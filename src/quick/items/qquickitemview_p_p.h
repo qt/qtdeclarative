@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 
-class FxViewItem
+class Q_AUTOTEST_EXPORT FxViewItem
 {
 public:
     FxViewItem(QQuickItem *, QQuickItemView *, bool own, QQuickItemViewAttached *attached);
@@ -123,7 +123,7 @@ public:
 };
 
 
-class QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener, public QAnimationJobChangeListener
+class Q_AUTOTEST_EXPORT QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener, public QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickItemView)
 public:

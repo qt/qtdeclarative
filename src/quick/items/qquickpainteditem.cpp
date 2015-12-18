@@ -483,7 +483,7 @@ void QQuickPaintedItem::setFillColor(const QColor &c)
     \brief The item's render target.
 
     This property defines which render target the QPainter renders into, it can be either
-    QSGPaintedItem::Image, QSGPaintedItem::FramebufferObject or QSGPaintedItem::InvertedYFramebufferObject.
+    QQuickPaintedItem::Image, QQuickPaintedItem::FramebufferObject or QQuickPaintedItem::InvertedYFramebufferObject.
 
     Each has certain benefits, typically performance versus quality. Using a framebuffer
     object avoids a costly upload of the image contents to the texture in graphics memory,

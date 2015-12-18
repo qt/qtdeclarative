@@ -3146,12 +3146,13 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         int i = 0;
         qreal from = tempPos - displayMarginBeginning - buffer;
 
-        for (i = count-1; i >= 0; --i) {
-            if (pos > from && insertionIdx < visibleIndex) {
-                // item won't be visible, just note the size for repositioning
-                insertResult->sizeChangesBeforeVisiblePos += averageSize + spacing;
-                pos -= averageSize + spacing;
-            } else {
+        if (insertionIdx < visibleIndex) {
+            if (pos >= from) {
+                // items won't be visible, just note the size for repositioning
+                insertResult->sizeChangesBeforeVisiblePos += count * (averageSize + spacing);
+            }
+        } else {
+            for (i = count-1; i >= 0 && pos >= from; --i) {
                 // item is before first visible e.g. in cache buffer
                 FxViewItem *item = 0;
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
@@ -3166,17 +3167,33 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
-                    item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
+                    if (transitioner)
+                        item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
+                    else
+                        static_cast<FxListItemSG *>(item)->setPosition(pos, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
                 pos -= item->size() + spacing;
+                index++;
             }
-            index++;
         }
+
+        int firstOkIdx = -1;
+        for (int i = 0; i <= insertionIdx && i < visibleItems.count() - 1; i++) {
+            if (visibleItems.at(i)->index + 1 != visibleItems.at(i + 1)->index) {
+                firstOkIdx = i + 1;
+                break;
+            }
+        }
+        for (int i = 0; i < firstOkIdx; i++) {
+            FxViewItem *nvItem = visibleItems.takeFirst();
+            addedItems->removeOne(nvItem);
+            removeItem(nvItem);
+        }
+
     } else {
-        int i = 0;
         qreal to = buffer + displayMarginEnd + tempPos + size();
-        for (i = 0; i < count && pos <= to; ++i) {
+        for (int i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
@@ -3196,11 +3213,31 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
-                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
+                if (transitioner)
+                    item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
+                else
+                    static_cast<FxListItemSG *>(item)->setPosition(pos, true);
             }
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
             pos += item->size() + spacing;
             ++index;
+        }
+
+        if (0 < index && index < visibleItems.count()) {
+            FxViewItem *prevItem = visibleItems.at(index - 1);
+            FxViewItem *item = visibleItems.at(index);
+            if (prevItem->index != item->index - 1) {
+                int i = index;
+                qreal prevPos = prevItem->position();
+                while (i < visibleItems.count()) {
+                    FxListItemSG *nvItem = static_cast<FxListItemSG *>(visibleItems.takeLast());
+                    insertResult->sizeChangesAfterVisiblePos -= nvItem->size() + spacing;
+                    addedItems->removeOne(nvItem);
+                    if (nvItem->transitionScheduledOrRunning())
+                        nvItem->setPosition(prevPos + (nvItem->index - prevItem->index) * averageSize);
+                    removeItem(nvItem);
+                }
+            }
         }
     }
 

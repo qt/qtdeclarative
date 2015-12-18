@@ -36,6 +36,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <QDebug>
+#include <QQmlFile>
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -108,7 +109,6 @@ void QQuickTurbulenceAffector::initializeGrid()
             for (int i=0; i<m_gridSize; i++)
                 free(m_field[i]);
             free(m_field);
-            m_system = 0;
         }
         if (m_vectorField) {
             for (int i=0; i<m_gridSize; i++)
@@ -127,17 +127,17 @@ void QQuickTurbulenceAffector::initializeGrid()
 
     QImage image;
     if (!m_noiseSource.isEmpty())
-        image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
+        image = QImage(QQmlFile::urlToLocalFileOrQrc(m_noiseSource)).scaled(QSize(m_gridSize, m_gridSize));
     if (image.isNull())
         image = QImage(QStringLiteral(":particleresources/noise.png")).scaled(QSize(m_gridSize, m_gridSize));
 
     for (int i=0; i<m_gridSize; i++)
         for (int j=0; j<m_gridSize; j++)
-            m_field[i][j] = qRed(image.pixel(QPoint(i,j)));//Red as proxy for Value
+            m_field[i][j] = qGray(image.pixel(QPoint(i,j)));
     for (int i=0; i<m_gridSize; i++){
         for (int j=0; j<m_gridSize; j++){
-            m_vectorField[i][j].setX(boundsRespectingField(i,j) - boundsRespectingField(i,j-1));
-            m_vectorField[i][j].setY(boundsRespectingField(i-1,j) - boundsRespectingField(i,j));
+            m_vectorField[i][j].setX(boundsRespectingField(i-1,j) - boundsRespectingField(i,j));
+            m_vectorField[i][j].setY(boundsRespectingField(i,j) - boundsRespectingField(i,j-1));
         }
     }
 }

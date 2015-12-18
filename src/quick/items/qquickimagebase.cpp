@@ -36,6 +36,7 @@
 
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qscreen.h>
+#include <QtGui/qicon.h>
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
@@ -338,20 +339,6 @@ void QQuickImageBase::pixmapChange()
     setImplicitSize(d->pix.width() / d->devicePixelRatio, d->pix.height() / d->devicePixelRatio);
 }
 
-// /path/to/foo.png -> path/too/foo@2x.png
-static QString image2xPath(const QString &path)
-{
-    const int dotIndex = path.lastIndexOf(QLatin1Char('.'));
-    if (dotIndex == -1)
-        return path + QLatin1String("@2x");
-    if (path.contains(QLatin1String("@2x.")))
-        return path;
-
-    QString retinaPath = path;
-    retinaPath.insert(dotIndex, QStringLiteral("@2x"));
-    return retinaPath;
-}
-
 void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio)
 {
     Q_ASSERT(sourceUrl);
@@ -369,23 +356,20 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
         return;
 
     // Special case: the url in the QML source refers directly to an "@2x" file.
-    if (localFile.contains(QLatin1String("@2x"))) {
-        *sourceDevicePixelRatio = qreal(2.0);
-        return;
+    int atLocation = localFile.lastIndexOf(QLatin1Char('@'));
+    if (atLocation > 0 && atLocation + 3 < localFile.size()) {
+        if (localFile[atLocation + 1].isDigit()
+                && localFile[atLocation + 2] == QLatin1Char('x')
+                && localFile[atLocation + 3] == QLatin1Char('.')) {
+            *sourceDevicePixelRatio = localFile[atLocation + 1].digitValue();
+            return;
+        }
     }
 
-    // Don't load @2x files non normal-dpi displays.
-    if (!(targetDevicePixelRatio > qreal(1.0)))
-        return;
-
     // Look for an @2x version
-    QString localFile2x = image2xPath(localFile);
-    if (!QFile::exists(localFile2x))
-        return;
-
-    // @2x file found found: Change url and devicePixelRatio
-    *sourceUrl = QUrl::fromLocalFile(localFile2x);
-    *sourceDevicePixelRatio = qreal(2.0);
+    QString localFileX = qt_findAtNxFile(localFile, targetDevicePixelRatio, sourceDevicePixelRatio);
+    if (localFileX != localFile)
+        *sourceUrl = QUrl::fromLocalFile(localFileX);
 }
 
 bool QQuickImageBase::autoTransform() const

@@ -34,6 +34,7 @@
 #include "qv4persistent_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4object_p.h"
+#include "qv4qobjectwrapper_p.h"
 #include "PageAllocation.h"
 
 using namespace QV4;
@@ -203,6 +204,12 @@ void PersistentValueStorage::free(Value *v)
         return;
 
     Page *p = getPage(v);
+
+    // Keep track of QObjectWrapper to release its resources later in MemoryManager::sweep()
+    if (p->header.engine) {
+        if (QObjectWrapper *qobjectWrapper = v->as<QObjectWrapper>())
+            p->header.engine->memoryManager->m_pendingDestroyedObjectWrappers.push_back(qobjectWrapper->d());
+    }
 
     v->setTag(QV4::Value::Empty_Type);
     v->setInt_32(p->header.freeList);

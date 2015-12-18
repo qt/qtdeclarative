@@ -252,8 +252,15 @@ void QQuickWidgetPrivate::renderSceneGraph()
     }
 
     Q_ASSERT(offscreenSurface);
+
     render(true);
-    q->update(); // schedule composition
+
+#ifndef QT_NO_GRAPHICSVIEW
+    if (q->window()->graphicsProxyWidget())
+        QWidgetPrivate::nearestGraphicsProxyWidget(q)->update();
+    else
+#endif
+        q->update(); // schedule composition
 }
 
 QImage QQuickWidgetPrivate::grabFramebuffer()
@@ -717,12 +724,13 @@ void QQuickWidgetPrivate::createContext()
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
 
-        if (qt_gl_global_share_context())
-            context->setShareContext(qt_gl_global_share_context());
-        else
-            context->setShareContext(QWidgetPrivate::get(q->window())->shareContext());
-        context->setScreen(context->shareContext()->screen());
-
+        QOpenGLContext *shareContext = qt_gl_global_share_context();
+        if (!shareContext)
+            shareContext = QWidgetPrivate::get(q->window())->shareContext();
+        if (shareContext) {
+            context->setShareContext(shareContext);
+            context->setScreen(shareContext->screen());
+        }
         if (!context->create()) {
             const bool isEs = context->isOpenGLES();
             delete context;
@@ -1220,6 +1228,7 @@ bool QQuickWidget::event(QEvent *e)
         }
         break;
 
+    case QEvent::Show:
     case QEvent::Move:
         d->updatePosition();
         break;

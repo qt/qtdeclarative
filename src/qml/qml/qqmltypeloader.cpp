@@ -2320,8 +2320,8 @@ void QQmlTypeData::resolveTypes()
             m_namespaces.insert(csRef.prefix);
         }
 
-        int majorVersion = -1;
-        int minorVersion = -1;
+        int majorVersion = csRef.majorVersion > -1 ? csRef.majorVersion : -1;
+        int minorVersion = csRef.minorVersion > -1 ? csRef.minorVersion : -1;
 
         if (!resolveType(typeName, majorVersion, minorVersion, ref))
             return;

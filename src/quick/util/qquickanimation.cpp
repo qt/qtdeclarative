@@ -178,14 +178,22 @@ void QQuickAbstractAnimationPrivate::commence()
     }
 }
 
-QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const QString &str, QObject *infoObj)
+QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage)
 {
     QQmlProperty prop(obj, str, qmlContext(infoObj));
     if (!prop.isValid()) {
-        qmlInfo(infoObj) << QQuickAbstractAnimation::tr("Cannot animate non-existent property \"%1\"").arg(str);
+        const QString message = QQuickAbstractAnimation::tr("Cannot animate non-existent property \"%1\"").arg(str);
+        if (errorMessage)
+            *errorMessage = message;
+        else
+            qmlInfo(infoObj) << message;
         return QQmlProperty();
     } else if (!prop.isWritable()) {
-        qmlInfo(infoObj) << QQuickAbstractAnimation::tr("Cannot animate read-only property \"%1\"").arg(str);
+        const QString message = QQuickAbstractAnimation::tr("Cannot animate read-only property \"%1\"").arg(str);
+        if (errorMessage)
+            *errorMessage = message;
+        else
+            qmlInfo(infoObj) << message;
         return QQmlProperty();
     }
     return prop;
@@ -2584,18 +2592,28 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
     if (defaultTarget && targets.isEmpty())
         targets << defaultTarget;
 
+    bool usingDefaultProperties = false;
     if (props.isEmpty() && !d->defaultProperties.isEmpty()) {
         props << d->defaultProperties.split(QLatin1Char(','));
+        usingDefaultProperties = true;
     }
 
     bool hasExplicit = false;
     //an explicit animation has been specified
     if (d->toIsDefined) {
+        QVector<QString> errorMessages;
+        bool successfullyCreatedDefaultProperty = false;
+
         for (int i = 0; i < props.count(); ++i) {
             for (int j = 0; j < targets.count(); ++j) {
                 QQuickStateAction myAction;
-                myAction.property = d->createProperty(targets.at(j), props.at(i), this);
+                QString errorMessage;
+                const QString propertyName = props.at(i);
+                myAction.property = d->createProperty(targets.at(j), propertyName, this, &errorMessage);
                 if (myAction.property.isValid()) {
+                    if (usingDefaultProperties)
+                        successfullyCreatedDefaultProperty = true;
+
                     if (d->fromIsDefined) {
                         myAction.fromValue = d->from;
                         d->convertVariant(myAction.fromValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
@@ -2612,8 +2630,15 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
                             break;  //### any chance there could be multiples?
                         }
                     }
+                } else {
+                    errorMessages.append(errorMessage);
                 }
             }
+        }
+
+        if (!successfullyCreatedDefaultProperty) {
+            foreach (const QString &errorMessage, errorMessages)
+                qmlInfo(this) << errorMessage;
         }
     }
 

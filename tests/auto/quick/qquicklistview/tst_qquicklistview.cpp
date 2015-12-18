@@ -40,6 +40,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
@@ -249,6 +250,7 @@ private slots:
     void contentHeightWithDelayRemove_data();
 
     void QTBUG_48044_currentItemNotVisibleAfterTransition();
+    void QTBUG_48870_fastModelUpdates();
 
     void keyNavigationEnabled();
 
@@ -592,8 +594,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->y(), 0.);
-    QTRY_COMPARE(listview->contentY(), qreal(0));
+    QTRY_COMPARE(item->y() - listview->contentY(), 0.);
 
     delete window;
     delete testObject;
@@ -644,7 +645,8 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
 
     QTRY_COMPARE(listview->property("count").toInt(), model.count());
 
-
+    // FIXME This is NOT checking anything about visibleItems.first()
+#if 0
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
@@ -652,6 +654,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
         QCOMPARE(item0->y(), -item0->height() - itemsOffsetAfterMove);
     else
         QCOMPARE(item0->y(), itemsOffsetAfterMove);
+#endif
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -667,12 +670,21 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     // Confirm items positioned correctly and indexes correct
     QQuickText *name;
     QQuickText *number;
+    const qreal visibleFromPos = listview->contentY() - listview->displayMarginBeginning() - listview->cacheBuffer();
+    const qreal visibleToPos = listview->contentY() + listview->height() + listview->displayMarginEnd() + listview->cacheBuffer();
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
         if (verticalLayoutDirection == QQuickItemView::BottomToTop)
-            pos = -item0->height() - pos;
+            pos = -item->height() - pos;
+        // Items outside the visible area (including cache buffer) should be skipped
+        if (pos > visibleToPos || pos < visibleFromPos) {
+            QTRY_VERIFY2(QQuickItemPrivate::get(item)->culled || item->y() < visibleFromPos || item->y() > visibleToPos,
+                     QTest::toString(QString("index %5, y %1, from %2, to %3, expected pos %4, culled %6").
+                                     arg(item->y()).arg(visibleFromPos).arg(visibleToPos).arg(pos).arg(i).arg(bool(QQuickItemPrivate::get(item)->culled))));
+            continue;
+        }
         QTRY_COMPARE(item->y(), pos);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
@@ -8361,6 +8373,136 @@ void tst_QQuickListView::keyNavigationEnabled()
     listView->setKeyNavigationEnabled(false);
     QTest::keyClick(window.data(), Qt::Key_Down);
     QCOMPARE(listView->currentIndex(), 1);
+}
+
+static bool testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx)
+{
+    QHash<QQuickItem*, int> uniqueItems;
+
+    int skip = 0;
+    for (int i = 0; i < priv->visibleItems.count(); ++i) {
+        FxViewItem *item = priv->visibleItems.at(i);
+        if (!item) {
+            *failItem = Q_NULLPTR;
+            return false;
+        }
+#if 0
+        qDebug() << "\t" << item->index
+                 << item->item
+                 << item->position()
+                 << (!item->item || QQuickItemPrivate::get(item->item)->culled ? "hidden" : "visible");
+#endif
+        if (item->index == -1) {
+            ++skip;
+        } else if (item->index != priv->visibleIndex + i - skip) {
+            *nonUnique = false;
+            *failItem = item;
+            *expectedIdx = priv->visibleIndex + i - skip;
+            return false;
+        } else if (uniqueItems.contains(item->item)) {
+            *nonUnique = true;
+            *failItem = item;
+            *expectedIdx = uniqueItems.find(item->item).value();
+            return false;
+        }
+
+        uniqueItems.insert(item->item, item->index);
+    }
+
+    return true;
+}
+
+class QTBUG_48870_Model : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+
+    QTBUG_48870_Model()
+        : QAbstractListModel()
+        , m_rowCount(20)
+    {
+        QTimer *t = new QTimer(this);
+        t->setInterval(500);
+        t->start();
+
+        qsrand(qHash(QDateTime::currentDateTime()));
+        connect(t, &QTimer::timeout, this, &QTBUG_48870_Model::updateModel);
+    }
+
+    int rowCount(const QModelIndex &) const
+    {
+        return m_rowCount;
+    }
+
+    QVariant data(const QModelIndex &, int) const
+    {
+        return QVariant();
+    }
+
+public Q_SLOTS:
+    void updateModel()
+    {
+        if (m_rowCount > 10) {
+            for (int i = 0; i < 10; ++i) {
+                int rnum = qrand() % m_rowCount;
+                beginRemoveRows(QModelIndex(), rnum, rnum);
+                m_rowCount--;
+                endRemoveRows();
+            }
+        }
+        if (m_rowCount < 20) {
+            for (int i = 0; i < 10; ++i) {
+                int rnum = qrand() % m_rowCount;
+                beginInsertRows(QModelIndex(), rnum, rnum);
+                m_rowCount++;
+                endInsertRows();
+            }
+        }
+    }
+
+private:
+    int m_rowCount;
+};
+
+void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
+{
+    QTBUG_48870_Model model;
+
+    QQuickView *window = createView();
+    QVERIFY(window);
+    QQmlContext *ctxt = window->rootContext();
+    QVERIFY(ctxt);
+    ctxt->setContextProperty("testModel", &model);
+
+    window->setSource(testFileUrl("qtbug48870.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItemViewPrivate *priv = QQuickItemViewPrivate::get(listview);
+    bool nonUnique;
+    FxViewItem *item = Q_NULLPTR;
+    int expectedIdx;
+    QVERIFY(testVisibleItems(priv, &nonUnique, &item, &expectedIdx));
+
+    for (int i = 0; i < 10; i++) {
+        QTest::qWait(100);
+        QVERIFY2(testVisibleItems(priv, &nonUnique, &item, &expectedIdx),
+                 qPrintable(!item ? QString("Unexpected null item")
+                            : nonUnique ? QString("Non-unique item at %1 and %2").arg(item->index).arg(expectedIdx)
+                                        : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
+        if (i % 3 != 0) {
+            if (i & 1)
+                flick(window, QPoint(100, 200), QPoint(100, 0), 100);
+            else
+                flick(window, QPoint(100, 200), QPoint(100, 400), 100);
+        }
+    }
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickListView)

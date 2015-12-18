@@ -102,6 +102,8 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 
     The \l drag.source property is communicated to the source of a drag event as
     the recipient of a drop on the drag target.
+
+    \sa {Qt Quick Examples - Drag and Drop}, {Qt Quick Examples - externaldraganddrop}
 */
 
 QQuickDropArea::QQuickDropArea(QQuickItem *parent)

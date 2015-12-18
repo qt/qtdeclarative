@@ -295,11 +295,11 @@ Q_SIGNALS:
     void selectionColorChanged(const QColor &color);
     void selectedTextColorChanged(const QColor &color);
     void fontChanged(const QFont &font);
-    void horizontalAlignmentChanged(HAlignment alignment);
-    void verticalAlignmentChanged(VAlignment alignment);
+    void horizontalAlignmentChanged(QQuickTextEdit::HAlignment alignment);
+    void verticalAlignmentChanged(QQuickTextEdit::VAlignment alignment);
     void wrapModeChanged();
     void lineCountChanged();
-    void textFormatChanged(TextFormat textFormat);
+    void textFormatChanged(QQuickTextEdit::TextFormat textFormat);
     void readOnlyChanged(bool isReadOnly);
     void cursorVisibleChanged(bool isCursorVisible);
     void cursorDelegateChanged();
@@ -308,7 +308,7 @@ Q_SIGNALS:
     void textMarginChanged(qreal textMargin);
     Q_REVISION(1) void selectByKeyboardChanged(bool selectByKeyboard);
     void selectByMouseChanged(bool selectByMouse);
-    void mouseSelectionModeChanged(SelectionMode mode);
+    void mouseSelectionModeChanged(QQuickTextEdit::SelectionMode mode);
     void linkActivated(const QString &link);
     Q_REVISION(2) void linkHovered(const QString &link);
     void canPasteChanged();

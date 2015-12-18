@@ -161,6 +161,8 @@ private slots:
 
     void touchGrabCausesMouseUngrab();
 
+    void hoverEnabled();
+
 protected:
     bool eventFilter(QObject *, QEvent *event)
     {
@@ -1230,6 +1232,93 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)0);
 
     delete window;
+}
+
+void tst_TouchMouse::hoverEnabled()
+{
+    // QTouchDevice *device = new QTouchDevice;
+    // device->setType(QTouchDevice::TouchScreen);
+    // QWindowSystemInterface::registerTouchDevice(device);
+
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("hoverMouseAreas.qml"));
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea1 = root->findChild<QQuickMouseArea*>("mouseArea1");
+    QVERIFY(mouseArea1 != 0);
+
+    QQuickMouseArea *mouseArea2 = root->findChild<QQuickMouseArea*>("mouseArea2");
+    QVERIFY(mouseArea2 != 0);
+
+    QSignalSpy enterSpy1(mouseArea1, SIGNAL(entered()));
+    QSignalSpy exitSpy1(mouseArea1, SIGNAL(exited()));
+    QSignalSpy clickSpy1(mouseArea1, SIGNAL(clicked(QQuickMouseEvent *)));
+
+    QSignalSpy enterSpy2(mouseArea2, SIGNAL(entered()));
+    QSignalSpy exitSpy2(mouseArea2, SIGNAL(exited()));
+    QSignalSpy clickSpy2(mouseArea2, SIGNAL(clicked(QQuickMouseEvent *)));
+
+    QPoint p0(50, 50);
+    QPoint p1(150, 150);
+    QPoint p2(150, 250);
+
+    // ------------------------- Mouse move to mouseArea1
+    QTest::mouseMove(window, p1);
+
+    QVERIFY(enterSpy1.count() == 1);
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea2->hovered());
+
+    // ------------------------- Touch click on mouseArea1
+    QTest::touchEvent(window, device).press(0, p1, window);
+
+    QVERIFY(enterSpy1.count() == 1);
+    QVERIFY(enterSpy2.count() == 0);
+    QVERIFY(mouseArea1->pressed());
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea2->hovered());
+
+    QTest::touchEvent(window, device).release(0, p1, window);
+    QVERIFY(clickSpy1.count() == 1);
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea2->hovered());
+
+    // ------------------------- Touch click on mouseArea2
+    QTest::touchEvent(window, device).press(0, p2, window);
+
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(mouseArea2->hovered());
+    QVERIFY(mouseArea2->pressed());
+    QVERIFY(enterSpy1.count() == 1);
+    QVERIFY(enterSpy2.count() == 1);
+
+    QTest::touchEvent(window, device).release(0, p2, window);
+
+    QVERIFY(clickSpy2.count() == 1);
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea2->hovered());
+    QVERIFY(exitSpy1.count() == 0);
+    QVERIFY(exitSpy2.count() == 1);
+
+    // ------------------------- Another touch click on mouseArea1
+    QTest::touchEvent(window, device).press(0, p1, window);
+
+    QVERIFY(enterSpy1.count() == 1);
+    QVERIFY(enterSpy2.count() == 1);
+    QVERIFY(mouseArea1->pressed());
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea2->hovered());
+
+    QTest::touchEvent(window, device).release(0, p1, window);
+    QVERIFY(clickSpy1.count() == 2);
+    QVERIFY(mouseArea1->hovered());
+    QVERIFY(!mouseArea1->pressed());
+    QVERIFY(!mouseArea2->hovered());
 }
 
 QTEST_MAIN(tst_TouchMouse)

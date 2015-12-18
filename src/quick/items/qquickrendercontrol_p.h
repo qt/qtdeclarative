@@ -56,7 +56,6 @@ public:
     Q_DECLARE_PUBLIC(QQuickRenderControl)
 
     QQuickRenderControlPrivate();
-    ~QQuickRenderControlPrivate();
 
     static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
         return renderControl->d_func();

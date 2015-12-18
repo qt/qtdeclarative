@@ -344,10 +344,12 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         accel = v2 / (2.0f * qAbs(dist));
 
         resetTimeline(data);
-        if (boundsBehavior & QQuickFlickable::OvershootBounds)
-            timeline.accel(data.move, v, accel);
-        else
-            timeline.accel(data.move, v, accel, maxDistance);
+        if (!data.inOvershoot) {
+            if (boundsBehavior & QQuickFlickable::OvershootBounds)
+                timeline.accel(data.move, v, accel);
+            else
+                timeline.accel(data.move, v, accel, maxDistance);
+        }
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
 
         if (&data == &hData)

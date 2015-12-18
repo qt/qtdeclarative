@@ -129,11 +129,6 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate()
     rc = new QSGRenderContext(sg);
 }
 
-QQuickRenderControlPrivate::~QQuickRenderControlPrivate()
-{
-    delete rc;
-}
-
 void QQuickRenderControlPrivate::cleanup()
 {
     delete sg;
@@ -162,13 +157,25 @@ QQuickRenderControl::~QQuickRenderControl()
 
     if (d->window)
         QQuickWindowPrivate::get(d->window)->renderControl = 0;
+
+    // It is likely that the cleanup in windowDestroyed() is not called since
+    // the standard pattern is to destroy the rendercontrol before the QQuickWindow.
+    // Do it here.
+    d->windowDestroyed();
+
+    delete d->rc;
 }
 
 void QQuickRenderControlPrivate::windowDestroyed()
 {
-    if (window == 0) {
+    if (window) {
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+
+        delete QQuickWindowPrivate::get(window)->animationController;
+        QQuickWindowPrivate::get(window)->animationController = 0;
+
+        window = 0;
     }
 }
 

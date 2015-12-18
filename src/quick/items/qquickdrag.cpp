@@ -135,6 +135,7 @@ public:
     \l {supportedActions}{drop action} chosen by the recipient of the event,
     otherwise it will return Qt.IgnoreAction.
 
+    \sa {Qt Quick Examples - Drag and Drop}, {Qt Quick Examples - externaldraganddrop}
 */
 
 void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry)

@@ -140,6 +140,11 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
 {
     if (job->isRenderThreadJob()) {
         QQuickAnimatorJob *j = static_cast<QQuickAnimatorJob *>(job);
+        // Note: since a QQuickAnimatorJob::m_target is a QPointer,
+        // if m_target is destroyed between the time it was set
+        // as the target of the animator job and before this step,
+        // (e.g a Loader being set inactive just after starting the animator)
+        // we are sure it will be NULL and won't be dangling around
         if (!j->target()) {
             return;
         } else if (c->m_deletedSinceLastFrame.contains(j->target())) {
