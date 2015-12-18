@@ -134,6 +134,16 @@ void QQuickDrawerPrivate::updateContent()
     }
 }
 
+static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
+{
+    // Flickable uses a hard-coded threshold of 15 for flicking, and
+    // QStyleHints::startDragDistance for dragging. Drawer uses a bit
+    // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
+    int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
+
+    return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
+}
+
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
@@ -143,16 +153,16 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
         // only accept pressing at drag margins when fully closed
         switch (edge) {
         case Qt::LeftEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(event->x(), Qt::XAxis, event));
             break;
         case Qt::RightEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(q->width() - event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(q->width() - event->x(), Qt::XAxis, event));
             break;
         case Qt::TopEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(event->y(), Qt::YAxis, event));
             break;
         case Qt::BottomEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(q->height() - event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(q->height() - event->y(), Qt::YAxis, event));
             break;
         }
         offset = 0;
@@ -172,9 +182,9 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     if (!q->keepMouseGrab()) {
         bool overThreshold = false;
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event);
+            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event);
         else
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event);
+            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event);
 
         if (window && overThreshold) {
             QQuickItem *grabber = q->window()->mouseGrabberItem();
