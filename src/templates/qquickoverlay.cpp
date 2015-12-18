@@ -64,16 +64,27 @@ void QQuickOverlayPrivate::updateBackground()
     if (!background)
         return;
 
+    bool anim = true;
     qreal level = 0.0;
     if (modalPopups > 0) {
         level = 1.0;
     } else {
-        foreach (QQuickDrawer *drawer, drawers)
-            level = qMax(level, drawer->position());
+        foreach (QQuickDrawer *drawer, drawers) {
+            qreal pos = drawer->position();
+            if (pos > 0.0 && pos < 1.0)
+                anim = false;
+            level = qMax(level, pos);
+        }
     }
 
-    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    QQmlProperty::write(background, QStringLiteral("opacity"), level);
+    if (anim) {
+        // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+        QQmlProperty::write(background, QStringLiteral("opacity"), level);
+    } else {
+        // except while a drawer is opening/closing, or else the background
+        // fading feels laggy compared to the drawer movement
+        background->setOpacity(level);
+    }
 }
 
 void QQuickOverlayPrivate::resizeBackground()
