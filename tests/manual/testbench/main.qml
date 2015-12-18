@@ -62,6 +62,8 @@ ApplicationWindow {
     }
 
     header: ToolBar {
+        Material.theme: Material.Dark
+
         RowLayout {
             anchors.fill: parent
 
