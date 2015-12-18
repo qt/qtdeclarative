@@ -86,14 +86,15 @@ T.SpinBox {
 
     //! [up.indicator]
     up.indicator: Item {
-        implicitWidth: 26
-        height: parent.height
+        implicitWidth: 28
+        height: parent.height + 4
+        y: -2
         x: control.mirrored ? 0 : parent.width - width
 
         Rectangle {
-            x: 2; y: 2
+            x: 2; y: 4
             width: parent.width - 4
-            height: parent.height - 4
+            height: parent.height - 8
             color: !control.up.pressed ? "transparent" :
                    control.activeFocus ? control.Universal.accentColor
                                        : control.Universal.chromeDisabledLowColor
@@ -110,14 +111,15 @@ T.SpinBox {
 
     //! [down.indicator]
     down.indicator: Item {
-        implicitWidth: 26
-        height: parent.height
+        implicitWidth: 28
+        height: parent.height + 4
+        y: -2
         x: control.mirrored ? parent.width - width : 0
 
         Rectangle {
-            x: 2; y: 2
+            x: 2; y: 4
             width: parent.width - 4
-            height: parent.height - 4
+            height: parent.height - 8
             color: !control.down.pressed ? "transparent" :
                      control.activeFocus ? control.Universal.accentColor
                                          : control.Universal.chromeDisabledLowColor
@@ -134,7 +136,7 @@ T.SpinBox {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 60 + 26 // TextControlThemeMinWidth - 4 (border)
+        implicitWidth: 60 + 28 // TextControlThemeMinWidth - 4 (border)
         implicitHeight: 28 // TextControlThemeMinHeight - 4 (border)
 
         border.width: 2 // TextControlBorderThemeThickness
