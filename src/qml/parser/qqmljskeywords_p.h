@@ -684,7 +684,7 @@ static inline int classify8(const QChar *s, bool qmlMode) {
             if (s[5].unicode() == 'r') {
               if (s[6].unicode() == 't') {
                 if (s[7].unicode() == 'y') {
-                  return qmlMode ? Lexer::T_PROPERTY : Lexer::T_IDENTIFIER;
+                  return Lexer::T_PROPERTY;
                 }
               }
             }
