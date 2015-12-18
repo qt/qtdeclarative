@@ -725,9 +725,9 @@ QColor QQuickMaterialStyle::drawerBackgroundColor() const
     return dividerTextColorLight;
 }
 
-QColor QQuickMaterialStyle::comboBoxColor() const
+QColor QQuickMaterialStyle::dialogColor() const
 {
-    return m_theme == Light ? "#ffffff" : backgroundColorDark;
+    return m_theme == Light ? dialogColorLight : dialogColorDark;
 }
 
 QColor QQuickMaterialStyle::backgroundDimColor() const

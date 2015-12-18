@@ -83,7 +83,7 @@ T.ComboBox {
             width: parent.width
             height: parent.height
             radius: 2
-            color: control.Material.comboBoxColor
+            color: control.Material.dialogColor
 
             Behavior on color {
                 ColorAnimation {
@@ -128,7 +128,7 @@ T.ComboBox {
                 id: panel
                 width: parent.width
                 height: parent.height
-                color: control.Material.comboBoxColor
+                color: control.Material.dialogColor
             }
 
             DropShadow {

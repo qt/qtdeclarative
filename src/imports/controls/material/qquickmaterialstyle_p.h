@@ -92,7 +92,7 @@ class QQuickMaterialStyle : public QQuickStyle
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor drawerBackgroundColor READ drawerBackgroundColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor comboBoxColor READ comboBoxColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
 
 public:
@@ -201,7 +201,7 @@ public:
     QColor scrollBarColor() const;
     QColor scrollBarPressedColor() const;
     QColor drawerBackgroundColor() const;
-    QColor comboBoxColor() const;
+    QColor dialogColor() const;
     QColor backgroundDimColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade) const;
