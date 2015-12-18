@@ -44,8 +44,6 @@ import Qt.labs.controls 1.0
 Pane {
     id: pane
 
-    readonly property int itemWidth: Math.max(field.implicitWidth, pane.availableWidth / 3)
-
     Column {
         spacing: 40
         anchors.fill: parent
@@ -53,13 +51,14 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "TextField is a single-line text editor."
         }
 
         TextField {
             id: field
             placeholderText: "TextField"
-            width: itemWidth
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

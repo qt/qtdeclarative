@@ -45,7 +45,7 @@ Flickable {
     id: flickable
     contentHeight: pane.height
 
-    readonly property int itemWidth: Math.max(button.implicitWidth, pane.availableWidth / 3)
+    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
 
     Pane {
         id: pane
@@ -59,6 +59,7 @@ Flickable {
             Label {
                 width: parent.width
                 wrapMode: Label.Wrap
+                horizontalAlignment: Qt.AlignHCenter
                 text: "Button presents a push-button that can be pushed or clicked by the user. "
                     + "Buttons are normally used to perform an action, or to answer a question."
             }

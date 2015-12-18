@@ -45,8 +45,6 @@ Flickable {
     id: flickable
     contentHeight: pane.height
 
-    readonly property int itemWidth: Math.max(box.implicitWidth, pane.availableWidth / 3)
-
     Pane {
         id: pane
         width: parent.width
@@ -59,6 +57,7 @@ Flickable {
             Label {
                 width: parent.width
                 wrapMode: Label.Wrap
+                horizontalAlignment: Qt.AlignHCenter
                 text: "CheckBox presents an option button that can be toggled on or off. "
                     + "Check boxes are typically used to select one or more options from a set of options."
             }
@@ -70,18 +69,14 @@ Flickable {
                 CheckBox {
                     text: "First"
                     checked: true
-                    width: itemWidth
                 }
                 CheckBox {
-                    id: box
                     text: "Second"
-                    width: itemWidth
                 }
                 CheckBox {
                     text: "Third"
                     checked: true
                     enabled: false
-                    width: itemWidth
                 }
             }
         }

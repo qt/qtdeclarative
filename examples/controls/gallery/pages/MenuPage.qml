@@ -51,6 +51,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "Menu can be used either as a context menu, or as a popup menu."
         }
 
@@ -58,7 +59,7 @@ Pane {
             id: button
             text: "Open"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, pane.availableWidth / 3)
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
 
             onClicked: optionsMenu.open()
         }

@@ -45,8 +45,6 @@ Flickable {
     id: flickable
     contentHeight: pane.height
 
-    readonly property int itemWidth: Math.max(swtch.implicitWidth, pane.availableWidth / 3)
-
     Pane {
         id: pane
         width: parent.width
@@ -59,6 +57,7 @@ Flickable {
             Label {
                 width: parent.width
                 wrapMode: Label.Wrap
+                horizontalAlignment: Qt.AlignHCenter
                 text: "Switch is an option button that can be dragged or toggled on or off. "
                     + "Switches are typically used to select between two states."
             }
@@ -69,18 +68,14 @@ Flickable {
 
                 Switch {
                     text: "First"
-                    width: itemWidth
                 }
                 Switch {
-                    id: swtch
                     text: "Second"
                     checked: true
-                    width: itemWidth
                 }
                 Switch {
                     text: "Third"
                     enabled: false
-                    width: itemWidth
                 }
             }
         }

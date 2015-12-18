@@ -51,6 +51,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "BusyIndicator is used to indicate activity while content is being loaded,"
                   + " or the UI is blocked waiting for a resource to become available."
         }

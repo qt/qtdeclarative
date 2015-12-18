@@ -63,6 +63,7 @@ Pane {
                     Label {
                         width: parent.width
                         wrapMode: Label.Wrap
+                        horizontalAlignment: Qt.AlignHCenter
                         text: "SwipeView provides a swipe-based navigation model."
                     }
 

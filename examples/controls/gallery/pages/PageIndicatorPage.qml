@@ -51,6 +51,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "PageIndicator is used to indicate the currently active page in a container of pages."
         }
 

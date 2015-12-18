@@ -49,11 +49,24 @@ Flickable {
         id: pane
         width: parent.width
 
-        TextArea {
+        Column {
+            spacing: 40
             anchors.fill: parent
 
-            wrapMode: TextArea.Wrap
-            text: "TextArea is a multi-line text editor."
+            Label {
+                width: parent.width
+                wrapMode: Label.Wrap
+                horizontalAlignment: Qt.AlignHCenter
+                text: "TextArea is a multi-line text editor."
+            }
+
+            TextArea {
+                width: Math.max(implicitWidth, Math.min(implicitWidth * 3, pane.availableWidth / 3))
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                wrapMode: TextArea.Wrap
+                text: "TextArea\n...\n...\n..."
+            }
         }
     }
 

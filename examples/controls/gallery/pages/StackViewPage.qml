@@ -59,6 +59,7 @@ StackView {
                 Label {
                     width: parent.width
                     wrapMode: Label.Wrap
+                    horizontalAlignment: Qt.AlignHCenter
                     text: "StackView provides a stack-based navigation model."
                 }
 
@@ -66,14 +67,14 @@ StackView {
                     id: button
                     text: "Push"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: Math.max(button.implicitWidth, pane.availableWidth / 3)
+                    width: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
                     onClicked: stackView.push(page)
                 }
 
                 Button {
                     text: "Pop"
                     enabled: stackView.depth > 1
-                    width: Math.max(button.implicitWidth, pane.availableWidth / 3)
+                    width: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: stackView.pop()
                 }

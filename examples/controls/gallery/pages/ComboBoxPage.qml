@@ -51,13 +51,14 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "ComboBox is a combined button and popup list. It provides means of presenting a "
                 + "list of options to the user in a way that takes up the minimum amount of screen space."
         }
 
         ComboBox {
             model: ["First", "Second", "Third"]
-            width: Math.max(implicitWidth, pane.availableWidth / 3)
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

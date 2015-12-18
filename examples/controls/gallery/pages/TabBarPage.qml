@@ -65,6 +65,7 @@ Pane {
                     Label {
                         width: parent.width
                         wrapMode: Label.Wrap
+                        horizontalAlignment: Qt.AlignHCenter
                         text: "TabBar provides a tab-based navigation model."
                     }
 

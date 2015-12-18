@@ -51,6 +51,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "Popup is used to display modal or modeless content that overlays other "
                 + "application content. In this example, the settings are shown in a popup."
         }
@@ -59,7 +60,7 @@ Pane {
             id: button
             text: "Open"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, pane.availableWidth / 3)
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
 
             onClicked: settingsPopup.open()
         }

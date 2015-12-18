@@ -44,7 +44,7 @@ import Qt.labs.controls 1.0
 Pane {
     id: pane
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, pane.availableWidth / 3)
+    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, pane.availableWidth / 3))
 
     Column {
         spacing: 40
@@ -53,6 +53,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "RangeSlider is used to select a range specified by two values, by sliding each handle along a track."
         }
 

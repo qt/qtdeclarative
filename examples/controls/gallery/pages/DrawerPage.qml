@@ -51,6 +51,7 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "Drawer provides a swipe-based side panel, similar to those often used "
                 + "in touch interfaces to provide a central location for navigation."
         }
@@ -58,7 +59,7 @@ Pane {
         Button {
             text: "Open"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, pane.availableWidth / 3)
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
 
             onClicked: drawer.open()
         }

@@ -95,7 +95,7 @@ ApplicationWindow {
 
         Pane {
             padding: 0
-            width: window.width / 3 * 2
+            width: Math.min(window.width, window.height) / 3 * 2
             height: window.height
 
             ListView {
@@ -200,7 +200,7 @@ ApplicationWindow {
         contentItem: Pane {
             x: (window.width - width) / 2
             y: window.height / 6
-            width: window.width / 3 * 2
+            width: Math.min(window.width, window.height) / 3 * 2
             contentHeight: settingsColumn.implicitHeight
 
             Keys.onEscapePressed: settingsPopup.close()
@@ -284,7 +284,7 @@ ApplicationWindow {
         contentItem: Pane {
             x: (window.width - width) / 2
             y: (window.height - height) / 2
-            width: window.width / 3 * 2
+            width: Math.min(window.width, window.height) / 3 * 2
             contentHeight: aboutColumn.implicitHeight
 
             Keys.onEscapePressed: aboutDialog.close()

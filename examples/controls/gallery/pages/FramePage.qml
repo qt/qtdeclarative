@@ -44,6 +44,8 @@ import Qt.labs.controls 1.0
 Pane {
     id: pane
 
+    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 3, pane.availableWidth / 3 * 2))
+
     Column {
         spacing: 40
         anchors.fill: parent
@@ -51,15 +53,16 @@ Pane {
         Label {
             width: parent.width
             wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
             text: "Frame is used to layout a logical group of controls together, within a visual frame."
         }
 
         Frame {
-            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
 
             Column {
                 spacing: 20
-                anchors.fill: parent
+                width: itemWidth
 
                 RadioButton {
                     text: "First"
@@ -67,6 +70,7 @@ Pane {
                     width: parent.width
                 }
                 RadioButton {
+                    id: button
                     text: "Second"
                     width: parent.width
                 }

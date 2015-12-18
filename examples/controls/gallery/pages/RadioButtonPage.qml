@@ -45,8 +45,6 @@ Flickable {
     id: flickable
     contentHeight: pane.height
 
-    readonly property int itemWidth: Math.max(button.implicitWidth, pane.availableWidth / 3)
-
     Pane {
         id: pane
         width: parent.width
@@ -59,6 +57,7 @@ Flickable {
             Label {
                 width: parent.width
                 wrapMode: Label.Wrap
+                horizontalAlignment: Qt.AlignHCenter
                 text: "RadioButton presents an option button that can be toggled on or off. "
                     + "Radio buttons are typically used to select one option from a set of options."
             }
@@ -69,18 +68,14 @@ Flickable {
 
                 RadioButton {
                     text: "First"
-                    width: itemWidth
                 }
                 RadioButton {
-                    id: button
                     text: "Second"
                     checked: true
-                    width: itemWidth
                 }
                 RadioButton {
                     text: "Third"
                     enabled: false
-                    width: itemWidth
                 }
             }
         }
