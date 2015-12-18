@@ -251,7 +251,7 @@ void QQuickProgressBar::setIndicator(QQuickItem *indicator)
 void QQuickProgressBar::mirrorChange()
 {
     QQuickControl::mirrorChange();
-    if (!qFuzzyCompare(position(), 0.5))
+    if (!qFuzzyCompare(position(), qreal(0.5)))
         emit visualPositionChanged();
 }
 

@@ -138,7 +138,7 @@ qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
 void QQuickSliderPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickSlider);
-    pos = qBound(0.0, pos, 1.0);
+    pos = qBound<qreal>(0.0, pos, 1.0);
     if (!qFuzzyCompare(position, pos)) {
         position = pos;
         emit q->positionChanged();

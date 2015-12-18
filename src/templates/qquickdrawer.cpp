@@ -302,7 +302,7 @@ qreal QQuickDrawer::position() const
 void QQuickDrawer::setPosition(qreal position)
 {
     Q_D(QQuickDrawer);
-    position = qBound(0.0, position, 1.0);
+    position = qBound<qreal>(0.0, position, 1.0);
     if (!qFuzzyCompare(d->position, position)) {
         d->position = position;
         if (isComponentComplete())

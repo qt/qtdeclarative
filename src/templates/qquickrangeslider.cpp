@@ -119,8 +119,8 @@ void QQuickRangeSliderNodePrivate::setPosition(qreal position, bool ignoreOtherP
 {
     Q_Q(QQuickRangeSliderNode);
 
-    const qreal min = isFirst() || ignoreOtherPosition ? 0.0 : qMax(0.0, slider->first()->position());
-    const qreal max = !isFirst() || ignoreOtherPosition ? 1.0 : qMin(1.0, slider->second()->position());
+    const qreal min = isFirst() || ignoreOtherPosition ? 0.0 : qMax<qreal>(0.0, slider->first()->position());
+    const qreal max = !isFirst() || ignoreOtherPosition ? 1.0 : qMin<qreal>(1.0, slider->second()->position());
     position = qBound(min, position, max);
     if (!qFuzzyCompare(this->position, position)) {
         this->position = position;

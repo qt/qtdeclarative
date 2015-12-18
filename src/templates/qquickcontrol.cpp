@@ -420,7 +420,7 @@ void QQuickControl::resetFont()
 */
 qreal QQuickControl::availableWidth() const
 {
-    return qMax(0.0, width() - leftPadding() - rightPadding());
+    return qMax<qreal>(0.0, width() - leftPadding() - rightPadding());
 }
 
 /*!
@@ -432,7 +432,7 @@ qreal QQuickControl::availableWidth() const
 */
 qreal QQuickControl::availableHeight() const
 {
-    return qMax(0.0, height() - topPadding() - bottomPadding());
+    return qMax<qreal>(0.0, height() - topPadding() - bottomPadding());
 }
 
 /*!
