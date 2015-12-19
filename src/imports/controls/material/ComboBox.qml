@@ -114,15 +114,29 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
+        enter: Transition {
+            // grow_fade_in
+            NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
+            NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; easing.type: Easing.OutCubic; duration: 150 }
+        }
+
+        exit: Transition {
+            // shrink_fade_out
+            NumberAnimation { property: "scale"; from: 1.0; to: 0.9; easing.type: Easing.OutQuint; duration: 220 }
+            NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
+        }
+
         contentItem: Item {
             // TODO: Popup::anchors
             readonly property var above: popup.visible ? control.mapToItem(null, 0, -height) : Qt.point(0, 0)
             readonly property var below: popup.visible ? control.mapToItem(null, 0, control.height) : Qt.point(0, 0)
+            readonly property bool showAbove: above.y >= 0 && below.y + height > control.Window.height
 
             x: below.x
-            y: above.y >= 0 && below.y + height > control.Window.height ? above.y : below.y
+            y: showAbove ? above.y : below.y
             width: control.width
             height: listview.height
+            transformOrigin: showAbove ? Item.Bottom : Item.Top
 
             Rectangle {
                 id: panel
