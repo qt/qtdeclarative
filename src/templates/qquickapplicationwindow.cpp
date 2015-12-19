@@ -567,7 +567,7 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
     This attached property holds the window overlay item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
 */
-QQuickItem *QQuickApplicationWindowAttached::overlay() const
+QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
 {
     Q_D(const QQuickApplicationWindowAttached);
     return d->window ? d->window->overlay() : Q_NULLPTR;

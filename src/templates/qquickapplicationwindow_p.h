@@ -120,7 +120,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay NOTIFY overlayChanged FINAL)
+    Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
 
 public:
     explicit QQuickApplicationWindowAttached(QObject *parent = Q_NULLPTR);
@@ -130,7 +130,7 @@ public:
     QQuickItem *activeFocusControl() const;
     QQuickItem *header() const;
     QQuickItem *footer() const;
-    QQuickItem *overlay() const;
+    QQuickOverlay *overlay() const;
 
 Q_SIGNALS:
     void windowChanged();
