@@ -38,6 +38,7 @@
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -58,17 +59,15 @@ QT_BEGIN_NAMESPACE
 
 QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
-    , contentItem(Q_NULLPTR)
-    , overlay(Q_NULLPTR)
     , focus(false)
     , modal(false)
+    , contentItem(Q_NULLPTR)
+    , overlay(Q_NULLPTR)
     , enter(Q_NULLPTR)
     , exit(Q_NULLPTR)
     , transitionManager(this)
-{ }
-
-QQuickPopupPrivate::~QQuickPopupPrivate()
-{ }
+{
+}
 
 void QQuickPopupPrivate::finalizeEnterTransition()
 {
@@ -78,16 +77,18 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 
 void QQuickPopupPrivate::finalizeExitTransition()
 {
+    Q_Q(QQuickPopup);
     overlay = Q_NULLPTR;
     contentItem->setParentItem(Q_NULLPTR);
-    emit q_func()->visibleChanged();
+    emit q->visibleChanged();
 }
 
-QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *priv)
+QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *popup)
     : QQuickTransitionManager()
     , state(Off)
-    , pp(priv)
-{ }
+    , popup(popup)
+{
+}
 
 void QQuickPopupTransitionManager::transitionEnter()
 {
@@ -95,7 +96,7 @@ void QQuickPopupTransitionManager::transitionEnter()
         return;
     QList<QQuickStateAction> actions;
     state = Enter;
-    transition(actions, pp->enter, pp->contentItem);
+    transition(actions, popup->enter, popup->contentItem);
 }
 
 void QQuickPopupTransitionManager::transitionExit()
@@ -104,15 +105,15 @@ void QQuickPopupTransitionManager::transitionExit()
         return;
     QList<QQuickStateAction> actions;
     state = Exit;
-    transition(actions, pp->exit, pp->contentItem);
+    transition(actions, popup->exit, popup->contentItem);
 }
 
 void QQuickPopupTransitionManager::finished()
 {
     if (state == Enter)
-        pp->finalizeEnterTransition();
+        popup->finalizeEnterTransition();
     else if (state == Exit)
-        pp->finalizeExitTransition();
+        popup->finalizeExitTransition();
 
     state = Off;
 }
@@ -124,10 +125,6 @@ QQuickPopup::QQuickPopup(QObject *parent)
 
 QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
     : QObject(dd, parent)
-{
-}
-
-QQuickPopup::~QQuickPopup()
 {
 }
 
@@ -149,33 +146,33 @@ void QQuickPopup::open()
         return;
     }
 
-    QQuickWindow *win = Q_NULLPTR;
+    QQuickWindow *window = Q_NULLPTR;
     QObject *p = parent();
-    while (p && !win) {
+    while (p && !window) {
         if (QQuickItem *item = qobject_cast<QQuickItem *>(p)) {
-            win = item->window();
-            if (!win)
+            window = item->window();
+            if (!window)
                 p = item->parentItem();
         } else {
-            win = qobject_cast<QQuickWindow *>(p);
-            if (!win)
+            window = qobject_cast<QQuickWindow *>(p);
+            if (!window)
                 p = p->parent();
         }
     }
-    if (!win) {
+    if (!window) {
         qmlInfo(this) << "cannot find any window to open popup in.";
         return;
     }
 
-    if (QQuickApplicationWindow *appWin = qobject_cast<QQuickApplicationWindow*>(win)) {
-        d->overlay = static_cast<QQuickOverlay *>(appWin->overlay());
-        d->contentItem->setParentItem(d->overlay);
-    } else {
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+    if (!applicationWindow) {
         // FIXME Maybe try to open it in that window somehow
         qmlInfo(this) << "is not in an ApplicationWindow.";
         return;
     }
 
+    d->overlay = static_cast<QQuickOverlay *>(applicationWindow->overlay());
+    d->contentItem->setParentItem(d->overlay);
     emit aboutToShow();
     d->transitionManager.transitionEnter();
     emit visibleChanged();
@@ -189,7 +186,6 @@ void QQuickPopup::open()
 void QQuickPopup::close()
 {
     Q_D(QQuickPopup);
-
     if (!d->overlay) {
         // TODO This could mean we opened the popup item in a plain QQuickWindow
         qmlInfo(this) << "trying to close non-visible Popup.";

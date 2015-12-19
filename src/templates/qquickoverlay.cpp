@@ -138,7 +138,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
-    QQuickItem *contentItem = const_cast<QQuickItem *>(data.item);
     QQuickPopup *popup = Q_NULLPTR;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(data.item);
@@ -152,7 +151,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
             }
             d->updateBackground();
         } else {
-            popup = qobject_cast<QQuickPopup *>(contentItem->parent());
+            popup = qobject_cast<QQuickPopup *>(data.item->parent());
         }
         setVisible(!childItems().isEmpty());
     }
@@ -160,27 +159,27 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         return;
 
     if (change == ItemChildAddedChange) {
-        if (QQuickPopup *prevPopup = d->popups.value(contentItem)) {
-            qmlInfo(popup).nospace() << "Popup is sharing item " << contentItem << " with " << prevPopup
+        if (QQuickPopup *prevPopup = d->popups.value(data.item)) {
+            qmlInfo(popup).nospace() << "Popup is sharing item " << data.item << " with " << prevPopup
                                      << ". This is not supported and strange things are about to happen.";
             return;
         }
 
-        d->popups.insert(contentItem, popup);
+        d->popups.insert(data.item, popup);
         if (popup->isModal())
             ++d->modalPopups;
 
         connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
     } else if (change == ItemChildRemovedChange) {
-        Q_ASSERT(popup == d->popups.value(contentItem));
+        Q_ASSERT(popup == d->popups.value(data.item));
 
         disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
 
         if (popup->isModal())
             --d->modalPopups;
-        d->popups.remove(contentItem);
+        d->popups.remove(data.item);
     }
 
     d->updateBackground();

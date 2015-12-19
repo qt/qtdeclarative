@@ -63,7 +63,8 @@ class QQuickOverlay;
 class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
 public:
-    QQuickPopupTransitionManager(QQuickPopupPrivate *);
+    QQuickPopupTransitionManager(QQuickPopupPrivate *popup);
+
     void transitionEnter();
     void transitionExit();
 
@@ -76,7 +77,7 @@ private:
     };
 
     TransitionState state;
-    QQuickPopupPrivate *pp;
+    QQuickPopupPrivate *popup;
 };
 
 class QQuickPopupPrivate : public QObjectPrivate
@@ -85,15 +86,14 @@ class QQuickPopupPrivate : public QObjectPrivate
 
 public:
     QQuickPopupPrivate();
-    ~QQuickPopupPrivate();
 
     void finalizeEnterTransition();
     void finalizeExitTransition();
 
-    QQuickItem *contentItem;
-    QQuickOverlay *overlay;
     bool focus;
     bool modal;
+    QQuickItem *contentItem;
+    QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupTransitionManager transitionManager;

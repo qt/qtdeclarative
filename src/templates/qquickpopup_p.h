@@ -69,7 +69,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
 
 public:
     explicit QQuickPopup(QObject *parent = Q_NULLPTR);
-    ~QQuickPopup();
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
@@ -88,6 +87,10 @@ public:
     QQuickTransition *exit() const;
     void setExit(QQuickTransition *transition);
 
+public Q_SLOTS:
+    void open();
+    void close();
+
 Q_SIGNALS:
     void contentItemChanged();
     void focusChanged();
@@ -102,11 +105,6 @@ Q_SIGNALS:
 
     void aboutToShow();
     void aboutToHide();
-
-
-public Q_SLOTS:
-    void open();
-    void close();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
