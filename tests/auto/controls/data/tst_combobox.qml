@@ -447,7 +447,7 @@ TestCase {
         compare(control.popup.visible, data.showPopup)
         keyRelease(data.key2)
         compare(control.pressed, false)
-        compare(control.popup.visible, !data.hidePopup)
+        tryCompare(control.popup, "visible", !data.hidePopup)
 
         control.destroy()
     }
@@ -468,7 +468,7 @@ TestCase {
         // hide
         mouseClick(control)
         compare(control.pressed, false)
-        compare(control.popup.visible, false)
+        tryCompare(control.popup, "visible", false)
 
         // show above
         control.y = window.height - control.height
@@ -521,7 +521,7 @@ TestCase {
         mouseRelease(content)
         compare(activatedSpy.count, 1)
         compare(highlightedSpy.count, 1)
-        compare(control.popup.visible, false)
+        tryCompare(control.popup, "visible", false)
 
         control.destroy()
     }
@@ -539,7 +539,7 @@ TestCase {
         window.contentItem.forceActiveFocus()
         verify(window.contentItem.activeFocus)
         verify(!control.activeFocus)
-        compare(control.popup.visible, false)
+        tryCompare(control.popup, "visible", false)
 
         control.destroy()
     }
