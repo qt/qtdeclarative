@@ -92,7 +92,7 @@ QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *p
 
 void QQuickPopupTransitionManager::transitionEnter()
 {
-    if (isRunning())
+    if (state == Enter && isRunning())
         return;
     QList<QQuickStateAction> actions;
     state = Enter;
@@ -101,7 +101,7 @@ void QQuickPopupTransitionManager::transitionEnter()
 
 void QQuickPopupTransitionManager::transitionExit()
 {
-    if (isRunning())
+    if (state == Exit && isRunning())
         return;
     QList<QQuickStateAction> actions;
     state = Exit;
