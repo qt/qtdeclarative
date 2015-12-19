@@ -64,8 +64,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
     Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged)
-    Q_PROPERTY(QQuickTransition *showTransition READ showTransition WRITE setShowTransition NOTIFY showTransitionChanged FINAL)
-    Q_PROPERTY(QQuickTransition *hideTransition READ hideTransition WRITE setHideTransition NOTIFY hideTransitionChanged FINAL)
+    Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
+    Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
 
 public:
     explicit QQuickPopup(QObject *parent = Q_NULLPTR);
@@ -82,19 +82,19 @@ public:
 
     bool isVisible() const;
 
-    QQuickTransition *showTransition() const;
-    void setShowTransition(QQuickTransition *);
+    QQuickTransition *enter() const;
+    void setEnter(QQuickTransition *transition);
 
-    QQuickTransition *hideTransition() const;
-    void setHideTransition(QQuickTransition *);
+    QQuickTransition *exit() const;
+    void setExit(QQuickTransition *transition);
 
 Q_SIGNALS:
     void contentItemChanged();
     void focusChanged();
     void modalChanged();
     void visibleChanged();
-    void showTransitionChanged();
-    void hideTransitionChanged();
+    void enterChanged();
+    void exitChanged();
 
     void pressedOutside();
     void releasedOutside();

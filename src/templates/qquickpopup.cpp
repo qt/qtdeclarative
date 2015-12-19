@@ -62,21 +62,21 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , overlay(Q_NULLPTR)
     , focus(false)
     , modal(false)
-    , showTransition(Q_NULLPTR)
-    , hideTransition(Q_NULLPTR)
+    , enter(Q_NULLPTR)
+    , exit(Q_NULLPTR)
     , transitionManager(this)
 { }
 
 QQuickPopupPrivate::~QQuickPopupPrivate()
 { }
 
-void QQuickPopupPrivate::finalizeShowTransition()
+void QQuickPopupPrivate::finalizeEnterTransition()
 {
     if (focus)
         contentItem->setFocus(true);
 }
 
-void QQuickPopupPrivate::finalizeHideTransition()
+void QQuickPopupPrivate::finalizeExitTransition()
 {
     overlay = Q_NULLPTR;
     contentItem->setParentItem(Q_NULLPTR);
@@ -89,30 +89,30 @@ QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *p
     , pp(priv)
 { }
 
-void QQuickPopupTransitionManager::transitionShow()
+void QQuickPopupTransitionManager::transitionEnter()
 {
     if (isRunning())
         return;
     QList<QQuickStateAction> actions;
-    state = Show;
-    transition(actions, pp->showTransition, pp->contentItem);
+    state = Enter;
+    transition(actions, pp->enter, pp->contentItem);
 }
 
-void QQuickPopupTransitionManager::transitionHide()
+void QQuickPopupTransitionManager::transitionExit()
 {
     if (isRunning())
         return;
     QList<QQuickStateAction> actions;
-    state = Hide;
-    transition(actions, pp->hideTransition, pp->contentItem);
+    state = Exit;
+    transition(actions, pp->exit, pp->contentItem);
 }
 
 void QQuickPopupTransitionManager::finished()
 {
-    if (state == Show)
-        pp->finalizeShowTransition();
-    else if (state == Hide)
-        pp->finalizeHideTransition();
+    if (state == Enter)
+        pp->finalizeEnterTransition();
+    else if (state == Exit)
+        pp->finalizeExitTransition();
 
     state = Off;
 }
@@ -177,7 +177,7 @@ void QQuickPopup::open()
     }
 
     emit aboutToShow();
-    d->transitionManager.transitionShow();
+    d->transitionManager.transitionEnter();
     emit visibleChanged();
 }
 
@@ -198,7 +198,7 @@ void QQuickPopup::close()
 
     d->contentItem->setFocus(false);
     emit aboutToHide();
-    d->transitionManager.transitionHide();
+    d->transitionManager.transitionExit();
 }
 
 /*!
@@ -286,43 +286,45 @@ bool QQuickPopup::isVisible() const
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Popup::showTransition
+    \qmlproperty Transition Qt.labs.controls::Popup::enter
 
     This property holds the transition that is applied to the content item
-    when the popup is opened.
+    when the popup is opened and enters the screen.
 */
-QQuickTransition *QQuickPopup::showTransition() const
+QQuickTransition *QQuickPopup::enter() const
 {
-    return d_func()->showTransition;
+    Q_D(const QQuickPopup);
+    return d->enter;
 }
 
-void QQuickPopup::setShowTransition(QQuickTransition *t)
+void QQuickPopup::setEnter(QQuickTransition *transition)
 {
     Q_D(QQuickPopup);
-    if (d->showTransition == t)
+    if (d->enter == transition)
         return;
-    d->showTransition = t;
-    emit showTransitionChanged();
+    d->enter = transition;
+    emit enterChanged();
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Popup::hideTransition
+    \qmlproperty Transition Qt.labs.controls::Popup::exit
 
     This property holds the transition that is applied to the content item
-    when the popup is closed.
+    when the popup is closed and exits the screen.
 */
-QQuickTransition *QQuickPopup::hideTransition() const
+QQuickTransition *QQuickPopup::exit() const
 {
-    return d_func()->hideTransition;
+    Q_D(const QQuickPopup);
+    return d->exit;
 }
 
-void QQuickPopup::setHideTransition(QQuickTransition *t)
+void QQuickPopup::setExit(QQuickTransition *transition)
 {
     Q_D(QQuickPopup);
-    if (d->hideTransition == t)
+    if (d->exit == transition)
         return;
-    d->hideTransition = t;
-    emit hideTransitionChanged();
+    d->exit = transition;
+    emit exitChanged();
 }
 
 QT_END_NAMESPACE

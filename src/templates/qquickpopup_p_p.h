@@ -64,15 +64,15 @@ class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
 public:
     QQuickPopupTransitionManager(QQuickPopupPrivate *);
-    void transitionShow();
-    void transitionHide();
+    void transitionEnter();
+    void transitionExit();
 
 protected:
     void finished() Q_DECL_OVERRIDE;
 
 private:
     enum TransitionState {
-        Off, Show, Hide
+        Off, Enter, Exit
     };
 
     TransitionState state;
@@ -87,15 +87,15 @@ public:
     QQuickPopupPrivate();
     ~QQuickPopupPrivate();
 
-    void finalizeShowTransition();
-    void finalizeHideTransition();
+    void finalizeEnterTransition();
+    void finalizeExitTransition();
 
     QQuickItem *contentItem;
     QQuickOverlay *overlay;
     bool focus;
     bool modal;
-    QQuickTransition *showTransition;
-    QQuickTransition *hideTransition;
+    QQuickTransition *enter;
+    QQuickTransition *exit;
     QQuickPopupTransitionManager transitionManager;
 };
 
