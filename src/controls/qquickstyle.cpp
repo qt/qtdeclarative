@@ -38,6 +38,7 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qsettings.h>
+#include <QtCore/qfileselector.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -157,7 +158,8 @@ QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)
 #ifndef QT_NO_SETTINGS
     const QString filePath = QLatin1String(SettingsFilePath);
     if (QFile::exists(filePath)) {
-        QSettings *settings = new QSettings(filePath, QSettings::IniFormat);
+        QFileSelector selector;
+        QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
         if (!group.isEmpty())
             settings->beginGroup(group);
         return QSharedPointer<QSettings>(settings);
