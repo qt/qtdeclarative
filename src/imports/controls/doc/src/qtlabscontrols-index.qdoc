@@ -61,11 +61,12 @@
     A basic example of a source file that makes use of controls is shown here:
 
     \code
-    #include <QApplication>
+    #include <QGuiApplication>
     #include <QQmlApplicationEngine>
 
     int main(int argc, char *argv[])
     {
+        QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         QGuiApplication app(argc, argv);
         QQmlApplicationEngine engine("main.qml");
         return app.exec();
@@ -86,6 +87,7 @@
 
     \list
       \li \l{Styling Qt Labs Controls}
+      \li \l{High-DPI Support in Qt Labs Controls}
       \li \l{Differences between Qt Quick Controls}
     \endlist
 
