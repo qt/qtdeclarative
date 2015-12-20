@@ -41,7 +41,7 @@ T.ToolBar {
     id: control
 
     implicitWidth: contentWidth + leftPadding + rightPadding
-    implicitHeight: Math.max(26, contentHeight + topPadding + bottomPadding)
+    implicitHeight: Math.max(40, contentHeight + topPadding + bottomPadding)
 
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0

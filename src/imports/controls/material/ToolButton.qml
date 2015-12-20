@@ -67,8 +67,8 @@ T.ToolButton {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 26
-        implicitHeight: 26
+        implicitWidth: 40
+        implicitHeight: 40
 
         color: control.pressed ? control.Material.flatButtonPressColor : control.Material.flatButtonFocusColor
         visible: control.enabled && (control.pressed || control.activeFocus || control.checked || control.highlighted)
