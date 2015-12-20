@@ -86,9 +86,9 @@ protected:
     QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickUniversalProgressStrip, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickUniversalProgressStripAnimator, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickUniversalProgressStrip)
+QML_DECLARE_TYPE(QQuickUniversalProgressStripAnimator)
 
 #endif // QQUICKUNIVERSALPROGRESSSTRIP_P_H

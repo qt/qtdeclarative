@@ -103,8 +103,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickScrollIndicator)
 };
 
-Q_DECLARE_TYPEINFO(QQuickScrollIndicator, Q_COMPLEX_TYPE);
-
 class QQuickScrollIndicatorAttachedPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
@@ -132,10 +130,9 @@ private:
     Q_DECLARE_PRIVATE(QQuickScrollIndicatorAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickScrollIndicatorAttached, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickScrollIndicator)
 QML_DECLARE_TYPEINFO(QQuickScrollIndicator, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKSCROLLINDICATOR_P_H

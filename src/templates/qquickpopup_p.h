@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -115,5 +116,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickPopup)
 
 #endif // QQUICKPOPUP_P_H

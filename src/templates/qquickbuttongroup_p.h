@@ -108,10 +108,9 @@ private:
     Q_DECLARE_PRIVATE(QQuickButtonGroupAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickButtonGroup, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickButtonGroup)
 QML_DECLARE_TYPEINFO(QQuickButtonGroup, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQuickButtonGroup_H

@@ -91,8 +91,6 @@ public:
     bool ignoreActiveFocusChanges;
 };
 
-Q_DECLARE_TYPEINFO(QQuickMenuPrivate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKMENU_P_P_H

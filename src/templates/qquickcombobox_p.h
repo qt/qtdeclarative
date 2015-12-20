@@ -139,8 +139,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickComboBox)
 };
 
-Q_DECLARE_TYPEINFO(QQuickComboBox, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickComboBox)
 
 #endif // QQUICKCOMBOBOX_P_H

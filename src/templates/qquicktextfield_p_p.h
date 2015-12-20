@@ -99,8 +99,6 @@ public:
     QQuickAccessibleAttached *accessibleAttached;
 };
 
-Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKTEXTFIELD_P_P_H

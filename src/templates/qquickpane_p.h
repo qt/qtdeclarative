@@ -95,8 +95,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickPane)
 };
 
-Q_DECLARE_TYPEINFO(QQuickPane, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickPane)
 
 #endif // QQUICKPANE_P_H

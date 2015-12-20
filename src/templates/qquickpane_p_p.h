@@ -65,8 +65,6 @@ public:
     qreal contentHeight;
 };
 
-Q_DECLARE_TYPEINFO(QQuickPanePrivate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKPANE_P_P_H

@@ -65,8 +65,8 @@ protected:
 #endif
 };
 
-Q_DECLARE_TYPEINFO(QQuickToolBar, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickToolBar)
 
 #endif // QQUICKTOOLBAR_P_H

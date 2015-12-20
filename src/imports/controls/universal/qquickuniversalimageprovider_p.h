@@ -60,8 +60,6 @@ public:
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickUniversalImageProvider, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKUNIVERSALIMAGEPROVIDER_P_H

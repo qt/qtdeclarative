@@ -63,8 +63,8 @@ protected:
     QFont defaultFont() const Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickToolButton, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickToolButton)
 
 #endif // QQUICKTOOLBUTTON_P_H

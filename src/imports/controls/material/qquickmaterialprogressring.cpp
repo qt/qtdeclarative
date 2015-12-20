@@ -274,7 +274,4 @@ void QQuickMaterialRingTexture::setColor(QColor color)
     m_color = color;
 }
 
-Q_DECLARE_TYPEINFO(QQuickMaterialRingAnimatorJob, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickMaterialRingTexture, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE

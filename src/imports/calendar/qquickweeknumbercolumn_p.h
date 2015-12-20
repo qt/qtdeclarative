@@ -95,8 +95,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickWeekNumberColumn)
 };
 
-Q_DECLARE_TYPEINFO(QQuickWeekNumberColumn, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickWeekNumberColumn)
 
 #endif // QQUICKWEEKNUMBERCOLUMN_P_H

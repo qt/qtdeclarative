@@ -111,8 +111,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextField)
 };
 
-Q_DECLARE_TYPEINFO(QQuickTextField, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickTextField)
 
 #endif // QQUICKTEXTFIELD_P_H

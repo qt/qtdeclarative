@@ -112,8 +112,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickMonthGrid)
 };
 
-Q_DECLARE_TYPEINFO(QQuickMonthGrid, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMonthGrid)
 
 #endif // QQUICKMONTHGRID_P_H

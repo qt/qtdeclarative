@@ -154,8 +154,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackView)
 };
 
-Q_DECLARE_TYPEINFO(QQuickStackView, Q_COMPLEX_TYPE);
-
 class QQuickStackAttachedPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickStackAttached : public QObject
@@ -183,11 +181,9 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickStackAttached, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickStackView, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickStackView)
+QML_DECLARE_TYPEINFO(QQuickStackView, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKSTACKVIEW_P_H

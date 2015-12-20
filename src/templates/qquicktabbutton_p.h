@@ -67,8 +67,8 @@ protected:
 #endif
 };
 
-Q_DECLARE_TYPEINFO(QQuickTabButton, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickTabButton)
 
 #endif // QQUICKTABBUTTON_P_H

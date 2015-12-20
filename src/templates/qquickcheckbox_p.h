@@ -88,8 +88,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickCheckBox)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCheckBox, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCheckBox)
 
 #endif // QQUICKCHECKBOX_P_H

@@ -111,8 +111,8 @@ private:
     bool m_hasBottomPadding;
 };
 
-Q_DECLARE_TYPEINFO(QQuickPaddedRectangle, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickPaddedRectangle)
 
 #endif // QQUICKPADDEDRECTANGLE_P_H

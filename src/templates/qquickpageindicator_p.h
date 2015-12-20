@@ -101,8 +101,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickPageIndicator)
 };
 
-Q_DECLARE_TYPEINFO(QQuickPageIndicator, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickPageIndicator)
 
 #endif // QQUICKPAGEINDICATOR_P_H

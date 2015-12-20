@@ -121,8 +121,6 @@ public:
     QQuickAccessibleAttached *accessibleAttached;
 };
 
-Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKCONTROL_P_P_H

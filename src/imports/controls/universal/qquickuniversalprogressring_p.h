@@ -92,9 +92,8 @@ protected:
     QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickUniversalProgressRing, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickUniversalProgressRingAnimator, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickUniversalProgressRing)
 
 #endif // QQUICKUNIVERSALPROGRESSRING_P_H

@@ -75,9 +75,8 @@ protected:
     QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickBusyIndicatorRing, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickBusyIndicatorAnimator, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickBusyIndicatorRing)
 
 #endif // QQUICKBUSYINDICATOR_P_H

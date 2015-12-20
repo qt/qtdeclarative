@@ -111,8 +111,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextArea)
 };
 
-Q_DECLARE_TYPEINFO(QQuickTextArea, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickTextArea)
 
 #endif // QQUICKTEXTAREA_P_H

@@ -144,8 +144,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickAbstractButton)
 };
 
-Q_DECLARE_TYPEINFO(QQuickAbstractButton, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickAbstractButton)
 
 #endif // QQUICKABSTRACTBUTTON_P_H

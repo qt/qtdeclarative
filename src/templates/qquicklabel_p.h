@@ -86,8 +86,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickLabel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickLabel, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickLabel)
 
 #endif // QQUICKLABEL_P_H

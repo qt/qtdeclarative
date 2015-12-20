@@ -145,11 +145,9 @@ private:
     Q_DECLARE_PRIVATE(QQuickApplicationWindowAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickApplicationWindowAttached, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickApplicationWindow)
 QML_DECLARE_TYPEINFO(QQuickApplicationWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H

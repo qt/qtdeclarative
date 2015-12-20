@@ -50,6 +50,7 @@
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qlocale.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,8 +89,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickDayOfWeekModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekModel, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickDayOfWeekModel)
 
 #endif // QQUICKDAYOFWEEKMODEL_P_H

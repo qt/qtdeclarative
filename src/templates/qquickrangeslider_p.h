@@ -129,8 +129,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickRangeSlider)
 };
 
-Q_DECLARE_TYPEINFO(QQuickRangeSlider, Q_COMPLEX_TYPE);
-
 class QQuickRangeSliderNodePrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickRangeSliderNode : public QObject
@@ -174,8 +172,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickRangeSliderNode)
 };
 
-Q_DECLARE_TYPEINFO(QQuickRangeSliderNode, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickRangeSlider)
 
 #endif // QQUICKRANGESLIDER_H
