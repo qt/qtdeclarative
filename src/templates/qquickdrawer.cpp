@@ -134,13 +134,8 @@ void QQuickDrawerPrivate::updateContent()
     }
 }
 
-static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
+static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int threshold = -1)
 {
-    // Flickable uses a hard-coded threshold of 15 for flicking, and
-    // QStyleHints::startDragDistance for dragging. Drawer uses a bit
-    // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
-    int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
-
     return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
 }
 
@@ -148,6 +143,7 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
 {
     Q_Q(QQuickDrawer);
     pressPoint = q->mapFromItem(item, event->pos());
+    offset = 0;
 
     if (qFuzzyIsNull(position)) {
         // only accept pressing at drag margins when fully closed
@@ -165,10 +161,8 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
             event->setAccepted(!dragOverThreshold(q->height() - event->y(), Qt::YAxis, event));
             break;
         }
-        offset = 0;
     } else {
         event->accept();
-        offset = q->positionAt(pressPoint) - position;
     }
 
     return item == q;
@@ -180,17 +174,22 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     QPointF movePoint = q->mapFromItem(item, event->pos());
 
     if (!q->keepMouseGrab()) {
+        // Flickable uses a hard-coded threshold of 15 for flicking, and
+        // QStyleHints::startDragDistance for dragging. Drawer uses a bit
+        // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
+        int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         bool overThreshold = false;
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event);
+            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
         else
-            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event);
+            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
 
         if (window && overThreshold) {
             QQuickItem *grabber = q->window()->mouseGrabberItem();
             if (!grabber || !grabber->keepMouseGrab()) {
                 q->grabMouse();
                 q->setKeepMouseGrab(overThreshold);
+                offset = qMin<qreal>(0.0, q->positionAt(movePoint) - position);
             }
         }
     }
