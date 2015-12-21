@@ -336,6 +336,8 @@ protected:
     virtual bool showFooterForIndex(int index) const = 0;
     virtual void updateHeader() = 0;
     virtual void updateFooter() = 0;
+    virtual bool hasStickyHeader() const { return false; };
+    virtual bool hasStickyFooter() const { return false; };
 
     virtual void createHighlight() = 0;
     virtual void updateHighlight() = 0;
