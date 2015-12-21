@@ -50,7 +50,9 @@ class QQuickOverlayPrivate : public QQuickItemPrivate
 public:
     QQuickOverlayPrivate();
 
-    void updateBackground();
+    void popupAboutToShow();
+    void popupAboutToHide();
+    void drawerPositionChange();
     void resizeBackground();
 
     QQuickItem *background;
@@ -59,32 +61,44 @@ public:
     int modalPopups;
 };
 
-void QQuickOverlayPrivate::updateBackground()
+void QQuickOverlayPrivate::popupAboutToShow()
 {
-    if (!background)
+    Q_Q(QQuickOverlay);
+    if (!background || modalPopups > 1)
         return;
 
-    bool anim = true;
-    qreal level = 0.0;
-    if (modalPopups > 0) {
-        level = 1.0;
-    } else {
-        foreach (QQuickDrawer *drawer, drawers) {
-            qreal pos = drawer->position();
-            if (pos > 0.0 && pos < 1.0)
-                anim = false;
-            level = qMax(level, pos);
-        }
-    }
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
+    if (!popup || !popup->isModal())
+        return;
 
-    if (anim) {
-        // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-        QQmlProperty::write(background, QStringLiteral("opacity"), level);
-    } else {
-        // except while a drawer is opening/closing, or else the background
-        // fading feels laggy compared to the drawer movement
-        background->setOpacity(level);
-    }
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    QQmlProperty::write(background, QStringLiteral("opacity"), 1.0);
+}
+
+void QQuickOverlayPrivate::popupAboutToHide()
+{
+    Q_Q(QQuickOverlay);
+    if (!background || modalPopups > 1)
+        return;
+
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
+    if (!popup || !popup->isModal())
+        return;
+
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    QQmlProperty::write(background, QStringLiteral("opacity"), 0.0);
+}
+
+void QQuickOverlayPrivate::drawerPositionChange()
+{
+    Q_Q(QQuickOverlay);
+    QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(q->sender());
+    if (!background || !drawer || modalPopups > 0)
+        return;
+
+    // call QQuickItem::setOpacity() directly to avoid triggering QML Behaviors
+    // which would make the fading feel laggy compared to the drawer movement
+    background->setOpacity(drawer->position());
 }
 
 void QQuickOverlayPrivate::resizeBackground()
@@ -143,13 +157,12 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(data.item);
         if (drawer) {
             if (change == ItemChildAddedChange) {
-                QObjectPrivate::connect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::updateBackground);
+                QObjectPrivate::connect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::drawerPositionChange);
                 d->drawers.append(drawer);
             } else {
-                QObjectPrivate::disconnect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::updateBackground);
+                QObjectPrivate::disconnect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::drawerPositionChange);
                 d->drawers.removeOne(drawer);
             }
-            d->updateBackground();
         } else {
             popup = qobject_cast<QQuickPopup *>(data.item->parent());
         }
@@ -171,18 +184,20 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
         connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
+        QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
+        QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
     } else if (change == ItemChildRemovedChange) {
         Q_ASSERT(popup == d->popups.value(data.item));
 
         disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
 
         if (popup->isModal())
             --d->modalPopups;
         d->popups.remove(data.item);
     }
-
-    d->updateBackground();
 }
 
 void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

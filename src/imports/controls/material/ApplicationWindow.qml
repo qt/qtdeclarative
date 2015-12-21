@@ -46,6 +46,6 @@ T.ApplicationWindow {
 
     overlay.background: Rectangle {
         color: window.Material.backgroundDimColor
-        Behavior on opacity { NumberAnimation { duration: 100 } }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
     }
 }
