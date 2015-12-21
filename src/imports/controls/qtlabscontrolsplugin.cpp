@@ -71,7 +71,6 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickButtonGroupAttached>();
     qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
-    qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");
 
     QQuickStyleSelector selector;
     selector.setBaseUrl(baseUrl());
@@ -91,6 +90,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("/MenuItem.qml")), uri, 1, 0, "MenuItem");
     qmlRegisterType(selector.select(QStringLiteral("/Pane.qml")), uri, 1, 0, "Pane");
     qmlRegisterType(selector.select(QStringLiteral("/PageIndicator.qml")), uri, 1, 0, "PageIndicator");
+    qmlRegisterType(selector.select(QStringLiteral("/Popup.qml")), uri, 1, 0, "Popup");
     qmlRegisterType(selector.select(QStringLiteral("/ProgressBar.qml")), uri, 1, 0, "ProgressBar");
     qmlRegisterType(selector.select(QStringLiteral("/RadioButton.qml")), uri, 1, 0, "RadioButton");
     qmlRegisterType(selector.select(QStringLiteral("/RangeSlider.qml")), uri, 1, 0, "RangeSlider");

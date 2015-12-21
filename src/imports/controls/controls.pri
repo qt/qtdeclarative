@@ -14,6 +14,7 @@ QML_FILES = \
     MenuItem.qml \
     Pane.qml \
     PageIndicator.qml \
+    Popup.qml \
     ProgressBar.qml \
     RadioButton.qml \
     RangeSlider.qml \
