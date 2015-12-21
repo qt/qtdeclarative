@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.3
+import QtQuick 2.6
 import QtQuick.Window 2.2
 import QtQuick.Layouts 1.0
 import Qt.labs.controls 1.0
@@ -55,6 +55,11 @@ ApplicationWindow {
     Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
 
     property int controlSpacing: 10
+
+    Shortcut {
+        sequence: "Ctrl+Q"
+        onActivated: Qt.quit()
+    }
 
     header: ToolBar {
         RowLayout {
