@@ -33,6 +33,11 @@
 #ifndef MASM_EXECUTABLEALLOCATOR_H
 #define MASM_EXECUTABLEALLOCATOR_H
 
+// Defined via mkspec
+#if _MSC_VER >= 1900
+#include <windows.h>
+#endif
+
 #include <RefPtr.h>
 #include <RefCounted.h>
 #include <wtf/PageBlock.h>

@@ -189,6 +189,11 @@ void OSAllocator::releaseDecommitted(void* address, size_t bytes)
         CRASH();
 }
 
+bool OSAllocator::canAllocateExecutableMemory()
+{
+    return true;
+}
+
 } // namespace WTF
 
 #endif // OS(UNIX)

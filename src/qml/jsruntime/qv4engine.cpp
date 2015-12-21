@@ -219,7 +219,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
         bool jitDisabled = true;
 
 #ifdef V4_ENABLE_JIT
-        static const bool forceMoth = !qEnvironmentVariableIsEmpty("QV4_FORCE_INTERPRETER");
+        static const bool forceMoth = !qEnvironmentVariableIsEmpty("QV4_FORCE_INTERPRETER") ||
+                                      !OSAllocator::canAllocateExecutableMemory();
         if (forceMoth) {
             factory = new Moth::ISelFactory;
         } else {
