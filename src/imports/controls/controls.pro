@@ -13,11 +13,13 @@ OTHER_FILES += \
     qmldir
 
 HEADERS += \
-    $$PWD/qquickbusyindicatorring_p.h
+    $$PWD/qquickbusyindicatorring_p.h \
+    $$PWD/qquickprogressstrip_p.h
 
 SOURCES += \
     $$PWD/qtlabscontrolsplugin.cpp \
-    $$PWD/qquickbusyindicatorring.cpp
+    $$PWD/qquickbusyindicatorring.cpp \
+    $$PWD/qquickprogressstrip.cpp
 
 RESOURCES += \
     $$PWD/qtlabscontrolsplugin.qrc
