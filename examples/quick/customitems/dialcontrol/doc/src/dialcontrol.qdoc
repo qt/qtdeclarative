@@ -42,6 +42,7 @@
 /*!
     \title UI Components: Dial Control Example
     \example customitems/dialcontrol
+    \brief The Dial Control Example shows how to create a speedometer-type dial.
 
     This example shows how to create a dial-type control. It combines
     \l Image elements with \l Rotation transforms and \l SpringAnimation behaviors
