@@ -142,23 +142,23 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    pressPoint = q->mapFromItem(item, event->pos());
+    pressPoint = event->windowPos();
     offset = 0;
 
     if (qFuzzyIsNull(position)) {
         // only accept pressing at drag margins when fully closed
         switch (edge) {
         case Qt::LeftEdge:
-            event->setAccepted(!dragOverThreshold(event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::RightEdge:
-            event->setAccepted(!dragOverThreshold(q->width() - event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(q->width() - event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::TopEdge:
-            event->setAccepted(!dragOverThreshold(event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(event->windowPos().y(), Qt::YAxis, event));
             break;
         case Qt::BottomEdge:
-            event->setAccepted(!dragOverThreshold(q->height() - event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(q->height() - event->windowPos().y(), Qt::YAxis, event));
             break;
         }
     } else {
@@ -171,7 +171,8 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    QPointF movePoint = q->mapFromItem(item, event->pos());
+    Q_UNUSED(item);
+    QPointF movePoint = event->windowPos();
 
     if (!q->keepMouseGrab()) {
         // Flickable uses a hard-coded threshold of 15 for flicking, and
@@ -195,7 +196,7 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     }
 
     if (q->keepMouseGrab())
-        q->setPosition(q->positionAt(event->pos()) - offset);
+        q->setPosition(q->positionAt(movePoint) - offset);
     event->accept();
 
     return q->keepMouseGrab();
