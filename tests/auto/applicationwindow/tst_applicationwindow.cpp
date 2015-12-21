@@ -65,6 +65,7 @@ private slots:
     void implicitFill();
     void attachedProperties();
     void font();
+    void locale();
     void activeFocusControl_data();
     void activeFocusControl();
 };
@@ -489,6 +490,57 @@ void tst_applicationwindow::font()
     QCOMPARE(item4->font(), font);
     QCOMPARE(item5->font(), font);
     QCOMPARE(item6->font(), font);
+}
+
+void tst_applicationwindow::locale()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("locale.qml"));
+    QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickApplicationWindow* window = qobject_cast<QQuickApplicationWindow*>(created);
+    QVERIFY(window);
+    QVERIFY(!window->isVisible());
+    QCOMPARE(window->width(), 400);
+    QCOMPARE(window->height(), 400);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QLocale l = window->locale();
+
+    QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
+    QVERIFY(mainItem);
+    QCOMPARE(mainItem->width(), 400.0);
+    QCOMPARE(mainItem->height(), 400.0);
+    QCOMPARE(mainItem->locale(), l);
+
+    QQuickControl *item2 = mainItem->property("item_2").value<QQuickControl*>();
+    QVERIFY(item2);
+    QQuickControl *item3 = mainItem->property("item_3").value<QQuickControl*>();
+    QVERIFY(item3);
+
+    QCOMPARE(item2->locale(), l);
+    QCOMPARE(item3->locale(), l);
+
+    l = QLocale("en_US");
+    window->setLocale(l);
+
+    QCOMPARE(window->locale(), l);
+    QCOMPARE(mainItem->locale(), l);
+    QCOMPARE(item2->locale(), l);
+    QCOMPARE(item3->locale(), l);
+
+    l = QLocale("ar_EG");
+    window->setLocale(l);
+
+    QCOMPARE(window->locale(), l);
+    QCOMPARE(mainItem->locale(), l);
+    QCOMPARE(item2->locale(), l);
+    QCOMPARE(item3->locale(), l);
 }
 
 void tst_applicationwindow::activeFocusControl_data()

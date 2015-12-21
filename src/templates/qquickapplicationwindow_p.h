@@ -51,6 +51,7 @@
 #include <QtQuick/private/qquickwindowmodule_p.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 #include <QtGui/qfont.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,6 +70,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -92,6 +94,10 @@ public:
     void setFont(const QFont &);
     void resetFont();
 
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+    void resetLocale();
+
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -99,6 +105,7 @@ Q_SIGNALS:
     void headerChanged();
     void footerChanged();
     void fontChanged();
+    void localeChanged();
 
 protected:
     bool isComponentComplete() const;

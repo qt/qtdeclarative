@@ -659,6 +659,9 @@ QLocale QQuickControlPrivate::calcLocale() const
         p = p->parentItem();
     }
 
+    if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+        return w->locale();
+
     return QLocale();
 }
 

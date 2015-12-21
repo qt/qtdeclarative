@@ -120,6 +120,7 @@ public:
     QQuickItem *footer;
     QQuickOverlay *overlay;
     QFont font;
+    QLocale locale;
     QQuickItem *activeFocusControl;
     QQuickApplicationWindow *q_ptr;
 };
@@ -408,6 +409,28 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
     QQuickControlPrivate::updateFontRecur(q->contentItem(), f);
 
     emit q->fontChanged();
+}
+
+QLocale QQuickApplicationWindow::locale() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->locale;
+}
+
+void QQuickApplicationWindow::setLocale(const QLocale &locale)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->locale == locale)
+        return;
+
+    d->locale = locale;
+    QQuickControlPrivate::updateLocaleRecur(contentItem(), locale);
+    emit localeChanged();
+}
+
+void QQuickApplicationWindow::resetLocale()
+{
+    setLocale(QLocale());
 }
 
 QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
