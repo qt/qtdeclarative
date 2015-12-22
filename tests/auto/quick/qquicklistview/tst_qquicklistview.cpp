@@ -252,6 +252,8 @@ private slots:
     void QTBUG_48044_currentItemNotVisibleAfterTransition();
     void QTBUG_48870_fastModelUpdates();
 
+    void QTBUG_50105();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8435,6 +8437,18 @@ void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
     }
 
     delete window;
+}
+
+// infinite loop in overlay header positioning due to undesired rounding in QQuickFlickablePrivate::fixup()
+void tst_QQuickListView::QTBUG_50105()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("qtbug50105.qml"));
+
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 }
 
 QTEST_MAIN(tst_QQuickListView)
