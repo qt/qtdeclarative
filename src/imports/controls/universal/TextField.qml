@@ -58,7 +58,7 @@ T.TextField {
 
     color: !enabled ? Universal.chromeDisabledLowColor :
             activeFocus ? Universal.chromeBlackHighColor : Universal.baseHighColor
-    selectionColor: Universal.accentColor
+    selectionColor: Universal.accent
     selectedTextColor: Universal.chromeWhiteColor
     verticalAlignment: TextInput.AlignVCenter
     renderType: Text.NativeRendering
@@ -88,7 +88,7 @@ T.TextField {
 
         border.width: 2 // TextControlBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.activeFocus ? control.Universal.accentColor : control.Universal.chromeDisabledLowColor
+                       control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
         color: control.enabled ? control.Universal.altHighColor : control.Universal.baseLowColor
     }
     //! [background]

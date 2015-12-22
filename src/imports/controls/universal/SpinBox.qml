@@ -73,7 +73,7 @@ T.SpinBox {
         font: control.font
         color: !enabled ? control.Universal.chromeDisabledLowColor :
                 activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor
-        selectionColor: control.Universal.accentColor
+        selectionColor: control.Universal.accent
         selectedTextColor: control.Universal.chromeWhiteColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: TextInput.AlignVCenter
@@ -96,7 +96,7 @@ T.SpinBox {
             width: parent.width - 4
             height: parent.height - 8
             color: !control.up.pressed ? "transparent" :
-                   control.activeFocus ? control.Universal.accentColor
+                   control.activeFocus ? control.Universal.accent
                                        : control.Universal.chromeDisabledLowColor
         }
 
@@ -121,7 +121,7 @@ T.SpinBox {
             width: parent.width - 4
             height: parent.height - 8
             color: !control.down.pressed ? "transparent" :
-                     control.activeFocus ? control.Universal.accentColor
+                     control.activeFocus ? control.Universal.accent
                                          : control.Universal.chromeDisabledLowColor
         }
 
@@ -141,7 +141,7 @@ T.SpinBox {
 
         border.width: 2 // TextControlBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.activeFocus ? control.Universal.accentColor : control.Universal.chromeDisabledLowColor
+                       control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
         color: control.enabled ? control.Universal.altHighColor : control.Universal.baseLowColor
     }
     //! [background]

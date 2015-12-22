@@ -63,7 +63,7 @@ T.Slider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accentColor : control.Universal.chromeDisabledHighColor
+        color: control.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
     //! [handle]
 
@@ -96,7 +96,7 @@ T.Slider {
             width: parent.horizontal ? control.position * parent.width : 2 // SliderTrackThemeHeight
             height: !parent.horizontal ? control.position * parent.height : 2 // SliderTrackThemeHeight
 
-            color: control.enabled ? control.Universal.accentColor : control.Universal.chromeDisabledHighColor
+            color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
     //! [track]

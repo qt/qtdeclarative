@@ -94,7 +94,7 @@ T.MenuItem {
             height: parent.height - 2
 
             visible: control.activeFocus
-            color: control.Universal.accentColor
+            color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
     }

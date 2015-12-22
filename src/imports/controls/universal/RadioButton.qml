@@ -80,7 +80,7 @@ T.RadioButton {
             color: "transparent"
             border.width: 2 // RadioButtonBorderThemeThickness
             border.color: !control.enabled ? control.Universal.baseLowColor :
-                           control.pressed ? control.Universal.baseMediumColor : control.Universal.accentColor
+                           control.pressed ? control.Universal.baseMediumColor : control.Universal.accent
         }
 
         Rectangle {

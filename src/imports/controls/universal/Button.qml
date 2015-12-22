@@ -78,7 +78,7 @@ T.Button {
         implicitHeight: 32
 
         color: control.pressed ? control.Universal.baseMediumLowColor :
-               control.enabled && (control.highlighted || control.checked) ? control.Universal.accentColor :
+               control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor
     }
     //! [background]

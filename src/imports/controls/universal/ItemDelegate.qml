@@ -93,7 +93,7 @@ T.ItemDelegate {
             width: parent.width
             height: parent.height
             visible: control.activeFocus || control.highlighted
-            color: control.Universal.accentColor
+            color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
 

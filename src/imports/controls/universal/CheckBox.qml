@@ -65,10 +65,10 @@ T.CheckBox {
 
         color: !control.enabled ? "transparent" :
                 control.pressed && control.checkState !== Qt.PartiallyChecked ? control.Universal.baseMediumColor :
-                control.checkState === Qt.Checked ? control.Universal.accentColor : "transparent"
+                control.checkState === Qt.Checked ? control.Universal.accent : "transparent"
         border.color: !control.enabled ? control.Universal.baseLowColor :
                        control.pressed ? control.Universal.baseMediumColor :
-                       control.checked ? control.Universal.accentColor : control.Universal.baseMediumHighColor
+                       control.checked ? control.Universal.accent : control.Universal.baseMediumHighColor
         border.width: 2 // CheckBoxBorderThemeThickness
 
         Image {

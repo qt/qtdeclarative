@@ -55,7 +55,7 @@ T.ProgressBar {
         height: control.availableHeight
 
         scale: control.mirrored ? -1 : 1
-        color: control.Universal.accentColor
+        color: control.Universal.accent
 
         ProgressStrip {
             id: strip
@@ -65,7 +65,7 @@ T.ProgressBar {
 
             clip: control.indeterminate
             visible: control.indeterminate
-            color: control.Universal.accentColor
+            color: control.Universal.accent
 
             ProgressStripAnimator {
                 target: strip

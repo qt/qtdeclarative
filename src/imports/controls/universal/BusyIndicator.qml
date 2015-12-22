@@ -55,7 +55,7 @@ T.BusyIndicator {
         readonly property real size: Math.min(control.availableWidth, control.availableHeight)
 
         count: size < 60 ? 5 : 6 // "Small" vs. "Large"
-        color: control.Universal.accentColor
+        color: control.Universal.accent
 
         ProgressRingAnimator {
             target: ring

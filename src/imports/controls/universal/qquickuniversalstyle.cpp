@@ -42,9 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
-static QQuickUniversalStyle::Accent DefaultAccent = QQuickUniversalStyle::Cobalt;
-
 static QColor qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role)
 {
     static const QRgb colors[] = {
@@ -107,32 +104,35 @@ static QColor qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
     return QColor::fromRgba(colors[role]);
 }
 
-static QColor qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
+static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
 {
     static const QRgb colors[] = {
-        0xA4C400, // Lime
-        0x60A917, // Green
-        0x008A00, // Emerald
-        0x00ABA9, // Teal
-        0x1BA1E2, // Cyan
-        0x3E65FF, // Cobalt
-        0x6A00FF, // Indigo
-        0xAA00FF, // Violet
-        0xF472D0, // Pink
-        0xD80073, // Magenta
-        0xA20025, // Crimson
-        0xE51400, // Red
-        0xFA6800, // Orange
-        0xF0A30A, // Amber
-        0xE3C800, // Yellow
-        0x825A2C, // Brown
-        0x6D8764, // Olive
-        0x647687, // Steel
-        0x76608A, // Mauve
-        0x87794E  // Taupe
+        0xFFA4C400, // Lime
+        0xFF60A917, // Green
+        0xFF008A00, // Emerald
+        0xFF00ABA9, // Teal
+        0xFF1BA1E2, // Cyan
+        0xFF3E65FF, // Cobalt
+        0xFF6A00FF, // Indigo
+        0xFFAA00FF, // Violet
+        0xFFF472D0, // Pink
+        0xFFD80073, // Magenta
+        0xFFA20025, // Crimson
+        0xFFE51400, // Red
+        0xFFFA6800, // Orange
+        0xFFF0A30A, // Amber
+        0xFFE3C800, // Yellow
+        0xFF825A2C, // Brown
+        0xFF6D8764, // Olive
+        0xFF647687, // Steel
+        0xFF76608A, // Mauve
+        0xFF87794E  // Taupe
     };
     return colors[accent];
 }
+
+static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
+static QRgb DefaultAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyle(parent),
     m_hasTheme(false), m_hasAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
@@ -189,17 +189,35 @@ void QQuickUniversalStyle::resetTheme()
     }
 }
 
-QQuickUniversalStyle::Accent QQuickUniversalStyle::accent() const
+QVariant QQuickUniversalStyle::accent() const
 {
-    return m_accent;
+    return QColor::fromRgba(m_accent);
 }
 
-void QQuickUniversalStyle::setAccent(Accent accent)
+void QQuickUniversalStyle::setAccent(const QVariant &var)
 {
-    if (accent < Lime || accent > Taupe) {
-        qWarning() << "QQuickUniversalStyle: unknown accent" << accent;
-        return;
+    QRgb accent = 0;
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val < Lime || val > Taupe) {
+            qWarning() << "QQuickUniversalStyle: unknown accent" << val;
+            return;
+        }
+        accent = qquickuniversal_accent_color(static_cast<Accent>(val));
+    } else {
+        int val = QMetaEnum::fromType<Accent>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            accent = qquickuniversal_accent_color(static_cast<Accent>(val));
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qWarning() << "QQuickUniversalStyle: unknown accent" << var.toString();
+                return;
+            }
+            accent = color.rgba();
+        }
     }
+
     m_hasAccent = true;
     if (m_accent != accent) {
         m_accent = accent;
@@ -208,7 +226,7 @@ void QQuickUniversalStyle::setAccent(Accent accent)
     }
 }
 
-void QQuickUniversalStyle::inheritAccent(Accent accent)
+void QQuickUniversalStyle::inheritAccent(QRgb accent)
 {
     if (!m_hasAccent && m_accent != accent) {
         m_accent = accent;
@@ -231,13 +249,8 @@ void QQuickUniversalStyle::resetAccent()
     if (m_hasAccent) {
         m_hasAccent = false;
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
-        inheritAccent(universal ? universal->accent() : DefaultAccent);
+        inheritAccent(universal ? universal->m_accent : DefaultAccent);
     }
-}
-
-QColor QQuickUniversalStyle::accentColor() const
-{
-    return qquickuniversal_accent_color(m_accent);
 }
 
 QColor QQuickUniversalStyle::altHighColor() const
@@ -371,22 +384,20 @@ void QQuickUniversalStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(newParent);
     if (universal) {
         inheritTheme(universal->theme());
-        inheritAccent(universal->accent());
+        inheritAccent(universal->m_accent);
     }
 }
 
 template <typename Enum>
-static Enum readEnumValue(QSettings *settings, const QString &name, Enum fallback)
+static Enum readEnumValue(QSettings *settings, const QString &name, bool *ok)
 {
-    Enum result = fallback;
-    if (settings->contains(name)) {
+    int value = -1;
+    *ok = settings->contains(name);
+    if (*ok) {
         QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
-        bool ok = false;
-        int value = enumeration.keyToValue(settings->value(name).toByteArray(), &ok);
-        if (ok)
-            result = static_cast<Enum>(value);
+        value = enumeration.keyToValue(settings->value(name).toByteArray(), ok);
     }
-    return result;
+    return static_cast<Enum>(value);
 }
 
 void QQuickUniversalStyle::init()
@@ -395,8 +406,19 @@ void QQuickUniversalStyle::init()
     if (!defaultsInitialized) {
         QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Universal"));
         if (!settings.isNull()) {
-            DefaultTheme = m_theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), m_theme);
-            DefaultAccent = m_accent = readEnumValue<Accent>(settings.data(), QStringLiteral("Accent"), m_accent);
+            bool ok = false;
+            Theme theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), &ok);
+            if (ok)
+                DefaultTheme = m_theme = theme;
+
+            Accent accent = readEnumValue<Accent>(settings.data(), QStringLiteral("Accent"), &ok);
+            if (ok) {
+                DefaultAccent = m_accent = qquickuniversal_accent_color(accent);
+            } else {
+                QColor color(settings->value(QStringLiteral("Accent")).toString());
+                if (color.isValid())
+                    DefaultAccent = m_accent = color.rgba();
+            }
         }
         defaultsInitialized = true;
     }
