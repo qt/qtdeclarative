@@ -366,18 +366,18 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
         StackSlot
     };
 
-    // Used when temp is used as base in member expression
-    MemberExpressionResolver *memberResolver;
-
     unsigned index      : 28;
     unsigned isReadOnly :  1;
     unsigned kind       :  3;
 
+    // Used when temp is used as base in member expression
+    MemberExpressionResolver *memberResolver;
+
     Temp()
-        : memberResolver(0)
-        , index((1 << 28) - 1)
+        : index((1 << 28) - 1)
         , isReadOnly(0)
         , kind(Invalid)
+        , memberResolver(0)
     {}
 
     void init(unsigned kind, unsigned index)
