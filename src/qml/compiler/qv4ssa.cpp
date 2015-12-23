@@ -477,7 +477,7 @@ class DominatorTree
                 d->vertex[d->N] = n;
                 d->parent[n] = todo.parent;
                 ++d->N;
-                const QVector<BasicBlock *> &out = function->basicBlock(n)->out;
+                const BasicBlock::OutgoingEdges &out = function->basicBlock(n)->out;
                 for (int i = out.size() - 1; i > 0; --i)
                     worklist.push_back(DFSTodo(out[i]->index(), n));
 

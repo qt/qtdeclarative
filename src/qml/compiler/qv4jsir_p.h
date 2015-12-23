@@ -53,6 +53,7 @@
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
 #include <QtCore/qurl.h>
+#include <QtCore/QVarLengthArray>
 #include <qglobal.h>
 
 #if defined(CONST) && defined(Q_OS_WIN)
@@ -113,6 +114,23 @@ struct Jump;
 struct CJump;
 struct Ret;
 struct Phi;
+
+template<class T, int Prealloc>
+class VarLengthArray: public QVarLengthArray<T, Prealloc>
+{
+public:
+    bool removeOne(const T &element)
+    {
+        for (int i = 0; i < this->size(); ++i) {
+            if (this->at(i) == element) {
+                this->remove(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
 
 // Flag pointer:
 // * The first flag indicates whether the meta object is final.
@@ -771,10 +789,13 @@ private:
     Q_DISABLE_COPY(BasicBlock)
 
 public:
+    typedef VarLengthArray<BasicBlock *, 4> IncomingEdges;
+    typedef VarLengthArray<BasicBlock *, 2> OutgoingEdges;
+
     Function *function;
     BasicBlock *catchBlock;
-    QVector<BasicBlock *> in;
-    QVector<BasicBlock *> out;
+    IncomingEdges in;
+    OutgoingEdges out;
     QQmlJS::AST::SourceLocation nextLocation;
 
     BasicBlock(Function *function, BasicBlock *catcher)
@@ -785,10 +806,7 @@ public:
         , _isExceptionHandler(false)
         , _groupStart(false)
         , _isRemoved(false)
-    {
-        in.reserve(2);
-        out.reserve(2);
-    }
+    {}
     ~BasicBlock();
 
     const QVector<Stmt *> &statements() const
