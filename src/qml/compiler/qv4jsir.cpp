@@ -164,12 +164,12 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
         subexpressions.clear();
         subexpressions.reserve(function->basicBlockCount() * 8);
 
-        foreach (BasicBlock *block, function->basicBlocks()) {
+        for (BasicBlock *block : function->basicBlocks()) {
             if (block->isRemoved())
                 continue;
             clone.setBasicBlock(block);
 
-            foreach (Stmt *s, block->statements()) {
+            for (Stmt *s : block->statements()) {
                 s->accept(this);
             }
         }
@@ -451,7 +451,7 @@ void Function::removeBasicBlock(BasicBlock *block)
 int Function::liveBasicBlocksCount() const
 {
     int count = 0;
-    foreach (BasicBlock *bb, basicBlocks())
+    for (BasicBlock *bb : basicBlocks())
         if (!bb->isRemoved())
             ++count;
     return count;
@@ -507,7 +507,7 @@ void Function::setStatementCount(int cnt)
 
 BasicBlock::~BasicBlock()
 {
-    foreach (Stmt *s, _statements) {
+    for (Stmt *s : qAsConst(_statements)) {
         Phi *p = s->asPhi();
         if (p)
             p->destroyData();
@@ -764,7 +764,7 @@ void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
     Q_ASSERT(!isRemoved());
     Q_ASSERT(newStatements.size() >= _statements.size());
     // FIXME: this gets quite inefficient for large basic-blocks, so this function/case should be re-worked.
-    foreach (Stmt *s, _statements) {
+    for (Stmt *s : qAsConst(_statements)) {
         Phi *p = s->asPhi();
         if (!p)
             continue;
@@ -978,11 +978,11 @@ void IRPrinter::print(Function *f)
     *out << ')' << endl
         << '{' << endl;
 
-    foreach (const QString *local, f->locals)
+    for (const QString *local : qAsConst(f->locals))
         *out << "    local var " << *local << endl;
 
     bool needsSeperator = !f->locals.isEmpty();
-    foreach (BasicBlock *bb, f->basicBlocks()) {
+    for (BasicBlock *bb : f->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -1000,7 +1000,7 @@ void IRPrinter::print(BasicBlock *bb)
     std::swap(currentBB, bb);
     printBlockStart();
 
-    foreach (Stmt *s, currentBB->statements()) {
+    for (Stmt *s : currentBB->statements()) {
         if (!s)
             continue;
 
@@ -1315,7 +1315,7 @@ void IRPrinter::printBlockStart()
     *out << str;
 
     *out << "; predecessors:";
-    foreach (BasicBlock *in, currentBB->in)
+    for (BasicBlock *in : qAsConst(currentBB->in))
         *out << " L" << in->index();
     if (currentBB->in.isEmpty())
         *out << " none";
