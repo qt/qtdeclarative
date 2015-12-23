@@ -41,6 +41,8 @@
 #include "StdLibExtras.h"
 
 #include <QTime>
+#include <QVector>
+#include <QVector>
 #include <QMap>
 
 #include <iostream>
@@ -434,15 +436,6 @@ void MemoryManager::sweep(bool lastSweep)
 
         (*it) = Primitive::undefinedValue();
     }
-
-    // Some QV4::QObjectWrapper objects will be removed from PersistentValueStorage in WeakValue::~WeakValue()
-    // before MemoryManager::sweep() is being called, in this case we will never have a chance to call detroyObject()
-    // on those QV4::QObjectWrapper objects. Here we call detroyObject() for each pending destroyed Heap::QObjectWrapper
-    // object on the heap to make sure that we can release all the resources held by them
-    for (QVector<Heap::QObjectWrapper *>::const_iterator it = m_pendingDestroyedObjectWrappers.constBegin();
-         it != m_pendingDestroyedObjectWrappers.constEnd(); ++it)
-        QObjectWrapper::destroyObject(*it, lastSweep);
-    m_pendingDestroyedObjectWrappers.clear();
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = engine->m_multiplyWrappedQObjects) {
         for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {

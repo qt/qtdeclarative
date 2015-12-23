@@ -49,7 +49,6 @@
 #include <private/qv4value_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4object_p.h>
-#include <QVector>
 
 //#define DETAILED_MM_STATS
 
@@ -328,7 +327,6 @@ public:
     QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
-    QVector<Heap::QObjectWrapper *> m_pendingDestroyedObjectWrappers;
 };
 
 }

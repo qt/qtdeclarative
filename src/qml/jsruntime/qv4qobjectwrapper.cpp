@@ -1019,11 +1019,6 @@ void QObjectWrapper::markObjects(Heap::Base *that, QV4::ExecutionEngine *e)
 void QObjectWrapper::destroyObject(bool lastCall)
 {
     Heap::QObjectWrapper *h = d();
-    destroyObject(h, lastCall);
-}
-
-void QObjectWrapper::destroyObject(Heap::QObjectWrapper *h, bool lastCall)
-{
     if (!h->internalClass)
         return; // destroyObject already got called
 
