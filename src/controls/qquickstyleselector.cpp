@@ -163,7 +163,10 @@ QStringList QQuickStyleSelector::allSelectors() const
     Q_D(const QQuickStyleSelector);
     QMutexLocker locker(&sharedDataMutex);
     QQuickStyleSelectorPrivate::updateSelectors();
-    return QStringList(d->style) + sharedData->staticSelectors;
+    QStringList selectors = sharedData->staticSelectors;
+    if (!d->style.isEmpty())
+        selectors.prepend(d->style);
+    return selectors;
 }
 
 void QQuickStyleSelector::setBaseUrl(const QUrl &base)
