@@ -550,4 +550,35 @@ TestCase {
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
+
+    Component {
+        id: displayBox
+        ComboBox {
+            textRole: "key"
+            model: ListModel {
+                ListElement { key: "First"; value: 123 }
+                ListElement { key: "Second"; value: 456 }
+                ListElement { key: "Third"; value: 789 }
+            }
+        }
+    }
+
+    function test_displayText() {
+        var control = displayBox.createObject(testCase)
+        verify(control)
+
+        compare(control.displayText, "First")
+        control.currentIndex = 1
+        compare(control.displayText, "Second")
+        control.textRole = "value"
+        compare(control.displayText, "456")
+        control.displayText = "Display"
+        compare(control.displayText, "Display")
+        control.currentIndex = 2
+        compare(control.displayText, "Display")
+        control.displayText = undefined
+        compare(control.displayText, "789")
+
+        control.destroy()
+    }
 }

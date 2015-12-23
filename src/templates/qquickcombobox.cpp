@@ -595,7 +595,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 QString QQuickComboBox::textAt(int index) const
 {
     Q_D(const QQuickComboBox);
-    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count())
+    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count() || !d->delegateModel->object(index))
         return QString();
     return d->delegateModel->stringValue(index, d->textRole.isEmpty() ? QStringLiteral("modelData") : d->textRole);
 }
