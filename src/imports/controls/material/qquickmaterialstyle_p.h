@@ -59,7 +59,6 @@ class QQuickMaterialStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
-    Q_PROPERTY(Color primary READ primary WRITE setPrimary RESET resetPrimary NOTIFY primaryChanged FINAL)
     Q_PROPERTY(Color accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
@@ -154,16 +153,6 @@ public:
     void propagateTheme();
     void resetTheme();
 
-    QColor primaryColorLight() const;
-
-    Color primary() const;
-    void setPrimary(Color color);
-    void inheritPrimary(Color color);
-    void propagatePrimary();
-    void resetPrimary();
-
-    QColor primaryColorDark() const;
-
     Color accent() const;
     void setAccent(Color color);
     void inheritAccent(Color color);
@@ -208,7 +197,6 @@ public:
 
 Q_SIGNALS:
     void themeChanged();
-    void primaryChanged();
     void accentChanged();
     void paletteChanged();
 
@@ -219,10 +207,8 @@ private:
     void init();
 
     bool m_explicitTheme;
-    bool m_explicitPrimary;
     bool m_explicitAccent;
     Theme m_theme;
-    Color m_primary;
     Color m_accent;
 };
 
