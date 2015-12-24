@@ -7481,7 +7481,7 @@ void tst_QQuickListView::stickyPositioning()
     QFETCH(QPointF, headerPos);
     QFETCH(QPointF, footerPos);
 
-    QQuickView *window = createView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < 20; i++)
@@ -7524,7 +7524,7 @@ void tst_QQuickListView::stickyPositioning()
         QCOMPARE(actualPos, footerPos);
     }
 
-    delete window;
+    releaseView(window);
 }
 
 void tst_QQuickListView::stickyPositioning_data()
