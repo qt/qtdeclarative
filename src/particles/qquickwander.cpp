@@ -83,7 +83,7 @@ QQuickWanderAffector::QQuickWanderAffector(QQuickItem *parent) :
 QQuickWanderAffector::~QQuickWanderAffector()
 {
     for (QHash<int, WanderData*>::const_iterator iter=m_wanderData.constBegin();
-        iter != m_wanderData.constEnd(); iter++)
+        iter != m_wanderData.constEnd(); ++iter)
         delete (*iter);
 }
 

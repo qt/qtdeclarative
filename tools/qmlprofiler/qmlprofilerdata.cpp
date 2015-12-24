@@ -448,7 +448,7 @@ void QmlProfilerData::sortStartTimes()
         // find block to sort
         while ( itFrom != d->startInstanceList.begin()
                 && itTo->startTime > itFrom->startTime ) {
-            itTo--;
+            --itTo;
             itFrom = itTo - 1;
         }
 
@@ -459,7 +459,7 @@ void QmlProfilerData::sortStartTimes()
         // find block length
         while ( itFrom != d->startInstanceList.begin()
                 && itTo->startTime <= itFrom->startTime )
-            itFrom--;
+            --itFrom;
 
         if (itTo->startTime <= itFrom->startTime)
             std::sort(itFrom, itTo + 1, compareStartTimes);
