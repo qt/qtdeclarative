@@ -41,8 +41,6 @@
 #include "StdLibExtras.h"
 
 #include <QTime>
-#include <QVector>
-#include <QVector>
 #include <QMap>
 
 #include <iostream>
@@ -435,6 +433,21 @@ void MemoryManager::sweep(bool lastSweep)
             qobjectWrapper->destroyObject(lastSweep);
 
         (*it) = Primitive::undefinedValue();
+    }
+
+    // Now it is time to free QV4::QObjectWrapper Value, we must check the Value's tag to make sure its object has been destroyed
+    const int pendingCount = m_pendingFreedObjectWrapperValue.count();
+    if (pendingCount) {
+        QVector<Value *> remainingWeakQObjectWrappers;
+        remainingWeakQObjectWrappers.reserve(pendingCount);
+        for (int i = 0; i < pendingCount; ++i) {
+            Value *v = m_pendingFreedObjectWrapperValue.at(i);
+            if (v->tag() == Value::Undefined_Type)
+                PersistentValueStorage::free(v);
+            else
+                remainingWeakQObjectWrappers.append(v);
+        }
+        m_pendingFreedObjectWrapperValue = remainingWeakQObjectWrappers;
     }
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = engine->m_multiplyWrappedQObjects) {
