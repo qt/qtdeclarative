@@ -348,6 +348,11 @@
     || (defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)                 \
     || (defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR))
 #define WTF_OS_IOS 1
+#elif OS(DARWIN) && ((defined(TARGET_OS_EMBEDDED) && TARGET_OS_EMBEDDED) \
+    || (defined(TARGET_OS_APPLETV) && TARGET_OS_APPLETV)                 \
+    || (defined(TARGET_APPLETV_SIMULATOR) && TARGET_APPLETV_SIMULATOR))
+#define WTF_OS_IOS 1
+#define WTF_OS_TVOS 1
 #elif OS(DARWIN) && defined(TARGET_OS_MAC) && TARGET_OS_MAC
 #define WTF_OS_MAC_OS_X 1
 

@@ -734,7 +734,7 @@ void QSGPlainTexture::bind()
                    || context->hasExtension(QByteArrayLiteral("GL_IMG_texture_format_BGRA8888")))) {
         externalFormat = GL_BGRA;
         internalFormat = GL_BGRA;
-#ifdef Q_OS_IOS
+#if defined(Q_OS_DARWIN) && !defined(Q_OS_OSX)
     } else if (context->hasExtension(QByteArrayLiteral("GL_APPLE_texture_format_BGRA8888"))) {
         externalFormat = GL_BGRA;
         internalFormat = GL_RGBA;

@@ -398,6 +398,7 @@ The following functions are also on the Qt object.
         \li \c "android" - Android
         \li \c "blackberry" - BlackBerry OS
         \li \c "ios" - iOS
+        \li \c "tvos" - tvOS
         \li \c "linux" - Linux
         \li \c "osx" - OS X
         \li \c "unix" - Other Unix-based OS
