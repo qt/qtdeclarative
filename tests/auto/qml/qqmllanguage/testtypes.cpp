@@ -98,6 +98,8 @@ void registerTypes()
     qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
 
     qmlRegisterSingletonType<MyTypeObjectSingleton>("Test", 1, 0, "MyTypeObjectSingleton", myTypeObjectSingleton);
+
+    qmlRegisterType<MyArrayBufferTestClass>("Test", 1, 0, "MyArrayBufferTestClass");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

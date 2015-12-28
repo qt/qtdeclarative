@@ -250,6 +250,9 @@ private slots:
 
     void deleteSingletons();
 
+    void arrayBuffer_data();
+    void arrayBuffer();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4143,6 +4146,27 @@ void tst_qqmllanguage::deleteSingletons()
         QVERIFY(singleton.data() != 0);
     }
     QVERIFY(singleton.data() == 0);
+}
+
+void tst_qqmllanguage::arrayBuffer_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::newRow("arraybuffer_property_get") << "arraybuffer_property_get.qml";
+    QTest::newRow("arraybuffer_property_set") << "arraybuffer_property_set.qml";
+    QTest::newRow("arraybuffer_signal_arg") << "arraybuffer_signal_arg.qml";
+    QTest::newRow("arraybuffer_method_arg") << "arraybuffer_method_arg.qml";
+    QTest::newRow("arraybuffer_method_return") << "arraybuffer_method_return.qml";
+    QTest::newRow("arraybuffer_method_overload") << "arraybuffer_method_overload.qml";
+}
+
+void tst_qqmllanguage::arrayBuffer()
+{
+    QFETCH(QString, file);
+    QQmlComponent component(&engine, testFile(file));
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("ok").toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
