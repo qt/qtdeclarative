@@ -84,6 +84,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
+
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
@@ -7139,6 +7141,7 @@ void QQuickItem::ungrabMouse()
         return;
     }
 
+    qCDebug(DBG_MOUSE_TARGET) << "ungrabMouse" << windowPriv->mouseGrabberItem << "-> null";
     windowPriv->mouseGrabberItem = 0;
 
     QEvent ev(QEvent::UngrabMouse);
@@ -7208,6 +7211,7 @@ void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 
         QQuickItem *mouseGrabber = windowPriv->mouseGrabberItem;
         if (windowPriv->touchMouseId == ids.at(i) && mouseGrabber && mouseGrabber != this) {
+            qCDebug(DBG_MOUSE_TARGET) << "grabTouchPoints: grabber" << windowPriv->mouseGrabberItem << "-> null";
             windowPriv->mouseGrabberItem = 0;
             QEvent ev(QEvent::UngrabMouse);
             d->window->sendEvent(mouseGrabber, &ev);
