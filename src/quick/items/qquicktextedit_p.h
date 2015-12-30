@@ -103,6 +103,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -150,6 +151,8 @@ public:
 
     QString text() const;
     void setText(const QString &);
+
+    Q_REVISION(7) QString preeditText() const;
 
     TextFormat textFormat() const;
     void setTextFormat(TextFormat format);
@@ -285,6 +288,7 @@ public:
 
 Q_SIGNALS:
     void textChanged();
+    Q_REVISION(7) void preeditTextChanged();
     void contentSizeChanged();
     void cursorPositionChanged();
     void cursorRectangleChanged();

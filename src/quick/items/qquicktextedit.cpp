@@ -351,6 +351,19 @@ void QQuickTextEdit::setText(const QString &text)
 }
 
 /*!
+    \qmlproperty string QtQuick::TextEdit::preeditText
+    \readonly
+    \since 5.7
+
+    This property contains partial text input from an input method.
+*/
+QString QQuickTextEdit::preeditText() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->control->preeditText();
+}
+
+/*!
     \qmlproperty enumeration QtQuick::TextEdit::textFormat
 
     The way the text property should be displayed.
@@ -2166,6 +2179,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkHovered(QString)), q, QQuickTextEdit, SIGNAL(linkHovered(QString)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(preeditTextChanged()), q, QQuickTextEdit, SIGNAL(preeditTextChanged()));
 #ifndef QT_NO_CLIPBOARD
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
 #endif

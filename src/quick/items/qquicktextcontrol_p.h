@@ -114,6 +114,8 @@ public:
     virtual int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const;
     virtual QRectF blockBoundingRect(const QTextBlock &block) const;
 
+    QString preeditText() const;
+
 public Q_SLOTS:
     void setPlainText(const QString &text);
     void setHtml(const QString &text);
@@ -131,6 +133,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void textChanged();
+    void preeditTextChanged();
     void contentsChange(int from, int charsRemoved, int charsAdded);
     void undoAvailable(bool b);
     void redoAvailable(bool b);

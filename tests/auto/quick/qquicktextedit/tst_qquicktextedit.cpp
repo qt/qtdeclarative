@@ -3039,6 +3039,23 @@ void tst_qquicktextedit::textInput()
     edit->setReadOnly(true);
     QGuiApplication::sendEvent(edit, &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), false);
+
+    edit->setReadOnly(false);
+
+    QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(edit, &preeditEvent);
+    QCOMPARE(edit->text(), QString("Hello world!"));
+    QCOMPARE(edit->preeditText(), QString("PREEDIT"));
+
+    QInputMethodEvent preeditEvent2("PREEDIT2", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(edit, &preeditEvent2);
+    QCOMPARE(edit->text(), QString("Hello world!"));
+    QCOMPARE(edit->preeditText(), QString("PREEDIT2"));
+
+    QInputMethodEvent preeditEvent3("", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(edit, &preeditEvent3);
+    QCOMPARE(edit->text(), QString("Hello world!"));
+    QCOMPARE(edit->preeditText(), QString(""));
 }
 
 void tst_qquicktextedit::inputMethodUpdate()

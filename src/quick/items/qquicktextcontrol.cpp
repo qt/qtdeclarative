@@ -1321,8 +1321,10 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
 
     QTextBlock block = cursor.block();
     QTextLayout *layout = block.layout();
-    if (isGettingInput)
+    if (isGettingInput) {
         layout->setPreeditArea(cursor.position() - block.position(), e->preeditString());
+        emit q->preeditTextChanged();
+    }
     QVector<QTextLayout::FormatRange> overrides;
     const int oldPreeditCursor = preeditCursor;
     preeditCursor = e->preeditString().length();
@@ -1756,6 +1758,19 @@ QRectF QQuickTextControl::blockBoundingRect(const QTextBlock &block) const
     return d->doc->documentLayout()->blockBoundingRect(block);
 }
 
+QString QQuickTextControl::preeditText() const
+{
+#ifndef QT_NO_IM
+    Q_D(const QQuickTextControl);
+    QTextLayout *layout = d->cursor.block().layout();
+    if (!layout)
+        return QString();
+
+    return layout->preeditAreaText();
+#else
+    return QString();
+#endif
+}
 
 
 QStringList QQuickTextEditMimeData::formats() const
