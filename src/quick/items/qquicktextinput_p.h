@@ -88,6 +88,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(QString passwordCharacter READ passwordCharacter WRITE setPasswordCharacter NOTIFY passwordCharacterChanged)
     Q_PROPERTY(int passwordMaskDelay READ passwordMaskDelay WRITE setPasswordMaskDelay RESET resetPasswordMaskDelay NOTIFY passwordMaskDelayChanged REVISION 3)
     Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged)
+    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
     Q_PROPERTY(bool autoScroll READ autoScroll WRITE setAutoScroll NOTIFY autoScrollChanged)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
@@ -233,6 +234,7 @@ public:
     void resetPasswordMaskDelay();
 
     QString displayText() const;
+    Q_REVISION(7) QString preeditText() const;
 
     QQmlComponent* cursorDelegate() const;
     void setCursorDelegate(QQmlComponent*);
@@ -324,6 +326,7 @@ Q_SIGNALS:
     void passwordCharacterChanged();
     Q_REVISION(3) void passwordMaskDelayChanged(int delay);
     void displayTextChanged();
+    Q_REVISION(7) void preeditTextChanged();
     void activeFocusOnPressChanged(bool activeFocusOnPress);
     void autoScrollChanged(bool autoScroll);
     void selectByMouseChanged(bool selectByMouse);

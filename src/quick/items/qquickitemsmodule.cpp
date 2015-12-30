@@ -277,6 +277,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
+    qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
 }
 
 static void initResources()

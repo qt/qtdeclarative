@@ -2184,11 +2184,27 @@ void QQuickTextInput::resetPasswordMaskDelay()
    partial text input from an input method.
 
    \readonly
+   \sa preeditText
 */
 QString QQuickTextInput::displayText() const
 {
     Q_D(const QQuickTextInput);
     return d->m_textLayout.text().insert(d->m_textLayout.preeditAreaPosition(), d->m_textLayout.preeditAreaText());
+}
+
+/*!
+    \qmlproperty string QtQuick::TextInput::preeditText
+    \readonly
+    \since 5.7
+
+    This property contains partial text input from an input method.
+
+    \sa displayText
+*/
+QString QQuickTextInput::preeditText() const
+{
+    Q_D(const QQuickTextInput);
+    return d->m_textLayout.preeditAreaText();
 }
 
 /*!
@@ -3263,7 +3279,10 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
             cursorPositionChanged = true;
         }
     }
+    QString oldPreeditString = m_textLayout.preeditAreaText();
     m_textLayout.setPreeditArea(m_cursor, event->preeditString());
+    if (oldPreeditString != m_textLayout.preeditAreaText())
+        emit q->preeditTextChanged();
     const int oldPreeditCursor = m_preeditCursor;
     m_preeditCursor = event->preeditString().length();
     hasImState = !event->preeditString().isEmpty();

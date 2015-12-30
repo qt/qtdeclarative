@@ -2252,6 +2252,19 @@ void tst_qquicktextinput::inputMethods()
     QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->displayText(), QString("Our GooPREEDITdbye world!"));
+    QCOMPARE(input->preeditText(), QString("PREEDIT"));
+
+    QInputMethodEvent preeditEvent2("PREEDIT2", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(input, &preeditEvent2);
+    QCOMPARE(input->text(), QString("Our Goodbye world!"));
+    QCOMPARE(input->displayText(), QString("Our GooPREEDIT2dbye world!"));
+    QCOMPARE(input->preeditText(), QString("PREEDIT2"));
+
+    QInputMethodEvent preeditEvent3("", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(input, &preeditEvent3);
+    QCOMPARE(input->text(), QString("Our Goodbye world!"));
+    QCOMPARE(input->displayText(), QString("Our Goodbye world!"));
+    QCOMPARE(input->preeditText(), QString(""));
 
     // input should reset selection even if replacement parameters are out of bounds
     input->setText("text");
