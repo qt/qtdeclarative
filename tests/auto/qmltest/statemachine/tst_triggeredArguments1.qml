@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Ford Motor Company
+** Copyright (C) 2016 Ford Motor Company
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the test suite module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,39 +31,49 @@
 **
 ****************************************************************************/
 
-#include "finalstate.h"
-#include "signaltransition.h"
-#include "state.h"
-#include "statemachine.h"
-#include "timeouttransition.h"
+import QtTest 1.1
+import QtQml.StateMachine 1.0
 
-#include <QHistoryState>
-#include <QQmlExtensionPlugin>
-#include <qqml.h>
+TestCase {
+    id: testCase
 
-QT_BEGIN_NAMESPACE
+    property string mystr
+    property bool mybool
+    property int myint
 
-class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QtQml.StateMachine/1.0")
-
-public:
-    void registerTypes(const char *uri)
-    {
-        qmlRegisterType<State>(uri, 1, 0, "State");
-        qmlRegisterType<StateMachine>(uri, 1, 0, "StateMachine");
-        qmlRegisterType<QHistoryState>(uri, 1, 0, "HistoryState");
-        qmlRegisterType<FinalState>(uri, 1, 0, "FinalState");
-        qmlRegisterUncreatableType<QState>(uri, 1, 0, "QState", "Don't use this, use State instead");
-        qmlRegisterUncreatableType<QAbstractState>(uri, 1, 0, "QAbstractState", "Don't use this, use State instead");
-        qmlRegisterUncreatableType<QSignalTransition>(uri, 1, 0, "QSignalTransition", "Don't use this, use SignalTransition instead");
-        qmlRegisterCustomType<SignalTransition>(uri, 1, 0, "SignalTransition", new SignalTransitionParser);
-        qmlRegisterType<TimeoutTransition>(uri, 1, 0, "TimeoutTransition");
-        qmlProtectModule(uri, 1);
+    StateMachine {
+        id: machine
+        initialState: startState
+        running: true
+        State {
+            id: startState
+            SignalTransition {
+                id: signalTrans
+                signal: testCase.mysignal
+                onTriggered: {
+                    testCase.mystr = mystr
+                    testCase.mybool = mybool
+                    testCase.myint = myint
+                }
+                targetState: finalState
+            }
+        }
+        FinalState {
+            id: finalState
+        }
     }
-};
 
-QT_END_NAMESPACE
+    signal mysignal(string mystr, bool mybool, int myint)
 
-#include "plugin.moc"
+    name: "testTriggeredArguments1"
+    function test_triggeredArguments()
+    {
+        tryCompare(startState, "active", true)
+
+        // Emit the signalTrans.signal
+        testCase.mysignal("test1", true, 2)
+        compare(testCase.mystr, "test1")
+        compare(testCase.mybool, true)
+        compare(testCase.myint, 2)
+    }
+}

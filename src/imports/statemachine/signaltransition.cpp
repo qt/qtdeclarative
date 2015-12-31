@@ -45,9 +45,10 @@
 #include <private/qjsvalue_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 SignalTransition::SignalTransition(QState *parent)
-    : QSignalTransition(this, SIGNAL(invokeYourself()), parent)
+    : QSignalTransition(this, SIGNAL(invokeYourself()), parent), m_complete(false), m_signalExpression(Q_NULLPTR)
 {
     connect(this, SIGNAL(signalChanged()), SIGNAL(qmlSignalChanged()));
 }
@@ -80,6 +81,15 @@ bool SignalTransition::eventTest(QEvent *event)
     return result.toBool();
 }
 
+void SignalTransition::onTransition(QEvent *event)
+{
+    if (m_signalExpression) {
+        QStateMachine::SignalEvent *e = static_cast<QStateMachine::SignalEvent*>(event);
+        m_signalExpression->evaluate(e->arguments());
+    }
+    QSignalTransition::onTransition(event);
+}
+
 const QJSValue& SignalTransition::signal()
 {
     return m_signal;
@@ -104,6 +114,8 @@ void SignalTransition::setSignal(const QJSValue &signal)
 
     QSignalTransition::setSenderObject(sender);
     QSignalTransition::setSignal(metaMethod.methodSignature());
+
+    connectTriggered();
 }
 
 QQmlScriptString SignalTransition::guard() const
@@ -123,6 +135,60 @@ void SignalTransition::setGuard(const QQmlScriptString &guard)
 void SignalTransition::invoke()
 {
     emit invokeYourself();
+}
+
+void SignalTransition::connectTriggered()
+{
+    if (!m_complete || !m_cdata)
+        return;
+
+    QObject *target = senderObject();
+    QQmlData *ddata = QQmlData::get(this);
+    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
+
+    Q_ASSERT(m_bindings.count() == 1);
+    const QV4::CompiledData::Binding *binding = m_bindings.at(0);
+    Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
+
+    QV4::ExecutionEngine *jsEngine = QV8Engine::getV4(QQmlEngine::contextForObject(this)->engine());
+    QV4::Scope scope(jsEngine);
+    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
+    Q_ASSERT(qobjectSignal);
+    QMetaMethod metaMethod = target->metaObject()->method(qobjectSignal->methodIndex());
+    int signalIndex = QMetaObjectPrivate::signalIndex(metaMethod);
+
+    QQmlBoundSignalExpression *expression = ctxtdata ?
+                new QQmlBoundSignalExpression(target, signalIndex,
+                                              ctxtdata, this, m_cdata->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
+    if (expression)
+        expression->setNotifyOnValueChanged(false);
+    m_signalExpression = expression;
+}
+
+void SignalTransitionParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+{
+    for (int ii = 0; ii < props.count(); ++ii) {
+        const QV4::CompiledData::Binding *binding = props.at(ii);
+
+        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
+
+        if (propName != QStringLiteral("onTriggered")) {
+            error(props.at(ii), SignalTransition::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
+            return;
+        }
+
+        if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+            error(binding, SignalTransition::tr("SignalTransition: script expected"));
+            return;
+        }
+    }
+}
+
+void SignalTransitionParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    SignalTransition *st = qobject_cast<SignalTransition*>(object);
+    st->m_cdata = cdata;
+    st->m_bindings = bindings;
 }
 
 /*!

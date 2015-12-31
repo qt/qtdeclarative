@@ -239,6 +239,28 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
 
+void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
+{
+    Q_ASSERT (context() && engine());
+
+    if (!expressionFunctionValid())
+        return;
+
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
+    QV4::Scope scope(ep->v4engine());
+
+    ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
+
+    QV4::ScopedCallData callData(scope, args.count());
+    for (int ii = 0; ii < args.count(); ++ii) {
+        callData->args[ii] = scope.engine->fromVariant(args[ii]);
+    }
+
+    QQmlJavaScriptExpression::evaluate(callData, 0);
+
+    ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 

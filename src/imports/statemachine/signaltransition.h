@@ -39,12 +39,17 @@
 #include <QtQml/QJSValue>
 
 #include <QtQml/qqmlscriptstring.h>
+#include <QtQml/qqmlparserstatus.h>
+#include <private/qqmlcustomparser_p.h>
+#include <private/qqmlboundsignalexpressionpointer_p.h>
+#include <private/qqmlcompiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class SignalTransition : public QSignalTransition
+class SignalTransition : public QSignalTransition, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QJSValue signal READ signal WRITE setSignal NOTIFY qmlSignalChanged)
     Q_PROPERTY(QQmlScriptString guard READ guard WRITE setGuard NOTIFY guardChanged)
 
@@ -54,7 +59,8 @@ public:
     QQmlScriptString guard() const;
     void setGuard(const QQmlScriptString &guard);
 
-    bool eventTest(QEvent *event);
+    bool eventTest(QEvent *event) Q_DECL_OVERRIDE;
+    void onTransition(QEvent *event) Q_DECL_OVERRIDE;
 
     const QJSValue &signal();
     void setSignal(const QJSValue &signal);
@@ -70,9 +76,24 @@ Q_SIGNALS:
     void qmlSignalChanged();
 
 private:
-    QByteArray m_data;
+    void classBegin() Q_DECL_OVERRIDE { m_complete = false; }
+    void componentComplete() Q_DECL_OVERRIDE { m_complete = true; connectTriggered(); }
+    void connectTriggered();
+
+    friend class SignalTransitionParser;
     QJSValue m_signal;
     QQmlScriptString m_guard;
+    bool m_complete;
+    QQmlRefPointer<QQmlCompiledData> m_cdata;
+    QList<const QV4::CompiledData::Binding *> m_bindings;
+    QQmlBoundSignalExpressionPointer m_signalExpression;
+};
+
+class SignalTransitionParser : public QQmlCustomParser
+{
+public:
+    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) Q_DECL_OVERRIDE;
+    void applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings) Q_DECL_OVERRIDE;
 };
 
 QT_END_NAMESPACE
