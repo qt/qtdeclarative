@@ -88,3 +88,8 @@ void NinePatchNode::paint(QPainter *painter)
         SoftwareContext::qDrawBorderPixmap(painter, m_bounds.toRect(), m_margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
                                            m_margins, Qt::StretchTile, QDrawBorderPixmap::DrawingHints(0));
 }
+
+QRectF NinePatchNode::bounds() const
+{
+    return m_bounds;
+}

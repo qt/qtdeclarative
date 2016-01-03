@@ -27,31 +27,47 @@
 **
 ****************************************************************************/
 
-#ifndef NINEPATCHNODE_H
-#define NINEPATCHNODE_H
+#ifndef RENDERLISTBUILDER_H
+#define RENDERLISTBUILDER_H
 
 #include <private/qsgadaptationlayer_p.h>
 
-class NinePatchNode : public QSGNinePatchNode
+namespace SoftwareContext {
+
+class AbstractSoftwareRenderer;
+
+class RenderListBuilder : public QSGNodeVisitorEx
 {
-public:    
-    NinePatchNode();
+public:
+    RenderListBuilder(AbstractSoftwareRenderer *renderer);
 
-    void setTexture(QSGTexture *texture) override;
-    void setBounds(const QRectF &bounds) override;
-    void setDevicePixelRatio(qreal ratio) override;
-    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
-    void update() override;
-
-    void paint(QPainter *painter);
-
-    QRectF bounds() const;
+    bool visit(QSGTransformNode *) override;
+    void endVisit(QSGTransformNode *) override;
+    bool visit(QSGClipNode *) override;
+    void endVisit(QSGClipNode *) override;
+    bool visit(QSGGeometryNode *) override;
+    void endVisit(QSGGeometryNode *) override;
+    bool visit(QSGOpacityNode *) override;
+    void endVisit(QSGOpacityNode *) override;
+    bool visit(QSGImageNode *) override;
+    void endVisit(QSGImageNode *) override;
+    bool visit(QSGPainterNode *) override;
+    void endVisit(QSGPainterNode *) override;
+    bool visit(QSGRectangleNode *) override;
+    void endVisit(QSGRectangleNode *) override;
+    bool visit(QSGGlyphNode *) override;
+    void endVisit(QSGGlyphNode *) override;
+    bool visit(QSGNinePatchNode *) override;
+    void endVisit(QSGNinePatchNode *) override;
+    bool visit(QSGRootNode *) override;
+    void endVisit(QSGRootNode *) override;
 
 private:
-    QPixmap m_pixmap;
-    QRectF m_bounds;
-    qreal m_pixelRatio;
-    QMargins m_margins;
+    bool addRenderableNode(QSGNode *node);
+
+    AbstractSoftwareRenderer *m_renderer;
 };
 
-#endif // NINEPATCHNODE_H
+}
+
+#endif // RENDERLISTBUILDER_H

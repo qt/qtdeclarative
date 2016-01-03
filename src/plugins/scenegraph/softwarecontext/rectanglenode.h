@@ -54,6 +54,8 @@ public:
 
     void paint(QPainter *);
 
+    bool isOpaque() const;
+    QRectF rect() const;
 private:
     void paintRectangle(QPainter *painter, const QRect &rect);
     void generateCornerPixmap();

@@ -35,8 +35,8 @@
 #include "pixmaptexture.h"
 #include "glyphnode.h"
 #include "ninepatchnode.h"
-#include "renderingvisitor.h"
 #include "softwarelayer.h"
+#include "renderer.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -81,84 +81,6 @@ Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERER,       "qt.scenegraph.time.rende
 
 namespace SoftwareContext
 {
-
-Renderer::Renderer(QSGRenderContext *context)
-    : QSGRenderer(context)
-{
-}
-
-void Renderer::renderScene(GLuint fboId)
-{
-    Q_UNUSED(fboId)
-
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const { }
-    } bindable;
-    QSGRenderer::renderScene(bindable);
-}
-
-void Renderer::render()
-{
-    QWindow *currentWindow = static_cast<RenderContext*>(m_context)->currentWindow;
-    if (!m_backingStore)
-        m_backingStore.reset(new QBackingStore(currentWindow));
-
-    if (m_backingStore->size() != currentWindow->size())
-        m_backingStore->resize(currentWindow->size());
-
-    const QRect rect(0, 0, currentWindow->width(), currentWindow->height());
-    m_backingStore->beginPaint(rect);
-
-    QPaintDevice *device = m_backingStore->paintDevice();
-    QPainter painter(device);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(rect, clearColor());
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    RenderingVisitor(&painter).visitChildren(rootNode());
-
-    m_backingStore->endPaint();
-    m_backingStore->flush(rect);
-}
-
-void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
-{
-
-    QSGRenderer::nodeChanged(node, state);
-}
-
-PixmapRenderer::PixmapRenderer(QSGRenderContext *context)
-    : QSGRenderer(context)
-{
-
-}
-
-void PixmapRenderer::renderScene(GLuint)
-{
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const { }
-    } bindable;
-    QSGRenderer::renderScene(bindable);
-}
-
-void PixmapRenderer::render()
-{
-
-}
-
-void PixmapRenderer::render(QPixmap *target)
-{
-    target->fill(clearColor());
-    QPainter painter(target);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setWindow(m_projectionRect);
-
-    RenderingVisitor(&painter).visitChildren(rootNode());
-}
 
 RenderContext::RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)

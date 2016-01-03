@@ -253,6 +253,30 @@ void RectangleNode::paint(QPainter *painter)
 
 }
 
+bool RectangleNode::isOpaque() const
+{
+    if (m_radius > 0.0f)
+        return false;
+    if (m_color.alpha() < 255)
+        return false;
+    if (m_penWidth > 0.0f && m_penColor.alpha() < 255)
+        return false;
+    if (m_stops.count() > 0) {
+        foreach (QGradientStop stop, m_stops) {
+            if (stop.second.alpha() < 255)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+QRectF RectangleNode::rect() const
+{
+    //TODO: double check that this is correct.
+    return m_rect;
+}
+
 void RectangleNode::paintRectangle(QPainter *painter, const QRect &rect)
 {
     //Radius should never exceeds half of the width or half of the height

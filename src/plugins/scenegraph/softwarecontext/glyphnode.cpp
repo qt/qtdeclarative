@@ -42,6 +42,7 @@ void GlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
 {
     m_position = position;
     m_glyphRun = glyphs;
+    m_bounding_rect = glyphs.boundingRect().translated(m_position - QPointF(0.0, glyphs.rawFont().ascent()));
 }
 
 void GlyphNode::setColor(const QColor &color)

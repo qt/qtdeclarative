@@ -474,6 +474,11 @@ void ImageNode::paint(QPainter *painter)
     }
 }
 
+QRectF ImageNode::rect() const
+{
+    return m_targetRect;
+}
+
 const QPixmap &ImageNode::pixmap() const
 {
     if (PixmapTexture *pt = qobject_cast<PixmapTexture*>(m_texture)) {

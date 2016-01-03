@@ -27,39 +27,30 @@
 **
 ****************************************************************************/
 
-#ifndef RENDERINGVISITOR_H
-#define RENDERINGVISITOR_H
+#ifndef PIXMAPRENDERER_H
+#define PIXMAPRENDERER_H
 
-#include <private/qsgadaptationlayer_p.h>
+#include "abstractsoftwarerenderer.h"
 
-class RenderingVisitor : public QSGNodeVisitorEx
+namespace SoftwareContext {
+
+class PixmapRenderer : public AbstractSoftwareRenderer
 {
 public:
-    RenderingVisitor(QPainter *painter);
+    PixmapRenderer(QSGRenderContext *context);
+    virtual ~PixmapRenderer();
 
-    bool visit(QSGTransformNode *node) override;
-    void endVisit(QSGTransformNode *) override;
-    bool visit(QSGClipNode *node) override;
-    void endVisit(QSGClipNode *node) override;
-    bool visit(QSGGeometryNode *node) override;
-    void endVisit(QSGGeometryNode *node) override;
-    bool visit(QSGOpacityNode *node) override;
-    void endVisit(QSGOpacityNode *node) override;
-    bool visit(QSGImageNode *node) override;
-    void endVisit(QSGImageNode *node) override;
-    bool visit(QSGPainterNode *node) override;
-    void endVisit(QSGPainterNode *) override;
-    bool visit(QSGRectangleNode *node) override;
-    void endVisit(QSGRectangleNode *node) override;
-    bool visit(QSGGlyphNode *node) override;
-    void endVisit(QSGGlyphNode *node) override;
-    bool visit(QSGNinePatchNode *node) override;
-    void endVisit(QSGNinePatchNode *) override;
-    bool visit(QSGRootNode *) override;
-    void endVisit(QSGRootNode *) override;
+    void renderScene(GLuint fboId = 0) final;
+    void render() final;
+
+    void render(QPixmap *target);
+    void setProjectionRect(const QRect &projectionRect);
 
 private:
-    QPainter *painter;
+    QRect m_projectionRect;
 };
 
-#endif // RENDERINGVISITOR_H
+
+} // namespace
+
+#endif // PIXMAPRENDERER_H

@@ -9,6 +9,9 @@ load(qt_plugin)
 QMAKE_TARGET_PRODUCT = "Qt Quick 2D Renderer (Qt $$QT_VERSION)"
 QMAKE_TARGET_DESCRIPTION = "Quick 2D Renderer for Qt."
 
+
+#DEFINES += QTQUICK2D_DEBUG_FLUSH
+
 SOURCES += \
     context.cpp \
     pluginmain.cpp \
@@ -17,11 +20,15 @@ SOURCES += \
     imagenode.cpp \
     pixmaptexture.cpp \
     glyphnode.cpp \
-    renderingvisitor.cpp \
     ninepatchnode.cpp \
     softwarelayer.cpp \
-    threadedrenderloop.cpp \
-    painternode.cpp
+    painternode.cpp \
+    renderablenode.cpp \
+    renderer.cpp \
+    pixmaprenderer.cpp \
+    renderablenodeupdater.cpp \
+    renderlistbuilder.cpp \
+    abstractsoftwarerenderer.cpp
 
 HEADERS += \
     context.h \
@@ -31,11 +38,15 @@ HEADERS += \
     imagenode.h \
     pixmaptexture.h \
     glyphnode.h \
-    renderingvisitor.h \
     ninepatchnode.h \
     softwarelayer.h \
-    threadedrenderloop.h \
-    painternode.h
+    painternode.h \
+    renderablenode.h \
+    renderer.h \
+    pixmaprenderer.h \
+    renderablenodeupdater.h \
+    renderlistbuilder.h \
+    abstractsoftwarerenderer.h
 
 OTHER_FILES += softwarecontext.json
 

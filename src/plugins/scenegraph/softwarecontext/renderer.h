@@ -27,31 +27,42 @@
 **
 ****************************************************************************/
 
-#ifndef NINEPATCHNODE_H
-#define NINEPATCHNODE_H
+#ifndef RENDERER_H
+#define RENDERER_H
 
-#include <private/qsgadaptationlayer_p.h>
+#include "abstractsoftwarerenderer.h"
 
-class NinePatchNode : public QSGNinePatchNode
+#include <QtGui/QBackingStore>
+
+#ifdef QTQUICK2D_DEBUG_FLUSH
+#include <QtGui/QImage>
+#endif
+
+class QSGSimpleRectNode;
+
+namespace SoftwareContext{
+
+class Renderer : public AbstractSoftwareRenderer
 {
-public:    
-    NinePatchNode();
+public:
+    Renderer(QSGRenderContext *context);
+    virtual ~Renderer();
 
-    void setTexture(QSGTexture *texture) override;
-    void setBounds(const QRectF &bounds) override;
-    void setDevicePixelRatio(qreal ratio) override;
-    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
-    void update() override;
+    QBackingStore *backingStore() const { return m_backingStore.data(); }
 
-    void paint(QPainter *painter);
-
-    QRectF bounds() const;
+protected:
+    void renderScene(GLuint fboId = 0) final;
+    void render() final;
 
 private:
-    QPixmap m_pixmap;
-    QRectF m_bounds;
-    qreal m_pixelRatio;
-    QMargins m_margins;
+    QScopedPointer<QBackingStore> m_backingStore;
+
+#ifdef QTQUICK2D_DEBUG_FLUSH
+    QVector<QRegion> m_previousFlushes;
+    QImage m_outputBuffer;
+#endif
 };
 
-#endif // NINEPATCHNODE_H
+} // namespace
+
+#endif // RENDERER_H
