@@ -143,8 +143,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
     with stochastic state transitions.
 
     Each QtQuick::Sprite in this list is interpreted as corresponding to the particle group
-    with ths same name. Any transitions defined in these sprites will take effect on the particle
-    groups as well. Additionally TrailEmitters, Affectors and ParticlePainters definined
+    with the same name. Any transitions defined in these sprites will take effect on the particle
+    groups as well. Additionally TrailEmitters, Affectors and ParticlePainters defined
     inside one of these sprites are automatically associated with the corresponding particle group.
 */
 
