@@ -267,14 +267,18 @@ static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QSt
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    QFileInfoList entries = QDir(QQC2_IMPORT_PATH + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
     foreach (const QFileInfo &entry, entries) {
         QString name = entry.baseName();
         if (!skiplist.contains(name)) {
             foreach (const QString &importPath, engine->importPathList()) {
-                QString filePath = QDir(importPath + "/Qt/labs/" + targetPath).absoluteFilePath(entry.fileName());
+                QString name = entry.dir().dirName() + "/" + entry.fileName();
+                QString filePath = importPath + "/Qt/labs/" + targetPath + "/" + entry.fileName();
                 if (QFile::exists(filePath)) {
-                    QTest::newRow(qPrintable(entry.dir().dirName() + "/" + entry.fileName())) << QUrl::fromLocalFile(filePath);
+                    QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
+                    break;
+                } else if (QFile::exists(QQmlFile::urlToLocalFileOrQrc(filePath))) {
+                    QTest::newRow(qPrintable(name)) << QUrl(filePath);
                     break;
                 }
             }
@@ -305,10 +309,10 @@ void tst_Sanity::attachedObjects()
 void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "/calendar");
-    addTestRows(&engine, "/controls");
-    addTestRows(&engine, "/controls/material", QStringList() << "Ripple" << "SliderHandle");
-    addTestRows(&engine, "/controls/universal");
+    addTestRows(&engine, "calendar");
+    addTestRows(&engine, "controls");
+    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
+    addTestRows(&engine, "controls/universal");
 }
 
 QTEST_MAIN(tst_Sanity)

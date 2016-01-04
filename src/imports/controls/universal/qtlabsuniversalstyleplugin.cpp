@@ -48,6 +48,9 @@
 static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabsuniversalstyleplugin);
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_controls_universal);
+#endif
 }
 
 QT_BEGIN_NAMESPACE
@@ -58,6 +61,7 @@ class QtLabsUniversalStylePlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    QtLabsUniversalStylePlugin(QObject *parent = Q_NULLPTR);
     ~QtLabsUniversalStylePlugin();
     void registerTypes(const char *uri) Q_DECL_OVERRIDE;
     void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
@@ -65,6 +69,11 @@ public:
 private:
     QQuickProxyTheme *theme;
 };
+
+QtLabsUniversalStylePlugin::QtLabsUniversalStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+{
+    initResources();
+}
 
 QtLabsUniversalStylePlugin::~QtLabsUniversalStylePlugin()
 {
@@ -93,7 +102,6 @@ void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char
         }
     }
 
-    initResources();
     engine->addImageProvider(QStringLiteral("universal"), new QQuickUniversalImageProvider);
 
     QByteArray import = QByteArray(uri) + ".impl";

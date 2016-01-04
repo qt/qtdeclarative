@@ -74,6 +74,13 @@
 #include <QtLabsTemplates/private/qquicktoolbutton_p.h>
 #include <QtLabsTemplates/private/qquicktumbler_p.h>
 
+static inline void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_templates);
+#endif
+}
+
 QT_BEGIN_NAMESPACE
 
 class QtLabsTemplatesPlugin: public QQmlExtensionPlugin
@@ -82,8 +89,14 @@ class QtLabsTemplatesPlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    QtLabsTemplatesPlugin(QObject *parent = Q_NULLPTR);
     void registerTypes(const char *uri);
 };
+
+QtLabsTemplatesPlugin::QtLabsTemplatesPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+{
+    initResources();
+}
 
 void QtLabsTemplatesPlugin::registerTypes(const char *uri)
 {

@@ -93,3 +93,5 @@ app_process
 qtc-debugging-helper
 android-*.so-deployment-settings.json
 *.directory
+*_plugin_import.cpp
+*_wrapper.sh

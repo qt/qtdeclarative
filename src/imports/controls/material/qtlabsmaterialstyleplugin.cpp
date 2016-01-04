@@ -46,6 +46,9 @@
 static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabsmaterialstyleplugin);
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_controls_material);
+#endif
 }
 
 QT_BEGIN_NAMESPACE
@@ -56,6 +59,7 @@ class QtLabsMaterialStylePlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    QtLabsMaterialStylePlugin(QObject *parent = Q_NULLPTR);
     ~QtLabsMaterialStylePlugin();
     void registerTypes(const char *uri) Q_DECL_OVERRIDE;
     void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
@@ -63,6 +67,11 @@ public:
 private:
     QQuickProxyTheme *theme;
 };
+
+QtLabsMaterialStylePlugin::QtLabsMaterialStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+{
+    initResources();
+}
 
 QtLabsMaterialStylePlugin::~QtLabsMaterialStylePlugin()
 {
@@ -81,7 +90,6 @@ void QtLabsMaterialStylePlugin::registerTypes(const char *uri)
 void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
-    Q_UNUSED(uri);
 
     QQuickStyleSelector selector;
     if (selector.style() == QStringLiteral("material")) {
@@ -94,11 +102,11 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
         }
     }
 
-    initResources();
-
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
+    qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
+    qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
 }
 
 QT_END_NAMESPACE

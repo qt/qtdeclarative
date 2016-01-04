@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import QtQuick.Window 2.2
+import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.ComboBox {

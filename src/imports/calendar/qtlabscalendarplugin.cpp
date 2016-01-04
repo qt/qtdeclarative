@@ -42,6 +42,13 @@
 #include "qquickcalendarmodel_p.h"
 #include "qquickcalendar_p.h"
 
+static inline void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_calendar);
+#endif
+}
+
 QT_BEGIN_NAMESPACE
 
 class QtLabsCalendarPlugin: public QQmlExtensionPlugin
@@ -50,8 +57,14 @@ class QtLabsCalendarPlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    QtLabsCalendarPlugin(QObject *parent = Q_NULLPTR);
     void registerTypes(const char *uri);
 };
+
+QtLabsCalendarPlugin::QtLabsCalendarPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+{
+    initResources();
+}
 
 static QObject *calendarSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {

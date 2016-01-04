@@ -51,6 +51,9 @@
 static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabscontrolsplugin);
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_controls);
+#endif
 }
 
 QT_BEGIN_NAMESPACE
@@ -61,9 +64,15 @@ class QtLabsControlsPlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    QtLabsControlsPlugin(QObject *parent = Q_NULLPTR);
     void registerTypes(const char *uri);
     void initializeEngine(QQmlEngine *engine, const char *uri);
 };
+
+QtLabsControlsPlugin::QtLabsControlsPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+{
+    initResources();
+}
 
 void QtLabsControlsPlugin::registerTypes(const char *uri)
 {
@@ -115,7 +124,6 @@ void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
     Q_UNUSED(uri);
-    initResources();
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickBusyIndicatorRing>(import, 1, 0, "BusyRing");

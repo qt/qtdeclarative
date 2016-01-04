@@ -84,7 +84,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3 as C1; import Qt.labs.controls 1.0 as C2; Row { C1.Button {} C2.Button {} }", QUrl());
+    component.setData("import QtQuick 2.0; import Qt.labs.controls 1.0; Item { Button {} }", QUrl());
     delete component.create();
 }
 
@@ -118,14 +118,18 @@ static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QSt
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    QFileInfoList entries = QDir(QQC2_IMPORT_PATH + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
     foreach (const QFileInfo &entry, entries) {
         QString name = entry.baseName();
         if (!skiplist.contains(name)) {
             foreach (const QString &importPath, engine->importPathList()) {
-                QString filePath = QDir(importPath + "/Qt/labs/" + targetPath).absoluteFilePath(entry.fileName());
+                QString name = entry.dir().dirName() + "/" + entry.fileName();
+                QString filePath = importPath + "/Qt/labs/" + targetPath + "/" + entry.fileName();
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
+                    break;
+                } else if (QFile::exists(QQmlFile::urlToLocalFileOrQrc(filePath))) {
+                    QTest::newRow(qPrintable(name)) << QUrl(filePath);
                     break;
                 }
             }
@@ -161,7 +165,7 @@ void tst_ObjectCount::calendar()
 void tst_ObjectCount::calendar_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "/calendar");
+    addTestRows(&engine, "calendar");
 }
 
 void tst_ObjectCount::controls()
@@ -173,7 +177,7 @@ void tst_ObjectCount::controls()
 void tst_ObjectCount::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "/controls");
+    addTestRows(&engine, "controls");
 }
 
 void tst_ObjectCount::material()
@@ -185,7 +189,7 @@ void tst_ObjectCount::material()
 void tst_ObjectCount::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "/controls/material", QStringList() << "Ripple" << "SliderHandle");
+    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
 }
 
 void tst_ObjectCount::universal()
@@ -197,7 +201,7 @@ void tst_ObjectCount::universal()
 void tst_ObjectCount::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "/controls/universal");
+    addTestRows(&engine, "controls/universal");
 }
 
 QTEST_MAIN(tst_ObjectCount)
