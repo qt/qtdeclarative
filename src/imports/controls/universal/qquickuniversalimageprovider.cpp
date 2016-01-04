@@ -56,7 +56,7 @@ QImage QQuickUniversalImageProvider::requestImage(const QString &id, QSize *size
     QString name = id.left(sep);
     QString color = id.mid(sep + 1);
     qreal dpr = qApp->primaryScreen()->devicePixelRatio();
-    QString file = qt_findAtNxFile(QStringLiteral(":/org.qt-project/imports/Qt/labs/controls/universal/images/") + name + QStringLiteral(".png"), dpr);
+    QString file = qt_findAtNxFile(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images/") + name + QStringLiteral(".png"), dpr);
 
     QImage image(file);
     if (image.isNull()) {

@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="org.qt-project/imports/Qt/labs/controls/universal">
+<qresource prefix="qt-project.org/imports/Qt/labs/controls/universal">
     <file>images/checkmark.png</file>
     <file>images/checkmark@2x.png</file>
     <file>images/checkmark@3x.png</file>
