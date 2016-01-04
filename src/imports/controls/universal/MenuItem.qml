@@ -46,6 +46,7 @@ T.MenuItem {
             + (label && indicator ? spacing : 0) + leftPadding + rightPadding
     implicitHeight: background ? background.implicitHeight
         : (label ? label.implicitHeight : 0) + (indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     topPadding: 11
     leftPadding: 12
