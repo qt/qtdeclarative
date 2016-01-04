@@ -198,7 +198,7 @@ QT_BEGIN_NAMESPACE
     You can also get to an item in the stack using \l {get()}{get(index)}.
 
     \badcode
-    previousItem = stackView.get(myItem.Stack.index - 1));
+    previousItem = stackView.get(myItem.StackView.index - 1));
     \endcode
 
     \section1 Transitions
