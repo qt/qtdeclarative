@@ -48,6 +48,7 @@ T.SpinBox {
                              background ? background.implicitHeight : 0,
                              up.indicator ? up.indicator.implicitHeight : 0,
                              down.indicator ? down.indicator.implicitHeight : 0)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
     leftPadding: 6 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))

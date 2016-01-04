@@ -298,4 +298,11 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_baseline() {
+        var control = spinBox.createObject(testCase)
+        verify(control)
+        compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
+        control.destroy()
+    }
 }

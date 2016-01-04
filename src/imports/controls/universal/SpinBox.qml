@@ -49,6 +49,7 @@ T.SpinBox {
                              background ? background.implicitHeight : 0,
                              up.indicator ? up.indicator.implicitHeight : 0,
                              down.indicator ? down.indicator.implicitHeight : 0)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     // TextControlThemePadding + 2 (border)
     topPadding: 5
