@@ -459,6 +459,22 @@ TestCase {
         compare(control.depth, 1)
         compare(control.currentItem, item6)
 
+        // replace the topmost item
+        control.push(component)
+        compare(control.depth, 2)
+        var item7 = control.replace(control.get(1), component, StackView.Immediate)
+        compare(control.depth, 2)
+        compare(control.currentItem, item7)
+
+        // replace the item in the middle
+        control.push(component)
+        control.push(component)
+        control.push(component)
+        compare(control.depth, 5)
+        var item8 = control.replace(control.get(2), component, StackView.Immediate)
+        compare(control.depth, 3)
+        compare(control.currentItem, item8)
+
         control.destroy()
     }
 

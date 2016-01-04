@@ -636,7 +636,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     if (!d->elements.isEmpty())
         exit = d->elements.pop();
 
-    if (d->replaceElements(target, elements)) {
+    if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
         if (depth != d->elements.count())
             emit depthChanged();
         QQuickStackElement *enter = d->elements.top();
