@@ -225,8 +225,36 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
     }
 
     if (radix == 10) {
-        const NumberLocale *locale = NumberLocale::instance();
-        *result = locale->toString(num, 'g', locale->defaultDoublePrecision);
+        // We cannot use our usual locale->toString(...) here, because EcmaScript has special rules
+        // about the longest permissible number, depending on if it's <0 or >0.
+        const int ecma_shortest_low = -6;
+        const int ecma_shortest_high = 21;
+
+        const QLatin1Char zero('0');
+        const QLatin1Char dot('.');
+
+        int decpt = 0;
+        int sign = 0;
+        *result = qdtoa(num, &decpt, &sign);
+
+        if (decpt <= ecma_shortest_low || decpt > ecma_shortest_high) {
+            if (result->length() > 1)
+                result->insert(1, dot);
+            result->append(QLatin1Char('e'));
+            if (decpt > 0)
+                result->append(QLatin1Char('+'));
+            result->append(QString::number(decpt - 1));
+        } else if (decpt <= 0) {
+            result->prepend(QString::fromLatin1("0.%1").arg(QString().fill(zero, -decpt)));
+        } else if (decpt < result->length()) {
+            result->insert(decpt, dot);
+        } else {
+            result->append(QString().fill(zero, decpt - result->length()));
+        }
+
+        if (sign)
+            result->prepend(QLatin1Char('-'));
+
         return;
     }
 

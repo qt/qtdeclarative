@@ -147,6 +147,8 @@ private slots:
     void registeredCompositeTypeProperty();
     void deeplyNestedObject();
     void readOnlyDynamicProperties();
+
+    void floatToStringPrecision_data();
     void floatToStringPrecision();
 
     void copy();
@@ -2055,21 +2057,43 @@ void tst_qqmlproperty::readOnlyDynamicProperties()
     delete obj;
 }
 
+void tst_qqmlproperty::floatToStringPrecision_data()
+{
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<double>("number");
+    QTest::addColumn<QString>("qtString");
+    QTest::addColumn<QString>("jsString");
+
+    QTest::newRow("3.4")           << "a" << 3.4           << "3.4"         << "3.4";
+    QTest::newRow("0.035003945")   << "b" << 0.035003945   << "0.035003945" << "0.035003945";
+    QTest::newRow("0.0000012345")  << "c" << 0.0000012345  << "1.2345e-6"   << "0.0000012345";
+    QTest::newRow("0.00000012345") << "d" << 0.00000012345 << "1.2345e-7"   << "1.2345e-7";
+    QTest::newRow("1e20")          << "e" << 1e20          << "1e+20"       << "100000000000000000000";
+    QTest::newRow("1e21")          << "f" << 1e21          << "1e+21"       << "1e+21";
+}
+
 void tst_qqmlproperty::floatToStringPrecision()
 {
     QQmlComponent comp(&engine, testFileUrl("floatToStringPrecision.qml"));
     QObject *obj = comp.create();
     QVERIFY(obj != 0);
 
-    QCOMPARE(obj->property("a").toDouble(), 3.4);
-    QCOMPARE(obj->property("a").toString(), QLatin1String("3.4"));
-    QCOMPARE(obj->property("b").toDouble(), 3.4);
-    QCOMPARE(obj->property("b").toString(), QLatin1String("3.4"));
+    QFETCH(QString, propertyName);
+    QFETCH(double, number);
+    QFETCH(QString, qtString);
+    QFETCH(QString, jsString);
 
-    QCOMPARE(obj->property("c").toDouble(), 0.035003945);
-    QCOMPARE(obj->property("c").toString(), QLatin1String("0.035003945"));
-    QCOMPARE(obj->property("d").toDouble(), 0.035003945);
-    QCOMPARE(obj->property("d").toString(), QLatin1String("0.035003945"));
+    const char *name = propertyName.toLatin1().constData();
+    QCOMPARE(obj->property(name).toDouble(), number);
+    QCOMPARE(obj->property(name).toString(), qtString);
+
+    const char *name1 = (propertyName + QLatin1Char('1')).toLatin1().constData();
+    QCOMPARE(obj->property(name1).toDouble(), number);
+    QCOMPARE(obj->property(name1).toString(), qtString);
+
+    const char *name2 = (propertyName + QLatin1Char('2')).toLatin1().constData();
+    QCOMPARE(obj->property(name2).toDouble(), number);
+    QCOMPARE(obj->property(name2).toString(), jsString);
 
     delete obj;
 }
