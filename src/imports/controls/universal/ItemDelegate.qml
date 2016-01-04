@@ -48,6 +48,7 @@ T.ItemDelegate {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     spacing: 12
 
