@@ -118,7 +118,7 @@ void tst_accessibility::a11y()
 #endif
     component.loadUrl(testFileUrl(fn + ".qml"));
     QObject* created = component.create();
-    QVERIFY(created);
+    QVERIFY2(created, qPrintable(component.errorString()));
     QScopedPointer<QObject> cleanup(created);
     QVERIFY(!cleanup.isNull());
 
