@@ -45,31 +45,27 @@ T.Dial {
 
     //! [background]
     background: Rectangle {
+        x: control.width / 2 - width / 2
+        y: control.height / 2 - height / 2
+        width: Math.max(64, Math.min(control.width, control.height))
+        height: Math.max(64, Math.min(control.width, control.height))
         radius: width / 2
         border.color: "#353637"
-
-        Text {
-            text: control.position.toFixed(1)
-            color: "#353637"
-            font.pixelSize: 60
-            x: parent.width / 2 - width / 2
-            y: parent.height / 2 - height / 2
-        }
     }
     //! [background]
 
     //! [handle]
     handle: Image {
         id: handleItem
-        x: background.width / 2 - handle.width / 2
-        y: background.height / 2 - handle.height / 2
+        x: background.x + background.width / 2 - handle.width / 2
+        y: background.y + background.height / 2 - handle.height / 2
         width: 14
         height: 10
         source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/dial-indicator.png"
         antialiasing: true
         transform: [
             Translate {
-                y: -background.height * 0.4
+                y: -background.height * 0.4 + handle.height / 2
             },
             Rotation {
                 angle: control.angle
