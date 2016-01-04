@@ -21,6 +21,7 @@ QML_FILES += \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
     $$PWD/Menu.qml \
+    $$PWD/MenuItem.qml \
     $$PWD/Pane.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/Popup.qml \
