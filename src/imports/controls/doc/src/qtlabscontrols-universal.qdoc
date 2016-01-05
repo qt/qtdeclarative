@@ -1,0 +1,177 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtlabscontrols-universal.html
+    \title Universal Style
+
+    The Universal Style is based on the Microsoft Universal Design Guidelines.
+    \l {detailed-description}{More...}
+
+    \styleimport {Qt.labs.controls.universal 1.0}
+
+    \section1 Attached Properties
+
+    \list
+        \li \l {accent-attached-prop}{\b accent} : color
+        \li \l {theme-attached-prop}{\b theme} : enumeration
+    \endlist
+
+    \section1 Detailed Description
+
+    The Universal style is a device-agnostic style based on the
+    \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines}.
+    The Universal style has been designed to look good on all devices, from
+    phones and tablets to PCs.
+
+    \image qtlabscontrols-universal.png
+    \caption The Universal style in light and dark themes
+
+    \note The Universal style is not a native Windows 10 style. The Universal
+    style is a 100% cross-platform Qt Labs Controls style implementation that
+    follows the Microsoft Universal Design Guidelines. The style runs on any
+    platform, and looks more or less identical everywhere. Minor differences
+    may occur due to differences in available system fonts and font rendering
+    engines.
+
+    \section2 Customization
+
+    The Universal style allows customizing two attributes, \l {theme-attached-prop}{theme}
+    and \l {accent-attached-prop}{accent}. The following example illustrates how to create
+    a red \e stop button with light text:
+
+    \table
+        \row
+            \li
+                \qml
+                import QtQuick 2.0
+                import Qt.labs.controls 1.0
+                import Qt.labs.controls.universal 1.0
+
+                Button {
+                    text: "Stop"
+                    highlighted: true
+
+                    Universal.accent: Universal.Red
+                    Universal.theme: Universal.Dark
+                }
+                \endqml
+            \li
+                \image qtlabscontrols-universal-button.png
+    \endtable
+
+    Both attributes can be specified for any window or item, and they automatically
+    propagate to children in the same manner as \l {Control::font}{fonts}. In the
+    following example, the window and all three radio buttons appear in the dark
+    theme using a violet accent color:
+
+    \table
+        \row
+            \li
+                \qml
+                import QtQuick 2.0
+                import Qt.labs.controls 1.0
+                import Qt.labs.controls.universal 1.0
+
+                ApplicationWindow {
+                    visible: true
+
+                    Universal.theme: Universal.Dark
+                    Universal.accent: Universal.Violet
+
+                    Column {
+                        anchors.centerIn: parent
+
+                        RadioButton { text: qsTr("Small") }
+                        RadioButton { text: qsTr("Medium");  checked: true }
+                        RadioButton { text: qsTr("Large") }
+                    }
+                }
+                \endqml
+            \li
+                \image qtlabscontrols-universal-dark.png
+    \endtable
+
+    \note The Universal style must be separately imported to gain access to
+    these style-specific attributes. It should be noted that regardless of the
+    references to the Universal style, the same application code runs with any
+    other style. The Universal style-specific attributes only have an effect
+    when the application is run with the Universal style. Furthermore, in case
+    of explicit Universal style-specific references, the Universal style must
+    be deployed with the application.
+
+    \section1 Attached Property Documentation
+
+    \styleproperty {Universal.accent} {color} {accent-attached-prop}
+    \target accent-attached-prop
+    This attached property holds the accent color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    recommended to use one of the pre-defined accents that have been designed
+    to work well with the rest of the Universal style palette:
+
+    \value Universal.Lime Lime (#A4C400)
+    \value Universal.Green Green (#60A917)
+    \value Universal.Emerald Emerald (#008A00)
+    \value Universal.Teal Teal (#00ABA9)
+    \value Universal.Cyan Cyan (#1BA1E2)
+    \value Universal.Cobalt Cobalt (#3E65FF, default)
+    \value Universal.Indigo Indigo (#6A00FF)
+    \value Universal.Violet Violet (#AA00FF)
+    \value Universal.Pink Pink (#F472D0)
+    \value Universal.Magenta Magenta (#D80073)
+    \value Universal.Crimson Crimson (#A20025)
+    \value Universal.Red Red (#E51400)
+    \value Universal.Orange Orange (#FA6800)
+    \value Universal.Amber Amber (#F0A30A)
+    \value Universal.Yellow Yellow (#E3C800)
+    \value Universal.Brown Brown (#825A2C)
+    \value Universal.Olive Olive (#6D8764)
+    \value Universal.Steel Steel (#647687)
+    \value Universal.Mauve Mauve (#76608A)
+    \value Universal.Taupe Taupe (#87794E)
+
+    \endstyleproperty
+
+    \styleproperty {Universal.theme} {enumeration} {theme-attached-prop}
+    \target theme-attached-prop
+    This attached property holds whether the theme is light or dark. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    Available themes:
+    \value Universal.Light Light theme (default)
+    \value Universal.Dark Dark theme
+
+    \endstyleproperty
+
+    \section1 Related Information
+
+    \list
+      \li \l{Styling Qt Labs Controls}
+    \endlist
+*/

@@ -35,88 +35,215 @@
 ****************************************************************************/
 
 #include "qquickoverlay_p.h"
-#include "qquickpanel_p.h"
+#include "qquickpopup_p.h"
+#include "qquickdrawer_p.h"
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlproperty.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QQuickOverlayPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickOverlay)
+
+public:
+    QQuickOverlayPrivate();
+
+    void popupAboutToShow();
+    void popupAboutToHide();
+    void drawerPositionChange();
+    void resizeBackground();
+
+    QQuickItem *background;
+    QVector<QQuickDrawer *> drawers;
+    QHash<QQuickItem *, QQuickPopup *> popups;
+    int modalPopups;
+};
+
+void QQuickOverlayPrivate::popupAboutToShow()
+{
+    Q_Q(QQuickOverlay);
+    if (!background || modalPopups > 1)
+        return;
+
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
+    if (!popup || !popup->isModal())
+        return;
+
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    QQmlProperty::write(background, QStringLiteral("opacity"), 1.0);
+}
+
+void QQuickOverlayPrivate::popupAboutToHide()
+{
+    Q_Q(QQuickOverlay);
+    if (!background || modalPopups > 1)
+        return;
+
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
+    if (!popup || !popup->isModal())
+        return;
+
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    QQmlProperty::write(background, QStringLiteral("opacity"), 0.0);
+}
+
+void QQuickOverlayPrivate::drawerPositionChange()
+{
+    Q_Q(QQuickOverlay);
+    QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(q->sender());
+    if (!background || !drawer || modalPopups > 0)
+        return;
+
+    // call QQuickItem::setOpacity() directly to avoid triggering QML Behaviors
+    // which would make the fading feel laggy compared to the drawer movement
+    background->setOpacity(drawer->position());
+}
+
+void QQuickOverlayPrivate::resizeBackground()
+{
+    Q_Q(QQuickOverlay);
+    background->setWidth(q->width());
+    background->setHeight(q->height());
+}
+
+QQuickOverlayPrivate::QQuickOverlayPrivate() :
+    background(Q_NULLPTR),
+    modalPopups(0)
+{
+}
+
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
-    : QQuickItem(parent), m_modalPanels(0)
+    : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
     setVisible(false);
 }
 
+
+QQuickItem *QQuickOverlay::background() const
+{
+    Q_D(const QQuickOverlay);
+    return d->background;
+}
+
+void QQuickOverlay::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickOverlay);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setOpacity(0.0);
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+            if (isComponentComplete())
+                d->resizeBackground();
+        }
+        emit backgroundChanged();
+    }
+}
+
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 {
+    Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
-    QQuickItem *panelItem = const_cast<QQuickItem *>(data.item);
-    QQuickPanel *panel = Q_NULLPTR;
+    QQuickPopup *popup = Q_NULLPTR;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
-        panel = qobject_cast<QQuickPanel *>(panelItem->parent());
+        QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(data.item);
+        if (drawer) {
+            if (change == ItemChildAddedChange) {
+                QObjectPrivate::connect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::drawerPositionChange);
+                d->drawers.append(drawer);
+            } else {
+                QObjectPrivate::disconnect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::drawerPositionChange);
+                d->drawers.removeOne(drawer);
+            }
+        } else {
+            popup = qobject_cast<QQuickPopup *>(data.item->parent());
+        }
         setVisible(!childItems().isEmpty());
     }
-    if (!panel)
+    if (!popup)
         return;
 
     if (change == ItemChildAddedChange) {
-        if (QQuickPanel *prevPanel = m_panels.value(panelItem)) {
-            qmlInfo(panel).nospace() << "Panel is sharing item " << panelItem << " with " << prevPanel
+        if (QQuickPopup *prevPopup = d->popups.value(data.item)) {
+            qmlInfo(popup).nospace() << "Popup is sharing item " << data.item << " with " << prevPopup
                                      << ". This is not supported and strange things are about to happen.";
             return;
         }
 
-        m_panels.insert(panelItem, panel);
-        if (panel->isModal())
-            ++m_modalPanels;
+        d->popups.insert(data.item, popup);
+        if (popup->isModal())
+            ++d->modalPopups;
 
-        connect(this, &QQuickOverlay::pressed, panel, &QQuickPanel::pressedOutside);
-        connect(this, &QQuickOverlay::released, panel, &QQuickPanel::releasedOutside);
+        connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
+        connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
+        QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
+        QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
     } else if (change == ItemChildRemovedChange) {
-        Q_ASSERT(panel == m_panels.value(panelItem));
+        Q_ASSERT(popup == d->popups.value(data.item));
 
-        disconnect(this, &QQuickOverlay::pressed, panel, &QQuickPanel::pressedOutside);
-        disconnect(this, &QQuickOverlay::released, panel, &QQuickPanel::releasedOutside);
+        disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
+        disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
 
-        if (panel->isModal())
-            --m_modalPanels;
-        m_panels.remove(panelItem);
+        if (popup->isModal())
+            --d->modalPopups;
+        d->popups.remove(data.item);
     }
+}
+
+void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickOverlay);
+    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    if (d->background)
+        d->resizeBackground();
 }
 
 void QQuickOverlay::keyPressEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::keyReleaseEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
     emit pressed();
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
     emit released();
 }
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
-    if (m_modalPanels == 0)
+    Q_D(QQuickOverlay);
+    if (d->modalPopups == 0)
         return false;
     // TODO Filter touch events
     if (event->type() != QEvent::MouseButtonPress)
@@ -128,15 +255,15 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     const QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
     const QList<QQuickItem *> &sortedChildren = priv->paintOrderChildItems();
     for (int i = sortedChildren.count() - 1; i >= 0; --i) {
-        QQuickItem *panelItem = sortedChildren[i];
-        if (panelItem == item)
+        QQuickItem *contentItem = sortedChildren[i];
+        if (contentItem == item)
             break;
 
-        QQuickPanel *panel = m_panels.value(panelItem);
-        if (panel) {
-            emit panel->pressedOutside();
+        QQuickPopup *popup = d->popups.value(contentItem);
+        if (popup) {
+            emit popup->pressedOutside();
 
-            if (!modalBlocked && panel->isModal())
+            if (!modalBlocked && popup->isModal())
                 modalBlocked = true;
         }
     }

@@ -41,6 +41,7 @@
 #include <QtLabsTemplates/private/qquickbusyindicator_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
 #include <QtLabsTemplates/private/qquickcheckbox_p.h>
+#include <QtLabsTemplates/private/qquickcombobox_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
 #include <QtLabsTemplates/private/qquickcontainer_p.h>
 #include <QtLabsTemplates/private/qquickdial_p.h>
@@ -51,8 +52,10 @@
 #include <QtLabsTemplates/private/qquicklabel_p.h>
 #include <QtLabsTemplates/private/qquickmenu_p.h>
 #include <QtLabsTemplates/private/qquickmenuitem_p.h>
+#include <QtLabsTemplates/private/qquickoverlay_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
-#include <QtLabsTemplates/private/qquickpanel_p.h>
+#include <QtLabsTemplates/private/qquickpane_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p.h>
 #include <QtLabsTemplates/private/qquickprogressbar_p.h>
 #include <QtLabsTemplates/private/qquickradiobutton_p.h>
 #include <QtLabsTemplates/private/qquickrangeslider_p.h>
@@ -90,6 +93,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
+    qmlRegisterType<QQuickComboBox>(uri, 1, 0, "ComboBox");
     qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
     qmlRegisterType<QQuickDial>(uri, 1, 0, "Dial");
@@ -100,8 +104,10 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
     qmlRegisterType<QQuickMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickMenuItem>(uri, 1, 0, "MenuItem");
+    qmlRegisterType<QQuickOverlay>();
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
-    qmlRegisterType<QQuickPanel>(uri, 1, 0, "Panel");
+    qmlRegisterType<QQuickPane>(uri, 1, 0, "Pane");
+    qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
     qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
     qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");

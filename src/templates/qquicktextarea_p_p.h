@@ -93,11 +93,10 @@ public:
 
     QQuickItem *background;
     QString placeholder;
+    Qt::FocusReason focusReason;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
 };
-
-Q_DECLARE_TYPEINFO(QQuickTextAreaPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

@@ -65,7 +65,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(int to READ to WRITE setTo NOTIFY toChanged FINAL)
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(int stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
     Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
@@ -86,9 +85,6 @@ public:
 
     int stepSize() const;
     void setStepSize(int step);
-
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
 
     QValidator *validator() const;
     void setValidator(QValidator *validator);
@@ -111,7 +107,6 @@ Q_SIGNALS:
     void toChanged();
     void valueChanged();
     void stepSizeChanged();
-    void localeChanged();
     void validatorChanged();
     void textFromValueChanged();
     void valueFromTextChanged();
@@ -120,6 +115,10 @@ protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
     void componentComplete() Q_DECL_OVERRIDE;
@@ -159,9 +158,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickSpinButton)
 };
 
-Q_DECLARE_TYPEINFO(QQuickSpinBox, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickSpinButton, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickSpinBox)
 
 #endif // QQUICKSPINBOX_P_H

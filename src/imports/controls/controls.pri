@@ -3,6 +3,7 @@ QML_FILES = \
     BusyIndicator.qml \
     Button.qml \
     CheckBox.qml \
+    ComboBox.qml \
     Dial.qml \
     Drawer.qml \
     Frame.qml \
@@ -11,7 +12,9 @@ QML_FILES = \
     Label.qml \
     Menu.qml \
     MenuItem.qml \
+    Pane.qml \
     PageIndicator.qml \
+    Popup.qml \
     ProgressBar.qml \
     RadioButton.qml \
     RangeSlider.qml \

@@ -43,8 +43,10 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QLocale>
 #include <QtCore/QDebug>
+#include <QtCore/QSettings>
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,9 +60,14 @@ QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
 QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
     Q_D(QQuickStyleSelector);
-    d->style = QGuiApplicationPrivate::styleOverride;
+    d->style = QGuiApplicationPrivate::styleOverride.toLower();
     if (d->style.isEmpty())
-        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
+        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE")).toLower();
+    if (d->style.isEmpty()) {
+        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Controls"));
+        if (settings)
+            d->style = settings->value(QStringLiteral("Style")).toString().toLower();
+    }
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
@@ -156,7 +163,10 @@ QStringList QQuickStyleSelector::allSelectors() const
     Q_D(const QQuickStyleSelector);
     QMutexLocker locker(&sharedDataMutex);
     QQuickStyleSelectorPrivate::updateSelectors();
-    return QStringList(d->style) + sharedData->staticSelectors;
+    QStringList selectors = sharedData->staticSelectors;
+    if (!d->style.isEmpty())
+        selectors.prepend(d->style);
+    return selectors;
 }
 
 void QQuickStyleSelector::setBaseUrl(const QUrl &base)
@@ -170,12 +180,6 @@ QUrl QQuickStyleSelector::baseUrl() const
 {
     Q_D(const QQuickStyleSelector);
     return d->baseUrl;
-}
-
-QQuickStyleSelector *QQuickStyleSelector::instance()
-{
-    static QQuickStyleSelector self;
-    return &self;
 }
 
 void QQuickStyleSelectorPrivate::updateSelectors()

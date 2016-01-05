@@ -78,6 +78,7 @@ public:
     bool pressed;
     bool checked;
     bool checkable;
+    bool highlighted;
     bool autoExclusive;
     bool autoRepeat;
     int delayTimer;
@@ -88,8 +89,6 @@ public:
     QQuickItem *indicator;
     QQuickButtonGroup *group;
 };
-
-Q_DECLARE_TYPEINFO(QQuickAbstractButtonPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

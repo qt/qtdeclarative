@@ -3,11 +3,15 @@ QML_FILES += \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
+    $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
+    $$PWD/Menu.qml \
+    $$PWD/MenuItem.qml \
+    $$PWD/Pane.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
@@ -27,6 +31,7 @@ QML_FILES += \
     $$PWD/Tumbler.qml
 
 HEADERS += \
+    $$PWD/qquickuniversalfocusrectangle_p.h \
     $$PWD/qquickuniversalimageprovider_p.h \
     $$PWD/qquickuniversalprogressring_p.h \
     $$PWD/qquickuniversalprogressstrip_p.h \
@@ -34,6 +39,7 @@ HEADERS += \
     $$PWD/qquickuniversaltheme_p.h
 
 SOURCES += \
+    $$PWD/qquickuniversalfocusrectangle.cpp \
     $$PWD/qquickuniversalimageprovider.cpp \
     $$PWD/qquickuniversalprogressring.cpp \
     $$PWD/qquickuniversalprogressstrip.cpp \

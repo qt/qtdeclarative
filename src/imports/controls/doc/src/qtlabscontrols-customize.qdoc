@@ -95,6 +95,38 @@
 
             \snippet CheckBox.qml indicator
 
+
+    \section1 Customizing ComboBox
+
+        ComboBox consists of \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \l {ComboBox::popup}{popup},
+        and \l {ComboBox::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtlabscontrols-combobox-background.png
+
+            \snippet ComboBox.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-combobox-contentItem.png
+
+            \snippet ComboBox.qml contentItem
+
+        \section3 Popup
+
+            \image qtlabscontrols-combobox-popup.png
+
+            \snippet ComboBox.qml popup
+
+        \section3 Delegate
+
+            \image qtlabscontrols-combobox-delegate.png
+
+            \snippet ComboBox.qml delegate
+
+
     \section1 Customizing Dial
 
         Dial consists of two visual items: \l {Control::background}{background}
@@ -208,7 +240,7 @@
 
     \section1 Customizing Menu
 
-        Menu consists of a \l {Panel::}{contentItem}.
+        Menu consists of a \l {Popup::}{contentItem}.
 
         \section3 Content item
 
@@ -226,6 +258,17 @@
     \section1 Customizing PageIndicator
 
         TODO
+
+
+    \section1 Customizing Pane
+
+        Pane consists of a \l {Control::background}{background}.
+
+        \section3 Background
+
+            \image qtlabscontrols-pane-background.png
+
+            \snippet Pane.qml background
 
 
     \section1 Customizing ProgressBar

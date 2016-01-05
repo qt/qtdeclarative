@@ -63,7 +63,7 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.first.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accentColor : control.Universal.chromeDisabledHighColor
+        color: control.first.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
     //! [firstHandle]
 
@@ -78,7 +78,7 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.second.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accentColor : control.Universal.chromeDisabledHighColor
+        color: control.second.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
     //! [secondHandle]
 
@@ -111,7 +111,7 @@ T.RangeSlider {
             width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width : 2 // SliderTrackThemeHeight
             height: !parent.horizontal ? control.second.position * parent.height - control.first.position * parent.height : 2 // SliderTrackThemeHeight
 
-            color: control.enabled ? control.Universal.accentColor : control.Universal.chromeDisabledHighColor
+            color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
     //! [track]

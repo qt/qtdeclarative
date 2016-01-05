@@ -58,6 +58,7 @@ T.Button {
         height: control.availableHeight
         text: control.text
         font: control.font
+        opacity: enabled || highlighted ? 1 : 0.3
         color: control.highlighted ? "#ffffff" : (control.pressed ? "#26282a" : "#353637")
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -69,7 +70,8 @@ T.Button {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        color: control.pressed ? (control.highlighted ? "#585a5c" : "#bdbebf") : (control.highlighted ? "#353637" : "#ffffff")
+        opacity: enabled ? 1 : 0.3
+        color: control.pressed ? (control.highlighted ? "#585a5c" : "#e4e4e4") : (control.highlighted ? "#353637" : "#ffffff")
         border.color: control.pressed ? "#26282a" : "#353637"
     }
     //! [background]

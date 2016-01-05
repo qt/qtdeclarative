@@ -180,18 +180,31 @@ void QQuickPaddedRectangle::setBottomPadding(qreal padding, bool has)
 
 QSGNode *QQuickPaddedRectangle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *data)
 {
-    QSGRectangleNode *rectangle = static_cast<QSGRectangleNode *>(QQuickRectangle::updatePaintNode(node, data));
-    if (rectangle) {
+    QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(node);
+    if (!transformNode)
+        transformNode = new QSGTransformNode;
+
+    QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(QQuickRectangle::updatePaintNode(transformNode->firstChild(), data));
+
+    if (rectNode) {
+        if (!transformNode->firstChild())
+            transformNode->appendChildNode(rectNode);
+
         qreal top = topPadding();
         qreal left = leftPadding();
         qreal right = rightPadding();
         qreal bottom = bottomPadding();
+
         if (!qFuzzyIsNull(top) || !qFuzzyIsNull(left) || !qFuzzyIsNull(right) || !qFuzzyIsNull(bottom)) {
-            rectangle->setRect(boundingRect().adjusted(left, top, -right, -bottom));
-            rectangle->update();
+            QMatrix4x4 m;
+            m.translate(left, top);
+            transformNode->setMatrix(m);
+
+            rectNode->setRect(boundingRect().adjusted(0, 0, -left-right, -top-bottom));
+            rectNode->update();
         }
     }
-    return rectangle;
+    return transformNode;
 }
 
 QT_END_NAMESPACE

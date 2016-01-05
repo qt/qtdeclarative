@@ -37,9 +37,22 @@
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.universal 1.0
+import Qt.labs.controls.universal.impl 1.0
 
 T.ApplicationWindow {
     id: window
 
     color: Universal.altHighColor
+
+    overlay.background: Rectangle {
+        color: window.Universal.baseLowColor
+    }
+
+    FocusRectangle {
+        parent: window.activeFocusControl
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
+        visible: parent && !!parent.useSystemFocusVisuals
+                        && (parent.focusReason === Qt.TabFocusReason || parent.focusReason === Qt.BacktabFocusReason)
+    }
 }

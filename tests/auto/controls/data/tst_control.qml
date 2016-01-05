@@ -57,16 +57,6 @@ TestCase {
     }
 
     SignalSpy {
-        id: layoutDirectionSpy
-        signalName: "layoutDirectionChanged"
-    }
-
-    SignalSpy {
-        id: effectiveLayoutDirectionSpy
-        signalName: "effectiveLayoutDirectionChanged"
-    }
-
-    SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
     }
@@ -213,54 +203,33 @@ TestCase {
         control.destroy()
     }
 
-    function test_layoutDirection() {
+    function test_mirrored() {
         var control = component.createObject(testCase)
         verify(control)
 
-        layoutDirectionSpy.target = control
-        effectiveLayoutDirectionSpy.target = control
         mirroredSpy.target = control
-
-        verify(layoutDirectionSpy.valid)
-        verify(effectiveLayoutDirectionSpy.valid)
         verify(mirroredSpy.valid)
 
+        control.locale = Qt.locale("en_US")
+        compare(control.locale.name, "en_US")
         verify(!control.LayoutMirroring.enabled)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
 
-        control.layoutDirection = Qt.RightToLeft
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
+        control.locale = Qt.locale("ar_EG")
         compare(control.mirrored, true)
-        compare(layoutDirectionSpy.count, 1)
-        compare(effectiveLayoutDirectionSpy.count, 1)
         compare(mirroredSpy.count, 1)
 
         control.LayoutMirroring.enabled = true
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-        compare(control.mirrored, false)
-        compare(layoutDirectionSpy.count, 1)
-        compare(effectiveLayoutDirectionSpy.count, 2)
-        compare(mirroredSpy.count, 2)
-
-        control.layoutDirection = Qt.LeftToRight
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
         compare(control.mirrored, true)
-        compare(layoutDirectionSpy.count, 2)
-        compare(effectiveLayoutDirectionSpy.count, 3)
-        compare(mirroredSpy.count, 3)
+        compare(mirroredSpy.count, 1)
+
+        control.locale = Qt.locale("en_US")
+        compare(control.mirrored, true)
+        compare(mirroredSpy.count, 1)
 
         control.LayoutMirroring.enabled = false
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
-        compare(layoutDirectionSpy.count, 2)
-        compare(effectiveLayoutDirectionSpy.count, 4)
-        compare(mirroredSpy.count, 4)
+        compare(mirroredSpy.count, 2)
 
         control.destroy()
     }
@@ -655,5 +624,229 @@ TestCase {
         compare(control4.item4_4.font.pixelSize, control4.font.pixelSize + 15)
 
         control4.destroy()
+    }
+
+    function test_locale() {
+        var control = component.createObject(testCase)
+        verify(control)
+
+        control.locale = Qt.locale("en_US")
+        compare(control.locale.name, "en_US")
+
+        control.locale = Qt.locale("nb_NO")
+        compare(control.locale.name, "nb_NO")
+
+        control.destroy()
+    }
+
+    Component {
+        id: component5
+        T.Control {
+            id: item2
+            objectName: "item2"
+            property alias localespy: _lspy;
+            property alias mirroredspy: _mspy;
+            property alias localespy_2: _lspy_2;
+            property alias mirroredspy_2: _mspy_2;
+            property alias localespy_3: _lspy_3;
+            property alias mirroredspy_3: _mspy_3;
+            property alias item2_2: _item2_2;
+            property alias item2_3: _item2_3;
+            T.Control {
+                id: _item2_2
+                objectName: "_item2_2"
+                T.Control {
+                    id: _item2_3
+                    objectName: "_item2_3"
+
+                    SignalSpy {
+                        id: _lspy_3
+                        target: item2_3
+                        signalName: "localeChanged"
+                    }
+
+                    SignalSpy {
+                        id: _mspy_3
+                        target: item2_3
+                        signalName: "mirroredChanged"
+                    }
+                }
+
+                SignalSpy {
+                    id: _lspy_2
+                    target: item2_2
+                    signalName: "localeChanged"
+                }
+
+                SignalSpy {
+                    id: _mspy_2
+                    target: item2_2
+                    signalName: "mirroredChanged"
+                }
+            }
+
+            SignalSpy {
+                id: _lspy
+                target: item2
+                signalName: "localeChanged"
+            }
+
+            SignalSpy {
+                id: _mspy
+                target: item2
+                signalName: "mirroredChanged"
+            }
+        }
+    }
+
+    function test_locale_2() {
+        var control = component5.createObject(testCase)
+        verify(control)
+        verify(control.item2_2)
+        verify(control.item2_3)
+
+        var defaultLocale = Qt.locale()
+
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.item2_2.locale.name, defaultLocale.name)
+        compare(control.item2_3.locale.name, defaultLocale.name)
+
+        control.locale = Qt.locale("nb_NO")
+        control.localespy.wait()
+        compare(control.localespy.count, 1)
+        compare(control.mirroredspy.count, 0)
+        compare(control.locale.name, "nb_NO")
+        compare(control.item2_2.locale.name, "nb_NO")
+        compare(control.item2_3.locale.name, "nb_NO")
+        compare(control.localespy_2.count, 1)
+        compare(control.mirroredspy_2.count, 0)
+        compare(control.localespy_3.count, 1)
+        compare(control.mirroredspy_3.count, 0)
+
+        control.locale = Qt.locale("ar_EG")
+        control.localespy.wait()
+        compare(control.localespy.count, 2)
+        compare(control.mirroredspy.count, 1)
+        compare(control.locale.name, "ar_EG")
+        compare(control.item2_2.locale.name, "ar_EG")
+        compare(control.item2_3.locale.name, "ar_EG")
+        compare(control.localespy_2.count, 2)
+        compare(control.mirroredspy_2.count, 1)
+        compare(control.localespy_3.count, 2)
+        compare(control.mirroredspy_3.count, 1)
+    }
+
+    Component {
+        id: component6
+        T.Control {
+            id: item6
+            objectName: "item6"
+            property alias localespy: _lspy;
+            property alias mirroredspy: _mspy;
+            property alias localespy_5: _lspy_5;
+            property alias mirroredspy_5: _mspy_5;
+            property alias item6_2: _item6_2;
+            property alias item6_3: _item6_3;
+            property alias item6_4: _item6_4;
+            property alias item6_5: _item6_5;
+            Item {
+                id: _item6_2
+                objectName: "_item6_2"
+                T.Control {
+                    id: _item6_3
+                    objectName: "_item6_3"
+                    Item {
+                        id: _item6_4
+                        objectName: "_item6_4"
+                        T.Control {
+                            id: _item6_5
+                            objectName: "_item6_5"
+
+                            SignalSpy {
+                                id: _lspy_5
+                                target: _item6_5
+                                signalName: "localeChanged"
+                            }
+
+                            SignalSpy {
+                                id: _mspy_5
+                                target: _item6_5
+                                signalName: "mirroredChanged"
+                            }
+                        }
+                    }
+                }
+            }
+
+            SignalSpy {
+                id: _lspy
+                target: item6
+                signalName: "localeChanged"
+            }
+
+            SignalSpy {
+                id: _mspy
+                target: item6
+                signalName: "mirroredChanged"
+            }
+        }
+    }
+
+    function test_locale_3() {
+        var control = component6.createObject(testCase)
+        verify(control)
+        verify(control.item6_2)
+        verify(control.item6_3)
+        verify(control.item6_4)
+        verify(control.item6_5)
+
+        var defaultLocale = Qt.locale()
+
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.item6_5.locale.name, defaultLocale.name)
+
+        control.locale = Qt.locale("nb_NO")
+        control.localespy.wait()
+        compare(control.localespy.count, 1)
+        compare(control.mirroredspy.count, 0)
+        compare(control.locale.name, "nb_NO")
+        compare(control.item6_5.locale.name, "nb_NO")
+        compare(control.localespy_5.count, 1)
+        compare(control.mirroredspy_5.count, 0)
+
+        control.locale = Qt.locale("ar_EG")
+        control.localespy.wait()
+        compare(control.localespy.count, 2)
+        compare(control.mirroredspy.count, 1)
+        compare(control.locale.name, "ar_EG")
+        compare(control.item6_5.locale.name, "ar_EG")
+        compare(control.localespy_5.count, 2)
+        compare(control.mirroredspy_5.count, 1)
+    }
+
+    function test_focusReason_data() {
+        return [
+            { tag: "Control", qml: "import Qt.labs.controls 1.0; Control { }" },
+            { tag: "TextField", qml: "import Qt.labs.controls 1.0; TextField { }" },
+            { tag: "TextArea", qml: "import Qt.labs.controls 1.0; TextArea { }" },
+            { tag: "SpinBox", qml: "import Qt.labs.controls 1.0; SpinBox { }" },
+            { tag: "ComboBox", qml: "import Qt.labs.controls 1.0; ComboBox { }" }
+        ]
+    }
+
+    function test_focusReason(data) {
+        var control = Qt.createQmlObject(data.qml, testCase)
+        verify(control)
+
+        compare(control.focusReason, Qt.OtherFocusReason)
+        control.forceActiveFocus(Qt.MouseFocusReason)
+        compare(control.activeFocus, true)
+        compare(control.focusReason, Qt.MouseFocusReason)
+
+        testCase.forceActiveFocus(Qt.TabFocusReason)
+        compare(control.activeFocus, false)
+        compare(control.focusReason, Qt.TabFocusReason)
+
+        control.destroy()
     }
 }

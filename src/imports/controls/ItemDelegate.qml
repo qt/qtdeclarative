@@ -47,6 +47,7 @@ T.ItemDelegate {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     padding: 12
     spacing: 12
@@ -74,7 +75,7 @@ T.ItemDelegate {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: control.checkable ? "qrc:/images/check.png" : ""
+        source: control.checkable ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png" : ""
     }
     //! [indicator]
 
@@ -82,7 +83,8 @@ T.ItemDelegate {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        color: control.pressed ? "#bdbebf" : "transparent"
+        visible: control.pressed || control.highlighted
+        color: control.pressed ? "#bdbebf" : "#eeeeee"
     }
     //! [background]
 }

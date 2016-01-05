@@ -64,9 +64,6 @@ private slots:
     void calendar();
     void calendar_data();
 
-    void legacy();
-    void legacy_data();
-
     void controls();
     void controls_data();
 
@@ -165,73 +162,6 @@ void tst_ObjectCount::calendar_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(&engine, "/calendar");
-}
-
-void tst_ObjectCount::legacy()
-{
-    QFETCH(QByteArray, data);
-
-    QQmlComponent component(&engine);
-
-    qt_qobjects->clear();
-
-    component.setData(data, QUrl());
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY2(object.data(), qPrintable(component.errorString()));
-
-    QList<QQuickItem *> items;
-    foreach (QObject *object, *qt_qobjects()) {
-        QQuickItem *item = qobject_cast<QQuickItem *>(object);
-        if (item)
-            items += item;
-    }
-    printItems(items);
-}
-
-void tst_ObjectCount::legacy_data()
-{
-    QTest::addColumn<QByteArray>("data");
-
-    QTest::newRow("ApplicationWindow")
-            << QByteArray("import QtQuick.Controls 1.3; ApplicationWindow { }");
-    QTest::newRow("BusyIndicator")
-            << QByteArray("import QtQuick.Controls 1.3; BusyIndicator { }");
-    QTest::newRow("Button")
-            << QByteArray("import QtQuick.Controls 1.3; Button { }");
-    QTest::newRow("CheckBox")
-            << QByteArray("import QtQuick.Controls 1.3; CheckBox { }");
-    QTest::newRow("Dial")
-            << QByteArray("import QtQuick.Extras 1.3; Dial { }");
-    QTest::newRow("GroupBox")
-            << QByteArray("import QtQuick.Controls 1.3; GroupBox { }");
-    QTest::newRow("Label")
-            << QByteArray("import QtQuick.Controls 1.3; Label { }");
-    QTest::newRow("ProgressBar")
-            << QByteArray("import QtQuick.Controls 1.3; ProgressBar { }");
-    QTest::newRow("RadioButton")
-            << QByteArray("import QtQuick.Controls 1.3; RadioButton { }");
-    QTest::newRow("ScrollView")
-            << QByteArray("import QtQuick.Controls 1.3; ScrollView { }");
-    QTest::newRow("Slider")
-            << QByteArray("import QtQuick.Controls 1.3; Slider { }");
-    QTest::newRow("SpinBox")
-            << QByteArray("import QtQuick.Controls 1.3; SpinBox { }");
-    QTest::newRow("StackView")
-            << QByteArray("import QtQuick.Controls 1.3; StackView { }");
-    QTest::newRow("Switch")
-            << QByteArray("import QtQuick.Controls 1.3; Switch { }");
-    QTest::newRow("TabView")
-            << QByteArray("import QtQuick.Controls 1.3; TabView { }");
-    QTest::newRow("TextArea")
-            << QByteArray("import QtQuick.Controls 1.3; TextArea { }");
-    QTest::newRow("TextField")
-            << QByteArray("import QtQuick.Controls 1.3; TextField { }");
-    QTest::newRow("ToolBar")
-            << QByteArray("import QtQuick.Controls 1.3; ToolBar { }");
-    QTest::newRow("ToolButton")
-            << QByteArray("import QtQuick.Controls 1.3; ToolButton { }");
-    QTest::newRow("Tumbler")
-            << QByteArray("import QtQuick.Extras 1.3; Tumbler { }");
 }
 
 void tst_ObjectCount::controls()

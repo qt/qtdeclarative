@@ -51,6 +51,7 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qlocale.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -107,8 +108,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickMonthModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickMonthModel, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMonthModel)
 
 #endif // QQUICKMONTHMODEL_P_H

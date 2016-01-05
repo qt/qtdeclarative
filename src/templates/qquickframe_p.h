@@ -48,56 +48,36 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtQml/qqmllist.h>
+#include <QtLabsTemplates/private/qquickpane_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickFramePrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickFrame : public QQuickControl
+class Q_LABSTEMPLATES_EXPORT QQuickFrame : public QQuickPane
 {
     Q_OBJECT
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
 
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
     QQuickItem *frame() const;
     void setFrame(QQuickItem *frame);
 
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
-
 Q_SIGNALS:
-    void contentWidthChanged();
-    void contentHeightChanged();
-    void contentChildrenChanged();
     void frameChanged();
 
 protected:
     QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent);
-
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickFrame)
     Q_DECLARE_PRIVATE(QQuickFrame)
 };
 
-Q_DECLARE_TYPEINFO(QQuickFrame, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickFrame)
 
 #endif // QQUICKFRAME_P_H

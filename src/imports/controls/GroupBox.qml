@@ -40,7 +40,9 @@ import Qt.labs.templates 1.0 as T
 T.GroupBox {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            label ? label.implicitWidth + leftPadding + rightPadding : 0,
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
@@ -48,7 +50,7 @@ T.GroupBox {
 
     spacing: 6
     padding: 6
-    topPadding: 6 + (label && title ? label.implicitHeight + spacing : 0)
+    topPadding: 6 + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
     //! [contentItem]
     contentItem: Item { }

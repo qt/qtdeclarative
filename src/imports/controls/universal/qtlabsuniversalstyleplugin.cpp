@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include "qquickuniversalfocusrectangle_p.h"
 #include "qquickuniversalimageprovider_p.h"
 #include "qquickuniversalprogressring_p.h"
 #include "qquickuniversalprogressstrip_p.h"
@@ -81,8 +82,8 @@ void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    QQuickStyleSelector *selector = QQuickStyleSelector::instance();
-    if (selector && selector->style() == QStringLiteral("universal")) {
+    QQuickStyleSelector selector;
+    if (selector.style() == QStringLiteral("universal")) {
         if (QFont(QStringLiteral("Segoe UI")).family() == QStringLiteral("Segoe UI")) {
             QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
             if (old) {
@@ -96,6 +97,7 @@ void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char
     engine->addImageProvider(QStringLiteral("universal"), new QQuickUniversalImageProvider);
 
     QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterType<QQuickUniversalFocusRectangle>(import, 1, 0, "FocusRectangle");
     qmlRegisterType<QQuickUniversalProgressRing>(import, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickUniversalProgressRingAnimator>(import, 1, 0, "ProgressRingAnimator");
     qmlRegisterType<QQuickUniversalProgressStrip>(import, 1, 0, "ProgressStrip");

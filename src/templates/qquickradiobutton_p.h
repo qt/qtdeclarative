@@ -67,8 +67,8 @@ protected:
 #endif
 };
 
-Q_DECLARE_TYPEINFO(QQuickRadioButton, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickRadioButton)
 
 #endif // QQUICKRADIOBUTTON_P_H

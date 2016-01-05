@@ -51,13 +51,13 @@
 #include <QtCore/qvector.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
-#include <QtLabsTemplates/private/qquickpanel_p_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlObjectModel;
 
-class Q_LABSTEMPLATES_EXPORT QQuickMenuPrivate : public QQuickPanelPrivate, public QQuickItemChangeListener
+class Q_LABSTEMPLATES_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickMenu)
 
@@ -90,8 +90,6 @@ public:
     QQuickItem *dummyFocusItem;
     bool ignoreActiveFocusChanges;
 };
-
-Q_DECLARE_TYPEINFO(QQuickMenuPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

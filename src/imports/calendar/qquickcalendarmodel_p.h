@@ -51,6 +51,7 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qdatetime.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -101,8 +102,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickCalendarModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCalendarModel, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCalendarModel)
 
 #endif // QQUICKCALENDARMODEL_P_H

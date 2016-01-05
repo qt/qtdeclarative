@@ -102,25 +102,29 @@ public:
     void resolveFont();
     static QFont naturalControlFont(const QQuickItem *);
     static QFont themeFont(QPlatformTheme::Font type);
+    void updateLocale(const QLocale &l, bool e);
+    static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
+
+    QLocale calcLocale() const;
 
     QFont font;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
     bool hasBottomPadding;
+    bool hasLocale;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
     qreal spacing;
-    Qt::LayoutDirection layoutDirection;
+    QLocale locale;
+    Qt::FocusReason focusReason;
     QQuickItem *background;
     QQuickItem *contentItem;
     QQuickAccessibleAttached *accessibleAttached;
 };
-
-Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

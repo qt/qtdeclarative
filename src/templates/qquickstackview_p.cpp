@@ -69,7 +69,7 @@ private:
 };
 
 QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(Q_NULLPTR),
-    index(-1), init(false), removal(false), ownItem(false), ownComponent(false),
+    index(-1), init(false), removal(false), ownItem(false), ownComponent(false), widthValid(false), heightValid(false),
     context(Q_NULLPTR), component(Q_NULLPTR), incubator(Q_NULLPTR), view(Q_NULLPTR),
     status(QQuickStackView::Inactive)
 {
@@ -139,16 +139,21 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         delete incubator;
         incubator = new QQuickStackIncubator(this);
         component->create(*incubator, context);
+        if (component->isError())
+            qWarning() << qPrintable(component->errorString().trimmed());
+    } else {
+        initialize();
     }
-    initialize();
     return item;
 }
 
 void QQuickStackElement::incubate(QObject *object)
 {
     item = qmlobject_cast<QQuickItem *>(object);
-    if (item)
+    if (item) {
         QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
+        initialize();
+    }
 }
 
 void QQuickStackElement::initialize()
@@ -157,14 +162,10 @@ void QQuickStackElement::initialize()
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    if (!p->widthValid) {
+    if (!(widthValid = p->widthValid))
         item->setWidth(view->width());
-        p->widthValid = false;
-    }
-    if (!p->heightValid) {
+    if (!(heightValid = p->heightValid))
         item->setHeight(view->height());
-        p->heightValid = false;
-    }
     item->setParentItem(view);
     p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
 
@@ -405,13 +406,13 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
     }
 
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, viewBounds))
             completeTransition(exit, transitioner->removeTransition);
         else
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, QRectF()))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, QRectF()))
             completeTransition(enter, transitioner->removeDisplacedTransition);
         else
             enter->startTransition(transitioner);
@@ -437,13 +438,13 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
     }
 
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
             completeTransition(enter, transitioner->addTransition);
         else
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
@@ -470,13 +471,13 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
     }
 
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->moveDisplacedTransition);
         else
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
             completeTransition(enter, transitioner->moveTransition);
         else
             enter->startTransition(transitioner);

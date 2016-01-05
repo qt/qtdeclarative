@@ -53,6 +53,8 @@ T.Switch {
     padding: 5
     spacing: 8
 
+    property bool useSystemFocusVisuals: true
+
     //! [indicator]
     indicator: Rectangle {
         implicitWidth: 44
@@ -63,9 +65,9 @@ T.Switch {
         radius: 10
         color: !control.enabled ? "transparent" :
                 control.pressed ? control.Universal.baseMediumColor :
-                control.checked ? control.Universal.accentColor : "transparent"
+                control.checked ? control.Universal.accent : "transparent"
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.checked && !control.pressed ? control.Universal.accentColor : control.Universal.baseMediumColor
+                       control.checked && !control.pressed ? control.Universal.accent : control.Universal.baseMediumColor
         border.width: 2
 
         Rectangle {

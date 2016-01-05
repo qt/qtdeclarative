@@ -75,7 +75,7 @@ T.Switch {
             width: 28
             height: 28
             radius: 16
-            color: control.pressed ? "#bdbebf" : "#ffffff"
+            color: control.pressed ? "#e4e4e4" : "#ffffff"
             border.width: 1
             border.color: control.pressed ? "#26282a" : "#353637"
 

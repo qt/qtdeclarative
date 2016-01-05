@@ -50,6 +50,7 @@
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qlocale.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,8 +97,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickWeekNumberModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickWeekNumberModel, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickWeekNumberModel)
 
 #endif // QQUICKWEEKNUMBERMODEL_P_H

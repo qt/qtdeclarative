@@ -13,13 +13,18 @@ QML_FILES += \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
+    $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Drawer.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
+    $$PWD/Menu.qml \
+    $$PWD/MenuItem.qml \
+    $$PWD/Pane.qml \
     $$PWD/PageIndicator.qml \
+    $$PWD/Popup.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/RangeSlider.qml \

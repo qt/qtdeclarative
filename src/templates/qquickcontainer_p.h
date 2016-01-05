@@ -109,8 +109,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_currentIndexChanged())
 };
 
-Q_DECLARE_TYPEINFO(QQuickContainer, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickContainer)
 
 #endif // QQUICKCONTAINER_P_H

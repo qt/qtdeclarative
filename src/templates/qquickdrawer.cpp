@@ -40,6 +40,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -88,7 +89,7 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the drawer is clicked.
 */
 
-class QQuickDrawerPrivate : public QQuickControlPrivate
+class QQuickDrawerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
@@ -100,6 +101,8 @@ public:
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
+
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
 
     Qt::Edge edge;
     qreal offset;
@@ -131,31 +134,35 @@ void QQuickDrawerPrivate::updateContent()
     }
 }
 
+static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int threshold = -1)
+{
+    return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
+}
+
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    pressPoint = q->mapFromItem(item, event->pos());
+    pressPoint = event->windowPos();
+    offset = 0;
 
     if (qFuzzyIsNull(position)) {
         // only accept pressing at drag margins when fully closed
         switch (edge) {
         case Qt::LeftEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::RightEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(q->width() - event->x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(q->width() - event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::TopEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(event->windowPos().y(), Qt::YAxis, event));
             break;
         case Qt::BottomEdge:
-            event->setAccepted(!QQuickWindowPrivate::dragOverThreshold(q->height() - event->y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(q->height() - event->windowPos().y(), Qt::YAxis, event));
             break;
         }
-        offset = 0;
     } else {
         event->accept();
-        offset = q->positionAt(pressPoint) - position;
     }
 
     return item == q;
@@ -164,26 +171,32 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    QPointF movePoint = q->mapFromItem(item, event->pos());
+    Q_UNUSED(item);
+    QPointF movePoint = event->windowPos();
 
     if (!q->keepMouseGrab()) {
+        // Flickable uses a hard-coded threshold of 15 for flicking, and
+        // QStyleHints::startDragDistance for dragging. Drawer uses a bit
+        // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
+        int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         bool overThreshold = false;
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event);
+            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
         else
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event);
+            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
 
         if (window && overThreshold) {
             QQuickItem *grabber = q->window()->mouseGrabberItem();
             if (!grabber || !grabber->keepMouseGrab()) {
                 q->grabMouse();
                 q->setKeepMouseGrab(overThreshold);
+                offset = qMin<qreal>(0.0, q->positionAt(movePoint) - position);
             }
         }
     }
 
     if (q->keepMouseGrab())
-        q->setPosition(q->positionAt(event->pos()) - offset);
+        q->setPosition(q->positionAt(movePoint) - offset);
     event->accept();
 
     return q->keepMouseGrab();
@@ -242,6 +255,11 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
     return wasGrabbed;
 }
 
+void QQuickDrawerPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    updateContent();
+}
+
 QQuickDrawer::QQuickDrawer(QQuickItem *parent) :
     QQuickControl(*(new QQuickDrawerPrivate), parent)
 {
@@ -294,7 +312,7 @@ qreal QQuickDrawer::position() const
 void QQuickDrawer::setPosition(qreal position)
 {
     Q_D(QQuickDrawer);
-    position = qBound(0.0, position, 1.0);
+    position = qBound<qreal>(0.0, position, 1.0);
     if (!qFuzzyCompare(d->position, position)) {
         d->position = position;
         if (isComponentComplete())
@@ -319,12 +337,17 @@ void QQuickDrawer::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickDrawer);
     if (d->content != item) {
-        delete d->content;
+        if (d->content) {
+            QQuickItemPrivate::get(d->content)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+            delete d->content;
+        }
         d->content = item;
-        if (item)
+        if (item) {
             item->setParentItem(this);
-        if (isComponentComplete())
-            d->updateContent();
+            QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+            if (isComponentComplete())
+                d->updateContent();
+        }
         emit contentItemChanged();
     }
 }

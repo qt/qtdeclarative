@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Frame
-    \inherits Control
+    \inherits Pane
     \instantiates QQuickFrame
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-containers
@@ -63,76 +63,18 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Frame}, {Container Controls}
 */
 
-QQuickFramePrivate::QQuickFramePrivate() : contentWidth(0), contentHeight(0), frame(Q_NULLPTR)
+QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
 {
-}
-
-void QQuickFramePrivate::init()
-{
-    Q_Q(QQuickFrame);
-    q->setFlag(QQuickItem::ItemIsFocusScope);
-    q->setAcceptedMouseButtons(Qt::AllButtons);
-
 }
 
 QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickControl(*(new QQuickFramePrivate), parent)
+    QQuickPane(*(new QQuickFramePrivate), parent)
 {
-    d_func()->init();
 }
 
 QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickControl(dd, parent)
+    QQuickPane(dd, parent)
 {
-    d_func()->init();
-}
-
-/*!
-    \qmlproperty real Qt.labs.controls::Frame::contentWidth
-
-    This property holds the content width. It is used for calculating the
-    total implicit width of the frame.
-
-    \note If only a single item is used within the frame, the implicit width
-          of its contained item is used as the content width.
-*/
-qreal QQuickFrame::contentWidth() const
-{
-    Q_D(const QQuickFrame);
-    return d->contentWidth;
-}
-
-void QQuickFrame::setContentWidth(qreal width)
-{
-    Q_D(QQuickFrame);
-    if (d->contentWidth != width) {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
-}
-
-/*!
-    \qmlproperty real Qt.labs.controls::Frame::contentHeight
-
-    This property holds the content height. It is used for calculating the
-    total implicit height of the frame.
-
-    \note If only a single item is used within the frame, the implicit height
-          of its contained item is used as the content height.
-*/
-qreal QQuickFrame::contentHeight() const
-{
-    Q_D(const QQuickFrame);
-    return d->contentHeight;
-}
-
-void QQuickFrame::setContentHeight(qreal height)
-{
-    Q_D(QQuickFrame);
-    if (d->contentHeight != height) {
-        d->contentHeight = height;
-        emit contentHeightChanged();
-    }
 }
 
 /*!
@@ -158,51 +100,6 @@ void QQuickFrame::setFrame(QQuickItem *frame)
             frame->setParentItem(this);
         emit frameChanged();
     }
-}
-
-/*!
-    \qmlproperty list<Object> Qt.labs.controls::Frame::contentData
-    \default
-
-    This property holds the list of content data.
-
-    \sa Item::data
-*/
-QQmlListProperty<QObject> QQuickFrame::contentData()
-{
-    Q_D(QQuickFrame);
-    return QQmlListProperty<QObject>(d->contentItem, Q_NULLPTR,
-                                     QQuickItemPrivate::data_append,
-                                     QQuickItemPrivate::data_count,
-                                     QQuickItemPrivate::data_at,
-                                     QQuickItemPrivate::data_clear);
-}
-
-/*!
-    \qmlproperty list<Item> Qt.labs.controls::Frame::contentChildren
-
-    This property holds the list of content children.
-
-    \sa Item::children
-*/
-QQmlListProperty<QQuickItem> QQuickFrame::contentChildren()
-{
-    Q_D(QQuickFrame);
-    return QQmlListProperty<QQuickItem>(d->contentItem, Q_NULLPTR,
-                                        QQuickItemPrivate::children_append,
-                                        QQuickItemPrivate::children_count,
-                                        QQuickItemPrivate::children_at,
-                                        QQuickItemPrivate::children_clear);
-}
-
-void QQuickFrame::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
-{
-    QQuickControl::contentItemChange(newItem, oldItem);
-    if (oldItem)
-        disconnect(oldItem, &QQuickItem::childrenChanged, this, &QQuickFrame::contentChildrenChanged);
-    if (newItem)
-        connect(newItem, &QQuickItem::childrenChanged, this, &QQuickFrame::contentChildrenChanged);
-    emit contentChildrenChanged();
 }
 
 QT_END_NAMESPACE

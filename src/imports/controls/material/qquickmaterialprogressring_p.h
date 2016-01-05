@@ -86,9 +86,8 @@ protected:
     QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
 };
 
-Q_DECLARE_TYPEINFO(QQuickMaterialProgressRing, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickMaterialRingAnimator, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMaterialProgressRing)
 
 #endif // QQUICKMATERIALPROGRESSRING_P_H

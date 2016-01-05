@@ -45,13 +45,13 @@ T.MenuItem {
             + (label && indicator ? spacing : 0) + leftPadding + rightPadding
     implicitHeight: background ? background.implicitHeight
         : (label ? label.implicitHeight : 0) + (indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 12
-    spacing: 12
+    padding: 6
 
     //! [label]
     label: Text {
-        x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding
         width: control.availableWidth - (control.checkable ? indicator.width + control.spacing : 0)
         height: control.availableHeight
@@ -68,11 +68,11 @@ T.MenuItem {
 
     //! [indicator]
     indicator: Image {
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: control.checkable ? "qrc:/images/check.png" : ""
+        source: control.checkable ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png" : ""
     }
     //! [indicator]
 

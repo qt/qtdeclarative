@@ -43,13 +43,13 @@ QT_BEGIN_NAMESPACE
 QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
-    systemFont = QFont(QLatin1Literal("Sege UI"));
+    systemFont = QFont(QStringLiteral("Segoe UI"));
     systemFont.setPixelSize(15);
-    mdiSubWindowTitleFont = systemFont;
-    mdiSubWindowTitleFont.setWeight(QFont::DemiBold);
-    dockWidgetTitleFont = QFont(QLatin1Literal("Sege UI"));
-    dockWidgetTitleFont.setPixelSize(24);
-    dockWidgetTitleFont.setWeight(QFont::Light);
+    groupBoxTitleFont = systemFont;
+    groupBoxTitleFont.setWeight(QFont::DemiBold);
+    tabButtonFont = QFont(QStringLiteral("Segoe UI"));
+    tabButtonFont.setPixelSize(24);
+    tabButtonFont.setWeight(QFont::Light);
 }
 
 QQuickUniversalTheme::~QQuickUniversalTheme()
@@ -59,10 +59,10 @@ QQuickUniversalTheme::~QQuickUniversalTheme()
 const QFont *QQuickUniversalTheme::font(QPlatformTheme::Font type) const
 {
     switch (type) {
-    case QPlatformTheme::MdiSubWindowTitleFont:
-        return &mdiSubWindowTitleFont;
-    case QPlatformTheme::DockWidgetTitleFont:
-        return &dockWidgetTitleFont;
+    case QPlatformTheme::GroupBoxTitleFont:
+        return &groupBoxTitleFont;
+    case QPlatformTheme::TabButtonFont:
+        return &tabButtonFont;
     default:
         return &systemFont;
     }

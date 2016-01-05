@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qquickbutton_p.h \
     $$PWD/qquickbuttongroup_p.h \
     $$PWD/qquickcheckbox_p.h \
+    $$PWD/qquickcombobox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
     $$PWD/qquickcontrol_p.h \
@@ -25,8 +26,10 @@ HEADERS += \
     $$PWD/qquickmenuitem_p.h \
     $$PWD/qquickoverlay_p.h \
     $$PWD/qquickpageindicator_p.h \
-    $$PWD/qquickpanel_p.h \
-    $$PWD/qquickpanel_p_p.h \
+    $$PWD/qquickpane_p.h \
+    $$PWD/qquickpane_p_p.h \
+    $$PWD/qquickpopup_p.h \
+    $$PWD/qquickpopup_p_p.h \
     $$PWD/qquickpressandholdhelper_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
@@ -56,6 +59,7 @@ SOURCES += \
     $$PWD/qquickbutton.cpp \
     $$PWD/qquickbuttongroup.cpp \
     $$PWD/qquickcheckbox.cpp \
+    $$PWD/qquickcombobox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
     $$PWD/qquickdial.cpp \
@@ -68,7 +72,8 @@ SOURCES += \
     $$PWD/qquickmenuitem.cpp \
     $$PWD/qquickoverlay.cpp \
     $$PWD/qquickpageindicator.cpp \
-    $$PWD/qquickpanel.cpp \
+    $$PWD/qquickpane.cpp \
+    $$PWD/qquickpopup.cpp \
     $$PWD/qquickpressandholdhelper.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \

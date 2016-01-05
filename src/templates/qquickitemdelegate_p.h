@@ -71,8 +71,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickItemDelegate)
 };
 
-Q_DECLARE_TYPEINFO(QQuickItemDelegate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickItemDelegate)
 
 #endif // QQUICKITEMDELEGATE_P_H

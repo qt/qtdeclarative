@@ -113,7 +113,6 @@ public:
     int repeatTimer;
     QQuickSpinButton *up;
     QQuickSpinButton *down;
-    QLocale locale;
     QValidator *validator;
     QJSValue textFromValue;
     QJSValue valueFromText;
@@ -170,19 +169,19 @@ void QQuickSpinBoxPrivate::stopPressRepeat()
     }
 }
 
-bool QQuickSpinBoxPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *)
+bool QQuickSpinBoxPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *event)
 {
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    up->setPressed(child == ui);
-    down->setPressed(child == di);
+    up->setPressed(ui && ui->contains(ui->mapFromItem(child, event->pos())));
+    down->setPressed(di && di->contains(di->mapFromItem(child, event->pos())));
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
     if (pressed)
         startRepeatDelay();
-    return child == ui || child == di;
+    return up->isPressed() || down->isPressed();
 }
 
 bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event)
@@ -190,13 +189,13 @@ bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    up->setPressed(child == ui && ui->contains(event->pos()));
-    down->setPressed(child == di && di->contains(event->pos()));
+    up->setPressed(ui && ui->contains(ui->mapFromItem(child, event->pos())));
+    down->setPressed(di && di->contains(di->mapFromItem(child, event->pos())));
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
     stopPressRepeat();
-    return child == ui || child == di;
+    return up->isPressed() || down->isPressed();
 }
 
 bool QQuickSpinBoxPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event)
@@ -204,32 +203,31 @@ bool QQuickSpinBoxPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEven
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    if (child == ui) {
+    bool wasPressed = up->isPressed() || down->isPressed();
+    if (up->isPressed()) {
         up->setPressed(false);
-        if (repeatTimer <= 0 && ui->contains(event->pos()))
+        if (repeatTimer <= 0 && ui && ui->contains(ui->mapFromItem(child, event->pos())))
             q->increase();
-    } else if (child == di) {
+    } else if (down->isPressed()) {
         down->setPressed(false);
-        if (repeatTimer <= 0 && di->contains(event->pos()))
+        if (repeatTimer <= 0 && di && di->contains(di->mapFromItem(child, event->pos())))
             q->decrease();
     }
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return child == ui || child == di;
+    return wasPressed;
 }
 
-bool QQuickSpinBoxPrivate::handleMouseUngrabEvent(QQuickItem *child)
+bool QQuickSpinBoxPrivate::handleMouseUngrabEvent(QQuickItem *)
 {
     Q_Q(QQuickSpinBox);
-    QQuickItem *ui = up->indicator();
-    QQuickItem *di = down->indicator();
     up->setPressed(false);
     down->setPressed(false);
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return child == ui || child == di;
+    return false;
 }
 
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
@@ -241,6 +239,7 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
 
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
+    setAcceptedMouseButtons(Qt::LeftButton);
 }
 
 /*!
@@ -337,26 +336,6 @@ void QQuickSpinBox::setStepSize(int step)
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.controls::SpinBox::locale
-
-    This property holds the locale that is used to format the value.
-*/
-QLocale QQuickSpinBox::locale() const
-{
-    Q_D(const QQuickSpinBox);
-    return d->locale;
-}
-
-void QQuickSpinBox::setLocale(const QLocale &locale)
-{
-    Q_D(QQuickSpinBox);
-    if (d->locale != locale) {
-        d->locale = locale;
-        emit localeChanged();
-    }
-}
-
-/*!
     \qmlproperty Validator Qt.labs.controls::SpinBox::validator
 
     This property holds the input text validator. By default, SpinBox uses
@@ -364,7 +343,7 @@ void QQuickSpinBox::setLocale(const QLocale &locale)
 
     \snippet SpinBox.qml validator
 
-    \sa textFromValue, valueFromText, locale
+    \sa textFromValue, valueFromText, {Control::locale}{locale}
 */
 QValidator *QQuickSpinBox::validator() const
 {
@@ -398,7 +377,7 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }
     \endcode
 
-    \sa valueFromText, validator, locale
+    \sa valueFromText, validator, {Control::locale}{locale}
 */
 QJSValue QQuickSpinBox::textFromValue() const
 {
@@ -434,7 +413,7 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
     valueFromText: function(text, locale) { return Number.fromLocaleString(locale, text); }
     \endcode
 
-    \sa textFromValue, validator, locale
+    \sa textFromValue, validator, {Control::locale}{locale}
 */
 QJSValue QQuickSpinBox::valueFromText() const
 {
@@ -562,6 +541,34 @@ bool QQuickSpinBox::childMouseEventFilter(QQuickItem *child, QEvent *event)
     default:
         return false;
     }
+}
+
+void QQuickSpinBox::mousePressEvent(QMouseEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::mousePressEvent(event);
+    d->handleMousePressEvent(this, event);
+}
+
+void QQuickSpinBox::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::mouseMoveEvent(event);
+    d->handleMouseMoveEvent(this, event);
+}
+
+void QQuickSpinBox::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::mouseReleaseEvent(event);
+    d->handleMouseReleaseEvent(this, event);
+}
+
+void QQuickSpinBox::mouseUngrabEvent()
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::mouseUngrabEvent();
+    d->handleMouseUngrabEvent(this);
 }
 
 void QQuickSpinBox::timerEvent(QTimerEvent *event)

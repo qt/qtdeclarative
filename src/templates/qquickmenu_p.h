@@ -49,15 +49,16 @@
 //
 
 #include <QtQml/qqmllist.h>
+#include <QtQml/qqml.h>
 
-#include "qquickpanel_p.h"
+#include "qquickpopup_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QQuickMenuItem;
 class QQuickMenuPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPanel
+class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
@@ -84,8 +85,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickMenu)
 };
 
-Q_DECLARE_TYPEINFO(QQuickMenu, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMenu)
 
 #endif // QQUICKMENU_P_H

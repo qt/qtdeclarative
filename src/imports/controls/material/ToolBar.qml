@@ -36,12 +36,13 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.material 1.0
 
 T.ToolBar {
     id: control
 
-    implicitWidth: contentWidth + leftPadding + rightPadding
-    implicitHeight: Math.max(26, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
@@ -49,4 +50,11 @@ T.ToolBar {
     //! [contentItem]
     contentItem: Item { }
     //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        implicitHeight: 40
+        color: control.Material.accentColor
+    }
+    //! [background]
 }

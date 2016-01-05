@@ -65,8 +65,8 @@ public:
 
 private:
     QFont systemFont;
-    QFont mdiSubWindowTitleFont; // QQuickGroupBox
-    QFont dockWidgetTitleFont; // QQuickTabButton
+    QFont groupBoxTitleFont;
+    QFont tabButtonFont;
 };
 
 QT_END_NAMESPACE

@@ -44,6 +44,7 @@
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
+#include "qquickapplicationwindow_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -65,10 +66,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
-    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR),
-    accessibleAttached(Q_NULLPTR)
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
+    background(Q_NULLPTR), contentItem(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -85,7 +85,8 @@ QQuickControlPrivate::~QQuickControlPrivate()
 void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
-    q->mirrorChange();
+    if (locale.textDirection() == Qt::LeftToRight)
+        q->mirrorChange();
 }
 
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
@@ -218,13 +219,20 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
     }
 
     QQuickItem *p = q->parentItem();
+    bool found = false;
     while (p) {
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
             naturalFont = qc->font();
+            found = true;
             break;
         }
 
         p = p->parentItem();
+    }
+
+    if (!found) {
+        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+            naturalFont = w->font();
     }
 
     naturalFont.resolve(0);
@@ -353,8 +361,11 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete())
+    if (change == ItemParentHasChanged && isComponentComplete()) {
         d->resolveFont();
+        if (!d->hasLocale)
+            d->locale = d->calcLocale();
+    }
 }
 
 /*!
@@ -367,7 +378,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     controls can maintain consistency with the native platform's native look and feel. It's common
     that different platforms, or different styles, define different fonts for an application.
 
-    The default font depends on the system environment. QGuiApplication maintains a system/theme
+    The default font depends on the system environment. ApplicationWindow maintains a system/theme
     font which serves as a default for all controls. There may also be special font defaults for
     certain types of controls. You can also set the default font for controls by passing a custom
     font to QGuiApplication::setFont(), before loading the QML. Finally, the font is matched
@@ -412,7 +423,7 @@ void QQuickControl::resetFont()
 */
 qreal QQuickControl::availableWidth() const
 {
-    return qMax(0.0, width() - leftPadding() - rightPadding());
+    return qMax<qreal>(0.0, width() - leftPadding() - rightPadding());
 }
 
 /*!
@@ -424,7 +435,7 @@ qreal QQuickControl::availableWidth() const
 */
 qreal QQuickControl::availableHeight() const
 {
-    return qMax(0.0, height() - topPadding() - bottomPadding());
+    return qMax<qreal>(0.0, height() - topPadding() - bottomPadding());
 }
 
 /*!
@@ -603,51 +614,83 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Control::layoutDirection
+    \qmlproperty Locale Qt.labs.calendar::Control::locale
 
-    This property holds the layout direction of the control.
+    This property holds the locale of the control.
 
-    Possible values:
-    \value Qt.LeftToRight Items are laid out from left to right. If the width of the row is explicitly set,
-    the left anchor remains to the left of the row (default).
-    \value Qt.RightToLeft Items are laid out from right to left. If the width of the row is explicitly set,
-    the right anchor remains to the right of the row.
-
-    \sa effectiveLayoutDirection
+    \sa mirrored, {LayoutMirroring}{LayoutMirroring}
 */
-Qt::LayoutDirection QQuickControl::layoutDirection() const
+QLocale QQuickControl::locale() const
 {
     Q_D(const QQuickControl);
-    return d->layoutDirection;
+    return d->locale;
 }
 
-/*!
-    \qmlproperty enumeration Qt.labs.controls::Control::effectiveLayoutDirection
-    \readonly
-
-    This property holds the effective layout direction of the control.
-
-    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled}
-    for locale layouts, the visual layout direction of the control will be mirrored. However,
-    the \l layoutDirection property will remain unchanged.
-
-    \sa layoutDirection, {LayoutMirroring}{LayoutMirroring}
-*/
-Qt::LayoutDirection QQuickControl::effectiveLayoutDirection() const
-{
-    Q_D(const QQuickControl);
-    if (d->isMirrored())
-        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
-    return d->layoutDirection;
-}
-
-void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
+void QQuickControl::setLocale(const QLocale &locale)
 {
     Q_D(QQuickControl);
-    if (d->layoutDirection != direction) {
-        d->layoutDirection = direction;
-        emit layoutDirectionChanged();
-        mirrorChange();
+    if (d->hasLocale && d->locale == locale)
+        return;
+
+    d->updateLocale(locale, true); // explicit=true
+}
+
+void QQuickControl::resetLocale()
+{
+    Q_D(QQuickControl);
+    if (!d->hasLocale)
+        return;
+
+    d->updateLocale(d->calcLocale(), false); // explicit=false
+}
+
+QLocale QQuickControlPrivate::calcLocale() const
+{
+    Q_Q(const QQuickControl);
+    QQuickItem *p = q->parentItem();
+    while (p) {
+        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
+            return qc->locale();
+
+        QVariant v = p->property("locale");
+        if (v.isValid() && v.userType() == QMetaType::QLocale)
+            return v.toLocale();
+
+        p = p->parentItem();
+    }
+
+    if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+        return w->locale();
+
+    return QLocale();
+}
+
+void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
+{
+    Q_Q(QQuickControl);
+    if (!e && hasLocale)
+        return;
+
+    QLocale old = q->locale();
+    hasLocale = e;
+    if (old != l) {
+        bool wasMirrored = q->isMirrored();
+        q->localeChange(l, old);
+        locale = l;
+        QQuickControlPrivate::updateLocaleRecur(q, l);
+        emit q->localeChanged();
+        if (wasMirrored != q->isMirrored())
+            q->mirrorChange();
+    }
+}
+
+void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
+{
+    foreach (QQuickItem *child, item->childItems()) {
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
+            QQuickControlPrivate::get(control)->updateLocale(l, false);
+        else
+            updateLocaleRecur(child, l);
     }
 }
 
@@ -660,11 +703,46 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
     This property is provided for convenience. A control is considered mirrored
     when its visual layout direction is right-to-left.
 
-    \sa effectiveLayoutDirection, {LayoutMirroring}{LayoutMirroring}
+    \sa locale, {LayoutMirroring}{LayoutMirroring}
 */
 bool QQuickControl::isMirrored() const
 {
-    return effectiveLayoutDirection() == Qt::RightToLeft;
+    Q_D(const QQuickControl);
+    return d->isMirrored() || d->locale.textDirection() == Qt::RightToLeft;
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::Control::focusReason
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the control has \l {Item::activeFocus}
+          {active focus}, but the reason why the control either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \sa Item::activeFocus
+*/
+Qt::FocusReason QQuickControl::focusReason() const
+{
+    Q_D(const QQuickControl);
+    return d->focusReason;
+}
+
+void QQuickControl::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickControl);
+    if (d->focusReason != reason) {
+        d->focusReason = reason;
+        emit focusReasonChanged();
+    }
 }
 
 /*!
@@ -742,6 +820,18 @@ QFont QQuickControl::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
 }
 
+void QQuickControl::focusInEvent(QFocusEvent *event)
+{
+    QQuickItem::focusInEvent(event);
+    setFocusReason(event->reason());
+}
+
+void QQuickControl::focusOutEvent(QFocusEvent *event)
+{
+    QQuickItem::focusOutEvent(event);
+    setFocusReason(event->reason());
+}
+
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     event->accept();
@@ -771,7 +861,6 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
 
 void QQuickControl::mirrorChange()
 {
-    emit effectiveLayoutDirectionChanged();
     emit mirroredChanged();
 }
 
@@ -787,6 +876,12 @@ void QQuickControl::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
+}
+
+void QQuickControl::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_UNUSED(newLocale);
+    Q_UNUSED(oldLocale);
 }
 
 QT_END_NAMESPACE

@@ -46,33 +46,12 @@
 #include "../shared/visualtestutil.h"
 
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
+#include <QtLabsTemplates/private/qquickoverlay_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
 #include <QtLabsTemplates/private/qquickmenu_p.h>
 #include <QtLabsTemplates/private/qquickmenuitem_p.h>
 
 using namespace QQuickVisualTestUtil;
-
-class ApplicationHelper
-{
-public:
-    ApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath = QLatin1String("applicationwindow.qml")) :
-        component(&engine)
-    {
-        component.loadUrl(testCase->testFileUrl(testFilePath));
-        QObject *rootObject = component.create();
-        cleanup.reset(rootObject);
-        QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create ApplicationWindow: %1").arg(component.errorString())));
-
-        window = qobject_cast<QQuickApplicationWindow*>(rootObject);
-        QVERIFY(window);
-        QVERIFY(!window->isVisible());
-    }
-
-    QQmlEngine engine;
-    QQmlComponent component;
-    QScopedPointer<QObject> cleanup;
-    QQuickApplicationWindow *window;
-};
 
 class tst_menu : public QQmlDataTest
 {
@@ -89,7 +68,7 @@ private slots:
 
 void tst_menu::defaults()
 {
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickMenu *emptyMenu = helper.window->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
@@ -98,14 +77,14 @@ void tst_menu::defaults()
 
 void tst_menu::mouse()
 {
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
-    menu->show();
+    menu->open();
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
 
@@ -129,7 +108,7 @@ void tst_menu::mouse()
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -143,13 +122,13 @@ void tst_menu::mouse()
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
 
     // Try pressing within the menu and releasing outside of it; it should close.
-    // TODO: won't work until QQuickPanel::releasedOutside() actually gets emitted
+    // TODO: won't work until QQuickPopup::releasedOutside() actually gets emitted
 //    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
 //    QVERIFY(firstItem->hasActiveFocus());
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
@@ -170,7 +149,7 @@ void tst_menu::contextMenuKeyboard()
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
 
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
@@ -185,7 +164,7 @@ void tst_menu::contextMenuKeyboard()
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 
     menu->setFocus(true);
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -212,7 +191,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!secondItem->hasActiveFocus());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 3);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -237,6 +216,10 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!secondItem->hasActiveFocus());
     QVERIFY(thirdItem->hasActiveFocus());
+
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(visibleSpy.count(), 4);
+    QVERIFY(!menu->isVisible());
 }
 
 void tst_menu::menuButton()
@@ -244,7 +227,7 @@ void tst_menu::menuButton()
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
 
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();

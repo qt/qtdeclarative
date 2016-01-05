@@ -89,6 +89,8 @@ public:
     bool removal;
     bool ownItem;
     bool ownComponent;
+    bool widthValid;
+    bool heightValid;
     QQmlContext *context;
     QQmlComponent *component;
     QQmlIncubator *incubator;
@@ -97,8 +99,6 @@ public:
     QQuickStackView::Status status;
     QV4::PersistentValue properties;
 };
-
-Q_DECLARE_TYPEINFO(QQuickStackElement, Q_COMPLEX_TYPE);
 
 class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
 {
@@ -156,8 +156,6 @@ public:
 
     QQuickStackElement *element;
 };
-
-Q_DECLARE_TYPEINFO(QQuickStackViewPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

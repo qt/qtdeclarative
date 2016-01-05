@@ -28,14 +28,14 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquick
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
 # \example controls/tabs
-exampledirs += ../../../../examples/labs \
+exampledirs += ../../../../examples/controls \
                ../ \
                ../../../templates \
                ../../calendar \
                ../../../../tests/auto/controls/data \
                snippets
 
-examplesinstallpath = qtquickcontrols2/labs
+examplesinstallpath = qtquickcontrols2/controls
 
 headerdirs += ../../../templates \
               ../../calendar \
@@ -49,3 +49,14 @@ navigation.landingpage  = "Qt Labs Controls"
 navigation.qmltypespage = "Qt Labs Controls QML Types"
 
 tagfile                 = qtlabscontrols.tags
+
+# \styleimport {Qt.labs.controls.universal 1.0}
+macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"
+
+# \styleproperty {Universal.accent} {enumeration} {html-target-id}
+# \target html-target-id
+# This property holds ...
+# (empty line)
+# \endstyleproperty
+macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\3\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
+macro.endstyleproperty = "\\br"

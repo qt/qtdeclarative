@@ -42,6 +42,6 @@ T.Label {
     id: control
 
     color: !control.enabled ? Universal.baseLowColor : Universal.baseHighColor
-    linkColor: Universal.accentColor
+    linkColor: Universal.accent
     renderType: Text.NativeRendering
 }

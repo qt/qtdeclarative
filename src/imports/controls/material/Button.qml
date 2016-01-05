@@ -60,7 +60,9 @@ T.Button {
         height: control.availableHeight
 
         text: control.text
-        color: control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
+        font: control.font
+        color: !control.enabled ? control.Material.hintTextColor :
+            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -68,33 +70,36 @@ T.Button {
     //! [label]
 
     //! [background]
-    background: Rectangle {
+    background: Item {
         implicitWidth: 36
         implicitHeight: 36
 
-        radius: 2
-        color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
-            (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
-            (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
-            (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
+        Rectangle {
+            id: rect
+            width: parent.width
+            height: parent.height
+            radius: 2
+            color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
+                (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
+                (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
+                (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 400
+            Behavior on color {
+                ColorAnimation {
+                    duration: 400
+                }
             }
         }
 
-        layer.enabled: control.enabled
-        layer.effect: DropShadow {
+        DropShadow {
+            source: rect
+            visible: control.enabled
+            width: parent.width
+            height: parent.height
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
             spread: 0.5
-
-            // TODO: Doesn't work because of QTBUG-49072
-            Behavior on radius {
-                NumberAnimation { duration: 1000 }
-            }
         }
     }
     //! [background]

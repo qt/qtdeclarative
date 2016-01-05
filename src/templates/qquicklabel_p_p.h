@@ -86,8 +86,6 @@ public:
     QQuickAccessibleAttached *accessibleAttached;
 };
 
-Q_DECLARE_TYPEINFO(QQuickLabelPrivate, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
 #endif // QQUICKLABEL_P_P_H

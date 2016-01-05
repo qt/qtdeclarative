@@ -108,8 +108,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickProgressBar)
 };
 
-Q_DECLARE_TYPEINFO(QQuickProgressBar, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickProgressBar)
 
 #endif // QQUICKPROGRESSBAR_P_H

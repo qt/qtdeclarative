@@ -198,7 +198,7 @@ QT_BEGIN_NAMESPACE
     You can also get to an item in the stack using \l {get()}{get(index)}.
 
     \badcode
-    previousItem = stackView.get(myItem.Stack.index - 1));
+    previousItem = stackView.get(myItem.StackView.index - 1));
     \endcode
 
     \section1 Transitions
@@ -636,7 +636,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     if (!d->elements.isEmpty())
         exit = d->elements.pop();
 
-    if (d->replaceElements(target, elements)) {
+    if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
         if (depth != d->elements.count())
             emit depthChanged();
         QQuickStackElement *enter = d->elements.top();
@@ -870,15 +870,10 @@ void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     Q_D(QQuickStackView);
     foreach (QQuickStackElement *element, d->elements) {
         if (element->item) {
-            QQuickItemPrivate *p = QQuickItemPrivate::get(element->item);
-            if (!p->widthValid) {
+            if (!element->widthValid)
                 element->item->setWidth(newGeometry.width());
-                p->widthValid = false;
-            }
-            if (!p->heightValid) {
+            if (!element->heightValid)
                 element->item->setHeight(newGeometry.height());
-                p->heightValid = false;
-            }
         }
     }
 }

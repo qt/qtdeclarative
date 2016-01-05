@@ -48,6 +48,7 @@ T.ItemDelegate {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     spacing: 12
 
@@ -87,8 +88,16 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed
-        color: control.Universal.listMediumColor
+        visible: control.pressed || control.highlighted || control.activeFocus
+        color: control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            visible: control.activeFocus || control.highlighted
+            color: control.Universal.accent
+            opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
+        }
+
     }
     //! [background]
 }

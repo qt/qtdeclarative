@@ -48,8 +48,8 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.calendar
     \brief A row of names for the days in a week.
 
-    DayOfWeekRow presents day of week names in a row. The names of
-    the days are ordered and formatted using the specified \l locale.
+    DayOfWeekRow presents day of week names in a row. The names of the days
+    are ordered and formatted using the specified \l {Control::locale}{locale}.
 
     \image qtlabscalendar-dayofweekrow.png
     \snippet qtlabscalendar-dayofweekrow.qml 1
@@ -98,24 +98,6 @@ QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
     Q_D(QQuickDayOfWeekRow);
     d->model = new QQuickDayOfWeekModel(this);
     d->source = QVariant::fromValue(d->model);
-    connect(d->model, &QQuickDayOfWeekModel::localeChanged, this, &QQuickDayOfWeekRow::localeChanged);
-}
-
-/*!
-    \qmlproperty Locale Qt.labs.calendar::DayOfWeekRow::locale
-
-    This property holds the locale that is used to format names of the days in a week.
-*/
-QLocale QQuickDayOfWeekRow::locale() const
-{
-    Q_D(const QQuickDayOfWeekRow);
-    return d->model->locale();
-}
-
-void QQuickDayOfWeekRow::setLocale(const QLocale &locale)
-{
-    Q_D(QQuickDayOfWeekRow);
-    d->model->setLocale(locale);
 }
 
 /*!
@@ -188,6 +170,13 @@ void QQuickDayOfWeekRow::geometryChanged(const QRectF &newGeometry, const QRectF
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
+}
+
+void QQuickDayOfWeekRow::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickDayOfWeekRow);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->model->setLocale(newLocale);
 }
 
 void QQuickDayOfWeekRow::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

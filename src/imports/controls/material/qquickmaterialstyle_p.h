@@ -59,7 +59,6 @@ class QQuickMaterialStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
-    Q_PROPERTY(Color primary READ primary WRITE setPrimary RESET resetPrimary NOTIFY primaryChanged FINAL)
     Q_PROPERTY(Color accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
@@ -92,6 +91,8 @@ class QQuickMaterialStyle : public QQuickStyle
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor drawerBackgroundColor READ drawerBackgroundColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -152,16 +153,6 @@ public:
     void propagateTheme();
     void resetTheme();
 
-    QColor primaryColorLight() const;
-
-    Color primary() const;
-    void setPrimary(Color color);
-    void inheritPrimary(Color color);
-    void propagatePrimary();
-    void resetPrimary();
-
-    QColor primaryColorDark() const;
-
     Color accent() const;
     void setAccent(Color color);
     void inheritAccent(Color color);
@@ -199,12 +190,13 @@ public:
     QColor scrollBarColor() const;
     QColor scrollBarPressedColor() const;
     QColor drawerBackgroundColor() const;
+    QColor dialogColor() const;
+    QColor backgroundDimColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade) const;
 
 Q_SIGNALS:
     void themeChanged();
-    void primaryChanged();
     void accentChanged();
     void paletteChanged();
 
@@ -212,11 +204,11 @@ protected:
     void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
+    void init();
+
     bool m_explicitTheme;
-    bool m_explicitPrimary;
     bool m_explicitAccent;
     Theme m_theme;
-    Color m_primary;
     Color m_accent;
 };
 

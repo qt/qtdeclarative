@@ -38,6 +38,12 @@
     following sections offer guidelines for choosing the appropriate type
     of input control, depending on the use case.
 
+    \section1 ComboBox Control
+
+    \image qtlabscontrols-combobox.png
+
+    \l ComboBox is used to select a value from a drop-down list.
+
     \section1 Dial Control
 
     \image qtlabscontrols-dial.png

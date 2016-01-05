@@ -57,6 +57,13 @@
     \l GroupBox is used to layout a logical group of controls together,
     within a titled visual frame.
 
+    \section1 Pane Control
+
+    \image qtlabscontrols-pane.png
+
+    \l Pane provides a background color that matches with the application
+    style and theme.
+
     \section1 StackView Control
 
     \image qtlabscontrols-stackview-wireframe.png

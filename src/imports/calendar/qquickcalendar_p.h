@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qdatetime.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,8 +78,8 @@ public:
     Q_ENUM(Month)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCalendar, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCalendar)
 
 #endif // QQUICKCALENDAR_P_H

@@ -65,7 +65,7 @@ public:
 
 private:
     QFont systemFont;
-    QFont dockWidgetTitleFont; // QQuickTabButton
+    QFont tabButtonFont;
 };
 
 QT_END_NAMESPACE

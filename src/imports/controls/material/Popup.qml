@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,72 +34,21 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPANEL_P_P_H
-#define QQUICKPANEL_P_P_H
+import QtQuick 2.6
+import Qt.labs.templates 1.0 as T
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+T.Popup {
+    id: control
 
-#include <QtCore/private/qobject_p.h>
-#include <QtQuick/private/qquicktransitionmanager_p_p.h>
+    enter: Transition {
+        // grow_fade_in
+        NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
+        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; easing.type: Easing.OutCubic; duration: 150 }
+    }
 
-QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QQuickTransition;
-class QQuickTransitionManager;
-class QQuickPanel;
-class QQuickPanelPrivate;
-class QQuickOverlay;
-
-class QQuickPanelTransitionManager : public QQuickTransitionManager
-{
-public:
-    QQuickPanelTransitionManager(QQuickPanelPrivate *);
-    void transitionShow();
-    void transitionHide();
-
-protected:
-    void finished() Q_DECL_OVERRIDE;
-
-private:
-    enum TransitionState {
-        Off, Show, Hide
-    };
-
-    TransitionState state;
-    QQuickPanelPrivate *pp;
-};
-
-class QQuickPanelPrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickPanel)
-
-public:
-    QQuickPanelPrivate();
-    ~QQuickPanelPrivate();
-
-    void finalizeShowTransition();
-    void finalizeHideTransition();
-
-    QQuickItem *contentItem;
-    QQuickOverlay *overlay;
-    bool focus;
-    bool modal;
-    QQuickTransition *showTransition;
-    QQuickTransition *hideTransition;
-    QQuickPanelTransitionManager transitionManager;
-};
-
-QT_END_NAMESPACE
-
-#endif // QQUICKPANEL_P_P_H
-
+    exit: Transition {
+        // shrink_fade_out
+        NumberAnimation { property: "scale"; from: 1.0; to: 0.9; easing.type: Easing.OutQuint; duration: 220 }
+        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
+    }
+}

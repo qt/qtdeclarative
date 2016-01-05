@@ -140,7 +140,7 @@ qreal QQuickDialPrivate::positionAt(const QPoint &point) const
 void QQuickDialPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickDial);
-    pos = qBound(0.0, pos, 1.0);
+    pos = qBound<qreal>(0.0, pos, 1.0);
     if (!qFuzzyCompare(position, pos)) {
         position = pos;
 

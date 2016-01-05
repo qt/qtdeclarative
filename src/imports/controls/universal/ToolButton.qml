@@ -72,7 +72,7 @@ T.ToolButton {
         implicitHeight: 48 // AppBarThemeCompactHeight
 
         color: control.pressed ? control.Universal.listMediumColor :
-               control.checkable && control.checked ? control.Universal.accentColor : "transparent"
+               control.enabled && (control.highlighted || control.checked) ? control.Universal.accent : "transparent"
     }
     //! [background]
 }

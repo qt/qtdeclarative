@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import Qt.labs.controls 1.0
+import Qt.labs.controls.impl 1.0
 import Qt.labs.templates 1.0 as T
 
 T.BusyIndicator {
@@ -47,30 +48,17 @@ T.BusyIndicator {
     padding: 6
 
     //! [contentItem]
-    contentItem: Item {
-        id: delegate
+    contentItem: BusyRing {
+        id: ring
         implicitWidth: 48
         implicitHeight: 48
-
         opacity: control.running ? 1 : 0
+
         Behavior on opacity { OpacityAnimator { duration: 250 } }
 
-        Image {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: Math.min(parent.width, parent.height)
-            height: width
-            source: width <= 32 ? "qrc:/images/spinner_small.png" :
-                    width >= 48 ? "qrc:/images/spinner_large.png" :
-                                  "qrc:/images/spinner_medium.png"
-
-            RotationAnimator on rotation {
-                duration: 800
-                loops: Animation.Infinite
-                from: 0
-                to: 360
-                running: control.visible && (control.running || delegate.opacity > 0)
-            }
+        BusyRingAnimator {
+            target: ring
+            running: control.visible && control.running
         }
     }
     //! [contentItem]

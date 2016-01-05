@@ -251,21 +251,30 @@ TestCase {
         compare(control.second.position, 1.0)
         compare(control.second.visualPosition, 1.0)
 
-        control.layoutDirection = Qt.RightToLeft
+        // RTL locale
+        control.locale = Qt.locale("ar_EG")
         compare(control.first.visualPosition, 0.75)
         compare(control.second.visualPosition, 0.0)
 
+        // RTL locale + LayoutMirroring
         control.LayoutMirroring.enabled = true
-        compare(control.first.visualPosition, 0.25)
-        compare(control.second.visualPosition, 1.0)
-
-        control.layoutDirection = Qt.LeftToRight
         compare(control.first.visualPosition, 0.75)
         compare(control.second.visualPosition, 0.0)
 
+        // LTR locale + LayoutMirroring
+        control.locale = Qt.locale("en_US")
+        compare(control.first.visualPosition, 0.75)
+        compare(control.second.visualPosition, 0.0)
+
+        // LTR locale
         control.LayoutMirroring.enabled = false
         compare(control.first.visualPosition, 0.25)
         compare(control.second.visualPosition, 1.0)
+
+        // LayoutMirroring
+        control.LayoutMirroring.enabled = true
+        compare(control.first.visualPosition, 0.75)
+        compare(control.second.visualPosition, 0.0)
 
         control.destroy()
     }
@@ -545,7 +554,7 @@ TestCase {
 
         // RTL
         control.first.value = 0
-        control.layoutDirection = Qt.RightToLeft
+        control.locale = Qt.locale("ar_EG")
 
         mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)
         compare(firstPressedSpy.count, 3)

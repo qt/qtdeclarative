@@ -65,6 +65,8 @@ Q_SIGNALS:
     void triggered();
 
 protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif
@@ -74,8 +76,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickMenuItem)
 };
 
-Q_DECLARE_TYPEINFO(QQuickMenuItem, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMenuItem)
 
 #endif // QQUICKMENUITEM_P_H

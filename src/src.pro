@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    templates \
     controls \
-    imports \
-    templates
+    imports
 
 imports.depends = controls templates

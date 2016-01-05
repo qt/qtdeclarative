@@ -90,6 +90,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
     : background(Q_NULLPTR)
+    , focusReason(Qt::OtherFocusReason)
     , accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -309,6 +310,40 @@ void QQuickTextField::setPlaceholderText(const QString &text)
     }
 }
 
+/*!
+    \qmlproperty enumeration Qt.labs.controls::TextField::focusReason
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the control has \l {Item::activeFocus}
+          {active focus}, but the reason why the control either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \sa Item::activeFocus
+*/
+Qt::FocusReason QQuickTextField::focusReason() const
+{
+    Q_D(const QQuickTextField);
+    return d->focusReason;
+}
+
+void QQuickTextField::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickTextField);
+    if (d->focusReason != reason) {
+        d->focusReason = reason;
+        emit focusReasonChanged();
+    }
+}
+
 void QQuickTextField::classBegin()
 {
     Q_D(QQuickTextField);
@@ -345,6 +380,18 @@ QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         clipNode->appendChildNode(textNode);
 
     return clipNode;
+}
+
+void QQuickTextField::focusInEvent(QFocusEvent *event)
+{
+    QQuickTextInput::focusInEvent(event);
+    setFocusReason(event->reason());
+}
+
+void QQuickTextField::focusOutEvent(QFocusEvent *event)
+{
+    QQuickTextInput::focusOutEvent(event);
+    setFocusReason(event->reason());
 }
 
 void QQuickTextField::mousePressEvent(QMouseEvent *event)

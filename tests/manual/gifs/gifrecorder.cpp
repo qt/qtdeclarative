@@ -183,6 +183,10 @@ void GifRecorder::start()
     mWindow->show();
     mWindow->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(mWindow, 500));
+    QVERIFY(QTest::qWaitForWindowExposed(mWindow, 500));
+    // For some reason, whatever is behind the window is sometimes
+    // in the recording, so add this delay to be extra sure that it isn't.
+    QTest::qWait(200);
 
     if (mOutputFileBaseName.isEmpty()) {
         mOutputFileBaseName = mOutputDir.absoluteFilePath(mQmlInputFileName);
@@ -198,11 +202,12 @@ void GifRecorder::start()
         mByzanzOutputFileName.append(QLatin1String(".gif"));
     }
 
+    const QPoint globalWindowPos = mWindow->mapToGlobal(QPoint(0, 0));
     QString args = QLatin1String("-d %1 -v %2 -x %3 -y %4 -w %5 -h %6 %7");
     args = args.arg(QString::number(mRecordingDuration))
         .arg(mRecordCursor ? QStringLiteral("-c") : QString())
-        .arg(QString::number(mWindow->x()))
-        .arg(QString::number(mWindow->y()))
+        .arg(QString::number(globalWindowPos.x()))
+        .arg(QString::number(globalWindowPos.y()))
         .arg(QString::number(mWindow->width()))
         .arg(QString::number(mWindow->height()))
         .arg(mByzanzOutputFileName);

@@ -59,9 +59,8 @@ class QQuickUniversalStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
-    Q_PROPERTY(Accent accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
+    Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
 
-    Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor altHighColor READ altHighColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor altLowColor READ altLowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor altMediumColor READ altMediumColor NOTIFY paletteChanged FINAL)
@@ -125,13 +124,12 @@ public:
     };
     Q_ENUM(Accent)
 
-    Accent accent() const;
-    void setAccent(Accent accent);
-    void inheritAccent(Accent accent);
+    QVariant accent() const;
+    void setAccent(const QVariant &accent);
+    void inheritAccent(QRgb accent);
     void propagateAccent();
     void resetAccent();
 
-    QColor accentColor() const;
     QColor altHighColor() const;
     QColor altLowColor() const;
     QColor altMediumColor() const;
@@ -195,10 +193,12 @@ protected:
     void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
+    void init();
+
     bool m_hasTheme;
     bool m_hasAccent;
     QQuickUniversalStyle::Theme m_theme;
-    QQuickUniversalStyle::Accent m_accent;
+    QRgb m_accent;
 };
 
 QT_END_NAMESPACE

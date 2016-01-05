@@ -67,7 +67,7 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
 
 QFont QQuickTabButton::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::DockWidgetTitleFont); // tmp
+    return QQuickControlPrivate::themeFont(QPlatformTheme::TabButtonFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

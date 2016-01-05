@@ -69,9 +69,9 @@ T.ToolButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        color: Qt.darker("#33333333", control.checkable && control.checked ? 1.5 : 1.0)
-        opacity: control.pressed ? 1.0 : control.checkable && control.checked ? 0.5 : 0
-        visible: control.pressed || (control.checkable && control.checked)
+        color: Qt.darker("#33333333", control.enabled && (control.checked || control.highlighted) ? 1.5 : 1.0)
+        opacity: control.pressed ? 1.0 : control.enabled && (control.checked || control.highlighted) ? 0.5 : 0
+        visible: control.pressed || (control.enabled && (control.checked || control.highlighted))
     }
     //! [background]
 }

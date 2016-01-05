@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
     MonthGrid presents a calendar month in a grid. The contents are
     calculated for a given \l month and \l year, using the specified
-    \l locale.
+    \l {Control::locale}{locale}.
 
     \image qtlabscalendar-monthgrid.png
     \snippet qtlabscalendar-monthgrid.qml 1
@@ -173,7 +173,6 @@ QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
     d->source = QVariant::fromValue(d->model);
     connect(d->model, &QQuickMonthModel::monthChanged, this, &QQuickMonthGrid::monthChanged);
     connect(d->model, &QQuickMonthModel::yearChanged, this, &QQuickMonthGrid::yearChanged);
-    connect(d->model, &QQuickMonthModel::localeChanged, this, &QQuickMonthGrid::localeChanged);
     connect(d->model, &QQuickMonthModel::titleChanged, this, &QQuickMonthGrid::titleChanged);
 }
 
@@ -245,23 +244,6 @@ void QQuickMonthGrid::setYear(int year)
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.calendar::MonthGrid::locale
-
-    This property holds the locale that is used to calculate the contents.
-*/
-QLocale QQuickMonthGrid::locale() const
-{
-    Q_D(const QQuickMonthGrid);
-    return d->model->locale();
-}
-
-void QQuickMonthGrid::setLocale(const QLocale &locale)
-{
-    Q_D(QQuickMonthGrid);
-    d->model->setLocale(locale);
-}
-
-/*!
     \internal
     \qmlproperty model Qt.labs.calendar::MonthGrid::source
 
@@ -290,7 +272,7 @@ void QQuickMonthGrid::setSource(const QVariant &source)
 
     This property is provided for convenience. MonthGrid itself does
     not visualize the title. The default value consists of the month name,
-    formatted using \l locale, and the year number.
+    formatted using \l {Control::locale}{locale}, and the year number.
 */
 QString QQuickMonthGrid::title() const
 {
@@ -365,6 +347,13 @@ void QQuickMonthGrid::geometryChanged(const QRectF &newGeometry, const QRectF &o
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
+}
+
+void QQuickMonthGrid::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickMonthGrid);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->model->setLocale(newLocale);
 }
 
 void QQuickMonthGrid::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

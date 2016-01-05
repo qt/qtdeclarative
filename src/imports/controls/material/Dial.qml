@@ -46,6 +46,10 @@ T.Dial {
 
     //! [background]
     background: Rectangle {
+        x: control.width / 2 - width / 2
+        y: control.height / 2 - height / 2
+        width: Math.max(64, Math.min(control.width, control.height))
+        height: Math.max(64, Math.min(control.width, control.height))
         color: "transparent"
         radius: width / 2
 
@@ -57,11 +61,11 @@ T.Dial {
     handle: Rectangle {
         id: handleItem
 
-        x: background.width / 2 - handle.width / 2
-        y: background.height / 2 - handle.height / 2
+        x: background.x + background.width / 2 - handle.width / 2
+        y: background.y + background.height / 2 - handle.height / 2
         transform: [
             Translate {
-                y: -background.height * 0.35
+                y: -background.height * 0.4 + handle.height / 2
             },
             Rotation {
                 angle: control.angle

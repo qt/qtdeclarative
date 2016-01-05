@@ -52,9 +52,12 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qsharedpointer.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QSettings;
 
 class QQuickStyle : public QObject, public QQuickItemChangeListener
 {
@@ -63,6 +66,8 @@ class QQuickStyle : public QObject, public QQuickItemChangeListener
 public:
     explicit QQuickStyle(QObject *parent = Q_NULLPTR);
     ~QQuickStyle();
+
+    static QSharedPointer<QSettings> settings(const QString &group = QString());
 
 protected:
     void init();

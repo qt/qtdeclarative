@@ -98,7 +98,7 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
         verify(control.Universal)
-        compare(control.Universal.accent, Universal.Cobalt)
+        compare(control.Universal.accent, "#3e65ff") // Universal.Cobalt
         compare(control.Universal.theme, Universal.Light)
         control.destroy()
     }
@@ -108,7 +108,7 @@ TestCase {
         verify(control)
         control.Universal.accent = Universal.Steel
         control.Universal.theme = Universal.Dark
-        compare(control.Universal.accent, Universal.Steel)
+        compare(control.Universal.accent, "#647687") // Universal.Steel
         compare(control.Universal.theme, Universal.Dark)
         control.destroy()
     }
@@ -116,7 +116,7 @@ TestCase {
     function test_reset() {
         var control = styledButton.createObject(testCase)
         verify(control)
-        compare(control.Universal.accent, Universal.Violet)
+        compare(control.Universal.accent, "#aa00ff") // Universal.Violet
         compare(control.Universal.theme, Universal.Dark)
         control.Universal.accent = undefined
         control.Universal.theme = undefined
@@ -127,7 +127,7 @@ TestCase {
 
     function test_inheritance_data() {
         return [
-            { tag: "accent", value1: Universal.Crimson, value2: Universal.Indigo },
+            { tag: "accent", value1: "#a20025" /*Universal.Crimson*/, value2: "#6a00ff" /*Universal.Indigo*/ },
             { tag: "theme", value1: Universal.Dark, value2: Universal.Light },
         ]
     }
@@ -192,7 +192,7 @@ TestCase {
         compare(unstyledChild.Universal.theme, parent.Universal.theme)
 
         parent.Universal.accent = Universal.Cyan
-        compare(control.Universal.accent, Universal.Cyan)
+        compare(control.Universal.accent, "#1ba1e2") // Universal.Cyan
         verify(styledChild.Universal.accent !== Universal.Cyan)
         // ### TODO: compare(unstyledChild.Universal.accent, Universal.Cyan)
 
@@ -203,13 +203,13 @@ TestCase {
         var control = loader.createObject(testCase)
         control.Universal.accent = Universal.Lime
         control.active = true
-        compare(control.item.Universal.accent, Universal.Lime)
+        compare(control.item.Universal.accent, "#a4c400") // Universal.Lime
         control.Universal.accent = Universal.Pink
-        compare(control.item.Universal.accent, Universal.Pink)
+        compare(control.item.Universal.accent, "#f472d0") // Universal.Pink
         control.active = false
         control.Universal.accent = Universal.Brown
         control.active = true
-        compare(control.item.Universal.accent, Universal.Brown)
+        compare(control.item.Universal.accent, "#825a2c") // Universal.Brown
         control.destroy()
     }
 
@@ -220,6 +220,49 @@ TestCase {
         verify(child)
         compare(control.Universal.theme, Universal.Dark)
         compare(child.Universal.theme, Universal.Dark)
+        control.destroy()
+    }
+
+    function test_colors() {
+        var control = button.createObject(testCase)
+        verify(control)
+
+        // Universal.Accent - enum
+        control.Universal.accent = Universal.Red
+        compare(control.Universal.accent, "#e51400")
+
+        // Universal.Accent - string
+        control.Universal.accent = "Emerald"
+        compare(control.Universal.accent, "#008a00")
+
+        // SVG named color
+        control.Universal.accent = "tomato"
+        compare(control.Universal.accent, "#ff6347")
+
+        // #rrggbb
+        control.Universal.accent = "#123456"
+        compare(control.Universal.accent, "#123456")
+
+        // #aarrggbb
+        control.Universal.accent = "#12345678"
+        compare(control.Universal.accent, "#12345678")
+
+        // Qt.rgba() - no alpha
+        control.Universal.accent = Qt.rgba(0.5, 0.5, 0.5)
+        compare(control.Universal.accent, "#808080")
+
+        // Qt.rgba() - with alpha
+        control.Universal.accent = Qt.rgba(0.5, 0.5, 0.5, 0.5)
+        compare(control.Universal.accent, "#80808080")
+
+        // unknown
+        ignoreWarning("QQuickUniversalStyle: unknown accent 123")
+        control.Universal.accent = 123
+        ignoreWarning("QQuickUniversalStyle: unknown accent \"foo\"")
+        control.Universal.accent = "foo"
+        ignoreWarning("QQuickUniversalStyle: unknown accent \"#1\"")
+        control.Universal.accent = "#1"
+
         control.destroy()
     }
 }

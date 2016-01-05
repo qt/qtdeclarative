@@ -50,9 +50,12 @@
 
 #include <QtQuick/private/qquickwindowmodule_p.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtGui/qfont.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
+class QQuickOverlay;
 class QQuickApplicationWindowPrivate;
 class QQuickApplicationWindowAttached;
 class QQuickApplicationWindowAttachedPrivate;
@@ -62,9 +65,12 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_OBJECT
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
+    Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
+    Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -74,19 +80,32 @@ public:
     QQuickItem *contentItem() const;
     QQmlListProperty<QObject> contentData();
 
+    QQuickItem *activeFocusControl() const;
+
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);
 
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
-    QQuickItem *overlay() const;
+    QQuickOverlay *overlay() const;
+
+    QFont font() const;
+    void setFont(const QFont &);
+    void resetFont();
+
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+    void resetLocale();
 
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
+    void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();
+    void fontChanged();
+    void localeChanged();
 
 protected:
     bool isComponentComplete() const;
@@ -96,6 +115,7 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickApplicationWindow)
     Q_DECLARE_PRIVATE(QQuickApplicationWindow)
+    Q_PRIVATE_SLOT(d_func(), void _q_updateActiveFocus())
     QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
@@ -104,25 +124,25 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuickApplicationWindow *window READ window NOTIFY windowChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem NOTIFY contentItemChanged FINAL)
-    Q_PROPERTY(QQuickItem *activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay NOTIFY overlayChanged FINAL)
+    Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
 
 public:
     explicit QQuickApplicationWindowAttached(QObject *parent = Q_NULLPTR);
 
     QQuickApplicationWindow *window() const;
     QQuickItem *contentItem() const;
-    QQuickItem *activeFocusItem() const;
+    QQuickItem *activeFocusControl() const;
     QQuickItem *header() const;
     QQuickItem *footer() const;
-    QQuickItem *overlay() const;
+    QQuickOverlay *overlay() const;
 
 Q_SIGNALS:
     void windowChanged();
     void contentItemChanged();
-    void activeFocusItemChanged();
+    void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();
     void overlayChanged();
@@ -132,11 +152,9 @@ private:
     Q_DECLARE_PRIVATE(QQuickApplicationWindowAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickApplicationWindowAttached, Q_COMPLEX_TYPE);
-
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickApplicationWindow)
 QML_DECLARE_TYPEINFO(QQuickApplicationWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H
