@@ -424,7 +424,6 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     \value StackView.Immediate An immediate operation without transitions.
 
     \sa initialItem
-    \sa {Pushing items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
 {
