@@ -1102,7 +1102,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     QV4::ScopedValue exception(scope, catchException(&trace));
     QQmlError error;
     if (!trace.isEmpty()) {
-        QV4::StackFrame frame = trace.first();
+        QV4::StackFrame frame = trace.constFirst();
         error.setUrl(QUrl(frame.source));
         error.setLine(frame.line);
         error.setColumn(frame.column);

@@ -946,7 +946,7 @@ private:
             return;
 
         while (!_unprocessed.isEmpty()) {
-            const LifeTimeInterval *i = _unprocessed.first();
+            const LifeTimeInterval *i = _unprocessed.constFirst();
             if (i->start() > position)
                 break;
 
