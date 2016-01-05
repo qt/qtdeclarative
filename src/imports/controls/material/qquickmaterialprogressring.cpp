@@ -71,9 +71,10 @@ public:
     void updateCurrentTime(int time) Q_DECL_OVERRIDE;
     void writeBack() Q_DECL_OVERRIDE;
     void nodeWasDestroyed() Q_DECL_OVERRIDE;
+    void afterNodeSync() Q_DECL_OVERRIDE;
 
 private:
-    QSGNode *m_itemNode;
+    QSGNode *m_containerNode;
     QQuickWindow *m_window;
 };
 
@@ -164,7 +165,7 @@ QQuickAnimatorJob *QQuickMaterialRingAnimator::createJob() const
 }
 
 QQuickMaterialRingAnimatorJob::QQuickMaterialRingAnimatorJob() :
-    m_itemNode(Q_NULLPTR),
+    m_containerNode(Q_NULLPTR),
     m_window(Q_NULLPTR)
 {
 }
@@ -176,14 +177,16 @@ QQuickMaterialRingAnimatorJob::~QQuickMaterialRingAnimatorJob()
 void QQuickMaterialRingAnimatorJob::initialize(QQuickAnimatorController *controller)
 {
     QQuickAnimatorJob::initialize(controller);
-    m_itemNode = QQuickItemPrivate::get(m_target)->itemNode();
+    m_containerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
     m_window = m_target->window();
 }
 
 void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
 {
-    QSGNode *childContainerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
-    QSGSimpleRectNode *rectNode = static_cast<QSGSimpleRectNode*>(childContainerNode->firstChild());
+    if (!m_containerNode)
+        return;
+
+    QSGSimpleRectNode *rectNode = static_cast<QSGSimpleRectNode*>(m_containerNode->firstChild());
     if (!rectNode)
         return;
 
@@ -252,8 +255,13 @@ void QQuickMaterialRingAnimatorJob::writeBack()
 
 void QQuickMaterialRingAnimatorJob::nodeWasDestroyed()
 {
-    m_itemNode = Q_NULLPTR;
+    m_containerNode = Q_NULLPTR;
     m_window = Q_NULLPTR;
+}
+
+void QQuickMaterialRingAnimatorJob::afterNodeSync()
+{
+    m_containerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
 }
 
 QQuickMaterialRingTexture::QQuickMaterialRingTexture()

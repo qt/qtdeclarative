@@ -50,9 +50,14 @@ public:
     QQuickBusyIndicatorAnimatorJob();
     ~QQuickBusyIndicatorAnimatorJob();
 
+    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
     void updateCurrentTime(int time) Q_DECL_OVERRIDE;
     void writeBack() Q_DECL_OVERRIDE;
     void nodeWasDestroyed() Q_DECL_OVERRIDE;
+    void afterNodeSync() Q_DECL_OVERRIDE;
+
+private:
+    QSGNode *m_node;
 };
 
 static const int circles = 10;
@@ -153,7 +158,7 @@ QQuickAnimatorJob *QQuickBusyIndicatorAnimator::createJob() const
     return new QQuickBusyIndicatorAnimatorJob;
 }
 
-QQuickBusyIndicatorAnimatorJob::QQuickBusyIndicatorAnimatorJob()
+QQuickBusyIndicatorAnimatorJob::QQuickBusyIndicatorAnimatorJob() : m_node(Q_NULLPTR)
 {
 }
 
@@ -161,13 +166,18 @@ QQuickBusyIndicatorAnimatorJob::~QQuickBusyIndicatorAnimatorJob()
 {
 }
 
+void QQuickBusyIndicatorAnimatorJob::initialize(QQuickAnimatorController *controller)
+{
+    QQuickAnimatorJob::initialize(controller);
+    m_node = QQuickItemPrivate::get(m_target)->childContainerNode();
+}
+
 void QQuickBusyIndicatorAnimatorJob::updateCurrentTime(int time)
 {
-    if (!m_target)
+    if (!m_node)
         return;
 
-    QSGNode *childContainerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
-    QSGSimpleRectNode *rootRectNode = static_cast<QSGSimpleRectNode*>(childContainerNode->firstChild());
+    QSGSimpleRectNode *rootRectNode = static_cast<QSGSimpleRectNode*>(m_node->firstChild());
     if (!rootRectNode)
         return;
 
@@ -204,6 +214,12 @@ void QQuickBusyIndicatorAnimatorJob::writeBack()
 
 void QQuickBusyIndicatorAnimatorJob::nodeWasDestroyed()
 {
+    m_node = Q_NULLPTR;
+}
+
+void QQuickBusyIndicatorAnimatorJob::afterNodeSync()
+{
+    m_node = QQuickItemPrivate::get(m_target)->childContainerNode();
 }
 
 QT_END_NAMESPACE
