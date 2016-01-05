@@ -420,6 +420,28 @@ QQmlListProperty<QObject> QQuickMenu::contentData()
         QQuickMenuPrivate::contentData_clear);
 }
 
+/*!
+    \qmlproperty string Qt.labs.controls::Menu::title
+
+    Title for the menu as a submenu or in a menubar.
+
+    Its value defaults to an empty string.
+*/
+QString QQuickMenu::title() const
+{
+    Q_D(const QQuickMenu);
+    return d->title;
+}
+
+void QQuickMenu::setTitle(QString &title)
+{
+    Q_D(QQuickMenu);
+    if (title == d->title)
+        return;
+    d->title = title;
+    emit titleChanged();
+}
+
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
 {
     Q_D(QQuickMenu);
