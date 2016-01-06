@@ -791,6 +791,13 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
                   << ": expected an array" << std::endl;
         return false;
     }
+    // Workaround for avoiding conflicting types when no dependency has been found.
+    //
+    // qmlplugindump used to import QtQuick, so all types defined in QtQuick used to be skipped when dumping.
+    // Now that it imports only Qt, it is no longer the case: if no dependency is found all the types defined
+    // in QtQuick will be dumped, causing conflicts.
+    if (dependencies->isEmpty())
+        dependencies->push_back(QLatin1String("QtQuick 2.0"));
     return true;
 }
 
