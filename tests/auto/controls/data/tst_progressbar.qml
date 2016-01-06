@@ -181,4 +181,19 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_indeterminate() {
+        skip("skipping until https://codereview.qt-project.org/#/c/145140/ is merged")
+        var control = progressBar.createObject(testCase)
+        verify(control)
+        compare(control.indeterminate, false)
+
+        wait(100)
+        control.indeterminate = true
+        wait(100)
+        // Shouldn't crash...
+        control.indeterminate = false
+
+        control.destroy()
+    }
 }

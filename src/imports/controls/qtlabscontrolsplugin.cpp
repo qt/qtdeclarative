@@ -46,6 +46,7 @@
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
+#include "qquickprogressstrip_p.h"
 
 static inline void initResources()
 {
@@ -119,6 +120,8 @@ void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickBusyIndicatorRing>(import, 1, 0, "BusyRing");
     qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 1, 0, "BusyRingAnimator");
+    qmlRegisterType<QQuickProgressStrip>(import, 1, 0, "ProgressStrip");
+    qmlRegisterType<QQuickProgressAnimator>(import, 1, 0, "ProgressStripAnimator");
 }
 
 QT_END_NAMESPACE

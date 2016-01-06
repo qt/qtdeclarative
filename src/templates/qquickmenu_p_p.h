@@ -89,6 +89,7 @@ public:
     QQmlObjectModel *contentModel;
     QQuickItem *dummyFocusItem;
     bool ignoreActiveFocusChanges;
+    QString title;
 };
 
 QT_END_NAMESPACE

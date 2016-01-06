@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,39 +34,63 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+#ifndef QQUICKPROGRESSSTRIP_P_H
+#define QQUICKPROGRESSSTRIP_P_H
 
-T.TextArea {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickanimatorjob_p.h>
 
-    padding: 6
-    leftPadding: 10
+QT_BEGIN_NAMESPACE
 
-    color: enabled ? "#26282a" : "#c2c2c2"
-//    selectionColor: TODO
-//    selectedTextColor: TODO
+class QQuickProgressStrip : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
 
-    Text {
-        id: placeholder
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.width - (control.leftPadding + control.rightPadding)
-        height: control.height - (control.topPadding + control.bottomPadding)
+public:
+    explicit QQuickProgressStrip(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickProgressStrip();
 
-        text: control.placeholderText
-        font: control.font
-        color: "#c2c2c2"
-        horizontalAlignment: control.horizontalAlignment
-        verticalAlignment: control.verticalAlignment
-        visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
-        elide: Text.ElideRight
-    }
-}
+    bool isIndeterminate() const;
+    void setIndeterminate(bool indeterminate);
+
+    qreal progress() const;
+    void setProgress(qreal progress);
+
+Q_SIGNALS:
+    void progressChanged();
+    void indeterminateChanged();
+
+protected:
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+
+private:
+    qreal m_progress;
+    bool m_indeterminate;
+};
+
+class QQuickProgressAnimator : public QQuickAnimator
+{
+public:
+    QQuickProgressAnimator(QObject *parent = Q_NULLPTR);
+
+protected:
+    QString propertyName() const Q_DECL_OVERRIDE;
+    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKPROGRESSSTRIP_P_H

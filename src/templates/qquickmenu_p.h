@@ -63,6 +63,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPopup
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -77,8 +78,14 @@ public:
     QVariant contentModel() const;
     QQmlListProperty<QObject> contentData();
 
+    QString title() const;
+    void setTitle(QString &title);
+
 protected:
     bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
+
+Q_SIGNALS:
+    void titleChanged();
 
 private:
     Q_DISABLE_COPY(QQuickMenu)

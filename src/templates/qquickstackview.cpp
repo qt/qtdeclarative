@@ -414,7 +414,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     stackView.push([rect1, rect2, rect3])
 
     // or with properties:
-    stackView.push([rect1 {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
+    stackView.push([rect1, {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
     \endcode
 
     An \a operation can be optionally specified as the last argument. Supported
@@ -424,7 +424,6 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     \value StackView.Immediate An immediate operation without transitions.
 
     \sa initialItem
-    \sa {Pushing items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
 {
@@ -589,7 +588,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     stackView.replace([rect1, rect2, rect3])
 
     // or with properties:
-    stackView.replace([rect1 {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
+    stackView.replace([rect1, {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
     \endcode
 
     An \a operation can be optionally specified as the last argument. Supported

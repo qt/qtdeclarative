@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.impl 1.0
 
 T.ProgressBar {
     id: control
@@ -46,40 +47,19 @@ T.ProgressBar {
                              indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
 
     //! [indicator]
-    indicator: Item {
+    indicator: ProgressStrip {
+        id: strip
         x: control.leftPadding
         y: control.topPadding
         width: control.availableWidth
         height: control.availableHeight
-
         scale: control.mirrored ? -1 : 1
+        progress: control.position
+        indeterminate: control.indeterminate
 
-        Repeater {
-            model: indeterminate ? 2 : 1
-
-            Rectangle {
-                property real offset: indeterminate ? 0 : control.position
-
-                x: indeterminate ? offset * parent.width : 0
-                y: (parent.height - height) / 2
-                width: offset * (parent.width - x)
-                height: 6
-
-                color: control.enabled ? "#353637" : "#bdbebf"
-
-                SequentialAnimation on offset {
-                    loops: Animation.Infinite
-                    running: indeterminate && visible
-                    PauseAnimation { duration: index ? 520 : 0 }
-                    NumberAnimation {
-                        easing.type: Easing.OutCubic
-                        duration: 1240
-                        from: 0
-                        to: 1
-                    }
-                    PauseAnimation { duration: index ? 0 : 520 }
-                }
-            }
+        ProgressStripAnimator {
+            target: strip
+            running: control.visible && control.indeterminate
         }
     }
     //! [indicator]
