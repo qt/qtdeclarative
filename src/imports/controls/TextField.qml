@@ -63,7 +63,7 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: "#a0a1a2"
+        color: "#bdbebf"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)

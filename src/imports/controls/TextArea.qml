@@ -48,6 +48,7 @@ T.TextArea {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
+    leftPadding: 10
 
     color: enabled ? "#26282a" : "#c2c2c2"
 //    selectionColor: TODO
