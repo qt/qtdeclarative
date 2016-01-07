@@ -176,7 +176,7 @@ void QQmlDebugProcess::start(const QStringList &arguments)
 #endif
     m_mutex.lock();
     m_port = 0;
-    m_process.setEnvironment(m_environment);
+    m_process.setEnvironment(QProcess::systemEnvironment() + m_environment);
     m_process.start(m_executable, arguments);
     if (!m_process.waitForStarted()) {
         qWarning() << "QML Debug Client: Could not launch app " << m_executable
@@ -234,9 +234,9 @@ QProcess::ExitStatus QQmlDebugProcess::exitStatus() const
     return m_process.exitStatus();
 }
 
-void QQmlDebugProcess::setEnvironment(const QStringList &environment)
+void QQmlDebugProcess::addEnvironment(const QString &environment)
 {
-    m_environment = environment;
+    m_environment.append(environment);
 }
 
 QString QQmlDebugProcess::output() const

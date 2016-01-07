@@ -94,7 +94,7 @@ public:
 
     QString state();
 
-    void setEnvironment(const QStringList &environment);
+    void addEnvironment(const QString &environment);
 
     void start(const QStringList &arguments);
     bool waitForSessionStart();
