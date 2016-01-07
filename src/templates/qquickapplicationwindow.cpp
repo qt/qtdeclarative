@@ -240,7 +240,8 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 {
     Q_D(QQuickApplicationWindow);
     if (d->header != header) {
-        delete d->header;
+        if (d->header)
+            QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->header = header;
         if (header) {
             header->setParentItem(contentItem());
@@ -273,7 +274,8 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 {
     Q_D(QQuickApplicationWindow);
     if (d->footer != footer) {
-        delete d->footer;
+        if (d->footer)
+            QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->footer = footer;
         if (footer) {
             footer->setParentItem(contentItem());
