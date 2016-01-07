@@ -94,6 +94,19 @@ TestCase {
         }
     }
 
+    Component {
+        id: menu
+        Item {
+            Material.accent: Material.Red
+            property alias menu: popup
+            Menu {
+                id: popup
+                Material.theme: Material.Dark
+                MenuItem { }
+            }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -221,5 +234,20 @@ TestCase {
         compare(control.Material.theme, Material.Dark)
         compare(child.Material.theme, Material.Dark)
         control.destroy()
+    }
+
+    function test_menu() {
+        var container = menu.createObject(testCase)
+        verify(container)
+        verify(container.menu)
+        var child = container.menu.itemAt(0)
+        verify(child)
+        compare(container.Material.theme, Material.Light)
+        compare(container.menu.Material.theme, Material.Dark)
+        compare(child.Material.theme, Material.Dark)
+        compare(container.Material.accent, Material.Red)
+        compare(container.menu.Material.accent, Material.Red)
+        compare(child.Material.accent, Material.Red)
+        container.destroy()
     }
 }

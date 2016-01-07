@@ -4,4 +4,5 @@ SUBDIRS += \
     controls \
     imports
 
+controls.depends = templates
 imports.depends = controls templates
