@@ -76,8 +76,6 @@ QtLabsMaterialStylePlugin::~QtLabsMaterialStylePlugin()
 void QtLabsMaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", tr("Material is an attached property"));
-    qmlRegisterType<QQuickMaterialProgressRing>(uri, 1, 0, "ProgressRing");
-    qmlRegisterType<QQuickMaterialRingAnimator>(uri, 1, 0, "RingAnimator");
 }
 
 void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -97,6 +95,10 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
     }
 
     initResources();
+
+    QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
+    qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
 }
 
 QT_END_NAMESPACE
