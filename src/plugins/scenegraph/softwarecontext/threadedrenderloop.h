@@ -1,12 +1,13 @@
-/****************************************************************************
+/******************************************************************************
 **
 ** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of Qt Quick 2d Renderer module of the Qt Toolkit.
+** This file is part of the Qt Quick 2d Renderer module.
 **
-** $QT_BEGIN_LICENSE$
+** $QT_BEGIN_LICENSE:COMM$
+**
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
@@ -14,9 +15,10 @@
 ** a written agreement between you and The Qt Company. For licensing terms
 ** and conditions see http://www.qt.io/terms-conditions. For further
 ** information use the contact form at http://www.qt.io/contact-us.
+**
 ** $QT_END_LICENSE$
 **
-****************************************************************************/
+******************************************************************************/
 
 #ifndef THREADEDRENDERLOOP_H
 #define THREADEDRENDERLOOP_H
