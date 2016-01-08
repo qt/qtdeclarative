@@ -56,9 +56,11 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/private/qmetaobject_p.h>
 
+#include <QRegularExpression>
 #include <iostream>
 #include <algorithm>
 
+#include "qmltypereader.h"
 #include "qmlstreamwriter.h"
 
 #ifdef QT_SIMULATOR
@@ -733,7 +735,7 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     std::cerr << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] module.uri version [module/import/path]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
@@ -987,6 +989,7 @@ int main(int argc, char *argv[])
     QString pluginImportVersion;
     bool relocatable = true;
     QString dependenciesFile;
+    QString mergeFile;
     enum Action { Uri, Path, Builtins };
     Action action = Uri;
     {
@@ -1005,6 +1008,13 @@ int main(int argc, char *argv[])
                     return EXIT_INVALIDARGUMENTS;
                 }
                 dependenciesFile = args.at(iArg);
+            } else if (arg == QLatin1String("--merge")
+                       || arg == QLatin1String("-merge")) {
+                if (++iArg == args.size()) {
+                    std::cerr << "missing merge file" << std::endl;
+                    return EXIT_INVALIDARGUMENTS;
+                }
+                mergeFile = args.at(iArg);
             } else if (arg == QLatin1String("--notrelocatable")
                     || arg == QLatin1String("-notrelocatable")
                     || arg == QLatin1String("--nonrelocatable")
@@ -1066,6 +1076,26 @@ int main(int argc, char *argv[])
         QDir::setCurrent(pluginImportPath);
         engine.addImportPath(pluginImportPath);
     }
+
+    // Merge file.
+    QStringList mergeDependencies;
+    QString mergeComponents;
+    if (!mergeFile.isEmpty()) {
+        QStringList merge = readQmlTypes(mergeFile);
+        if (!merge.isEmpty()) {
+            QRegularExpression re("(\\w+\\.*\\w*\\s*\\d+\\.\\d+)");
+            QRegularExpressionMatchIterator i = re.globalMatch(merge[1]);
+            while (i.hasNext()) {
+                QRegularExpressionMatch m = i.next();
+                QString d = m.captured(1);
+                mergeDependencies  << m.captured(1);
+            }
+            mergeComponents = merge [2];
+        }
+    }
+
+    // Dependencies.
+
     bool calculateDependencies = !pluginImportUri.isEmpty() && !pluginImportVersion.isEmpty();
     QStringList dependencies;
     if (!dependenciesFile.isEmpty())
@@ -1215,6 +1245,13 @@ int main(int argc, char *argv[])
               "// '%1 %2'\n"
               "\n").arg(QFileInfo(args.at(0)).baseName(), args.mid(1).join(QLatin1Char(' '))));
     qml.writeStartObject("Module");
+
+    // Insert merge dependencies.
+    if (!mergeDependencies.isEmpty()) {
+        dependencies << mergeDependencies;
+    }
+    compactDependencies(&dependencies);
+
     QStringList quotedDependencies;
     foreach (const QString &dep, dependencies)
         quotedDependencies << enquote(dep);
@@ -1240,6 +1277,9 @@ int main(int argc, char *argv[])
     // properties using the QEasingCurve type get useful type information.
     if (pluginImportUri.isEmpty())
         dumper.writeEasingCurve();
+
+    // Insert merge file.
+    qml.write(mergeComponents);
 
     qml.writeEndObject();
     qml.writeEndDocument();

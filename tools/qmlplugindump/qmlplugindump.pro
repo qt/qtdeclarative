@@ -6,10 +6,12 @@ QTPLUGIN.platforms = qminimal
 
 SOURCES += \
     main.cpp \
-    qmlstreamwriter.cpp
+    qmlstreamwriter.cpp \
+    qmltypereader.cpp
 
 HEADERS += \
-    qmlstreamwriter.h
+    qmlstreamwriter.h \
+    qmltypereader.h
 
 macx {
     # Prevent qmlplugindump from popping up in the dock when launched.
