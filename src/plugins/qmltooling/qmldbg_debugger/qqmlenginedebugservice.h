@@ -89,9 +89,9 @@ public:
         bool hasNotifySignal;
     };
 
-    void engineAboutToBeAdded(QQmlEngine *);
-    void engineAboutToBeRemoved(QQmlEngine *);
-    void objectCreated(QQmlEngine *, QObject *);
+    void engineAboutToBeAdded(QQmlEngine *) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QQmlEngine *) Q_DECL_OVERRIDE;
+    void objectCreated(QQmlEngine *, QObject *) Q_DECL_OVERRIDE;
 
     void setStatesDelegate(QQmlDebugStatesDelegate *) Q_DECL_OVERRIDE;
 
