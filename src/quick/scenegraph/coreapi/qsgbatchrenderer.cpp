@@ -1055,7 +1055,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
         while (child) {
             // Get the next child now before we proceed
-            nextChild = child ? child->nextSibling : 0;
+            nextChild = child->nextSibling;
 
             // Remove (and delete) child
             nodeWasRemoved(child);
