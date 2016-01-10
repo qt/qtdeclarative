@@ -182,7 +182,7 @@ struct ScopedValue
 template<typename T>
 struct Scoped
 {
-    enum _Convert { Convert };
+    enum ConvertType { Convert };
 
     inline void setPointer(const Managed *p) {
         ptr->setM(p ? p->m() : 0);
@@ -218,7 +218,7 @@ struct Scoped
         setPointer(v.ptr->as<T>());
     }
 
-    Scoped(const Scope &scope, const Value &v, _Convert)
+    Scoped(const Scope &scope, const Value &v, ConvertType)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(value_convert<T>(scope.engine, v));
@@ -246,7 +246,7 @@ struct Scoped
         ptr = scope.engine->jsStackTop++;
         setPointer(QV4::Value::fromReturnedValue(v).as<T>());
     }
-    Scoped(const Scope &scope, const ReturnedValue &v, _Convert)
+    Scoped(const Scope &scope, const ReturnedValue &v, ConvertType)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));

@@ -34,10 +34,8 @@
 #include "qquickdroparea_p.h"
 #include "qquickdrag_p.h"
 #include "qquickitem_p.h"
-#include "qquickwindow.h"
 
 #include <private/qv4arraybuffer_p.h>
-#include <private/qqmlengine_p.h>
 
 #ifndef QT_NO_DRAGANDDROP
 

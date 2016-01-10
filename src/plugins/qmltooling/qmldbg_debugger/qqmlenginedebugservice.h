@@ -93,10 +93,10 @@ public:
     void engineAboutToBeRemoved(QJSEngine *) Q_DECL_OVERRIDE;
     void objectCreated(QJSEngine *, QObject *) Q_DECL_OVERRIDE;
 
-    void setStatesDelegate(QQmlDebugStatesDelegate *);
+    void setStatesDelegate(QQmlDebugStatesDelegate *) Q_DECL_OVERRIDE;
 
 protected:
-    virtual void messageReceived(const QByteArray &);
+    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void processMessage(const QByteArray &msg);

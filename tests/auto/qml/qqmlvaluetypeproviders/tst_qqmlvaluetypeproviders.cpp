@@ -36,6 +36,7 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QDebug>
+#include <QScopedPointer>
 #include <private/qqmlglobal_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include "../../shared/util.h"
@@ -66,6 +67,7 @@ private slots:
     void jsObjectConversion();
     void invokableFunctions();
     void userType();
+    void changedSignal();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -289,6 +291,18 @@ void tst_qqmlvaluetypeproviders::userType()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("success").toBool(), true);
+}
+
+void tst_qqmlvaluetypeproviders::changedSignal()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("changedSignal.qml"));
+    QVERIFY(!component.isError());
+    QVERIFY(component.errors().isEmpty());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->property("complete").toBool());
+    QVERIFY(object->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)

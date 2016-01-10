@@ -161,6 +161,8 @@ void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
         // Upon leaving a window, we reset the controller. This means that
         // animators will only enter the Starting phase and won't be making
         // calls to QQuickAnimatorController::startjob().
+        if (m_controller)
+            m_controller->proxyWasDestroyed(this);
         m_controller = 0;
 
     } else if (!m_controller && m_job) {

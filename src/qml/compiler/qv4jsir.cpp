@@ -175,8 +175,8 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
         }
     }
 
-    template <typename _Expr>
-    _Expr *cleanup(_Expr *expr)
+    template <typename Expr_>
+    Expr_ *cleanup(Expr_ *expr)
     {
         std::vector<Expr *>::iterator it = std::lower_bound(subexpressions.begin(), subexpressions.end(), expr);
         if (it == subexpressions.end() || *it != expr) {
@@ -185,7 +185,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
             qSwap(uniqueExpr, e);
             expr->accept(this);
             qSwap(uniqueExpr, e);
-            return static_cast<_Expr *>(e);
+            return static_cast<Expr_ *>(e);
         }
 
         // the cloned expression is unique by definition

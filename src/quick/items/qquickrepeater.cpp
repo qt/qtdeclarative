@@ -200,11 +200,12 @@ void QQuickRepeater::setModel(const QVariant &m)
 
     clear();
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
-                this, SLOT(modelUpdated(QQmlChangeSet,bool)));
-        disconnect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
-        disconnect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
-//        disconnect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                this, QQuickRepeater, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(createdItem(int,QObject*)),
+                this, QQuickRepeater, SLOT(createdItem(int,QObject*)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(initItem(int,QObject*)),
+                this, QQuickRepeater, SLOT(initItem(int,QObject*)));
     }
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
@@ -228,11 +229,12 @@ void QQuickRepeater::setModel(const QVariant &m)
             dataModel->setModel(model);
     }
     if (d->model) {
-        connect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
-                this, SLOT(modelUpdated(QQmlChangeSet,bool)));
-        connect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
-        connect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
-//        connect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                this, QQuickRepeater, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(createdItem(int,QObject*)),
+                this, QQuickRepeater, SLOT(createdItem(int,QObject*)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(initItem(int,QObject*)),
+                this, QQuickRepeater, SLOT(initItem(int,QObject*)));
         regenerate();
     }
     emit modelChanged();

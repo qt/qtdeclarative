@@ -327,7 +327,7 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
 
     // check if it's an int32:
     Assembler::Jump isNoInt = branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                            Assembler::TrustedImm32(Value::_Integer_Type));
+                                            Assembler::TrustedImm32(Value::Integer_Type_Internal));
     convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister), dest);
     Assembler::Jump intDone = jump();
 

@@ -28,6 +28,8 @@
 /*!
     \title Threaded ListModel Example
     \example threading/threadedlistmodel
+    \brief The Threaded ListModel example shows how to use a ListModel from multiple
+    threads using WorkerScript.
 
     This example shows how to use a ListModel from multiple threads using
     WorkerScript.

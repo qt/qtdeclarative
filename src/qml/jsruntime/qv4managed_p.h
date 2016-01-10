@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 #define Q_MANAGED_CHECK \
-    template <typename _T> inline void qt_check_for_QMANAGED_macro(const _T *_q_argument) const \
+    template <typename Type> inline void qt_check_for_QMANAGED_macro(const Type *_q_argument) const \
     { int i = qYouForgotTheQ_MANAGED_Macro(this, _q_argument); i = i + 1; }
 
 template <typename T>

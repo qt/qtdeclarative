@@ -103,11 +103,11 @@ namespace QQmlJS {
 
 namespace AST {
 
-template <typename _T1, typename _T2>
-_T1 cast(_T2 *ast)
+template <typename T1, typename T2>
+T1 cast(T2 *ast)
 {
-    if (ast && ast->kind == static_cast<_T1>(0)->K)
-        return static_cast<_T1>(ast);
+    if (ast && ast->kind == static_cast<T1>(0)->K)
+        return static_cast<T1>(ast);
 
     return 0;
 }

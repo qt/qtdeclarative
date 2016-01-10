@@ -435,12 +435,12 @@ void QQuickFlickablePrivate::clearTimeline()
 
 void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if (data.move.value() > minExtent || maxExtent > minExtent) {
+    if (data.move.value() >= minExtent || maxExtent > minExtent) {
         resetTimeline(data);
         if (data.move.value() != minExtent) {
             adjustContentPos(data, minExtent);
         }
-    } else if (data.move.value() < maxExtent) {
+    } else if (data.move.value() <= maxExtent) {
         resetTimeline(data);
         adjustContentPos(data, maxExtent);
     } else if (-qRound(-data.move.value()) != data.move.value()) {

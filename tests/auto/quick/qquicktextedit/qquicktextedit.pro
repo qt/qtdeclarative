@@ -13,3 +13,4 @@ TESTDATA = data/*
 
 QT += core-private gui-private  qml-private quick-private network-private testlib
 
+osx: LIBS += -framework AppKit

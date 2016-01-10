@@ -120,7 +120,6 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     void setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value);
 
     void destroyObject(bool lastCall);
-    static void destroyObject(Heap::QObjectWrapper *h, bool lastCall);
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);

@@ -959,10 +959,10 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
             quint32 tag;
             switch (regTemp->type) {
             case IR::BoolType:
-                tag = QV4::Value::_Boolean_Type;
+                tag = QV4::Value::Boolean_Type_Internal;
                 break;
             case IR::SInt32Type:
-                tag = QV4::Value::_Integer_Type;
+                tag = QV4::Value::Integer_Type_Internal;
                 break;
             default:
                 tag = QV4::Value::Undefined_Type;
@@ -1096,7 +1096,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
 
         // check if it's an int32:
         Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                                Assembler::TrustedImm32(Value::_Integer_Type));
+                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
         convertIntToDouble(source, target);
         Assembler::Jump intDone = _as->jump();
 
@@ -1219,7 +1219,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
             Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
             _as->store32(Assembler::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            _as->store32(Assembler::TrustedImm32(Value::_Integer_Type), targetAddr);
+            _as->store32(Assembler::TrustedImm32(Value::Integer_Type_Internal), targetAddr);
         } else {
             _as->storeInt32(Assembler::ReturnValueRegister, target);
         }
@@ -1232,14 +1232,14 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
 
         // check if it's an int32:
         Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                                Assembler::TrustedImm32(Value::_Integer_Type));
+                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             _as->load32(addr, Assembler::ReturnValueRegister);
             Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
             _as->store32(Assembler::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            _as->store32(Assembler::TrustedImm32(Value::_Integer_Type), targetAddr);
+            _as->store32(Assembler::TrustedImm32(Value::Integer_Type_Internal), targetAddr);
         } else {
             _as->load32(addr, (Assembler::RegisterID) targetTemp->index);
         }
@@ -1296,7 +1296,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *targe
 
         // check if it's an int32:
         Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                                Assembler::TrustedImm32(Value::_Integer_Type));
+                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
         Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         _as->storeUInt32(_as->toInt32Register(addr, Assembler::ScratchRegister), target);
         Assembler::Jump intDone = _as->jump();
@@ -1518,16 +1518,16 @@ void InstructionSelection::visitRet(IR::Ret *s)
                 Assembler::Jump done = _as->jump();
                 intRange.link(_as);
                 _as->move(srcReg, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), highReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
                 done.link(_as);
             } break;
             case IR::SInt32Type:
                 _as->move((Assembler::RegisterID) t->index, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), highReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
                 break;
             case IR::BoolType:
                 _as->move((Assembler::RegisterID) t->index, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::_Boolean_Type), highReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal), highReg);
                 break;
             default:
                 Q_UNREACHABLE();
@@ -1556,7 +1556,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
                 Assembler::Jump done = _as->jump();
                 intRange.link(_as);
                 _as->zeroExtend32ToPtr(srcReg, Assembler::ReturnValueRegister);
-                quint64 tag = QV4::Value::_Integer_Type;
+                quint64 tag = QV4::Value::Integer_Type_Internal;
                 _as->or64(Assembler::TrustedImm64(tag << 32),
                           Assembler::ReturnValueRegister);
                 done.link(_as);
@@ -1565,10 +1565,10 @@ void InstructionSelection::visitRet(IR::Ret *s)
                 quint64 tag;
                 switch (t->type) {
                 case IR::SInt32Type:
-                    tag = QV4::Value::_Integer_Type;
+                    tag = QV4::Value::Integer_Type_Internal;
                     break;
                 case IR::BoolType:
-                    tag = QV4::Value::_Boolean_Type;
+                    tag = QV4::Value::Boolean_Type_Internal;
                     break;
                 default:
                     tag = QV4::Value::Undefined_Type;
@@ -1657,7 +1657,7 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
     }
 
     Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
-    _as->store32(Assembler::TrustedImm32(QV4::Value::_Integer_Type), p);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
     _as->store32(Assembler::TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
@@ -1836,7 +1836,7 @@ bool InstructionSelection::visitCJumpStrictNullUndefined(IR::Type nullOrUndef, I
 
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
                                                                            : Assembler::NotEqual;
-    const Assembler::TrustedImm32 tag(nullOrUndef == IR::NullType ? int(QV4::Value::_Null_Type)
+    const Assembler::TrustedImm32 tag(nullOrUndef == IR::NullType ? int(QV4::Value::Null_Type_Internal)
                                                                     : int(QV4::Value::Undefined_Type));
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
@@ -1878,7 +1878,7 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
     // check if the tag of the var operand is indicates 'boolean'
     _as->load32(otherAddr, Assembler::ScratchRegister);
     Assembler::Jump noBool = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                           Assembler::TrustedImm32(QV4::Value::_Boolean_Type));
+                                           Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal));
     if (binop->op == IR::OpStrictEqual)
         _as->addPatch(falseBlock, noBool);
     else
@@ -1927,7 +1927,7 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
 
     if (binop->op == IR::OpNotEqual)
         qSwap(trueBlock, falseBlock);
-    Assembler::Jump isNull = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::_Null_Type)));
+    Assembler::Jump isNull = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Null_Type_Internal)));
     Assembler::Jump isUndefined = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Undefined_Type)));
     _as->addPatch(trueBlock, isNull);
     _as->addPatch(trueBlock, isUndefined);

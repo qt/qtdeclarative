@@ -152,8 +152,10 @@ void QQuickFlipable::setFront(QQuickItem *front)
     }
     d->front = front;
     d->front->setParentItem(this);
-    if (Back == d->current)
+    if (Back == d->current) {
         d->front->setOpacity(0.);
+        d->front->setEnabled(false);
+    }
     emit frontChanged();
 }
 
@@ -178,8 +180,11 @@ void QQuickFlipable::setBack(QQuickItem *back)
     d->backTransform = new QQuickLocalTransform(d->back);
     d->backTransform->prependToItem(d->back);
 
-    if (Front == d->current)
+    if (Front == d->current) {
         d->back->setOpacity(0.);
+        d->back->setEnabled(false);
+    }
+
     connect(back, SIGNAL(widthChanged()),
             this, SLOT(retransformBack()));
     connect(back, SIGNAL(heightChanged()),
@@ -271,10 +276,14 @@ void QQuickFlipablePrivate::updateSide()
         current = newSide;
         if (current == QQuickFlipable::Back && back)
             setBackTransform();
-        if (front)
+        if (front) {
             front->setOpacity((current==QQuickFlipable::Front)?1.:0.);
-        if (back)
+            front->setEnabled((current==QQuickFlipable::Front)?true:false);
+        }
+        if (back) {
             back->setOpacity((current==QQuickFlipable::Back)?1.:0.);
+            back->setEnabled((current==QQuickFlipable::Back)?true:false);
+        }
         emit q->sideChanged();
     }
 }

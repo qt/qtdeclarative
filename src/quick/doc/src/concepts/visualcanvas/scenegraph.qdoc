@@ -164,9 +164,9 @@ a rectangular geometry with a texture material.
 \section1 Scene Graph and Rendering
 
 The rendering of the scene graph happens internally in the
-QQuickWindow class, and there is no public API to access it. There are
+QQuickWindow class, and there is no public API to access it. There are,
 however, a few places in the rendering pipeline where the user can
-attach application code. This can be to add custom scene graph
+attach application code. This can be used to add custom scene graph
 content or render raw OpenGL content. The integration points are
 defined by the render loop.
 

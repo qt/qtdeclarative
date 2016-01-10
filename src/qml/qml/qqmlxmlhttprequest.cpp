@@ -856,6 +856,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
     }
 
     ScopedObject instance(scope, v4->memoryManager->allocObject<Node>(document));
+    document->release(); // the GC should own the NodeImpl via Node now
     ScopedObject p(scope);
     instance->setPrototype((p = Document::prototype(v4)));
     return instance.asReturnedValue();

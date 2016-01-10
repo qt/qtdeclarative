@@ -47,9 +47,6 @@
 
 #include "qquickitem.h"
 
-#include <private/qqmlguard_p.h>
-#include <private/qv8engine_p.h>
-
 #include <QtGui/qevent.h>
 
 #ifndef QT_NO_DRAGANDDROP

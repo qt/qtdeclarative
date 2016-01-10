@@ -1146,7 +1146,7 @@ public:
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
         load32(tagAddr, scratchReg);
-        Jump inIntRange = branch32(Equal, scratchReg, TrustedImm32(QV4::Value::_Integer_Type));
+        Jump inIntRange = branch32(Equal, scratchReg, TrustedImm32(QV4::Value::Integer_Type_Internal));
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
