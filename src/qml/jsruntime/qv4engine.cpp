@@ -216,16 +216,25 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
+        bool jitDisabled = true;
 
 #ifdef V4_ENABLE_JIT
         static const bool forceMoth = !qEnvironmentVariableIsEmpty("QV4_FORCE_INTERPRETER");
-        if (forceMoth)
+        if (forceMoth) {
             factory = new Moth::ISelFactory;
-        else
+        } else {
             factory = new JIT::ISelFactory;
+            jitDisabled = false;
+        }
 #else // !V4_ENABLE_JIT
         factory = new Moth::ISelFactory;
 #endif // V4_ENABLE_JIT
+
+        if (jitDisabled) {
+            qWarning("JIT is disabled for QML. Property bindings and animations will be "
+                     "very slow. Visit https://wiki.qt.io/V4 to learn about possible "
+                     "solutions for your platform.");
+        }
     }
     iselFactory.reset(factory);
 
