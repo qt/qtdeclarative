@@ -48,9 +48,10 @@ T.Button {
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 6
-    leftPadding: 8
-    rightPadding: 8
+    // external padding is 6 (to increase touch area)
+    padding: 12
+    leftPadding: 14
+    rightPadding: 14
 
     //! [label]
     label: Text {
@@ -71,13 +72,16 @@ T.Button {
 
     //! [background]
     background: Item {
-        implicitWidth: 36
-        implicitHeight: 36
+        implicitWidth: 48
+        implicitHeight: 48
 
         Rectangle {
             id: rect
-            width: parent.width
-            height: parent.height
+            // external padding is 6 (to increase touch area)
+            x: 6
+            y: 6
+            width: parent.width - 12
+            height: parent.height - 12
             radius: 2
             color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
                 (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
@@ -94,8 +98,10 @@ T.Button {
         DropShadow {
             source: rect
             visible: control.enabled
-            width: parent.width
-            height: parent.height
+            x: rect.x
+            y: rect.y
+            width: rect.width
+            height: rect.height
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
