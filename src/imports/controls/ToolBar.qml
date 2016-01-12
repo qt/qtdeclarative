@@ -52,7 +52,7 @@ T.ToolBar {
 
     //! [background]
     background: Rectangle {
-        implicitHeight: 26
+        implicitHeight: 40
         color: "#eeeeee"
     }
     //! [background]
