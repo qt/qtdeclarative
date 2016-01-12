@@ -121,6 +121,16 @@ QQmlFileSelector::~QQmlFileSelector()
     interceptorInstances()->remove(d->myInstance.data());
 }
 
+/*!
+  \since 5.7
+  Returns the QFileSelector instance used by the QQmlFileSelector.
+*/
+QFileSelector *QQmlFileSelector::selector() const Q_DECL_NOTHROW
+{
+    Q_D(const QQmlFileSelector);
+    return d->selector;
+}
+
 QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
 {
     Q_Q(QQmlFileSelector);

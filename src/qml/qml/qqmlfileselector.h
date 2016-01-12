@@ -56,6 +56,7 @@ class Q_QML_EXPORT QQmlFileSelector : public QObject
 public:
     QQmlFileSelector(QQmlEngine* engine, QObject* parent=0);
     ~QQmlFileSelector();
+    QFileSelector *selector() const Q_DECL_NOTHROW;
     void setSelector(QFileSelector *selector);
     void setExtraSelectors(QStringList &strings); // TODO Qt6: remove
     void setExtraSelectors(const QStringList &strings);
