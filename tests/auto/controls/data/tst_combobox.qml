@@ -44,6 +44,8 @@ import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
+    width: 200
+    height: 200
     name: "ComboBox"
 
     ApplicationWindow {

@@ -74,6 +74,7 @@ public:
     void afterNodeSync() Q_DECL_OVERRIDE;
 
 private:
+    qreal m_devicePixelRatio;
     QSGNode *m_containerNode;
     QQuickWindow *m_window;
 };
@@ -165,6 +166,7 @@ QQuickAnimatorJob *QQuickMaterialRingAnimator::createJob() const
 }
 
 QQuickMaterialRingAnimatorJob::QQuickMaterialRingAnimatorJob() :
+    m_devicePixelRatio(1.0),
     m_containerNode(Q_NULLPTR),
     m_window(Q_NULLPTR)
 {
@@ -179,6 +181,7 @@ void QQuickMaterialRingAnimatorJob::initialize(QQuickAnimatorController *control
     QQuickAnimatorJob::initialize(controller);
     m_containerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
     m_window = m_target->window();
+    m_devicePixelRatio = m_window->effectiveDevicePixelRatio();
 }
 
 void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
@@ -192,8 +195,8 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
 
     Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
-    const qreal width = rectNode->rect().width();
-    const qreal height = rectNode->rect().height();
+    const qreal width = rectNode->rect().width() * m_devicePixelRatio;
+    const qreal height = rectNode->rect().height() * m_devicePixelRatio;
     QImage image(width, height, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
 
@@ -203,7 +206,7 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
     QPen pen;
     QQuickMaterialRingTexture *textureNode = static_cast<QQuickMaterialRingTexture*>(rectNode->firstChild());
     pen.setColor(textureNode->color());
-    pen.setWidth(4);
+    pen.setWidth(4 * m_devicePixelRatio);
     painter.setPen(pen);
 
     const qreal percentageComplete = time / qreal(rotationAnimationDuration);
@@ -237,7 +240,7 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
     }
 
     const int halfPen = pen.width() / 2;
-    const QRectF arcBounds = QRectF(rectNode->rect().adjusted(halfPen, halfPen, -halfPen, -halfPen));
+    const QRectF arcBounds = QRectF(halfPen, halfPen, width - pen.width(), height - pen.width());
     // The current angle of the rotation animation.
     const qreal rotation = oneDegree * percentageComplete * -targetRotation;
     startAngle -= rotation;

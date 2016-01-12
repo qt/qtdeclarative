@@ -66,7 +66,7 @@ T.ProgressBar {
                 x: (indeterminate ? offset * parent.width : 0)
                 y: (parent.height - height) / 2
                 width: offset * (parent.width - x)
-                height: 6
+                height: 4
 
                 color: control.Material.accentColor
 
@@ -94,7 +94,7 @@ T.ProgressBar {
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         width: control.availableWidth
-        height: 6
+        height: 4
 
         color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, 0.25)
     }

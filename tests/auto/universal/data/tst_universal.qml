@@ -94,6 +94,19 @@ TestCase {
         }
     }
 
+    Component {
+        id: menu
+        Item {
+            Universal.accent: Universal.Red
+            property alias menu: popup
+            Menu {
+                id: popup
+                Universal.theme: Universal.Dark
+                MenuItem { }
+            }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -221,6 +234,21 @@ TestCase {
         compare(control.Universal.theme, Universal.Dark)
         compare(child.Universal.theme, Universal.Dark)
         control.destroy()
+    }
+
+    function test_menu() {
+        var container = menu.createObject(testCase)
+        verify(container)
+        verify(container.menu)
+        var child = container.menu.itemAt(0)
+        verify(child)
+        compare(container.Universal.theme, Universal.Light)
+        compare(container.menu.Universal.theme, Universal.Dark)
+        compare(child.Universal.theme, Universal.Dark)
+        compare(container.Universal.accent, "#e51400") // Red
+        compare(container.menu.Universal.accent, "#e51400") // Red
+        compare(child.Universal.accent, "#e51400") // Red
+        container.destroy()
     }
 
     function test_colors() {
