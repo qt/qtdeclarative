@@ -52,17 +52,36 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickToolBarPrivate;
+
 class Q_LABSTEMPLATES_EXPORT QQuickToolBar : public QQuickFrame
 {
     Q_OBJECT
+    Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
 
 public:
     explicit QQuickToolBar(QQuickItem *parent = nullptr);
+
+    enum Position {
+        Header,
+        Footer
+    };
+    Q_ENUM(Position)
+
+    Position position() const;
+    void setPosition(Position position);
+
+Q_SIGNALS:
+    void positionChanged();
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
+
+private:
+    Q_DISABLE_COPY(QQuickToolBar)
+    Q_DECLARE_PRIVATE(QQuickToolBar)
 };
 
 QT_END_NAMESPACE

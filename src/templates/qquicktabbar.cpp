@@ -69,10 +69,18 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
+    QQuickTabBarPrivate();
+
     void updateCurrentItem();
     void updateCurrentIndex();
     void updateLayout();
+
+    QQuickTabBar::Position position;
 };
+
+QQuickTabBarPrivate::QQuickTabBarPrivate() : position(QQuickTabBar::Header)
+{
+}
 
 void QQuickTabBarPrivate::updateCurrentItem()
 {
@@ -115,6 +123,38 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
     Q_D(QQuickTabBar);
     setFlag(ItemIsFocusScope);
     QObjectPrivate::connect(this, &QQuickTabBar::currentIndexChanged, d, &QQuickTabBarPrivate::updateCurrentItem);
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::TabBar::position
+
+    This property holds the position of the tab bar.
+
+    \note If the tab bar is assigned as a header or footer of ApplicationWindow
+    or Page, the appropriate position is set automatically.
+
+    Possible values:
+    \value TabBar.Header The tab bar is at the top, as a window or page header.
+    \value TabBar.Footer The tab bar is at the bottom, as a window or page footer.
+
+    The default value is style-specific.
+
+    \sa ApplicationWindow::header, ApplicationWindow::footer, Page::header, Page::footer
+*/
+QQuickTabBar::Position QQuickTabBar::position() const
+{
+    Q_D(const QQuickTabBar);
+    return d->position;
+}
+
+void QQuickTabBar::setPosition(Position position)
+{
+    Q_D(QQuickTabBar);
+    if (d->position == position)
+        return;
+
+    d->position = position;
+    emit positionChanged();
 }
 
 void QQuickTabBar::updatePolish()

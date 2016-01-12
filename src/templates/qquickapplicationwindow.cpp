@@ -39,6 +39,8 @@
 #include "qquickcontrol_p_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
+#include "qquicktoolbar_p.h"
+#include "qquicktabbar_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -230,6 +232,9 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     This property holds the window header item. The header item is positioned to
     the top, and resized to the width of the window. The default value is \c null.
 
+    \note Assigning a ToolBar or TabBar as a window header sets the respective
+    \l ToolBar::position or \l TabBar::position property automatically to \c Header.
+
     \sa footer, Page::header
 */
 QQuickItem *QQuickApplicationWindow::header() const
@@ -251,6 +256,10 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(header->z()))
                 header->setZ(1);
+            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
+                toolBar->setPosition(QQuickToolBar::Header);
+            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
+                tabBar->setPosition(QQuickTabBar::Header);
             if (isComponentComplete())
                 d->relayout();
         }
@@ -263,6 +272,9 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 
     This property holds the window footer item. The footer item is positioned to
     the bottom, and resized to the width of the window. The default value is \c null.
+
+    \note Assigning a ToolBar or TabBar as a window footer sets the respective
+    \l ToolBar::position or \l TabBar::position property automatically to \c Footer.
 
     \sa header, Page::footer
 */
@@ -285,6 +297,10 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(footer->z()))
                 footer->setZ(1);
+            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
+                toolBar->setPosition(QQuickToolBar::Footer);
+            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
+                tabBar->setPosition(QQuickTabBar::Footer);
             if (isComponentComplete())
                 d->relayout();
         }

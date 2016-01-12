@@ -57,9 +57,22 @@ class QQuickTabBarPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
+    Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
 
 public:
     explicit QQuickTabBar(QQuickItem *parent = nullptr);
+
+    enum Position {
+        Header,
+        Footer
+    };
+    Q_ENUM(Position)
+
+    Position position() const;
+    void setPosition(Position position);
+
+Q_SIGNALS:
+    void positionChanged();
 
 protected:
     void updatePolish() override;

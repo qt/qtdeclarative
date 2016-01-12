@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquicktoolbar_p.h"
+#include "qquickframe_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -91,9 +92,49 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, {Container Controls}
 */
 
-QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
-    QQuickFrame(parent)
+class QQuickToolBarPrivate : public QQuickFramePrivate
 {
+public:
+    QQuickToolBarPrivate() : position(QQuickToolBar::Header) { }
+
+    QQuickToolBar::Position position;
+};
+
+QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
+    QQuickFrame(*(new QQuickToolBarPrivate), parent)
+{
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::ToolBar::position
+
+    This property holds the position of the toolbar.
+
+    \note If the toolbar is assigned as a header or footer of ApplicationWindow
+    or Page, the appropriate position is set automatically.
+
+    Possible values:
+    \value ToolBar.Header The toolbar is at the top, as a window or page header.
+    \value ToolBar.Footer The toolbar is at the bottom, as a window or page footer.
+
+    The default value is style-specific.
+
+    \sa ApplicationWindow::header, ApplicationWindow::footer, Page::header, Page::footer
+*/
+QQuickToolBar::Position QQuickToolBar::position() const
+{
+    Q_D(const QQuickToolBar);
+    return d->position;
+}
+
+void QQuickToolBar::setPosition(Position position)
+{
+    Q_D(QQuickToolBar);
+    if (d->position == position)
+        return;
+
+    d->position = position;
+    emit positionChanged();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

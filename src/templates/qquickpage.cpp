@@ -36,6 +36,8 @@
 
 #include "qquickpage_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquicktoolbar_p.h"
+#include "qquicktabbar_p.h"
 
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
@@ -148,6 +150,9 @@ QQuickPage::QQuickPage(QQuickItem *parent) :
     This property holds the page header item. The header item is positioned to
     the top, and resized to the width of the page. The default value is \c null.
 
+    \note Assigning a ToolBar or TabBar as a page header sets the respective
+    \l ToolBar::position or \l TabBar::position property automatically to \c Header.
+
     \sa footer, ApplicationWindow::header
 */
 QQuickItem *QQuickPage::header() const
@@ -169,6 +174,10 @@ void QQuickPage::setHeader(QQuickItem *header)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(header->z()))
                 header->setZ(1);
+            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
+                toolBar->setPosition(QQuickToolBar::Header);
+            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
+                tabBar->setPosition(QQuickTabBar::Header);
             if (isComponentComplete())
                 d->relayout();
         }
@@ -181,6 +190,9 @@ void QQuickPage::setHeader(QQuickItem *header)
 
     This property holds the page footer item. The footer item is positioned to
     the bottom, and resized to the width of the page. The default value is \c null.
+
+    \note Assigning a ToolBar or TabBar as a page footer sets the respective
+    \l ToolBar::position or \l TabBar::position property automatically to \c Footer.
 
     \sa header, ApplicationWindow::footer
 */
@@ -203,6 +215,10 @@ void QQuickPage::setFooter(QQuickItem *footer)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(footer->z()))
                 footer->setZ(1);
+            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
+                toolBar->setPosition(QQuickToolBar::Footer);
+            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
+                tabBar->setPosition(QQuickTabBar::Footer);
             if (isComponentComplete())
                 d->relayout();
         }
