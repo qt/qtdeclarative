@@ -205,6 +205,9 @@ public:
 
     QVector<QQuickItem *> itemsToPolish;
 
+    qreal devicePixelRatio;
+    QMetaObject::Connection physicalDpiChangedConnection;
+
     void updateDirtyNodes();
     void cleanupNodes();
     void cleanupNodesOnShutdown();

@@ -2068,6 +2068,10 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \value ItemRotationHasChanged The item's rotation has changed.
     ItemChangeData::realValue contains the new rotation.
+
+    \value ItemDevicePixelRatioHasChanged The device pixel ratio of the screen
+    the item is on has changed. ItemChangedData::realValue contains the new
+    device pixel ratio.
 */
 
 /*!
@@ -5952,6 +5956,8 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         }
         break;
     case QQuickItem::ItemAntialiasingHasChanged:
+        // fall through
+    case QQuickItem::ItemDevicePixelRatioHasChanged:
         q->itemChange(change, data);
         break;
     }
