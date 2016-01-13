@@ -38,7 +38,6 @@
 #include <private/qquickprofiler_p.h>
 
 RenderLoop::RenderLoop()
-    : eventPending(false)
 {
     sg = QSGContext::createDefaultContext();
     rc = sg->createRenderContext();
@@ -193,12 +192,7 @@ void RenderLoop::maybeUpdate(QQuickWindow *window)
         return;
 
     m_windows[window].updatePending = true;
-
-    if (!eventPending) {
-        const int exhaust_delay = 5;
-        m_update_timer = startTimer(exhaust_delay, Qt::PreciseTimer);
-        eventPending = true;
-    }
+    window->requestUpdate();
 }
 
 QSurface::SurfaceType RenderLoop::windowSurfaceType() const
@@ -214,19 +208,7 @@ QSGContext *RenderLoop::sceneGraphContext() const
 }
 
 
-bool RenderLoop::event(QEvent *e)
+void RenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
-    if (e->type() == QEvent::Timer) {
-        eventPending = false;
-        killTimer(m_update_timer);
-        m_update_timer = 0;
-        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
-             it != m_windows.constEnd(); ++it) {
-            const WindowData &data = it.value();
-            if (data.updatePending)
-                renderWindow(it.key());
-        }
-        return true;
-    }
-    return QObject::event(e);
+    renderWindow(window);
 }
