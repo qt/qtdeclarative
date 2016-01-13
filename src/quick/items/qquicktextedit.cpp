@@ -328,6 +328,8 @@ QString QQuickTextEdit::text() const
     insert() and remove() methods provide more fine-grained control and
     remarkably better performance for modifying especially large rich text
     content.
+
+    \sa clear()
 */
 void QQuickTextEdit::setText(const QString &text)
 {
@@ -2197,6 +2199,13 @@ void QQuickTextEditPrivate::init()
     q->updateSize();
 }
 
+void QQuickTextEditPrivate::resetInputMethod()
+{
+    Q_Q(QQuickTextEdit);
+    if (!q->isReadOnly() && q->hasActiveFocus() && qGuiApp)
+        QGuiApplication::inputMethod()->reset();
+}
+
 void QQuickTextEdit::q_textChanged()
 {
     Q_D(QQuickTextEdit);
@@ -2950,6 +2959,24 @@ void QQuickTextEdit::resetBottomPadding()
 {
     Q_D(QQuickTextEdit);
     d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlmethod QtQuick::TextEdit::clear()
+    \since 5.7
+
+    Clears the contents of the text edit
+    and resets partial text input from an input method.
+
+    Use this method instead of setting the \l text property to an empty string.
+
+    \sa QInputMethod::reset()
+*/
+void QQuickTextEdit::clear()
+{
+    Q_D(QQuickTextEdit);
+    d->resetInputMethod();
+    d->control->clear();
 }
 
 QT_END_NAMESPACE

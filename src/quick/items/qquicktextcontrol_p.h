@@ -128,6 +128,7 @@ public Q_SLOTS:
 
     void undo();
     void redo();
+    void clear();
 
     void selectAll();
 

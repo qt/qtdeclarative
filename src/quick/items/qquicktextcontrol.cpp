@@ -577,6 +577,13 @@ void QQuickTextControl::redo()
     updateCursorRectangle(true);
 }
 
+void QQuickTextControl::clear()
+{
+    Q_D(QQuickTextControl);
+    d->cursor.select(QTextCursor::Document);
+    d->cursor.removeSelectedText();
+}
+
 QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
     : QObject(*new QQuickTextControlPrivate, parent)
 {

@@ -135,6 +135,7 @@ public:
 
     void init();
 
+    void resetInputMethod();
     void updateDefaultTextOption();
     void relayoutDocument();
     bool determineHorizontalAlignment();

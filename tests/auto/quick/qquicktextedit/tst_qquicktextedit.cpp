@@ -194,6 +194,7 @@ private slots:
     void redo();
     void undo_keypressevents_data();
     void undo_keypressevents();
+    void clear();
 
     void baseUrl();
     void embeddedImages();
@@ -5245,6 +5246,66 @@ void tst_qquicktextedit::undo_keypressevents()
         textEdit->undo();
     }
     QVERIFY(textEdit->text().isEmpty());
+}
+
+void tst_qquicktextedit::clear()
+{
+    QString componentStr = "import QtQuick 2.0\nTextEdit { focus: true }";
+    QQmlComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
+
+    QQuickWindow window;
+    textEdit->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(textEdit->hasActiveFocus());
+
+    QSignalSpy spy(textEdit, SIGNAL(canUndoChanged()));
+
+    textEdit->setText("I am Legend");
+    QCOMPARE(textEdit->text(), QString("I am Legend"));
+    textEdit->clear();
+    QVERIFY(textEdit->text().isEmpty());
+
+    QCOMPARE(spy.count(), 1);
+
+    // checks that clears can be undone
+    textEdit->undo();
+    QVERIFY(!textEdit->canUndo());
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(textEdit->text(), QString("I am Legend"));
+
+    textEdit->setCursorPosition(4);
+    QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(textEdit, &preeditEvent);
+    QCOMPARE(textEdit->text(), QString("I am Legend"));
+    QCOMPARE(textEdit->preeditText(), QString("PREEDIT"));
+
+    textEdit->clear();
+    QVERIFY(textEdit->text().isEmpty());
+
+    QCOMPARE(spy.count(), 3);
+
+    // checks that clears can be undone
+    textEdit->undo();
+    QVERIFY(!textEdit->canUndo());
+    QCOMPARE(spy.count(), 4);
+    QCOMPARE(textEdit->text(), QString("I am Legend"));
+
+    textEdit->setText(QString("<i>I am Legend</i>"));
+    QCOMPARE(textEdit->text(), QString("<i>I am Legend</i>"));
+    textEdit->clear();
+    QVERIFY(textEdit->text().isEmpty());
+
+    QCOMPARE(spy.count(), 5);
+
+    // checks that clears can be undone
+    textEdit->undo();
+    QCOMPARE(spy.count(), 6);
+    QCOMPARE(textEdit->text(), QString("<i>I am Legend</i>"));
 }
 
 void tst_qquicktextedit::baseUrl()
