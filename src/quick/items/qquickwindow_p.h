@@ -190,6 +190,7 @@ public:
     void cleanup(QSGNode *);
 
     void polishItems();
+    void forcePolish();
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
 
