@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick 2D Renderer module of the Qt Toolkit.
+** This file is part of the FOO module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
@@ -26,42 +26,4 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#include "pluginmain.h"
-#include "context.h"
-#include "renderloop.h"
-#include "threadedrenderloop.h"
-
-#include <private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
-
-ContextPlugin::ContextPlugin(QObject *parent)
-    : QSGContextPlugin(parent)
-{
-}
-
-QStringList ContextPlugin::keys() const
-{
-    return QStringList() << QLatin1String("softwarecontext");
-}
-
-QSGContext *ContextPlugin::create(const QString &) const
-{
-    if (!instance)
-        instance = new SoftwareContext::Context();
-    return instance;
-}
-
-QSGRenderLoop *ContextPlugin::createWindowManager()
-{
-    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedPixmaps) ||
-        qgetenv("QSG_RENDER_LOOP") == QByteArrayLiteral("basic"))
-        return new RenderLoop();
-
-    return new ThreadedRenderLoop();
-}
-
-SoftwareContext::Context *ContextPlugin::instance = 0;
-
-
 
