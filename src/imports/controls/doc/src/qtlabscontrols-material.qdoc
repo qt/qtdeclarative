@@ -37,7 +37,7 @@
     \section1 Attached Properties
 
     \list
-        \li \l {accent-attached-prop}{\b accent} : enumeration
+        \li \l {accent-attached-prop}{\b accent} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
 
@@ -125,10 +125,14 @@
 
     \section1 Attached Property Documentation
 
-    \styleproperty {Material.accent} {enumeration} {accent-attached-prop}
+    \styleproperty {Material.accent} {color} {accent-attached-prop}
     \target accent-attached-prop
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
+
+    Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    recommended to use one of the pre-defined accents that have been designed
+    to work well with the rest of the Material style palette:
 
     Available accents:
     \value Material.Red Red (#F44336)

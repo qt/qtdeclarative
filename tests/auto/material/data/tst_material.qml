@@ -111,7 +111,7 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
         verify(control.Material)
-        compare(control.Material.accent, Material.Teal)
+        compare(control.Material.accent, Material.color(Material.Teal))
         compare(control.Material.theme, Material.Light)
         control.destroy()
     }
@@ -121,7 +121,7 @@ TestCase {
         verify(control)
         control.Material.accent = Material.Brown
         control.Material.theme = Material.Dark
-        compare(control.Material.accent, Material.Brown)
+        compare(control.Material.accent, Material.color(Material.Brown))
         compare(control.Material.theme, Material.Dark)
         control.destroy()
     }
@@ -129,7 +129,7 @@ TestCase {
     function test_reset() {
         var control = styledButton.createObject(testCase)
         verify(control)
-        compare(control.Material.accent, Material.DeepPurple)
+        compare(control.Material.accent, Material.color(Material.DeepPurple))
         compare(control.Material.theme, Material.Dark)
         control.Material.accent = undefined
         control.Material.theme = undefined
@@ -140,7 +140,7 @@ TestCase {
 
     function test_inheritance_data() {
         return [
-            { tag: "accent", value1: Material.Amber, value2: Material.Indigo },
+            { tag: "accent", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
             { tag: "theme", value1: Material.Dark, value2: Material.Light },
         ]
     }
@@ -205,9 +205,9 @@ TestCase {
         compare(unstyledChild.Material.theme, parent.Material.theme)
 
         parent.Material.accent = Material.Cyan
-        compare(control.Material.accent, Material.Cyan)
-        verify(styledChild.Material.accent !== Material.Cyan)
-        // ### TODO: compare(unstyledChild.Material.accent, Material.Cyan)
+        compare(control.Material.accent, Material.color(Material.Cyan))
+        verify(styledChild.Material.accent !== Material.color(Material.Cyan))
+        // ### TODO: compare(unstyledChild.Material.accent, Material.color(Material.Cyan))
 
         parent.destroy()
     }
@@ -216,13 +216,13 @@ TestCase {
         var control = loader.createObject(testCase)
         control.Material.accent = Material.Lime
         control.active = true
-        compare(control.item.Material.accent, Material.Lime)
+        compare(control.item.Material.accent, Material.color(Material.Lime))
         control.Material.accent = Material.Pink
-        compare(control.item.Material.accent, Material.Pink)
+        compare(control.item.Material.accent, Material.color(Material.Pink))
         control.active = false
         control.Material.accent = Material.Brown
         control.active = true
-        compare(control.item.Material.accent, Material.Brown)
+        compare(control.item.Material.accent, Material.color(Material.Brown))
         control.destroy()
     }
 
@@ -245,9 +245,52 @@ TestCase {
         compare(container.Material.theme, Material.Light)
         compare(container.menu.Material.theme, Material.Dark)
         compare(child.Material.theme, Material.Dark)
-        compare(container.Material.accent, Material.Red)
-        compare(container.menu.Material.accent, Material.Red)
-        compare(child.Material.accent, Material.Red)
+        compare(container.Material.accent, Material.color(Material.Red))
+        compare(container.menu.Material.accent, Material.color(Material.Red))
+        compare(child.Material.accent, Material.color(Material.Red))
         container.destroy()
+    }
+
+    function test_colors() {
+        var control = button.createObject(testCase)
+        verify(control)
+
+        // Material.Accent - enum
+        control.Material.accent = Material.Red
+        compare(control.Material.accent, "#f44336")
+
+        // Material.Accent - string
+        control.Material.accent = "Emerald"
+        compare(control.Material.accent, "#f44336")
+
+        // SVG named color
+        control.Material.accent = "tomato"
+        compare(control.Material.accent, "#ff6347")
+
+        // #rrggbb
+        control.Material.accent = "#123456"
+        compare(control.Material.accent, "#123456")
+
+        // #aarrggbb
+        control.Material.accent = "#12345678"
+        compare(control.Material.accent, "#12345678")
+
+        // Qt.rgba() - no alpha
+        control.Material.accent = Qt.rgba(0.5, 0.5, 0.5)
+        compare(control.Material.accent, "#808080")
+
+        // Qt.rgba() - with alpha
+        control.Material.accent = Qt.rgba(0.5, 0.5, 0.5, 0.5)
+        compare(control.Material.accent, "#80808080")
+
+        // unknown
+        ignoreWarning("QQuickMaterialStyle: unknown accent 123")
+        control.Material.accent = 123
+        ignoreWarning("QQuickMaterialStyle: unknown accent \"foo\"")
+        control.Material.accent = "foo"
+        ignoreWarning("QQuickMaterialStyle: unknown accent \"#1\"")
+        control.Material.accent = "#1"
+
+        control.destroy()
     }
 }
