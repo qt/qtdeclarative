@@ -162,7 +162,7 @@ bool QQuickContext2DTexture::setDirtyRect(const QRect &r)
 {
     bool doDirty = false;
     if (m_tiledCanvas) {
-        foreach (QQuickContext2DTile* t, m_tiles) {
+        for (QQuickContext2DTile* t : qAsConst(m_tiles)) {
             bool dirty = t->rect().intersected(r).isValid();
             t->markDirty(dirty);
             if (dirty)
@@ -256,7 +256,7 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
     QRect tiledRegion = createTiles(m_canvasWindow.intersected(QRect(QPoint(0, 0), m_canvasSize)));
     if (!tiledRegion.isEmpty()) {
         QRect dirtyRect;
-        foreach (QQuickContext2DTile* tile, m_tiles) {
+        for (QQuickContext2DTile* tile : qAsConst(m_tiles)) {
             if (tile->dirty()) {
                 if (dirtyRect.isEmpty())
                     dirtyRect = tile->rect();
@@ -267,7 +267,7 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
 
         if (beginPainting()) {
             QQuickContext2D::State oldState = m_state;
-            foreach (QQuickContext2DTile* tile, m_tiles) {
+            for (QQuickContext2DTile* tile : qAsConst(m_tiles)) {
                 if (tile->dirty()) {
                     ccb->replay(tile->createPainter(m_smooth, m_antialiasing), oldState, scaleFactor());
                     tile->drawFinished();
