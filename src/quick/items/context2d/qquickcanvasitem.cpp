@@ -690,8 +690,8 @@ void QQuickCanvasItem::updatePolish()
         QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
-        foreach (int key, animationCallbacks.keys()) {
-            QV4::ScopedFunctionObject f(scope, animationCallbacks.value(key).value());
+        for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
+            QV4::ScopedFunctionObject f(scope, it.value().value());
             callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
             f->call(callData);
         }
