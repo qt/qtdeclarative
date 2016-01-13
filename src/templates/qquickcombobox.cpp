@@ -287,14 +287,12 @@ void QQuickComboBoxPrivate::setHighlightedIndex(int index)
 void QQuickComboBoxPrivate::createDelegateModel()
 {
     Q_Q(QQuickComboBox);
-    if (delegateModel) {
-        if (ownModel) {
-            delete delegateModel;
-        } else {
-            disconnect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
-            disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
-            disconnect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
-        }
+    bool ownedOldModel = ownModel;
+    QQmlInstanceModel* oldModel = delegateModel;
+    if (oldModel) {
+        disconnect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
+        disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
+        disconnect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
     }
 
     ownModel = false;
@@ -318,6 +316,9 @@ void QQuickComboBoxPrivate::createDelegateModel()
     }
 
     emit q->delegateModelChanged();
+
+    if (ownedOldModel)
+        delete oldModel;
 }
 
 QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
