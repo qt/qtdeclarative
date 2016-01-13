@@ -192,6 +192,7 @@ private slots:
     void redo();
     void undo_keypressevents_data();
     void undo_keypressevents();
+    void clear();
 
     void backspaceSurrogatePairs();
 
@@ -5722,6 +5723,56 @@ void tst_qquicktextinput::undo_keypressevents()
         textInput->undo();
     }
     QVERIFY(textInput->text().isEmpty());
+}
+
+void tst_qquicktextinput::clear()
+{
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(textInput->hasActiveFocus());
+    QVERIFY(!textInput->canUndo());
+
+    QSignalSpy spy(textInput, SIGNAL(canUndoChanged()));
+
+    textInput->setText("I am Legend");
+    QCOMPARE(textInput->text(), QString("I am Legend"));
+    textInput->clear();
+    QVERIFY(textInput->text().isEmpty());
+
+    QCOMPARE(spy.count(), 1);
+
+    // checks that clears can be undone
+    textInput->undo();
+    QVERIFY(!textInput->canUndo());
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(textInput->text(), QString("I am Legend"));
+
+    textInput->setCursorPosition(4);
+    QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(textInput, &preeditEvent);
+    QCOMPARE(textInput->text(), QString("I am Legend"));
+    QCOMPARE(textInput->displayText(), QString("I amPREEDIT Legend"));
+    QCOMPARE(textInput->preeditText(), QString("PREEDIT"));
+
+    textInput->clear();
+    QVERIFY(textInput->text().isEmpty());
+
+    QCOMPARE(spy.count(), 3);
+
+    // checks that clears can be undone
+    textInput->undo();
+    QVERIFY(!textInput->canUndo());
+    QCOMPARE(spy.count(), 4);
+    QCOMPARE(textInput->text(), QString("I am Legend"));
 }
 
 void tst_qquicktextinput::backspaceSurrogatePairs()

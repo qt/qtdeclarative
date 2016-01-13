@@ -118,6 +118,8 @@ void QQuickTextInput::componentComplete()
     \qmlproperty string QtQuick::TextInput::text
 
     The text in the TextInput.
+
+    \sa clear()
 */
 QString QQuickTextInput::text() const
 {
@@ -1932,6 +1934,7 @@ void QQuickTextInput::undo()
 {
     Q_D(QQuickTextInput);
     if (!d->m_readOnly) {
+        d->resetInputMethod();
         d->internalUndo();
         d->finishChange(-1, true);
     }
@@ -1947,6 +1950,7 @@ void QQuickTextInput::redo()
 {
     Q_D(QQuickTextInput);
     if (!d->m_readOnly) {
+        d->resetInputMethod();
         d->internalRedo();
         d->finishChange();
     }
@@ -2567,6 +2571,13 @@ void QQuickTextInputPrivate::init()
         option.setUseDesignMetrics(renderType != QQuickTextInput::NativeRendering);
         m_textLayout.setTextOption(option);
     }
+}
+
+void QQuickTextInputPrivate::resetInputMethod()
+{
+    Q_Q(QQuickTextInput);
+    if (!m_readOnly && q->hasActiveFocus() && qGuiApp)
+        QGuiApplication::inputMethod()->reset();
 }
 
 void QQuickTextInput::updateCursorRectangle(bool scroll)
@@ -4471,6 +4482,24 @@ void QQuickTextInput::ensureVisible(int position)
     Q_D(QQuickTextInput);
     d->ensureVisible(position);
     updateCursorRectangle(false);
+}
+
+/*!
+    \qmlmethod QtQuick::TextInput::clear()
+    \since 5.7
+
+    Clears the contents of the text input
+    and resets partial text input from an input method.
+
+    Use this method instead of setting the \l text property to an empty string.
+
+    \sa QInputMethod::reset()
+*/
+void QQuickTextInput::clear()
+{
+    Q_D(QQuickTextInput);
+    d->resetInputMethod();
+    d->clear();
 }
 
 /*!

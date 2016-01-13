@@ -388,6 +388,7 @@ public Q_SLOTS:
     void insert(int position, const QString &text);
     void remove(int start, int end);
     Q_REVISION(3) void ensureVisible(int position);
+    Q_REVISION(7) void clear();
 
 private Q_SLOTS:
     void selectionChanged();
