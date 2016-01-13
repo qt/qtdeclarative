@@ -50,9 +50,9 @@ T.ProgressBar {
     //! [indicator]
     indicator: Rectangle {
         x: control.leftPadding
-        y: control.topPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
         width: control.indeterminate ? 0 : control.position * control.availableWidth
-        height: control.availableHeight
+        height: 10
 
         scale: control.mirrored ? -1 : 1
         color: control.Universal.accent
@@ -81,9 +81,9 @@ T.ProgressBar {
         implicitHeight: 10
 
         x: control.leftPadding
-        y: control.topPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
         width: control.availableWidth
-        height: control.availableHeight
+        height: 10
 
         visible: !control.indeterminate
         color: control.Universal.baseLowColor
