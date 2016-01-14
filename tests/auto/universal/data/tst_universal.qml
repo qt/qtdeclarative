@@ -284,11 +284,11 @@ TestCase {
         compare(control.Universal.accent, "#80808080")
 
         // unknown
-        ignoreWarning("QQuickUniversalStyle: unknown accent 123")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: 123")
         control.Universal.accent = 123
-        ignoreWarning("QQuickUniversalStyle: unknown accent \"foo\"")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: foo")
         control.Universal.accent = "foo"
-        ignoreWarning("QQuickUniversalStyle: unknown accent \"#1\"")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: #1")
         control.Universal.accent = "#1"
 
         control.destroy()

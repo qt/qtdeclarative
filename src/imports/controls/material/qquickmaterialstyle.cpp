@@ -38,6 +38,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -488,7 +489,7 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
     if (var.type() == QVariant::Int) {
         int val = var.toInt();
         if (val > BlueGrey) {
-            qWarning() << "QQuickMaterialStyle: unknown accent" << val;
+            qmlInfo(parent()) << "unknown Material.accent value: " << val;
             return;
         }
         accent = val;
@@ -499,7 +500,7 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
         } else {
             QColor color(var.toString());
             if (!color.isValid()) {
-                qWarning() << "QQuickMaterialStyle: unknown accent" << var.toString();
+                qmlInfo(parent()) << "unknown Material.accent value: " << var.toString();
                 return;
             }
             custom = true;
@@ -823,15 +824,10 @@ void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle 
 }
 
 template <typename Enum>
-static Enum readEnumValue(QSettings *settings, const QString &name, bool *ok)
+static Enum toEnumValue(const QByteArray &value, bool *ok)
 {
-    int value = -1;
-    *ok = settings->contains(name);
-    if (*ok) {
-        QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
-        value = enumeration.keyToValue(settings->value(name).toByteArray(), ok);
-    }
-    return static_cast<Enum>(value);
+    QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
+    return static_cast<Enum>(enumeration.keyToValue(value, ok));
 }
 
 void QQuickMaterialStyle::init()
@@ -841,19 +837,25 @@ void QQuickMaterialStyle::init()
         QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Material"));
         if (!settings.isNull()) {
             bool ok = false;
-            Theme theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), &ok);
+            QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
+            Theme theme = toEnumValue<Theme>(value, &ok);
             if (ok)
                 defaultTheme = m_theme = theme;
+            else if (!value.isEmpty())
+                qWarning().nospace().noquote() << settings->fileName() << ": unknown Material theme value: " << value;
 
-            Color accent = readEnumValue<Color>(settings.data(), QStringLiteral("Accent"), &ok);
+            value = settings->value(QStringLiteral("Accent")).toByteArray();
+            Color accent = toEnumValue<Color>(value, &ok);
             if (ok) {
                 defaultCustom = m_customAccent = false;
                 defaultAccent = m_accent = accent;
             } else {
-                QColor color(settings->value(QStringLiteral("Accent")).toString());
+                QColor color(value.constData());
                 if (color.isValid()) {
                     defaultCustom = m_customAccent = true;
                     defaultAccent = m_accent = color.rgba();
+                } else if (!value.isEmpty()) {
+                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material accent value: " << value;
                 }
             }
         }

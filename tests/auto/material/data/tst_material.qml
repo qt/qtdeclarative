@@ -260,8 +260,8 @@ TestCase {
         compare(control.Material.accent, "#f44336")
 
         // Material.Accent - string
-        control.Material.accent = "Emerald"
-        compare(control.Material.accent, "#f44336")
+        control.Material.accent = "BlueGrey"
+        compare(control.Material.accent, "#607d8b")
 
         // SVG named color
         control.Material.accent = "tomato"
@@ -284,11 +284,11 @@ TestCase {
         compare(control.Material.accent, "#80808080")
 
         // unknown
-        ignoreWarning("QQuickMaterialStyle: unknown accent 123")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: 123")
         control.Material.accent = 123
-        ignoreWarning("QQuickMaterialStyle: unknown accent \"foo\"")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: foo")
         control.Material.accent = "foo"
-        ignoreWarning("QQuickMaterialStyle: unknown accent \"#1\"")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: #1")
         control.Material.accent = "#1"
 
         control.destroy()
