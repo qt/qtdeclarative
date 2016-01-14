@@ -127,7 +127,7 @@ protected:
 
     void appendPCRelativeOffset(int32_t immediate)
     {
-        bufferPrintf("0x%x", reinterpret_cast<uint32_t>(m_currentPC + immediate));
+        bufferPrintf("%p", m_currentPC + immediate);
     }
 
     void appendShiftAmount(unsigned amount)

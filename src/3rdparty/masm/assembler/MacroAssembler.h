@@ -34,6 +34,10 @@
 #include "MacroAssemblerARMv7.h"
 namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; };
 
+#elif CPU(ARM64)
+#include "MacroAssemblerARM64.h"
+namespace JSC { typedef MacroAssemblerARM64 MacroAssemblerBase; };
+
 #elif CPU(ARM_TRADITIONAL)
 #include "MacroAssemblerARM.h"
 namespace JSC { typedef MacroAssemblerARM MacroAssemblerBase; };
@@ -183,7 +187,7 @@ public:
         storePtr(imm, addressForPoke(index));
     }
 
-#if CPU(X86_64)
+#if CPU(X86_64) || CPU(ARM64)
     void peek64(RegisterID dest, int index = 0)
     {
         load64(Address(stackPointerRegister, (index * sizeof(void*))), dest);
@@ -253,7 +257,7 @@ public:
         branchTestPtr(cond, reg).linkTo(target, this);
     }
 
-#if !CPU(ARM_THUMB2)
+#if !CPU(ARM_THUMB2) && !CPU(ARM64)
     PatchableJump patchableBranchPtr(RelationalCondition cond, Address left, TrustedImmPtr right = TrustedImmPtr(0))
     {
         return PatchableJump(branchPtr(cond, left, right));
@@ -273,7 +277,7 @@ public:
     {
         return PatchableJump(branchTest32(cond, reg, mask));
     }
-#endif // !CPU(ARM_THUMB2)
+#endif // !CPU(ARM_THUMB2) && !CPU(ARM64)
 
 #if !CPU(ARM)
     PatchableJump patchableBranch32(RelationalCondition cond, RegisterID reg, TrustedImm32 imm)
@@ -325,7 +329,7 @@ public:
     // Ptr methods
     // On 32-bit platforms (i.e. x86), these methods directly map onto their 32-bit equivalents.
     // FIXME: should this use a test for 32-bitness instead of this specific exception?
-#if !CPU(X86_64)
+#if !CPU(X86_64) && !CPU(ARM64)
     void addPtr(Address src, RegisterID dest)
     {
         add32(src, dest);

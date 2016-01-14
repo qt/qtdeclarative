@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2012, 2014 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,27 +23,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define __STDC_FORMAT_MACROS
 #include "config.h"
 #include "Disassembler.h"
 
-#if USE(ARMV7_DISASSEMBLER) && CPU(ARM_THUMB2)
+#if USE(ARM64_DISASSEMBLER) && CPU(ARM64)
 
-#include "ARMv7/ARMv7DOpcode.h"
+#include "ARM64/A64DOpcode.h"
 #include "MacroAssemblerCodeRef.h"
 
 namespace JSC {
 
 bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out)
 {
-    ARMv7DOpcode armOpcode;
+    A64DOpcode arm64Opcode;
 
-    uint16_t* currentPC = reinterpret_cast<uint16_t*>(reinterpret_cast<uintptr_t>(codePtr.executableAddress())&~1);
-    uint16_t* endPC = currentPC + (size / sizeof(uint16_t));
+    uint32_t* currentPC = reinterpret_cast<uint32_t*>(codePtr.executableAddress());
+    size_t byteCount = size;
 
-    while (currentPC < endPC) {
-        char pcString[12];
-        snprintf(pcString, sizeof(pcString), "0x%x", reinterpret_cast<unsigned>(currentPC));
-        out.printf("%s%10s: %s\n", prefix, pcString, armOpcode.disassemble(currentPC));
+    while (byteCount) {
+        char pcString[20];
+        snprintf(pcString, sizeof(pcString), "0x%lx", reinterpret_cast<unsigned long>(currentPC));
+        out.printf("%s%16s: %s\n", prefix, pcString, arm64Opcode.disassemble(currentPC));
+        currentPC++;
+        byteCount -= sizeof(uint32_t);
     }
 
     return true;
@@ -51,5 +54,19 @@ bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const c
 
 } // namespace JSC
 
-#endif // USE(ARMV7_DISASSEMBLER)
+#endif // USE(ARM64_DISASSEMBLER)
 
+#if USE(LLVM_DISASSEMBLER) && CPU(ARM64)
+
+#include "LLVMDisassembler.h"
+
+namespace JSC {
+
+bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out, InstructionSubsetHint hint)
+{
+    return tryToDisassembleWithLLVM(codePtr, size, prefix, out, hint);
+}
+
+} // namespace JSC
+
+#endif // USE(LLVM_DISASSEMBLER) && CPU(ARM64)

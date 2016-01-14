@@ -166,6 +166,11 @@
 #define WTF_CPU_X86_64 1
 #endif
 
+/* CPU(ARM64) - Apple */
+#if (defined(__arm64__) && defined(__APPLE__)) || defined(__aarch64__)
+#define WTF_CPU_ARM64 1
+#endif
+
 /* CPU(ARM) - ARM, any version*/
 #define WTF_ARM_ARCH_AT_LEAST(N) (CPU(ARM) && WTF_ARM_ARCH_VERSION >= N)
 
@@ -705,6 +710,7 @@
 #if (CPU(X86_64) && (OS(UNIX) || OS(WINDOWS))) \
     || (CPU(IA64) && !CPU(IA64_32)) \
     || CPU(ALPHA) \
+    || CPU(ARM64) \
     || CPU(SPARC64) \
     || CPU(S390X) \
     || CPU(PPC64)
@@ -725,7 +731,7 @@
 
 /* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms. */
 #if !defined(ENABLE_JIT) \
-    && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(MIPS)) \
+    && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(MIPS) || CPU(ARM64)) \
     && (OS(DARWIN) || !COMPILER(GCC) || GCC_VERSION_AT_LEAST(4, 1, 0)) \
     && !OS(WINCE) \
     && !(OS(QNX) && !PLATFORM(QT)) /* We use JIT in QNX Qt */
@@ -740,7 +746,7 @@
 #define WTF_USE_UDIS86 1
 #endif
 
-#if !defined(ENABLE_DISASSEMBLER) && (USE(UDIS86) || USE(ARMV7_DISASSEMBLER) || USE(MIPS32_DISASSEMBLER))
+#if !defined(ENABLE_DISASSEMBLER) && (USE(UDIS86) || USE(ARMV7_DISASSEMBLER) || USE(ARM64_DISASSEMBLER) || USE(MIPS32_DISASSEMBLER))
 #define ENABLE_DISASSEMBLER 1
 #endif
 
@@ -874,7 +880,7 @@
 /* Pick which allocator to use; we only need an executable allocator if the assembler is compiled in.
    On x86-64 we use a single fixed mmap, on other platforms we mmap on demand. */
 #if ENABLE(ASSEMBLER)
-#if CPU(X86_64) && !OS(WINDOWS) || PLATFORM(IOS)
+#if CPU(X86_64) && !OS(WINDOWS) || PLATFORM(IOS) || CPU(ARM64)
 #define ENABLE_EXECUTABLE_ALLOCATOR_FIXED 1
 #else
 #define ENABLE_EXECUTABLE_ALLOCATOR_DEMAND 1
@@ -933,7 +939,7 @@
 #define WTF_USE_ACCESSIBILITY_CONTEXT_MENUS 1
 #endif
 
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) || CPU(ARM64)
 #define ENABLE_BRANCH_COMPACTION 1
 #endif
 

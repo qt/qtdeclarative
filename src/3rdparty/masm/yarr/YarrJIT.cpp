@@ -53,6 +53,17 @@ class YarrGenerator : private MacroAssembler {
 
     static const RegisterID returnRegister = ARMRegisters::r0;
     static const RegisterID returnRegister2 = ARMRegisters::r1;
+#elif CPU(ARM64)
+    static const RegisterID input = ARM64Registers::x0;
+    static const RegisterID index = ARM64Registers::x1;
+    static const RegisterID length = ARM64Registers::x2;
+    static const RegisterID output = ARM64Registers::x3;
+
+    static const RegisterID regT0 = ARM64Registers::x4;
+    static const RegisterID regT1 = ARM64Registers::x5;
+
+    static const RegisterID returnRegister = ARM64Registers::x0;
+    static const RegisterID returnRegister2 = ARM64Registers::x1;
 #elif CPU(MIPS)
     static const RegisterID input = MIPSRegisters::a0;
     static const RegisterID index = MIPSRegisters::a1;

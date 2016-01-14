@@ -62,6 +62,9 @@ HEADERS += $$PWD/disassembler/ARMv7/ARMv7DOpcode.h
 SOURCES += $$PWD/disassembler/Mips32Disassembler.cpp
 SOURCES += $$PWD/disassembler/mips32/Mips32Opcode.cpp
 HEADERS += $$PWD/disassembler/mips32/Mips32Opcode.h
+SOURCES += $$PWD/disassembler/ARM64Disassembler.cpp
+SOURCES += $$PWD/disassembler/ARM64/A64DOpcode.cpp
+HEADERS += $$PWD/disassembler/ARM64/A64DOpcode.h
 
 SOURCES += $$PWD/yarr/*.cpp
 HEADERS += $$PWD/yarr/*.h

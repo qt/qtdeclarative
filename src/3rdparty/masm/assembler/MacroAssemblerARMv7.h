@@ -27,7 +27,7 @@
 #ifndef MacroAssemblerARMv7_h
 #define MacroAssemblerARMv7_h
 
-#if ENABLE(ASSEMBLER)
+#if ENABLE(ASSEMBLER) && CPU(ARM_THUMB2)
 
 #include "ARMv7Assembler.h"
 #include "AbstractMacroAssembler.h"

@@ -423,6 +423,7 @@ public:
     typedef ARMRegisters::FPSingleRegisterID FPSingleRegisterID;
     typedef ARMRegisters::FPDoubleRegisterID FPDoubleRegisterID;
     typedef ARMRegisters::FPQuadRegisterID FPQuadRegisterID;
+    typedef ARMRegisters::FPDoubleRegisterID FPRegisterID;
 
     // (HS, LO, HI, LS) -> (AE, B, A, BE)
     // (VS, VC) -> (O, NO)

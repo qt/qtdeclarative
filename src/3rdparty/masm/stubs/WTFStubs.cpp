@@ -112,6 +112,13 @@ void WTFReportAssertionFailure(const char* file, int line, const char* function,
     fprintf(stderr, "WTF failing assertion in %s, line %d, function %s: %s\n", file, line, function, assertion);
 }
 
+void WTFReportAssertionFailureWithMessage(const char* file, int line, const char* function, const char* assertion, const char* format, ...)
+{
+    // TODO: show the message, or remove this function completely. (The latter would probably be best.)
+    Q_UNUSED(format);
+    fprintf(stderr, "WTF failing assertion in %s, line %d, function %s: %s\n", file, line, function, assertion);
+}
+
 void WTFReportBacktrace()
 {
 }

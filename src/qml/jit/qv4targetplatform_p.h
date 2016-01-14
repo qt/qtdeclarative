@@ -365,7 +365,120 @@ public:
         as->pop(StackFrameRegister);
         as->pop(JSC::ARMRegisters::lr);
     }
-#endif // Linux on ARM (32 bit)
+#endif // ARM (32 bit)
+
+#if CPU(ARM64)
+    enum { RegAllocIsSupported = 1 };
+
+    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::ARM64Registers::fp;
+    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARM64Registers::x28;
+    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
+    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARM64Registers::x9;
+    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARM64Registers::x27;
+    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
+    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
+    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
+
+    static RegisterInformation getPlatformRegisterInfo()
+    {
+        typedef RegisterInfo RI;
+        return RegisterInformation()
+                << RI(JSC::ARM64Registers::x0,  QStringLiteral("x0"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
+                << RI(JSC::ARM64Registers::x1,  QStringLiteral("x1"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x2,  QStringLiteral("x2"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x3,  QStringLiteral("x3"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x4,  QStringLiteral("x4"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x5,  QStringLiteral("x5"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x6,  QStringLiteral("x6"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x7,  QStringLiteral("x7"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x8,  QStringLiteral("x8"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
+                << RI(JSC::ARM64Registers::x9,  QStringLiteral("x9"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::ARM64Registers::x10, QStringLiteral("x10"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x11, QStringLiteral("x11"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x12, QStringLiteral("x12"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x13, QStringLiteral("x13"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x14, QStringLiteral("x14"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x15, QStringLiteral("x15"), RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x19, QStringLiteral("x19"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x20, QStringLiteral("x20"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x21, QStringLiteral("x21"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x22, QStringLiteral("x22"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x23, QStringLiteral("x23"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x24, QStringLiteral("x24"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x25, QStringLiteral("x25"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x26, QStringLiteral("x26"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x27, QStringLiteral("x27"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::ARM64Registers::x28, QStringLiteral("x28"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+
+                << RI(JSC::ARM64Registers::q2,  QStringLiteral("q2"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q3,  QStringLiteral("q3"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q4,  QStringLiteral("q4"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q5,  QStringLiteral("q5"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q6,  QStringLiteral("q6"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q8,  QStringLiteral("q8"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q9,  QStringLiteral("q9"),  RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q10, QStringLiteral("q10"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q11, QStringLiteral("q11"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q12, QStringLiteral("q12"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q13, QStringLiteral("q13"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q14, QStringLiteral("q14"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q15, QStringLiteral("q15"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q16, QStringLiteral("q16"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q17, QStringLiteral("q17"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q18, QStringLiteral("q18"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q19, QStringLiteral("q19"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q20, QStringLiteral("q20"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q21, QStringLiteral("q21"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q22, QStringLiteral("q22"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q23, QStringLiteral("q23"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q24, QStringLiteral("q24"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q25, QStringLiteral("q25"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q26, QStringLiteral("q26"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q27, QStringLiteral("q27"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q28, QStringLiteral("q28"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q29, QStringLiteral("q29"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q30, QStringLiteral("q30"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::q31, QStringLiteral("q31"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                   ;
+    }
+
+#undef HAVE_ALU_OPS_WITH_MEM_OPERAND
+#define VALUE_FITS_IN_REGISTER
+    static const int RegisterSize = 8;
+
+#define ARGUMENTS_IN_REGISTERS
+    static const int RegisterArgumentCount = 8;
+    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    {
+        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+            JSC::ARM64Registers::x0,
+            JSC::ARM64Registers::x1,
+            JSC::ARM64Registers::x2,
+            JSC::ARM64Registers::x3,
+            JSC::ARM64Registers::x4,
+            JSC::ARM64Registers::x5,
+            JSC::ARM64Registers::x6,
+            JSC::ARM64Registers::x7
+        };
+
+        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
+        return regs[index];
+    };
+
+    static const int StackAlignment = 16;
+    static const int StackShadowSpace = 0;
+    static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
+
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->pushPair(StackFrameRegister, JSC::ARM64Registers::lr);
+    }
+
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->popPair(StackFrameRegister, JSC::ARM64Registers::lr);
+    }
+#endif // ARM64
 
 #if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
     enum { RegAllocIsSupported = 1 };
