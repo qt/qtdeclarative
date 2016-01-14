@@ -135,7 +135,7 @@ T.SpinBox {
         Rectangle {
             x: parent.width / 2 - width / 2
             y: parent.y + parent.height - height
-            width: Math.max(26, control.contentItem.implicitWidth)
+            width: control.availableWidth
             height: control.activeFocus ? 2 : 1
             color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
         }
