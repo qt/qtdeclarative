@@ -41,16 +41,16 @@ class RectangleNode : public QSGRectangleNode
 public:
     RectangleNode();
 
-    virtual void setRect(const QRectF &rect);
-    virtual void setColor(const QColor &color);
-    virtual void setPenColor(const QColor &color);
-    virtual void setPenWidth(qreal width);
-    virtual void setGradientStops(const QGradientStops &stops);
-    virtual void setRadius(qreal radius);
-    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
-    virtual void setAligned(bool aligned);
+    void setRect(const QRectF &rect) override;
+    void setColor(const QColor &color) override;
+    void setPenColor(const QColor &color) override;
+    void setPenWidth(qreal width) override;
+    void setGradientStops(const QGradientStops &stops) override;
+    void setRadius(qreal radius) override;
+    void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing) }
+    void setAligned(bool aligned) override;
 
-    virtual void update();
+    void update() override;
 
     void paint(QPainter *);
 

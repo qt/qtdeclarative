@@ -48,34 +48,34 @@ public:
 
     // QSGTexture interface
 public:
-    virtual int textureId() const;
-    virtual QSize textureSize() const;
-    virtual bool hasAlphaChannel() const;
-    virtual bool hasMipmaps() const;
-    virtual void bind();
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    void bind() override;
 
     // QSGDynamicTexture interface
 public:
-    virtual bool updateTexture();
+    bool updateTexture() override;
 
     // QSGLayer interface
 public:
-    virtual void setItem(QSGNode *item);
-    virtual void setRect(const QRectF &rect);
-    virtual void setSize(const QSize &size);
-    virtual void scheduleUpdate();
-    virtual QImage toImage() const;
-    virtual void setLive(bool live);
-    virtual void setRecursive(bool recursive);
-    virtual void setFormat(GLenum);
-    virtual void setHasMipmaps(bool);
-    virtual void setDevicePixelRatio(qreal ratio);
-    virtual void setMirrorHorizontal(bool mirror);
-    virtual void setMirrorVertical(bool mirror);
+    void setItem(QSGNode *item) override;
+    void setRect(const QRectF &rect) override;
+    void setSize(const QSize &size) override;
+    void scheduleUpdate() override;
+    QImage toImage() const override;
+    void setLive(bool live) override;
+    void setRecursive(bool recursive) override;
+    void setFormat(GLenum) override;
+    void setHasMipmaps(bool) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setMirrorHorizontal(bool mirror) override;
+    void setMirrorVertical(bool mirror) override;
 
 public slots:
-    virtual void markDirtyTexture();
-    virtual void invalidated();
+    void markDirtyTexture() override;
+    void invalidated() override;
 
 private:
     void grab();

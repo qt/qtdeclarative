@@ -37,13 +37,13 @@ class GlyphNode : public QSGGlyphNode
 public:
     GlyphNode();
 
-    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
-    virtual void setColor(const QColor &color);
-    virtual void setStyle(QQuickText::TextStyle style);
-    virtual void setStyleColor(const QColor &color);
-    virtual QPointF baseLine() const;
-    virtual void setPreferredAntialiasingMode(AntialiasingMode);
-    virtual void update();
+    void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
+    void setColor(const QColor &color) override;
+    void setStyle(QQuickText::TextStyle style) override;
+    void setStyleColor(const QColor &color) override;
+    QPointF baseLine() const override;
+    void setPreferredAntialiasingMode(AntialiasingMode) override;
+    void update() override;
 
     void paint(QPainter *painter);
 

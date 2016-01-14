@@ -37,26 +37,26 @@ class RenderingVisitor : public QSGNodeVisitorEx
 public:
     RenderingVisitor(QPainter *painter);
 
-    virtual bool visit(QSGTransformNode *node);
-    virtual void endVisit(QSGTransformNode *);
-    virtual bool visit(QSGClipNode *node);
-    virtual void endVisit(QSGClipNode *node);
-    virtual bool visit(QSGGeometryNode *node);
-    virtual void endVisit(QSGGeometryNode *node);
-    virtual bool visit(QSGOpacityNode *node);
-    virtual void endVisit(QSGOpacityNode *node);
-    virtual bool visit(QSGImageNode *node);
-    virtual void endVisit(QSGImageNode *node);
-    virtual bool visit(QSGPainterNode *node);
-    virtual void endVisit(QSGPainterNode *);
-    virtual bool visit(QSGRectangleNode *node);
-    virtual void endVisit(QSGRectangleNode *node);
-    virtual bool visit(QSGGlyphNode *node);
-    virtual void endVisit(QSGGlyphNode *node);
-    virtual bool visit(QSGNinePatchNode *node);
-    virtual void endVisit(QSGNinePatchNode *);
-    virtual bool visit(QSGRootNode *);
-    virtual void endVisit(QSGRootNode *);
+    bool visit(QSGTransformNode *node) override;
+    void endVisit(QSGTransformNode *) override;
+    bool visit(QSGClipNode *node) override;
+    void endVisit(QSGClipNode *node) override;
+    bool visit(QSGGeometryNode *node) override;
+    void endVisit(QSGGeometryNode *node) override;
+    bool visit(QSGOpacityNode *node) override;
+    void endVisit(QSGOpacityNode *node) override;
+    bool visit(QSGImageNode *node) override;
+    void endVisit(QSGImageNode *node) override;
+    bool visit(QSGPainterNode *node) override;
+    void endVisit(QSGPainterNode *) override;
+    bool visit(QSGRectangleNode *node) override;
+    void endVisit(QSGRectangleNode *node) override;
+    bool visit(QSGGlyphNode *node) override;
+    void endVisit(QSGGlyphNode *node) override;
+    bool visit(QSGNinePatchNode *node) override;
+    void endVisit(QSGNinePatchNode *) override;
+    bool visit(QSGRootNode *) override;
+    void endVisit(QSGRootNode *) override;
 
 private:
     QPainter *painter;

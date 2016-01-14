@@ -39,11 +39,11 @@ public:
     PixmapTexture(const QImage &image);
     PixmapTexture(const QPixmap &pixmap);
 
-    virtual int textureId() const;
-    virtual QSize textureSize() const;
-    virtual bool hasAlphaChannel() const;
-    virtual bool hasMipmaps() const;
-    virtual void bind();
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    void bind() override;
 
     const QPixmap &pixmap() const { return m_pixmap; }
 

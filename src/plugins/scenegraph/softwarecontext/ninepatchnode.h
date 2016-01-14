@@ -37,11 +37,11 @@ class NinePatchNode : public QSGNinePatchNode
 public:    
     NinePatchNode();
 
-    virtual void setTexture(QSGTexture *texture);
-    virtual void setBounds(const QRectF &bounds);
-    virtual void setDevicePixelRatio(qreal ratio);
-    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom);
-    virtual void update();
+    void setTexture(QSGTexture *texture) override;
+    void setBounds(const QRectF &bounds) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
+    void update() override;
 
     void paint(QPainter *painter);
 

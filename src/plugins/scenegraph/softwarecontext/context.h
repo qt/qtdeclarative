@@ -53,11 +53,11 @@ class Renderer : public QSGRenderer
 public:
     Renderer(QSGRenderContext *context);
 
-    virtual void renderScene(GLuint fboId = 0);
+    void renderScene(GLuint fboId = 0) override;
 
-    virtual void render();
+    void render() override;
 
-    void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
     QBackingStore *backingStore() const { return m_backingStore.data(); }
 
@@ -71,9 +71,9 @@ class PixmapRenderer : public QSGRenderer
 public:
     PixmapRenderer(QSGRenderContext *context);
 
-    virtual void renderScene(GLuint fboId = 0);
+    void renderScene(GLuint fboId = 0) override;
 
-    virtual void render();
+    void render() override;
 
     void render(QPixmap *target);
 
@@ -84,12 +84,12 @@ class RenderContext : public QSGRenderContext
 {
 public:
     RenderContext(QSGContext *ctx);
-    void initialize(QOpenGLContext *context);
+    void initialize(QOpenGLContext *context) override;
     void initializeIfNeeded();
-    void invalidate();
-    void renderNextFrame(QSGRenderer *renderer, GLuint fbo);
-    QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const;
-    QSGRenderer *createRenderer();
+    void invalidate() override;
+    void renderNextFrame(QSGRenderer *renderer, GLuint fbo) override;
+    QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
+    QSGRenderer *createRenderer() override;
 
     QWindow *currentWindow;
     bool m_initialized;
@@ -101,15 +101,15 @@ class Context : public QSGContext
 public:
     explicit Context(QObject *parent = 0);
 
-    QSGRenderContext *createRenderContext() { return new RenderContext(this); }
+    QSGRenderContext *createRenderContext() override { return new RenderContext(this); }
 
-    virtual QSGRectangleNode *createRectangleNode();
-    virtual QSGImageNode *createImageNode();
-    virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item);
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode);
-    virtual QSGNinePatchNode *createNinePatchNode();
-    virtual QSGLayer *createLayer(QSGRenderContext *renderContext);
-    virtual QSurfaceFormat defaultSurfaceFormat() const;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
+    QSGNinePatchNode *createNinePatchNode() override;
+    QSGLayer *createLayer(QSGRenderContext *renderContext) override;
+    QSurfaceFormat defaultSurfaceFormat() const override;
 };
 
 } // namespace

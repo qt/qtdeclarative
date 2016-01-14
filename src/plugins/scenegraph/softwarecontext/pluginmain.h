@@ -46,9 +46,9 @@ class ContextPlugin : public QSGContextPlugin
 public:
     ContextPlugin(QObject *parent = 0);
 
-    QStringList keys() const;
-    QSGContext *create(const QString &key) const;
-    QSGRenderLoop *createWindowManager();
+    QStringList keys() const override;
+    QSGContext *create(const QString &key) const override;
+    QSGRenderLoop *createWindowManager() override;
 
     static SoftwareContext::Context *instance;
 };

@@ -83,19 +83,19 @@ class ImageNode : public QSGImageNode
 public:
     ImageNode();
 
-    virtual void setTargetRect(const QRectF &rect);
-    virtual void setInnerTargetRect(const QRectF &rect);
-    virtual void setInnerSourceRect(const QRectF &rect);
-    virtual void setSubSourceRect(const QRectF &rect);
-    virtual void setTexture(QSGTexture *texture);
-    virtual void setMirror(bool mirror);
-    virtual void setMipmapFiltering(QSGTexture::Filtering filtering);
-    virtual void setFiltering(QSGTexture::Filtering filtering);
-    virtual void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode);
-    virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode);
-    virtual void update();
+    void setTargetRect(const QRectF &rect) override;
+    void setInnerTargetRect(const QRectF &rect) override;
+    void setInnerSourceRect(const QRectF &rect) override;
+    void setSubSourceRect(const QRectF &rect) override;
+    void setTexture(QSGTexture *texture) override;
+    void setMirror(bool mirror) override;
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void update() override;
 
-    virtual void preprocess();
+    void preprocess() override;
 
     void paint(QPainter *painter);
 
