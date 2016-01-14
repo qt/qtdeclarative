@@ -26,6 +26,7 @@
 /tests/manual/testbench/testbench
 
 /tests/auto/snippets/screenshots/*.png
+/tests/manual/gifs/gifs/*.gif
 /src/templates/QtLabsTemplates.version
 
 *.so
