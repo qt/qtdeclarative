@@ -52,7 +52,7 @@ ApplicationWindow {
     Button {
         id: fileButton
         text: "File"
-        onClicked: menu.show()
+        onClicked: menu.open()
         x: 10
         y: 10
     }
