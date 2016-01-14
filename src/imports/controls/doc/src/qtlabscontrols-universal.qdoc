@@ -124,6 +124,8 @@
     of explicit Universal style-specific references, the Universal style must
     be deployed with the application.
 
+    \labs
+
     \section1 Attached Property Documentation
 
     \styleproperty {Universal.accent} {color} {accent-attached-prop}

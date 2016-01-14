@@ -257,6 +257,8 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \labs
+
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
 */
 

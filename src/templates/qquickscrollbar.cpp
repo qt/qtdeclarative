@@ -73,6 +73,8 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
+    \labs
+
     \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
 */
 

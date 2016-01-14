@@ -65,6 +65,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-label.qml 1
 
+    \labs
+
     \sa {Customizing Label}
 */
 

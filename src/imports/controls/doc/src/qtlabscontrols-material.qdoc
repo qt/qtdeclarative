@@ -123,6 +123,8 @@
     of explicit Material style-specific references, the Material style must
     be deployed with the application.
 
+    \labs
+
     \section1 Attached Property Documentation
 
     \styleproperty {Material.accent} {color} {accent-attached-prop}

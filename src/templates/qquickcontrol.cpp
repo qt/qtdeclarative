@@ -63,6 +63,8 @@ QT_BEGIN_NAMESPACE
     \brief A user interface control.
 
     Control is the base type of user interface controls.
+
+    \labs
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :

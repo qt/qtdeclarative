@@ -55,6 +55,8 @@ QT_BEGIN_NAMESPACE
     \brief A popup control.
 
     Popup is the base type of popup-like user interface controls.
+
+    \labs
 */
 
 QQuickPopupPrivate::QQuickPopupPrivate()

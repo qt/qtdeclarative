@@ -80,6 +80,8 @@ QT_BEGIN_NAMESPACE
     If you would like the application's contents to stay where they are when
     the drawer is opened, don't apply a translation.
 
+    \labs
+
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Container Controls}
 */
 

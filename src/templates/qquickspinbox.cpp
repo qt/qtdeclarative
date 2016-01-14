@@ -80,6 +80,8 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     \snippet qtlabscontrols-spinbox-textual.qml 1
 
+    \labs
+
     \sa Tumbler, {Customizing SpinBox}
 */
 

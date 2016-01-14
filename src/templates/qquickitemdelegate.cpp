@@ -54,6 +54,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-itemdelegate.qml 1
 
+    \labs
+
     \sa {Customizing ItemDelegate}
 */
 

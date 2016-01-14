@@ -77,6 +77,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \labs
+
     \sa TextArea, {Customizing TextField}, {Input Controls}
 */
 

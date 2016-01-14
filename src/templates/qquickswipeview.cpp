@@ -67,6 +67,8 @@ QT_BEGIN_NAMESPACE
     \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
     pages dynamically at run time.
 
+    \labs
+
     \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls}
 */
 

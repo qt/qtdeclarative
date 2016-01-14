@@ -77,6 +77,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \labs
+
     \sa {Customizing Switch}, {Button Controls}
 */
 

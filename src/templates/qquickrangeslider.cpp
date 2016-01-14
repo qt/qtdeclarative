@@ -73,6 +73,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \labs
+
     \sa {Customizing RangeSlider}, {Input Controls}
 */
 
