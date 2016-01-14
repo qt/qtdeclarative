@@ -116,8 +116,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
 
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
@@ -203,8 +203,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
 #endif // Linux/MacOS on x86_64
 
 #if CPU(X86_64) && OS(WINDOWS)
@@ -260,8 +260,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { Q_UNUSED(as); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
 #endif // Windows on x86_64
 
 #if CPU(ARM)
@@ -353,8 +353,18 @@ public:
     static const int StackAlignment = 8; // Per AAPCS
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(JSC::ARMRegisters::lr); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(JSC::ARMRegisters::lr); }
+
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->push(JSC::ARMRegisters::lr);
+        as->push(StackFrameRegister);
+    }
+
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->pop(StackFrameRegister);
+        as->pop(JSC::ARMRegisters::lr);
+    }
 #endif // Linux on ARM (32 bit)
 
 #if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
@@ -418,8 +428,18 @@ public:
     static const int StackAlignment = 8;
     static const int StackShadowSpace = 4 * RegisterSize; // Stack space for 4 argument registers.
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(JSC::MIPSRegisters::ra); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(JSC::MIPSRegisters::ra); }
+
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->push(JSC::MIPSRegisters::ra);
+        as->push(StackFrameRegister);
+    }
+
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    {
+        as->pop(StackFrameRegister);
+        as->pop(JSC::MIPSRegisters::ra);
+    }
 #endif // Linux on MIPS (32 bit)
 
 public: // utility functions
