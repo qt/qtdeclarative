@@ -282,7 +282,8 @@ void QQuickControlPrivate::updateFont(const QFont &f)
 
 void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
 {
-    foreach (QQuickItem *child, item->childItems()) {
+    const auto childItems = item->childItems();
+    for (QQuickItem *child : childItems) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
             QQuickControlPrivate::get(control)->resolveFont();
         else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(child))
@@ -686,7 +687,8 @@ void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
 
 void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
 {
-    foreach (QQuickItem *child, item->childItems()) {
+    const auto childItems = item->childItems();
+    for (QQuickItem *child : childItems) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
             QQuickControlPrivate::get(control)->updateLocale(l, false);
         else

@@ -312,7 +312,7 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function
 QQuickStackElement *QQuickStackViewPrivate::findElement(QQuickItem *item) const
 {
     if (item) {
-        foreach (QQuickStackElement *e, elements) {
+        for (QQuickStackElement *e : qAsConst(elements)) {
             if (e->item == item)
                 return e;
         }
@@ -341,7 +341,7 @@ bool QQuickStackViewPrivate::pushElements(const QList<QQuickStackElement *> &ele
 {
     Q_Q(QQuickStackView);
     if (!elems.isEmpty()) {
-        foreach (QQuickStackElement *e, elems) {
+        for (QQuickStackElement *e : elems) {
             e->setIndex(elements.count());
             elements += e;
         }

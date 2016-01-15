@@ -101,7 +101,8 @@ QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
     // find the nearest
     qreal distance = qInf();
     QQuickItem *nearest = Q_NULLPTR;
-    foreach (QQuickItem *child, contentItem->childItems()) {
+    const auto childItems = contentItem->childItems();
+    for (QQuickItem *child : childItems) {
         if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
             continue;
 

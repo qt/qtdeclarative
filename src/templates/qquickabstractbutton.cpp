@@ -147,7 +147,7 @@ QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
     if (group)
         return qobject_cast<QQuickAbstractButton *>(group->checkedButton());
 
-    QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
+    const QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
     // TODO: A singular QRadioButton can be unchecked, which seems logical,
     // because there's nothing to be exclusive with. However, a RadioButton
     // from QtQuick.Controls 1.x can never be unchecked, which is the behavior
@@ -157,7 +157,7 @@ QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
     if (!autoExclusive /*|| buttons.count() == 1*/)
         return Q_NULLPTR;
 
-    foreach (QQuickAbstractButton *button, buttons) {
+    for (QQuickAbstractButton *button : buttons) {
         if (button->isChecked() && button != q)
             return button;
     }
@@ -176,7 +176,8 @@ QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons(
                 buttons += button;
         }
     } else if (parentItem) {
-        foreach (QQuickItem *child, parentItem->childItems()) {
+        const auto childItems = parentItem->childItems();
+        for (QQuickItem *child : childItems) {
             QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(child);
             if (button && button->autoExclusive() && !QQuickAbstractButtonPrivate::get(button)->group)
                 buttons += button;

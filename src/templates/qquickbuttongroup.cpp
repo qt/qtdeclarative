@@ -143,7 +143,7 @@ public:
 
 void QQuickButtonGroupPrivate::clear()
 {
-    foreach (QQuickAbstractButton *button, buttons) {
+    for (QQuickAbstractButton *button : qAsConst(buttons)) {
         QQuickAbstractButtonPrivate::get(button)->group = Q_NULLPTR;
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::updateCurrent);
     }

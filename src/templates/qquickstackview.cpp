@@ -867,7 +867,7 @@ void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
 
     Q_D(QQuickStackView);
-    foreach (QQuickStackElement *element, d->elements) {
+    for (QQuickStackElement *element : qAsConst(d->elements)) {
         if (element->item) {
             if (!element->widthValid)
                 element->item->setWidth(newGeometry.width());

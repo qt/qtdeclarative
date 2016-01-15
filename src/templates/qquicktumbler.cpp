@@ -156,7 +156,8 @@ void QQuickTumblerPrivate::_q_updateItemHeights()
     // which doesn't affect them, only their getters.
     Q_Q(const QQuickTumbler);
     const qreal itemHeight = delegateHeight(q);
-    foreach (QQuickItem *childItem, contentItemChildItems(contentItem))
+    const auto items = contentItemChildItems(contentItem);
+    for (QQuickItem *childItem : items)
         childItem->setHeight(itemHeight);
 }
 
@@ -164,7 +165,8 @@ void QQuickTumblerPrivate::_q_updateItemWidths()
 {
     Q_Q(const QQuickTumbler);
     const qreal availableWidth = q->availableWidth();
-    foreach (QQuickItem *childItem, contentItemChildItems(contentItem))
+    const auto items = contentItemChildItems(contentItem);
+    for (QQuickItem *childItem : items)
         childItem->setWidth(availableWidth);
 }
 
