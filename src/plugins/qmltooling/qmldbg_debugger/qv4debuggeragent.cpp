@@ -178,9 +178,8 @@ void QV4DebuggerAgent::removeBreakPoint(int id)
 
 void QV4DebuggerAgent::removeAllBreakPoints()
 {
-    QList<int> ids = m_breakPoints.keys();
-    foreach (int id, ids)
-        removeBreakPoint(id);
+    for (auto it = m_breakPoints.keyBegin(), end = m_breakPoints.keyEnd(); it != end; ++it)
+        removeBreakPoint(*it);
 }
 
 void QV4DebuggerAgent::enableBreakPoint(int id, bool onoff)

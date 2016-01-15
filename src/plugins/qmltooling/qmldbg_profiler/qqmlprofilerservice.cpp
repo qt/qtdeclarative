@@ -375,8 +375,10 @@ void QQmlProfilerServiceImpl::stateAboutToBeChanged(QQmlDebugService::State newS
 
     // Stop all profiling and send the data before we get disabled.
     if (newState != Enabled) {
-        foreach (QJSEngine *engine, m_engineProfilers.keys())
-            stopProfiling(engine);
+        for (auto it = m_engineProfilers.keyBegin(), end = m_engineProfilers.keyEnd();
+             it != end; ++it) {
+            stopProfiling(*it);
+        }
     }
 }
 
