@@ -40,6 +40,7 @@
 #include "qquickpopup_p.h"
 
 #include <QtCore/qregexp.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qqmldelegatemodel_p.h>
@@ -791,6 +792,11 @@ void QQuickComboBox::componentComplete()
         else
             d->updateCurrentText();
     }
+}
+
+QFont QQuickComboBox::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
 
 QT_END_NAMESPACE
