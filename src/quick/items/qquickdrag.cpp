@@ -715,9 +715,8 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     QDrag *drag = new QDrag(q);
     QMimeData *mimeData = new QMimeData();
 
-    Q_FOREACH (const QString &key, externalMimeData.keys()) {
-        mimeData->setData(key, externalMimeData[key].toString().toUtf8());
-    }
+    for (auto it = externalMimeData.cbegin(), end = externalMimeData.cend(); it != end; ++it)
+        mimeData->setData(it.key(), it.value().toString().toUtf8());
 
     drag->setMimeData(mimeData);
 

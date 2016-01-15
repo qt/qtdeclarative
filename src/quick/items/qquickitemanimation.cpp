@@ -836,12 +836,13 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         prevData = *d->activeAnimations[target]->pathUpdater();
     }
 
-    QList<QQuickItem*> keys = d->activeAnimations.keys();
-    foreach (QQuickItem *item, keys) {
-        QQuickPathAnimationAnimator *anim = d->activeAnimations.value(item);
+    for (auto it = d->activeAnimations.begin(); it != d->activeAnimations.end();) {
+        QQuickPathAnimationAnimator *anim = it.value();
         if (anim->state() == QAbstractAnimationJob::Stopped) {
             anim->clearTemplate();
-            d->activeAnimations.remove(item);
+            it = d->activeAnimations.erase(it);
+        } else {
+            ++it;
         }
     }
 

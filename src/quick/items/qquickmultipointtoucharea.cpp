@@ -470,7 +470,11 @@ void QQuickMultiPointTouchArea::grabGesture()
     grabMouse();
     setKeepMouseGrab(true);
 
-    grabTouchPoints(_touchPoints.keys().toVector());
+    QVector<int> ids;
+    ids.reserve(_touchPoints.size());
+    for (auto it = _touchPoints.keyBegin(), end = _touchPoints.keyEnd(); it != end; ++it)
+        ids.append(*it);
+    grabTouchPoints(ids);
     setKeepTouchGrab(true);
 }
 

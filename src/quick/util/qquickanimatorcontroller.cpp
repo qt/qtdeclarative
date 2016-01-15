@@ -72,11 +72,13 @@ QQuickAnimatorController::~QQuickAnimatorController()
 
     foreach (QQuickAnimatorProxyJob *proxy, m_animatorRoots)
         proxy->controllerWasDeleted();
-    qDeleteAll(m_animatorRoots.keys());
+    for (auto it = m_animatorRoots.keyBegin(), end = m_animatorRoots.keyEnd(); it != end; ++it)
+        delete *it;
 
     // Delete those who have been started, stopped and are now still
     // pending for restart.
-    foreach (QAbstractAnimationJob *job, m_starting.keys()) {
+    for (auto it = m_starting.keyBegin(), end = m_starting.keyEnd(); it != end; ++it) {
+        QAbstractAnimationJob *job = *it;
         if (!m_animatorRoots.contains(job))
             delete job;
     }
