@@ -1497,9 +1497,10 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
             int count = 0;
-            foreach (int i, m_nodes.keys()) {
-                qDebug() << "Group " << i << " (" << m_system->groupData[i]->size() << " particles)";
-                count += m_system->groupData[i]->size();
+            for (auto it = m_nodes.keyBegin(), end = m_nodes.keyEnd(); it != end; ++it) {
+                qDebug() << "Group " << *it << " (" << m_system->groupData[*it]->size()
+                         << " particles)";
+                count += m_system->groupData[*it]->size();
             }
             qDebug() << "Total count: " << count;
         }

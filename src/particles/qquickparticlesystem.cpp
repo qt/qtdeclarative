@@ -995,9 +995,12 @@ void QQuickParticleSystem::createEngine()
     //### Solve the losses if size/states go down
     foreach (QQuickParticleGroup* group, m_groups) {
         bool exists = false;
-        foreach (const QString &name, groupIds.keys())
-            if (group->name() == name)
+        for (auto it = groupIds.keyBegin(), end = groupIds.keyEnd(); it != end; ++it) {
+            if (group->name() == *it) {
                 exists = true;
+                break;
+            }
+        }
         if (!exists) {
             int id = m_nextGroupId++;
             QQuickParticleGroupData* gd = new QQuickParticleGroupData(id, this);
