@@ -1084,12 +1084,10 @@ public:
     {
         if (IR::Const *c = e->asConst()) {
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-            union {
-                double d;
-                int64_t i;
-            } u;
-            u.d = c->value;
-            move(TrustedImm64(u.i), ReturnValueRegister);
+            Q_STATIC_ASSERT(sizeof(int64_t) == sizeof(double));
+            int64_t i;
+            memcpy(&i, &c->value, sizeof(double));
+            move(TrustedImm64(i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
             JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
