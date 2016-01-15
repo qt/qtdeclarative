@@ -520,10 +520,13 @@ bool QmlProfilerData::save(const QString &filename)
     stream.writeStartElement(QStringLiteral("eventData"));
     stream.writeAttribute(QStringLiteral("totalTime"), QString::number(d->qmlMeasuredTime));
 
-    foreach (const QmlRangeEventData *eventData, d->eventDescriptions.values()) {
+    const auto eventDescriptionsKeys = d->eventDescriptions.keys();
+    for (auto it = d->eventDescriptions.cbegin(), end = d->eventDescriptions.cend();
+         it != end; ++it) {
+        const QmlRangeEventData *eventData = it.value();
         stream.writeStartElement(QStringLiteral("event"));
         stream.writeAttribute(QStringLiteral("index"), QString::number(
-                                  d->eventDescriptions.keys().indexOf(eventData->eventHashStr)));
+                                  eventDescriptionsKeys.indexOf(eventData->eventHashStr)));
         if (!eventData->displayName.isEmpty())
             stream.writeTextElement(QStringLiteral("displayname"), eventData->displayName);
         if (eventData->rangeType != QQmlProfilerDefinitions::MaximumRangeType)
@@ -581,7 +584,7 @@ bool QmlProfilerData::save(const QString &filename)
             stream.writeAttribute(QStringLiteral("duration"),
                                   QString::number(event.duration));
         stream.writeAttribute(QStringLiteral("eventIndex"), QString::number(
-                                  d->eventDescriptions.keys().indexOf(event.data->eventHashStr)));
+                                  eventDescriptionsKeys.indexOf(event.data->eventHashStr)));
         if (event.data->message == QQmlProfilerDefinitions::Event) {
             if (event.data->detailType == QQmlProfilerDefinitions::AnimationFrame) {
                 // special: animation frame

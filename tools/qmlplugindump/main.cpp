@@ -241,10 +241,10 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
     // For each export of a base object there can be a single extension object overriding it.
     // Example: QDeclarativeGraphicsWidget overrides the QtQuick/QGraphicsWidget export
     //          of QGraphicsWidget.
-    foreach (const QByteArray &baseCpp, extensions.keys()) {
-        QSet<const QQmlType *> baseExports = qmlTypesByCppName.value(baseCpp);
+    for (auto it = extensions.cbegin(), end = extensions.cend(); it != end; ++it) {
+        QSet<const QQmlType *> baseExports = qmlTypesByCppName.value(it.key());
 
-        const QSet<QByteArray> extensionCppNames = extensions.value(baseCpp);
+        const QSet<QByteArray> extensionCppNames = it.value();
         foreach (const QByteArray &extensionCppName, extensionCppNames) {
             const QSet<const QQmlType *> extensionExports = qmlTypesByCppName.value(extensionCppName);
 
@@ -266,7 +266,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             }
             baseExports = newBaseExports;
         }
-        qmlTypesByCppName[baseCpp] = baseExports;
+        qmlTypesByCppName[it.key()] = baseExports;
     }
 
     if (creatable) {
