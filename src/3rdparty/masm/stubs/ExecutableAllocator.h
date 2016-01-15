@@ -89,15 +89,34 @@ struct ExecutableAllocator {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
 
-    static void makeWritable(void* addr, int size)
+    static void makeWritable(void* addr, size_t size)
     {
-#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
-        size_t pageSize = WTF::pageSize();
-        size_t iaddr = reinterpret_cast<size_t>(addr);
-        size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+        quintptr pageSize = WTF::pageSize();
+        quintptr iaddr = reinterpret_cast<quintptr>(addr);
+        quintptr roundAddr = iaddr & ~(pageSize - 1);
+        size = size + (iaddr - roundAddr);
+        addr = reinterpret_cast<void*>(roundAddr);
 
+#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+#  if OS(WINDOWS)
+        DWORD oldProtect;
+#    if !OS(WINRT)
+        VirtualProtect(addr, size, PAGE_READWRITE, &oldProtect);
+#    elif _MSC_VER >= 1900
+        bool hr = VirtualProtectFromApp(addr, size, PAGE_READWRITE, &oldProtect);
+        if (!hr) {
+            Q_UNREACHABLE();
+        }
+#    else
+        (void)oldProtect;
+#    endif
+#  else
         int mode = PROT_READ | PROT_WRITE;
-        mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
+        if (mprotect(addr, size, mode) != 0) {
+            perror("mprotect failed in ExecutableAllocator::makeWritable");
+            Q_UNREACHABLE();
+        }
+#  endif
 #else
         // We assume we already have RWX
         (void)addr; // suppress unused parameter warning
@@ -105,25 +124,36 @@ struct ExecutableAllocator {
 #endif
     }
 
-    static void makeExecutable(void* addr, int size)
+    static void makeExecutable(void* addr, size_t size)
     {
-        size_t pageSize = WTF::pageSize();
-        size_t iaddr = reinterpret_cast<size_t>(addr);
-        size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
-#if OS(WINDOWS)
-#if !OS(WINRT)
+        quintptr pageSize = WTF::pageSize();
+        quintptr iaddr = reinterpret_cast<quintptr>(addr);
+        quintptr roundAddr = iaddr & ~(pageSize - 1);
+        size = size + (iaddr - roundAddr);
+        addr = reinterpret_cast<void*>(roundAddr);
+
+#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+#  if OS(WINDOWS)
         DWORD oldProtect;
-        VirtualProtect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), PAGE_EXECUTE_READWRITE, &oldProtect);
-#else
-        (void)size; // suppress unused parameter warning
-        (void)roundAddr; // suppress unused parameter warning
-#endif
-#else
+#    if !OS(WINRT)
+        VirtualProtect(addr, size, PAGE_EXECUTE_READ, &oldProtect);
+#    elif _MSC_VER >= 1900
+        bool hr = VirtualProtectFromApp(addr, size, PAGE_EXECUTE_READ, &oldProtect);
+        if (!hr) {
+            Q_UNREACHABLE();
+        }
+#    else
+        (void)oldProtect;
+#    endif
+#  else
         int mode = PROT_READ | PROT_EXEC;
-#if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)
-        mode |= PROT_WRITE;
-#endif
-        mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
+        if (mprotect(addr, size, mode) != 0) {
+            perror("mprotect failed in ExecutableAllocator::makeExecutable");
+            Q_UNREACHABLE();
+        }
+#  endif
+#else
+#  error "Only W^X is supported"
 #endif
     }
 
