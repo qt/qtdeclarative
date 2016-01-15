@@ -88,7 +88,8 @@ void QQuickDayOfWeekRowPrivate::resizeItems()
     itemSize.setWidth((contentItem->width() - 6 * spacing) / 7);
     itemSize.setHeight(contentItem->height());
 
-    foreach (QQuickItem *item, contentItem->childItems())
+    const auto childItems = contentItem->childItems();
+    for (QQuickItem *item : childItems)
         item->setSize(itemSize);
 }
 

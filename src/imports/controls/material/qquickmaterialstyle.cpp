@@ -457,7 +457,8 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 
 void QQuickMaterialStyle::propagateTheme()
 {
-    foreach (QQuickStyle *child, childStyles()) {
+    const auto styles = childStyles();
+    for (QQuickStyle *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritTheme(m_theme);
@@ -500,7 +501,8 @@ void QQuickMaterialStyle::inheritAccent(QQuickMaterialStyle::Color color)
 
 void QQuickMaterialStyle::propagateAccent()
 {
-    foreach (QQuickStyle *child, childStyles()) {
+    const auto styles = childStyles();
+    for (QQuickStyle *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritAccent(m_accent);

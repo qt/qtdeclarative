@@ -106,7 +106,8 @@ void QQuickMonthGridPrivate::resizeItems()
     itemSize.setWidth((contentItem->width() - 6 * spacing) / 7);
     itemSize.setHeight((contentItem->height() - 5 * spacing) / 6);
 
-    foreach (QQuickItem *item, contentItem->childItems())
+    const auto childItems = contentItem->childItems();
+    for (QQuickItem *item : childItems)
         item->setSize(itemSize);
 }
 
@@ -333,7 +334,8 @@ void QQuickMonthGrid::componentComplete()
     Q_D(QQuickMonthGrid);
     QQuickControl::componentComplete();
     if (d->contentItem) {
-        foreach (QQuickItem *child, d->contentItem->childItems()) {
+        const auto childItems = d->contentItem->childItems();
+        for (QQuickItem *child : childItems) {
             if (!QQuickItemPrivate::get(child)->isTransparentForPositioner())
                 d->setContextProperty(child, QStringLiteral("pressed"), false);
         }

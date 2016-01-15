@@ -90,7 +90,8 @@ void QQuickWeekNumberColumnPrivate::resizeItems()
     itemSize.setWidth(contentItem->width());
     itemSize.setHeight((contentItem->height() - 5 * spacing) / 6);
 
-    foreach (QQuickItem *item, contentItem->childItems())
+    const auto childItems = contentItem->childItems();
+    for (QQuickItem *item : childItems)
         item->setSize(itemSize);
 }
 

@@ -173,7 +173,8 @@ void QQuickUniversalStyle::inheritTheme(Theme theme)
 
 void QQuickUniversalStyle::propagateTheme()
 {
-    foreach (QQuickStyle *child, childStyles()) {
+    const auto styles = childStyles();
+    for (QQuickStyle *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritTheme(m_theme);
@@ -237,7 +238,8 @@ void QQuickUniversalStyle::inheritAccent(QRgb accent)
 
 void QQuickUniversalStyle::propagateAccent()
 {
-    foreach (QQuickStyle *child, childStyles()) {
+    const auto styles = childStyles();
+    for (QQuickStyle *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritAccent(m_accent);
