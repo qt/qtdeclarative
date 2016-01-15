@@ -114,6 +114,7 @@ void tst_qmlplugindump::singleton()
 
     const QString &result = dumper.readAllStandardOutput();
     QVERIFY(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")));
+    QVERIFY(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")));
 }
 
 QTEST_MAIN(tst_qmlplugindump)
