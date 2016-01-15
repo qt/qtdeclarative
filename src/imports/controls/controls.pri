@@ -1,4 +1,4 @@
-QML_FILES = \
+QML_CONTROLS = \
     ApplicationWindow.qml \
     BusyIndicator.qml \
     Button.qml \
@@ -32,3 +32,5 @@ QML_FILES = \
     ToolBar.qml \
     ToolButton.qml \
     Tumbler.qml
+
+!qtquickcompiler: QML_FILES += $$QML_CONTROLS

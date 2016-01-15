@@ -27,5 +27,11 @@ RESOURCES += \
 include(controls.pri)
 include(designer/designer.pri)
 
+qtquickcompiler {
+    qmlfiles.prefix = /qt-project.org/imports/Qt/labs/controls
+    qmlfiles.files += $$QML_CONTROLS
+    RESOURCES += qmlfiles
+}
+
 CONFIG += no_cxx_module
 load(qml_plugin)

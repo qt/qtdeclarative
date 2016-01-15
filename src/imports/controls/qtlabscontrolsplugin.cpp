@@ -36,6 +36,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtCore/qurl.h>
+#include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
 
 #include <QtLabsTemplates/private/qquickabstractbutton_p.h>
@@ -83,7 +84,10 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
 
     QQuickStyleSelector selector;
-    selector.setBaseUrl(baseUrl());
+    if (QFile::exists(QLatin1String(":/qt-project.org/imports/Qt/labs/controls/ApplicationWindow.qml")))
+        selector.setBaseUrl(QUrl(QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls")));\
+    else
+        selector.setBaseUrl(baseUrl());
 
     qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
