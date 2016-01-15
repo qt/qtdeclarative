@@ -1399,13 +1399,8 @@ void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode 
 
 void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> &roles)
 {
-    const QList<QString> &keys = object.keys();
-
-    QList<QString>::const_iterator it = keys.begin();
-    QList<QString>::const_iterator end = keys.end();
-
-    while (it != end) {
-        const QString &key = *it;
+    for (auto it = object.cbegin(), end = object.cend(); it != end; ++it) {
+        const QString &key = it.key();
 
         int roleIndex = m_owner->m_roles.indexOf(key);
         if (roleIndex == -1) {
@@ -1413,7 +1408,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
             m_owner->m_roles.append(key);
         }
 
-        QVariant value = object[key];
+        QVariant value = it.value();
 
         // A JS array/object is translated into a (hierarchical) QQmlListModel,
         // so translate to a variant map/list first with toVariant().
@@ -1444,8 +1439,6 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
 
         if (m_meta->setValue(keyUtf8, value))
             roles << roleIndex;
-
-        ++it;
     }
 }
 

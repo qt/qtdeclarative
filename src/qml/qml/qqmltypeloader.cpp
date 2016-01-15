@@ -2225,7 +2225,10 @@ void QQmlTypeData::allDependenciesDone()
         for ( ; it != end; ++it) {
             if (*it == 0) {
                 // This import was not resolved
-                foreach (const QV4::CompiledData::Import *import, m_unresolvedImports.keys()) {
+                for (auto keyIt = m_unresolvedImports.keyBegin(),
+                     keyEnd = m_unresolvedImports.keyEnd();
+                     keyIt != keyEnd; ++keyIt) {
+                    const QV4::CompiledData::Import *import = *keyIt;
                     QQmlError error;
                     error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(stringAt(import->uriIndex)));
                     error.setUrl(m_importCache.baseUrl());

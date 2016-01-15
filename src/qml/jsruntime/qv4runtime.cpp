@@ -154,14 +154,14 @@ struct RuntimeCounters::Data {
         buf.open(QIODevice::WriteOnly);
         QTextStream outs(&buf);
         QList<Line> lines;
-        foreach (const char *func, counters.keys()) {
-            const Counters &fCount = counters[func];
+        for (auto it = counters.cbegin(), end = counters.cend(); it != end; ++it) {
+            const Counters &fCount = it.value();
             for (int i = 0, ei = fCount.size(); i != ei; ++i) {
                 quint64 count = fCount[i];
                 if (!count)
                     continue;
                 Line line;
-                line.func = func;
+                line.func = it.key();
                 unmangle(i, line.tag1, line.tag2);
                 line.count = count;
                 lines.append(line);
