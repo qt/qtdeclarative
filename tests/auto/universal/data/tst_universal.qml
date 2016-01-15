@@ -107,6 +107,22 @@ TestCase {
         }
     }
 
+    Component {
+        id: comboBox
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Universal.accent: Universal.Red
+            property alias combo: box
+            ComboBox {
+                id: box
+                Universal.theme: Universal.Dark
+                model: 1
+            }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -249,6 +265,28 @@ TestCase {
         compare(container.menu.Universal.accent, "#e51400") // Red
         compare(child.Universal.accent, "#e51400") // Red
         container.destroy()
+    }
+
+    function test_comboBox() {
+        var window = comboBox.createObject(testCase)
+        verify(window)
+        verify(window.combo)
+        waitForRendering(window.combo)
+        window.combo.forceActiveFocus()
+        verify(window.combo.activeFocus)
+        keyClick(Qt.Key_Space)
+        verify(window.combo.popup.visible)
+        var listView = window.combo.popup.contentItem.children[0]
+        verify(listView)
+        var child = listView.contentItem.children[0]
+        verify(child)
+        compare(window.Universal.theme, Universal.Light)
+        compare(window.combo.Universal.theme, Universal.Dark)
+        compare(child.Universal.theme, Universal.Dark)
+        compare(window.Universal.accent, "#e51400") // Red
+        compare(window.combo.Universal.accent, "#e51400") // Red
+        compare(child.Universal.accent, "#e51400") // Red
+        window.destroy()
     }
 
     function test_colors() {

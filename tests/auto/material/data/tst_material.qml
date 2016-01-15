@@ -107,6 +107,22 @@ TestCase {
         }
     }
 
+    Component {
+        id: comboBox
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Material.accent: Material.Red
+            property alias combo: box
+            ComboBox {
+                id: box
+                Material.theme: Material.Dark
+                model: 1
+            }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -249,6 +265,28 @@ TestCase {
         compare(container.menu.Material.accent, Material.color(Material.Red))
         compare(child.Material.accent, Material.color(Material.Red))
         container.destroy()
+    }
+
+    function test_comboBox() {
+        var window = comboBox.createObject(testCase)
+        verify(window)
+        verify(window.combo)
+        waitForRendering(window.combo)
+        window.combo.forceActiveFocus()
+        verify(window.combo.activeFocus)
+        keyClick(Qt.Key_Space)
+        verify(window.combo.popup.visible)
+        var listView = window.combo.popup.contentItem.children[0]
+        verify(listView)
+        var child = listView.contentItem.children[0]
+        verify(child)
+        compare(window.Material.theme, Material.Light)
+        compare(window.combo.Material.theme, Material.Dark)
+        compare(child.Material.theme, Material.Dark)
+        compare(window.Material.accent, Material.color(Material.Red))
+        compare(window.combo.Material.accent, Material.color(Material.Red))
+        compare(child.Material.accent, Material.color(Material.Red))
+        window.destroy()
     }
 
     function test_colors() {
