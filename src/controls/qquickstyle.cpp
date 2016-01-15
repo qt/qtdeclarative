@@ -104,7 +104,8 @@ static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *ob
         if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object)) {
             item = window->contentItem();
 
-            foreach (QObject *child, window->children()) {
+            const auto windowChildren = window->children();
+            for (QObject *child : windowChildren) {
                 QQuickWindow *childWindow = qobject_cast<QQuickWindow *>(child);
                 if (childWindow) {
                     QQuickStyle *style = attachedStyle(type, childWindow);
@@ -122,7 +123,8 @@ static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *ob
     }
 
     if (item) {
-        foreach (QQuickItem *child, item->childItems()) {
+        const auto childItems = item->childItems();
+        for (QQuickItem *child : childItems) {
             QQuickStyle *style = attachedStyle(type, child);
             if (style)
                 children += style;
@@ -130,7 +132,8 @@ static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *ob
                 children += findChildStyles(type, child);
         }
 
-        foreach (QObject *child, item->children()) {
+        const auto itemChildren = item->children();
+        for (QObject *child : itemChildren) {
             if (!qobject_cast<QQuickItem *>(child)) {
                 QQuickStyle *style = attachedStyle(type, child);
                 if (style)
@@ -207,8 +210,8 @@ void QQuickStyle::init()
     if (parentStyle)
         setParentStyle(parentStyle);
 
-    QList<QQuickStyle *> children = findChildStyles(metaObject(), parent());
-    foreach (QQuickStyle *child, children)
+    const QList<QQuickStyle *> children = findChildStyles(metaObject(), parent());
+    for (QQuickStyle *child : children)
         child->setParentStyle(this);
 }
 

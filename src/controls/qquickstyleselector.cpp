@@ -113,7 +113,7 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     */
     Q_ASSERT(path.isEmpty() || path.endsWith(QLatin1Char('/')));
 
-    foreach (const QString &s, selectors) {
+    for (const QString &s : selectors) {
         QString prospectiveBase = path + s + QLatin1Char('/');
         QStringList remainingSelectors = selectors;
         remainingSelectors.removeAll(s);
