@@ -93,22 +93,22 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 
 #if defined(Q_PROCESSOR_X86) && !defined(__ILP32__) \
     && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD))
-#define V4_ENABLE_JIT
+#  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_X86_64) && !defined(__ILP32__) \
     && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
-#define V4_ENABLE_JIT
+#  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_ARM_32)
-
-#if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
-#define V4_ENABLE_JIT
-#elif defined(__ARM_ARCH_ISA_THUMB) && __ARM_ARCH_ISA_THUMB == 2 // clang 3.5 and later will set this if the core supports the Thumb-2 ISA.
-#define V4_ENABLE_JIT
-#endif
-
+#  if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
+#    define V4_ENABLE_JIT
+#  elif defined(__ARM_ARCH_ISA_THUMB) && __ARM_ARCH_ISA_THUMB == 2 // clang 3.5 and later will set this if the core supports the Thumb-2 ISA.
+#    define V4_ENABLE_JIT
+#  endif
 #elif defined(Q_PROCESSOR_ARM_64)
-#define V4_ENABLE_JIT // iOS is disabled below.
+#  if defined(Q_OS_LINUX) && 0 // TODO: test on Linux/aarch64 before enabling this
+#    define V4_ENABLE_JIT
+#  endif
 #elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
-#define V4_ENABLE_JIT
+#  define V4_ENABLE_JIT
 #endif
 
 // Black list some platforms
@@ -116,6 +116,11 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
 #    undef V4_ENABLE_JIT
 #endif
+#endif
+
+// For debug purposes: add CONFIG+=force-compile-jit to qmake's command-line to always compile the JIT.
+#if defined(V4_FORCE_COMPILE_JIT) && !defined(V4_ENABLE_JIT)
+#  define V4_ENABLE_JIT
 #endif
 
 // Do certain things depending on whether the JIT is enabled or disabled
