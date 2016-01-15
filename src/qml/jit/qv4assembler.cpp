@@ -240,12 +240,12 @@ void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegist
 {
     platformEnterStandardStackFrame(this);
 
-    move(StackPointerRegister, StackFrameRegister);
+    move(StackPointerRegister, FramePointerRegister);
 
     const int frameSize = _stackLayout->calculateStackFrameSize();
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    Address slotAddr(StackFrameRegister, 0);
+    Address slotAddr(FramePointerRegister, 0);
     for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
         slotAddr.offset -= sizeof(double);
@@ -261,7 +261,7 @@ void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegist
 void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
                                         const RegisterInformation &fpRegistersToSave)
 {
-    Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
+    Address slotAddr(FramePointerRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
 
     // restore the callee saved registers
     for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {

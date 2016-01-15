@@ -225,7 +225,7 @@ public:
             // sp was aligned before executing the call instruction. So, calculate all contents
             // that were saved after that aligned stack...:
             const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
-                                                     + RegisterSize; // saved StackFrameRegister
+                                                     + RegisterSize; // saved FramePointerRegister
 
             // ... then calculate the stuff we want to store ...:
             int frameSize = RegisterSize * normalRegistersToSave + sizeof(double) * fpRegistersToSave;
@@ -278,7 +278,7 @@ public:
             Q_ASSERT(offset < savedRegCount);
 
             // Get the address of the bottom-most element of our frame:
-            Address ptr(Assembler::StackFrameRegister, -calculateStackFrameSize());
+            Address ptr(Assembler::FramePointerRegister, -calculateStackFrameSize());
             // This now is the element with offset 0. So:
             ptr.offset += offset * sizeof(QV4::Value);
             // and we're done!

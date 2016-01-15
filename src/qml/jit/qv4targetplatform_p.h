@@ -85,7 +85,7 @@ public:
 #if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX) || OS(FREEBSD))
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::edi;
     static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::esi;
@@ -122,8 +122,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
 
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
@@ -145,7 +145,7 @@ public:
             Q_ASSERT(ebxIdx >= 0);
             ebxIdx += 1;
         }
-        return JSC::MacroAssembler::Address(StackFrameRegister, ebxIdx * -int(sizeof(void*)));
+        return JSC::MacroAssembler::Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
     }
 #endif
 
@@ -154,7 +154,7 @@ public:
 #if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD))
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
     static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
@@ -209,8 +209,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
 #endif // Linux/MacOS on x86_64
 
 #if CPU(X86_64) && OS(WINDOWS)
@@ -219,7 +219,7 @@ public:
     // incoming function parameters to the shadow space is missing.
     enum { RegAllocIsSupported = 0 };
 
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
     static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
@@ -266,8 +266,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(StackFrameRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(StackFrameRegister); }
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
 #endif // Windows on x86_64
 
 #if CPU(ARM)
@@ -286,10 +286,10 @@ public:
     // is used for the subroutine: r7 for Thumb or Thumb2, and r11 for ARM. We assign the constants
     // accordingly, and assign the locals-register to the "other" register.
 #if CPU(ARM_THUMB2)
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::ARMRegisters::r7;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
     static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r11;
 #else // Thumbs down
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::ARMRegisters::r11;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r11;
     static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r7;
 #endif
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
@@ -363,12 +363,12 @@ public:
     static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
     {
         as->push(JSC::ARMRegisters::lr);
-        as->push(StackFrameRegister);
+        as->push(FramePointerRegister);
     }
 
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
     {
-        as->pop(StackFrameRegister);
+        as->pop(FramePointerRegister);
         as->pop(JSC::ARMRegisters::lr);
     }
 #endif // ARM (32 bit)
@@ -376,7 +376,7 @@ public:
 #if CPU(ARM64)
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::ARM64Registers::fp;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARM64Registers::fp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARM64Registers::x28;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
     static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARM64Registers::x9;
@@ -477,19 +477,19 @@ public:
 
     static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
     {
-        as->pushPair(StackFrameRegister, JSC::ARM64Registers::lr);
+        as->pushPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
     {
-        as->popPair(StackFrameRegister, JSC::ARM64Registers::lr);
+        as->popPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 #endif // ARM64
 
 #if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::MIPSRegisters::fp;
+    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
     static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::MIPSRegisters::s1;
@@ -551,12 +551,12 @@ public:
     static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
     {
         as->push(JSC::MIPSRegisters::ra);
-        as->push(StackFrameRegister);
+        as->push(FramePointerRegister);
     }
 
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
     {
-        as->pop(StackFrameRegister);
+        as->pop(FramePointerRegister);
         as->pop(JSC::MIPSRegisters::ra);
     }
 #endif // Linux on MIPS (32 bit)

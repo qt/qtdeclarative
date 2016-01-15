@@ -142,10 +142,10 @@ protected:
 #if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
     {
-        // StackFrameRegister points to its old value on the stack, and above
+        // FramePointerRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
         // values before reaching the first argument.
-        return Address(Assembler::StackFrameRegister, (index + 2) * sizeof(void*));
+        return Address(Assembler::FramePointerRegister, (index + 2) * sizeof(void*));
     }
 #endif
 
