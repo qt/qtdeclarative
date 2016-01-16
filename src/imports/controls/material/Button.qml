@@ -48,10 +48,10 @@ T.Button {
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    // external padding is 6 (to increase touch area)
+    // external vertical padding is 6 (to increase touch area)
     padding: 12
-    leftPadding: 14
-    rightPadding: 14
+    leftPadding: 8
+    rightPadding: 8
 
     //! [label]
     label: Text {
@@ -77,10 +77,9 @@ T.Button {
 
         Rectangle {
             id: rect
-            // external padding is 6 (to increase touch area)
-            x: 6
+            // external vertical padding is 6 (to increase touch area)
             y: 6
-            width: parent.width - 12
+            width: parent.width
             height: parent.height - 12
             radius: 2
             color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
