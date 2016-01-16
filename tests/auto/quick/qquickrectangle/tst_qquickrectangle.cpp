@@ -28,6 +28,7 @@
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 
+#include <QtGui/qscreen.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
@@ -42,6 +43,7 @@ public:
     tst_qquickrectangle();
 
 private slots:
+    void color();
     void gradient();
     void gradient_border();
     void antialiasing();
@@ -52,6 +54,21 @@ private:
 
 tst_qquickrectangle::tst_qquickrectangle()
 {
+}
+
+void tst_qquickrectangle::color()
+{
+    if (QGuiApplication::primaryScreen()->depth() < 24)
+        QSKIP("This test does not work at display depths < 24");
+
+    QQuickView view;
+    view.setSource(testFileUrl("color.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QImage image = view.grabWindow();
+    QVERIFY(image.pixel(0,0) == QColor("#020202").rgba());
 }
 
 void tst_qquickrectangle::gradient()
