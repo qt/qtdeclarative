@@ -2070,7 +2070,7 @@ protected:
             return;
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
         // a side-effect.
-        if (e->builtin == Name::builtin_invalid || (e->id && *e->id != QStringLiteral("this")))
+        if (e->builtin == Name::builtin_invalid || (e->id && *e->id != QLatin1String("this")))
             markAsSideEffect();
     }
 

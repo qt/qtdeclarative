@@ -135,10 +135,10 @@ bool QQmlScriptString::operator==(const QQmlScriptString &other) const
     if (d->isStringLiteral || other.d->isStringLiteral)
         return d->isStringLiteral && other.d->isStringLiteral && d->script == other.d->script;
 
-    if (d->script == QStringLiteral("true") ||
-        d->script == QStringLiteral("false") ||
-        d->script == QStringLiteral("undefined") ||
-        d->script == QStringLiteral("null"))
+    if (d->script == QLatin1String("true") ||
+        d->script == QLatin1String("false") ||
+        d->script == QLatin1String("undefined") ||
+        d->script == QLatin1String("null"))
         return d->script == other.d->script;
 
     return d->context == other.d->context &&
@@ -172,7 +172,7 @@ Returns whether the content of the QQmlScriptString is the \c undefined literal.
 */
 bool QQmlScriptString::isUndefinedLiteral() const
 {
-    return d->script == QStringLiteral("undefined");
+    return d->script == QLatin1String("undefined");
 }
 
 /*!
@@ -180,7 +180,7 @@ Returns whether the content of the QQmlScriptString is the \c null literal.
 */
 bool QQmlScriptString::isNullLiteral() const
 {
-    return d->script == QStringLiteral("null");
+    return d->script == QLatin1String("null");
 }
 
 /*!
@@ -211,8 +211,8 @@ sets \a ok to true. Otherwise returns false and sets \a ok to false.
 */
 bool QQmlScriptString::booleanLiteral(bool *ok) const
 {
-    bool isTrue = d->script == QStringLiteral("true");
-    bool isFalse = !isTrue && d->script == QStringLiteral("false");
+    bool isTrue = d->script == QLatin1String("true");
+    bool isFalse = !isTrue && d->script == QLatin1String("false");
     if (ok)
         *ok = isTrue || isFalse;
     return isTrue ? true : false;

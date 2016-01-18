@@ -640,7 +640,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
     if (_compiledObject->idIndex) {
         const QQmlPropertyData *idProperty = propertyData.last();
-        Q_ASSERT(!idProperty || !idProperty->isValid() || idProperty->name(_qobject) == QStringLiteral("id"));
+        Q_ASSERT(!idProperty || !idProperty->isValid() || idProperty->name(_qobject) == QLatin1String("id"));
         if (idProperty && idProperty->isValid() && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
             QV4::CompiledData::Binding idBinding;
             idBinding.propertyNameIndex = 0; // Not used

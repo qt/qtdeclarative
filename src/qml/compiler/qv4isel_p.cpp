@@ -95,7 +95,7 @@ void IRDecoder::visitMove(IR::Move *s)
         }
     } else if (s->target->asTemp() || s->target->asArgLocal()) {
         if (IR::Name *n = s->source->asName()) {
-            if (n->id && *n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
+            if (n->id && *n->id == QLatin1String("this")) // TODO: `this' should be a builtin.
                 loadThisObject(s->target);
             else if (n->builtin == IR::Name::builtin_qml_context)
                 loadQmlContext(s->target);

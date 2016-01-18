@@ -972,7 +972,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QmlIR::PropertyResolver resolver(propertyCache);
 
-        Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
+        Q_ASSERT(propertyName.startsWith(QLatin1String("on")));
         propertyName.remove(0, 2);
 
         // Note that the property name could start with any alpha or '_' or '$' character,
@@ -1039,7 +1039,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             }
 
             QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(propertyName);
-            if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
+            if (entry == customSignals.constEnd() && propertyName.endsWith(QLatin1String("Changed"))) {
                 QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
                 entry = customSignals.constFind(alternateName);
             }
@@ -2749,7 +2749,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
 
 bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAndConvertBinding(QmlIR::Binding *binding)
 {
-    if (*_nameOfFunctionCalled == QStringLiteral("qsTr")) {
+    if (*_nameOfFunctionCalled == QLatin1String("qsTr")) {
         QString translation;
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
@@ -2791,7 +2791,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->stringIndex = compiler->registerString(translation);
         binding->value.translationData = translationData;
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("qsTrId")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("qsTrId")) {
         QString id;
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
@@ -2825,7 +2825,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->stringIndex = compiler->registerString(id);
         binding->value.translationData = translationData;
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TR_NOOP") || *_nameOfFunctionCalled == QStringLiteral("QT_TRID_NOOP")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("QT_TR_NOOP") || *_nameOfFunctionCalled == QLatin1String("QT_TRID_NOOP")) {
         QVector<int>::ConstIterator param = _functionParameters.constBegin();
         QVector<int>::ConstIterator end = _functionParameters.constEnd();
         if (param == end)
@@ -2842,7 +2842,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->type = QV4::CompiledData::Binding::Type_String;
         binding->stringIndex = compiler->registerString(*stringParam->value);
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TRANSLATE_NOOP")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("QT_TRANSLATE_NOOP")) {
         QVector<int>::ConstIterator param = _functionParameters.constBegin();
         QVector<int>::ConstIterator end = _functionParameters.constEnd();
         if (param == end)
