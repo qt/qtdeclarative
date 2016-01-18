@@ -36,13 +36,13 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include "qquickuniversalfocusrectangle_p.h"
-#include "qquickuniversalimageprovider_p.h"
 #include "qquickuniversalprogressring_p.h"
 #include "qquickuniversalprogressstrip_p.h"
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtLabsControls/private/qquickcolorimageprovider_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
@@ -102,7 +102,7 @@ void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char
         }
     }
 
-    engine->addImageProvider(QStringLiteral("universal"), new QQuickUniversalImageProvider);
+    engine->addImageProvider(QStringLiteral("universal"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 1, 0, "FocusRectangle");

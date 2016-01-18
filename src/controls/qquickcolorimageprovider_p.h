@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKUNIVERSALIMAGEPROVIDER_P_H
-#define QQUICKUNIVERSALIMAGEPROVIDER_P_H
+#ifndef QQUICKCOLORIMAGEPROVIDER_P_H
+#define QQUICKCOLORIMAGEPROVIDER_P_H
 
 //
 //  W A R N I N G
@@ -52,14 +52,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickUniversalImageProvider : public QQuickImageProvider
+class QQuickColorImageProvider : public QQuickImageProvider
 {
 public:
-    QQuickUniversalImageProvider();
+    QQuickColorImageProvider(const QString &path);
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) Q_DECL_OVERRIDE;
+
+private:
+    QString m_path;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKUNIVERSALIMAGEPROVIDER_P_H
+#endif // QQUICKOCOLORIMAGEPROVIDER_P_H

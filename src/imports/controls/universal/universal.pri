@@ -32,7 +32,6 @@ QML_FILES += \
 
 HEADERS += \
     $$PWD/qquickuniversalfocusrectangle_p.h \
-    $$PWD/qquickuniversalimageprovider_p.h \
     $$PWD/qquickuniversalprogressring_p.h \
     $$PWD/qquickuniversalprogressstrip_p.h \
     $$PWD/qquickuniversalstyle_p.h \
@@ -40,7 +39,6 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qquickuniversalfocusrectangle.cpp \
-    $$PWD/qquickuniversalimageprovider.cpp \
     $$PWD/qquickuniversalprogressring.cpp \
     $$PWD/qquickuniversalprogressstrip.cpp \
     $$PWD/qquickuniversalstyle.cpp \

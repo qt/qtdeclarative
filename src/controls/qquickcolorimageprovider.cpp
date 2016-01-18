@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickuniversalimageprovider_p.h"
+#include "qquickcolorimageprovider_p.h"
 
 #include <QtCore/qdebug.h>
 #include <QtGui/qpainter.h>
@@ -44,11 +44,12 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickUniversalImageProvider::QQuickUniversalImageProvider() : QQuickImageProvider(Image)
+QQuickColorImageProvider::QQuickColorImageProvider(const QString &path)
+    : QQuickImageProvider(Image), m_path(path)
 {
 }
 
-QImage QQuickUniversalImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+QImage QQuickColorImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
     Q_UNUSED(requestedSize);
 
@@ -56,11 +57,11 @@ QImage QQuickUniversalImageProvider::requestImage(const QString &id, QSize *size
     QString name = id.left(sep);
     QString color = id.mid(sep + 1);
     qreal dpr = qApp->primaryScreen()->devicePixelRatio();
-    QString file = qt_findAtNxFile(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images/") + name + QStringLiteral(".png"), dpr);
+    QString file = qt_findAtNxFile(m_path + QLatin1Char('/') + name + QStringLiteral(".png"), dpr);
 
     QImage image(file);
     if (image.isNull()) {
-        qWarning() << "QQuickUniversalImageProvider: unknown id:" << id;
+        qWarning() << "QQuickColorImageProvider: unknown id:" << id;
         return QImage();
     }
 
