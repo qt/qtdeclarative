@@ -290,7 +290,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
     const QFileInfo testPathInfo(testPath);
     if (testPathInfo.isFile()) {
-        if (!testPath.endsWith(QStringLiteral(".qml"))) {
+        if (!testPath.endsWith(QLatin1String(".qml"))) {
             qWarning("'%s' does not have the suffix '.qml'.", qPrintable(testPath));
             return 1;
         }

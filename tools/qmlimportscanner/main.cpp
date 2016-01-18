@@ -90,7 +90,7 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
         if (!importNode->fileName.isEmpty()) {
             QString name = importNode->fileName.toString();
             import[QStringLiteral("name")] = name;
-            if (name.endsWith(QStringLiteral(".js"))) {
+            if (name.endsWith(QLatin1String(".js"))) {
                 import[QStringLiteral("type")] = QStringLiteral("javascript");
             } else {
                 import[QStringLiteral("type")] = QStringLiteral("directory");
@@ -193,7 +193,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
 
     for (int i = 0; i < importsCopy.length(); ++i) {
         QVariantMap import = qvariant_cast<QVariantMap>(importsCopy[i]);
-        if (import[QStringLiteral("type")] == QStringLiteral("module")) {
+        if (import[QStringLiteral("type")] == QLatin1String("module")) {
             QString path = resolveImportPath(import.value(QStringLiteral("name")).toString(), import.value(QStringLiteral("version")).toString());
             if (!path.isEmpty())
                 import[QStringLiteral("path")] = path;
@@ -324,9 +324,9 @@ QVariantList findQmlImportsInFile(const QString &filePath)
         QFile f;
         if (f.open(stdin, QIODevice::ReadOnly))
             imports = findQmlImportsInQmlCode(QLatin1String("<stdin>"), QString::fromUtf8(f.readAll()));
-    } else if (filePath.endsWith(QStringLiteral(".qml"))) {
+    } else if (filePath.endsWith(QLatin1String(".qml"))) {
         imports = findQmlImportsInQmlFile(filePath);
-    } else if (filePath.endsWith(QStringLiteral(".js"))) {
+    } else if (filePath.endsWith(QLatin1String(".js"))) {
         imports = findQmlImportsInJavascriptFile(filePath);
     }
 
@@ -387,10 +387,10 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
             continue;
 
         // skip obvious build output directories
-        if (path.contains(QStringLiteral("Debug-iphoneos")) || path.contains(QStringLiteral("Release-iphoneos")) ||
-            path.contains(QStringLiteral("Debug-iphonesimulator")) || path.contains(QStringLiteral("Release-iphonesimulator"))
+        if (path.contains(QLatin1String("Debug-iphoneos")) || path.contains(QLatin1String("Release-iphoneos")) ||
+            path.contains(QLatin1String("Debug-iphonesimulator")) || path.contains(QLatin1String("Release-iphonesimulator"))
 #ifdef Q_OS_WIN
-            || path.contains(QStringLiteral("/release/")) || path.contains(QStringLiteral("/debug/"))
+            || path.contains(QLatin1String("/release/")) || path.contains(QLatin1String("/debug/"))
 #endif
         ){
             continue;
@@ -409,7 +409,7 @@ QSet<QString> importModulePaths(QVariantList imports) {
         QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
         QString path = import.value(QStringLiteral("path")).toString();
         QString type = import.value(QStringLiteral("type")).toString();
-        if (type == QStringLiteral("module") && !path.isEmpty())
+        if (type == QLatin1String("module") && !path.isEmpty())
             ret.insert(QDir(path).canonicalPath());
     }
     return ret;
