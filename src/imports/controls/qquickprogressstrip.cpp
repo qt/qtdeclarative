@@ -142,6 +142,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
     }
     Q_ASSERT(rootTransformNode->type() == QSGNode::TransformNodeType);
 
+    const QColor color(0x35, 0x36, 0x37);
     if (m_indeterminate) {
         if (rootTransformNode->childCount() != blocks) {
             // This was previously a regular progress bar; remove the old nodes.
@@ -158,7 +159,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
             QSGRectangleNode *rectNode = static_cast<QSGRectangleNode*>(transformNode->firstChild());
             if (!rectNode) {
                 rectNode = d->sceneGraphContext()->createRectangleNode();
-                rectNode->setColor(QColor(0x35, 0x36, 0x37));
+                rectNode->setColor(color);
                 transformNode->appendChildNode(rectNode);
             }
 
@@ -180,7 +181,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
         QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(rootTransformNode->firstChild());
         if (!rectNode) {
             rectNode = d->sceneGraphContext()->createRectangleNode();
-            rectNode->setColor(QColor(0x35, 0x36, 0x37));
+            rectNode->setColor(color);
             rootTransformNode->appendChildNode(rectNode);
         }
 
