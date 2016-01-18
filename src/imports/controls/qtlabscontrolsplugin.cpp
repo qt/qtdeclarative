@@ -89,8 +89,9 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("/Label.qml")), uri, 1, 0, "Label");
     qmlRegisterType(selector.select(QStringLiteral("/Menu.qml")), uri, 1, 0, "Menu");
     qmlRegisterType(selector.select(QStringLiteral("/MenuItem.qml")), uri, 1, 0, "MenuItem");
-    qmlRegisterType(selector.select(QStringLiteral("/Pane.qml")), uri, 1, 0, "Pane");
+    qmlRegisterType(selector.select(QStringLiteral("/Page.qml")), uri, 1, 0, "Page");
     qmlRegisterType(selector.select(QStringLiteral("/PageIndicator.qml")), uri, 1, 0, "PageIndicator");
+    qmlRegisterType(selector.select(QStringLiteral("/Pane.qml")), uri, 1, 0, "Pane");
     qmlRegisterType(selector.select(QStringLiteral("/Popup.qml")), uri, 1, 0, "Popup");
     qmlRegisterType(selector.select(QStringLiteral("/ProgressBar.qml")), uri, 1, 0, "ProgressBar");
     qmlRegisterType(selector.select(QStringLiteral("/RadioButton.qml")), uri, 1, 0, "RadioButton");

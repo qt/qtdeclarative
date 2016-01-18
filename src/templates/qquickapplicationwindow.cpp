@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 
     \note By default, an ApplicationWindow is not visible.
 
-    \sa {Container Controls}
+    \sa Page, {Container Controls}
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
@@ -228,7 +228,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     This property holds the window header item. The header item is positioned to
     the top, and resized to the width of the window. The default value is \c null.
 
-    \sa footer
+    \sa footer, Page::header
 */
 QQuickItem *QQuickApplicationWindow::header() const
 {
@@ -262,7 +262,7 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
     This property holds the window footer item. The footer item is positioned to
     the bottom, and resized to the width of the window. The default value is \c null.
 
-    \sa header
+    \sa header, Page::footer
 */
 QQuickItem *QQuickApplicationWindow::footer() const
 {
