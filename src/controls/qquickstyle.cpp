@@ -44,8 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char *SettingsFilePath = ":/qtlabscontrols.conf";
-
 static QQuickStyle *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
 {
     if (!object)
@@ -170,7 +168,7 @@ QQuickStyle::~QQuickStyle()
 QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)
 {
 #ifndef QT_NO_SETTINGS
-    const QString filePath = QLatin1String(SettingsFilePath);
+    const QString filePath = QStringLiteral(":/qtlabscontrols.conf");
     if (QFile::exists(filePath)) {
         QFileSelector selector;
         QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
