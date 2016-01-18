@@ -794,9 +794,9 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
     return true;
 }
 
-static bool readDependenciesFile(QString dependenciesFile, QStringList *dependencies,
+static bool readDependenciesFile(const QString &dependenciesFile, QStringList *dependencies,
                                 const QStringList &urisToSkip) {
-    if (!QFileInfo(dependenciesFile).exists()) {
+    if (!QFileInfo::exists(dependenciesFile)) {
         std::cerr << "non existing dependencies file " << dependenciesFile.toStdString()
                   << std::endl;
         return false;
