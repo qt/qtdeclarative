@@ -66,7 +66,7 @@ T.TextField {
         color: "#bdbebf"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
 

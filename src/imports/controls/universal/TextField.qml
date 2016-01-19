@@ -74,7 +74,7 @@ T.TextField {
         font: control.font
         color: !control.enabled ? control.Universal.chromeDisabledLowColor :
                 control.activeFocus ? control.Universal.chromeBlackMediumLowColor : control.Universal.baseMediumColor
-        visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         renderType: Text.NativeRendering

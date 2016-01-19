@@ -92,7 +92,7 @@ T.TextArea {
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
-        visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
     }
     //! [placeholder]
 

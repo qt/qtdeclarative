@@ -91,7 +91,7 @@ T.TextField {
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
-        visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
 
     }
     //! [placeholder]

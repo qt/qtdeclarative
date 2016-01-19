@@ -66,7 +66,7 @@ T.TextArea {
         color: "#c2c2c2"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
 }
