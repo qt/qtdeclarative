@@ -37,12 +37,14 @@
 #include "qquickuniversalfocusrectangle_p.h"
 
 #include <QtGui/qpainter.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QQuickUniversalFocusRectangle::QQuickUniversalFocusRectangle(QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
+    QQuickItemPrivate::get(this)->setTransparentForPositioner(true);
 }
 
 void QQuickUniversalFocusRectangle::paint(QPainter *painter)

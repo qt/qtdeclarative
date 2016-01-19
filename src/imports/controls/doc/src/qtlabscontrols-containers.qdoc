@@ -57,6 +57,12 @@
     \l GroupBox is used to layout a logical group of controls together,
     within a titled visual frame.
 
+    \section1 Page Control
+
+    \image qtlabscontrols-page-wireframe.png
+
+    \l Page provides page-specific header and footer items.
+
     \section1 Pane Control
 
     \image qtlabscontrols-pane.png

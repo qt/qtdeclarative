@@ -44,8 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char *SettingsFilePath = ":/qtlabscontrols.conf";
-
 static QQuickStyle *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
 {
     if (!object)
@@ -63,33 +61,40 @@ static QQuickStyle *findParentStyle(const QMetaObject *type, QObject *parent)
     if (style)
         return style;
 
+    // lookup object parent (window/popup)
+    QObject *grandParent = parent->parent();
+    if (grandParent) {
+        QQuickStyle *style = findParentStyle(type, grandParent);
+        if (style)
+            return style;
+    }
+
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item) {
         // lookup parent items
         QQuickItem *parent = item->parentItem();
-        if (parent)
-            return findParentStyle(type, parent);
+        if (parent) {
+            QQuickStyle *style = findParentStyle(type, parent);
+            if (style)
+                return style;
+        }
 
         // fallback to item's window
-        return findParentStyle(type, item->window());
+        QQuickStyle *style = findParentStyle(type, item->window());
+        if (style)
+            return style;
     }
 
-    // lookup object parent (window/popup)
-    if (parent->parent())
-        return findParentStyle(type, parent->parent());
-
     // fallback to engine (global)
-    if (parent) {
-        QQmlEngine *engine = qmlEngine(parent);
-        if (engine) {
-            QByteArray name = QByteArray("_q_") + type->className();
-            QQuickStyle *style = engine->property(name).value<QQuickStyle*>();
-            if (!style) {
-                style = attachedStyle(type, engine, true);
-                engine->setProperty(name, QVariant::fromValue(style));
-            }
-            return style;
+    QQmlEngine *engine = qmlEngine(parent);
+    if (engine) {
+        QByteArray name = QByteArray("_q_") + type->className();
+        QQuickStyle *style = engine->property(name).value<QQuickStyle*>();
+        if (!style) {
+            style = attachedStyle(type, engine, true);
+            engine->setProperty(name, QVariant::fromValue(style));
         }
+        return style;
     }
 
     return Q_NULLPTR;
@@ -166,7 +171,7 @@ QQuickStyle::~QQuickStyle()
 QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)
 {
 #ifndef QT_NO_SETTINGS
-    const QString filePath = QLatin1String(SettingsFilePath);
+    const QString filePath = QStringLiteral(":/qtlabscontrols.conf");
     if (QFile::exists(filePath)) {
         QFileSelector selector;
         QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
@@ -203,14 +208,16 @@ void QQuickStyle::setParentStyle(QQuickStyle *style)
 
 void QQuickStyle::init()
 {
-    if (!parent())
+    QObject *parent = QObject::parent();
+    if (!parent)
         return;
 
-    QQuickStyle *parentStyle = findParentStyle(metaObject(), parent()->parent());
+    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent);
+    QQuickStyle *parentStyle = findParentStyle(metaObject(), parentItem ? parentItem->parentItem() : parent->parent());
     if (parentStyle)
         setParentStyle(parentStyle);
 
-    const QList<QQuickStyle *> children = findChildStyles(metaObject(), parent());
+    const QList<QQuickStyle *> children = findChildStyles(metaObject(), parent);
     for (QQuickStyle *child : children)
         child->setParentStyle(this);
 }

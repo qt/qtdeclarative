@@ -101,6 +101,7 @@ QSGNode *QQuickBusyIndicatorRing::updatePaintNode(QSGNode *oldNode, QQuickItem::
     const qreal dx = (w - sz) / 2;
     const qreal dy = (h - sz) / 2;
     const int circleRadius = sz / 12;
+    const QColor color(0x35, 0x36, 0x37);
 
     QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(rootTransformNode->firstChild());
     for (int i = 0; i < circles; ++i) {
@@ -113,8 +114,8 @@ QSGNode *QQuickBusyIndicatorRing::updatePaintNode(QSGNode *oldNode, QQuickItem::
 
             QSGRectangleNode *rectNode = d->sceneGraphContext()->createRectangleNode();
             rectNode->setAntialiasing(true);
-            rectNode->setColor(QColor("#353637"));
-            rectNode->setPenColor(QColor("#353637"));
+            rectNode->setColor(color);
+            rectNode->setPenColor(color);
             opacityNode->appendChildNode(rectNode);
         }
 
@@ -191,6 +192,8 @@ void QQuickBusyIndicatorAnimatorJob::updateCurrentTime(int time)
     const qreal secondPhaseProgress = percentageComplete > 0.5 ? (percentageComplete - 0.5) * 2 : 0;
 
     QSGTransformNode *transformNode = static_cast<QSGTransformNode*>(rootTransformNode->firstChild());
+    const QColor color(0x35, 0x36, 0x37);
+    const QColor transparent(Qt::transparent);
     Q_ASSERT(transformNode->type() == QSGNode::TransformNodeType);
     for (int i = 0; i < circles; ++i) {
         QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode*>(transformNode->firstChild());
@@ -201,7 +204,7 @@ void QQuickBusyIndicatorAnimatorJob::updateCurrentTime(int time)
 
         const bool fill = (firstPhaseProgress > qreal(i) / circles) || (secondPhaseProgress > 0 && secondPhaseProgress < qreal(i) / circles);
         rectNode->setPenWidth(fill ? 0 : 1);
-        rectNode->setColor(fill ? QColor("#353637") : QColor("transparent"));
+        rectNode->setColor(fill ? color : transparent);
         rectNode->update();
 
         transformNode = static_cast<QSGTransformNode*>(transformNode->nextSibling());

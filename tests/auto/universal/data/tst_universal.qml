@@ -107,6 +107,22 @@ TestCase {
         }
     }
 
+    Component {
+        id: comboBox
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Universal.accent: Universal.Red
+            property alias combo: box
+            ComboBox {
+                id: box
+                Universal.theme: Universal.Dark
+                model: 1
+            }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -251,6 +267,28 @@ TestCase {
         container.destroy()
     }
 
+    function test_comboBox() {
+        var window = comboBox.createObject(testCase)
+        verify(window)
+        verify(window.combo)
+        waitForRendering(window.combo)
+        window.combo.forceActiveFocus()
+        verify(window.combo.activeFocus)
+        keyClick(Qt.Key_Space)
+        verify(window.combo.popup.visible)
+        var listView = window.combo.popup.contentItem.children[0]
+        verify(listView)
+        var child = listView.contentItem.children[0]
+        verify(child)
+        compare(window.Universal.theme, Universal.Light)
+        compare(window.combo.Universal.theme, Universal.Dark)
+        compare(child.Universal.theme, Universal.Dark)
+        compare(window.Universal.accent, "#e51400") // Red
+        compare(window.combo.Universal.accent, "#e51400") // Red
+        compare(child.Universal.accent, "#e51400") // Red
+        window.destroy()
+    }
+
     function test_colors() {
         var control = button.createObject(testCase)
         verify(control)
@@ -284,11 +322,11 @@ TestCase {
         compare(control.Universal.accent, "#80808080")
 
         // unknown
-        ignoreWarning("QQuickUniversalStyle: unknown accent 123")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: 123")
         control.Universal.accent = 123
-        ignoreWarning("QQuickUniversalStyle: unknown accent \"foo\"")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: foo")
         control.Universal.accent = "foo"
-        ignoreWarning("QQuickUniversalStyle: unknown accent \"#1\"")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: #1")
         control.Universal.accent = "#1"
 
         control.destroy()

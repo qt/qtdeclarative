@@ -50,9 +50,9 @@ T.ProgressBar {
     indicator: ProgressStrip {
         id: strip
         x: control.leftPadding
-        y: control.topPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
         width: control.availableWidth
-        height: control.availableHeight
+        height: 6
         scale: control.mirrored ? -1 : 1
         progress: control.position
         indeterminate: control.indeterminate

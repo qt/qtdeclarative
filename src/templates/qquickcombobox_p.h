@@ -134,6 +134,8 @@ protected:
 
     void componentComplete() Q_DECL_OVERRIDE;
 
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickComboBox)
     Q_DECLARE_PRIVATE(QQuickComboBox)

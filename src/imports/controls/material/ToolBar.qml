@@ -53,7 +53,7 @@ T.ToolBar {
 
     //! [background]
     background: Rectangle {
-        implicitHeight: 40
+        implicitHeight: 48
         color: control.Material.accentColor
     }
     //! [background]

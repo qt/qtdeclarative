@@ -55,9 +55,6 @@ T.ComboBox {
     rightPadding: 10
     bottomPadding: 7
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width

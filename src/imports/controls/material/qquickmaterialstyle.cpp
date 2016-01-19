@@ -36,7 +36,9 @@
 
 #include "qquickmaterialstyle_p.h"
 
+#include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -59,331 +61,332 @@ QT_BEGIN_NAMESPACE
 static const QRgb colors[][14] = {
     // Red
     {
-        0xFFEBEE, // Shade50
-        0xFFCDD2, // Shade100
-        0xEF9A9A, // Shade200
-        0xE57373, // Shade300
-        0xEF5350, // Shade400
-        0xF44336, // Shade500
-        0xE53935, // Shade600
-        0xD32F2F, // Shade700
-        0xC62828, // Shade800
-        0xB71C1C, // Shade900
-        0xFF8A80, // ShadeA100
-        0xFF5252, // ShadeA200
-        0xFF1744, // ShadeA400
-        0xD50000  // ShadeA700
+        0xFFFFEBEE, // Shade50
+        0xFFFFCDD2, // Shade100
+        0xFFEF9A9A, // Shade200
+        0xFFE57373, // Shade300
+        0xFFEF5350, // Shade400
+        0xFFF44336, // Shade500
+        0xFFE53935, // Shade600
+        0xFFD32F2F, // Shade700
+        0xFFC62828, // Shade800
+        0xFFB71C1C, // Shade900
+        0xFFFF8A80, // ShadeA100
+        0xFFFF5252, // ShadeA200
+        0xFFFF1744, // ShadeA400
+        0xFFD50000  // ShadeA700
     },
     // Pink
     {
-        0xFCE4EC, // Shade50
-        0xF8BBD0, // Shade100
-        0xF48FB1, // Shade200
-        0xF06292, // Shade300
-        0xEC407A, // Shade400
-        0xE91E63, // Shade500
-        0xD81B60, // Shade600
-        0xC2185B, // Shade700
-        0xAD1457, // Shade800
-        0x880E4F, // Shade900
-        0xFF80AB, // ShadeA100
-        0xFF4081, // ShadeA200
-        0xF50057, // ShadeA400
-        0xC51162  // ShadeA700
+        0xFFFCE4EC, // Shade50
+        0xFFF8BBD0, // Shade100
+        0xFFF48FB1, // Shade200
+        0xFFF06292, // Shade300
+        0xFFEC407A, // Shade400
+        0xFFE91E63, // Shade500
+        0xFFD81B60, // Shade600
+        0xFFC2185B, // Shade700
+        0xFFAD1457, // Shade800
+        0xFF880E4F, // Shade900
+        0xFFFF80AB, // ShadeA100
+        0xFFFF4081, // ShadeA200
+        0xFFF50057, // ShadeA400
+        0xFFC51162  // ShadeA700
     },
     // Purple
     {
-        0xF3E5F5, // Shade50
-        0xE1BEE7, // Shade100
-        0xCE93D8, // Shade200
-        0xBA68C8, // Shade300
-        0xAB47BC, // Shade400
-        0x9C27B0, // Shade500
-        0x8E24AA, // Shade600
-        0x7B1FA2, // Shade700
-        0x6A1B9A, // Shade800
-        0x4A148C, // Shade900
-        0xEA80FC, // ShadeA100
-        0xE040FB, // ShadeA200
-        0xD500F9, // ShadeA400
-        0xAA00FF  // ShadeA700
+        0xFFF3E5F5, // Shade50
+        0xFFE1BEE7, // Shade100
+        0xFFCE93D8, // Shade200
+        0xFFBA68C8, // Shade300
+        0xFFAB47BC, // Shade400
+        0xFF9C27B0, // Shade500
+        0xFF8E24AA, // Shade600
+        0xFF7B1FA2, // Shade700
+        0xFF6A1B9A, // Shade800
+        0xFF4A148C, // Shade900
+        0xFFEA80FC, // ShadeA100
+        0xFFE040FB, // ShadeA200
+        0xFFD500F9, // ShadeA400
+        0xFFAA00FF  // ShadeA700
     },
     // DeepPurple
     {
-        0xEDE7F6, // Shade50
-        0xD1C4E9, // Shade100
-        0xB39DDB, // Shade200
-        0x9575CD, // Shade300
-        0x7E57C2, // Shade400
-        0x673AB7, // Shade500
-        0x5E35B1, // Shade600
-        0x512DA8, // Shade700
-        0x4527A0, // Shade800
-        0x311B92, // Shade900
-        0xB388FF, // ShadeA100
-        0x7C4DFF, // ShadeA200
-        0x651FFF, // ShadeA400
-        0x6200EA  // ShadeA700
+        0xFFEDE7F6, // Shade50
+        0xFFD1C4E9, // Shade100
+        0xFFB39DDB, // Shade200
+        0xFF9575CD, // Shade300
+        0xFF7E57C2, // Shade400
+        0xFF673AB7, // Shade500
+        0xFF5E35B1, // Shade600
+        0xFF512DA8, // Shade700
+        0xFF4527A0, // Shade800
+        0xFF311B92, // Shade900
+        0xFFB388FF, // ShadeA100
+        0xFF7C4DFF, // ShadeA200
+        0xFF651FFF, // ShadeA400
+        0xFF6200EA  // ShadeA700
     },
     // Indigo
     {
-        0xE8EAF6, // Shade50
-        0xC5CAE9, // Shade100
-        0x9FA8DA, // Shade200
-        0x7986CB, // Shade300
-        0x5C6BC0, // Shade400
-        0x3F51B5, // Shade500
-        0x3949AB, // Shade600
-        0x303F9F, // Shade700
-        0x283593, // Shade800
-        0x1A237E, // Shade900
-        0x8C9EFF, // ShadeA100
-        0x536DFE, // ShadeA200
-        0x3D5AFE, // ShadeA400
-        0x304FFE  // ShadeA700
+        0xFFE8EAF6, // Shade50
+        0xFFC5CAE9, // Shade100
+        0xFF9FA8DA, // Shade200
+        0xFF7986CB, // Shade300
+        0xFF5C6BC0, // Shade400
+        0xFF3F51B5, // Shade500
+        0xFF3949AB, // Shade600
+        0xFF303F9F, // Shade700
+        0xFF283593, // Shade800
+        0xFF1A237E, // Shade900
+        0xFF8C9EFF, // ShadeA100
+        0xFF536DFE, // ShadeA200
+        0xFF3D5AFE, // ShadeA400
+        0xFF304FFE  // ShadeA700
     },
     // Blue
     {
-        0xE3F2FD, // Shade50
-        0xBBDEFB, // Shade100
-        0x90CAF9, // Shade200
-        0x64B5F6, // Shade300
-        0x42A5F5, // Shade400
-        0x2196F3, // Shade500
-        0x1E88E5, // Shade600
-        0x1976D2, // Shade700
-        0x1565C0, // Shade800
-        0x0D47A1, // Shade900
-        0x82B1FF, // ShadeA100
-        0x448AFF, // ShadeA200
-        0x2979FF, // ShadeA400
-        0x2962FF  // ShadeA700
+        0xFFE3F2FD, // Shade50
+        0xFFBBDEFB, // Shade100
+        0xFF90CAF9, // Shade200
+        0xFF64B5F6, // Shade300
+        0xFF42A5F5, // Shade400
+        0xFF2196F3, // Shade500
+        0xFF1E88E5, // Shade600
+        0xFF1976D2, // Shade700
+        0xFF1565C0, // Shade800
+        0xFF0D47A1, // Shade900
+        0xFF82B1FF, // ShadeA100
+        0xFF448AFF, // ShadeA200
+        0xFF2979FF, // ShadeA400
+        0xFF2962FF  // ShadeA700
     },
     // LightBlue
     {
-        0xE1F5FE, // Shade50
-        0xB3E5FC, // Shade100
-        0x81D4FA, // Shade200
-        0x4FC3F7, // Shade300
-        0x29B6F6, // Shade400
-        0x03A9F4, // Shade500
-        0x039BE5, // Shade600
-        0x0288D1, // Shade700
-        0x0277BD, // Shade800
-        0x01579B, // Shade900
-        0x80D8FF, // ShadeA100
-        0x40C4FF, // ShadeA200
-        0x00B0FF, // ShadeA400
-        0x0091EA  // ShadeA700
+        0xFFE1F5FE, // Shade50
+        0xFFB3E5FC, // Shade100
+        0xFF81D4FA, // Shade200
+        0xFF4FC3F7, // Shade300
+        0xFF29B6F6, // Shade400
+        0xFF03A9F4, // Shade500
+        0xFF039BE5, // Shade600
+        0xFF0288D1, // Shade700
+        0xFF0277BD, // Shade800
+        0xFF01579B, // Shade900
+        0xFF80D8FF, // ShadeA100
+        0xFF40C4FF, // ShadeA200
+        0xFF00B0FF, // ShadeA400
+        0xFF0091EA  // ShadeA700
     },
     // Cyan
     {
-        0xE0F7FA, // Shade50
-        0xB2EBF2, // Shade100
-        0x80DEEA, // Shade200
-        0x4DD0E1, // Shade300
-        0x26C6DA, // Shade400
-        0x00BCD4, // Shade500
-        0x00ACC1, // Shade600
-        0x0097A7, // Shade700
-        0x00838F, // Shade800
-        0x006064, // Shade900
-        0x84FFFF, // ShadeA100
-        0x18FFFF, // ShadeA200
-        0x00E5FF, // ShadeA400
-        0x00B8D4  // ShadeA700
+        0xFFE0F7FA, // Shade50
+        0xFFB2EBF2, // Shade100
+        0xFF80DEEA, // Shade200
+        0xFF4DD0E1, // Shade300
+        0xFF26C6DA, // Shade400
+        0xFF00BCD4, // Shade500
+        0xFF00ACC1, // Shade600
+        0xFF0097A7, // Shade700
+        0xFF00838F, // Shade800
+        0xFF006064, // Shade900
+        0xFF84FFFF, // ShadeA100
+        0xFF18FFFF, // ShadeA200
+        0xFF00E5FF, // ShadeA400
+        0xFF00B8D4  // ShadeA700
     },
     // Teal
     {
-        0xE0F2F1, // Shade50
-        0xB2DFDB, // Shade100
-        0x80CBC4, // Shade200
-        0x4DB6AC, // Shade300
-        0x26A69A, // Shade400
-        0x009688, // Shade500
-        0x00897B, // Shade600
-        0x00796B, // Shade700
-        0x00695C, // Shade800
-        0x004D40, // Shade900
-        0xA7FFEB, // ShadeA100
-        0x64FFDA, // ShadeA200
-        0x1DE9B6, // ShadeA400
-        0x00BFA5  // ShadeA700
+        0xFFE0F2F1, // Shade50
+        0xFFB2DFDB, // Shade100
+        0xFF80CBC4, // Shade200
+        0xFF4DB6AC, // Shade300
+        0xFF26A69A, // Shade400
+        0xFF009688, // Shade500
+        0xFF00897B, // Shade600
+        0xFF00796B, // Shade700
+        0xFF00695C, // Shade800
+        0xFF004D40, // Shade900
+        0xFFA7FFEB, // ShadeA100
+        0xFF64FFDA, // ShadeA200
+        0xFF1DE9B6, // ShadeA400
+        0xFF00BFA5  // ShadeA700
     },
     // Green
     {
-        0xE8F5E9, // Shade50
-        0xC8E6C9, // Shade100
-        0xA5D6A7, // Shade200
-        0x81C784, // Shade300
-        0x66BB6A, // Shade400
-        0x4CAF50, // Shade500
-        0x43A047, // Shade600
-        0x388E3C, // Shade700
-        0x2E7D32, // Shade800
-        0x1B5E20, // Shade900
-        0xB9F6CA, // ShadeA100
-        0x69F0AE, // ShadeA200
-        0x00E676, // ShadeA400
-        0x00C853  // ShadeA700
+        0xFFE8F5E9, // Shade50
+        0xFFC8E6C9, // Shade100
+        0xFFA5D6A7, // Shade200
+        0xFF81C784, // Shade300
+        0xFF66BB6A, // Shade400
+        0xFF4CAF50, // Shade500
+        0xFF43A047, // Shade600
+        0xFF388E3C, // Shade700
+        0xFF2E7D32, // Shade800
+        0xFF1B5E20, // Shade900
+        0xFFB9F6CA, // ShadeA100
+        0xFF69F0AE, // ShadeA200
+        0xFF00E676, // ShadeA400
+        0xFF00C853  // ShadeA700
     },
     // LightGreen
     {
-        0xF1F8E9, // Shade50
-        0xDCEDC8, // Shade100
-        0xC5E1A5, // Shade200
-        0xAED581, // Shade300
-        0x9CCC65, // Shade400
-        0x8BC34A, // Shade500
-        0x7CB342, // Shade600
-        0x689F38, // Shade700
-        0x558B2F, // Shade800
-        0x33691E, // Shade900
-        0xCCFF90, // ShadeA100
-        0xB2FF59, // ShadeA200
-        0x76FF03, // ShadeA400
-        0x64DD17  // ShadeA700
+        0xFFF1F8E9, // Shade50
+        0xFFDCEDC8, // Shade100
+        0xFFC5E1A5, // Shade200
+        0xFFAED581, // Shade300
+        0xFF9CCC65, // Shade400
+        0xFF8BC34A, // Shade500
+        0xFF7CB342, // Shade600
+        0xFF689F38, // Shade700
+        0xFF558B2F, // Shade800
+        0xFF33691E, // Shade900
+        0xFFCCFF90, // ShadeA100
+        0xFFB2FF59, // ShadeA200
+        0xFF76FF03, // ShadeA400
+        0xFF64DD17  // ShadeA700
     },
     // Lime
     {
-        0xF9FBE7, // Shade50
-        0xF0F4C3, // Shade100
-        0xE6EE9C, // Shade200
-        0xDCE775, // Shade300
-        0xD4E157, // Shade400
-        0xCDDC39, // Shade500
-        0xC0CA33, // Shade600
-        0xAFB42B, // Shade700
-        0x9E9D24, // Shade800
-        0x827717, // Shade900
-        0xF4FF81, // ShadeA100
-        0xEEFF41, // ShadeA200
-        0xC6FF00, // ShadeA400
-        0xAEEA00  // ShadeA700
+        0xFFF9FBE7, // Shade50
+        0xFFF0F4C3, // Shade100
+        0xFFE6EE9C, // Shade200
+        0xFFDCE775, // Shade300
+        0xFFD4E157, // Shade400
+        0xFFCDDC39, // Shade500
+        0xFFC0CA33, // Shade600
+        0xFFAFB42B, // Shade700
+        0xFF9E9D24, // Shade800
+        0xFF827717, // Shade900
+        0xFFF4FF81, // ShadeA100
+        0xFFEEFF41, // ShadeA200
+        0xFFC6FF00, // ShadeA400
+        0xFFAEEA00  // ShadeA700
     },
     // Yellow
     {
-        0xFFFDE7, // Shade50
-        0xFFF9C4, // Shade100
-        0xFFF59D, // Shade200
-        0xFFF176, // Shade300
-        0xFFEE58, // Shade400
-        0xFFEB3B, // Shade500
-        0xFDD835, // Shade600
-        0xFBC02D, // Shade700
-        0xF9A825, // Shade800
-        0xF57F17, // Shade900
-        0xFFFF8D, // ShadeA100
-        0xFFFF00, // ShadeA200
-        0xFFEA00, // ShadeA400
-        0xFFD600  // ShadeA700
+        0xFFFFFDE7, // Shade50
+        0xFFFFF9C4, // Shade100
+        0xFFFFF59D, // Shade200
+        0xFFFFF176, // Shade300
+        0xFFFFEE58, // Shade400
+        0xFFFFEB3B, // Shade500
+        0xFFFDD835, // Shade600
+        0xFFFBC02D, // Shade700
+        0xFFF9A825, // Shade800
+        0xFFF57F17, // Shade900
+        0xFFFFFF8D, // ShadeA100
+        0xFFFFFF00, // ShadeA200
+        0xFFFFEA00, // ShadeA400
+        0xFFFFD600  // ShadeA700
     },
     // Amber
     {
-        0xFFF8E1, // Shade50
-        0xFFECB3, // Shade100
-        0xFFE082, // Shade200
-        0xFFD54F, // Shade300
-        0xFFCA28, // Shade400
-        0xFFC107, // Shade500
-        0xFFB300, // Shade600
-        0xFFA000, // Shade700
-        0xFF8F00, // Shade800
-        0xFF6F00, // Shade900
-        0xFFE57F, // ShadeA100
-        0xFFD740, // ShadeA200
-        0xFFC400, // ShadeA400
-        0xFFAB00  // ShadeA700
+        0xFFFFF8E1, // Shade50
+        0xFFFFECB3, // Shade100
+        0xFFFFE082, // Shade200
+        0xFFFFD54F, // Shade300
+        0xFFFFCA28, // Shade400
+        0xFFFFC107, // Shade500
+        0xFFFFB300, // Shade600
+        0xFFFFA000, // Shade700
+        0xFFFF8F00, // Shade800
+        0xFFFF6F00, // Shade900
+        0xFFFFE57F, // ShadeA100
+        0xFFFFD740, // ShadeA200
+        0xFFFFC400, // ShadeA400
+        0xFFFFAB00  // ShadeA700
     },
     // Orange
     {
-        0xFFF3E0, // Shade50
-        0xFFE0B2, // Shade100
-        0xFFCC80, // Shade200
-        0xFFB74D, // Shade300
-        0xFFA726, // Shade400
-        0xFF9800, // Shade500
-        0xFB8C00, // Shade600
-        0xF57C00, // Shade700
-        0xEF6C00, // Shade800
-        0xE65100, // Shade900
-        0xFFD180, // ShadeA100
-        0xFFAB40, // ShadeA200
-        0xFF9100, // ShadeA400
-        0xFF6D00  // ShadeA700
+        0xFFFFF3E0, // Shade50
+        0xFFFFE0B2, // Shade100
+        0xFFFFCC80, // Shade200
+        0xFFFFB74D, // Shade300
+        0xFFFFA726, // Shade400
+        0xFFFF9800, // Shade500
+        0xFFFB8C00, // Shade600
+        0xFFF57C00, // Shade700
+        0xFFEF6C00, // Shade800
+        0xFFE65100, // Shade900
+        0xFFFFD180, // ShadeA100
+        0xFFFFAB40, // ShadeA200
+        0xFFFF9100, // ShadeA400
+        0xFFFF6D00  // ShadeA700
     },
     // DeepOrange
     {
-        0xFBE9E7, // Shade50
-        0xFFCCBC, // Shade100
-        0xFFAB91, // Shade200
-        0xFF8A65, // Shade300
-        0xFF7043, // Shade400
-        0xFF5722, // Shade500
-        0xF4511E, // Shade600
-        0xE64A19, // Shade700
-        0xD84315, // Shade800
-        0xBF360C, // Shade900
-        0xFF9E80, // ShadeA100
-        0xFF6E40, // ShadeA200
-        0xFF3D00, // ShadeA400
-        0xDD2C00  // ShadeA700
+        0xFFFBE9E7, // Shade50
+        0xFFFFCCBC, // Shade100
+        0xFFFFAB91, // Shade200
+        0xFFFF8A65, // Shade300
+        0xFFFF7043, // Shade400
+        0xFFFF5722, // Shade500
+        0xFFF4511E, // Shade600
+        0xFFE64A19, // Shade700
+        0xFFD84315, // Shade800
+        0xFFBF360C, // Shade900
+        0xFFFF9E80, // ShadeA100
+        0xFFFF6E40, // ShadeA200
+        0xFFFF3D00, // ShadeA400
+        0xFFDD2C00  // ShadeA700
     },
     // Brown
     {
-        0xEFEBE9, // Shade50
-        0xD7CCC8, // Shade100
-        0xBCAAA4, // Shade200
-        0xA1887F, // Shade300
-        0x8D6E63, // Shade400
-        0x795548, // Shade500
-        0x6D4C41, // Shade600
-        0x5D4037, // Shade700
-        0x4E342E, // Shade800
-        0x3E2723, // Shade900
-        0x000000, // ShadeA100
-        0x000000, // ShadeA200
-        0x000000, // ShadeA400
-        0x000000  // ShadeA700
+        0xFFEFEBE9, // Shade50
+        0xFFD7CCC8, // Shade100
+        0xFFBCAAA4, // Shade200
+        0xFFA1887F, // Shade300
+        0xFF8D6E63, // Shade400
+        0xFF795548, // Shade500
+        0xFF6D4C41, // Shade600
+        0xFF5D4037, // Shade700
+        0xFF4E342E, // Shade800
+        0xFF3E2723, // Shade900
+        0xFF000000, // ShadeA100
+        0xFF000000, // ShadeA200
+        0xFF000000, // ShadeA400
+        0xFF000000  // ShadeA700
     },
     // Grey
     {
-        0xFAFAFA, // Shade50
-        0xF5F5F5, // Shade100
-        0xEEEEEE, // Shade200
-        0xE0E0E0, // Shade300
-        0xBDBDBD, // Shade400
-        0x9E9E9E, // Shade500
-        0x757575, // Shade600
-        0x616161, // Shade700
-        0x424242, // Shade800
-        0x212121, // Shade900
-        0x000000, // ShadeA100
-        0x000000, // ShadeA200
-        0x000000, // ShadeA400
-        0x000000  // ShadeA700
+        0xFFFAFAFA, // Shade50
+        0xFFF5F5F5, // Shade100
+        0xFFEEEEEE, // Shade200
+        0xFFE0E0E0, // Shade300
+        0xFFBDBDBD, // Shade400
+        0xFF9E9E9E, // Shade500
+        0xFF757575, // Shade600
+        0xFF616161, // Shade700
+        0xFF424242, // Shade800
+        0xFF212121, // Shade900
+        0xFF000000, // ShadeA100
+        0xFF000000, // ShadeA200
+        0xFF000000, // ShadeA400
+        0xFF000000  // ShadeA700
     },
     // BlueGrey
     {
-        0xECEFF1, // Shade50
-        0xCFD8DC, // Shade100
-        0xB0BEC5, // Shade200
-        0x90A4AE, // Shade300
-        0x78909C, // Shade400
-        0x607D8B, // Shade500
-        0x546E7A, // Shade600
-        0x455A64, // Shade700
-        0x37474F, // Shade800
-        0x263238, // Shade900
-        0x000000, // ShadeA100
-        0x000000, // ShadeA200
-        0x000000, // ShadeA400
-        0x000000  // ShadeA700
+        0xFFECEFF1, // Shade50
+        0xFFCFD8DC, // Shade100
+        0xFFB0BEC5, // Shade200
+        0xFF90A4AE, // Shade300
+        0xFF78909C, // Shade400
+        0xFF607D8B, // Shade500
+        0xFF546E7A, // Shade600
+        0xFF455A64, // Shade700
+        0xFF37474F, // Shade800
+        0xFF263238, // Shade900
+        0xFF000000, // ShadeA100
+        0xFF000000, // ShadeA200
+        0xFF000000, // ShadeA400
+        0xFF000000  // ShadeA700
     }
 };
 
 static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
-static QQuickMaterialStyle::Color defaultAccent = QQuickMaterialStyle::Teal;
+static uint defaultAccent = QQuickMaterialStyle::Teal;
+static bool defaultCustom = false;
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
@@ -418,6 +421,7 @@ static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
     m_explicitTheme(false),
     m_explicitAccent(false),
+    m_customAccent(defaultCustom),
     m_theme(defaultTheme),
     m_accent(defaultAccent)
 {
@@ -474,26 +478,52 @@ void QQuickMaterialStyle::resetTheme()
     }
 }
 
-QQuickMaterialStyle::Color QQuickMaterialStyle::accent() const
+QVariant QQuickMaterialStyle::accent() const
 {
-    return m_accent;
+    return accentColor();
 }
 
-void QQuickMaterialStyle::setAccent(QQuickMaterialStyle::Color color)
+void QQuickMaterialStyle::setAccent(const QVariant &var)
 {
+    QRgb accent = 0;
+    bool custom = false;
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val > BlueGrey) {
+            qmlInfo(parent()) << "unknown Material.accent value: " << val;
+            return;
+        }
+        accent = val;
+    } else {
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            accent = val;
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qmlInfo(parent()) << "unknown Material.accent value: " << var.toString();
+                return;
+            }
+            custom = true;
+            accent = color.rgba();
+        }
+    }
+
     m_explicitAccent = true;
-    if (m_accent != color) {
-        m_accent = color;
+    if (m_accent != accent) {
+        m_customAccent = custom;
+        m_accent = accent;
         propagateAccent();
         emit accentChanged();
         emit paletteChanged();
     }
 }
 
-void QQuickMaterialStyle::inheritAccent(QQuickMaterialStyle::Color color)
+void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
 {
-    if (!m_explicitAccent && m_accent != color) {
-        m_accent = color;
+    if (!m_explicitAccent && m_accent != accent) {
+        m_customAccent = custom;
+        m_accent = accent;
         propagateAccent();
         emit accentChanged();
     }
@@ -505,22 +535,27 @@ void QQuickMaterialStyle::propagateAccent()
     for (QQuickStyle *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
-            material->inheritAccent(m_accent);
+            material->inheritAccent(m_accent, m_customAccent);
     }
 }
 
 void QQuickMaterialStyle::resetAccent()
 {
     if (m_explicitAccent) {
+        m_customAccent = false;
         m_explicitAccent = false;
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritAccent(material ? material->accent() : defaultAccent);
+        inheritAccent(material ? material->m_accent : defaultAccent, true);
     }
 }
 
 QColor QQuickMaterialStyle::accentColor() const
 {
-    return color(m_accent, Shade500);
+    if (m_customAccent)
+        return QColor::fromRgba(m_accent);
+    if (m_accent > BlueGrey)
+        return QColor();
+    return colors[m_accent][Shade500];
 }
 
 QColor QQuickMaterialStyle::backgroundColor() const
@@ -593,12 +628,12 @@ QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
 {
-    return color(m_accent, Shade600);
+    return shade(accentColor(), Shade600);
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
 {
-    return color(m_accent, Shade700);
+    return shade(accentColor(), Shade700);
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
@@ -628,7 +663,7 @@ QColor QQuickMaterialStyle::checkBoxUncheckedRippleColor() const
 
 QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
-    QColor pressColor = color(m_accent, Shade500);
+    QColor pressColor = accentColor();
     // TODO: find out actual value
     pressColor.setAlpha(30);
     return pressColor;
@@ -641,7 +676,7 @@ QColor QQuickMaterialStyle::switchUncheckedTrackColor() const
 
 QColor QQuickMaterialStyle::switchCheckedTrackColor() const
 {
-    QColor trackColor = m_theme == Light ? accentColor() : color(m_accent, Shade200);
+    QColor trackColor = m_theme == Light ? accentColor() : shade(accentColor(), Shade200);
     trackColor.setAlphaF(0.5);
     return trackColor;
 }
@@ -653,7 +688,7 @@ QColor QQuickMaterialStyle::switchUncheckedHandleColor() const
 
 QColor QQuickMaterialStyle::switchCheckedHandleColor() const
 {
-    return m_theme == Light ? accentColor() : color(m_accent, Shade200);
+    return m_theme == Light ? accentColor() : shade(accentColor(), Shade200);
 }
 
 QColor QQuickMaterialStyle::switchDisabledTrackColor() const
@@ -704,28 +739,97 @@ QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMateri
     return colors[color][shade];
 }
 
+static QColor lighterShade(const QColor &color, qreal amount)
+{
+    QColor hsl = color.toHsl();
+    hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() + amount, 1.0), color.alphaF());
+    return hsl.convertTo(color.spec());
+}
+
+QColor darkerShade(const QColor &color, qreal amount)
+{
+    QColor hsl = color.toHsl();
+    hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() - amount, 1.0), color.alphaF());
+    return hsl.convertTo(color.spec());
+}
+
+/*
+ * The following lightness values originate from the Material Design Color Generator project.
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 mbitson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
+{
+    switch (shade) {
+    case Shade50:
+        return lighterShade(color, 0.52);
+    case Shade100:
+        return lighterShade(color, 0.37);
+    case Shade200:
+        return lighterShade(color, 0.26);
+    case Shade300:
+        return lighterShade(color, 0.12);
+    case Shade400:
+        return lighterShade(color, 0.06);
+    case Shade500:
+        return color;
+    case Shade600:
+        return darkerShade(color, 0.06);
+    case Shade700:
+        return darkerShade(color, 0.12);
+    case Shade800:
+        return darkerShade(color, 0.18);
+    case Shade900:
+        return darkerShade(color, 0.24);
+    case ShadeA100:
+        return lighterShade(color, 0.54);
+    case ShadeA200:
+        return lighterShade(color, 0.37);
+    case ShadeA400:
+        return lighterShade(color, 0.06);
+    case ShadeA700:
+        return darkerShade(color, 0.12);
+    default:
+        Q_UNREACHABLE();
+        return QColor();
+    }
+}
+
 void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
     if (material) {
-        inheritAccent(material->accent());
+        inheritAccent(material->m_accent, material->m_customAccent);
         inheritTheme(material->theme());
     }
 }
 
 template <typename Enum>
-static Enum readEnumValue(QSettings *settings, const QString &name, Enum fallback)
+static Enum toEnumValue(const QByteArray &value, bool *ok)
 {
-    Enum result = fallback;
-    if (settings->contains(name)) {
-        QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
-        bool ok = false;
-        int value = enumeration.keyToValue(settings->value(name).toByteArray(), &ok);
-        if (ok)
-            result = static_cast<Enum>(value);
-    }
-    return result;
+    QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
+    return static_cast<Enum>(enumeration.keyToValue(value, ok));
 }
 
 void QQuickMaterialStyle::init()
@@ -734,8 +838,28 @@ void QQuickMaterialStyle::init()
     if (!defaultsInitialized) {
         QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Material"));
         if (!settings.isNull()) {
-            defaultTheme = m_theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), m_theme);
-            defaultAccent = m_accent = readEnumValue<Color>(settings.data(), QStringLiteral("Accent"), m_accent);
+            bool ok = false;
+            QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
+            Theme theme = toEnumValue<Theme>(value, &ok);
+            if (ok)
+                defaultTheme = m_theme = theme;
+            else if (!value.isEmpty())
+                qWarning().nospace().noquote() << settings->fileName() << ": unknown Material theme value: " << value;
+
+            value = settings->value(QStringLiteral("Accent")).toByteArray();
+            Color accent = toEnumValue<Color>(value, &ok);
+            if (ok) {
+                defaultCustom = m_customAccent = false;
+                defaultAccent = m_accent = accent;
+            } else {
+                QColor color(value.constData());
+                if (color.isValid()) {
+                    defaultCustom = m_customAccent = true;
+                    defaultAccent = m_accent = color.rgba();
+                } else if (!value.isEmpty()) {
+                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material accent value: " << value;
+                }
+            }
         }
         defaultsInitialized = true;
     }

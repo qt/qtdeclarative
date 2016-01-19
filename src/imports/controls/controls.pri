@@ -12,8 +12,9 @@ QML_CONTROLS = \
     Label.qml \
     Menu.qml \
     MenuItem.qml \
-    Pane.qml \
+    Page.qml \
     PageIndicator.qml \
+    Pane.qml \
     Popup.qml \
     ProgressBar.qml \
     RadioButton.qml \

@@ -92,8 +92,8 @@ void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     QQuickStyleSelector selector;
-    if (selector.style() == QStringLiteral("universal")) {
-        if (QFont(QStringLiteral("Segoe UI")).family() == QStringLiteral("Segoe UI")) {
+    if (selector.style() == QLatin1String("universal")) {
+        if (QFont(QStringLiteral("Segoe UI")).family() == QLatin1String("Segoe UI")) {
             QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
             if (old) {
                 QQuickProxyTheme *theme = new QQuickUniversalTheme(old);
