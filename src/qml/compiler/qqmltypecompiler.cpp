@@ -1859,6 +1859,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
 
         bool bindingToDefaultProperty = false;
+        bool isGroupProperty = instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty;
 
         bool notInRevision = false;
         QQmlPropertyData *pd = 0;
@@ -1867,7 +1868,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
                 pd = propertyResolver.signal(name, &notInRevision);
             else
-                pd = propertyResolver.property(name, &notInRevision);
+                pd = propertyResolver.property(name, &notInRevision, isGroupProperty ? QmlIR::PropertyResolver::IgnoreRevision : QmlIR::PropertyResolver::CheckRevision);
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
@@ -1879,7 +1880,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 }
             }
         } else {
-           if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+           if (isGroupProperty)
                COMPILE_EXCEPTION(binding, tr("Cannot assign a value directly to a grouped property"));
 
            pd = defaultProperty;

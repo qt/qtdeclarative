@@ -1875,17 +1875,17 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
 
 #ifndef V4_BOOTSTRAP
 
-QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, QObject *object, QQmlContextData *context)
+QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, RevisionCheck check)
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, object, context);
+    QQmlPropertyData *d = cache->property(name, 0, 0);
 
     // Find the first property
     while (d && d->isFunction())
         d = cache->overrideData(d);
 
-    if (d && !cache->isAllowedInRevision(d)) {
+    if (check != IgnoreRevision && d && !cache->isAllowedInRevision(d)) {
         if (notInRevision) *notInRevision = true;
         return 0;
     } else {
@@ -1894,11 +1894,11 @@ QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRev
 }
 
 
-QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision, QObject *object, QQmlContextData *context)
+QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, object, context);
+    QQmlPropertyData *d = cache->property(name, 0, 0);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))
@@ -1914,7 +1914,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
     if (name.endsWith(QStringLiteral("Changed"))) {
         QString propName = name.mid(0, name.length() - static_cast<int>(strlen("Changed")));
 
-        d = property(propName, notInRevision, object, context);
+        d = property(propName, notInRevision);
         if (d)
             return cache->signal(d->notifyIndex);
     }
