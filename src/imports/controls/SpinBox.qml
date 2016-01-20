@@ -84,7 +84,7 @@ T.SpinBox {
         x: control.mirrored ? 0 : parent.width - width
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? "#e4e4e4" : "#ffffff"
+        color: up.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color: control.enabled ? "#353637" : "#bdbebf"
 
         Rectangle {
@@ -109,7 +109,7 @@ T.SpinBox {
         x: control.mirrored ? parent.width - width : 0
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? "#e4e4e4" : "#ffffff"
+        color: down.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color: control.enabled ? "#353637" : "#bdbebf"
 
         Rectangle {
