@@ -53,7 +53,6 @@ ApplicationWindow {
 
     Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
     Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
-    Material.accent: Material.LightGreen
 
     property int controlSpacing: 10
 
