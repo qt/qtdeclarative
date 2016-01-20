@@ -74,6 +74,7 @@ private slots:
     void nextItemInFocusChain3();
 
     void tabFence();
+    void qtbug_50516();
 
     void keys();
     void standardKeys_data();
@@ -1192,6 +1193,27 @@ void tst_QQuickItem::tabFence()
           "input11", "input13", "input12", "input11", Q_NULLPTR
     };
     verifyTabFocusChain(window, fence1BacktabFocusChain, false /* forward */);
+}
+
+void tst_QQuickItem::qtbug_50516()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("qtbug_50516.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(window->rootObject()->hasActiveFocus());
+
+    QQuickItem *contentItem = window->rootObject();
+    QQuickItem *next = contentItem->nextItemInFocusChain(true);
+    QCOMPARE(next, contentItem);
+    next = contentItem->nextItemInFocusChain(false);
+    QCOMPARE(next, contentItem);
+
+    delete window;
 }
 
 void tst_QQuickItem::keys()

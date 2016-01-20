@@ -2508,6 +2508,8 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
                 lastChild = prevTabChildItem(current, -1);
         }
         bool isTabFence = current->d_func()->isTabFence;
+        if (isTabFence && !hasChildren)
+            return current;
 
         // coming from parent: check children
         if (hasChildren && from == current->parentItem()) {
