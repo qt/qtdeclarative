@@ -56,11 +56,11 @@ public:
     typedef QVector<uint> Refs;
     static const Ref s_invalidRef;
 
-    static QV4::CallContext *findContext(QV4::ExecutionEngine *engine, int frame);
     static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
-    static QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(
-            QV4::ExecutionEngine *engine, int frame);
     static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
+
+    QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame);
+    QV4::CallContext *findContext(int frame);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
 

@@ -154,18 +154,6 @@ public:
     const QStringList &result() const;
 };
 
-class ExceptionCollectJob: public QV4DebugJob
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    QV4DataCollector::Ref exception;
-
-public:
-    ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector);
-    void run();
-    QV4DataCollector::Ref exceptionValue() const;
-};
-
 class EvalJob: public JavaScriptJob
 {
     bool result;

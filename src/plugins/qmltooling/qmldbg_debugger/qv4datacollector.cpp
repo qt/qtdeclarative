@@ -58,9 +58,9 @@ QT_BEGIN_NAMESPACE
 const QV4DataCollector::Ref QV4DataCollector::s_invalidRef =
         std::numeric_limits<QV4DataCollector::Ref>::max();
 
-QV4::CallContext *QV4DataCollector::findContext(QV4::ExecutionEngine *engine, int frame)
+QV4::CallContext *QV4DataCollector::findContext(int frame)
 {
-    QV4::ExecutionContext *ctx = engine->currentContext;
+    QV4::ExecutionContext *ctx = engine()->currentContext;
     while (ctx) {
         QV4::CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {
@@ -68,7 +68,7 @@ QV4::CallContext *QV4DataCollector::findContext(QV4::ExecutionEngine *engine, in
                 return cCtxt;
             --frame;
         }
-        ctx = engine->parentContext(ctx);
+        ctx = engine()->parentContext(ctx);
     }
 
     return 0;
@@ -87,13 +87,12 @@ QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::ExecutionContext *ctxt,
     return (ctx && ctx->d()) ? ctx->asCallContext()->d() : 0;
 }
 
-QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(
-        QV4::ExecutionEngine *engine, int frame)
+QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
 {
     QVector<QV4::Heap::ExecutionContext::ContextType> types;
 
-    QV4::Scope scope(engine);
-    QV4::CallContext *sctxt = findContext(engine, frame);
+    QV4::Scope scope(engine());
+    QV4::CallContext *sctxt = findContext(frame);
     if (!sctxt || sctxt->d()->type < QV4::Heap::ExecutionContext::Type_QmlContext)
         return types;
 
@@ -254,7 +253,7 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
     QStringList names;
 
     QV4::Scope scope(engine());
-    QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(engine(), frameNr), scopeNr));
+    QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(frameNr), scopeNr));
     if (!ctxt)
         return false;
 
@@ -314,7 +313,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
 
     QJsonArray scopes;
     QV4::Scope scope(engine());
-    QV4::ScopedContext ctxt(scope, findContext(engine(), frameNr));
+    QV4::ScopedContext ctxt(scope, findContext(frameNr));
     while (ctxt) {
         if (QV4::CallContext *cCtxt = ctxt->asCallContext()) {
             if (cCtxt->d()->activation)
@@ -329,7 +328,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     }
 
     // Only type and index are used by Qt Creator, so we keep it easy:
-    QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = getScopeTypes(engine(), frameNr);
+    QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = getScopeTypes(frameNr);
     for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
         int type = encodeScopeType(scopeTypes[i]);
         if (type == -1)

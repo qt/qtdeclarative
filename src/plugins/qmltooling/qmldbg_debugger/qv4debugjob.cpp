@@ -173,7 +173,7 @@ void ScopeJob::run()
 
     if (success) {
         QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
-                QV4DataCollector::getScopeTypes(collector->engine(), frameNr);
+                collector->getScopeTypes(frameNr);
         result[QLatin1String("type")] = QV4DataCollector::encodeScopeType(scopeTypes[scopeNr]);
     } else {
         result[QLatin1String("type")] = -1;
@@ -268,24 +268,6 @@ void GatherSourcesJob::run()
 const QStringList &GatherSourcesJob::result() const
 {
     return sources;
-}
-
-ExceptionCollectJob::ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector)
-    : engine(engine)
-    , collector(collector)
-    , exception(QV4DataCollector::s_invalidRef)
-{}
-
-void ExceptionCollectJob::run()
-{
-    QV4::Scope scope(engine);
-    QV4::ScopedValue v(scope, *engine->exceptionValue);
-    exception = collector->collect(v);
-}
-
-QV4DataCollector::Ref ExceptionCollectJob::exceptionValue() const
-{
-    return exception;
 }
 
 EvalJob::EvalJob(QV4::ExecutionEngine *engine, const QString &script) :
