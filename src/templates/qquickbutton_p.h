@@ -57,10 +57,10 @@ class Q_LABSTEMPLATES_EXPORT QQuickButton : public QQuickAbstractButton
     Q_OBJECT
 
 public:
-    explicit QQuickButton(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickButton(QQuickItem *parent = nullptr);
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 };
 
 QT_END_NAMESPACE

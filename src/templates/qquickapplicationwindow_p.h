@@ -74,7 +74,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
-    explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
+    explicit QQuickApplicationWindow(QWindow *parent = nullptr);
     ~QQuickApplicationWindow();
 
     QQuickItem *contentItem() const;
@@ -109,8 +109,8 @@ Q_SIGNALS:
 
 protected:
     bool isComponentComplete() const;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickApplicationWindow)
@@ -130,7 +130,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
     Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
 
 public:
-    explicit QQuickApplicationWindowAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickApplicationWindowAttached(QObject *parent = nullptr);
 
     QQuickApplicationWindow *window() const;
     QQuickItem *contentItem() const;

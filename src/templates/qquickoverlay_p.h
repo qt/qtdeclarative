@@ -61,7 +61,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickOverlay : public QQuickItem
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
 
 public:
-    explicit QQuickOverlay(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickOverlay(QQuickItem *parent = nullptr);
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
@@ -72,15 +72,15 @@ Q_SIGNALS:
     void released();
 
 protected:
-    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
+    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
 
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    bool childMouseEventFilter(QQuickItem *item, QEvent *event) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickOverlay)

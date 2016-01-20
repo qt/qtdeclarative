@@ -87,7 +87,7 @@ class QQuickUniversalStyle : public QQuickStyle
     Q_PROPERTY(QColor listMediumColor READ listMediumColor NOTIFY paletteChanged FINAL)
 
 public:
-    explicit QQuickUniversalStyle(QObject *parent = Q_NULLPTR);
+    explicit QQuickUniversalStyle(QObject *parent = nullptr);
 
     static QQuickUniversalStyle *qmlAttachedProperties(QObject *object);
 
@@ -190,7 +190,7 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
+    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) override;
 
 private:
     void init();

@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : background(Q_NULLPTR), focusReason(Qt::OtherFocusReason), accessibleAttached(Q_NULLPTR)
+    : background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);

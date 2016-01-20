@@ -66,7 +66,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickProgressBar(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickProgressBar(QQuickItem *parent = nullptr);
 
     qreal from() const;
     void setFrom(qreal from);
@@ -96,11 +96,11 @@ Q_SIGNALS:
     void indicatorChanged();
 
 protected:
-    void mirrorChange() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
+    void componentComplete() override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

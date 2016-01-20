@@ -66,7 +66,7 @@ class QQuickCalendarModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
-    explicit QQuickCalendarModel(QObject *parent = Q_NULLPTR);
+    explicit QQuickCalendarModel(QObject *parent = nullptr);
 
     QDate from() const;
     void setFrom(const QDate &from);
@@ -84,9 +84,9 @@ public:
         YearRole
     };
 
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
 Q_SIGNALS:
     void fromChanged();
@@ -94,8 +94,8 @@ Q_SIGNALS:
     void countChanged();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickCalendarModel)

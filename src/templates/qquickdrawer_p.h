@@ -66,7 +66,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickDrawer : public QQuickControl
     Q_CLASSINFO("DefaultProperty", "contentItem")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickDrawer(QQuickItem *parent = nullptr);
 
     Qt::Edge edge() const;
     void setEdge(Qt::Edge edge);
@@ -92,13 +92,13 @@ Q_SIGNALS:
     void animationChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void componentComplete() override;
 
     virtual qreal positionAt(const QPointF &point) const;
 

@@ -62,7 +62,7 @@ class QQuickPaddedRectangle : public QQuickRectangle
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
 
 public:
-    QQuickPaddedRectangle(QQuickItem *parent = Q_NULLPTR);
+    QQuickPaddedRectangle(QQuickItem *parent = nullptr);
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -92,7 +92,7 @@ Q_SIGNALS:
     void bottomPaddingChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
     void setTopPadding(qreal padding, bool has);

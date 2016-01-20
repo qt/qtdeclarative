@@ -61,33 +61,33 @@ public:
 
     QPlatformTheme* theme() const;
 
-    QPlatformMenuItem* createPlatformMenuItem() const Q_DECL_OVERRIDE;
-    QPlatformMenu* createPlatformMenu() const Q_DECL_OVERRIDE;
-    QPlatformMenuBar* createPlatformMenuBar() const Q_DECL_OVERRIDE;
-    void showPlatformMenuBar() Q_DECL_OVERRIDE;
+    QPlatformMenuItem* createPlatformMenuItem() const override;
+    QPlatformMenu* createPlatformMenu() const override;
+    QPlatformMenuBar* createPlatformMenuBar() const override;
+    void showPlatformMenuBar() override;
 
-    bool usePlatformNativeDialog(DialogType type) const Q_DECL_OVERRIDE;
-    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const Q_DECL_OVERRIDE;
+    bool usePlatformNativeDialog(DialogType type) const override;
+    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const override;
 
 #ifndef QT_NO_SYSTEMTRAYICON
-    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const Q_DECL_OVERRIDE;
+    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const override;
 #endif
 
-    const QPalette *palette(Palette type = SystemPalette) const Q_DECL_OVERRIDE;
+    const QPalette *palette(Palette type = SystemPalette) const override;
 
-    const QFont *font(Font type = SystemFont) const Q_DECL_OVERRIDE;
+    const QFont *font(Font type = SystemFont) const override;
 
-    QVariant themeHint(ThemeHint hint) const Q_DECL_OVERRIDE;
+    QVariant themeHint(ThemeHint hint) const override;
 
-    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const Q_DECL_OVERRIDE;
+    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
     QPixmap fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size,
-                                   QPlatformTheme::IconOptions iconOptions = 0) const Q_DECL_OVERRIDE;
+                                   QPlatformTheme::IconOptions iconOptions = 0) const override;
 
-    QIconEngine *createIconEngine(const QString &iconName) const Q_DECL_OVERRIDE;
+    QIconEngine *createIconEngine(const QString &iconName) const override;
 
-    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const Q_DECL_OVERRIDE;
+    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
 
-    QString standardButtonText(int button) const Q_DECL_OVERRIDE;
+    QString standardButtonText(int button) const override;
 
 private:
     QPlatformTheme *m_theme;

@@ -50,11 +50,11 @@ public:
     QQuickBusyIndicatorAnimatorJob();
     ~QQuickBusyIndicatorAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
-    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
-    void writeBack() Q_DECL_OVERRIDE;
-    void nodeWasDestroyed() Q_DECL_OVERRIDE;
-    void afterNodeSync() Q_DECL_OVERRIDE;
+    void initialize(QQuickAnimatorController *controller) override;
+    void updateCurrentTime(int time) override;
+    void writeBack() override;
+    void nodeWasDestroyed() override;
+    void afterNodeSync() override;
 
 private:
     QSGNode *m_node;
@@ -159,7 +159,7 @@ QQuickAnimatorJob *QQuickBusyIndicatorAnimator::createJob() const
     return new QQuickBusyIndicatorAnimatorJob;
 }
 
-QQuickBusyIndicatorAnimatorJob::QQuickBusyIndicatorAnimatorJob() : m_node(Q_NULLPTR)
+QQuickBusyIndicatorAnimatorJob::QQuickBusyIndicatorAnimatorJob() : m_node(nullptr)
 {
 }
 
@@ -217,7 +217,7 @@ void QQuickBusyIndicatorAnimatorJob::writeBack()
 
 void QQuickBusyIndicatorAnimatorJob::nodeWasDestroyed()
 {
-    m_node = Q_NULLPTR;
+    m_node = nullptr;
 }
 
 void QQuickBusyIndicatorAnimatorJob::afterNodeSync()

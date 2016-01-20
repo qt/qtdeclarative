@@ -68,7 +68,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
 
 public:
-    explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickTextArea(QQuickItem *parent = nullptr);
     ~QQuickTextArea();
 
     QFont font() const;
@@ -93,18 +93,18 @@ Q_SIGNALS:
     void pressAndHold(QQuickMouseEvent *event);
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
+    void classBegin() override;
 
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override;
 
-    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickTextArea)

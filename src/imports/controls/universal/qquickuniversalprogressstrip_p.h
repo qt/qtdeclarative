@@ -59,7 +59,7 @@ class QQuickUniversalProgressStrip : public QQuickItem
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
 public:
-    QQuickUniversalProgressStrip(QQuickItem *parent = Q_NULLPTR);
+    QQuickUniversalProgressStrip(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(const QColor &color);
@@ -68,7 +68,7 @@ Q_SIGNALS:
     void colorChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     QColor m_color;
@@ -79,11 +79,11 @@ class QQuickUniversalProgressStripAnimator : public QQuickAnimator
     Q_OBJECT
 
 public:
-    QQuickUniversalProgressStripAnimator(QObject *parent = Q_NULLPTR);
+    QQuickUniversalProgressStripAnimator(QObject *parent = nullptr);
 
 protected:
-    QString propertyName() const Q_DECL_OVERRIDE;
-    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+    QString propertyName() const override;
+    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE

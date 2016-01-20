@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
 class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickDayOfWeekRowPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
+    QQuickDayOfWeekRowPrivate() : delegate(nullptr), model(nullptr) { }
 
     void resizeItems();
 

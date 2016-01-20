@@ -61,7 +61,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickCheckBox : public QQuickAbstractButton
     Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL)
 
 public:
-    explicit QQuickCheckBox(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickCheckBox(QQuickItem *parent = nullptr);
 
     bool isTristate() const;
     void setTristate(bool tristate);
@@ -74,13 +74,13 @@ Q_SIGNALS:
     void checkStateChanged();
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
-    void checkStateSet() Q_DECL_OVERRIDE;
-    void nextCheckState() Q_DECL_OVERRIDE;
+    void checkStateSet() override;
+    void nextCheckState() override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

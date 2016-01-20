@@ -270,7 +270,7 @@ QQuickStackView::~QQuickStackView()
 {
     Q_D(QQuickStackView);
     if (d->transitioner) {
-        d->transitioner->setChangeListener(Q_NULLPTR);
+        d->transitioner->setChangeListener(nullptr);
         delete d->transitioner;
     }
     qDeleteAll(d->removals);
@@ -282,7 +282,7 @@ QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
         qmlInfo(object) << "StackView must be attached to an Item";
-        return Q_NULLPTR;
+        return nullptr;
     }
     return new QQuickStackAttached(item);
 }
@@ -339,7 +339,7 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
             element->load(this);
         return element->item;
     }
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 /*!
@@ -365,7 +365,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     QJSValue func(callback);
     QQmlEngine *engine = qmlEngine(this);
     if (!engine || !func.isCallable()) // TODO: warning?
-        return Q_NULLPTR;
+        return nullptr;
 
     for (int i = d->elements.count() - 1; i >= 0; --i) {
         QQuickStackElement *element = d->elements.at(i);
@@ -378,7 +378,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
         }
     }
 
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 /*!
@@ -449,7 +449,7 @@ void QQuickStackView::push(QQmlV4Function *args)
         return;
     }
 
-    QQuickStackElement *exit = Q_NULLPTR;
+    QQuickStackElement *exit = nullptr;
     if (!d->elements.isEmpty())
         exit = d->elements.top();
 
@@ -533,7 +533,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             operation = static_cast<Operation>(lastArg->toInt32());
     }
 
-    QQuickItem *previousItem = Q_NULLPTR;
+    QQuickItem *previousItem = nullptr;
 
     if (d->popElements(enter)) {
         if (exit)
@@ -616,7 +616,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
 
-    QQuickStackElement *target = Q_NULLPTR;
+    QQuickStackElement *target = nullptr;
     QV4::ScopedValue firstArg(scope, (*args)[0]);
     if (firstArg->isNull())
         target = d->elements.value(0);
@@ -631,7 +631,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     }
 
     int depth = d->elements.count();
-    QQuickStackElement* exit = Q_NULLPTR;
+    QQuickStackElement* exit = nullptr;
     if (!d->elements.isEmpty())
         exit = d->elements.pop();
 
@@ -659,7 +659,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 void QQuickStackView::clear()
 {
     Q_D(QQuickStackView);
-    d->setCurrentItem(Q_NULLPTR);
+    d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();
     emit depthChanged();
@@ -702,7 +702,7 @@ QQuickTransition *QQuickStackView::popEnter() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->removeDisplacedTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setPopEnter(QQuickTransition *enter)
@@ -728,7 +728,7 @@ QQuickTransition *QQuickStackView::popExit() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->removeTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setPopExit(QQuickTransition *exit)
@@ -754,7 +754,7 @@ QQuickTransition *QQuickStackView::pushEnter() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->addTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setPushEnter(QQuickTransition *enter)
@@ -780,7 +780,7 @@ QQuickTransition *QQuickStackView::pushExit() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->addDisplacedTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setPushExit(QQuickTransition *exit)
@@ -806,7 +806,7 @@ QQuickTransition *QQuickStackView::replaceEnter() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->moveTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setReplaceEnter(QQuickTransition *enter)
@@ -832,7 +832,7 @@ QQuickTransition *QQuickStackView::replaceExit() const
     Q_D(const QQuickStackView);
     if (d->transitioner)
         return d->transitioner->moveDisplacedTransition;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQuickStackView::setReplaceExit(QQuickTransition *exit)
@@ -850,7 +850,7 @@ void QQuickStackView::componentComplete()
     QQuickControl::componentComplete();
 
     Q_D(QQuickStackView);
-    QQuickStackElement *element = Q_NULLPTR;
+    QQuickStackElement *element = nullptr;
     if (QObject *o = d->initialItem.value<QObject *>())
         element = QQuickStackElement::fromObject(o, this);
     else if (d->initialItem.canConvert<QString>())
@@ -887,11 +887,11 @@ void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem 
 {
     Q_Q(QQuickStackAttached);
     int oldIndex = element ? element->index : -1;
-    QQuickStackView *oldView = element ? element->view : Q_NULLPTR;
+    QQuickStackView *oldView = element ? element->view : nullptr;
     QQuickStackView::Status oldStatus = element ? element->status : QQuickStackView::Inactive;
 
     QQuickStackView *newView = qobject_cast<QQuickStackView *>(parent);
-    element = newView ? QQuickStackViewPrivate::get(newView)->findElement(item) : Q_NULLPTR;
+    element = newView ? QQuickStackViewPrivate::get(newView)->findElement(item) : nullptr;
 
     int newIndex = element ? element->index : -1;
     QQuickStackView::Status newStatus = element ? element->status : QQuickStackView::Inactive;
@@ -940,7 +940,7 @@ int QQuickStackAttached::index() const
 QQuickStackView *QQuickStackAttached::view() const
 {
     Q_D(const QQuickStackAttached);
-    return d->element ? d->element->view : Q_NULLPTR;
+    return d->element ? d->element->view : nullptr;
 }
 
 /*!

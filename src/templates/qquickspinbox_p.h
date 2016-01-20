@@ -72,7 +72,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
 
 public:
-    explicit QQuickSpinBox(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickSpinBox(QQuickItem *parent = nullptr);
 
     int from() const;
     void setFrom(int from);
@@ -112,21 +112,21 @@ Q_SIGNALS:
     void valueFromTextChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void timerEvent(QTimerEvent *event) override;
 
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

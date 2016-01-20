@@ -85,7 +85,7 @@ public:
         isPendingValue(false),
         pendingValue(0),
         position(0),
-        handle(Q_NULLPTR),
+        handle(nullptr),
         slider(slider),
         pressed(false)
     {
@@ -295,11 +295,11 @@ public:
         from(defaultFrom),
         to(defaultTo),
         stepSize(0),
-        first(Q_NULLPTR),
-        second(Q_NULLPTR),
+        first(nullptr),
+        second(nullptr),
         orientation(Qt::Horizontal),
         snapMode(QQuickRangeSlider::NoSnap),
-        track(Q_NULLPTR)
+        track(nullptr)
     {
     }
 
@@ -690,7 +690,7 @@ void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
     QQuickControl::keyPressEvent(event);
 
     QQuickRangeSliderNode *focusNode = d->first->handle()->hasActiveFocus()
-        ? d->first : (d->second->handle()->hasActiveFocus() ? d->second : Q_NULLPTR);
+        ? d->first : (d->second->handle()->hasActiveFocus() ? d->second : nullptr);
     if (!focusNode)
         return;
 
@@ -741,8 +741,8 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
     QQuickItem *secondHandle = d->second->handle();
     const bool firstHit = firstHandle && firstHandle->contains(mapToItem(firstHandle, d->pressPoint));
     const bool secondHit = secondHandle && secondHandle->contains(mapToItem(secondHandle, d->pressPoint));
-    QQuickRangeSliderNode *hitNode = Q_NULLPTR;
-    QQuickRangeSliderNode *otherNode = Q_NULLPTR;
+    QQuickRangeSliderNode *hitNode = nullptr;
+    QQuickRangeSliderNode *otherNode = nullptr;
 
     if (firstHit && secondHit) {
         // choose highest
@@ -775,7 +775,7 @@ void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().y() - d->pressPoint.y(), Qt::YAxis, event));
     }
     if (keepMouseGrab()) {
-        QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : Q_NULLPTR);
+        QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : nullptr);
         if (pressedNode) {
             qreal pos = positionAt(this, pressedNode->handle(), event->pos());
             if (d->snapMode == SnapAlways)
@@ -794,7 +794,7 @@ void QQuickRangeSlider::mouseReleaseEvent(QMouseEvent *event)
     if (!keepMouseGrab())
         return;
 
-    QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : Q_NULLPTR);
+    QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : nullptr);
     if (!pressedNode)
         return;
 

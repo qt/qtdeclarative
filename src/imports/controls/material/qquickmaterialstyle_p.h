@@ -143,7 +143,7 @@ public:
     Q_ENUM(Color)
     Q_ENUM(Shade)
 
-    explicit QQuickMaterialStyle(QObject *parent = Q_NULLPTR);
+    explicit QQuickMaterialStyle(QObject *parent = nullptr);
 
     static QQuickMaterialStyle *qmlAttachedProperties(QObject *object);
 
@@ -202,7 +202,7 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
+    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) override;
 
 private:
     void init();

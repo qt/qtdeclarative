@@ -62,11 +62,11 @@ class QQuickUniversalProgressStripAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickUniversalProgressStripAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
-    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
-    void writeBack() Q_DECL_OVERRIDE;
-    void nodeWasDestroyed() Q_DECL_OVERRIDE;
-    void afterNodeSync() Q_DECL_OVERRIDE;
+    void initialize(QQuickAnimatorController *controller) override;
+    void updateCurrentTime(int time) override;
+    void writeBack() override;
+    void nodeWasDestroyed() override;
+    void afterNodeSync() override;
 
 private:
     struct Phase {
@@ -82,7 +82,7 @@ private:
     Phase m_ellipsePhases[PhaseCount];
 };
 
-QQuickUniversalProgressStripAnimatorJob::QQuickUniversalProgressStripAnimatorJob() : m_node(Q_NULLPTR)
+QQuickUniversalProgressStripAnimatorJob::QQuickUniversalProgressStripAnimatorJob() : m_node(nullptr)
 {
     m_borderPhases[0] = Phase( 500, -50,   0);
     m_borderPhases[1] = Phase(1500,   0,   0);
@@ -203,7 +203,7 @@ void QQuickUniversalProgressStripAnimatorJob::writeBack()
 
 void QQuickUniversalProgressStripAnimatorJob::nodeWasDestroyed()
 {
-    m_node = Q_NULLPTR;
+    m_node = nullptr;
 }
 
 void QQuickUniversalProgressStripAnimatorJob::afterNodeSync()

@@ -62,15 +62,15 @@ public:
     QQuickStackIncubator(QQuickStackElement *element) : QQmlIncubator(Synchronous), element(element) { }
 
 protected:
-    void setInitialState(QObject *object) Q_DECL_OVERRIDE { element->incubate(object); }
+    void setInitialState(QObject *object) override { element->incubate(object); }
 
 private:
     QQuickStackElement *element;
 };
 
-QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(Q_NULLPTR),
+QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(nullptr),
     index(-1), init(false), removal(false), ownItem(false), ownComponent(false), widthValid(false), heightValid(false),
-    context(Q_NULLPTR), component(Q_NULLPTR), incubator(Q_NULLPTR), view(Q_NULLPTR),
+    context(nullptr), component(nullptr), incubator(nullptr), view(nullptr),
     status(QQuickStackView::Inactive)
 {
 }
@@ -84,9 +84,9 @@ QQuickStackElement::~QQuickStackElement()
         delete component;
 
     if (ownItem && item) {
-        item->setParentItem(Q_NULLPTR);
+        item->setParentItem(nullptr);
         item->deleteLater();
-        item = Q_NULLPTR;
+        item = nullptr;
     } else if (item) {
         item->setVisible(false);
         if (item->parentItem() != originalParent) {
@@ -94,7 +94,7 @@ QQuickStackElement::~QQuickStackElement()
         } else {
             QQuickStackAttached *attached = attachedStackObject(this);
             if (attached)
-                QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, Q_NULLPTR);
+                QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, nullptr);
         }
     }
 
@@ -239,10 +239,10 @@ void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitione
 
 void QQuickStackElement::itemDestroyed(QQuickItem *)
 {
-    item = Q_NULLPTR;
+    item = nullptr;
 }
 
-QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(Q_NULLPTR), transitioner(Q_NULLPTR)
+QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(nullptr), transitioner(nullptr)
 {
 }
 
@@ -317,14 +317,14 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(QQuickItem *item) const
                 return e;
         }
     }
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value) const
 {
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
         return findElement(qobject_cast<QQuickItem *>(o->object()));
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value)
@@ -334,7 +334,7 @@ QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &valu
         return QQuickStackElement::fromString(s->toQString(), q);
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
         return QQuickStackElement::fromObject(o->object(), q);
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 bool QQuickStackViewPrivate::pushElements(const QList<QQuickStackElement *> &elems)

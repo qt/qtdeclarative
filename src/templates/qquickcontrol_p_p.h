@@ -77,7 +77,7 @@ public:
         return control->d_func();
     }
 
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
 
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
@@ -88,8 +88,8 @@ public:
     void resizeContent();
 
 #ifndef QT_NO_ACCESSIBILITY
-    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
     void updateFont(const QFont &);

@@ -67,7 +67,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPopup
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickMenu(QObject *parent = Q_NULLPTR);
+    explicit QQuickMenu(QObject *parent = nullptr);
 
     Q_INVOKABLE QQuickItem *itemAt(int index) const;
     Q_INVOKABLE void addItem(QQuickItem *item);
@@ -82,7 +82,7 @@ public:
     void setTitle(QString &title);
 
 protected:
-    bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 Q_SIGNALS:
     void titleChanged();

@@ -57,11 +57,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickToolBar : public QQuickFrame
     Q_OBJECT
 
 public:
-    explicit QQuickToolBar(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickToolBar(QQuickItem *parent = nullptr);
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 };
 

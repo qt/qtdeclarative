@@ -60,7 +60,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickBusyIndicator : public QQuickControl
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
 
 public:
-    explicit QQuickBusyIndicator(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickBusyIndicator(QQuickItem *parent = nullptr);
 
     bool isRunning() const;
     void setRunning(bool running);
@@ -70,7 +70,7 @@ Q_SIGNALS:
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

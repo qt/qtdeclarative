@@ -67,11 +67,11 @@ public:
     QQuickMaterialRingAnimatorJob();
     ~QQuickMaterialRingAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
-    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
-    void writeBack() Q_DECL_OVERRIDE;
-    void nodeWasDestroyed() Q_DECL_OVERRIDE;
-    void afterNodeSync() Q_DECL_OVERRIDE;
+    void initialize(QQuickAnimatorController *controller) override;
+    void updateCurrentTime(int time) override;
+    void writeBack() override;
+    void nodeWasDestroyed() override;
+    void afterNodeSync() override;
 
 private:
     qreal m_devicePixelRatio;
@@ -167,8 +167,8 @@ QQuickAnimatorJob *QQuickMaterialRingAnimator::createJob() const
 
 QQuickMaterialRingAnimatorJob::QQuickMaterialRingAnimatorJob() :
     m_devicePixelRatio(1.0),
-    m_containerNode(Q_NULLPTR),
-    m_window(Q_NULLPTR)
+    m_containerNode(nullptr),
+    m_window(nullptr)
 {
 }
 
@@ -258,8 +258,8 @@ void QQuickMaterialRingAnimatorJob::writeBack()
 
 void QQuickMaterialRingAnimatorJob::nodeWasDestroyed()
 {
-    m_containerNode = Q_NULLPTR;
-    m_window = Q_NULLPTR;
+    m_containerNode = nullptr;
+    m_window = nullptr;
 }
 
 void QQuickMaterialRingAnimatorJob::afterNodeSync()

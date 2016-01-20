@@ -58,21 +58,21 @@ class QQuickBusyIndicatorRing : public QQuickItem
     Q_OBJECT
 
 public:
-    explicit QQuickBusyIndicatorRing(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickBusyIndicatorRing(QQuickItem *parent = nullptr);
     ~QQuickBusyIndicatorRing();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 };
 
 class QQuickBusyIndicatorAnimator : public QQuickAnimator
 {
 public:
-    QQuickBusyIndicatorAnimator(QObject *parent = Q_NULLPTR);
+    QQuickBusyIndicatorAnimator(QObject *parent = nullptr);
 
 protected:
-    QString propertyName() const Q_DECL_OVERRIDE;
-    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+    QString propertyName() const override;
+    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE

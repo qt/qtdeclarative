@@ -60,7 +60,7 @@ class QQuickProgressStrip : public QQuickItem
     Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
 
 public:
-    explicit QQuickProgressStrip(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickProgressStrip(QQuickItem *parent = nullptr);
     ~QQuickProgressStrip();
 
     bool isIndeterminate() const;
@@ -74,7 +74,7 @@ Q_SIGNALS:
     void indeterminateChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     qreal m_progress;
@@ -84,11 +84,11 @@ private:
 class QQuickProgressAnimator : public QQuickAnimator
 {
 public:
-    QQuickProgressAnimator(QObject *parent = Q_NULLPTR);
+    QQuickProgressAnimator(QObject *parent = nullptr);
 
 protected:
-    QString propertyName() const Q_DECL_OVERRIDE;
-    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+    QString propertyName() const override;
+    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE

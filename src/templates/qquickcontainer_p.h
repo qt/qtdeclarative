@@ -67,7 +67,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickContainer : public QQuickControl
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickContainer(QQuickItem *parent = nullptr);
     ~QQuickContainer();
 
     int count() const;
@@ -96,8 +96,8 @@ Q_SIGNALS:
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
 
-    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
     virtual bool isContent(QQuickItem *item) const;
     virtual void itemAdded(int index, QQuickItem *item);

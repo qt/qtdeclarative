@@ -84,7 +84,7 @@ void QQuickTabBarPrivate::updateCurrentIndex()
     Q_Q(QQuickTabBar);
     QQuickTabButton *button = qobject_cast<QQuickTabButton *>(q->sender());
     if (button && button->isChecked())
-        q->setCurrentIndex(contentModel->indexOf(button, Q_NULLPTR));
+        q->setCurrentIndex(contentModel->indexOf(button, nullptr));
 }
 
 void QQuickTabBarPrivate::updateLayout()

@@ -68,7 +68,7 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickIte
 
 public:
     QQuickPageIndicatorPrivate() : count(0), currentIndex(0),
-        interactive(false), delegate(Q_NULLPTR), pressedItem(Q_NULLPTR)
+        interactive(false), delegate(nullptr), pressedItem(nullptr)
     {
     }
 
@@ -89,7 +89,7 @@ QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
 {
     Q_Q(const QQuickPageIndicator);
     if (!contentItem || !q->contains(pos))
-        return Q_NULLPTR;
+        return nullptr;
 
     QPointF contentPos = q->mapToItem(contentItem, pos);
     QQuickItem *item = contentItem->childAt(contentPos.x(), contentPos.y());
@@ -100,7 +100,7 @@ QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
 
     // find the nearest
     qreal distance = qInf();
-    QQuickItem *nearest = Q_NULLPTR;
+    QQuickItem *nearest = nullptr;
     const auto childItems = contentItem->childItems();
     for (QQuickItem *child : childItems) {
         if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
@@ -121,7 +121,7 @@ QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
 void QQuickPageIndicatorPrivate::updatePressed(bool pressed, const QPoint &pos)
 {
     QQuickItem *prevItem = pressedItem;
-    pressedItem = pressed ? itemAt(pos) : Q_NULLPTR;
+    pressedItem = pressed ? itemAt(pos) : nullptr;
     if (prevItem != pressedItem) {
         setContextProperty(prevItem, QStringLiteral("pressed"), false);
         setContextProperty(pressedItem, QStringLiteral("pressed"), pressed);

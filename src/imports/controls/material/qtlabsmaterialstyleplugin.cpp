@@ -59,10 +59,10 @@ class QtLabsMaterialStylePlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsMaterialStylePlugin(QObject *parent = Q_NULLPTR);
+    QtLabsMaterialStylePlugin(QObject *parent = nullptr);
     ~QtLabsMaterialStylePlugin();
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE;
-    void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
+    void registerTypes(const char *uri) override;
+    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:
     QQuickProxyTheme *theme;

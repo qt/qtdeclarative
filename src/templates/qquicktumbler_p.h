@@ -68,7 +68,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
 
 public:
-    explicit QQuickTumbler(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickTumbler(QQuickItem *parent = nullptr);
     ~QQuickTumbler();
 
     QVariant model() const;
@@ -97,10 +97,10 @@ Q_SIGNALS:
     void visibleItemCountChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void componentComplete() override;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickTumbler)

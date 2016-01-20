@@ -53,11 +53,11 @@ class QQuickUniversalProgressRingAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickUniversalProgressRingAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
-    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
-    void writeBack() Q_DECL_OVERRIDE;
-    void nodeWasDestroyed() Q_DECL_OVERRIDE;
-    void afterNodeSync() Q_DECL_OVERRIDE;
+    void initialize(QQuickAnimatorController *controller) override;
+    void updateCurrentTime(int time) override;
+    void writeBack() override;
+    void nodeWasDestroyed() override;
+    void afterNodeSync() override;
 
 private:
     struct Phase {
@@ -73,7 +73,7 @@ private:
     Phase m_phases[PhaseCount];
 };
 
-QQuickUniversalProgressRingAnimatorJob::QQuickUniversalProgressRingAnimatorJob() : m_node(Q_NULLPTR)
+QQuickUniversalProgressRingAnimatorJob::QQuickUniversalProgressRingAnimatorJob() : m_node(nullptr)
 {
     m_phases[0] = Phase(433, -110,  10, QEasingCurve::BezierSpline);
     m_phases[1] = Phase(767,   10,  93, QEasingCurve::Linear      );
@@ -153,7 +153,7 @@ void QQuickUniversalProgressRingAnimatorJob::writeBack()
 
 void QQuickUniversalProgressRingAnimatorJob::nodeWasDestroyed()
 {
-    m_node = Q_NULLPTR;
+    m_node = nullptr;
 }
 
 void QQuickUniversalProgressRingAnimatorJob::afterNodeSync()

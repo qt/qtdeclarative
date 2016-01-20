@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 class QQuickGroupBoxPrivate : public QQuickFramePrivate
 {
 public:
-    QQuickGroupBoxPrivate() : label(Q_NULLPTR) { }
+    QQuickGroupBoxPrivate() : label(nullptr) { }
 
     QString title;
     QQuickItem *label;

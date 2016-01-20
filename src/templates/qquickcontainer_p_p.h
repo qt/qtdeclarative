@@ -71,10 +71,10 @@ public:
 
     void _q_currentIndexChanged();
 
-    void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
-    void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemChildAdded(QQuickItem *item, QQuickItem *child) override;
+    void itemSiblingOrderChanged(QQuickItem *item) override;
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
     static int contentData_count(QQmlListProperty<QObject> *prop);

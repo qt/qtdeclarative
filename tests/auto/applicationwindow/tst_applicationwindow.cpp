@@ -417,7 +417,7 @@ void tst_applicationwindow::attachedProperties()
     QCOMPARE(childItem->property("attached_footer").value<QQuickItem *>(), childAppWindow->footer());
     QCOMPARE(childItem->property("attached_overlay").value<QQuickItem *>(), childAppWindow->overlay());
 
-    childControl->setParentItem(Q_NULLPTR);
+    childControl->setParentItem(nullptr);
     QVERIFY(!childControl->window());
     QVERIFY(!childControl->property("attached_window").value<QQuickApplicationWindow *>());
     QVERIFY(!childControl->property("attached_contentItem").value<QQuickItem *>());
@@ -426,7 +426,7 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childControl->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childControl->property("attached_overlay").value<QQuickItem *>());
 
-    childItem->setParentItem(Q_NULLPTR);
+    childItem->setParentItem(nullptr);
     QVERIFY(!childItem->window());
     QVERIFY(!childItem->property("attached_window").value<QQuickApplicationWindow *>());
     QVERIFY(!childItem->property("attached_contentItem").value<QQuickItem *>());

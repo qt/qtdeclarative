@@ -64,8 +64,8 @@ namespace {
 }
 
 GifRecorder::GifRecorder() :
-    QObject(Q_NULLPTR),
-    mWindow(Q_NULLPTR),
+    QObject(nullptr),
+    mWindow(nullptr),
     mHighQuality(false),
     mRecordingDuration(0),
     mRecordCursor(false),

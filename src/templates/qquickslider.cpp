@@ -78,7 +78,7 @@ class QQuickSliderPrivate : public QQuickControlPrivate
 public:
     QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), pressed(false),
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
-        handle(Q_NULLPTR), track(Q_NULLPTR)
+        handle(nullptr), track(nullptr)
     {
     }
 

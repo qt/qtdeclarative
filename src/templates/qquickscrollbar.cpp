@@ -81,7 +81,7 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
 public:
     QQuickScrollBarPrivate() : size(0), position(0), offset(0),
         active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical), handle(Q_NULLPTR)
+        orientation(Qt::Vertical), handle(nullptr)
     {
     }
 
@@ -114,7 +114,7 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
         return new QQuickScrollBarAttached(flickable);
 
     qWarning() << "ScrollBar must be attached to a Flickable" << object;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 /*!
@@ -307,7 +307,7 @@ QAccessible::Role QQuickScrollBar::accessibleRole() const
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollBarAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(Q_NULLPTR), vertical(Q_NULLPTR) { }
+    QQuickScrollBarAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(nullptr), vertical(nullptr) { }
 
     void activateHorizontal();
     void activateVertical();
@@ -317,7 +317,7 @@ public:
     void layoutHorizontal(bool move = true);
     void layoutVertical(bool move = true);
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QQuickFlickable *flickable;
     QQuickScrollBar *horizontal;

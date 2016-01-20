@@ -60,7 +60,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickFrame : public QQuickPane
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
 
 public:
-    explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickFrame(QQuickItem *parent = nullptr);
 
     QQuickItem *frame() const;
     void setFrame(QQuickItem *frame);

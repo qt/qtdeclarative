@@ -71,7 +71,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
-    explicit QQuickDial(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickDial(QQuickItem *parent = nullptr);
 
     qreal from() const;
     void setFrom(qreal from);
@@ -121,18 +121,18 @@ Q_SIGNALS:
     void handleChanged();
 
 protected:
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void mirrorChange() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void mirrorChange() override;
+    void componentComplete() override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

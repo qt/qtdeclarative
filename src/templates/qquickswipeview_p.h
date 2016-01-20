@@ -60,13 +60,13 @@ class Q_LABSTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
     Q_OBJECT
 
 public:
-    explicit QQuickSwipeView(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickSwipeView(QQuickItem *parent = nullptr);
 
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemAdded(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemAdded(int index, QQuickItem *item) override;
 
 private:
     Q_DISABLE_COPY(QQuickSwipeView)

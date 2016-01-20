@@ -62,7 +62,7 @@ class QQuickDayOfWeekRow : public QQuickControl
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickDayOfWeekRow(QQuickItem *parent = nullptr);
 
     QVariant source() const;
     void setSource(const QVariant &source);
@@ -75,10 +75,10 @@ Q_SIGNALS:
     void delegateChanged();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
 
 private:
     Q_DISABLE_COPY(QQuickDayOfWeekRow)

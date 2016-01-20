@@ -89,7 +89,7 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
 
 public:
     QQuickSpinBoxPrivate() : from(0), to(99), value(0), stepSize(1),
-        delayTimer(0), repeatTimer(0), up(Q_NULLPTR), down(Q_NULLPTR), validator(Q_NULLPTR) { }
+        delayTimer(0), repeatTimer(0), up(nullptr), down(nullptr), validator(nullptr) { }
 
     int boundValue(int value) const;
     void updateValue();
@@ -623,7 +623,7 @@ QAccessible::Role QQuickSpinBox::accessibleRole() const
 class QQuickSpinButtonPrivate : public QObjectPrivate
 {
 public:
-    QQuickSpinButtonPrivate() : pressed(false), indicator(Q_NULLPTR) { }
+    QQuickSpinButtonPrivate() : pressed(false), indicator(nullptr) { }
     bool pressed;
     QQuickItem *indicator;
 };

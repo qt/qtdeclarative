@@ -47,11 +47,11 @@ public:
     QQuickProgressAnimatorJob();
     ~QQuickProgressAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
-    void afterNodeSync() Q_DECL_OVERRIDE;
-    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
-    void writeBack() Q_DECL_OVERRIDE;
-    void nodeWasDestroyed() Q_DECL_OVERRIDE;
+    void initialize(QQuickAnimatorController *controller) override;
+    void afterNodeSync() override;
+    void updateCurrentTime(int time) override;
+    void writeBack() override;
+    void nodeWasDestroyed() override;
 
 private:
     QSGNode *m_node;
@@ -210,7 +210,7 @@ QQuickAnimatorJob *QQuickProgressAnimator::createJob() const
 }
 
 QQuickProgressAnimatorJob::QQuickProgressAnimatorJob() :
-    m_node(Q_NULLPTR)
+    m_node(nullptr)
 {
 }
 
@@ -308,7 +308,7 @@ void QQuickProgressAnimatorJob::writeBack()
 
 void QQuickProgressAnimatorJob::nodeWasDestroyed()
 {
-    m_node = Q_NULLPTR;
+    m_node = nullptr;
 }
 
 QT_END_NAMESPACE

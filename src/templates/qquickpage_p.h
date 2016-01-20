@@ -65,7 +65,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPage : public QQuickControl
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickPage(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickPage(QQuickItem *parent = nullptr);
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);
@@ -82,12 +82,12 @@ Q_SIGNALS:
     void contentChildrenChanged();
 
 protected:
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

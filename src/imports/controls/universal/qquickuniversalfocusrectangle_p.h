@@ -57,9 +57,9 @@ class QQuickUniversalFocusRectangle : public QQuickPaintedItem
     Q_OBJECT
 
 public:
-    QQuickUniversalFocusRectangle(QQuickItem *parent = Q_NULLPTR);
+    QQuickUniversalFocusRectangle(QQuickItem *parent = nullptr);
 
-    void paint(QPainter *painter) Q_DECL_OVERRIDE;
+    void paint(QPainter *painter) override;
 };
 
 QT_END_NAMESPACE

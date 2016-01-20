@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickWeekNumberColumnPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
+    QQuickWeekNumberColumnPrivate() : delegate(nullptr), model(nullptr) { }
 
     void resizeItems();
 

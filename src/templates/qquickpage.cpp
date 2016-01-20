@@ -91,14 +91,14 @@ public:
 
     void relayout();
 
-    void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     QQuickItem *header;
     QQuickItem *footer;
 };
 
-QQuickPagePrivate::QQuickPagePrivate() : header(Q_NULLPTR), footer(Q_NULLPTR)
+QQuickPagePrivate::QQuickPagePrivate() : header(nullptr), footer(nullptr)
 {
 }
 
@@ -221,7 +221,7 @@ void QQuickPage::setFooter(QQuickItem *footer)
 QQmlListProperty<QObject> QQuickPage::contentData()
 {
     Q_D(QQuickPage);
-    return QQmlListProperty<QObject>(d->contentItem, Q_NULLPTR,
+    return QQmlListProperty<QObject>(d->contentItem, nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -238,7 +238,7 @@ QQmlListProperty<QObject> QQuickPage::contentData()
 QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
 {
     Q_D(QQuickPage);
-    return QQmlListProperty<QQuickItem>(d->contentItem, Q_NULLPTR,
+    return QQmlListProperty<QQuickItem>(d->contentItem, nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,

@@ -76,7 +76,7 @@ class QQuickMonthGridPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickMonthGrid)
 
 public:
-    QQuickMonthGridPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR), delegate(Q_NULLPTR) { }
+    QQuickMonthGridPrivate() : pressTimer(0), pressedItem(nullptr), model(nullptr), delegate(nullptr) { }
 
     void resizeItems();
 
@@ -118,7 +118,7 @@ QQuickItem *QQuickMonthGridPrivate::cellAt(const QPoint &pos) const
         QPointF mapped = q->mapToItem(contentItem, pos);
         return contentItem->childAt(mapped.x(), mapped.y());
     }
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 QDate QQuickMonthGridPrivate::dateOf(QQuickItem *cell) const
@@ -149,7 +149,7 @@ void QQuickMonthGridPrivate::clearPress(bool clicked)
             emit q->clicked(pressedDate);
     }
     pressedDate = QDate();
-    pressedItem = Q_NULLPTR;
+    pressedItem = nullptr;
 }
 
 void QQuickMonthGridPrivate::setContextProperty(QQuickItem *item, const QString &name, const QVariant &value)

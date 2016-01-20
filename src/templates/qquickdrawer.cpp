@@ -95,14 +95,14 @@ class QQuickDrawerPrivate : public QQuickControlPrivate, public QQuickItemChange
 
 public:
     QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0),
-        content(Q_NULLPTR), animation(Q_NULLPTR) { }
+        content(nullptr), animation(nullptr) { }
 
     void updateContent();
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) override;
 
     Qt::Edge edge;
     qreal offset;

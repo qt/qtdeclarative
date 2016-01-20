@@ -80,7 +80,7 @@ class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
 {
 public:
     QQuickScrollIndicatorPrivate() : size(0), position(0),
-        active(false), orientation(Qt::Vertical), indicator(Q_NULLPTR)
+        active(false), orientation(Qt::Vertical), indicator(nullptr)
     {
     }
 
@@ -103,7 +103,7 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
         return new QQuickScrollIndicatorAttached(flickable);
 
     qWarning() << "ScrollIndicator must be attached to a Flickable" << object;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 /*!
@@ -223,7 +223,7 @@ void QQuickScrollIndicator::setIndicator(QQuickItem *indicator)
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollIndicatorAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(Q_NULLPTR), vertical(Q_NULLPTR) { }
+    QQuickScrollIndicatorAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(nullptr), vertical(nullptr) { }
 
     void activateHorizontal();
     void activateVertical();
@@ -231,7 +231,7 @@ public:
     void layoutHorizontal(bool move = true);
     void layoutVertical(bool move = true);
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QQuickFlickable *flickable;
     QQuickScrollIndicator *horizontal;

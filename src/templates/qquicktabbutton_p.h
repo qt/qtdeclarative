@@ -57,13 +57,13 @@ class Q_LABSTEMPLATES_EXPORT QQuickTabButton : public QQuickAbstractButton
     Q_OBJECT
 
 public:
-    explicit QQuickTabButton(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickTabButton(QQuickItem *parent = nullptr);
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 };
 

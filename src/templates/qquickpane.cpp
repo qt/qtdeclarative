@@ -140,7 +140,7 @@ void QQuickPane::setContentHeight(qreal height)
 QQmlListProperty<QObject> QQuickPane::contentData()
 {
     Q_D(QQuickPane);
-    return QQmlListProperty<QObject>(d->contentItem, Q_NULLPTR,
+    return QQmlListProperty<QObject>(d->contentItem, nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -157,7 +157,7 @@ QQmlListProperty<QObject> QQuickPane::contentData()
 QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
 {
     Q_D(QQuickPane);
-    return QQmlListProperty<QQuickItem>(d->contentItem, Q_NULLPTR,
+    return QQmlListProperty<QQuickItem>(d->contentItem, nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,

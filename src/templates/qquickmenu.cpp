@@ -89,8 +89,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMenuPrivate::QQuickMenuPrivate() :
-    contentModel(Q_NULLPTR),
-    dummyFocusItem(Q_NULLPTR),
+    contentModel(nullptr),
+    dummyFocusItem(nullptr),
     ignoreActiveFocusChanges(false)
 {
     Q_Q(QQuickMenu);
@@ -120,7 +120,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     contentData.removeOne(item);
 
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
-    item->setParentItem(Q_NULLPTR);
+    item->setParentItem(nullptr);
     contentModel->remove(index);
 }
 
@@ -135,7 +135,7 @@ void QQuickMenuPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
     // remove dynamically unparented items (eg. by a Repeater)
     if (!parent)
-        removeItem(contentModel->indexOf(item, Q_NULLPTR), item);
+        removeItem(contentModel->indexOf(item, nullptr), item);
 }
 
 void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
@@ -145,14 +145,14 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
     QList<QQuickItem *> siblings = contentItem->childItems();
     for (int i = 0; i < siblings.count(); ++i) {
         QQuickItem* sibling = siblings.at(i);
-        int index = contentModel->indexOf(sibling, Q_NULLPTR);
+        int index = contentModel->indexOf(sibling, nullptr);
         q->moveItem(index, i);
     }
 }
 
 void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
 {
-    int index = contentModel->indexOf(item, Q_NULLPTR);
+    int index = contentModel->indexOf(item, nullptr);
     if (index != -1)
         removeItem(index, item);
 }
@@ -189,7 +189,7 @@ void QQuickMenuPrivate::onItemPressed()
 {
     Q_Q(QQuickMenu);
     QQuickItem *item = qobject_cast<QQuickItem*>(q->sender());
-    int itemIndex = contentModel->indexOf(item, Q_NULLPTR);
+    int itemIndex = contentModel->indexOf(item, nullptr);
     Q_ASSERT(itemIndex != -1);
 
     if (!contentItem->property("currentIndex").isValid())
@@ -211,7 +211,7 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     if (!contentItem->property("currentIndex").isValid())
         return;
 
-    int indexOfItem = contentModel->indexOf(item, Q_NULLPTR);
+    int indexOfItem = contentModel->indexOf(item, nullptr);
     contentItem->setProperty("currentIndex", indexOfItem);
 }
 
@@ -261,7 +261,7 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
         if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
             QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
             item->setParentItem(p->contentItem);
-        } else if (p->contentModel->indexOf(item, Q_NULLPTR) == -1) {
+        } else if (p->contentModel->indexOf(item, nullptr) == -1) {
             q->addItem(item);
 
             QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
@@ -339,7 +339,7 @@ void QQuickMenu::insertItem(int index, QQuickItem *item)
     if (index < 0 || index > count)
         index = count;
 
-    int oldIndex = d->contentModel->indexOf(item, Q_NULLPTR);
+    int oldIndex = d->contentModel->indexOf(item, nullptr);
     if (oldIndex != -1) {
         if (oldIndex < index)
             --index;

@@ -64,7 +64,7 @@ class QQuickStyle : public QObject, public QQuickItemChangeListener
     Q_OBJECT
 
 public:
-    explicit QQuickStyle(QObject *parent = Q_NULLPTR);
+    explicit QQuickStyle(QObject *parent = nullptr);
     ~QQuickStyle();
 
     static QSharedPointer<QSettings> settings(const QString &group = QString());
@@ -79,7 +79,7 @@ protected:
 
     virtual void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent);
 
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
 private:
     QList<QQuickStyle *> m_childStyles;

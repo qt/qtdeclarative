@@ -127,7 +127,7 @@ class QQuickButtonGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
 public:
-    QQuickButtonGroupPrivate() : checkedButton(Q_NULLPTR) { }
+    QQuickButtonGroupPrivate() : checkedButton(nullptr) { }
 
     void clear();
     void updateCurrent();
@@ -144,7 +144,7 @@ public:
 void QQuickButtonGroupPrivate::clear()
 {
     for (QQuickAbstractButton *button : qAsConst(buttons)) {
-        QQuickAbstractButtonPrivate::get(button)->group = Q_NULLPTR;
+        QQuickAbstractButtonPrivate::get(button)->group = nullptr;
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::updateCurrent);
     }
     buttons.clear();
@@ -182,7 +182,7 @@ void QQuickButtonGroupPrivate::buttons_clear(QQmlListProperty<QQuickAbstractButt
     if (!p->buttons.isEmpty()) {
         p->clear();
         QQuickButtonGroup *q = static_cast<QQuickButtonGroup *>(prop->object);
-        q->setCheckedButton(Q_NULLPTR);
+        q->setCheckedButton(nullptr);
         emit q->buttonsChanged();
     }
 }
@@ -310,11 +310,11 @@ void QQuickButtonGroup::removeButton(QQuickAbstractButton *button)
     if (!button || !d->buttons.contains(button))
         return;
 
-    QQuickAbstractButtonPrivate::get(button)->group = Q_NULLPTR;
+    QQuickAbstractButtonPrivate::get(button)->group = nullptr;
     QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, d, &QQuickButtonGroupPrivate::updateCurrent);
 
     if (d->checkedButton == button)
-        setCheckedButton(Q_NULLPTR);
+        setCheckedButton(nullptr);
 
     d->buttons.removeOne(button);
     emit buttonsChanged();
@@ -323,7 +323,7 @@ void QQuickButtonGroup::removeButton(QQuickAbstractButton *button)
 class QQuickButtonGroupAttachedPrivate : public QObjectPrivate
 {
 public:
-    QQuickButtonGroupAttachedPrivate() : group(Q_NULLPTR) { }
+    QQuickButtonGroupAttachedPrivate() : group(nullptr) { }
 
     QQuickButtonGroup *group;
 };

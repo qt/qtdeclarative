@@ -61,10 +61,10 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
     , modal(false)
-    , contentItem(Q_NULLPTR)
-    , overlay(Q_NULLPTR)
-    , enter(Q_NULLPTR)
-    , exit(Q_NULLPTR)
+    , contentItem(nullptr)
+    , overlay(nullptr)
+    , enter(nullptr)
+    , exit(nullptr)
     , transitionManager(this)
 {
 }
@@ -78,8 +78,8 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
-    overlay = Q_NULLPTR;
-    contentItem->setParentItem(Q_NULLPTR);
+    overlay = nullptr;
+    contentItem->setParentItem(nullptr);
     emit q->visibleChanged();
 }
 
@@ -146,7 +146,7 @@ void QQuickPopup::open()
         return;
     }
 
-    QQuickWindow *window = Q_NULLPTR;
+    QQuickWindow *window = nullptr;
     QObject *p = parent();
     while (p && !window) {
         if (QQuickItem *item = qobject_cast<QQuickItem *>(p)) {
@@ -278,7 +278,7 @@ void QQuickPopup::setModal(bool modal)
 bool QQuickPopup::isVisible() const
 {
     Q_D(const QQuickPopup);
-    return d->overlay != Q_NULLPTR /*&& !d->transitionManager.isRunning()*/;
+    return d->overlay != nullptr /*&& !d->transitionManager.isRunning()*/;
 }
 
 /*!

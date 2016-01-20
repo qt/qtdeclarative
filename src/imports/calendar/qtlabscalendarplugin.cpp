@@ -57,7 +57,7 @@ class QtLabsCalendarPlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsCalendarPlugin(QObject *parent = Q_NULLPTR);
+    QtLabsCalendarPlugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
 };
 

@@ -65,7 +65,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPane : public QQuickControl
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickPane(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickPane(QQuickItem *parent = nullptr);
 
     qreal contentWidth() const;
     void setContentWidth(qreal width);
@@ -84,10 +84,10 @@ Q_SIGNALS:
 protected:
     QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent);
 
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

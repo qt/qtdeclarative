@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(Q_NULLPTR)
+    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(nullptr)
     {
     }
 

@@ -60,7 +60,7 @@ class QQuickUniversalProgressRing : public QQuickItem
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
 public:
-    QQuickUniversalProgressRing(QQuickItem *parent = Q_NULLPTR);
+    QQuickUniversalProgressRing(QQuickItem *parent = nullptr);
 
     int count() const;
     void setCount(int count);
@@ -73,7 +73,7 @@ Q_SIGNALS:
     void colorChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     int m_count;
@@ -85,11 +85,11 @@ class QQuickUniversalProgressRingAnimator : public QQuickAnimator
     Q_OBJECT
 
 public:
-    QQuickUniversalProgressRingAnimator(QObject *parent = Q_NULLPTR);
+    QQuickUniversalProgressRingAnimator(QObject *parent = nullptr);
 
 protected:
-    QString propertyName() const Q_DECL_OVERRIDE;
-    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+    QString propertyName() const override;
+    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE

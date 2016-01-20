@@ -60,7 +60,7 @@ class QQuickMaterialProgressRing : public QQuickItem
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
 public:
-    explicit QQuickMaterialProgressRing(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickMaterialProgressRing(QQuickItem *parent = nullptr);
     ~QQuickMaterialProgressRing();
 
     QColor color() const;
@@ -70,7 +70,7 @@ Q_SIGNALS:
     void colorChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     QColor m_color;
@@ -79,11 +79,11 @@ private:
 class QQuickMaterialRingAnimator : public QQuickAnimator
 {
 public:
-    QQuickMaterialRingAnimator(QObject *parent = Q_NULLPTR);
+    QQuickMaterialRingAnimator(QObject *parent = nullptr);
 
 protected:
-    QString propertyName() const Q_DECL_OVERRIDE;
-    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+    QString propertyName() const override;
+    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE

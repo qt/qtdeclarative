@@ -109,7 +109,7 @@ QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
         qWarning() << "SwipeView: attached properties must be accessed from within a child item";
-        return Q_NULLPTR;
+        return nullptr;
     }
 
     return new QQuickSwipeViewAttached(item);
@@ -159,7 +159,7 @@ class QQuickSwipeViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
 public:
     QQuickSwipeViewAttachedPrivate(QQuickItem *item) :
         item(item),
-        swipeView(Q_NULLPTR),
+        swipeView(nullptr),
         index(-1),
         isCurrent(false)
     {
@@ -170,9 +170,9 @@ public:
 
     void updateView(QQuickItem *parent);
 
-    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *) override;
 
     void updateIndex();
     void updateIsCurrent();
@@ -192,7 +192,7 @@ public:
 
 void QQuickSwipeViewAttachedPrivate::updateIndex()
 {
-    setIndex(swipeView ? QQuickSwipeViewPrivate::get(swipeView)->contentModel->indexOf(item, Q_NULLPTR) : -1);
+    setIndex(swipeView ? QQuickSwipeViewPrivate::get(swipeView)->contentModel->indexOf(item, nullptr) : -1);
 }
 
 void QQuickSwipeViewAttachedPrivate::updateIsCurrent()
@@ -259,7 +259,7 @@ void QQuickSwipeViewAttachedPrivate::updateView(QQuickItem *parent)
     // - A non-visual or weird type like TestCase, when child items are created from components
     //   wherein the attached properties are used
     // - null, when the item was removed with removeItem()
-    QQuickSwipeView *view = Q_NULLPTR;
+    QQuickSwipeView *view = nullptr;
     if (parent) {
         view = qobject_cast<QQuickSwipeView*>(parent);
         if (!view) {

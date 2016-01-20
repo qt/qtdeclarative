@@ -73,7 +73,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(QQuickTransition *replaceExit READ replaceExit WRITE setReplaceExit NOTIFY replaceExitChanged FINAL)
 
 public:
-    explicit QQuickStackView(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickStackView(QQuickItem *parent = nullptr);
     ~QQuickStackView();
 
     static QQuickStackAttached *qmlAttachedProperties(QObject *object);
@@ -145,9 +145,9 @@ Q_SIGNALS:
     void replaceExitChanged();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    bool childMouseEventFilter(QQuickItem *, QEvent *) override;
 
 private:
     Q_DISABLE_COPY(QQuickStackView)
@@ -164,7 +164,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickStackAttached : public QObject
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
 
 public:
-    explicit QQuickStackAttached(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickStackAttached(QQuickItem *parent = nullptr);
     ~QQuickStackAttached();
 
     int index() const;

@@ -61,7 +61,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickGroupBox : public QQuickFrame
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
 public:
-    explicit QQuickGroupBox(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickGroupBox(QQuickItem *parent = nullptr);
 
     QString title() const;
     void setTitle(const QString &title);
@@ -74,7 +74,7 @@ Q_SIGNALS:
     void labelChanged();
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
 private:
     Q_DISABLE_COPY(QQuickGroupBox)

@@ -82,7 +82,7 @@ public:
     bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
     void startTransition(QQuickItemViewTransitioner *transitioner);
 
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemDestroyed(QQuickItem *item) override;
 
     int index;
     bool init;
@@ -129,7 +129,7 @@ public:
     void replaceTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate);
     void completeTransition(QQuickStackElement *element, QQuickTransition *transition);
 
-    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) Q_DECL_OVERRIDE;
+    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
     void setBusy(bool busy);
 
     bool busy;
@@ -145,7 +145,7 @@ class QQuickStackAttachedPrivate : public QObjectPrivate, public QQuickItemChang
     Q_DECLARE_PUBLIC(QQuickStackAttached)
 
 public:
-    QQuickStackAttachedPrivate() : element(Q_NULLPTR) { }
+    QQuickStackAttachedPrivate() : element(nullptr) { }
 
     static QQuickStackAttachedPrivate *get(QQuickStackAttached *attached)
     {

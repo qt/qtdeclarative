@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
-    background(Q_NULLPTR), contentItem(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
+    background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);

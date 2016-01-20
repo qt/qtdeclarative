@@ -75,7 +75,7 @@ class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChang
 
 public:
     QQuickTumblerPrivate() :
-        delegate(Q_NULLPTR),
+        delegate(nullptr),
         visibleItemCount(3)
     {
     }
@@ -91,8 +91,8 @@ public:
     void _q_updateItemHeights();
     void _q_updateItemWidths();
 
-    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 };
 
 static QList<QQuickItem *> contentItemChildItems(QQuickItem *contentItem)
@@ -124,7 +124,7 @@ namespace {
         else if (contentType == ListViewContentItem)
             return qobject_cast<QQuickFlickable*>(rootContentItem)->contentItem();
 
-        return Q_NULLPTR;
+        return nullptr;
     }
 
     static inline ContentItemType contentItemType(QQuickItem *rootContentItem)
@@ -253,7 +253,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 QQuickItem *QQuickTumbler::currentItem() const
 {
     Q_D(const QQuickTumbler);
-    return d->contentItem ? d->contentItem->property("currentItem").value<QQuickItem*>() : Q_NULLPTR;
+    return d->contentItem ? d->contentItem->property("currentItem").value<QQuickItem*>() : nullptr;
 }
 
 /*!
@@ -303,7 +303,7 @@ QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
     QQuickItem *delegateItem = qobject_cast<QQuickItem *>(object);
     if (!delegateItem) {
         qWarning() << "Tumbler: attached properties of Tumbler must be accessed from within a delegate item";
-        return Q_NULLPTR;
+        return nullptr;
     }
 
     return new QQuickTumblerAttached(delegateItem);
@@ -396,7 +396,7 @@ class QQuickTumblerAttachedPrivate : public QObjectPrivate, public QQuickItemCha
     Q_DECLARE_PUBLIC(QQuickTumblerAttached)
 public:
     QQuickTumblerAttachedPrivate(QQuickItem *delegateItem) :
-        tumbler(Q_NULLPTR),
+        tumbler(nullptr),
         index(-1),
         displacement(1)
     {
@@ -425,9 +425,9 @@ public:
     ~QQuickTumblerAttachedPrivate() {
     }
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
     void _q_calculateDisplacement();
 

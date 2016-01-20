@@ -65,7 +65,7 @@ class QtLabsControlsPlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsControlsPlugin(QObject *parent = Q_NULLPTR);
+    QtLabsControlsPlugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
     void initializeEngine(QQmlEngine *engine, const char *uri);
 };

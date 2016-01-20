@@ -81,7 +81,7 @@ QQuickLabel::~QQuickLabel()
 }
 
 QQuickLabelPrivate::QQuickLabelPrivate()
-    : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
+    : background(nullptr), accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);

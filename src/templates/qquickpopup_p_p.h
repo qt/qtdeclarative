@@ -69,7 +69,7 @@ public:
     void transitionExit();
 
 protected:
-    void finished() Q_DECL_OVERRIDE;
+    void finished() override;
 
 private:
     enum TransitionState {

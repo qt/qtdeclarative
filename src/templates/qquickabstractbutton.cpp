@@ -110,7 +110,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
     pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false),
-    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR), group(Q_NULLPTR)
+    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(nullptr), indicator(nullptr), group(nullptr)
 {
 }
 
@@ -155,13 +155,13 @@ QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
     // gives the QRadioButton behavior. Notice that tst_radiobutton.qml needs
     // to be updated.
     if (!autoExclusive /*|| buttons.count() == 1*/)
-        return Q_NULLPTR;
+        return nullptr;
 
     for (QQuickAbstractButton *button : buttons) {
         if (button->isChecked() && button != q)
             return button;
     }
-    return checked ? const_cast<QQuickAbstractButton *>(q) : Q_NULLPTR;
+    return checked ? const_cast<QQuickAbstractButton *>(q) : nullptr;
 }
 
 QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons() const

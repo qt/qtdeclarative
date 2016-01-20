@@ -67,7 +67,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
-    explicit QQuickScrollBar(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickScrollBar(QQuickItem *parent = nullptr);
 
     static QQuickScrollBarAttached *qmlAttachedProperties(QObject *object);
 
@@ -99,15 +99,15 @@ Q_SIGNALS:
     void handleChanged();
 
 protected:
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
     virtual qreal positionAt(const QPoint &point) const;
 
 #ifndef QT_NO_ACCESSIBILITY
-    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

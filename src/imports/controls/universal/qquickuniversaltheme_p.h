@@ -61,7 +61,7 @@ public:
 
     ~QQuickUniversalTheme();
 
-    const QFont *font(Font type = SystemFont) const Q_DECL_OVERRIDE;
+    const QFont *font(Font type = SystemFont) const override;
 
 private:
     QFont systemFont;

@@ -91,17 +91,17 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 public:
     QQuickApplicationWindowPrivate()
         : complete(false)
-        , contentItem(Q_NULLPTR)
-        , header(Q_NULLPTR)
-        , footer(Q_NULLPTR)
-        , overlay(Q_NULLPTR)
-        , activeFocusControl(Q_NULLPTR)
+        , contentItem(nullptr)
+        , header(nullptr)
+        , footer(nullptr)
+        , overlay(nullptr)
+        , activeFocusControl(nullptr)
     { }
 
     void relayout();
 
-    void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     void updateFont(const QFont &);
     inline void setFont_helper(const QFont &f) {
@@ -465,7 +465,7 @@ class QQuickApplicationWindowAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickApplicationWindowAttached)
 
 public:
-    QQuickApplicationWindowAttachedPrivate() : window(Q_NULLPTR) { }
+    QQuickApplicationWindowAttachedPrivate() : window(nullptr) { }
 
     void windowChange(QQuickWindow *wnd);
 
@@ -541,7 +541,7 @@ QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->contentItem() : Q_NULLPTR;
+    return d->window ? d->window->contentItem() : nullptr;
 }
 
 /*!
@@ -557,7 +557,7 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->activeFocusControl() : Q_NULLPTR;
+    return d->window ? d->window->activeFocusControl() : nullptr;
 }
 
 /*!
@@ -570,7 +570,7 @@ QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 QQuickItem *QQuickApplicationWindowAttached::header() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->header() : Q_NULLPTR;
+    return d->window ? d->window->header() : nullptr;
 }
 
 /*!
@@ -583,7 +583,7 @@ QQuickItem *QQuickApplicationWindowAttached::header() const
 QQuickItem *QQuickApplicationWindowAttached::footer() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->footer() : Q_NULLPTR;
+    return d->window ? d->window->footer() : nullptr;
 }
 
 /*!
@@ -595,7 +595,7 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->overlay() : Q_NULLPTR;
+    return d->window ? d->window->overlay() : nullptr;
 }
 
 QT_END_NAMESPACE

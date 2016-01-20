@@ -57,13 +57,13 @@ class Q_LABSTEMPLATES_EXPORT QQuickRadioButton : public QQuickAbstractButton
     Q_OBJECT
 
 public:
-    explicit QQuickRadioButton(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickRadioButton(QQuickItem *parent = nullptr);
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 };
 

@@ -59,7 +59,7 @@ class QQuickCalendar : public QObject
     Q_OBJECT
 
 public:
-    explicit QQuickCalendar(QObject *parent = Q_NULLPTR);
+    explicit QQuickCalendar(QObject *parent = nullptr);
 
     enum Month {
         January,

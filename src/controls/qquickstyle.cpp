@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 static QQuickStyle *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
 {
     if (!object)
-        return Q_NULLPTR;
+        return nullptr;
     int idx = -1;
     return qobject_cast<QQuickStyle *>(qmlAttachedPropertiesObject(&idx, object, type, create));
 }
@@ -55,7 +55,7 @@ static QQuickStyle *attachedStyle(const QMetaObject *type, QObject *object, bool
 static QQuickStyle *findParentStyle(const QMetaObject *type, QObject *parent)
 {
     if (!parent)
-        return Q_NULLPTR;
+        return nullptr;
 
     QQuickStyle *style = attachedStyle(type, parent);
     if (style)
@@ -97,7 +97,7 @@ static QQuickStyle *findParentStyle(const QMetaObject *type, QObject *parent)
         return style;
     }
 
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *object)
@@ -165,7 +165,7 @@ QQuickStyle::~QQuickStyle()
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
 
-    setParentStyle(Q_NULLPTR);
+    setParentStyle(nullptr);
 }
 
 QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)

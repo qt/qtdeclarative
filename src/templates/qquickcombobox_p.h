@@ -72,7 +72,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
 
 public:
-    explicit QQuickComboBox(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickComboBox(QQuickItem *parent = nullptr);
 
     int count() const;
 
@@ -123,18 +123,18 @@ Q_SIGNALS:
     void highlighted(int index);
 
 protected:
-    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
+    void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void timerEvent(QTimerEvent *event) override;
 
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
 
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
 private:
     Q_DISABLE_COPY(QQuickComboBox)

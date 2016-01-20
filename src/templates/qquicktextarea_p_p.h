@@ -78,17 +78,17 @@ public:
     void resizeBackground();
     void resolveFont();
 
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
-    qreal getImplicitHeight() const Q_DECL_OVERRIDE;
+    qreal getImplicitWidth() const override;
+    qreal getImplicitHeight() const override;
 
-    void implicitWidthChanged() Q_DECL_OVERRIDE;
-    void implicitHeightChanged() Q_DECL_OVERRIDE;
+    void implicitWidthChanged() override;
+    void implicitHeightChanged() override;
 
     void _q_readOnlyChanged(bool isReadOnly);
 
 #ifndef QT_NO_ACCESSIBILITY
-    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
     QQuickItem *background;

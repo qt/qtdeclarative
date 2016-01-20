@@ -64,7 +64,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPageIndicator : public QQuickControl
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickPageIndicator(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickPageIndicator(QQuickItem *parent = nullptr);
 
     int count() const;
     void setCount(int count);
@@ -85,15 +85,15 @@ Q_SIGNALS:
     void delegateChanged();
 
 protected:
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

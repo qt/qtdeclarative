@@ -66,7 +66,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicator : public QQuickControl
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickScrollIndicator(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickScrollIndicator(QQuickItem *parent = nullptr);
 
     static QQuickScrollIndicatorAttached *qmlAttachedProperties(QObject *object);
 
@@ -95,7 +95,7 @@ Q_SIGNALS:
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

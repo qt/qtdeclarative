@@ -57,7 +57,7 @@ class QQuickColorImageProvider : public QQuickImageProvider
 public:
     QQuickColorImageProvider(const QString &path);
 
-    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) Q_DECL_OVERRIDE;
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
 private:
     QString m_path;

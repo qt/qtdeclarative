@@ -69,7 +69,7 @@
 
 EventCapturer::EventCapturer(QObject *parent) :
     QObject(parent),
-    mEventSource(Q_NULLPTR),
+    mEventSource(nullptr),
     mStopCaptureKey(Qt::Key_Escape),
     mMoveEventTrimFlags(TrimNone),
     mDuration(0),

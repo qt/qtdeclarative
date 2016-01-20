@@ -62,7 +62,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickLabel : public QQuickText
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
 
 public:
-    explicit QQuickLabel(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickLabel(QQuickItem *parent = nullptr);
     ~QQuickLabel();
 
     QFont font() const;
@@ -76,10 +76,10 @@ Q_SIGNALS:
     void backgroundChanged();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
+    void classBegin() override;
 
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 private:
     Q_DISABLE_COPY(QQuickLabel)

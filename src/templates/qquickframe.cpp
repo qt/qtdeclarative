@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Frame}, {Container Controls}
 */
 
-QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
+QQuickFramePrivate::QQuickFramePrivate() : frame(nullptr)
 {
 }
 

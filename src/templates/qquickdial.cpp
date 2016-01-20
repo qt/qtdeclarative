@@ -90,7 +90,7 @@ public:
         stepSize(0),
         pressed(false),
         snapMode(QQuickDial::NoSnap),
-        handle(Q_NULLPTR)
+        handle(nullptr)
     {
     }
 

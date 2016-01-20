@@ -45,10 +45,10 @@
 QT_BEGIN_NAMESPACE
 
 QQuickPressAndHoldHelper::QQuickPressAndHoldHelper()
-    : control(Q_NULLPTR)
+    : control(nullptr)
     , longPress(false)
     , pressAndHoldSignalIndex(-1)
-    , delayedMousePressEvent(Q_NULLPTR)
+    , delayedMousePressEvent(nullptr)
 { }
 
 void QQuickPressAndHoldHelper::mousePressEvent(QMouseEvent *event)
@@ -91,7 +91,7 @@ void QQuickPressAndHoldHelper::timerEvent(QTimerEvent *)
         mev.setAccepted(true);
         // Use fast signal invocation since we already got its index
         QQuickMouseEvent *mevPtr = &mev;
-        void *args[] = { Q_NULLPTR, &mevPtr };
+        void *args[] = { nullptr, &mevPtr };
         QMetaObject::metacall(control, QMetaObject::InvokeMetaMethod, pressAndHoldSignalIndex, args);
         if (!mev.isAccepted())
             longPress = false;

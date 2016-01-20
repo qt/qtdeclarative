@@ -123,8 +123,8 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
 
 public:
     QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false),
-        hideTimer(0), highlightedIndex(-1), currentIndex(-1), delegateModel(Q_NULLPTR),
-        delegate(Q_NULLPTR), popup(Q_NULLPTR) { }
+        hideTimer(0), highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
+        delegate(nullptr), popup(nullptr) { }
 
     bool isPopupVisible() const;
     void showPopup();
@@ -204,7 +204,7 @@ void QQuickComboBoxPrivate::pressedOutside()
 void QQuickComboBoxPrivate::itemClicked()
 {
     Q_Q(QQuickComboBox);
-    int index = delegateModel->indexOf(q->sender(), Q_NULLPTR);
+    int index = delegateModel->indexOf(q->sender(), nullptr);
     if (index != -1) {
         setHighlightedIndex(index);
         emit q->highlighted(index);

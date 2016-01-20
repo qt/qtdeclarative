@@ -59,16 +59,16 @@ class Q_LABSTEMPLATES_EXPORT QQuickMenuItem : public QQuickAbstractButton
     Q_OBJECT
 
 public:
-    explicit QQuickMenuItem(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickMenuItem(QQuickItem *parent = nullptr);
 
 Q_SIGNALS:
     void triggered();
 
 protected:
-    QFont defaultFont() const Q_DECL_OVERRIDE;
+    QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

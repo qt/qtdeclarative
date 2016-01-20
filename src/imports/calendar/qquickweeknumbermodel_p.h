@@ -65,7 +65,7 @@ class QQuickWeekNumberModel : public QAbstractListModel
     Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
 
 public:
-    explicit QQuickWeekNumberModel(QObject *parent = Q_NULLPTR);
+    explicit QQuickWeekNumberModel(QObject *parent = nullptr);
 
     int month() const;
     void setMonth(int month);
@@ -83,9 +83,9 @@ public:
         WeekNumberRole = Qt::UserRole + 1
     };
 
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
 Q_SIGNALS:
     void monthChanged();

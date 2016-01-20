@@ -59,11 +59,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickItemDelegate : public QQuickAbstractButton
     Q_OBJECT
 
 public:
-    explicit QQuickItemDelegate(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickItemDelegate(QQuickItem *parent = nullptr);
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

@@ -69,10 +69,10 @@ public:
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
 
-    void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
-    void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemChildAdded(QQuickItem *item, QQuickItem *child) override;
+    void itemSiblingOrderChanged(QQuickItem *item) override;
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     void onContentItemChanged();
     void onItemPressed();

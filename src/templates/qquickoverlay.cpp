@@ -109,7 +109,7 @@ void QQuickOverlayPrivate::resizeBackground()
 }
 
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
-    background(Q_NULLPTR),
+    background(nullptr),
     modalPopups(0)
 {
 }
@@ -152,7 +152,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
-    QQuickPopup *popup = Q_NULLPTR;
+    QQuickPopup *popup = nullptr;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(data.item);
         if (drawer) {

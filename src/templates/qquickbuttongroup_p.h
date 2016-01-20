@@ -66,7 +66,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickButtonGroup : public QObject
     Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
 
 public:
-    explicit QQuickButtonGroup(QObject *parent = Q_NULLPTR);
+    explicit QQuickButtonGroup(QObject *parent = nullptr);
     ~QQuickButtonGroup();
 
     static QQuickButtonGroupAttached *qmlAttachedProperties(QObject *object);
@@ -95,7 +95,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickButtonGroupAttached : public QObject
     Q_PROPERTY(QQuickButtonGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
 
 public:
-    explicit QQuickButtonGroupAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickButtonGroupAttached(QObject *parent = nullptr);
 
     QQuickButtonGroup *group() const;
     void setGroup(QQuickButtonGroup *group);

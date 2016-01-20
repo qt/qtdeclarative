@@ -78,8 +78,8 @@ public:
     void _q_textChanged(const QString &text);
 
 #ifndef QT_NO_ACCESSIBILITY
-    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    void accessibilityActiveChanged(bool active) override;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
     QQuickItem *background;

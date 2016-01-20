@@ -61,7 +61,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickSwitch : public QQuickAbstractButton
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
 
 public:
-    explicit QQuickSwitch(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickSwitch(QQuickItem *parent = nullptr);
 
     qreal position() const;
     void setPosition(qreal position);
@@ -73,8 +73,8 @@ Q_SIGNALS:
     void visualPositionChanged();
 
 protected:
-    void mirrorChange() Q_DECL_OVERRIDE;
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
+    void mirrorChange() override;
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
 
     virtual qreal positionAt(const QPoint &point) const;
 

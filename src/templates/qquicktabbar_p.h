@@ -59,18 +59,18 @@ class Q_LABSTEMPLATES_EXPORT QQuickTabBar : public QQuickContainer
     Q_OBJECT
 
 public:
-    explicit QQuickTabBar(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickTabBar(QQuickItem *parent = nullptr);
 
 protected:
-    void updatePolish() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    bool isContent(QQuickItem *item) const Q_DECL_OVERRIDE;
-    void itemAdded(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemRemoved(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void updatePolish() override;
+    void componentComplete() override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    bool isContent(QQuickItem *item) const override;
+    void itemAdded(int index, QQuickItem *item) override;
+    void itemRemoved(int index, QQuickItem *item) override;
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const override;
 #endif
 
 private:

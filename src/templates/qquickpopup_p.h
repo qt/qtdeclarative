@@ -69,7 +69,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
 
 public:
-    explicit QQuickPopup(QObject *parent = Q_NULLPTR);
+    explicit QQuickPopup(QObject *parent = nullptr);
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);

@@ -75,7 +75,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
 public:
-    explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickControl(QQuickItem *parent = nullptr);
 
     QFont font() const;
     void setFont(const QFont &);
@@ -144,18 +144,18 @@ protected:
 
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
-    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
 
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     virtual void mirrorChange();
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
