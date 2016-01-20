@@ -83,18 +83,20 @@ QQuickStackElement::~QQuickStackElement()
     if (ownComponent)
         delete component;
 
-    if (ownItem && item) {
-        item->setParentItem(Q_NULLPTR);
-        item->deleteLater();
-        item = Q_NULLPTR;
-    } else if (item) {
-        item->setVisible(false);
-        if (item->parentItem() != originalParent) {
-            item->setParentItem(originalParent);
+    if (item) {
+        if (ownItem) {
+            item->setParentItem(Q_NULLPTR);
+            item->deleteLater();
+            item = Q_NULLPTR;
         } else {
-            QQuickStackAttached *attached = attachedStackObject(this);
-            if (attached)
-                QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, Q_NULLPTR);
+            item->setVisible(false);
+            if (item->parentItem() != originalParent) {
+                item->setParentItem(originalParent);
+            } else {
+                QQuickStackAttached *attached = attachedStackObject(this);
+                if (attached)
+                    QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, Q_NULLPTR);
+            }
         }
     }
 
