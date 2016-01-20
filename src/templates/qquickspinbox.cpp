@@ -183,7 +183,7 @@ bool QQuickSpinBoxPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent 
     q->setAccessibleProperty("pressed", pressed);
     if (pressed)
         startRepeatDelay();
-    return up->isPressed() || down->isPressed();
+    return pressed;
 }
 
 bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event)
@@ -197,7 +197,7 @@ bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
     stopPressRepeat();
-    return up->isPressed() || down->isPressed();
+    return pressed;
 }
 
 bool QQuickSpinBoxPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event)
