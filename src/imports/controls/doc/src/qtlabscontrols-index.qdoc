@@ -42,50 +42,10 @@
     \section2 Qt.labs.calendar Module
     \generatelist {qmltypesbymodule Qt.labs.calendar}
 
-    \section1 Getting Started
-
-    A basic example of a QML file that makes use of controls is shown here:
-
-    \snippet basic-example.qml 0
-
-    \section1 Setting Up Controls from C++
-
-    Although QQuickView has traditionally been used to display QML files in a
-    C++ application, doing this means you can only set window properties from
-    C++.
-
-    With Qt Labs Controls, declare an ApplicationWindow as the root item of
-    your application and launch it by using QQmlApplicationEngine instead.
-    This ensures that you can control top level window properties from QML.
-
-    A basic example of a source file that makes use of controls is shown here:
-
-    \code
-    #include <QGuiApplication>
-    #include <QQmlApplicationEngine>
-
-    int main(int argc, char *argv[])
-    {
-        QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        QGuiApplication app(argc, argv);
-        QQmlApplicationEngine engine("main.qml");
-        return app.exec();
-    }
-    \endcode
-
-    \section2 Using C++ Data From QML
-
-    If you need to register a C++ class to use from QML, you can call
-    qmlRegisterType() before declaring your QQmlApplicationEngine.
-    See \l [QtQml] {Defining QML Types from C++} for more information.
-
-    If you need to expose data to QML components, you need to make them
-    available to the context of the current QML engine. See QQmlContext for
-    more information.
-
     \section1 Important Concepts in Qt Labs Controls
 
     \list
+      \li \l{Getting Started with Qt Labs Controls}
       \li \l{Styling Qt Labs Controls}
       \li \l{High-DPI Support in Qt Labs Controls}
       \li \l{Differences between Qt Quick Controls}
