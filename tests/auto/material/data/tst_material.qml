@@ -131,8 +131,8 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
         verify(control.Material)
-        compare(control.Material.primary, Material.color(Material.BlueGrey))
-        compare(control.Material.accent, Material.color(Material.Teal))
+        compare(control.Material.primary, Material.color(Material.Indigo))
+        compare(control.Material.accent, Material.color(Material.Pink))
         compare(control.Material.theme, Material.Light)
         control.destroy()
     }

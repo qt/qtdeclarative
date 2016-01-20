@@ -385,8 +385,8 @@ static const QRgb colors[][14] = {
 };
 
 static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
-static uint defaultPrimary = QQuickMaterialStyle::BlueGrey;
-static uint defaultAccent = QQuickMaterialStyle::Teal;
+static uint defaultPrimary = QQuickMaterialStyle::Indigo;
+static uint defaultAccent = QQuickMaterialStyle::Pink;
 static bool defaultPrimaryCustom = false;
 static bool defaultAccentCustom = false;
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
