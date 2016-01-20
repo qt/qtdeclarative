@@ -59,7 +59,9 @@ class QQuickMaterialStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QVariant primary READ primary WRITE setPrimary RESET resetPrimary NOTIFY primaryChanged FINAL)
     Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
+    Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY paletteChanged FINAL)
@@ -153,12 +155,19 @@ public:
     void propagateTheme();
     void resetTheme();
 
+    QVariant primary() const;
+    void setPrimary(const QVariant &accent);
+    void inheritPrimary(uint primary, bool custom);
+    void propagatePrimary();
+    void resetPrimary();
+
     QVariant accent() const;
     void setAccent(const QVariant &accent);
     void inheritAccent(uint accent, bool custom);
     void propagateAccent();
     void resetAccent();
 
+    QColor primaryColor() const;
     QColor accentColor() const;
     QColor backgroundColor() const;
     QColor primaryTextColor() const;
@@ -198,6 +207,7 @@ public:
 
 Q_SIGNALS:
     void themeChanged();
+    void primaryChanged();
     void accentChanged();
     void paletteChanged();
 
@@ -208,9 +218,12 @@ private:
     void init();
 
     bool m_explicitTheme;
+    bool m_explicitPrimary;
     bool m_explicitAccent;
+    bool m_customPrimary;
     bool m_customAccent;
     Theme m_theme;
+    uint m_primary;
     uint m_accent;
 };
 

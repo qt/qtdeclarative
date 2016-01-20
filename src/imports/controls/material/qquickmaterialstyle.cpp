@@ -385,8 +385,10 @@ static const QRgb colors[][14] = {
 };
 
 static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
+static uint defaultPrimary = QQuickMaterialStyle::BlueGrey;
 static uint defaultAccent = QQuickMaterialStyle::Teal;
-static bool defaultCustom = false;
+static bool defaultPrimaryCustom = false;
+static bool defaultAccentCustom = false;
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
@@ -420,9 +422,12 @@ static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
     m_explicitTheme(false),
+    m_explicitPrimary(false),
     m_explicitAccent(false),
-    m_customAccent(defaultCustom),
+    m_customPrimary(defaultPrimaryCustom),
+    m_customAccent(defaultAccentCustom),
     m_theme(defaultTheme),
+    m_primary(defaultPrimary),
     m_accent(defaultAccent)
 {
     init();
@@ -474,6 +479,76 @@ void QQuickMaterialStyle::resetTheme()
         m_explicitTheme = false;
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
         inheritTheme(material ? material->theme() : defaultTheme);
+    }
+}
+
+QVariant QQuickMaterialStyle::primary() const
+{
+    return primaryColor();
+}
+
+void QQuickMaterialStyle::setPrimary(const QVariant &var)
+{
+    QRgb primary = 0;
+    bool custom = false;
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val > BlueGrey) {
+            qmlInfo(parent()) << "unknown Material.primary value: " << val;
+            return;
+        }
+        primary = val;
+    } else {
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            primary = val;
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qmlInfo(parent()) << "unknown Material.primary value: " << var.toString();
+                return;
+            }
+            custom = true;
+            primary = color.rgba();
+        }
+    }
+
+    m_explicitPrimary = true;
+    if (m_primary != primary) {
+        m_customPrimary = custom;
+        m_primary = primary;
+        propagatePrimary();
+        emit primaryChanged();
+        emit paletteChanged();
+    }
+}
+
+void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
+{
+    if (!m_explicitPrimary && m_primary != primary) {
+        m_customPrimary = custom;
+        m_primary = primary;
+        propagatePrimary();
+        emit primaryChanged();
+    }
+}
+
+void QQuickMaterialStyle::propagatePrimary()
+{
+    foreach (QQuickStyle *child, childStyles()) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritPrimary(m_primary, m_customPrimary);
+    }
+}
+
+void QQuickMaterialStyle::resetPrimary()
+{
+    if (m_explicitPrimary) {
+        m_customPrimary = false;
+        m_explicitPrimary = false;
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+        inheritPrimary(material ? material->m_primary : defaultPrimary, true);
     }
 }
 
@@ -545,6 +620,15 @@ void QQuickMaterialStyle::resetAccent()
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
         inheritAccent(material ? material->m_accent : defaultAccent, true);
     }
+}
+
+QColor QQuickMaterialStyle::primaryColor() const
+{
+    if (m_customPrimary)
+        return QColor::fromRgba(m_primary);
+    if (m_primary > BlueGrey)
+        return QColor();
+    return colors[m_primary][Shade500];
 }
 
 QColor QQuickMaterialStyle::accentColor() const
@@ -818,6 +902,7 @@ void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle 
     Q_UNUSED(oldParent);
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
     if (material) {
+        inheritPrimary(material->m_primary, material->m_customPrimary);
         inheritAccent(material->m_accent, material->m_customAccent);
         inheritTheme(material->theme());
     }
@@ -844,15 +929,30 @@ void QQuickMaterialStyle::init()
             else if (!value.isEmpty())
                 qWarning().nospace().noquote() << settings->fileName() << ": unknown Material theme value: " << value;
 
+            value = settings->value(QStringLiteral("Primary")).toByteArray();
+            Color primary = toEnumValue<Color>(value, &ok);
+            if (ok) {
+                defaultPrimaryCustom = m_customPrimary = false;
+                defaultPrimary = m_primary = primary;
+            } else {
+                QColor color(value.constData());
+                if (color.isValid()) {
+                    defaultPrimaryCustom = m_customPrimary = true;
+                    defaultPrimary = m_primary = color.rgba();
+                } else if (!value.isEmpty()) {
+                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material primary value: " << value;
+                }
+            }
+
             value = settings->value(QStringLiteral("Accent")).toByteArray();
             Color accent = toEnumValue<Color>(value, &ok);
             if (ok) {
-                defaultCustom = m_customAccent = false;
+                defaultAccentCustom = m_customAccent = false;
                 defaultAccent = m_accent = accent;
             } else {
                 QColor color(value.constData());
                 if (color.isValid()) {
-                    defaultCustom = m_customAccent = true;
+                    defaultAccentCustom = m_customAccent = true;
                     defaultAccent = m_accent = color.rgba();
                 } else if (!value.isEmpty()) {
                     qWarning().nospace().noquote() << settings->fileName() << ": unknown Material accent value: " << value;
