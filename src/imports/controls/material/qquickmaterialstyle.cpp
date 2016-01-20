@@ -43,21 +43,6 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype Material
-    \inherits QtObject
-    \instantiates QQuickMaterialStyleAttached
-    \inqmlmodule QtQuick.Controls.Material
-    \ingroup utilities
-    \brief A style interface.
-
-    TODO
-*/
-
-/*!
-    \qmlattachedproperty color QtQuickControls2::Material::textColorPrimaray
-*/
-
 static const QRgb colors[][14] = {
     // Red
     {
