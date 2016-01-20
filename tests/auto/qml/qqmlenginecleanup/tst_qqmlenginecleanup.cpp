@@ -80,7 +80,7 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
     component = new QQmlComponent(engine, testFile);
     QVERIFY(component->isError());
     QCOMPARE(component->errorString(),
-            testFile.toString() +":38 module \"Test\" is not installed\n");
+            testFile.toString() +":33 module \"Test\" is not installed\n");
 
     delete engine;
     delete component;

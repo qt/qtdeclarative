@@ -77,7 +77,7 @@ void tst_QQmlImport::testDesignerSupported()
     window->setSource(testFileUrl("testfile_supported.qml"));
     QVERIFY(window->errors().isEmpty());
 
-    QString warningString("%1:35:1: module does not support the designer \"MyPluginUnsupported\" \n     import MyPluginUnsupported 1.0\r \n     ^ ");
+    QString warningString("%1:30:1: module does not support the designer \"MyPluginUnsupported\" \n     import MyPluginUnsupported 1.0\r \n     ^ ");
 #ifndef Q_OS_WIN
     warningString.remove('\r');
 #endif

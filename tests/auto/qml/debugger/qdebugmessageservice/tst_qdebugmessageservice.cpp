@@ -228,12 +228,12 @@ void tst_QDebugMessageService::retrieveDebugOutput()
     const QString path =
             QUrl::fromLocalFile(QQmlDataTest::instance()->testFile(QMLFILE)).toString();
     LogEntry entry1(QtDebugMsg, QLatin1String("console.log"));
-    entry1.line = 40;
+    entry1.line = 35;
     entry1.file = path;
     entry1.function = QLatin1String("onCompleted");
     entry1.category = QLatin1String("qml");
     LogEntry entry2(QtDebugMsg, QLatin1String("console.count: 1"));
-    entry2.line = 41;
+    entry2.line = 36;
     entry2.file = path;
     entry2.function = QLatin1String("onCompleted");
     entry2.category = QLatin1String("default");
