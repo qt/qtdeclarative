@@ -460,17 +460,23 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     // only allow flicking with the mouse when there are too many menu items to be
     // shown at once.
     QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-    if (keyEvent->key() == Qt::Key_Up) {
+    switch (keyEvent->key()) {
+    case Qt::Key_Up:
         if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
         return true;
-    } else if (keyEvent->key() == Qt::Key_Down) {
+
+    case Qt::Key_Down:
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
         return true;
-    } else if (keyEvent->key() == Qt::Key_Escape) {
+
+    case Qt::Key_Escape:
         close();
         return true;
+
+    default:
+        break;
     }
 
     return false;
