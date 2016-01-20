@@ -429,27 +429,39 @@ void QQuickDial::setHandle(QQuickItem *handle)
 void QQuickDial::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickDial);
-    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Down) {
+    switch (event->key()) {
+    case Qt::Key_Left:
+    case Qt::Key_Down:
         setPressed(true);
         if (isMirrored())
             increase();
         else
             decrease();
-    } else if (event->key() == Qt::Key_Right || event->key() == Qt::Key_Up) {
+        break;
+
+    case Qt::Key_Right:
+    case Qt::Key_Up:
         setPressed(true);
         if (isMirrored())
             decrease();
         else
             increase();
-    } else if (event->key() == Qt::Key_Home) {
+        break;
+
+    case Qt::Key_Home:
         setPressed(true);
         setValue(isMirrored() ? d->to : d->from);
-    } else if (event->key() == Qt::Key_End) {
+        break;
+
+    case Qt::Key_End:
         setPressed(true);
         setValue(isMirrored() ? d->from : d->to);
-    } else {
+        break;
+
+    default:
         event->ignore();
         QQuickControl::keyPressEvent(event);
+        break;
     }
 }
 
