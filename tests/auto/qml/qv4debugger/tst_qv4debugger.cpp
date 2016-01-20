@@ -96,6 +96,23 @@ signals:
     void evaluateFinished();
 };
 
+class ExceptionCollectJob: public CollectJob
+{
+    QV4DataCollector::Ref exception;
+
+public:
+    ExceptionCollectJob(QV4DataCollector *collector) :
+        CollectJob(collector), exception(-1) {}
+
+    void run() {
+        QV4::Scope scope(collector->engine());
+        QV4::ScopedValue v(scope, *collector->engine()->exceptionValue);
+        exception = collector->collect(v);
+    }
+
+    QV4DataCollector::Ref exceptionValue() const { return exception; }
+};
+
 class TestAgent : public QObject
 {
     Q_OBJECT
@@ -174,7 +191,7 @@ public slots:
 
         if (debugger->state() == V4Debugger::Paused &&
                 debugger->engine()->hasException) {
-            ExceptionCollectJob job(debugger->engine(), &collector);
+            ExceptionCollectJob job(&collector);
             debugger->runInEngine(&job);
             m_thrownValue = job.exceptionValue();
         }
