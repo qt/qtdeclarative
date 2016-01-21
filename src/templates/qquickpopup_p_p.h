@@ -92,6 +92,7 @@ public:
 
     bool focus;
     bool modal;
+    bool complete;
     QQuickItem *contentItem;
     QQuickOverlay *overlay;
     QQuickTransition *enter;

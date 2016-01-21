@@ -51,6 +51,7 @@
 #include <QtCore/qobject.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,9 +59,10 @@ class QQuickItem;
 class QQuickPopupPrivate;
 class QQuickTransition;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
@@ -109,6 +111,10 @@ Q_SIGNALS:
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
+
+    void classBegin() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+    bool isComponentComplete() const;
 
 private:
     Q_DISABLE_COPY(QQuickPopup)

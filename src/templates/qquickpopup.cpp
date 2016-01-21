@@ -325,6 +325,22 @@ void QQuickPopup::setExit(QQuickTransition *transition)
     emit exitChanged();
 }
 
+void QQuickPopup::classBegin()
+{
+}
+
+void QQuickPopup::componentComplete()
+{
+    Q_D(QQuickPopup);
+    d->complete = true;
+}
+
+bool QQuickPopup::isComponentComplete() const
+{
+    Q_D(const QQuickPopup);
+    return d->complete;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickpopup_p.cpp"
