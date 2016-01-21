@@ -69,10 +69,14 @@ public:
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
 
+    void resizeItem(QQuickItem *item);
+    void resizeItems();
+
     void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
     void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
     void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
     void onContentItemChanged();
     void onItemPressed();

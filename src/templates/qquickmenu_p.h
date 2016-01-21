@@ -82,6 +82,7 @@ public:
     void setTitle(QString &title);
 
 protected:
+    void componentComplete() Q_DECL_OVERRIDE;
     bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:

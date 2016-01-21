@@ -108,6 +108,8 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 {
     contentData.append(item);
     item->setParentItem(contentItem);
+    if (complete)
+        resizeItem(item);
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
 }
@@ -124,6 +126,27 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     item->setParentItem(Q_NULLPTR);
     contentModel->remove(index);
+}
+
+void QQuickMenuPrivate::resizeItem(QQuickItem *item)
+{
+    if (!item || !contentItem)
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (!p->widthValid) {
+        item->setWidth(contentItem->width());
+        p->widthValid = false;
+    }
+}
+
+void QQuickMenuPrivate::resizeItems()
+{
+    if (!contentModel)
+        return;
+
+    for (int i = 0; i < contentModel->count(); ++i)
+        resizeItem(itemAt(i));
 }
 
 void QQuickMenuPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
@@ -159,10 +182,17 @@ void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
         removeItem(index, item);
 }
 
+void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    if (complete)
+        resizeItems();
+}
+
 void QQuickMenuPrivate::onContentItemChanged()
 {
     Q_Q(QQuickMenu);
     if (contentItem) {
+        QQuickItemPrivate::get(contentItem)->updateOrAddGeometryChangeListener(this, QQuickItemPrivate::WidthChange);
         contentItem->installEventFilter(q);
         contentItem->setFlag(QQuickItem::ItemIsFocusScope);
         contentItem->setActiveFocusOnTab(true);
@@ -442,6 +472,13 @@ void QQuickMenu::setTitle(QString &title)
         return;
     d->title = title;
     emit titleChanged();
+}
+
+void QQuickMenu::componentComplete()
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::componentComplete();
+    d->resizeItems();
 }
 
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
