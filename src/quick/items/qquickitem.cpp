@@ -2471,6 +2471,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
 {
     Q_ASSERT(item);
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: item:" << item << ", forward:" << forward;
 
     if (!item->window())
         return item;
@@ -2481,19 +2482,25 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     bool all = QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
 
     QQuickItem *from = 0;
+    bool isTabFence = item->d_func()->isTabFence;
     if (forward) {
-       from = item->parentItem();
+        if (!isTabFence)
+            from = item->parentItem();
     } else {
         if (!item->childItems().isEmpty())
             from = item->childItems().first();
-        else
+        else if (!isTabFence)
             from = item->parentItem();
     }
     bool skip = false;
     QQuickItem * startItem = item;
     QQuickItem * firstFromItem = from;
     QQuickItem *current = item;
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
     do {
+        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: current:" << current;
+        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: from:" << from;
         skip = false;
         QQuickItem *last = current;
 
@@ -2507,7 +2514,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             else
                 lastChild = prevTabChildItem(current, -1);
         }
-        bool isTabFence = current->d_func()->isTabFence;
+        isTabFence = current->d_func()->isTabFence;
         if (isTabFence && !hasChildren)
             return current;
 
@@ -2562,9 +2569,14 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
                 return startItem;
             }
         }
-        if (!firstFromItem) { //start from root
-            startItem = current;
-            firstFromItem = from;
+        if (!firstFromItem) {
+            if (startItem->d_func()->isTabFence) {
+                if (current == startItem)
+                    firstFromItem = from;
+            } else { //start from root
+                startItem = current;
+                firstFromItem = from;
+            }
         }
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
                   || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
