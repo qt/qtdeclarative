@@ -240,6 +240,12 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     emit released();
 }
 
+void QQuickOverlay::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
+}
+
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);
