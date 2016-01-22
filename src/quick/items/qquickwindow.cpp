@@ -3983,7 +3983,7 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
-    \qmlproperty Window::active
+    \qmlproperty bool Window::active
     \since 5.1
 
     The active status of the window.
