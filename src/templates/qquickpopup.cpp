@@ -351,10 +351,22 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
 
 void QQuickPopupPositioner::repositionPopup()
 {
-    QPointF pos(m_x, m_y);
-    if (m_parentItem)
-        pos = m_parentItem->mapToScene(pos);
-    m_popup->popupItem->setPosition(pos);
+    QRectF rect(m_x, m_y, m_popup->popupItem->width(), m_popup->popupItem->height());
+    if (m_parentItem) {
+        rect = m_parentItem->mapRectToScene(rect);
+
+        QQuickWindow *window = m_parentItem->window();
+        if (window) {
+            if (rect.top() < 0 || rect.bottom() > window->height()) {
+                // if the popup doesn't fit on the screen, try flipping it around (below <-> above)
+                QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
+                if (flipped.y() >= 0 && flipped.bottom() < window->height())
+                    rect = flipped;
+            }
+        }
+    }
+
+    m_popup->popupItem->setPosition(rect.topLeft());
 }
 
 void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
