@@ -124,7 +124,7 @@ bool QQuickMouseAreaPrivate::isWheelConnected()
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
 {
     Q_Q(QQuickMouseArea);
-    if (!propagateComposedEvents)
+    if (!window || !propagateComposedEvents)
         return;
     QPointF scenePos = q->mapToScene(QPointF(event->x(), event->y()));
     propagateHelper(event, window->contentItem(), scenePos, t);

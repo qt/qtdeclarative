@@ -957,7 +957,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         switch (mode) {
         case QQuickItemView::Beginning:
             pos = itemPos;
-            if (index < 0 && header)
+            if (header && (index < 0 || hasStickyHeader()))
                 pos -= headerSize();
             break;
         case QQuickItemView::Center:
@@ -965,7 +965,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
             break;
         case QQuickItemView::End:
             pos = itemPos - size() + item->size();
-            if (index >= model->count() && footer)
+            if (footer && (index >= model->count() || hasStickyFooter()))
                 pos += footerSize();
             break;
         case QQuickItemView::Visible:

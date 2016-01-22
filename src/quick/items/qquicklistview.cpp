@@ -123,8 +123,8 @@ public:
     bool showFooterForIndex(int index) const Q_DECL_OVERRIDE;
     void updateHeader() Q_DECL_OVERRIDE;
     void updateFooter() Q_DECL_OVERRIDE;
-    bool hasStickyHeader() const;
-    bool hasStickyFooter() const;
+    bool hasStickyHeader() const Q_DECL_OVERRIDE;
+    bool hasStickyFooter() const Q_DECL_OVERRIDE;
 
     void changedVisibleIndex(int newIndex) Q_DECL_OVERRIDE;
     void initializeCurrentItem() Q_DECL_OVERRIDE;

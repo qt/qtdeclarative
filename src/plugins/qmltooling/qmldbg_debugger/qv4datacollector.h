@@ -46,6 +46,9 @@
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonArray>
 
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+
 QT_BEGIN_NAMESPACE
 
 class QV4Debugger;

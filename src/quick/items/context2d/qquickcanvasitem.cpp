@@ -228,6 +228,9 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     operations. The Canvas output may be saved as an image file or serialized
     to a URL.
 
+    Rendering to the Canvas is done using a Context2D object, usually as a
+    result of the \l paint signal.
+
     To define a drawing area in the Canvas item set the \c width and \c height
     properties.  For example, the following code creates a Canvas item which
     has a drawing area with a height of 100 pixels and width of 200 pixels:
@@ -237,6 +240,11 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
         id: mycanvas
         width: 100
         height: 200
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.fillStyle = Qt.rgba(1, 0, 0, 1);
+            ctx.fillRect(0, 0, width, height);
+        }
     }
     \endqml
 

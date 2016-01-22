@@ -249,6 +249,7 @@ private slots:
 
     void QTBUG_50105();
     void keyNavigationEnabled();
+    void QTBUG_50097_stickyHeader_positionViewAtIndex();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -7476,7 +7477,7 @@ void tst_QQuickListView::stickyPositioning()
     QFETCH(QPointF, headerPos);
     QFETCH(QPointF, footerPos);
 
-    QQuickView *window = createView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < 20; i++)
@@ -7519,7 +7520,7 @@ void tst_QQuickListView::stickyPositioning()
         QCOMPARE(actualPos, footerPos);
     }
 
-    delete window;
+    releaseView(window);
 }
 
 void tst_QQuickListView::stickyPositioning_data()
@@ -7546,7 +7547,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("top header") << "stickyPositioning-header.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(0,-10) << QPointF();
+            << QPointF(0,0) << QPointF();
 
     QTest::newRow("top header: 1/2 up") << "stickyPositioning-header.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -7573,7 +7574,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("top footer") << "stickyPositioning-footer.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::BottomToTop
             << 19 << QQuickItemView::End << QList<QPointF>()
-            << QPointF() << QPointF(0,-10);
+            << QPointF() << QPointF(0,0);
 
     QTest::newRow("top footer: 1/2 up") << "stickyPositioning-footer.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::BottomToTop
@@ -7600,7 +7601,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("bottom header") << "stickyPositioning-header.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::BottomToTop
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(0,100) << QPointF();
+            << QPointF(0,90) << QPointF();
 
     QTest::newRow("bottom header: 1/2 down") << "stickyPositioning-header.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::BottomToTop
@@ -7627,7 +7628,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("bottom footer") << "stickyPositioning-footer.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
             << 19 << QQuickItemView::End << QList<QPointF>()
-            << QPointF() << QPointF(0,100);
+            << QPointF() << QPointF(0,90);
 
     QTest::newRow("bottom footer: 1/2 down") << "stickyPositioning-footer.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -7654,7 +7655,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("top header & bottom footer") << "stickyPositioning-both.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(0,-10) << QPointF(0,90);
+            << QPointF(0,0) << QPointF(0,100);
 
     QTest::newRow("top header & bottom footer: 1/2 up") << "stickyPositioning-both.qml"
             << Qt::Vertical << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -7707,7 +7708,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("left header") << "stickyPositioning-header.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(-10,0) << QPointF();
+            << QPointF(0,0) << QPointF();
 
     QTest::newRow("left header: 1/2 left") << "stickyPositioning-header.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -7734,7 +7735,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("left footer") << "stickyPositioning-footer.qml"
             << Qt::Horizontal << Qt::RightToLeft << QQuickListView::TopToBottom
             << 19 << QQuickItemView::End << QList<QPointF>()
-            << QPointF() << QPointF(-10,0);
+            << QPointF() << QPointF(0,0);
 
     QTest::newRow("left footer: 1/2 left") << "stickyPositioning-footer.qml"
             << Qt::Horizontal << Qt::RightToLeft << QQuickListView::TopToBottom
@@ -7761,7 +7762,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("right header") << "stickyPositioning-header.qml"
             << Qt::Horizontal << Qt::RightToLeft << QQuickListView::TopToBottom
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(100,0) << QPointF();
+            << QPointF(90,0) << QPointF();
 
     QTest::newRow("right header: 1/2 right") << "stickyPositioning-header.qml"
             << Qt::Horizontal << Qt::RightToLeft << QQuickListView::TopToBottom
@@ -7788,7 +7789,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("right footer") << "stickyPositioning-footer.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
             << 19 << QQuickItemView::End << QList<QPointF>()
-            << QPointF() << QPointF(100,0);
+            << QPointF() << QPointF(90,0);
 
     QTest::newRow("right footer: 1/2 right") << "stickyPositioning-footer.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -7815,7 +7816,7 @@ void tst_QQuickListView::stickyPositioning_data()
     QTest::newRow("left header & right footer") << "stickyPositioning-both.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
             << 0 << QQuickItemView::Beginning << QList<QPointF>()
-            << QPointF(-10,0) << QPointF(90,0);
+            << QPointF(0,0) << QPointF(100,0);
 
     QTest::newRow("left header & right footer: 1/2 left") << "stickyPositioning-both.qml"
             << Qt::Horizontal << Qt::LeftToRight << QQuickListView::TopToBottom
@@ -8511,6 +8512,22 @@ void tst_QQuickListView::QTBUG_50105()
     QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
     QVERIFY(window.data());
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+}
+
+void tst_QQuickListView::QTBUG_50097_stickyHeader_positionViewAtIndex()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("qtbug50097.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != 0);
+    QTRY_COMPARE(listview->contentY(), -100.0); // the header size, since the header is overlaid
+    listview->setProperty("currentPage", 2);
+    QTRY_COMPARE(listview->contentY(), 400.0); // a full page of items down, sans the original negative header position
+    listview->setProperty("currentPage", 1);
+    QTRY_COMPARE(listview->contentY(), -100.0); // back to the same position: header visible, items not under the header.
 }
 
 QTEST_MAIN(tst_QQuickListView)
