@@ -116,8 +116,8 @@ ApplicationWindow {
 
     Menu {
         id: menu
-        contentItem.x: 1
-        contentItem.y: header.height
+        x: 1
+        y: header.height
 
         MenuItem {
             text: "Option 1"

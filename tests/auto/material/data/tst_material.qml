@@ -304,7 +304,7 @@ TestCase {
         verify(window.combo.activeFocus)
         keyClick(Qt.Key_Space)
         verify(window.combo.popup.visible)
-        var listView = window.combo.popup.contentItem.children[0]
+        var listView = window.combo.popup.contentItem
         verify(listView)
         var child = listView.contentItem.children[0]
         verify(child)

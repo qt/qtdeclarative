@@ -86,7 +86,7 @@ void tst_menu::mouse()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     menu->open();
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
     QQuickItem *firstItem = menu->itemAt(0);
     QSignalSpy clickedSpy(firstItem, SIGNAL(clicked(QQuickMouseEvent*)));
@@ -111,7 +111,7 @@ void tst_menu::mouse()
     menu->open();
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
     // Ensure that we have enough space to click outside of the menu.
     QVERIFY(window->width() > menu->contentItem()->width());
@@ -120,12 +120,12 @@ void tst_menu::mouse()
         QPoint(menu->contentItem()->width() + 1, menu->contentItem()->height() + 1));
     QCOMPARE(visibleSpy.count(), 3);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
     // Try pressing within the menu and releasing outside of it; it should close.
     // TODO: won't work until QQuickPopup::releasedOutside() actually gets emitted
@@ -167,7 +167,7 @@ void tst_menu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
@@ -194,7 +194,7 @@ void tst_menu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 3);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!secondItem->hasActiveFocus());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));

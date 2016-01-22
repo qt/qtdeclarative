@@ -109,29 +109,27 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
-        contentItem: Rectangle {
-            // TODO: Popup::anchors
-            readonly property var above: popup.visible ? control.mapToItem(null, 0, control.height - height) : Qt.point(0, 0)
-            readonly property var below: popup.visible ? control.mapToItem(null, 0, 0) : Qt.point(0, 0)
+        readonly property var above: popup.visible ? control.mapToItem(null, 0, control.height - height) : Qt.point(0, 0)
+        readonly property var below: popup.visible ? control.mapToItem(null, 0, 0) : Qt.point(0, 0)
 
-            x: below.x
-            y: above.y >= 0 && below.y + height > control.Window.height ? above.y : below.y
-            width: control.width
-            height: listview.height
+        x: below.x
+        y: above.y >= 0 && below.y + height > control.Window.height ? above.y : below.y
+        width: control.width
+        height: Math.min(200, listview.contentHeight) // TODO: 396
 
+        contentItem: ListView {
+            id: listview
+            clip: true
+            model: control.delegateModel
+            currentIndex: control.highlightedIndex
+
+//            ScrollIndicator.vertical: ScrollIndicator { }
+        }
+
+        background: Rectangle {
             color: control.Universal.chromeMediumLowColor
-
-            ListView {
-                id: listview
-                width: control.width
-                height: Math.min(200, contentHeight) // TODO: 396
-
-                clip: true
-                model: control.delegateModel
-                currentIndex: control.highlightedIndex
-
-//                ScrollIndicator.vertical: ScrollIndicator { }
-            }
+            border.color: control.Universal.chromeHighColor
+            border.width: 1 // FlyoutBorderThemeThickness
         }
     }
     //! [popup]

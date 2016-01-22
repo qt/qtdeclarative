@@ -48,12 +48,14 @@
 // We mean it.
 //
 
+#include "qquickpopup_p.h"
+
 #include <QtCore/private/qobject_p.h>
+#include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
@@ -80,6 +82,20 @@ private:
     QQuickPopupPrivate *popup;
 };
 
+class QQuickPopupItem : public QQuickItem
+{
+    Q_OBJECT
+
+public:
+    explicit QQuickPopupItem(QQuickPopup *popup);
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+
+private:
+    QQuickPopup *popup;
+};
+
 class QQuickPopupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
@@ -87,16 +103,42 @@ class QQuickPopupPrivate : public QObjectPrivate
 public:
     QQuickPopupPrivate();
 
+    static QQuickPopupPrivate *get(QQuickPopup *popup)
+    {
+        return popup->d_func();
+    }
+
+    void init();
+
     void finalizeEnterTransition();
     void finalizeExitTransition();
+
+    void resizeBackground();
+    void resizeContent();
+
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
 
     bool focus;
     bool modal;
     bool complete;
+    bool hasTopPadding;
+    bool hasLeftPadding;
+    bool hasRightPadding;
+    bool hasBottomPadding;
+    qreal padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
+    QQuickItem *background;
     QQuickItem *contentItem;
     QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
+    QQuickPopupItem *popupItem;
     QQuickPopupTransitionManager transitionManager;
 };
 

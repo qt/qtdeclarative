@@ -41,10 +41,14 @@ import Qt.labs.templates 1.0 as T
 T.Menu {
     id: control
 
+    width: Math.max(background ? background.implicitWidth : 0,
+                    contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
+    height: Math.min(background ? background.implicitHeight : 0,
+                     contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+
     //! [contentItem]
     contentItem: ListView {
-        implicitWidth: 200
-        implicitHeight: Math.min(contentHeight, 200)
+        implicitHeight: contentHeight
         model: control.contentModel
         // TODO: improve this?
         interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
@@ -53,14 +57,15 @@ T.Menu {
         currentIndex: -1
 
         ScrollIndicator.vertical: ScrollIndicator {}
-
-        Rectangle {
-            width: parent.width
-            height: parent.height
-            color: "#ffffff"
-            border.color: "#353637"
-            z: -1
-        }
     }
     //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        implicitWidth: 200
+        implicitHeight: 200
+        color: "#ffffff"
+        border.color: "#353637"
+    }
+    //! [background]
 }

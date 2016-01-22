@@ -261,11 +261,11 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     const QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
     const QList<QQuickItem *> &sortedChildren = priv->paintOrderChildItems();
     for (int i = sortedChildren.count() - 1; i >= 0; --i) {
-        QQuickItem *contentItem = sortedChildren[i];
-        if (contentItem == item)
+        QQuickItem *popupItem = sortedChildren[i];
+        if (popupItem == item)
             break;
 
-        QQuickPopup *popup = d->popups.value(contentItem);
+        QQuickPopup *popup = d->popups.value(popupItem);
         if (popup) {
             emit popup->pressedOutside();
 

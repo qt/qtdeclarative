@@ -35,10 +35,19 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtGraphicalEffects 1.0
 import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.material 1.0
 
 T.Popup {
     id: control
+
+    width: Math.max(background ? background.implicitWidth : 0,
+                    contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
+    height: Math.max(background ? background.implicitHeight : 0,
+                     contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+
+    padding: 6
 
     enter: Transition {
         // grow_fade_in
@@ -50,5 +59,17 @@ T.Popup {
         // shrink_fade_out
         NumberAnimation { property: "scale"; from: 1.0; to: 0.9; easing.type: Easing.OutQuint; duration: 220 }
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
+    }
+
+    background: Rectangle {
+        radius: 3
+        color: control.Material.dialogColor
+
+        layer.effect: DropShadow {
+            verticalOffset: 1
+            color: control.Material.dropShadowColor
+            samples: 15
+            spread: 0.5
+        }
     }
 }
