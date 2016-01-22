@@ -52,6 +52,7 @@
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -107,6 +108,41 @@ private:
     QQuickPopup *popup;
 };
 
+class QQuickPopupPositioner : public QQuickItemChangeListener
+{
+public:
+    explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
+    ~QQuickPopupPositioner();
+
+    qreal x() const;
+    void setX(qreal x);
+
+    qreal y() const;
+    void setY(qreal y);
+
+    QQuickItem *parentItem() const;
+    void setParentItem(QQuickItem *parent);
+
+protected:
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemParentChanged(QQuickItem *, QQuickItem *parent);
+    void itemChildRemoved(QQuickItem *, QQuickItem *child);
+    void itemDestroyed(QQuickItem *item);
+
+private:
+    void repositionPopup();
+
+    void removeAncestorListeners(QQuickItem *item);
+    void addAncestorListeners(QQuickItem *item);
+
+    bool isAncestor(QQuickItem *item) const;
+
+    qreal m_x;
+    qreal m_y;
+    QQuickItem *m_parentItem;
+    QQuickPopupPrivate *m_popup;
+};
+
 class QQuickPopupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
@@ -144,12 +180,14 @@ public:
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
+    QQuickItem *parentItem;
     QQuickItem *background;
     QQuickItem *contentItem;
     QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;
+    QQuickPopupPositioner positioner;
     QQuickPopupTransitionManager transitionManager;
 };
 

@@ -59,6 +59,14 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
+static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPrivate::Geometry
+                                                                  | QQuickItemPrivate::Parent
+                                                                  | QQuickItemPrivate::Children;
+
+static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate::Geometry
+                                                             | QQuickItemPrivate::Parent
+                                                             | QQuickItemPrivate::Destroyed;
+
 QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
@@ -72,12 +80,14 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , leftPadding(0)
     , rightPadding(0)
     , bottomPadding(0)
+    , parentItem(Q_NULLPTR)
     , background(Q_NULLPTR)
     , contentItem(Q_NULLPTR)
     , overlay(Q_NULLPTR)
     , enter(Q_NULLPTR)
     , exit(Q_NULLPTR)
     , popupItem(Q_NULLPTR)
+    , positioner(this)
     , transitionManager(this)
 {
 }
@@ -87,6 +97,7 @@ void QQuickPopupPrivate::init()
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
     popupItem->setParent(q);
+    q->setParentItem(qobject_cast<QQuickItem *>(parent));
 }
 
 void QQuickPopupPrivate::finalizeEnterTransition()
@@ -99,6 +110,7 @@ void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
     overlay = Q_NULLPTR;
+    positioner.setParentItem(Q_NULLPTR);
     popupItem->setParentItem(Q_NULLPTR);
     emit q->visibleChanged();
 }
@@ -244,6 +256,146 @@ void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
     popup->geometryChanged(newGeometry, oldGeometry);
 }
 
+QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
+    m_x(0),
+    m_y(0),
+    m_parentItem(Q_NULLPTR),
+    m_popup(popup)
+{
+}
+
+QQuickPopupPositioner::~QQuickPopupPositioner()
+{
+    if (m_parentItem) {
+        QQuickItemPrivate::get(m_parentItem)->removeItemChangeListener(this, ItemChangeTypes);
+        removeAncestorListeners(m_parentItem->parentItem());
+    }
+}
+
+qreal QQuickPopupPositioner::x() const
+{
+    return m_x;
+}
+
+void QQuickPopupPositioner::setX(qreal x)
+{
+    if (m_x != x) {
+        m_x = x;
+        repositionPopup();
+    }
+}
+
+qreal QQuickPopupPositioner::y() const
+{
+    return m_y;
+}
+
+void QQuickPopupPositioner::setY(qreal y)
+{
+    if (m_y != y) {
+        m_y = y;
+        repositionPopup();
+    }
+}
+
+QQuickItem *QQuickPopupPositioner::parentItem() const
+{
+    return m_parentItem;
+}
+
+void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
+{
+    if (m_parentItem == parent)
+        return;
+
+    if (m_parentItem) {
+        QQuickItemPrivate::get(m_parentItem)->removeItemChangeListener(this, ItemChangeTypes);
+        removeAncestorListeners(m_parentItem->parentItem());
+    }
+
+    m_parentItem = parent;
+
+    if (!parent)
+        return;
+
+    QQuickItemPrivate::get(parent)->addItemChangeListener(this, ItemChangeTypes);
+    addAncestorListeners(parent->parentItem());
+
+    repositionPopup();
+}
+
+void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    repositionPopup();
+}
+
+void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
+{
+    addAncestorListeners(parent);
+}
+
+void QQuickPopupPositioner::itemChildRemoved(QQuickItem *, QQuickItem *child)
+{
+    if (isAncestor(child))
+        removeAncestorListeners(child);
+}
+
+void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
+{
+    Q_ASSERT(m_parentItem == item);
+
+    m_parentItem = Q_NULLPTR;
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, ItemChangeTypes);
+    removeAncestorListeners(item->parentItem());
+}
+
+void QQuickPopupPositioner::repositionPopup()
+{
+    QPointF pos(m_x, m_y);
+    if (m_parentItem)
+        pos = m_parentItem->mapToScene(pos);
+    m_popup->popupItem->setPosition(pos);
+}
+
+void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
+{
+    if (item == m_parentItem)
+        return;
+
+    QQuickItem *p = item;
+    while (p) {
+        QQuickItemPrivate::get(p)->removeItemChangeListener(this, AncestorChangeTypes);
+        p = p->parentItem();
+    }
+}
+
+void QQuickPopupPositioner::addAncestorListeners(QQuickItem *item)
+{
+    if (item == m_parentItem)
+        return;
+
+    QQuickItem *p = item;
+    while (p) {
+        QQuickItemPrivate::get(p)->addItemChangeListener(this, AncestorChangeTypes);
+        p = p->parentItem();
+    }
+}
+
+// TODO: use QQuickItem::isAncestorOf() in dev/5.7
+bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
+{
+    if (!m_parentItem)
+        return false;
+
+    QQuickItem *parent = m_parentItem->parentItem();
+    while (parent) {
+        if (parent == item)
+            return true;
+        parent = parent->parentItem();
+    }
+    return false;
+}
+
 QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *popup)
     : QQuickTransitionManager()
     , state(Off)
@@ -293,6 +445,12 @@ QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
     d->init();
 }
 
+QQuickPopup::~QQuickPopup()
+{
+    Q_D(QQuickPopup);
+    d->positioner.setParentItem(Q_NULLPTR);
+}
+
 /*!
     \qmlmethod void Qt.labs.controls::Popup::open()
 
@@ -333,6 +491,7 @@ void QQuickPopup::open()
 
     d->overlay = static_cast<QQuickOverlay *>(applicationWindow->overlay());
     d->popupItem->setParentItem(d->overlay);
+    d->positioner.setParentItem(d->parentItem);
     // TODO: add Popup::transformOrigin?
     if (d->contentItem)
         d->popupItem->setTransformOrigin(d->contentItem->transformOrigin());
@@ -368,13 +527,13 @@ void QQuickPopup::close()
 qreal QQuickPopup::x() const
 {
     Q_D(const QQuickPopup);
-    return d->popupItem->x();
+    return d->positioner.x();
 }
 
 void QQuickPopup::setX(qreal x)
 {
     Q_D(QQuickPopup);
-    d->popupItem->setX(x);
+    d->positioner.setX(x);
 }
 
 /*!
@@ -385,13 +544,13 @@ void QQuickPopup::setX(qreal x)
 qreal QQuickPopup::y() const
 {
     Q_D(const QQuickPopup);
-    return d->popupItem->y();
+    return d->positioner.y();
 }
 
 void QQuickPopup::setY(qreal y)
 {
     Q_D(QQuickPopup);
-    d->popupItem->setY(y);
+    d->positioner.setY(y);
 }
 
 /*!
@@ -603,6 +762,28 @@ void QQuickPopup::resetBottomPadding()
 }
 
 /*!
+    \qmlproperty Item Qt.labs.popups::Popup::parent
+
+    This property holds the parent item.
+*/
+QQuickItem *QQuickPopup::parentItem() const
+{
+    Q_D(const QQuickPopup);
+    return d->parentItem;
+}
+
+void QQuickPopup::setParentItem(QQuickItem *parent)
+{
+    Q_D(QQuickPopup);
+    if (d->parentItem != parent) {
+        d->parentItem = parent;
+        if (d->positioner.parentItem())
+            d->positioner.setParentItem(parent);
+        emit parentChanged();
+    }
+}
+
+/*!
     \qmlproperty Item Qt.labs.popups::Popup::background
 
     This property holds the background item.
@@ -787,6 +968,8 @@ void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
     d->complete = true;
+    if (!parentItem())
+        setParentItem(qobject_cast<QQuickItem *>(parent()));
 }
 
 bool QQuickPopup::isComponentComplete() const

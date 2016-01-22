@@ -109,11 +109,6 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
-        readonly property var above: popup.visible ? control.mapToItem(null, 0, control.height - height) : Qt.point(0, 0)
-        readonly property var below: popup.visible ? control.mapToItem(null, 0, 0) : Qt.point(0, 0)
-
-        x: below.x
-        y: above.y >= 0 && below.y + height > control.Window.height ? above.y : below.y
         width: control.width
         height: Math.min(200, listview.contentHeight) // TODO: 396
 

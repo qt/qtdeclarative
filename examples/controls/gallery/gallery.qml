@@ -86,6 +86,20 @@ ApplicationWindow {
                     source: "qrc:/images/menu.png"
                 }
                 onClicked: optionsMenu.open()
+
+                Menu {
+                    id: optionsMenu
+                    x: parent.width - width
+
+                    MenuItem {
+                        text: "Settings"
+                        onTriggered: settingsPopup.open()
+                    }
+                    MenuItem {
+                        text: "About"
+                        onTriggered: aboutDialog.open()
+                    }
+                }
             }
         }
     }
@@ -303,20 +317,6 @@ ApplicationWindow {
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
-        }
-    }
-
-    Menu {
-        id: optionsMenu
-        x: window.width - width
-
-        MenuItem {
-            text: "Settings"
-            onTriggered: settingsPopup.open()
-        }
-        MenuItem {
-            text: "About"
-            onTriggered: aboutDialog.open()
         }
     }
 }

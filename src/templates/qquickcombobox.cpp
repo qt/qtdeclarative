@@ -332,6 +332,13 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
+QQuickComboBox::~QQuickComboBox()
+{
+    Q_D(QQuickComboBox);
+    delete d->popup;
+    d->popup = Q_NULLPTR;
+}
+
 /*!
     \readonly
     \qmlproperty int Qt.labs.controls::ComboBox::count

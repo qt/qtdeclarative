@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickPopupPrivate;
 class QQuickTransition;
+class QQuickTransform;
 
 class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
@@ -77,6 +78,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
+    Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
@@ -89,6 +91,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
 
 public:
     explicit QQuickPopup(QObject *parent = Q_NULLPTR);
+    ~QQuickPopup();
 
     qreal x() const;
     void setX(qreal x);
@@ -124,6 +127,9 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
+
+    QQuickItem *parentItem() const;
+    void setParentItem(QQuickItem *parent);
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
@@ -163,6 +169,7 @@ Q_SIGNALS:
     void leftPaddingChanged();
     void rightPaddingChanged();
     void bottomPaddingChanged();
+    void parentChanged();
     void backgroundChanged();
     void contentItemChanged();
     void focusChanged();
