@@ -14,8 +14,9 @@ qtHaveModule(gui):contains(QT_CONFIG, opengl(es1|es2)?) {
 
 SUBDIRS += \
     plugins \
-    qmldebug \
     imports \
     qmldevtools
+
+!contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmldebug
 
 qmldevtools.CONFIG = host_build

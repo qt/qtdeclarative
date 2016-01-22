@@ -9,8 +9,10 @@ qmlimportscanner.CONFIG = host_build
 !android|android_app {
     SUBDIRS += \
         qml \
-        qmlprofiler \
         qmllint
+
+    !contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmlprofiler
+
     qtHaveModule(quick) {
         !static: SUBDIRS += qmlscene qmlplugindump
         qtHaveModule(widgets): SUBDIRS += qmleasing
