@@ -49,6 +49,7 @@
 //
 
 #include <QtCore/qvector.h>
+#include <QtCore/qpointer.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 #include <QtLabsTemplates/private/qquickpopup_p_p.h>
@@ -78,7 +79,6 @@ public:
     void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
-    void onContentItemChanged();
     void onItemPressed();
     void onItemActiveFocusChanged();
     void onMenuVisibleChanged();
@@ -91,7 +91,7 @@ public:
 
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;
-    QQuickItem *dummyFocusItem;
+    QPointer<QQuickItem> dummyFocusItem;
     bool ignoreActiveFocusChanges;
     QString title;
 };

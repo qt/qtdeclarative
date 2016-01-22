@@ -223,6 +223,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
         return;
     }
     if (d->contentItem != item) {
+        contentItemChange(item, d->contentItem);
         delete d->contentItem;
         d->contentItem = item;
         if (item)
@@ -338,6 +339,12 @@ bool QQuickPopup::isComponentComplete() const
 {
     Q_D(const QQuickPopup);
     return d->complete;
+}
+
+void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_UNUSED(newItem);
+    Q_UNUSED(oldItem);
 }
 
 QT_END_NAMESPACE

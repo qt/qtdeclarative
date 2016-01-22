@@ -188,35 +188,6 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const 
         resizeItems();
 }
 
-void QQuickMenuPrivate::onContentItemChanged()
-{
-    Q_Q(QQuickMenu);
-    if (contentItem) {
-        QQuickItemPrivate::get(contentItem)->updateOrAddGeometryChangeListener(this, QQuickItemPrivate::WidthChange);
-        contentItem->installEventFilter(q);
-        contentItem->setFlag(QQuickItem::ItemIsFocusScope);
-        contentItem->setActiveFocusOnTab(true);
-
-        // Trying to give active focus to the contentItem (ListView, by default)
-        // when the menu first opens, without also giving it to the first delegate item
-        // doesn't seem to be possible, but this is what we need to do. QMenu behaves
-        // similarly to this; it receives focus if a button that has it as a menu is clicked,
-        // and only after pressing tab is the first menu item then given active focus.
-        if (!dummyFocusItem) {
-            dummyFocusItem = new QQuickItem(contentItem);
-            dummyFocusItem->setObjectName(QStringLiteral("dummyMenuFocusItem"));
-        } else {
-            dummyFocusItem->setParentItem(contentItem);
-        }
-
-        dummyFocusItem->setActiveFocusOnTab(true);
-        dummyFocusItem->stackBefore(contentItem->childItems().first());
-
-        QObjectPrivate::connect(q, &QQuickMenu::visibleChanged, this, &QQuickMenuPrivate::onMenuVisibleChanged);
-        QObjectPrivate::connect(dummyFocusItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
-    }
-}
-
 void QQuickMenuPrivate::onItemPressed()
 {
     Q_Q(QQuickMenu);
@@ -332,7 +303,7 @@ QQuickMenu::QQuickMenu(QObject *parent) :
     Q_D(QQuickMenu);
     connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::close);
     connect(this, &QQuickMenu::releasedOutside, this, &QQuickMenu::close);
-    QObjectPrivate::connect(this, &QQuickMenu::contentItemChanged, d, &QQuickMenuPrivate::onContentItemChanged);
+    QObjectPrivate::connect(this, &QQuickMenu::visibleChanged, d, &QQuickMenuPrivate::onMenuVisibleChanged);
 }
 
 /*!
@@ -479,6 +450,40 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
+}
+
+void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::contentItemChange(newItem, oldItem);
+    if (oldItem) {
+        oldItem->removeEventFilter(this);
+        if (d->dummyFocusItem)
+            QObjectPrivate::disconnect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
+    }
+
+    if (newItem) {
+        newItem->installEventFilter(this);
+        newItem->setFlag(QQuickItem::ItemIsFocusScope);
+        newItem->setActiveFocusOnTab(true);
+
+        // Trying to give active focus to the contentItem (ListView, by default)
+        // when the menu first opens, without also giving it to the first delegate item
+        // doesn't seem to be possible, but this is what we need to do. QMenu behaves
+        // similarly to this; it receives focus if a button that has it as a menu is clicked,
+        // and only after pressing tab is the first menu item then given active focus.
+        if (!d->dummyFocusItem) {
+            d->dummyFocusItem = new QQuickItem(newItem);
+            d->dummyFocusItem->setObjectName(QStringLiteral("dummyMenuFocusItem"));
+        } else {
+            d->dummyFocusItem->setParentItem(newItem);
+        }
+
+        d->dummyFocusItem->setActiveFocusOnTab(true);
+        d->dummyFocusItem->stackBefore(newItem->childItems().first());
+
+        QObjectPrivate::connect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
+    }
 }
 
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)

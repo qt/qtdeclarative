@@ -116,6 +116,8 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
     bool isComponentComplete() const;
 
+    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
+
 private:
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)

@@ -83,6 +83,7 @@ public:
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
