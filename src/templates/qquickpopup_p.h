@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qmargins.h>
+#include <QtGui/qevent.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmllist.h>
@@ -183,6 +184,17 @@ protected:
     void classBegin() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
     bool isComponentComplete() const;
+
+    virtual void focusInEvent(QFocusEvent *event);
+    virtual void focusOutEvent(QFocusEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void keyReleaseEvent(QKeyEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
+    virtual void mouseUngrabEvent();
+    virtual void wheelEvent(QWheelEvent *event);
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);

@@ -186,6 +186,57 @@ void QQuickPopupPrivate::setBottomPadding(qreal value, bool reset)
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) : popup(popup)
 {
+    setAcceptedMouseButtons(Qt::AllButtons);
+}
+
+void QQuickPopupItem::focusInEvent(QFocusEvent *event)
+{
+    popup->focusInEvent(event);
+}
+
+void QQuickPopupItem::focusOutEvent(QFocusEvent *event)
+{
+    popup->focusOutEvent(event);
+}
+
+void QQuickPopupItem::keyPressEvent(QKeyEvent *event)
+{
+    popup->keyPressEvent(event);
+}
+
+void QQuickPopupItem::keyReleaseEvent(QKeyEvent *event)
+{
+    popup->keyReleaseEvent(event);
+}
+
+void QQuickPopupItem::mousePressEvent(QMouseEvent *event)
+{
+    popup->mousePressEvent(event);
+}
+
+void QQuickPopupItem::mouseMoveEvent(QMouseEvent *event)
+{
+    popup->mouseMoveEvent(event);
+}
+
+void QQuickPopupItem::mouseReleaseEvent(QMouseEvent *event)
+{
+    popup->mouseReleaseEvent(event);
+}
+
+void QQuickPopupItem::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    popup->mouseDoubleClickEvent(event);
+}
+
+void QQuickPopupItem::mouseUngrabEvent()
+{
+    popup->mouseUngrabEvent();
+}
+
+void QQuickPopupItem::wheelEvent(QWheelEvent *event)
+{
+    popup->wheelEvent(event);
 }
 
 void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -742,6 +793,55 @@ bool QQuickPopup::isComponentComplete() const
 {
     Q_D(const QQuickPopup);
     return d->complete;
+}
+
+void QQuickPopup::focusInEvent(QFocusEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::focusOutEvent(QFocusEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::keyPressEvent(QKeyEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::mousePressEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::mouseMoveEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::mouseReleaseEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::mouseUngrabEvent()
+{
+}
+
+void QQuickPopup::wheelEvent(QWheelEvent *event)
+{
+    event->accept();
 }
 
 void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
