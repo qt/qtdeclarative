@@ -143,8 +143,7 @@ void QQuickPopup::open()
         return;
     }
     if (d->overlay) {
-        // FIXME qmlInfo needs to know about QQuickWindow and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "popup already open in window") << d->overlay->window();
+        // popup already open
         return;
     }
 
