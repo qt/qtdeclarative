@@ -320,6 +320,7 @@ void tst_qqmlvaluetypes::locale()
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
+#ifndef QT_NO_IM
         QVERIFY(QQml_guiProvider()->inputMethod());
         QInputMethod *inputMethod = qobject_cast<QInputMethod*>(QQml_guiProvider()->inputMethod());
         QLocale locale = inputMethod->locale();
@@ -346,6 +347,7 @@ void tst_qqmlvaluetypes::locale()
         }
         QCOMPARE(weekDays, locale.weekdays());
         QCOMPARE(object->property("zeroDigit").toString().at(0), locale.zeroDigit());
+#endif // QT_NO_IM
     }
 }
 
