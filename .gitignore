@@ -94,3 +94,5 @@ app_process
 qtc-debugging-helper
 android-*.so-deployment-settings.json
 *.directory
+*_wrapper.sh
+*_wrapper.bat
