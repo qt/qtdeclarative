@@ -471,7 +471,7 @@ void QQuickTextPrivate::updateSize()
 }
 
 QQuickTextLine::QQuickTextLine()
-    : QObject(), m_line(0), m_height(0)
+    : QObject(), m_line(0), m_height(0), m_lineOffset(0)
 {
 }
 

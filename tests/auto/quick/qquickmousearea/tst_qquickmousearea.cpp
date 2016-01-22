@@ -1144,6 +1144,19 @@ void tst_QQuickMouseArea::clickThrough()
 
     QCOMPARE(window->rootObject()->property("clicksEnabled").toInt(), 2);
     QCOMPARE(window->rootObject()->property("clicksDisabled").toInt(), 1); //disabled, shouldn't increment
+
+    window.reset(new QQuickView);
+
+    //QTBUG-49100
+    QVERIFY2(initView(*window.data(), testFileUrl("qtbug49100.qml"), true, &errorMessage), errorMessage.constData());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+
+    QVERIFY(window->rootObject() != 0);
 }
 
 void tst_QQuickMouseArea::hoverPosition()

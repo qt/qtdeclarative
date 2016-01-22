@@ -84,6 +84,7 @@ public:
 
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);
+    void evaluate(const QList<QVariant> &args);
 
     QQmlSourceLocation sourceLocation() const;
     QString expression() const;
