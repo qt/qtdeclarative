@@ -57,7 +57,6 @@ class QV4DataCollector
 public:
     typedef uint Ref;
     typedef QVector<uint> Refs;
-    static const Ref s_invalidRef;
 
     static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
     static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);

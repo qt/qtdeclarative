@@ -55,9 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-const QV4DataCollector::Ref QV4DataCollector::s_invalidRef =
-        std::numeric_limits<QV4DataCollector::Ref>::max();
-
 QV4::CallContext *QV4DataCollector::findContext(int frame)
 {
     QV4::ExecutionContext *ctx = engine()->currentContext;
@@ -108,17 +105,13 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
     switch (scopeType) {
     case QV4::Heap::ExecutionContext::Type_GlobalContext:
         return 0;
-        break;
     case QV4::Heap::ExecutionContext::Type_CatchContext:
         return 4;
-        break;
     case QV4::Heap::ExecutionContext::Type_WithContext:
         return 2;
-        break;
     case QV4::Heap::ExecutionContext::Type_SimpleCallContext:
     case QV4::Heap::ExecutionContext::Type_CallContext:
         return 1;
-        break;
     case QV4::Heap::ExecutionContext::Type_QmlContext:
     default:
         return -1;
