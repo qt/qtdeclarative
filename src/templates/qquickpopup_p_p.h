@@ -60,8 +60,9 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
-class QQuickPopupPrivate;
 class QQuickOverlay;
+class QQuickPopupPrivate;
+class QQuickPopupItemPrivate;
 
 class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
@@ -105,7 +106,7 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:
-    QQuickPopup *popup;
+    Q_DECLARE_PRIVATE(QQuickPopupItem)
 };
 
 class QQuickPopupPositioner : public QQuickItemChangeListener
@@ -180,6 +181,8 @@ public:
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
+    qreal contentWidth;
+    qreal contentHeight;
     QQuickItem *parentItem;
     QQuickItem *background;
     QQuickItem *contentItem;

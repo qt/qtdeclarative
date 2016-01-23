@@ -42,10 +42,11 @@ import Qt.labs.controls.material 1.0
 T.Popup {
     id: control
 
-    width: Math.max(background ? background.implicitWidth : 0,
-                    contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
-    height: Math.max(background ? background.implicitHeight : 0,
-                     contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+
+    contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
+    contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
     padding: 6
 
@@ -60,6 +61,8 @@ T.Popup {
         NumberAnimation { property: "scale"; from: 1.0; to: 0.9; easing.type: Easing.OutQuint; duration: 220 }
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
     }
+
+    contentItem: Item { }
 
     background: Rectangle {
         radius: 3

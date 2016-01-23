@@ -80,6 +80,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , leftPadding(0)
     , rightPadding(0)
     , bottomPadding(0)
+    , contentWidth(0)
+    , contentHeight(0)
     , parentItem(Q_NULLPTR)
     , background(Q_NULLPTR)
     , contentItem(Q_NULLPTR)
@@ -196,64 +198,103 @@ void QQuickPopupPrivate::setBottomPadding(qreal value, bool reset)
     }
 }
 
-QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) : popup(popup)
+class QQuickPopupItemPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickPopupItem)
+
+public:
+    QQuickPopupItemPrivate(QQuickPopup *popup);
+
+    void implicitWidthChanged() Q_DECL_OVERRIDE;
+    void implicitHeightChanged() Q_DECL_OVERRIDE;
+
+    QQuickPopup *popup;
+};
+
+QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
+{
+}
+
+void QQuickPopupItemPrivate::implicitWidthChanged()
+{
+    emit popup->implicitHeightChanged();
+}
+
+void QQuickPopupItemPrivate::implicitHeightChanged()
+{
+    emit popup->implicitHeightChanged();
+}
+
+QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
+    QQuickItem(*(new QQuickPopupItemPrivate(popup)))
 {
     setAcceptedMouseButtons(Qt::AllButtons);
 }
 
 void QQuickPopupItem::focusInEvent(QFocusEvent *event)
 {
-    popup->focusInEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->focusInEvent(event);
 }
 
 void QQuickPopupItem::focusOutEvent(QFocusEvent *event)
 {
-    popup->focusOutEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->focusOutEvent(event);
 }
 
 void QQuickPopupItem::keyPressEvent(QKeyEvent *event)
 {
-    popup->keyPressEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->keyPressEvent(event);
 }
 
 void QQuickPopupItem::keyReleaseEvent(QKeyEvent *event)
 {
-    popup->keyReleaseEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->keyReleaseEvent(event);
 }
 
 void QQuickPopupItem::mousePressEvent(QMouseEvent *event)
 {
-    popup->mousePressEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->mousePressEvent(event);
 }
 
 void QQuickPopupItem::mouseMoveEvent(QMouseEvent *event)
 {
-    popup->mouseMoveEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->mouseMoveEvent(event);
 }
 
 void QQuickPopupItem::mouseReleaseEvent(QMouseEvent *event)
 {
-    popup->mouseReleaseEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->mouseReleaseEvent(event);
 }
 
 void QQuickPopupItem::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    popup->mouseDoubleClickEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->mouseDoubleClickEvent(event);
 }
 
 void QQuickPopupItem::mouseUngrabEvent()
 {
-    popup->mouseUngrabEvent();
+    Q_D(QQuickPopupItem);
+    d->popup->mouseUngrabEvent();
 }
 
 void QQuickPopupItem::wheelEvent(QWheelEvent *event)
 {
-    popup->wheelEvent(event);
+    Q_D(QQuickPopupItem);
+    d->popup->wheelEvent(event);
 }
 
 void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    popup->geometryChanged(newGeometry, oldGeometry);
+    Q_D(QQuickPopupItem);
+    d->popup->geometryChanged(newGeometry, oldGeometry);
 }
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
@@ -582,6 +623,12 @@ void QQuickPopup::setWidth(qreal width)
     d->popupItem->setWidth(width);
 }
 
+void QQuickPopup::resetWidth()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetWidth();
+}
+
 /*!
     \qmlproperty real Qt.labs.controls::Popup::height
 
@@ -597,6 +644,94 @@ void QQuickPopup::setHeight(qreal height)
 {
     Q_D(QQuickPopup);
     d->popupItem->setHeight(height);
+}
+
+void QQuickPopup::resetHeight()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetHeight();
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::implicitWidth
+
+    This property holds the implicit width of the popup.
+*/
+qreal QQuickPopup::implicitWidth() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitWidth();
+}
+
+void QQuickPopup::setImplicitWidth(qreal width)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setImplicitWidth(width);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::implicitHeight
+
+    This property holds the implicit height of the popup.
+*/
+qreal QQuickPopup::implicitHeight() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitHeight();
+}
+
+void QQuickPopup::setImplicitHeight(qreal height)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setImplicitHeight(height);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::contentWidth
+
+    This property holds the content width. It is used for calculating the
+    total implicit width of the Popup.
+
+    \note If only a single item is used within the Popup, the implicit width
+          of its contained item is used as the content width.
+*/
+qreal QQuickPopup::contentWidth() const
+{
+    Q_D(const QQuickPopup);
+    return d->contentWidth;
+}
+
+void QQuickPopup::setContentWidth(qreal width)
+{
+    Q_D(QQuickPopup);
+    if (d->contentWidth != width) {
+        d->contentWidth = width;
+        emit contentWidthChanged();
+    }
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::contentHeight
+
+    This property holds the content height. It is used for calculating the
+    total implicit height of the Popup.
+
+    \note If only a single item is used within the Popup, the implicit height
+          of its contained item is used as the content height.
+*/
+qreal QQuickPopup::contentHeight() const
+{
+    Q_D(const QQuickPopup);
+    return d->contentHeight;
+}
+
+void QQuickPopup::setContentHeight(qreal height)
+{
+    Q_D(QQuickPopup);
+    if (d->contentHeight != height) {
+        d->contentHeight = height;
+        emit contentHeightChanged();
+    }
 }
 
 /*!
@@ -863,6 +998,41 @@ void QQuickPopup::setContentItem(QQuickItem *item)
         }
         emit contentItemChanged();
     }
+}
+
+/*!
+    \qmlproperty list<Object> Qt.labs.controls::Popup::contentData
+    \default
+
+    This property holds the list of content data.
+
+    \sa Item::data
+*/
+QQmlListProperty<QObject> QQuickPopup::contentData()
+{
+    Q_D(QQuickPopup);
+    return QQmlListProperty<QObject>(d->contentItem, Q_NULLPTR,
+                                     QQuickItemPrivate::data_append,
+                                     QQuickItemPrivate::data_count,
+                                     QQuickItemPrivate::data_at,
+                                     QQuickItemPrivate::data_clear);
+}
+
+/*!
+    \qmlproperty list<Item> Qt.labs.controls::Popup::contentChildren
+
+    This property holds the list of content children.
+
+    \sa Item::children
+*/
+QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
+{
+    Q_D(QQuickPopup);
+    return QQmlListProperty<QQuickItem>(d->contentItem, Q_NULLPTR,
+                                        QQuickItemPrivate::children_append,
+                                        QQuickItemPrivate::children_count,
+                                        QQuickItemPrivate::children_at,
+                                        QQuickItemPrivate::children_clear);
 }
 
 /*!

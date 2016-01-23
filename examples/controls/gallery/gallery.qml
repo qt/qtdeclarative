@@ -287,12 +287,12 @@ ApplicationWindow {
         modal: true
         focus: true
         x: (window.width - width) / 2
-        y: (window.height - height) / 2
+        y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
-        height: aboutColumn.implicitHeight + topPadding + bottomPadding
+        contentHeight: aboutColumn.height
         onPressedOutside: close()
 
-        contentItem: Column {
+        Column {
             id: aboutColumn
             spacing: 20
             Keys.onEscapePressed: aboutDialog.close() // TODO: Popup::closePolicy
@@ -303,14 +303,14 @@ ApplicationWindow {
             }
 
             Label {
-                width: parent.width
+                width: aboutDialog.availableWidth
                 text: "The Qt Labs Controls module is a technology preview of the next generation user interface controls based on Qt Quick."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
 
             Label {
-                width: parent.width
+                width: aboutDialog.availableWidth
                 text: "In comparison to the desktop oriented Qt Quick Controls 1, the experimental Qt Labs "
                     + "Controls are an order of magnitude simpler, lighter and faster, and are primarily targeting embedded "
                     + "and mobile platforms."
