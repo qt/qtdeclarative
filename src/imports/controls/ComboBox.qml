@@ -99,8 +99,8 @@ T.ComboBox {
     //! [popup]
     popup: T.Popup {
         y: control.height - 1
-        width: control.width
-        height: Math.min(200, listview.contentHeight)
+        implicitWidth: control.width
+        implicitHeight: Math.min(200, listview.contentHeight)
 
         contentItem: ListView {
             id: listview
