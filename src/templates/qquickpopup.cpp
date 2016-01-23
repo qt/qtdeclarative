@@ -1085,6 +1085,14 @@ bool QQuickPopup::isVisible() const
     return d->overlay != Q_NULLPTR /*&& !d->transitionManager.isRunning()*/;
 }
 
+void QQuickPopup::setVisible(bool visible)
+{
+    if (visible)
+        open();
+    else
+        close();
+}
+
 /*!
     \qmlproperty Transition Qt.labs.controls::Popup::enter
 
