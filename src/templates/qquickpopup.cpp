@@ -562,8 +562,7 @@ void QQuickPopup::close()
 {
     Q_D(QQuickPopup);
     if (!d->overlay) {
-        // TODO This could mean we opened the popup item in a plain QQuickWindow
-        qmlInfo(this) << "trying to close non-visible Popup.";
+        // popup already closed
         return;
     }
 
