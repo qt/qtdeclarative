@@ -41,10 +41,10 @@ import Qt.labs.templates 1.0 as T
 T.Menu {
     id: control
 
-    width: Math.max(background ? background.implicitWidth : 0,
-                    contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
-    height: Math.min(background ? background.implicitHeight : 0,
-                     contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
+    implicitHeight: Math.min(background ? background.implicitHeight : 0,
+                             contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
 
     //! [contentItem]
     contentItem: ListView {
