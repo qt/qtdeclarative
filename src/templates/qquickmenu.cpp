@@ -68,19 +68,20 @@ QT_BEGIN_NAMESPACE
         id: fileButton
         text: "File"
         onClicked: menu.open()
-    }
-    Menu {
-        id: menu
-        contentItem.y: fileButton.height
 
-        MenuItem {
-            text: "New..."
-        }
-        MenuItem {
-            text: "Open..."
-        }
-        MenuItem {
-            text: "Save"
+        Menu {
+            id: menu
+            y: fileButton.height
+
+            MenuItem {
+                text: "New..."
+            }
+            MenuItem {
+                text: "Open..."
+            }
+            MenuItem {
+                text: "Save"
+            }
         }
     }
     \endcode
