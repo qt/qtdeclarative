@@ -82,6 +82,8 @@ public:
     void setTitle(QString &title);
 
 protected:
+    void componentComplete() override;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     bool eventFilter(QObject *object, QEvent *event) override;
 
 Q_SIGNALS:

@@ -49,30 +49,115 @@
 //
 
 #include <QtCore/qobject.h>
+#include <QtCore/qmargins.h>
+#include <QtGui/qevent.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmllist.h>
+#include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickPopupPrivate;
 class QQuickTransition;
+class QQuickTransform;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal width READ width WRITE setWidth RESET resetWidth NOTIFY widthChanged FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight RESET resetHeight NOTIFY heightChanged FINAL)
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
+    Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
+    Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
+    Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
+    Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
-    Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged)
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickPopup(QObject *parent = nullptr);
+    ~QQuickPopup();
+
+    qreal x() const;
+    void setX(qreal x);
+
+    qreal y() const;
+    void setY(qreal y);
+
+    qreal width() const;
+    void setWidth(qreal width);
+    void resetWidth();
+
+    qreal height() const;
+    void setHeight(qreal height);
+    void resetHeight();
+
+    qreal implicitWidth() const;
+    void setImplicitWidth(qreal width);
+
+    qreal implicitHeight() const;
+    void setImplicitHeight(qreal height);
+
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
+
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
+
+    qreal availableWidth() const;
+    qreal availableHeight() const;
+
+    qreal padding() const;
+    void setPadding(qreal padding);
+    void resetPadding();
+
+    qreal topPadding() const;
+    void setTopPadding(qreal padding);
+    void resetTopPadding();
+
+    qreal leftPadding() const;
+    void setLeftPadding(qreal padding);
+    void resetLeftPadding();
+
+    qreal rightPadding() const;
+    void setRightPadding(qreal padding);
+    void resetRightPadding();
+
+    qreal bottomPadding() const;
+    void setBottomPadding(qreal padding);
+    void resetBottomPadding();
+
+    QQuickItem *parentItem() const;
+    void setParentItem(QQuickItem *parent);
+
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
+
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
 
     bool hasFocus() const;
     void setFocus(bool focus);
@@ -81,6 +166,7 @@ public:
     void setModal(bool modal);
 
     bool isVisible() const;
+    void setVisible(bool visible);
 
     QQuickTransition *enter() const;
     void setEnter(QQuickTransition *transition);
@@ -93,7 +179,25 @@ public Q_SLOTS:
     void close();
 
 Q_SIGNALS:
+    void xChanged();
+    void yChanged();
+    void widthChanged();
+    void heightChanged();
+    void implicitWidthChanged();
+    void implicitHeightChanged();
+    void contentWidthChanged();
+    void contentHeightChanged();
+    void availableWidthChanged();
+    void availableHeightChanged();
+    void paddingChanged();
+    void topPaddingChanged();
+    void leftPaddingChanged();
+    void rightPaddingChanged();
+    void bottomPaddingChanged();
+    void parentChanged();
+    void backgroundChanged();
     void contentItemChanged();
+    void contentChildrenChanged();
     void focusChanged();
     void modalChanged();
     void visibleChanged();
@@ -110,9 +214,29 @@ Q_SIGNALS:
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
 
+    void classBegin() override;
+    void componentComplete() override;
+    bool isComponentComplete() const;
+
+    virtual void focusInEvent(QFocusEvent *event);
+    virtual void focusOutEvent(QFocusEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void keyReleaseEvent(QKeyEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
+    virtual void mouseUngrabEvent();
+    virtual void wheelEvent(QWheelEvent *event);
+
+    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
+    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+
 private:
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
+    friend class QQuickPopupItem;
 };
 
 QT_END_NAMESPACE

@@ -38,6 +38,7 @@
 
     \list
         \li \l {accent-attached-prop}{\b accent} : color
+        \li \l {primary-attached-prop}{\b primary} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
 
@@ -59,9 +60,9 @@
 
     \section2 Customization
 
-    The Material style allows customizing two attributes, \l {theme-attached-prop}{theme}
-    and \l {accent-attached-prop}{accent}. The following example illustrates how to create
-    a red \e stop button with light text:
+    The Material style allows customizing three attributes, \l {theme-attached-prop}{theme},
+    \l {primary-attached-prop}{primary} and \l {accent-attached-prop}{accent}. The following
+    example illustrates how to create a red \e stop button with light text:
 
     \table
         \row
@@ -123,18 +124,13 @@
     of explicit Material style-specific references, the Material style must
     be deployed with the application.
 
-    \section1 Attached Property Documentation
+    \section2 Pre-defined Colors
 
-    \styleproperty {Material.accent} {color} {accent-attached-prop}
-    \target accent-attached-prop
-    This attached property holds the accent color of the theme. The property
-    can be attached to any window or item. The value is propagated to children.
-
-    Even though the accent can be any \l {colorbasictypedocs}{color}, it is
-    recommended to use one of the pre-defined accents that have been designed
+    Even though primary and accent can be any \l {colorbasictypedocs}{color}, it
+    is recommended to use one of the pre-defined colors that have been designed
     to work well with the rest of the Material style palette:
 
-    Available accents:
+    Available pre-defined colors:
     \value Material.Red Red (#F44336)
     \value Material.Pink Pink (#E91E63)
     \value Material.Purple Purple (#9C27B0)
@@ -143,7 +139,7 @@
     \value Material.Blue Blue (#2196F3)
     \value Material.LightBlue Light Blue (#03A9F4)
     \value Material.Cyan Cyan (#00BCD4)
-    \value Material.Teal Teal (#009688, default)
+    \value Material.Teal Teal (#009688)
     \value Material.Green Green (#4CAF50)
     \value Material.LightGreen Light Green (#8BC34A)
     \value Material.Lime Lime (#CDDC39)
@@ -154,6 +150,34 @@
     \value Material.Brown Brown (#795548)
     \value Material.Grey Grey (#9E9E9E)
     \value Material.BlueGrey Blue Grey (#607D8B)
+
+    \labs
+
+    \section1 Attached Property Documentation
+
+    \styleproperty {Material.accent} {color} {accent-attached-prop}
+    \target accent-attached-prop
+    This attached property holds the accent color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is \c Material.Teal.
+
+    \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    recommended to use one of the \l {pre-defined colors} that have been designed
+    to work well with the rest of the Material style palette.
+
+    \endstyleproperty
+
+    \styleproperty {Material.primary} {color} {primary-attached-prop}
+    \target primary-attached-prop
+    This attached property holds the primary color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is \c Material.BlueGray.
+
+    \note Even though the primary can be any \l {colorbasictypedocs}{color}, it is
+    recommended to use one of the \l {pre-defined colors} that have been designed
+    to work well with the rest of the Material style palette.
 
     \endstyleproperty
 

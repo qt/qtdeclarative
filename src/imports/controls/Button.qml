@@ -71,7 +71,7 @@ T.Button {
         implicitWidth: 100
         implicitHeight: 40
         opacity: enabled ? 1 : 0.3
-        color: control.pressed ? (control.highlighted ? "#585a5c" : "#e4e4e4") : (control.highlighted ? "#353637" : "#ffffff")
+        color: control.pressed ? (control.highlighted ? "#585a5c" : "#e4e4e4") : (control.highlighted ? "#353637" : "#f6f6f6")
         border.color: control.pressed ? "#26282a" : "#353637"
     }
     //! [background]

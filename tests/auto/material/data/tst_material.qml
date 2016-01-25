@@ -61,6 +61,7 @@ TestCase {
         id: styledButton
         Button {
             Material.theme: Material.Dark
+            Material.primary: Material.DeepOrange
             Material.accent: Material.DeepPurple
         }
     }
@@ -74,6 +75,7 @@ TestCase {
         id: styledWindow
         Window {
             Material.theme: Material.Dark
+            Material.primary: Material.Brown
             Material.accent: Material.Green
         }
     }
@@ -97,6 +99,7 @@ TestCase {
     Component {
         id: menu
         Item {
+            Material.primary: Material.Blue
             Material.accent: Material.Red
             property alias menu: popup
             Menu {
@@ -113,6 +116,7 @@ TestCase {
             width: 200
             height: 200
             visible: true
+            Material.primary: Material.Blue
             Material.accent: Material.Red
             property alias combo: box
             ComboBox {
@@ -127,7 +131,8 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
         verify(control.Material)
-        compare(control.Material.accent, Material.color(Material.Teal))
+        compare(control.Material.primary, Material.color(Material.Indigo))
+        compare(control.Material.accent, Material.color(Material.Pink))
         compare(control.Material.theme, Material.Light)
         control.destroy()
     }
@@ -135,8 +140,10 @@ TestCase {
     function test_set() {
         var control = button.createObject(testCase)
         verify(control)
+        control.Material.primary = Material.Green
         control.Material.accent = Material.Brown
         control.Material.theme = Material.Dark
+        compare(control.Material.primary, Material.color(Material.Green))
         compare(control.Material.accent, Material.color(Material.Brown))
         compare(control.Material.theme, Material.Dark)
         control.destroy()
@@ -145,10 +152,13 @@ TestCase {
     function test_reset() {
         var control = styledButton.createObject(testCase)
         verify(control)
+        compare(control.Material.primary, Material.color(Material.DeepOrange))
         compare(control.Material.accent, Material.color(Material.DeepPurple))
         compare(control.Material.theme, Material.Dark)
+        control.Material.primary = undefined
         control.Material.accent = undefined
         control.Material.theme = undefined
+        compare(control.Material.primary, testCase.Material.primary)
         compare(control.Material.accent, testCase.Material.accent)
         compare(control.Material.theme, testCase.Material.theme)
         control.destroy()
@@ -156,6 +166,7 @@ TestCase {
 
     function test_inheritance_data() {
         return [
+            { tag: "primary", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
             { tag: "accent", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
             { tag: "theme", value1: Material.Dark, value2: Material.Light },
         ]
@@ -209,16 +220,24 @@ TestCase {
         var parent = window.createObject()
 
         var control = button.createObject(parent.contentItem)
+        compare(control.Material.primary, parent.Material.primary)
         compare(control.Material.accent, parent.Material.accent)
         compare(control.Material.theme, parent.Material.theme)
 
         var styledChild = styledWindow.createObject(window)
+        verify(styledChild.Material.primary !== parent.Material.primary)
         verify(styledChild.Material.accent !== parent.Material.accent)
         verify(styledChild.Material.theme !== parent.Material.theme)
 
         var unstyledChild = window.createObject(window)
+        compare(unstyledChild.Material.primary, parent.Material.primary)
         compare(unstyledChild.Material.accent, parent.Material.accent)
         compare(unstyledChild.Material.theme, parent.Material.theme)
+
+        parent.Material.primary = Material.Lime
+        compare(control.Material.primary, Material.color(Material.Lime))
+        verify(styledChild.Material.primary !== Material.color(Material.Lime))
+        // ### TODO: compare(unstyledChild.Material.primary, Material.color(Material.Lime))
 
         parent.Material.accent = Material.Cyan
         compare(control.Material.accent, Material.color(Material.Cyan))
@@ -230,14 +249,20 @@ TestCase {
 
     function test_loader() {
         var control = loader.createObject(testCase)
+        control.Material.primary = Material.Yellow
         control.Material.accent = Material.Lime
         control.active = true
+        compare(control.item.Material.primary, Material.color(Material.Yellow))
         compare(control.item.Material.accent, Material.color(Material.Lime))
+        control.Material.primary = Material.Red
         control.Material.accent = Material.Pink
+        compare(control.item.Material.primary, Material.color(Material.Red))
         compare(control.item.Material.accent, Material.color(Material.Pink))
         control.active = false
+        control.Material.primary = Material.Orange
         control.Material.accent = Material.Brown
         control.active = true
+        compare(control.item.Material.primary, Material.color(Material.Orange))
         compare(control.item.Material.accent, Material.color(Material.Brown))
         control.destroy()
     }
@@ -261,6 +286,9 @@ TestCase {
         compare(container.Material.theme, Material.Light)
         compare(container.menu.Material.theme, Material.Dark)
         compare(child.Material.theme, Material.Dark)
+        compare(container.Material.primary, Material.color(Material.Blue))
+        compare(container.menu.Material.primary, Material.color(Material.Blue))
+        compare(child.Material.primary, Material.color(Material.Blue))
         compare(container.Material.accent, Material.color(Material.Red))
         compare(container.menu.Material.accent, Material.color(Material.Red))
         compare(child.Material.accent, Material.color(Material.Red))
@@ -276,58 +304,70 @@ TestCase {
         verify(window.combo.activeFocus)
         keyClick(Qt.Key_Space)
         verify(window.combo.popup.visible)
-        var listView = window.combo.popup.contentItem.children[0]
+        var listView = window.combo.popup.contentItem
         verify(listView)
         var child = listView.contentItem.children[0]
         verify(child)
         compare(window.Material.theme, Material.Light)
         compare(window.combo.Material.theme, Material.Dark)
         compare(child.Material.theme, Material.Dark)
+        compare(window.Material.primary, Material.color(Material.Blue))
+        compare(window.combo.Material.primary, Material.color(Material.Blue))
+        compare(child.Material.primary, Material.color(Material.Blue))
         compare(window.Material.accent, Material.color(Material.Red))
         compare(window.combo.Material.accent, Material.color(Material.Red))
         compare(child.Material.accent, Material.color(Material.Red))
         window.destroy()
     }
 
-    function test_colors() {
+
+    function test_colors_data() {
+        return [
+            { tag: "primary" }, { tag: "accent" }
+        ]
+    }
+
+    function test_colors(data) {
         var control = button.createObject(testCase)
         verify(control)
 
-        // Material.Accent - enum
-        control.Material.accent = Material.Red
-        compare(control.Material.accent, "#f44336")
+        var prop = data.tag
 
-        // Material.Accent - string
-        control.Material.accent = "BlueGrey"
-        compare(control.Material.accent, "#607d8b")
+        // Material.Color - enum
+        control.Material[prop] = Material.Red
+        compare(control.Material[prop], "#f44336")
+
+        // Material.Color - string
+        control.Material[prop] = "BlueGrey"
+        compare(control.Material[prop], "#607d8b")
 
         // SVG named color
-        control.Material.accent = "tomato"
-        compare(control.Material.accent, "#ff6347")
+        control.Material[prop] = "tomato"
+        compare(control.Material[prop], "#ff6347")
 
         // #rrggbb
-        control.Material.accent = "#123456"
-        compare(control.Material.accent, "#123456")
+        control.Material[prop] = "#123456"
+        compare(control.Material[prop], "#123456")
 
         // #aarrggbb
-        control.Material.accent = "#12345678"
-        compare(control.Material.accent, "#12345678")
+        control.Material[prop] = "#12345678"
+        compare(control.Material[prop], "#12345678")
 
         // Qt.rgba() - no alpha
-        control.Material.accent = Qt.rgba(0.5, 0.5, 0.5)
-        compare(control.Material.accent, "#808080")
+        control.Material[prop] = Qt.rgba(0.5, 0.5, 0.5)
+        compare(control.Material[prop], "#808080")
 
         // Qt.rgba() - with alpha
-        control.Material.accent = Qt.rgba(0.5, 0.5, 0.5, 0.5)
-        compare(control.Material.accent, "#80808080")
+        control.Material[prop] = Qt.rgba(0.5, 0.5, 0.5, 0.5)
+        compare(control.Material[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: 123")
-        control.Material.accent = 123
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: foo")
-        control.Material.accent = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material.accent value: #1")
-        control.Material.accent = "#1"
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: 123")
+        control.Material[prop] = 123
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: foo")
+        control.Material[prop] = "foo"
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: #1")
+        control.Material[prop] = "#1"
 
         control.destroy()
     }

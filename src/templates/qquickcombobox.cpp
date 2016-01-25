@@ -98,6 +98,8 @@ QT_BEGIN_NAMESPACE
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
     \c {ReferenceError: modelData is not defined}.
 
+    \labs
+
     \sa {Customizing ComboBox}, {Input Controls}
 */
 
@@ -328,6 +330,13 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
     setActiveFocusOnTab(true);
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::LeftButton);
+}
+
+QQuickComboBox::~QQuickComboBox()
+{
+    Q_D(QQuickComboBox);
+    delete d->popup;
+    d->popup = nullptr;
 }
 
 /*!

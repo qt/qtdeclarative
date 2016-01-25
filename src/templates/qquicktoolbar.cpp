@@ -86,6 +86,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \labs
+
     \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, {Container Controls}
 */
 

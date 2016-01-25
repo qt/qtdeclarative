@@ -39,4 +39,18 @@ import Qt.labs.templates 1.0 as T
 
 T.Popup {
     id: control
+
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+
+    contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
+    contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
+
+    padding: 6
+
+    contentItem: Item { }
+
+    background: Rectangle {
+        border.color: "#353637"
+    }
 }

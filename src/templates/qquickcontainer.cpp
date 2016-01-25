@@ -51,6 +51,8 @@ QT_BEGIN_NAMESPACE
 
     Container is the base type of container-like user interface controls.
 
+    \labs
+
     \sa {Container Controls}
 */
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,64 +34,26 @@
 **
 ****************************************************************************/
 
-#include "qquickbutton_p.h"
-#include "qquickabstractbutton_p_p.h"
+import QtQuick 2.6
+import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.universal 1.0
 
-#include <QtGui/qpa/qplatformtheme.h>
+T.Popup {
+    id: control
 
-QT_BEGIN_NAMESPACE
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-/*!
-    \qmltype Button
-    \inherits AbstractButton
-    \instantiates QQuickButton
-    \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
-    \brief A button control.
+    contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
+    contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
-    \image qtlabscontrols-button.gif
+    padding: 12
 
-    Button presents a push-button control that can be pushed or clicked by
-    the user. Buttons are normally used to perform an action, or to answer
-    a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
-    \e Yes, \e No, and \e Help.
+    contentItem: Item { }
 
-    \table
-    \row \li \image qtlabscontrols-button-normal.png
-         \li A button in its normal state.
-    \row \li \image qtlabscontrols-button-pressed.png
-         \li A button that is pressed.
-    \row \li \image qtlabscontrols-button-focused.png
-         \li A button that has active focus.
-    \row \li \image qtlabscontrols-button-disabled.png
-         \li A button that is disabled.
-    \endtable
-
-    \code
-    RowLayout {
-        Button {
-            text: "Ok"
-            onClicked: model.submit()
-        }
-        Button {
-            text: "Cancel"
-            onClicked: model.revert()
-        }
+    background: Rectangle {
+        color: control.Universal.chromeMediumLowColor
+        border.color: control.Universal.chromeHighColor
+        border.width: 1 // FlyoutBorderThemeThickness
     }
-    \endcode
-
-    \labs
-
-    \sa {Customizing Button}, {Button Controls}
-*/
-
-QQuickButton::QQuickButton(QQuickItem *parent) : QQuickAbstractButton(parent)
-{
 }
-
-QFont QQuickButton::defaultFont() const
-{
-    return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
-}
-
-QT_END_NAMESPACE

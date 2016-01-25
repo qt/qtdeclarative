@@ -119,6 +119,8 @@ QT_BEGIN_NAMESPACE
     More advanced use cases can be handled using the addButton() and
     removeButton() methods.
 
+    \labs
+
     \sa RadioButton
 */
 

@@ -14,6 +14,7 @@ QML_FILES += \
     $$PWD/Page.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/Pane.qml \
+    $$PWD/Popup.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/RangeSlider.qml \

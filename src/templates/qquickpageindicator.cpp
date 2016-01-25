@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-pageindicator.qml 1
 
+    \labs
+
     \sa SwipeView, {Customizing PageIndicator}, {Indicator Controls}
 */
 

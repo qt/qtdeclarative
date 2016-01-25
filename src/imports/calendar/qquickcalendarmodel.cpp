@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
         \row \li \b model.year : int \li The number of the year
     \endtable
 
+    \labs
+
     \sa MonthGrid
 */
 

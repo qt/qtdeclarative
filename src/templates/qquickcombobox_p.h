@@ -73,6 +73,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickComboBox : public QQuickControl
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = nullptr);
+    ~QQuickComboBox();
 
     int count() const;
 

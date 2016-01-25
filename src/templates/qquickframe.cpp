@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-frame.qml 1
 
+    \labs
+
     \sa {Customizing Frame}, {Container Controls}
 */
 

@@ -86,6 +86,20 @@ ApplicationWindow {
                     source: "qrc:/images/menu.png"
                 }
                 onClicked: optionsMenu.open()
+
+                Menu {
+                    id: optionsMenu
+                    x: parent.width - width
+
+                    MenuItem {
+                        text: "Settings"
+                        onTriggered: settingsPopup.open()
+                    }
+                    MenuItem {
+                        text: "About"
+                        onTriggered: aboutDialog.open()
+                    }
+                }
             }
         }
     }
@@ -193,83 +207,76 @@ ApplicationWindow {
 
     Popup {
         id: settingsPopup
+        x: (window.width - width) / 2
+        y: window.height / 6
+        width: Math.min(window.width, window.height) / 3 * 2
+        height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
         onPressedOutside: close()
 
-        contentItem: Pane {
-            id: settingsPane
-            x: (window.width - width) / 2
-            y: window.height / 6
-            width: Math.min(window.width, window.height) / 3 * 2
-            contentHeight: settingsColumn.implicitHeight
+        contentItem: ColumnLayout {
+            id: settingsColumn
+            spacing: 20
+            Keys.onEscapePressed: settingsPopup.close() // TODO: Popup::closePolicy
 
-            Keys.onEscapePressed: settingsPopup.close()
+            Label {
+                text: "Settings"
+                font.bold: true
+            }
 
-
-            ColumnLayout {
-                id: settingsColumn
-                spacing: 20
-                anchors.fill: parent
+            RowLayout {
+                spacing: 10
 
                 Label {
-                    text: "Settings"
-                    font.bold: true
+                    text: "Style:"
                 }
 
-                RowLayout {
-                    spacing: 10
-
-                    Label {
-                        text: "Style:"
+                ComboBox {
+                    id: styleBox
+                    property int styleIndex: -1
+                    model: ["Default", "Material", "Universal"]
+                    Component.onCompleted: {
+                        styleIndex = find(settings.style)
+                        if (styleIndex !== -1)
+                            currentIndex = styleIndex
                     }
-
-                    ComboBox {
-                        id: styleBox
-                        property int styleIndex: -1
-                        model: ["Default", "Material", "Universal"]
-                        Component.onCompleted: {
-                            styleIndex = find(settings.style)
-                            if (styleIndex !== -1)
-                                currentIndex = styleIndex
-                        }
-                        Layout.fillWidth: true
-                    }
-                }
-
-                Label {
-                    text: "Restart required"
-                    opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
-                    horizontalAlignment: Label.AlignHCenter
-                    verticalAlignment: Label.AlignVCenter
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                }
+            }
+
+            Label {
+                text: "Restart required"
+                opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
+                horizontalAlignment: Label.AlignHCenter
+                verticalAlignment: Label.AlignVCenter
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            RowLayout {
+                spacing: 10
+
+                Button {
+                    id: okButton
+                    text: "Ok"
+                    onClicked: {
+                        settings.style = styleBox.displayText
+                        settingsPopup.close()
+                    }
+                    Layout.preferredWidth: 0
+                    Layout.fillWidth: true
                 }
 
-                RowLayout {
-                    spacing: 10
-
-                    Button {
-                        id: okButton
-                        text: "Ok"
-                        onClicked: {
-                            settings.style = styleBox.displayText
-                            settingsPopup.close()
-                        }
-                        Layout.preferredWidth: 0
-                        Layout.fillWidth: true
+                Button {
+                    id: cancelButton
+                    text: "Cancel"
+                    onClicked: {
+                        styleBox.currentIndex = styleBox.styleIndex
+                        settingsPopup.close()
                     }
-
-                    Button {
-                        id: cancelButton
-                        text: "Cancel"
-                        onClicked: {
-                            styleBox.currentIndex = styleBox.styleIndex
-                            settingsPopup.close()
-                        }
-                        Layout.preferredWidth: 0
-                        Layout.fillWidth: true
-                    }
+                    Layout.preferredWidth: 0
+                    Layout.fillWidth: true
                 }
             }
         }
@@ -279,57 +286,37 @@ ApplicationWindow {
         id: aboutDialog
         modal: true
         focus: true
+        x: (window.width - width) / 2
+        y: window.height / 6
+        width: Math.min(window.width, window.height) / 3 * 2
+        contentHeight: aboutColumn.height
         onPressedOutside: close()
 
-        contentItem: Pane {
-            x: (window.width - width) / 2
-            y: (window.height - height) / 2
-            width: Math.min(window.width, window.height) / 3 * 2
-            contentHeight: aboutColumn.implicitHeight
+        Column {
+            id: aboutColumn
+            spacing: 20
+            Keys.onEscapePressed: aboutDialog.close() // TODO: Popup::closePolicy
 
-            Keys.onEscapePressed: aboutDialog.close()
-
-            Column {
-                id: aboutColumn
-
-                spacing: 20
-                anchors.fill: parent
-
-                Label {
-                    text: "About"
-                    font.bold: true
-                }
-
-                Label {
-                    width: parent.width
-                    text: "The Qt Labs Controls module is a technology preview of the next generation user interface controls based on Qt Quick."
-                    wrapMode: Label.Wrap
-                    font.pixelSize: 12
-                }
-
-                Label {
-                    width: parent.width
-                    text: "In comparison to the desktop oriented Qt Quick Controls 1, the experimental Qt Labs "
-                        + "Controls are an order of magnitude simpler, lighter and faster, and are primarily targeting embedded "
-                        + "and mobile platforms."
-                    wrapMode: Label.Wrap
-                    font.pixelSize: 12
-                }
+            Label {
+                text: "About"
+                font.bold: true
             }
-        }
-    }
 
-    Menu {
-        id: optionsMenu
-        contentItem.x: contentItem.parent ? (contentItem.parent.width - contentItem.width) : 0
+            Label {
+                width: aboutDialog.availableWidth
+                text: "The Qt Labs Controls module is a technology preview of the next generation user interface controls based on Qt Quick."
+                wrapMode: Label.Wrap
+                font.pixelSize: 12
+            }
 
-        MenuItem {
-            text: "Settings"
-            onTriggered: settingsPopup.open()
-        }
-        MenuItem {
-            text: "About"
-            onTriggered: aboutDialog.open()
+            Label {
+                width: aboutDialog.availableWidth
+                text: "In comparison to the desktop oriented Qt Quick Controls 1, the experimental Qt Labs "
+                    + "Controls are an order of magnitude simpler, lighter and faster, and are primarily targeting embedded "
+                    + "and mobile platforms."
+                wrapMode: Label.Wrap
+                font.pixelSize: 12
+            }
         }
     }
 }

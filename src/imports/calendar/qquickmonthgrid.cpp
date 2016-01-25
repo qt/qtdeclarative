@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickMonthGrid
     \inqmlmodule Qt.labs.calendar
-    \brief A calendar view.
+    \brief A grid of days for a calendar month.
 
     MonthGrid presents a calendar month in a grid. The contents are
     calculated for a given \l month and \l year, using the specified
@@ -67,6 +67,8 @@ QT_BEGIN_NAMESPACE
 
     The visual appearance of MonthGrid can be changed by
     implementing a \l {delegate}{custom delegate}.
+
+    \labs
 
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */

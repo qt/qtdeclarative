@@ -99,35 +99,29 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
-        contentItem: Rectangle {
-            // TODO: Popup::anchors
-            readonly property var above: popup.visible ? control.mapToItem(null, 0, -height + 1) : Qt.point(0, 0)
-            readonly property var below: popup.visible ? control.mapToItem(null, 0, control.height - 1) : Qt.point(0, 0)
+        y: control.height - 1
+        implicitWidth: control.width
+        implicitHeight: Math.min(200, listview.contentHeight)
 
-            x: below.x
-            y: above.y >= 0 && below.y + height > control.Window.height ? above.y : below.y
-            width: control.width
-            height: listview.height
-
-            ListView {
-                id: listview
-                width: control.width
-                height: Math.min(200, contentHeight)
-
-                clip: true
-                model: control.delegateModel
-                currentIndex: control.highlightedIndex
-
-//                ScrollIndicator.vertical: ScrollIndicator { }
-            }
+        contentItem: ListView {
+            id: listview
+            clip: true
+            model: control.delegateModel
+            currentIndex: control.highlightedIndex
 
             Rectangle {
-                width: parent.width
-                height: parent.height
-                color: "transparent"
+                z: 10
+                parent: listview
+                width: listview.width
+                height: listview.height
                 border.color: "#353637"
+                color: "transparent"
             }
+
+//            ScrollIndicator.vertical: ScrollIndicator { }
         }
+
+        background: Rectangle { }
     }
     //! [popup]
 }

@@ -257,6 +257,8 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \labs
+
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
 */
 
@@ -877,10 +879,18 @@ void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     }
 }
 
-bool QQuickStackView::childMouseEventFilter(QQuickItem *, QEvent *)
+bool QQuickStackView::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
-    // busy should be true if this function gets called
-    return true;
+    // in order to block accidental user interaction while busy/transitioning,
+    // StackView filters out childrens' mouse events. therefore we block all
+    // press events. however, since push() may be called from signal handlers
+    // such as onPressed or onDoubleClicked, we must let the current mouse
+    // grabber item receive the respective mouse release event to avoid
+    // breaking its state (QTBUG-50305).
+    if (event->type() == QEvent::MouseButtonPress)
+        return true;
+    QQuickWindow *window = item->window();
+    return window && !window->mouseGrabberItem();
 }
 
 void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)

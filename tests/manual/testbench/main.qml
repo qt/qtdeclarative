@@ -53,7 +53,6 @@ ApplicationWindow {
 
     Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
     Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
-    Material.accent: Material.LightGreen
 
     property int controlSpacing: 10
 
@@ -71,6 +70,25 @@ ApplicationWindow {
             ToolButton {
                 text: "Normal"
                 onClicked: menu.visible ? menu.close() : menu.open()
+
+                Menu {
+                    id: menu
+                    x: 1
+                    y: 1 + parent.height
+
+                    MenuItem {
+                        text: "Option 1"
+                        checkable: true
+                    }
+                    MenuItem {
+                        text: "Option 2"
+                        checkable: true
+                    }
+                    MenuItem {
+                        text: "Option 3"
+                        checkable: true
+                    }
+                }
             }
             ToolButton {
                 text: "Pressed"
@@ -112,25 +130,6 @@ ApplicationWindow {
         TabButton {
             text: "Disabled"
             enabled: false
-        }
-    }
-
-    Menu {
-        id: menu
-        contentItem.x: 1
-        contentItem.y: header.height
-
-        MenuItem {
-            text: "Option 1"
-            checkable: true
-        }
-        MenuItem {
-            text: "Option 2"
-            checkable: true
-        }
-        MenuItem {
-            text: "Option 3"
-            checkable: true
         }
     }
 

@@ -85,6 +85,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \labs
+
     \sa {Customizing Menu}, {Menu Controls}
 */
 
@@ -106,6 +108,8 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 {
     contentData.append(item);
     item->setParentItem(contentItem);
+    if (complete)
+        resizeItem(item);
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
 }
@@ -122,6 +126,27 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     item->setParentItem(nullptr);
     contentModel->remove(index);
+}
+
+void QQuickMenuPrivate::resizeItem(QQuickItem *item)
+{
+    if (!item || !contentItem)
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (!p->widthValid) {
+        item->setWidth(contentItem->width());
+        p->widthValid = false;
+    }
+}
+
+void QQuickMenuPrivate::resizeItems()
+{
+    if (!contentModel)
+        return;
+
+    for (int i = 0; i < contentModel->count(); ++i)
+        resizeItem(itemAt(i));
 }
 
 void QQuickMenuPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
@@ -157,32 +182,10 @@ void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
         removeItem(index, item);
 }
 
-void QQuickMenuPrivate::onContentItemChanged()
+void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    Q_Q(QQuickMenu);
-    if (contentItem) {
-        contentItem->installEventFilter(q);
-        contentItem->setFlag(QQuickItem::ItemIsFocusScope);
-        contentItem->setActiveFocusOnTab(true);
-
-        // Trying to give active focus to the contentItem (ListView, by default)
-        // when the menu first opens, without also giving it to the first delegate item
-        // doesn't seem to be possible, but this is what we need to do. QMenu behaves
-        // similarly to this; it receives focus if a button that has it as a menu is clicked,
-        // and only after pressing tab is the first menu item then given active focus.
-        if (!dummyFocusItem) {
-            dummyFocusItem = new QQuickItem(contentItem);
-            dummyFocusItem->setObjectName(QStringLiteral("dummyMenuFocusItem"));
-        } else {
-            dummyFocusItem->setParentItem(contentItem);
-        }
-
-        dummyFocusItem->setActiveFocusOnTab(true);
-        dummyFocusItem->stackBefore(contentItem->childItems().first());
-
-        QObjectPrivate::connect(q, &QQuickMenu::visibleChanged, this, &QQuickMenuPrivate::onMenuVisibleChanged);
-        QObjectPrivate::connect(dummyFocusItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
-    }
+    if (complete)
+        resizeItems();
 }
 
 void QQuickMenuPrivate::onItemPressed()
@@ -300,7 +303,7 @@ QQuickMenu::QQuickMenu(QObject *parent) :
     Q_D(QQuickMenu);
     connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::close);
     connect(this, &QQuickMenu::releasedOutside, this, &QQuickMenu::close);
-    QObjectPrivate::connect(this, &QQuickMenu::contentItemChanged, d, &QQuickMenuPrivate::onContentItemChanged);
+    QObjectPrivate::connect(this, &QQuickMenu::visibleChanged, d, &QQuickMenuPrivate::onMenuVisibleChanged);
 }
 
 /*!
@@ -442,6 +445,47 @@ void QQuickMenu::setTitle(QString &title)
     emit titleChanged();
 }
 
+void QQuickMenu::componentComplete()
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::componentComplete();
+    d->resizeItems();
+}
+
+void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::contentItemChange(newItem, oldItem);
+    if (oldItem) {
+        oldItem->removeEventFilter(this);
+        if (d->dummyFocusItem)
+            QObjectPrivate::disconnect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
+    }
+
+    if (newItem) {
+        newItem->installEventFilter(this);
+        newItem->setFlag(QQuickItem::ItemIsFocusScope);
+        newItem->setActiveFocusOnTab(true);
+
+        // Trying to give active focus to the contentItem (ListView, by default)
+        // when the menu first opens, without also giving it to the first delegate item
+        // doesn't seem to be possible, but this is what we need to do. QMenu behaves
+        // similarly to this; it receives focus if a button that has it as a menu is clicked,
+        // and only after pressing tab is the first menu item then given active focus.
+        if (!d->dummyFocusItem) {
+            d->dummyFocusItem = new QQuickItem(newItem);
+            d->dummyFocusItem->setObjectName(QStringLiteral("dummyMenuFocusItem"));
+        } else {
+            d->dummyFocusItem->setParentItem(newItem);
+        }
+
+        d->dummyFocusItem->setActiveFocusOnTab(true);
+        d->dummyFocusItem->stackBefore(newItem->childItems().first());
+
+        QObjectPrivate::connect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
+    }
+}
+
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
 {
     Q_D(QQuickMenu);
@@ -458,17 +502,23 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     // only allow flicking with the mouse when there are too many menu items to be
     // shown at once.
     QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-    if (keyEvent->key() == Qt::Key_Up) {
+    switch (keyEvent->key()) {
+    case Qt::Key_Up:
         if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
         return true;
-    } else if (keyEvent->key() == Qt::Key_Down) {
+
+    case Qt::Key_Down:
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
         return true;
-    } else if (keyEvent->key() == Qt::Key_Escape) {
+
+    case Qt::Key_Escape:
         close();
         return true;
+
+    default:
+        break;
     }
 
     return false;

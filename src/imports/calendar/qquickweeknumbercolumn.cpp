@@ -66,6 +66,8 @@ QT_BEGIN_NAMESPACE
     The visual appearance of WeekNumberColumn can be changed by
     implementing a \l {delegate}{custom delegate}.
 
+    \labs
+
     \sa MonthGrid, DayOfWeekRow
 */
 

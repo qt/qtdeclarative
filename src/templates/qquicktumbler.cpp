@@ -66,6 +66,8 @@ QT_BEGIN_NAMESPACE
 
     \image qtlabscontrols-tumbler-wrap.gif
 
+    \labs
+
     \sa {Customizing Tumbler}, {Input Controls}
 */
 

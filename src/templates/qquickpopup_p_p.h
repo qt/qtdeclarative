@@ -48,17 +48,21 @@
 // We mean it.
 //
 
+#include "qquickpopup_p.h"
+
 #include <QtCore/private/qobject_p.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
-class QQuickPopupPrivate;
 class QQuickOverlay;
+class QQuickPopupPrivate;
+class QQuickPopupItemPrivate;
 
 class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
@@ -80,6 +84,66 @@ private:
     QQuickPopupPrivate *popup;
 };
 
+class QQuickPopupItem : public QQuickItem
+{
+    Q_OBJECT
+
+public:
+    explicit QQuickPopupItem(QQuickPopup *popup);
+
+protected:
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void wheelEvent(QWheelEvent *event) override;
+
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+
+private:
+    Q_DECLARE_PRIVATE(QQuickPopupItem)
+};
+
+class QQuickPopupPositioner : public QQuickItemChangeListener
+{
+public:
+    explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
+    ~QQuickPopupPositioner();
+
+    qreal x() const;
+    void setX(qreal x);
+
+    qreal y() const;
+    void setY(qreal y);
+
+    QQuickItem *parentItem() const;
+    void setParentItem(QQuickItem *parent);
+
+protected:
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemParentChanged(QQuickItem *, QQuickItem *parent);
+    void itemChildRemoved(QQuickItem *, QQuickItem *child);
+    void itemDestroyed(QQuickItem *item);
+
+private:
+    void repositionPopup();
+
+    void removeAncestorListeners(QQuickItem *item);
+    void addAncestorListeners(QQuickItem *item);
+
+    bool isAncestor(QQuickItem *item) const;
+
+    qreal m_x;
+    qreal m_y;
+    QQuickItem *m_parentItem;
+    QQuickPopupPrivate *m_popup;
+};
+
 class QQuickPopupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
@@ -87,15 +151,46 @@ class QQuickPopupPrivate : public QObjectPrivate
 public:
     QQuickPopupPrivate();
 
+    static QQuickPopupPrivate *get(QQuickPopup *popup)
+    {
+        return popup->d_func();
+    }
+
+    void init();
+
     void finalizeEnterTransition();
     void finalizeExitTransition();
 
+    void resizeBackground();
+    void resizeContent();
+
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
+
     bool focus;
     bool modal;
+    bool complete;
+    bool hasTopPadding;
+    bool hasLeftPadding;
+    bool hasRightPadding;
+    bool hasBottomPadding;
+    qreal padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
+    qreal contentWidth;
+    qreal contentHeight;
+    QQuickItem *parentItem;
+    QQuickItem *background;
     QQuickItem *contentItem;
     QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
+    QQuickPopupItem *popupItem;
+    QQuickPopupPositioner positioner;
     QQuickPopupTransitionManager transitionManager;
 };
 

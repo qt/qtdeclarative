@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-tabbar.qml 1
 
+    \labs
+
     \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls}
 */
 

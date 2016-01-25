@@ -761,6 +761,45 @@ TestCase {
         control.destroy()
     }
 
+    Component {
+        id: mouseArea
+        MouseArea {
+            property int presses: 0
+            property int releases: 0
+            property int clicks: 0
+            property int doubleClicks: 0
+            property int cancels: 0
+            onPressed: ++presses
+            onReleased: ++releases
+            onClicked: ++clicks
+            onDoubleClicked: ++doubleClicks
+            onCanceled: ++cancels
+        }
+    }
+
+    // QTBUG-50305
+    function test_events() {
+        var control = stackView.createObject(testCase, {initialItem: mouseArea, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        var testItem = control.currentItem
+        verify(testItem)
+
+        testItem.doubleClicked.connect(function() {
+            control.push(mouseArea) // ungrab -> cancel
+        })
+
+        mouseDoubleClickSequence(testItem)
+        compare(testItem.presses, 2)
+        compare(testItem.releases, 2)
+        compare(testItem.clicks, 1)
+        compare(testItem.doubleClicks, 1)
+        compare(testItem.pressed, false)
+        compare(testItem.cancels, 0)
+
+        control.destroy()
+    }
+
     function test_failures() {
         var control = stackView.createObject(testCase, {initialItem: component})
         verify(control)

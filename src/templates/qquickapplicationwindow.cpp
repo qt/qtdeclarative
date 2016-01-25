@@ -81,6 +81,8 @@ QT_BEGIN_NAMESPACE
 
     \note By default, an ApplicationWindow is not visible.
 
+    \labs
+
     \sa Page, {Container Controls}
 */
 

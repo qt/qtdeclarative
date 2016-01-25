@@ -43,6 +43,11 @@ import QtGraphicalEffects 1.0
 T.Menu {
     id: control
 
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
+    implicitHeight: Math.min(background ? background.implicitHeight : 0,
+                             contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+
     enter: Transition {
         // grow_fade_in
         NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
@@ -56,10 +61,25 @@ T.Menu {
     }
 
     //! [contentItem]
-    contentItem: Item {
-        implicitWidth: 200
-        implicitHeight: Math.min(listview.contentHeight, 200)
+    contentItem: ListView {
+        implicitHeight: contentHeight
         transformOrigin: Item.Top
+
+        model: control.contentModel
+        // TODO: improve this?
+        interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
+        clip: true
+        keyNavigationWraps: false
+        currentIndex: -1
+
+        ScrollIndicator.vertical: ScrollIndicator {}
+    }
+    //! [contentItem]
+
+    //! [background]
+    background: Item {
+        implicitWidth: 200
+        implicitHeight: 200
 
         Rectangle {
             id: panel
@@ -77,20 +97,6 @@ T.Menu {
             samples: 15
             spread: 0.5
         }
-
-        ListView {
-            id: listview
-            width: parent.width
-            height: parent.height
-            model: control.contentModel
-            // TODO: improve this?
-            interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
-            clip: true
-            keyNavigationWraps: false
-            currentIndex: -1
-
-            ScrollIndicator.vertical: ScrollIndicator {}
-        }
     }
-    //! [contentItem]
+    //! [background]
 }
