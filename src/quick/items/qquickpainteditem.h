@@ -115,6 +115,7 @@ protected:
     QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = Q_NULLPTR);
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
     void releaseResources() Q_DECL_OVERRIDE;
+    void itemChange(ItemChange, const ItemChangeData &) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void invalidateSceneGraph();

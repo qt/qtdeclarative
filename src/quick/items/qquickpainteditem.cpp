@@ -657,4 +657,11 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
     return d->textureProvider;
 }
 
+void QQuickPaintedItem::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == ItemDevicePixelRatioHasChanged)
+        update();
+    QQuickItem::itemChange(change, value);
+}
+
 QT_END_NAMESPACE
