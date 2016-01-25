@@ -96,19 +96,14 @@ T.Switch {
                     duration: 300
                 }
             }
-        }
 
-        DropShadow {
-            x: handle.x
-            y: handle.y
-            width: handle.width
-            height: handle.height
-            source: handle
-            verticalOffset: 1
-            color: control.Material.dropShadowColor
-            spread: 0.3
+            layer.enabled: true
+            layer.effect: DropShadow {
+                verticalOffset: 1
+                color: control.Material.dropShadowColor
+                spread: 0.3
+            }
         }
-
     }
     //! [indicator]
 

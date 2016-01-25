@@ -71,36 +71,28 @@ T.Button {
     //! [label]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 64
         implicitHeight: 48
 
-        Rectangle {
-            id: rect
-            // external vertical padding is 6 (to increase touch area)
-            y: 6
-            width: parent.width
-            height: parent.height - 12
-            radius: 2
-            color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
-                (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
-                (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
-                (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
+        // external vertical padding is 6 (to increase touch area)
+        y: 6
+        width: parent.width
+        height: parent.height - 12
+        radius: 2
+        color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
+            (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
+            (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
+            (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 400
-                }
+        Behavior on color {
+            ColorAnimation {
+                duration: 400
             }
         }
 
-        DropShadow {
-            source: rect
-            visible: control.enabled
-            x: rect.x
-            y: rect.y
-            width: rect.width
-            height: rect.height
+        layer.enabled: control.enabled
+        layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9

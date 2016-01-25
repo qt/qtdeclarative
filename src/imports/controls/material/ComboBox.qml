@@ -74,29 +74,21 @@ T.ComboBox {
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 120
         implicitHeight: 32
 
-        Rectangle {
-            id: rect
-            width: parent.width
-            height: parent.height
-            radius: 2
-            color: control.Material.dialogColor
+        radius: 2
+        color: control.Material.dialogColor
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 400
-                }
+        Behavior on color {
+            ColorAnimation {
+                duration: 400
             }
         }
 
-        DropShadow {
-            source: rect
-            visible: control.enabled
-            width: parent.width
-            height: parent.height
+        layer.enabled: control.enabled
+        layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
@@ -140,19 +132,11 @@ T.ComboBox {
 //            ScrollIndicator.vertical: ScrollIndicator { }
         }
 
-        background: Item {
-            Rectangle {
-                id: panel
-                width: parent.width
-                height: parent.height
-                color: control.Material.dialogColor
-            }
+        background: Rectangle {
+            color: control.Material.dialogColor
 
-            DropShadow {
-                source: panel
-                visible: control.enabled
-                width: parent.width
-                height: parent.height
+            layer.enabled: control.enabled
+            layer.effect: DropShadow {
                 verticalOffset: 1
                 color: control.Material.dropShadowColor
                 samples: 15

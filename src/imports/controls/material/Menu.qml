@@ -78,21 +78,14 @@ T.Menu {
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 200
         implicitHeight: 200
 
-        Rectangle {
-            id: panel
-            width: parent.width
-            height: parent.height
-            color: control.Material.dialogColor
-        }
+        color: control.Material.dialogColor
 
-        DropShadow {
-            source: panel
-            width: parent.width
-            height: parent.height
+        layer.enabled: true
+        layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: 15
