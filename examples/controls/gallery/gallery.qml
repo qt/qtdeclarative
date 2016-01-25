@@ -90,6 +90,7 @@ ApplicationWindow {
                 Menu {
                     id: optionsMenu
                     x: parent.width - width
+                    transformOrigin: Menu.TopRight
 
                     MenuItem {
                         text: "Settings"

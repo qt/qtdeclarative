@@ -545,9 +545,6 @@ void QQuickPopup::open()
     d->overlay = static_cast<QQuickOverlay *>(applicationWindow->overlay());
     d->popupItem->setParentItem(d->overlay);
     d->positioner.setParentItem(d->parentItem);
-    // TODO: add Popup::transformOrigin?
-    if (d->contentItem)
-        d->popupItem->setTransformOrigin(d->contentItem->transformOrigin());
     emit aboutToShow();
     d->transitionManager.transitionEnter();
     emit visibleChanged();
@@ -1091,6 +1088,30 @@ void QQuickPopup::setVisible(bool visible)
         open();
     else
         close();
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::Popup::transformOrigin
+
+    This property holds the origin point for transformations in enter and exit transitions.
+
+    Nine transform origins are available, as shown in the image below.
+    The default transform origin is \c Popup.Center.
+
+    \image qtlabscontrols-popup-transformorigin.png
+
+    \sa enter, exit, Item::transformOrigin
+*/
+QQuickPopup::TransformOrigin QQuickPopup::transformOrigin() const
+{
+    Q_D(const QQuickPopup);
+    return static_cast<TransformOrigin>(d->popupItem->transformOrigin());
+}
+
+void QQuickPopup::setTransformOrigin(TransformOrigin origin)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setTransformOrigin(static_cast<QQuickItem::TransformOrigin>(origin));
 }
 
 /*!

@@ -117,6 +117,7 @@ T.ComboBox {
         y: control.height
         implicitWidth: control.width
         implicitHeight: Math.min(200, listview.contentHeight)
+        transformOrigin: Item.Top
 
         enter: Transition {
             // grow_fade_in
@@ -135,7 +136,6 @@ T.ComboBox {
             clip: true
             model: control.delegateModel
             currentIndex: control.highlightedIndex
-            transformOrigin: popup.showAbove ? Item.Bottom : Item.Top
 
 //            ScrollIndicator.vertical: ScrollIndicator { }
         }

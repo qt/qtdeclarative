@@ -90,6 +90,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
@@ -167,6 +168,17 @@ public:
 
     bool isVisible() const;
     void setVisible(bool visible);
+
+    // keep in sync with Item.TransformOrigin
+    enum TransformOrigin {
+        TopLeft, Top, TopRight,
+        Left, Center, Right,
+        BottomLeft, Bottom, BottomRight
+    };
+    Q_ENUM(TransformOrigin)
+
+    TransformOrigin transformOrigin() const;
+    void setTransformOrigin(TransformOrigin);
 
     QQuickTransition *enter() const;
     void setEnter(QQuickTransition *transition);

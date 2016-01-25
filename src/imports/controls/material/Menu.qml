@@ -48,6 +48,8 @@ T.Menu {
     implicitHeight: Math.min(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
 
+    transformOrigin: Item.Top
+
     enter: Transition {
         // grow_fade_in
         NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
@@ -63,7 +65,6 @@ T.Menu {
     //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
-        transformOrigin: Item.Top
 
         model: control.contentModel
         // TODO: improve this?
