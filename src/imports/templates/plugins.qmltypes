@@ -56,6 +56,7 @@ Module {
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
         Property { name: "overlay"; type: "QQuickOverlay"; isReadonly: true; isPointer: true }
         Property { name: "font"; type: "QFont" }
+        Property { name: "locale"; type: "QLocale" }
     }
     Component {
         name: "QQuickApplicationWindowAttached"
@@ -65,7 +66,7 @@ Module {
         Property { name: "activeFocusControl"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "header"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isReadonly: true; isPointer: true }
-        Property { name: "overlay"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "overlay"; type: "QQuickOverlay"; isReadonly: true; isPointer: true }
     }
     Component {
         name: "QQuickBusyIndicator"
@@ -438,6 +439,7 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "contentModel"; type: "QVariant"; isReadonly: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "title"; type: "string" }
         Method {
             name: "itemAt"
             type: "QQuickItem*"
@@ -479,6 +481,17 @@ Module {
         Signal { name: "released" }
     }
     Component {
+        name: "QQuickPage"
+        defaultProperty: "contentData"
+        prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/Page 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "header"; type: "QQuickItem"; isPointer: true }
+        Property { name: "footer"; type: "QQuickItem"; isPointer: true }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+    }
+    Component {
         name: "QQuickPageIndicator"
         defaultProperty: "data"
         prototype: "QQuickControl"
@@ -502,13 +515,48 @@ Module {
     }
     Component {
         name: "QQuickPopup"
+        defaultProperty: "contentData"
         prototype: "QObject"
         exports: ["Qt.labs.templates/Popup 1.0"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "TransformOrigin"
+            values: {
+                "TopLeft": 0,
+                "Top": 1,
+                "TopRight": 2,
+                "Left": 3,
+                "Center": 4,
+                "Right": 5,
+                "BottomLeft": 6,
+                "Bottom": 7,
+                "BottomRight": 8
+            }
+        }
+        Property { name: "x"; type: "double" }
+        Property { name: "y"; type: "double" }
+        Property { name: "width"; type: "double" }
+        Property { name: "height"; type: "double" }
+        Property { name: "implicitWidth"; type: "double" }
+        Property { name: "implicitHeight"; type: "double" }
+        Property { name: "contentWidth"; type: "double" }
+        Property { name: "contentHeight"; type: "double" }
+        Property { name: "availableWidth"; type: "double"; isReadonly: true }
+        Property { name: "availableHeight"; type: "double"; isReadonly: true }
+        Property { name: "padding"; type: "double" }
+        Property { name: "topPadding"; type: "double" }
+        Property { name: "leftPadding"; type: "double" }
+        Property { name: "rightPadding"; type: "double" }
+        Property { name: "bottomPadding"; type: "double" }
+        Property { name: "parent"; type: "QQuickItem"; isPointer: true }
+        Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
         Property { name: "focus"; type: "bool" }
         Property { name: "modal"; type: "bool" }
-        Property { name: "visible"; type: "bool"; isReadonly: true }
+        Property { name: "visible"; type: "bool" }
+        Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
         Signal { name: "pressedOutside" }
@@ -1123,15 +1171,15 @@ Module {
         }
         Signal {
             name: "horizontalAlignmentChanged"
-            Parameter { name: "alignment"; type: "HAlignment" }
+            Parameter { name: "alignment"; type: "QQuickTextEdit::HAlignment" }
         }
         Signal {
             name: "verticalAlignmentChanged"
-            Parameter { name: "alignment"; type: "VAlignment" }
+            Parameter { name: "alignment"; type: "QQuickTextEdit::VAlignment" }
         }
         Signal {
             name: "textFormatChanged"
-            Parameter { name: "textFormat"; type: "TextFormat" }
+            Parameter { name: "textFormat"; type: "QQuickTextEdit::TextFormat" }
         }
         Signal {
             name: "readOnlyChanged"
@@ -1164,7 +1212,7 @@ Module {
         }
         Signal {
             name: "mouseSelectionModeChanged"
-            Parameter { name: "mode"; type: "SelectionMode" }
+            Parameter { name: "mode"; type: "QQuickTextEdit::SelectionMode" }
         }
         Signal {
             name: "linkActivated"
