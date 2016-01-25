@@ -119,6 +119,36 @@ QT_BEGIN_NAMESPACE
     \sa highlightedIndex
 */
 
+class QQuickComboBoxDelegateModel : public QQmlDelegateModel
+{
+public:
+    explicit QQuickComboBoxDelegateModel(QQuickComboBox *combo);
+    QString stringValue(int index, const QString &role) Q_DECL_OVERRIDE;
+
+private:
+    QQuickComboBox *combo;
+};
+
+QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo) :
+    QQmlDelegateModel(qmlContext(combo), combo), combo(combo)
+{
+}
+
+QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
+{
+    QVariant model = combo->model();
+    if (model.userType() == QMetaType::QVariantList) {
+        QVariant object = model.toList().value(index);
+        if (object.userType() == QMetaType::QVariantMap) {
+            QVariantMap data = object.toMap();
+            if (data.count() == 1 && role == QLatin1String("modelData"))
+                return data.first().toString();
+            return data.value(role).toString();
+        }
+    }
+    return QQmlDelegateModel::stringValue(index, role);
+}
+
 class QQuickComboBoxPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickComboBox)
@@ -302,7 +332,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     delegateModel = model.value<QQmlInstanceModel *>();
 
     if (!delegateModel && model.isValid()) {
-        QQmlDelegateModel *dataModel = new QQmlDelegateModel(qmlContext(q), q);
+        QQmlDelegateModel *dataModel = new QQuickComboBoxDelegateModel(q);
         dataModel->setModel(model);
         dataModel->setDelegate(delegate);
         if (q->isComponentComplete())

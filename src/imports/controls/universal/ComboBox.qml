@@ -57,7 +57,7 @@ T.ComboBox {
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
-        text: control.textRole ? model[control.textRole] : modelData
+        text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
         pressed: highlighted && control.pressed
     }
