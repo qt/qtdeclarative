@@ -82,6 +82,7 @@ T.SpinBox {
     //! [up.indicator]
     up.indicator: Rectangle {
         x: control.mirrored ? 0 : parent.width - width
+        height: parent.height
         implicitWidth: 40
         implicitHeight: 40
         color: up.pressed ? "#e4e4e4" : "#f6f6f6"
@@ -98,7 +99,7 @@ T.SpinBox {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
-            height: parent.height / 3
+            height: parent.width / 3
             color: control.enabled ? "#353637" : "#bdbebf"
         }
     }
@@ -107,6 +108,7 @@ T.SpinBox {
     //! [down.indicator]
     down.indicator: Rectangle {
         x: control.mirrored ? parent.width - width : 0
+        height: parent.height
         implicitWidth: 40
         implicitHeight: 40
         color: down.pressed ? "#e4e4e4" : "#f6f6f6"
