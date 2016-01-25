@@ -89,7 +89,7 @@ void tst_menu::mouse()
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
     QQuickItem *firstItem = menu->itemAt(0);
-    QSignalSpy clickedSpy(firstItem, SIGNAL(clicked(QQuickMouseEvent*)));
+    QSignalSpy clickedSpy(firstItem, SIGNAL(clicked()));
     QSignalSpy triggeredSpy(firstItem, SIGNAL(triggered()));
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 

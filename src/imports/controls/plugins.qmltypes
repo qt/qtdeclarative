@@ -29,23 +29,11 @@ Module {
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "label"; type: "QQuickItem"; isPointer: true }
-        Signal {
-            name: "pressed"
-            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
-        }
-        Signal {
-            name: "released"
-            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
-        }
+        Signal { name: "pressed" }
+        Signal { name: "released" }
         Signal { name: "canceled" }
-        Signal {
-            name: "clicked"
-            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
-        }
-        Signal {
-            name: "doubleClicked"
-            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
-        }
+        Signal { name: "clicked" }
+        Signal { name: "doubleClicked" }
         Method { name: "toggle" }
     }
     Component {
