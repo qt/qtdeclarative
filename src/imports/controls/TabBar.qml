@@ -59,37 +59,13 @@ T.TabBar {
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem
-
-        highlightMoveDuration: 250
-        highlightResizeDuration: 0
-        highlightFollowsCurrentItem: true
-        highlight: Item {
-            z: 2
-            Rectangle {
-                height: 4
-                width: parent.width
-                y: parent.height - height
-                color: "#353637"
-            }
-        }
     }
     //! [contentItem]
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 26
-        implicitHeight: 26
-
-        border.color: "#ffffff"
-        border.width: 8
-        color: control.count > 1 ? "#bdbebf" : "#ffffff"
-
-        Rectangle {
-            y: parent.height - height
-            width: parent.width
-            height: 1
-            color: "#bdbebf"
-        }
+        implicitWidth: 40
+        implicitHeight: 40
     }
     //! [background]
 }
