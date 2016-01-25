@@ -79,6 +79,16 @@ TestCase {
         }
     }
 
+    Component {
+        id: contentBox
+        GroupBox {
+            contentItem: Item {
+                implicitWidth: 100
+                implicitHeight: 30
+            }
+        }
+    }
+
     function test_empty() {
         var control = groupBox.createObject(testCase)
         verify(control)
@@ -110,6 +120,18 @@ TestCase {
         compare(control.contentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
+
+        control.destroy()
+    }
+
+    function test_contentItem() {
+        var control = contentBox.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 100)
+        compare(control.contentHeight, 30)
+        verify(control.implicitWidth > 100)
+        verify(control.implicitHeight > 30)
 
         control.destroy()
     }

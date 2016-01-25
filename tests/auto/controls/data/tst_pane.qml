@@ -57,7 +57,7 @@ TestCase {
 
     Component {
         id: oneChildPane
-        GroupBox {
+        Pane {
             Item {
                 implicitWidth: 100
                 implicitHeight: 30
@@ -67,7 +67,7 @@ TestCase {
 
     Component {
         id: twoChildrenPane
-        GroupBox {
+        Pane {
             Item {
                 implicitWidth: 100
                 implicitHeight: 30
@@ -75,6 +75,16 @@ TestCase {
             Item {
                 implicitWidth: 200
                 implicitHeight: 60
+            }
+        }
+    }
+
+    Component {
+        id: contentPane
+        Pane {
+            contentItem: Item {
+                implicitWidth: 100
+                implicitHeight: 30
             }
         }
     }
@@ -123,6 +133,18 @@ TestCase {
         compare(control.contentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
+
+        control.destroy()
+    }
+
+    function test_contentItem() {
+        var control = contentPane.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 100)
+        compare(control.contentHeight, 30)
+        verify(control.implicitWidth > 100)
+        verify(control.implicitHeight > 30)
 
         control.destroy()
     }

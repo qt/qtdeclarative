@@ -57,7 +57,7 @@ TestCase {
 
     Component {
         id: oneChildBar
-        GroupBox {
+        ToolBar {
             Item {
                 implicitWidth: 100
                 implicitHeight: 30
@@ -67,7 +67,7 @@ TestCase {
 
     Component {
         id: twoChildrenBar
-        GroupBox {
+        ToolBar {
             Item {
                 implicitWidth: 100
                 implicitHeight: 30
@@ -75,6 +75,16 @@ TestCase {
             Item {
                 implicitWidth: 200
                 implicitHeight: 60
+            }
+        }
+    }
+
+    Component {
+        id: contentBar
+        ToolBar {
+            contentItem: Item {
+                implicitWidth: 100
+                implicitHeight: 30
             }
         }
     }
@@ -96,8 +106,8 @@ TestCase {
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
-        verify(control.implicitWidth > 100)
-        verify(control.implicitHeight > 30)
+        verify(control.implicitWidth >= 100)
+        verify(control.implicitHeight >= 30)
 
         control.destroy()
     }
@@ -108,8 +118,20 @@ TestCase {
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-        verify(control.implicitWidth > 0)
-        verify(control.implicitHeight > 0)
+        verify(control.implicitWidth >= 0)
+        verify(control.implicitHeight >= 0)
+
+        control.destroy()
+    }
+
+    function test_contentItem() {
+        var control = contentBar.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 100)
+        compare(control.contentHeight, 30)
+        verify(control.implicitWidth >= 100)
+        verify(control.implicitHeight >= 30)
 
         control.destroy()
     }
