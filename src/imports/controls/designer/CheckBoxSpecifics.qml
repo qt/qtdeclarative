@@ -41,34 +41,9 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    Section {
-        width: parent.width
+    ButtonSection {
         caption: qsTr("Check Box")
-
-        SectionLayout {
-            Label {
-                text: qsTr("Text")
-                tooltip: qsTr("The text displayed on the check box.")
-            }
-            SecondColumnLayout {
-                LineEdit {
-                    backendValue: backendValues.text
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Checked")
-                tooltip: qsTr("The checked state of the check box.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.checked.valueToString
-                    backendValue: backendValues.checked
-                    Layout.fillWidth: true
-                }
-            }
-        }
+        width: parent.width
     }
 
     ControlSection {

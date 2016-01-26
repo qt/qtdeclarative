@@ -41,9 +41,39 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Button")
+    Section {
         width: parent.width
+        caption: qsTr("Tumbler")
+
+        SectionLayout {
+            Label {
+                text: qsTr("Visible Count")
+                tooltip: qsTr("The count of visible items.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    decimals: 0
+                    backendValue: backendValues.visibleItemCount
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Current")
+                tooltip: qsTr("The index of the current item.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    decimals: 0
+                    backendValue: backendValues.currentIndex
+                    Layout.fillWidth: true
+                }
+            }
+        }
     }
 
     ControlSection {

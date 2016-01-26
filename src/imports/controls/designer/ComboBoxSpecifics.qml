@@ -41,9 +41,36 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Button")
+    Section {
         width: parent.width
+        caption: qsTr("Combo Box")
+
+        SectionLayout {
+            Label {
+                text: qsTr("Text Role")
+                tooltip: qsTr("The model role used for displaying text.")
+            }
+            SecondColumnLayout {
+                LineEdit {
+                    backendValue: backendValues.textRole
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Current")
+                tooltip: qsTr("The index of the current item.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    decimals: 0
+                    backendValue: backendValues.currentIndex
+                    Layout.fillWidth: true
+                }
+            }
+        }
     }
 
     ControlSection {

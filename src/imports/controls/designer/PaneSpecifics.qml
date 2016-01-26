@@ -41,11 +41,6 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Button")
-        width: parent.width
-    }
-
     ControlSection {
         width: parent.width
     }

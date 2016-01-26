@@ -42,7 +42,7 @@ Column {
     width: parent.width
 
     ButtonSection {
-        caption: qsTr("Button")
+        caption: qsTr("Item Delegate")
         width: parent.width
     }
 

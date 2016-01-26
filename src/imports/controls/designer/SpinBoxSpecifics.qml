@@ -36,40 +36,68 @@
 
 import QtQuick 2.1
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.0
+import QtQuick.Layouts 1.1
 
 Column {
     width: parent.width
 
     Section {
         width: parent.width
-        caption: qsTr("Indicator")
+        caption: qsTr("Spin Box")
 
         SectionLayout {
             Label {
-                text: qsTr("Count")
-                tooltip: qsTr("The number of pages.")
+                text: qsTr("Value")
+                tooltip: qsTr("The current value of the spinbox.")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.count
+                    minimumValue: Math.min(backendValues.from.value, backendValues.to.value)
+                    maximumValue: Math.max(backendValues.from.value, backendValues.to.value)
+                    decimals: 2
+                    backendValue: backendValues.value
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current page.")
+                text: qsTr("From")
+                tooltip: qsTr("The starting value of the spinbox range.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
+                    decimals: 2
+                    backendValue: backendValues.from
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("To")
+                tooltip: qsTr("The ending value of the spinbox range.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    decimals: 2
+                    backendValue: backendValues.to
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Step Size")
+                tooltip: qsTr("The step size of the spinbox.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    decimals: 2
+                    backendValue: backendValues.stepSize
                     Layout.fillWidth: true
                 }
             }

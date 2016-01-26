@@ -43,6 +43,32 @@ MetaInfo {
     }
 
     Type {
+        name: "Qt.labs.controls.ComboBox"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Combo Box"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Dial"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Dial"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+        }
+    }
+
+    Type {
         name: "Qt.labs.controls.Frame"
         icon: "images/todo16.png"
 
@@ -76,6 +102,21 @@ MetaInfo {
     }
 
     Type {
+        name: "Qt.labs.controls.ItemDelegate"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Item Delegate"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Item Delegate')" }
+        }
+    }
+
+    Type {
         name: "Qt.labs.controls.Label"
         icon: "images/todo16.png"
 
@@ -102,6 +143,22 @@ MetaInfo {
             requiredImport: "Qt.labs.controls"
 
             Property { name: "count"; type: "int"; value: 3 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Pane"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Pane"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
         }
     }
 
@@ -147,6 +204,19 @@ MetaInfo {
             requiredImport: "Qt.labs.controls"
 
             Property { name: "value"; type: "real"; value: 0.5 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.SpinBox"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Spin Box"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
         }
     }
 
@@ -222,6 +292,19 @@ MetaInfo {
             requiredImport: "Qt.labs.controls"
 
             Property { name: "width"; type: "int"; value: 360 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Tumbler"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Tumbler"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
         }
     }
 }
