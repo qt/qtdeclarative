@@ -1,4 +1,4 @@
-CONFIG += testcase insignificant_test
+CONFIG += testcase
 TARGET = tst_scenegraph
 DESTDIR=..
 macx:CONFIG -= app_bundle
