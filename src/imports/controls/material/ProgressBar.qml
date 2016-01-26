@@ -46,8 +46,6 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
 
-    padding: 6
-
     //! [indicator]
     indicator: Item {
         x: control.leftPadding
