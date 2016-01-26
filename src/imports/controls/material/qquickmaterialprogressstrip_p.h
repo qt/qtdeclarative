@@ -34,49 +34,68 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
+#ifndef QQUICKMATERIALPROGRESSSTRIP_P_H
+#define QQUICKMATERIALPROGRESSSTRIP_P_H
 
-T.ProgressBar {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            indicator ? indicator.implicitWidth : 0) + leftPadding + rightPadding
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickanimator_p.h>
 
-    //! [indicator]
-    indicator: ProgressStrip {
-        id: strip
-        x: control.leftPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
-        height: 4
+QT_BEGIN_NAMESPACE
 
-        scale: control.mirrored ? -1 : 1
-        indeterminate: control.indeterminate
-        color: control.Material.accentColor
-        progress: control.position
+class QQuickMaterialProgressStrip : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress FINAL)
+    Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate FINAL)
 
-        StripAnimator {
-            target: strip
-            running: control.visible && control.indeterminate
-        }
-    }
-    //! [indicator]
+public:
+    QQuickMaterialProgressStrip(QQuickItem *parent = Q_NULLPTR);
 
-    //! [background]
-    background: Rectangle {
-        implicitWidth: 200
-        implicitHeight: 6
-        x: control.leftPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
-        height: 4
+    QColor color() const;
+    void setColor(const QColor &color);
 
-        color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, 0.25)
-    }
-    //! [background]
-}
+    qreal progress() const;
+    void setProgress(qreal progress);
+
+    bool isIndeterminate() const;
+    void setIndeterminate(bool indeterminate);
+
+protected:
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+
+private:
+    QColor m_color;
+    qreal m_progress;
+    bool m_indeterminate;
+};
+
+class QQuickMaterialStripAnimator : public QQuickAnimator
+{
+    Q_OBJECT
+
+public:
+    QQuickMaterialStripAnimator(QObject *parent = Q_NULLPTR);
+
+protected:
+    QString propertyName() const Q_DECL_OVERRIDE;
+    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+};
+
+QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMaterialProgressStrip)
+QML_DECLARE_TYPE(QQuickMaterialStripAnimator)
+
+#endif // QQUICKMATERIALPROGRESSSTRIP_P_H

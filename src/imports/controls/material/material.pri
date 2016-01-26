@@ -1,12 +1,14 @@
 HEADERS += \
     $$PWD/qquickmaterialstyle_p.h \
     $$PWD/qquickmaterialtheme_p.h \
-    $$PWD/qquickmaterialprogressring_p.h
+    $$PWD/qquickmaterialprogressring_p.h \
+    $$PWD/qquickmaterialprogressstrip_p.h
 
 SOURCES += \
     $$PWD/qquickmaterialstyle.cpp \
     $$PWD/qquickmaterialtheme.cpp \
-    $$PWD/qquickmaterialprogressring.cpp
+    $$PWD/qquickmaterialprogressring.cpp \
+    $$PWD/qquickmaterialprogressstrip.cpp
 
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
