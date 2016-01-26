@@ -69,7 +69,7 @@ TestCase {
         id: comboBox
         ComboBox {
             delegate: ItemDelegate {
-                width: parent.width
+                width: popup.width
             }
         }
     }

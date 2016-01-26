@@ -115,7 +115,7 @@ T.ComboBox {
         contentItem: ListView {
             id: listview
             clip: true
-            model: control.delegateModel
+            model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
 
 //            ScrollIndicator.vertical: ScrollIndicator { }
