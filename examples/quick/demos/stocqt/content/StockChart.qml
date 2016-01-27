@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "."
 
 Rectangle {
     id: chart
@@ -135,7 +136,7 @@ Rectangle {
     Text {
         id: fromDate
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 8
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -145,7 +146,7 @@ Rectangle {
     Text {
         id: toDate
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 8
         anchors.right: parent.right
         anchors.rightMargin: canvas.tickMargin

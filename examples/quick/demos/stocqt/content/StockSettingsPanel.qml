@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "."
 
 Rectangle {
     id: root
@@ -62,7 +63,7 @@ Rectangle {
         anchors.left: root.left
         anchors.top: root.top
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 19
         text: "Open"
     }
@@ -73,7 +74,7 @@ Rectangle {
         anchors.top: openText.bottom
         anchors.topMargin: 10
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 19
         text: "Close"
     }
@@ -84,7 +85,7 @@ Rectangle {
         anchors.top: closeText.bottom
         anchors.topMargin: 10
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 19
         text: "High"
     }
@@ -95,7 +96,7 @@ Rectangle {
         anchors.top: highText.bottom
         anchors.topMargin: 10
         color: "#000000"
-        font.family: "Open Sans"
+        font.family: Settings.fontFamily
         font.pointSize: 19
         text: "Low"
     }

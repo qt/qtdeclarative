@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/demos/stocqt">
         <file>stocqt.qml</file>
+        <file>content/qmldir</file>
         <file>content/Button.qml</file>
         <file>content/CheckBox.qml</file>
         <file>content/StockChart.qml</file>
@@ -13,5 +14,7 @@
         <file>content/images/icon-left-arrow.png</file>
         <file>content/StockSettingsPanel.qml</file>
         <file>content/StockInfo.qml</file>
+        <file>content/Settings.qml</file>
+        <file>content/+windows/Settings.qml</file>
     </qresource>
 </RCC>
