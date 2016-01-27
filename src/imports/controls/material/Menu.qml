@@ -82,6 +82,7 @@ T.Menu {
         implicitWidth: 200
         implicitHeight: 200
 
+        radius: 3
         color: control.Material.dialogColor
 
         layer.enabled: true
