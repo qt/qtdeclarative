@@ -569,9 +569,6 @@ Module {
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
-        Signal { name: "pressedOutside" }
-        Signal { name: "releasedOutside" }
-        Signal { name: "clickedOutside" }
         Signal { name: "aboutToShow" }
         Signal { name: "aboutToHide" }
         Method { name: "open" }

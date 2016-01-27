@@ -52,6 +52,7 @@ public:
 
     void popupAboutToShow();
     void popupAboutToHide();
+    void closePopup(QQuickPopup *popup, QMouseEvent *event);
     void drawerPositionChange();
     void resizeBackground();
 
@@ -87,6 +88,30 @@ void QQuickOverlayPrivate::popupAboutToHide()
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     QQmlProperty::write(background, QStringLiteral("opacity"), 0.0);
+}
+
+void QQuickOverlayPrivate::closePopup(QQuickPopup *popup, QMouseEvent *event)
+{
+    Q_Q(QQuickOverlay);
+    const bool isPress = event->type() == QEvent::MouseButtonPress;
+    const bool onOutside = popup->closePolicy().testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
+    const bool onOutsideParent = popup->closePolicy().testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
+    if (onOutside || onOutsideParent) {
+        QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
+        QQuickItem *parentItem = QQuickPopupPrivate::get(popup)->parentItem;
+
+        if (onOutside && onOutsideParent) {
+            if (!popupItem->contains(q->mapToItem(popupItem, event->pos())) &&
+                    (!parentItem || !parentItem->contains(q->mapToItem(parentItem, event->pos()))))
+            popup->close();
+        } else if (onOutside) {
+            if (!popupItem->contains(q->mapToItem(popupItem, event->pos())))
+                popup->close();
+        } else if (onOutsideParent) {
+            if (!parentItem || !parentItem->contains(q->mapToItem(parentItem, event->pos())))
+                popup->close();
+        }
+    }
 }
 
 void QQuickOverlayPrivate::drawerPositionChange()
@@ -182,15 +207,11 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         if (popup->isModal())
             ++d->modalPopups;
 
-        connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
-        connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
         QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
         QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
     } else if (change == ItemChildRemovedChange) {
         Q_ASSERT(popup == d->popups.value(data.item));
 
-        disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
-        disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
         QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
         QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
 
@@ -226,13 +247,8 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
     event->setAccepted(d->modalPopups > 0);
     emit pressed();
 
-    foreach (QQuickPopup *popup, d->popups) {
-        if (popup->closePolicy().testFlag(QQuickPopup::OnPressOutside)) {
-            QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
-            if (!popupItem->contains(mapToItem(popupItem, event->pos())))
-                popup->close();
-        }
-    }
+    foreach (QQuickPopup *popup, d->popups)
+        d->closePopup(popup, event);
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
@@ -247,13 +263,8 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     event->setAccepted(d->modalPopups > 0);
     emit released();
 
-    foreach (QQuickPopup *popup, d->popups) {
-        if (popup->closePolicy().testFlag(QQuickPopup::OnReleaseOutside)) {
-            QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
-            if (!popupItem->contains(mapToItem(popupItem, event->pos())))
-                popup->close();
-        }
-    }
+    foreach (QQuickPopup *popup, d->popups)
+        d->closePopup(popup, event);
 }
 
 void QQuickOverlay::wheelEvent(QWheelEvent *event)
@@ -283,7 +294,9 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 
         QQuickPopup *popup = d->popups.value(popupItem);
         if (popup) {
-            emit popup->pressedOutside();
+            QQuickPopup::ClosePolicy policy = popup->closePolicy();
+            if (policy.testFlag(QQuickPopup::OnPressOutside) || policy.testFlag(QQuickPopup::OnPressOutsideParent))
+                popup->close();
 
             if (!modalBlocked && popup->isModal())
                 modalBlocked = true;

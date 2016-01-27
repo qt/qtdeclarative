@@ -503,6 +503,7 @@ QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
     d->positioner.setParentItem(Q_NULLPTR);
+    delete d->popupItem;
 }
 
 /*!
@@ -1100,7 +1101,9 @@ void QQuickPopup::setVisible(bool visible)
     The available values are:
     \value Popup.NoAutoClose The popup will only close when manually instructed to do so.
     \value Popup.OnPressOutside The popup will close when the mouse is pressed outside of it.
+    \value Popup.OnPressOutsideParent The popup will close when the mouse is pressed outside of its parent.
     \value Popup.OnReleaseOutside The popup will close when the mouse is released outside of it.
+    \value Popup.OnReleaseOutsideParent The popup will close when the mouse is released outside of its parent.
     \value Popup.OnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
 

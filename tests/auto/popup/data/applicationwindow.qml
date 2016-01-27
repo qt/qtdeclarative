@@ -46,19 +46,26 @@ ApplicationWindow {
     height: 400
 
     property alias popup: popup
+    property alias button: button
 
-    Popup {
-        id: popup
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
+    Button {
+        id: button
+        text: "Open"
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: -height
 
-        Text {
-            color: "white"
-            text: "Hello, world!"
+        Popup {
+            id: popup
+            y: parent.height
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: popup.close()
+            Text {
+                color: "white"
+                text: "Hello, world!"
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: popup.close()
+                }
             }
         }
     }

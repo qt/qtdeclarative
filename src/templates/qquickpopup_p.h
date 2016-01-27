@@ -171,10 +171,12 @@ public:
     void setVisible(bool visible);
 
     enum ClosePolicyFlag {
-        NoAutoClose = 0x0,
-        OnPressOutside = 0x1,
-        OnReleaseOutside = 0x2,
-        OnEscape = 0x4
+        NoAutoClose = 0x00,
+        OnPressOutside = 0x01,
+        OnPressOutsideParent = 0x02,
+        OnReleaseOutside = 0x04,
+        OnReleaseOutsideParent = 0x08,
+        OnEscape = 0x10
     };
     Q_DECLARE_FLAGS(ClosePolicy, ClosePolicyFlag)
     Q_FLAG(ClosePolicy)
@@ -231,10 +233,6 @@ Q_SIGNALS:
     void closePolicyChanged();
     void enterChanged();
     void exitChanged();
-
-    void pressedOutside();
-    void releasedOutside();
-    void clickedOutside();
 
     void aboutToShow();
     void aboutToHide();

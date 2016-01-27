@@ -155,7 +155,7 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
 
 public:
     QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false),
-        hideTimer(0), highlightedIndex(-1), currentIndex(-1), delegateModel(Q_NULLPTR),
+        highlightedIndex(-1), currentIndex(-1), delegateModel(Q_NULLPTR),
         delegate(Q_NULLPTR), popup(Q_NULLPTR) { }
 
     bool isPopupVisible() const;
@@ -163,7 +163,6 @@ public:
     void hidePopup(bool accept);
     void togglePopup(bool accept);
 
-    void pressedOutside();
     void itemClicked();
 
     void initItem(int index, QObject *object);
@@ -178,7 +177,6 @@ public:
     bool pressed;
     bool ownModel;
     bool hasDisplayText;
-    int hideTimer;
     int highlightedIndex;
     int currentIndex;
     QVariant model;
@@ -224,13 +222,6 @@ void QQuickComboBoxPrivate::togglePopup(bool accept)
         hidePopup(accept);
     else
         showPopup();
-}
-
-void QQuickComboBoxPrivate::pressedOutside()
-{
-    Q_Q(QQuickComboBox);
-    if (hideTimer <= 0)
-        hideTimer = q->startTimer(0);
 }
 
 void QQuickComboBoxPrivate::itemClicked()
@@ -619,7 +610,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     if (d->popup != popup) {
         delete d->popup;
         if (popup)
-            QObjectPrivate::connect(popup, &QQuickPopup::pressedOutside, d, &QQuickComboBoxPrivate::pressedOutside);
+            popup->setClosePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutsideParent);
         d->popup = popup;
         emit popupChanged();
     }
@@ -801,18 +792,6 @@ void QQuickComboBox::mouseUngrabEvent()
 {
     QQuickControl::mouseUngrabEvent();
     setPressed(false);
-}
-
-void QQuickComboBox::timerEvent(QTimerEvent *event)
-{
-    Q_D(QQuickComboBox);
-    QQuickControl::timerEvent(event);
-    if (event->timerId() == d->hideTimer) {
-        killTimer(d->hideTimer);
-        d->hideTimer = 0;
-        if (!d->pressed)
-            d->hidePopup(false);
-    }
 }
 
 void QQuickComboBox::componentComplete()
