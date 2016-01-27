@@ -90,6 +90,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy NOTIFY closePolicyChanged FINAL)
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
@@ -169,6 +170,18 @@ public:
     bool isVisible() const;
     void setVisible(bool visible);
 
+    enum ClosePolicyFlag {
+        NoAutoClose = 0x0,
+        OnPressOutside = 0x1,
+        OnReleaseOutside = 0x2,
+        OnEscape = 0x4
+    };
+    Q_DECLARE_FLAGS(ClosePolicy, ClosePolicyFlag)
+    Q_FLAG(ClosePolicy)
+
+    ClosePolicy closePolicy() const;
+    void setClosePolicy(ClosePolicy policy);
+
     // keep in sync with Item.TransformOrigin
     enum TransformOrigin {
         TopLeft, Top, TopRight,
@@ -215,6 +228,7 @@ Q_SIGNALS:
     void focusChanged();
     void modalChanged();
     void visibleChanged();
+    void closePolicyChanged();
     void enterChanged();
     void exitChanged();
 
@@ -252,6 +266,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)
 
 QT_END_NAMESPACE
 

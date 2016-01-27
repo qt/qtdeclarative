@@ -82,6 +82,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , bottomPadding(0)
     , contentWidth(0)
     , contentHeight(0)
+    , closePolicy(QQuickPopup::OnEscape)
     , parentItem(Q_NULLPTR)
     , background(Q_NULLPTR)
     , contentItem(Q_NULLPTR)
@@ -1091,6 +1092,36 @@ void QQuickPopup::setVisible(bool visible)
 }
 
 /*!
+    \qmlproperty enumeration Qt.labs.controls::Popup::closePolicy
+
+    This property determines the circumstances under which the popup closes.
+    The flags can be combined to allow several ways of closing the popup.
+
+    The available values are:
+    \value Popup.NoAutoClose The popup will only close when manually instructed to do so.
+    \value Popup.OnPressOutside The popup will close when the mouse is pressed outside of it.
+    \value Popup.OnReleaseOutside The popup will close when the mouse is released outside of it.
+    \value Popup.OnEscape The popup will close when the escape key is pressed while the popup
+        has active focus.
+
+    The default value is \c Popup.OnEscape.
+*/
+QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
+{
+    Q_D(const QQuickPopup);
+    return d->closePolicy;
+}
+
+void QQuickPopup::setClosePolicy(ClosePolicy policy)
+{
+    Q_D(QQuickPopup);
+    if (d->closePolicy == policy)
+        return;
+    d->closePolicy = policy;
+    emit closePolicyChanged();
+}
+
+/*!
     \qmlproperty enumeration Qt.labs.controls::Popup::transformOrigin
 
     This property holds the origin point for transformations in enter and exit transitions.
@@ -1200,7 +1231,14 @@ void QQuickPopup::focusOutEvent(QFocusEvent *event)
 
 void QQuickPopup::keyPressEvent(QKeyEvent *event)
 {
+    Q_D(QQuickPopup);
     event->accept();
+
+    if (event->key() != Qt::Key_Escape)
+        return;
+
+    if (d->closePolicy.testFlag(OnEscape))
+        close();
 }
 
 void QQuickPopup::keyReleaseEvent(QKeyEvent *event)

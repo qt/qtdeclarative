@@ -520,6 +520,15 @@ Module {
         exports: ["Qt.labs.templates/Popup 1.0"]
         exportMetaObjectRevisions: [0]
         Enum {
+            name: "ClosePolicy"
+            values: {
+                "NoAutoClose": 0,
+                "CloseOnPressOutside": 1,
+                "CloseOnReleaseOutside": 2,
+                "CloseOnEscape": 4
+            }
+        }
+        Enum {
             name: "TransformOrigin"
             values: {
                 "TopLeft": 0,
@@ -556,6 +565,7 @@ Module {
         Property { name: "focus"; type: "bool" }
         Property { name: "modal"; type: "bool" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "closePolicy"; type: "ClosePolicy" }
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }

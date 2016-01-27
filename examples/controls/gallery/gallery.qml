@@ -214,12 +214,11 @@ ApplicationWindow {
         height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
-        onPressedOutside: close()
+        closePolicy: Popup.OnEscape | Popup.OnPressOutside
 
         contentItem: ColumnLayout {
             id: settingsColumn
             spacing: 20
-            Keys.onEscapePressed: settingsPopup.close() // TODO: Popup::closePolicy
 
             Label {
                 text: "Settings"
@@ -291,12 +290,11 @@ ApplicationWindow {
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
         contentHeight: aboutColumn.height
-        onPressedOutside: close()
+        closePolicy: Popup.OnEscape | Popup.OnPressOutside
 
         Column {
             id: aboutColumn
             spacing: 20
-            Keys.onEscapePressed: aboutDialog.close() // TODO: Popup::closePolicy
 
             Label {
                 text: "About"

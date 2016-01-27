@@ -183,6 +183,7 @@ public:
     qreal bottomPadding;
     qreal contentWidth;
     qreal contentHeight;
+    QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
     QQuickItem *background;
     QQuickItem *contentItem;

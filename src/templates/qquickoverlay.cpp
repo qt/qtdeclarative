@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickoverlay_p.h"
-#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 #include "qquickdrawer_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
@@ -225,6 +225,14 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickOverlay);
     event->setAccepted(d->modalPopups > 0);
     emit pressed();
+
+    foreach (QQuickPopup *popup, d->popups) {
+        if (popup->closePolicy().testFlag(QQuickPopup::OnPressOutside)) {
+            QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
+            if (!popupItem->contains(mapToItem(popupItem, event->pos())))
+                popup->close();
+        }
+    }
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
@@ -238,6 +246,14 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickOverlay);
     event->setAccepted(d->modalPopups > 0);
     emit released();
+
+    foreach (QQuickPopup *popup, d->popups) {
+        if (popup->closePolicy().testFlag(QQuickPopup::OnReleaseOutside)) {
+            QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
+            if (!popupItem->contains(mapToItem(popupItem, event->pos())))
+                popup->close();
+        }
+    }
 }
 
 void QQuickOverlay::wheelEvent(QWheelEvent *event)

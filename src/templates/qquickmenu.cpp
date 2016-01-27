@@ -302,8 +302,7 @@ QQuickMenu::QQuickMenu(QObject *parent) :
     QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     Q_D(QQuickMenu);
-    connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::close);
-    connect(this, &QQuickMenu::releasedOutside, this, &QQuickMenu::close);
+    setClosePolicy(OnEscape | OnPressOutside | OnReleaseOutside);
     QObjectPrivate::connect(this, &QQuickMenu::visibleChanged, d, &QQuickMenuPrivate::onMenuVisibleChanged);
 }
 
@@ -512,10 +511,6 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     case Qt::Key_Down:
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
-        return true;
-
-    case Qt::Key_Escape:
-        close();
         return true;
 
     default:

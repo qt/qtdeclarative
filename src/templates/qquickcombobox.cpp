@@ -739,8 +739,6 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         d->increase();
         event->accept();
         break;
-    case Qt::Key_Escape:
-        event->accept();
     default:
         break;
     }
