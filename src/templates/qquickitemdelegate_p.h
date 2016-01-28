@@ -62,6 +62,8 @@ public:
     explicit QQuickItemDelegate(QQuickItem *parent = Q_NULLPTR);
 
 protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif

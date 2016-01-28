@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquickitemdelegate_p.h"
+#include "qquickcontrol_p_p.h"
+
+#include <QtGui/qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +64,11 @@ QT_BEGIN_NAMESPACE
 
 QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) : QQuickAbstractButton(parent)
 {
+}
+
+QFont QQuickItemDelegate::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY
