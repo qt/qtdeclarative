@@ -247,6 +247,7 @@ ApplicationWindow {
 
             Label {
                 text: "Restart required"
+                color: "#e41e25"
                 opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
                 horizontalAlignment: Label.AlignHCenter
                 verticalAlignment: Label.AlignVCenter
