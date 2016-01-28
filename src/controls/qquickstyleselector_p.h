@@ -70,8 +70,6 @@ public:
     QUrl baseUrl() const;
 
 private:
-    QUrl select(const QUrl &filePath) const;
-
     Q_DECLARE_PRIVATE(QQuickStyleSelector)
     QScopedPointer<QQuickStyleSelectorPrivate> d_ptr;
 };

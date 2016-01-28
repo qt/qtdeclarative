@@ -74,12 +74,6 @@ QQuickStyleSelector::~QQuickStyleSelector()
 {
 }
 
-QString QQuickStyleSelector::select(const QString &filePath) const
-{
-    Q_D(const QQuickStyleSelector);
-    return select(QUrl(d->baseUrl.toString() + filePath)).toString();
-}
-
 static bool isLocalScheme(const QString &file)
 {
     bool local = file == QLatin1String("qrc");
@@ -89,20 +83,20 @@ static bool isLocalScheme(const QString &file)
     return local;
 }
 
-QUrl QQuickStyleSelector::select(const QUrl &filePath) const
+QString QQuickStyleSelector::select(const QString &filePath) const
 {
     Q_D(const QQuickStyleSelector);
-    if (!isLocalScheme(filePath.scheme()) && !filePath.isLocalFile())
-        return filePath;
-    QUrl ret(filePath);
-    if (isLocalScheme(filePath.scheme())) {
-        QString equivalentPath = QLatin1Char(':') + filePath.path();
-        QString selectedPath = d->select(equivalentPath, allSelectors());
-        ret.setPath(selectedPath.remove(0, 1));
-    } else {
-        ret = QUrl::fromLocalFile(d->select(ret.toLocalFile(), allSelectors()));
+    QUrl url(d->baseUrl.toString() + filePath);
+    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
+        if (isLocalScheme(url.scheme())) {
+            QString equivalentPath = QLatin1Char(':') + url.path();
+            QString selectedPath = d->select(equivalentPath, allSelectors());
+            url.setPath(selectedPath.remove(0, 1));
+        } else {
+            url = QUrl::fromLocalFile(d->select(url.toLocalFile(), allSelectors()));
+        }
     }
-    return ret;
+    return url.toString();
 }
 
 static QString selectionHelper(const QString &path, const QString &fileName, const QStringList &selectors)
