@@ -448,6 +448,13 @@ bool QQuickApplicationWindow::isComponentComplete() const
     return d->complete;
 }
 
+void QQuickApplicationWindow::classBegin()
+{
+    Q_D(QQuickApplicationWindow);
+    QQuickWindowQmlImpl::classBegin();
+    d->resolveFont();
+}
+
 void QQuickApplicationWindow::componentComplete()
 {
     Q_D(QQuickApplicationWindow);

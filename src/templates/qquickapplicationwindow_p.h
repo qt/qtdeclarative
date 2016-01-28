@@ -109,6 +109,7 @@ Q_SIGNALS:
 
 protected:
     bool isComponentComplete() const;
+    void classBegin() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 
