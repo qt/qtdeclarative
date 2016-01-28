@@ -2923,7 +2923,7 @@ public:
         return static_cast<int32_t*>(m_buffer.data())[location / sizeof(int32_t) - 1];
     }
 
-#if OS(LINUX) && COMPILER(GCC_OR_CLANG)
+#if OS(LINUX)
     static inline void linuxPageFlush(uintptr_t begin, uintptr_t end)
     {
         __builtin___clear_cache(reinterpret_cast<char*>(begin), reinterpret_cast<char*>(end));
