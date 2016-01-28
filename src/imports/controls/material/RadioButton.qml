@@ -50,8 +50,11 @@ T.RadioButton {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 6
-    spacing: 6
+    spacing: 8
+    topPadding: 14
+    leftPadding: 8
+    rightPadding: 8
+    bottomPadding: 14
 
     //! [indicator]
     indicator: Rectangle {

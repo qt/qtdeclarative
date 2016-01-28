@@ -51,20 +51,20 @@ T.Switch {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 6
-    spacing: 6
+    padding: 8
+    spacing: 8
 
     //! [indicator]
     indicator: Item {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        implicitWidth: 40
-        implicitHeight: 20
+        implicitWidth: 38
+        implicitHeight: 32
 
         Ripple {
             x: handle.x + handle.width / 2 - width / 2
             y: handle.y + handle.height / 2 - height / 2
-            width: handle.width - 4
+            width: handle.width
             height: width
             control: control
             colored: control.checked
@@ -73,7 +73,7 @@ T.Switch {
 
         Rectangle {
             width: parent.width
-            height: 16
+            height: 14
             radius: height / 2
             y: parent.height / 2 - height / 2
             color: control.enabled ? (control.checked ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedTrackColor)
@@ -84,8 +84,8 @@ T.Switch {
             id: handle
             x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
-            width: 24
-            height: 24
+            width: 20
+            height: 20
             radius: width / 2
             color: control.enabled ? (control.checked ? control.Material.switchCheckedHandleColor : control.Material.switchUncheckedHandleColor)
                                    : control.Material.switchDisabledHandleColor
