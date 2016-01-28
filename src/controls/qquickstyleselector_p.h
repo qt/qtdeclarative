@@ -47,7 +47,6 @@
 //
 
 #include <QtCore/qurl.h>
-#include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
@@ -63,8 +62,6 @@ public:
 
     QString style() const;
     void setStyle(const QString &s);
-
-    QStringList allSelectors() const;
 
     void setBaseUrl(const QUrl &base);
     QUrl baseUrl() const;
