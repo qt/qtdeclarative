@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickoverlay_p.h"
-#include "qquickpopup_p_p.h"
+#include "qquickpopup_p.h"
 #include "qquickdrawer_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
@@ -97,8 +97,8 @@ void QQuickOverlayPrivate::closePopup(QQuickPopup *popup, QMouseEvent *event)
     const bool onOutside = popup->closePolicy().testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
     const bool onOutsideParent = popup->closePolicy().testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
-        QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
-        QQuickItem *parentItem = QQuickPopupPrivate::get(popup)->parentItem;
+        QQuickItem *popupItem = popup->popupItem();
+        QQuickItem *parentItem = popup->parentItem();
 
         if (onOutside && onOutsideParent) {
             if (!popupItem->contains(q->mapToItem(popupItem, event->pos())) &&

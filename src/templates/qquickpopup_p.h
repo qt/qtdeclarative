@@ -149,6 +149,8 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    QQuickItem *popupItem() const;
+
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
 

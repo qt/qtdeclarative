@@ -41,7 +41,7 @@
 
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
 #include <QtLabsTemplates/private/qquickoverlay_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
 
 using namespace QQuickVisualTestUtil;
@@ -67,7 +67,7 @@ void tst_popup::visible()
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
-    QQuickItem *popupItem = QQuickPopupPrivate::get(popup)->popupItem;
+    QQuickItem *popupItem = popup->popupItem();
 
     popup->open();
     QVERIFY(popup->isVisible());

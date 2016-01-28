@@ -906,6 +906,12 @@ void QQuickPopup::resetBottomPadding()
     d->setBottomPadding(0, true);
 }
 
+QQuickItem *QQuickPopup::popupItem() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem;
+}
+
 /*!
     \qmlproperty Item Qt.labs.popups::Popup::parent
 
