@@ -67,21 +67,15 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::pressed(MouseEvent mouse)
+    \qmlsignal Qt.labs.controls::AbstractButton::pressed()
 
     This signal is emitted when the button is interactively pressed by the user.
-
-    The mouse parameter provides information about the press, including the x
-    and y position and which button was pressed.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::released(MouseEvent mouse)
+    \qmlsignal Qt.labs.controls::AbstractButton::released()
 
     This signal is emitted when the button is interactively released by the user.
-
-    The mouse parameter provides information about the click, including the x
-    and y position of the release of the click, and whether the click was held.
 */
 
 /*!
@@ -93,21 +87,15 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::clicked(MouseEvent mouse)
+    \qmlsignal Qt.labs.controls::AbstractButton::clicked()
 
     This signal is emitted when the button is interactively clicked by the user.
-
-    The mouse parameter provides information about the click, including the x
-    and y position of the release of the click, and whether the click was held.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked(MouseEvent mouse)
+    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked()
 
     This signal is emitted when the button is interactively double clicked by the user.
-
-    The mouse parameter provides information about the click, including the x
-    and y position of the release of the click, and whether the click was held.
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
@@ -462,9 +450,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
             d->repeatButton = Qt::NoButton;
         }
 
-        QQuickMouseEvent me(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
-        emit pressed(&me);
-        event->setAccepted(me.isAccepted());
+        emit pressed();
     }
 }
 
@@ -475,12 +461,9 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
 
-        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
-        emit released(&mre);
-        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers(), true /* isClick */);
-        emit clicked(&mce);
+        emit released();
+        emit clicked();
         nextCheckState();
-        event->setAccepted(mre.isAccepted() || mce.isAccepted());
 
         if (d->autoRepeat)
             d->stopPressRepeat();
@@ -494,9 +477,7 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
     setPressed(true);
     d->pressPoint = event->pos();
 
-    QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
-    emit pressed(&me);
-    event->setAccepted(me.isAccepted());
+    emit pressed();
 
     if (d->autoRepeat) {
         d->startRepeatDelay();
@@ -522,11 +503,8 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     setPressed(false);
 
     if (wasPressed) {
-        QQuickMouseEvent mre(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
-        emit released(&mre);
-        QQuickMouseEvent mce(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
-        emit clicked(&mce);
-        event->setAccepted(mre.isAccepted() || mce.isAccepted());
+        emit released();
+        emit clicked();
     } else {
         emit canceled();
     }
@@ -541,10 +519,7 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QQuickControl::mouseDoubleClickEvent(event);
-
-    QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
-    emit doubleClicked(&me);
-    event->setAccepted(me.isAccepted());
+    emit doubleClicked();
 }
 
 void QQuickAbstractButton::mouseUngrabEvent()
@@ -565,12 +540,9 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
     if (event->timerId() == d->delayTimer) {
         d->startPressRepeat();
     } else if (event->timerId() == d->repeatTimer) {
-        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
-        emit released(&mre);
-        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers(), true /* isClick */);
-        emit clicked(&mce);
-        QQuickMouseEvent mpe(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
-        emit pressed(&mpe);
+        emit released();
+        emit clicked();
+        emit pressed();
     }
 }
 

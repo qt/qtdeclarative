@@ -119,13 +119,43 @@ QT_BEGIN_NAMESPACE
     \sa highlightedIndex
 */
 
+class QQuickComboBoxDelegateModel : public QQmlDelegateModel
+{
+public:
+    explicit QQuickComboBoxDelegateModel(QQuickComboBox *combo);
+    QString stringValue(int index, const QString &role) override;
+
+private:
+    QQuickComboBox *combo;
+};
+
+QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo) :
+    QQmlDelegateModel(qmlContext(combo), combo), combo(combo)
+{
+}
+
+QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
+{
+    QVariant model = combo->model();
+    if (model.userType() == QMetaType::QVariantList) {
+        QVariant object = model.toList().value(index);
+        if (object.userType() == QMetaType::QVariantMap) {
+            QVariantMap data = object.toMap();
+            if (data.count() == 1 && role == QLatin1String("modelData"))
+                return data.first().toString();
+            return data.value(role).toString();
+        }
+    }
+    return QQmlDelegateModel::stringValue(index, role);
+}
+
 class QQuickComboBoxPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
 public:
     QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false),
-        hideTimer(0), highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
+        highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
         delegate(nullptr), popup(nullptr) { }
 
     bool isPopupVisible() const;
@@ -133,7 +163,6 @@ public:
     void hidePopup(bool accept);
     void togglePopup(bool accept);
 
-    void pressedOutside();
     void itemClicked();
 
     void initItem(int index, QObject *object);
@@ -148,7 +177,6 @@ public:
     bool pressed;
     bool ownModel;
     bool hasDisplayText;
-    int hideTimer;
     int highlightedIndex;
     int currentIndex;
     QVariant model;
@@ -194,13 +222,6 @@ void QQuickComboBoxPrivate::togglePopup(bool accept)
         hidePopup(accept);
     else
         showPopup();
-}
-
-void QQuickComboBoxPrivate::pressedOutside()
-{
-    Q_Q(QQuickComboBox);
-    if (hideTimer <= 0)
-        hideTimer = q->startTimer(0);
 }
 
 void QQuickComboBoxPrivate::itemClicked()
@@ -302,7 +323,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     delegateModel = model.value<QQmlInstanceModel *>();
 
     if (!delegateModel && model.isValid()) {
-        QQmlDelegateModel *dataModel = new QQmlDelegateModel(qmlContext(q), q);
+        QQmlDelegateModel *dataModel = new QQuickComboBoxDelegateModel(q);
         dataModel->setModel(model);
         dataModel->setDelegate(delegate);
         if (q->isComponentComplete())
@@ -589,7 +610,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     if (d->popup != popup) {
         delete d->popup;
         if (popup)
-            QObjectPrivate::connect(popup, &QQuickPopup::pressedOutside, d, &QQuickComboBoxPrivate::pressedOutside);
+            popup->setClosePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutsideParent);
         d->popup = popup;
         emit popupChanged();
     }
@@ -709,8 +730,6 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         d->increase();
         event->accept();
         break;
-    case Qt::Key_Escape:
-        event->accept();
     default:
         break;
     }
@@ -773,18 +792,6 @@ void QQuickComboBox::mouseUngrabEvent()
 {
     QQuickControl::mouseUngrabEvent();
     setPressed(false);
-}
-
-void QQuickComboBox::timerEvent(QTimerEvent *event)
-{
-    Q_D(QQuickComboBox);
-    QQuickControl::timerEvent(event);
-    if (event->timerId() == d->hideTimer) {
-        killTimer(d->hideTimer);
-        d->hideTimer = 0;
-        if (!d->pressed)
-            d->hidePopup(false);
-    }
 }
 
 void QQuickComboBox::componentComplete()

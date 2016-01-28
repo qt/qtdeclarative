@@ -139,9 +139,8 @@ bool QQuickSwitchPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent
         child->setKeepMouseGrab(false);
         event->accept();
     } else {
-        QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
-        emit q->clicked(&me);
-        event->setAccepted(me.isAccepted());
+        emit q->clicked();
+        event->accept();
         q->toggle();
     }
     return true;

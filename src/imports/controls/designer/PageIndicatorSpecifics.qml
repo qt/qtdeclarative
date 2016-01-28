@@ -62,7 +62,7 @@ Column {
 
             Label {
                 text: qsTr("Current")
-                tooltip: qsTr("The index of the current page")
+                tooltip: qsTr("The index of the current page.")
             }
             SecondColumnLayout {
                 SpinBox {

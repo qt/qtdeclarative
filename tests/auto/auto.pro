@@ -7,6 +7,7 @@ SUBDIRS += \
     controls \
     material \
     menu \
+    popup \
     pressandhold \
     sanity \
     snippets \

@@ -43,37 +43,37 @@ T.StackView {
 
     //! [popEnter]
     popEnter: Transition {
-        XAnimator { from: -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (root.mirrored ? -1 : 1) * -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popEnter]
 
     //! [popExit]
     popExit: Transition {
-        XAnimator { from: 0; to: root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popExit]
 
     //! [pushEnter]
     pushEnter: Transition {
-        XAnimator { from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (root.mirrored ? -1 : 1) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushEnter]
 
     //! [pushExit]
     pushExit: Transition {
-        XAnimator { from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushExit]
 
     //! [replaceEnter]
     replaceEnter: Transition {
-        XAnimator { from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (root.mirrored ? -1 : 1) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [replaceEnter]
 
     //! [replaceExit]
     replaceExit: Transition {
-        XAnimator { from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [replaceExit]
 }

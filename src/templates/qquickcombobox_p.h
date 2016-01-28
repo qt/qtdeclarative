@@ -131,7 +131,6 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
-    void timerEvent(QTimerEvent *event) override;
 
     void componentComplete() override;
 

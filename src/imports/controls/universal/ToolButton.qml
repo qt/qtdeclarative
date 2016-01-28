@@ -60,7 +60,7 @@ T.ToolButton {
         font: control.font
         color: control.enabled ? control.Universal.baseHighColor : control.Universal.baseLowColor
         elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         renderType: Text.NativeRendering
     }

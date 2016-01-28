@@ -52,7 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMouseEvent;
 class QQuickAbstractButtonPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
@@ -103,11 +102,11 @@ public Q_SLOTS:
     void toggle();
 
 Q_SIGNALS:
-    void pressed(QQuickMouseEvent *mouse);
-    void released(QQuickMouseEvent *mouse);
+    void pressed();
+    void released();
     void canceled();
-    void clicked(QQuickMouseEvent *mouse);
-    void doubleClicked(QQuickMouseEvent *mouse);
+    void clicked();
+    void doubleClicked();
     void textChanged();
     void pressedChanged();
     void checkedChanged();

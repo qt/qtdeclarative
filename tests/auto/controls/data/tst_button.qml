@@ -163,84 +163,8 @@ TestCase {
         control.destroy()
     }
 
-    Component {
-        id: eventButton
-        Button {
-            property var lastPress
-            property var lastRelease
-            property var lastClick
-            property var lastDoubleClick
-
-            function reset() {
-                lastPress = undefined
-                lastRelease = undefined
-                lastClick = undefined
-                lastDoubleClick = undefined
-            }
-
-            onPressed: { lastPress = { x: mouse.x, y: mouse.y, button: mouse.button, buttons: mouse.buttons, modifiers: mouse.modifiers, wasHeld: mouse.wasHeld, isClick: mouse.isClick } }
-            onReleased: { lastRelease = { x: mouse.x, y: mouse.y, button: mouse.button, buttons: mouse.buttons, modifiers: mouse.modifiers, wasHeld: mouse.wasHeld, isClick: mouse.isClick } }
-            onClicked: { lastClick = { x: mouse.x, y: mouse.y, button: mouse.button, buttons: mouse.buttons, modifiers: mouse.modifiers, wasHeld: mouse.wasHeld, isClick: mouse.isClick } }
-            onDoubleClicked: { lastDoubleClick = { x: mouse.x, y: mouse.y, button: mouse.button, buttons: mouse.buttons, modifiers: mouse.modifiers, wasHeld: mouse.wasHeld, isClick: mouse.isClick } }
-        }
-    }
-
     function eventErrorMessage(actual, expected) {
         return "actual event:" + JSON.stringify(actual) + ", expected event:" + JSON.stringify(expected)
-    }
-
-    function test_events() {
-        var control = eventButton.createObject(testCase)
-        verify(control)
-
-        control.forceActiveFocus()
-        verify(control.activeFocus)
-
-        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        var expected = { x: Math.round(control.width / 2), y: Math.round(control.height / 2), button: Qt.LeftButton, buttons: Qt.LeftButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
-        compare(control.lastPress, expected, eventErrorMessage(control.lastPress, expected))
-        compare(control.lastRelease, undefined)
-        compare(control.lastClick, undefined)
-        compare(control.lastDoubleClick, undefined)
-
-        control.reset()
-
-        mouseMove(control, control.width / 3, control.height / 3, Qt.LeftButton)
-        compare(control.lastPress, undefined)
-        compare(control.lastRelease, undefined)
-        compare(control.lastClick, undefined)
-        compare(control.lastDoubleClick, undefined)
-
-        control.reset()
-
-        mouseRelease(control, control.width / 4, control.height / 4, Qt.LeftButton)
-        compare(control.lastPress, undefined)
-        expected = { x: Math.round(control.width / 4), y: Math.round(control.height / 4), button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
-        compare(control.lastRelease, expected, eventErrorMessage(control.lastRelease, expected))
-        expected = { x: Math.round(control.width / 4), y: Math.round(control.height / 4), button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true }
-        compare(control.lastClick, expected, eventErrorMessage(control.lastClick, expected))
-        compare(control.lastDoubleClick, undefined)
-
-        control.reset()
-
-        keyPress(Qt.Key_Space)
-        expected = { x: Math.round(control.width / 2), y: Math.round(control.height / 2), button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
-        compare(control.lastPress, expected, eventErrorMessage(control.lastPress, expected))
-        compare(control.lastRelease, undefined)
-        compare(control.lastClick, undefined)
-        compare(control.lastDoubleClick, undefined)
-
-        control.reset()
-
-        keyRelease(Qt.Key_Space)
-        compare(control.lastPress, undefined)
-        expected = { x: Math.round(control.width / 2), y: Math.round(control.height / 2), button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
-        compare(control.lastRelease, expected, eventErrorMessage(control.lastRelease, expected))
-        expected = { x: Math.round(control.width / 2), y: Math.round(control.height / 2), button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true }
-        compare(control.lastClick, expected, eventErrorMessage(control.lastClick, expected))
-        compare(control.lastDoubleClick, undefined)
-
-        control.destroy()
     }
 
     SignalSpy { id: clickSpy; signalName: "clicked" }

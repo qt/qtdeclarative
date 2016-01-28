@@ -41,22 +41,9 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    Section {
-        width: parent.width
+    ButtonSection {
         caption: qsTr("Button")
-
-        SectionLayout {
-            Label {
-                text: qsTr("Text")
-                tooltip: qsTr("The text displayed on the button.")
-            }
-            SecondColumnLayout {
-                LineEdit {
-                    backendValue: backendValues.text
-                    Layout.fillWidth: true
-                }
-            }
-        }
+        width: parent.width
     }
 
     ControlSection {

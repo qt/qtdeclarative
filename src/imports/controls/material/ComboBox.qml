@@ -56,7 +56,7 @@ T.ComboBox {
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
-        text: control.textRole ? model[control.textRole] : modelData
+        text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
         pressed: highlighted && control.pressed
     }
@@ -75,29 +75,21 @@ T.ComboBox {
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 120
         implicitHeight: 32
 
-        Rectangle {
-            id: rect
-            width: parent.width
-            height: parent.height
-            radius: 2
-            color: control.Material.dialogColor
+        radius: 2
+        color: control.Material.dialogColor
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 400
-                }
+        Behavior on color {
+            ColorAnimation {
+                duration: 400
             }
         }
 
-        DropShadow {
-            source: rect
-            visible: control.enabled
-            width: parent.width
-            height: parent.height
+        layer.enabled: control.enabled
+        layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
@@ -118,6 +110,7 @@ T.ComboBox {
         y: control.height
         implicitWidth: control.width
         implicitHeight: Math.min(200, listview.contentHeight)
+        transformOrigin: Item.Top
 
         enter: Transition {
             // grow_fade_in
@@ -134,26 +127,17 @@ T.ComboBox {
         contentItem: ListView {
             id: listview
             clip: true
-            model: control.delegateModel
+            model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
-            transformOrigin: popup.showAbove ? Item.Bottom : Item.Top
 
 //            ScrollIndicator.vertical: ScrollIndicator { }
         }
 
-        background: Item {
-            Rectangle {
-                id: panel
-                width: parent.width
-                height: parent.height
-                color: control.Material.dialogColor
-            }
+        background: Rectangle {
+            color: control.Material.dialogColor
 
-            DropShadow {
-                source: panel
-                visible: control.enabled
-                width: parent.width
-                height: parent.height
+            layer.enabled: control.enabled
+            layer.effect: DropShadow {
                 verticalOffset: 1
                 color: control.Material.dropShadowColor
                 samples: 15

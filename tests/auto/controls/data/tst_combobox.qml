@@ -69,7 +69,7 @@ TestCase {
         id: comboBox
         ComboBox {
             delegate: ItemDelegate {
-                width: parent.width
+                width: popup.width
             }
         }
     }
@@ -127,6 +127,36 @@ TestCase {
         control.currentIndex = 2
         compare(control.currentIndex, 2)
         compare(control.currentText, "Coconut")
+
+        control.model = null
+        compare(control.model, null)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+
+        control.destroy()
+    }
+
+    function test_objects() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        var items = [
+            { text: "Apple" },
+            { text: "Orange" },
+            { text: "Banana" }
+        ]
+
+        control.model = items
+        compare(control.model, items)
+
+        compare(control.count, 3)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "Apple")
+
+        control.currentIndex = 2
+        compare(control.currentIndex, 2)
+        compare(control.currentText, "Banana")
 
         control.model = null
         compare(control.model, null)
@@ -201,11 +231,24 @@ TestCase {
         ListElement { name: "Banana"; color: "yellow" }
     }
 
-    function test_textRole() {
+    property var fruitarray: [
+        { name: "Apple", color: "red" },
+        { name: "Orange", color: "orange" },
+        { name: "Banana", color: "yellow" }
+    ]
+
+    function test_textRole_data() {
+        return [
+            { tag: "ListModel", model: fruitmodel },
+            { tag: "ObjectArray", model: fruitarray }
+        ]
+    }
+
+    function test_textRole(data) {
         var control = comboBox.createObject(window.contentItem)
         verify(control)
 
-        control.model = fruitmodel
+        control.model = data.model
         compare(control.count, 3)
         compare(control.currentIndex, 0)
         compare(control.currentText, "")

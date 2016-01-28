@@ -50,9 +50,10 @@ T.TextArea {
     padding: 6
     leftPadding: 10
 
-    color: enabled ? "#26282a" : "#c2c2c2"
-//    selectionColor: TODO
-//    selectedTextColor: TODO
+    opacity: enabled ? 1 : 0.2
+    color: "#353637"
+    selectionColor: "#fddd5c"
+    selectedTextColor: color
 
     Text {
         id: placeholder

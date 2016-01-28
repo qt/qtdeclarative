@@ -40,7 +40,7 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -119,7 +119,7 @@ static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *ob
                 }
             }
         } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(object)) {
-            item = QQuickPopupPrivate::get(popup)->popupItem;
+            item = popup->popupItem();
 
             QQuickStyle *style = attachedStyle(type, popup);
             if (style)

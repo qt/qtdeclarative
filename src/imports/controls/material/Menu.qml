@@ -48,6 +48,8 @@ T.Menu {
     implicitHeight: Math.min(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
 
+    transformOrigin: Item.Top
+
     enter: Transition {
         // grow_fade_in
         NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
@@ -63,7 +65,6 @@ T.Menu {
     //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
-        transformOrigin: Item.Top
 
         model: control.contentModel
         // TODO: improve this?
@@ -77,21 +78,15 @@ T.Menu {
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 200
         implicitHeight: 200
 
-        Rectangle {
-            id: panel
-            width: parent.width
-            height: parent.height
-            color: control.Material.dialogColor
-        }
+        radius: 3
+        color: control.Material.dialogColor
 
-        DropShadow {
-            source: panel
-            width: parent.width
-            height: parent.height
+        layer.enabled: true
+        layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: 15

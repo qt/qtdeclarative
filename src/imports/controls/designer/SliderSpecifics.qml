@@ -89,7 +89,7 @@ Column {
             }
 
             Label {
-                text: qsTr("Step size")
+                text: qsTr("Step Size")
                 tooltip: qsTr("The step size of the slider.")
             }
             SecondColumnLayout {

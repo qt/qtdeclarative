@@ -39,6 +39,7 @@
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialtheme_p.h"
 #include "qquickmaterialprogressring_p.h"
+#include "qquickmaterialprogressstrip_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
@@ -104,7 +105,9 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
+    qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
+    qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
     qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
     qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
 }

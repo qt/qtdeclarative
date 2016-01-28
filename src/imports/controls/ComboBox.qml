@@ -56,7 +56,7 @@ T.ComboBox {
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
-        text: control.textRole ? model[control.textRole] : modelData
+        text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         checkable: true
         autoExclusive: true
         checked: control.currentIndex === index
@@ -106,7 +106,7 @@ T.ComboBox {
         contentItem: ListView {
             id: listview
             clip: true
-            model: control.delegateModel
+            model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
 
             Rectangle {

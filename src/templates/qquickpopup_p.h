@@ -90,6 +90,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy NOTIFY closePolicyChanged FINAL)
+    Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
@@ -147,6 +149,8 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    QQuickItem *popupItem() const;
+
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
 
@@ -167,6 +171,31 @@ public:
 
     bool isVisible() const;
     void setVisible(bool visible);
+
+    enum ClosePolicyFlag {
+        NoAutoClose = 0x00,
+        OnPressOutside = 0x01,
+        OnPressOutsideParent = 0x02,
+        OnReleaseOutside = 0x04,
+        OnReleaseOutsideParent = 0x08,
+        OnEscape = 0x10
+    };
+    Q_DECLARE_FLAGS(ClosePolicy, ClosePolicyFlag)
+    Q_FLAG(ClosePolicy)
+
+    ClosePolicy closePolicy() const;
+    void setClosePolicy(ClosePolicy policy);
+
+    // keep in sync with Item.TransformOrigin
+    enum TransformOrigin {
+        TopLeft, Top, TopRight,
+        Left, Center, Right,
+        BottomLeft, Bottom, BottomRight
+    };
+    Q_ENUM(TransformOrigin)
+
+    TransformOrigin transformOrigin() const;
+    void setTransformOrigin(TransformOrigin);
 
     QQuickTransition *enter() const;
     void setEnter(QQuickTransition *transition);
@@ -201,12 +230,9 @@ Q_SIGNALS:
     void focusChanged();
     void modalChanged();
     void visibleChanged();
+    void closePolicyChanged();
     void enterChanged();
     void exitChanged();
-
-    void pressedOutside();
-    void releasedOutside();
-    void clickedOutside();
 
     void aboutToShow();
     void aboutToHide();
@@ -238,6 +264,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)
 
 QT_END_NAMESPACE
 

@@ -46,8 +46,8 @@ T.GroupBox {
                             contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
-    contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
+    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
+    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     spacing: 6
     padding: 6
