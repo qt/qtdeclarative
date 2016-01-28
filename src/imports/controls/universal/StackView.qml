@@ -45,7 +45,7 @@ T.StackView {
     popEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
-            NumberAnimation { property: "x"; from: -root.width / 3; to: 0; duration: 400; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "x"; from: (root.mirrored ? -0.3 : 0.3) * -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
     //! [popEnter]
@@ -60,7 +60,7 @@ T.StackView {
     pushEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
-            NumberAnimation { property: "x"; from: root.width / 3; to: 0; duration: 400; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "x"; from: (root.mirrored ? -0.3 : 0.3) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
     //! [pushEnter]
@@ -75,7 +75,7 @@ T.StackView {
     replaceEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
-            NumberAnimation { property: "x"; from: root.width / 3; to: 0; duration: 400; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "x"; from: (root.mirrored ? -0.3 : 0.3) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
     //! [replaceEnter]
