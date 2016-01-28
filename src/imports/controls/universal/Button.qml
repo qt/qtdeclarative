@@ -64,7 +64,7 @@ T.Button {
         text: control.text
         font: control.font
         elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         renderType: Text.NativeRendering
 
