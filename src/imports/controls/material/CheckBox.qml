@@ -64,7 +64,7 @@ T.CheckBox {
         implicitWidth: 20
         implicitHeight: 20
         color: "transparent"
-        border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
+        border.color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
         border.width: control.checked ? width / 2 : 2
         radius: 2
 
