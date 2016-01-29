@@ -4257,7 +4257,7 @@ void QQuickItem::setBaselineOffset(qreal offset)
  * The call to QQuickItem::updatePaintNode() will always happen if the
  * item is showing in a QQuickWindow.
  *
- * Only items which specifies QQuickItem::ItemHasContents are allowed
+ * Only items which specify QQuickItem::ItemHasContents are allowed
  * to call QQuickItem::update().
  */
 void QQuickItem::update()
@@ -4297,7 +4297,7 @@ void QQuickItem::polish()
     \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in \a
-    item's coordinate system, to this item's coordinate system, and returns a \l point or \rect
+    item's coordinate system, to this item's coordinate system, and returns a \l point or \l rect
     matching the mapped coordinate.
 
     If \a item is a \c null value, this maps the point or rect from the coordinate system of

@@ -6573,6 +6573,15 @@ void tst_qqmlecmascript::revision()
         QCOMPARE(object->property("test").toReal(), 11.);
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("metaobjectRevision5.qml"));
+
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("test").toReal(), 11.);
+        delete object;
+    }
 }
 
 void tst_qqmlecmascript::realToInt()

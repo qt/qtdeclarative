@@ -244,6 +244,8 @@ private slots:
 
     void dataAlignment();
 
+    void deleteSingletons();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4080,6 +4082,24 @@ void tst_qqmllanguage::dataAlignment()
     QVERIFY(sizeof(QQmlVMEMetaData::AliasData) % sizeof(int) == 0);
     QVERIFY(sizeof(QQmlVMEMetaData::PropertyData) % sizeof(int) == 0);
     QVERIFY(sizeof(QQmlVMEMetaData::MethodData) % sizeof(int) == 0);
+}
+
+void tst_qqmllanguage::deleteSingletons()
+{
+    QPointer<QObject> singleton;
+    {
+        QQmlEngine tmpEngine;
+        QQmlComponent component(&tmpEngine, testFile("singletonTest5.qml"));
+        VERIFY_ERRORS(0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+        QObject *s1 = NULL;
+        getSingletonInstance(o, "singletonInstance", &s1);
+        QVERIFY(s1 != 0);
+        singleton = s1;
+        QVERIFY(singleton.data() != 0);
+    }
+    QVERIFY(singleton.data() == 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

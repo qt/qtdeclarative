@@ -363,8 +363,14 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
     VALUE_TYPE_LOAD(QMetaType::QString, QString, v4->newString);
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
 
-    QVariant v(result->propType, (void *)0);
-    void *args[] = { v.data(), 0 };
+    QVariant v;
+    void *args[] = { Q_NULLPTR, Q_NULLPTR };
+    if (result->propType == QMetaType::QVariant) {
+        args[0] = &v;
+    } else {
+        v = QVariant(result->propType, static_cast<void *>(Q_NULLPTR));
+        args[0] = v.data();
+    }
     metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, index, args);
     return v4->fromVariant(v);
 #undef VALUE_TYPE_ACCESSOR

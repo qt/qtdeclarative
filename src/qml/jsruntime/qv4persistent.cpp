@@ -40,6 +40,7 @@
 #include "qv4persistent_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4object_p.h"
+#include "qv4qobjectwrapper_p.h"
 #include "PageAllocation.h"
 
 using namespace QV4;
@@ -387,7 +388,7 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
 
 WeakValue::~WeakValue()
 {
-    PersistentValueStorage::free(val);
+    free();
 }
 
 void WeakValue::set(ExecutionEngine *engine, const Value &value)
@@ -416,5 +417,23 @@ void WeakValue::markOnce(ExecutionEngine *e)
     if (!val)
         return;
     val->mark(e);
+}
+
+void WeakValue::free()
+{
+    if (!val)
+        return;
+
+    ExecutionEngine *e = engine();
+    if (e && val->as<QObjectWrapper>()) {
+        // Some QV4::QObjectWrapper Value will be freed in WeakValue::~WeakValue() before MemoryManager::sweep() is being called,
+        // in this case we will never have a chance to call detroyObject() on those QV4::QObjectWrapper objects.
+        // Here we don't free these Value immediately, instead we keep track of them to free them later in MemoryManager::sweep()
+        e->memoryManager->m_pendingFreedObjectWrapperValue.push_back(val);
+    } else {
+        PersistentValueStorage::free(val);
+    }
+
+    val = 0;
 }
 

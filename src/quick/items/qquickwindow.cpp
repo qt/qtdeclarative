@@ -294,6 +294,13 @@ void QQuickWindow::update()
         QQuickRenderControlPrivate::get(d->renderControl)->update();
 }
 
+void QQuickWindow::handleScreenChanged(QScreen *screen)
+{
+    Q_D(QQuickWindow);
+    Q_UNUSED(screen)
+    d->forcePolish();
+}
+
 void forcePolishHelper(QQuickItem *item)
 {
     if (item->flags() & QQuickItem::ItemHasContents) {
@@ -308,12 +315,12 @@ void forcePolishHelper(QQuickItem *item)
 /*!
     Schedules polish events on all items in the scene.
 */
-void QQuickWindow::forcePolish()
+void QQuickWindowPrivate::forcePolish()
 {
-    Q_D(QQuickWindow);
-    if (!screen())
+    Q_Q(QQuickWindow);
+    if (!q->screen())
         return;
-    forcePolishHelper(d->contentItem);
+    forcePolishHelper(contentItem);
 }
 
 void forceUpdate(QQuickItem *item)
@@ -484,7 +491,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 
     QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
-    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(forcePolish()));
+    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(handleScreenChanged(QScreen*)));
 
     QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
 
@@ -4012,7 +4019,7 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
-    \qmlproperty Window::active
+    \qmlproperty bool Window::active
     \since 5.1
 
     The active status of the window.

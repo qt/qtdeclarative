@@ -298,7 +298,7 @@ protected:
     void invalidateFontCaches();
 
 private Q_SLOTS:
-    void q_imagesLoaded();
+    void q_updateLayout();
     void triggerPreprocess();
     void imageDownloadFinished();
 

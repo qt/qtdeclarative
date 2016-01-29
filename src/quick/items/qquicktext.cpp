@@ -234,7 +234,7 @@ void QQuickTextPrivate::setBottomPadding(qreal value, bool reset)
     The default is true.
 */
 
-void QQuickText::q_imagesLoaded()
+void QQuickText::q_updateLayout()
 {
     Q_D(QQuickText);
     d->updateLayout();
@@ -1180,7 +1180,7 @@ void QQuickTextPrivate::ensureDoc()
         extra->doc->setDocumentMargin(0);
         extra->doc->setBaseUrl(q->baseUrl());
         qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),
-                          q, QQuickText, SLOT(q_imagesLoaded()));
+                          q, QQuickText, SLOT(q_updateLayout()));
     }
 }
 

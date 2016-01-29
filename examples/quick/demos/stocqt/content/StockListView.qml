@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "."
 
 Rectangle {
     id: root
@@ -144,7 +145,7 @@ Rectangle {
                 width: 125
                 height: 40
                 color: "#000000"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 20
                 font.weight: Font.Bold
                 verticalAlignment: Text.AlignVCenter
@@ -160,7 +161,7 @@ Rectangle {
                 width: 190
                 height: 40
                 color: "#000000"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 20
                 font.bold: true
                 horizontalAlignment: Text.AlignRight
@@ -178,7 +179,7 @@ Rectangle {
                 width: 135
                 height: 40
                 color: "#328930"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 20
                 font.bold: true
                 horizontalAlignment: Text.AlignRight
@@ -200,7 +201,7 @@ Rectangle {
                 width: 330
                 height: 30
                 color: "#000000"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 16
                 font.bold: false
                 elide: Text.ElideRight
@@ -217,7 +218,7 @@ Rectangle {
                 width: 120
                 height: 30
                 color: "#328930"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 18
                 font.bold: false
                 horizontalAlignment: Text.AlignRight

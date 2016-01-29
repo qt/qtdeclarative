@@ -1984,6 +1984,7 @@ void QQuickPathView::refill()
                     break;
                 }
                 if (d->items.contains(item)) {
+                    d->releaseItem(item);
                     break; //Otherwise we'd "re-add" it, and get confused
                 }
                 if (d->currentIndex == idx) {
@@ -2014,6 +2015,7 @@ void QQuickPathView::refill()
                     break;
                 }
                 if (d->items.contains(item)) {
+                    d->releaseItem(item);
                     break; //Otherwise we'd "re-add" it, and get confused
                 }
                 if (d->currentIndex == idx) {
@@ -2055,6 +2057,8 @@ void QQuickPathView::refill()
                         int lastListIdx = d->items.indexOf(lastItem);
                         d->items.insert(lastListIdx + 1, item);
                         d->updateItem(item, nextPos);
+                    } else {
+                        d->releaseItem(item);
                     }
 
                     lastItem = item;

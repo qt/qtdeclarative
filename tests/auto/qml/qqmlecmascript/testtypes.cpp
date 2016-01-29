@@ -447,6 +447,7 @@ void registerTypes()
     qmlRegisterType<MyRevisionedSubclass>("Qt.test",1,0,"MyRevisionedSubclass");
     // MyRevisionedSubclass 1.1 uses MyRevisionedClass revision 1
     qmlRegisterType<MyRevisionedSubclass,1>("Qt.test",1,1,"MyRevisionedSubclass");
+    qmlRegisterType<MyItemUsingRevisionedObject>("Qt.test", 1, 0, "MyItemUsingRevisionedObject");
 
 #ifndef QT_NO_WIDGETS
     qmlRegisterExtendedType<QWidget,QWidgetDeclarativeUI>("Qt.test",1,0,"QWidget");

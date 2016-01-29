@@ -116,6 +116,7 @@
 
     \quotefromfile demos/photosurface/photosurface.qml
     \skipto Rectangle
+    \printuntil Component.onCompleted
     \printuntil }
 
     \section1 Handling Pinch Gestures
@@ -123,6 +124,7 @@
     We use a PinchArea that contains a MouseArea in the photo frames to handle
     dragging, rotation and pinch zooming of the frame:
 
+    \skipto PinchArea
     \printuntil onPinchStarted
 
     We use the \c pinch group property to control how the photo frames react to
@@ -137,13 +139,13 @@
     frame is controlled in the \c onEntered signal handler to highlight the
     selected image:
 
+    \skipto MouseArea
     \printuntil onEntered
 
     To enable you to test the example on the desktop, we use the MouseArea's
     \c onWheel signal handler to simulate pinch gestures by using a mouse:
 
-    \printuntil photoFrame.y
-    \printuntil }
+    \printuntil photoFrame.scale
     \printuntil }
     \printuntil }
 

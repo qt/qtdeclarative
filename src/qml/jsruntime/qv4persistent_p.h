@@ -184,15 +184,15 @@ public:
 
     bool isUndefined() const { return !val || val->isUndefined(); }
     bool isNullOrUndefined() const { return !val || val->isNullOrUndefined(); }
-    void clear() {
-        PersistentValueStorage::free(val);
-        val = 0;
-    }
+    void clear() { free(); }
 
     void markOnce(ExecutionEngine *e);
 
 private:
     Value *val;
+
+private:
+    void free();
 };
 
 } // namespace QV4

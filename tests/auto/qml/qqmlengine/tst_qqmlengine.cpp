@@ -741,6 +741,15 @@ void tst_qqmlengine::urlInterceptor_data()
         << QStringLiteral("base file")
         << testFileUrl("interception/strings/intercepted/doesNotExist.file").toString()
         << QStringLiteral("file:///intercepted/doesNotExist.file");
+
+    QTest::newRow("InterceptIncludes")
+        << testFileUrl("interception/includes/urlInterceptor.qml")
+        << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::JavaScriptFile)
+        << testFileUrl("interception/includes/doesNotExist.file").toString()
+        << QStringLiteral("base file")
+        << QStringLiteral("intercepted include file")
+        << testFileUrl("interception/includes/doesNotExist.file").toString()
+        << QStringLiteral("file:///doesNotExist.file");
 }
 
 void tst_qqmlengine::urlInterceptor()

@@ -53,7 +53,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <private/qquicksprite_p.h>
-#include <QTime>
+#include <QtCore/qelapsedtimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -372,7 +372,7 @@ private:
     QQuickAnimatedSpriteMaterial *m_material;
     QQuickSprite* m_sprite;
     QQuickSpriteEngine* m_spriteEngine;
-    QTime m_timestamp;
+    QElapsedTimer m_timestamp;
     int m_curFrame;
     bool m_pleaseReset;
     bool m_running;

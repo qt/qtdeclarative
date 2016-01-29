@@ -339,6 +339,24 @@ QVariantList mergeImports(const QVariantList &a, const QVariantList &b)
     return merged;
 }
 
+// Predicates needed by findQmlImportsInDirectory.
+
+struct isMetainfo {
+    bool operator() (const QFileInfo &x) const {
+        return x.suffix() == QLatin1String("metainfo");
+    }
+};
+
+struct pathStartsWith {
+    pathStartsWith(const QString &path) : _path(path) {}
+    bool operator() (const QString &x) const {
+        return _path.startsWith(x);
+    }
+    const QString _path;
+};
+
+
+
 // Scan all qml files in directory for import statements
 QVariantList findQmlImportsInDirectory(const QString &qmlDir)
 {
@@ -348,19 +366,6 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
 
     QDirIterator iterator(qmlDir, QDir::AllDirs | QDir::NoDotDot, QDirIterator::Subdirectories);
     QStringList blacklist;
-    struct isMetainfo {
-        bool operator() (const QFileInfo &x) const {
-            return x.suffix() == QLatin1String("metainfo");
-        }
-    };
-    struct pathStartsWith {
-        pathStartsWith(const QString &path) : _path(path) {}
-        bool operator() (const QString &x) const {
-            return _path.startsWith(x);
-        }
-        const QString _path;
-    };
-
 
     while (iterator.hasNext()) {
         iterator.next();

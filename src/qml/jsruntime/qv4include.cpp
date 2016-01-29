@@ -189,6 +189,8 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
     QUrl url(scope.engine->resolvedUrl(ctx->args()[0].toQStringNoThrow()));
+    if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
+        url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
     if (ctx->argc() >= 2 && ctx->args()[1].as<QV4::FunctionObject>())

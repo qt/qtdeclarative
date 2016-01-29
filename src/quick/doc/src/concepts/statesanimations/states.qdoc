@@ -74,7 +74,7 @@ configurations with the \c PropertyChanges type.
 \snippet qml/states.qml signal states
 The \l PropertyChanges type will change the values of object properties.
 Objects are referenced through their
-\l{qtqml-syntax-objectattributes.html#the-id-assignment}{id}. Objects outside
+\l{qtqml-syntax-objectattributes.html#the-id-attribute}{id}. Objects outside
 the component are also referenced using the \c id property, exemplified by the
 property change to the external \c flag object.
 

@@ -250,7 +250,7 @@ void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
     QObject *o = qobjectApis.take(e);
     if (o) {
         QQmlData *ddata = QQmlData::get(o, false);
-        if (ddata && ddata->indestructible)
+        if (url.isEmpty() && ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
             return;
         delete o;
     }

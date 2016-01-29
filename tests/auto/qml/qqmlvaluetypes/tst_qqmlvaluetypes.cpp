@@ -1490,6 +1490,7 @@ struct MyOffice
 {
     Q_PROPERTY(int chairs MEMBER m_chairs)
     Q_PROPERTY(MyDesk desk READ desk WRITE setDesk)
+    Q_PROPERTY(QVariant myThing READ myThing WRITE setMyThing)
     Q_GADGET
 public:
     MyOffice() : m_chairs(0) {}
@@ -1497,8 +1498,12 @@ public:
     MyDesk desk() const { return m_desk; }
     void setDesk(const MyDesk &d) { m_desk = d; }
 
+    QVariant myThing() const { return m_myThing; }
+    void setMyThing(const QVariant &thingy) { m_myThing = thingy; }
+
     int m_chairs;
     MyDesk m_desk;
+    QVariant m_myThing;
 };
 
 Q_DECLARE_METATYPE(MyOffice)
@@ -1509,6 +1514,11 @@ void tst_qqmlvaluetypes::customValueType()
 
     MyOffice cppOffice;
     cppOffice.m_chairs = 2;
+
+    QVariantMap m;
+    m.insert(QStringLiteral("hasChair"), false);
+    m.insert(QStringLiteral("textOnWhiteboard"), QStringLiteral("Blah blah"));
+    cppOffice.m_myThing = m;
 
     QJSValue office = engine.toScriptValue(cppOffice);
     QCOMPARE(office.property("chairs").toInt(), 2);
@@ -1527,6 +1537,14 @@ void tst_qqmlvaluetypes::customValueType()
     cppOffice = engine.fromScriptValue<MyOffice>(office);
     QCOMPARE(cppOffice.m_chairs, 1);
     QCOMPARE(cppOffice.desk().monitorCount, 2);
+
+    QJSValue thingy = office.property("myThing");
+    QVERIFY(thingy.hasProperty("hasChair"));
+    QVERIFY(thingy.property("hasChair").isBool());
+    QCOMPARE(thingy.property("hasChair").toBool(), false);
+    QVERIFY(thingy.property("textOnWhiteboard").isString());
+    QVERIFY(thingy.hasProperty("textOnWhiteboard"));
+    QCOMPARE(thingy.property("textOnWhiteboard").toString(), QStringLiteral("Blah blah"));
 }
 
 struct BaseGadget
