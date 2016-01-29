@@ -100,14 +100,28 @@ T.CheckBox {
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
             fillMode: Image.PreserveAspectFit
 
-            scale: control.checked ? 1 : 0
+            scale: control.checkState === Qt.Checked ? 1 : 0
             Behavior on scale { NumberAnimation { duration: 100 } }
         }
 
-        states: State {
-            name: "checked"
-            when: control.checked
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 12
+            height: 3
+            visible: control.checkState === Qt.PartiallyChecked
         }
+
+        states: [
+            State {
+                name: "checked"
+                when: control.checkState === Qt.Checked
+            },
+            State {
+                name: "partiallychecked"
+                when: control.checkState === Qt.PartiallyChecked
+            }
+        ]
 
         transitions: Transition {
             SequentialAnimation {
