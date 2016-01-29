@@ -118,7 +118,7 @@ T.ComboBox {
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
 
-//            ScrollIndicator.vertical: ScrollIndicator { }
+            T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle {

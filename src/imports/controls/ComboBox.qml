@@ -117,7 +117,7 @@ T.ComboBox {
                 color: "transparent"
             }
 
-//            ScrollIndicator.vertical: ScrollIndicator { }
+            T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle { }
