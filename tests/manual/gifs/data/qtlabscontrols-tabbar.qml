@@ -43,7 +43,7 @@ import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
 Window {
-    width: 200
+    width: 300
     height: tabBar.height
     visible: true
 
