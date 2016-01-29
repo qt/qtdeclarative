@@ -69,8 +69,8 @@ T.SpinBox {
 
         font: control.font
         color: "#353637"
-//        selectionColor: TODO
-//        selectedTextColor: TODO
+        selectionColor: "#fddd5c"
+        selectedTextColor: color
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 
