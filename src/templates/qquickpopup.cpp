@@ -464,23 +464,44 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
 
 void QQuickPopupPositioner::repositionPopup()
 {
-    QRectF rect(m_x, m_y, m_popup->popupItem->width(), m_popup->popupItem->height());
+    const qreal w = m_popup->popupItem->width();
+    const qreal h = m_popup->popupItem->height();
+    const qreal iw = m_popup->popupItem->implicitWidth();
+    const qreal ih = m_popup->popupItem->implicitHeight();
+
+    QRectF rect(m_x, m_y, iw > 0 ? iw : w, ih > 0 ? ih : h);
     if (m_parentItem) {
         rect = m_parentItem->mapRectToScene(rect);
 
         QQuickWindow *window = m_parentItem->window();
         if (window) {
-            QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(m_popup->getMargins());
+            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(m_popup->getMargins());
             if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
-                // if the popup doesn't fit on the screen, try flipping it around (below <-> above)
-                QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
-                if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom())
+                // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
+                const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
+                if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom()) {
                     rect = flipped;
+                } else if (ih > 0) {
+                    // neither the flipped around geometry fits inside the window, choose
+                    // whichever side (above vs. below) fits larger part of the popup
+                    const QRectF primary = rect.intersected(bounds);
+                    const QRectF secondary = flipped.intersected(bounds);
+
+                    if (primary.height() > secondary.height()) {
+                        rect.setY(primary.y());
+                        rect.setHeight(primary.height());
+                    } else {
+                        rect.setY(secondary.y());
+                        rect.setHeight(secondary.height());
+                    }
+                }
             }
         }
     }
 
     m_popup->popupItem->setPosition(rect.topLeft());
+    if (ih > 0)
+        m_popup->popupItem->setHeight(rect.height());
 }
 
 void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
