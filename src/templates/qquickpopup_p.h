@@ -276,6 +276,7 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
     bool isComponentComplete() const;
 
+    bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
     virtual void focusInEvent(QFocusEvent *event);
     virtual void focusOutEvent(QFocusEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);

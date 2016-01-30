@@ -95,7 +95,6 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , parentItem(Q_NULLPTR)
     , background(Q_NULLPTR)
     , contentItem(Q_NULLPTR)
-    , overlay(Q_NULLPTR)
     , enter(Q_NULLPTR)
     , exit(Q_NULLPTR)
     , popupItem(Q_NULLPTR)
@@ -108,8 +107,30 @@ void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
-    popupItem->setParent(q);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
+}
+
+bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+{
+    Q_Q(QQuickPopup);
+    const bool isPress = event->type() == QEvent::MouseButtonPress;
+    const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
+    const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
+    if (onOutside || onOutsideParent) {
+        if (onOutsideParent) {
+            if (!popupItem->contains(item->mapToItem(popupItem, event->pos())) &&
+                    (!parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos())))) {
+                q->close();
+                return true;
+            }
+        } else if (onOutside) {
+            if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+                q->close();
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void QQuickPopupPrivate::finalizeEnterTransition()
@@ -120,11 +141,9 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 
 void QQuickPopupPrivate::finalizeExitTransition()
 {
-    Q_Q(QQuickPopup);
-    overlay = Q_NULLPTR;
     positioner.setParentItem(Q_NULLPTR);
     popupItem->setParentItem(Q_NULLPTR);
-    emit q->visibleChanged();
+    popupItem->setVisible(false);
 }
 
 void QQuickPopupPrivate::resizeBackground()
@@ -281,6 +300,7 @@ public:
 
 QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
 {
+    isTabFence = true;
 }
 
 void QQuickPopupItemPrivate::implicitWidthChanged()
@@ -296,6 +316,9 @@ void QQuickPopupItemPrivate::implicitHeightChanged()
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     QQuickItem(*(new QQuickPopupItemPrivate(popup)))
 {
+    setParent(popup);
+    setVisible(false);
+    setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
 }
 
@@ -365,6 +388,19 @@ void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
     d->popup->geometryChanged(newGeometry, oldGeometry);
 }
 
+void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    Q_D(QQuickPopupItem);
+    QQuickItem::itemChange(change, data);
+    switch (change) {
+    case ItemVisibleHasChanged:
+        emit d->popup->visibleChanged();
+        break;
+    default:
+        break;
+    }
+}
+
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
     m_x(0),
     m_y(0),
@@ -390,7 +426,7 @@ void QQuickPopupPositioner::setX(qreal x)
 {
     if (m_x != x) {
         m_x = x;
-        if (m_popup->overlay) // isVisible
+        if (m_popup->popupItem->isVisible())
             repositionPopup();
     }
 }
@@ -404,7 +440,7 @@ void QQuickPopupPositioner::setY(qreal y)
 {
     if (m_y != y) {
         m_y = y;
-        if (m_popup->overlay) // isVisible
+        if (m_popup->popupItem->isVisible())
             repositionPopup();
     }
 }
@@ -432,13 +468,13 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
     QQuickItemPrivate::get(parent)->addItemChangeListener(this, ItemChangeTypes);
     addAncestorListeners(parent->parentItem());
 
-    if (m_popup->overlay) // isVisible
+    if (m_popup->popupItem->isVisible())
         repositionPopup();
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    if (m_popup->overlay) // isVisible
+    if (m_popup->popupItem->isVisible())
         repositionPopup();
 }
 
@@ -607,24 +643,12 @@ QQuickPopup::~QQuickPopup()
 void QQuickPopup::open()
 {
     Q_D(QQuickPopup);
-    if (d->overlay) {
-        // popup already open
+    if (d->popupItem->isVisible())
         return;
-    }
 
     QQuickWindow *window = Q_NULLPTR;
-    QObject *p = parent();
-    while (p && !window) {
-        if (QQuickItem *item = qobject_cast<QQuickItem *>(p)) {
-            window = item->window();
-            if (!window)
-                p = item->parentItem();
-        } else {
-            window = qobject_cast<QQuickWindow *>(p);
-            if (!window)
-                p = p->parent();
-        }
-    }
+    if (d->parentItem)
+        window = d->parentItem->window();
     if (!window) {
         qmlInfo(this) << "cannot find any window to open popup in.";
         return;
@@ -632,17 +656,17 @@ void QQuickPopup::open()
 
     QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
     if (!applicationWindow) {
-        // FIXME Maybe try to open it in that window somehow
-        qmlInfo(this) << "is not in an ApplicationWindow.";
-        return;
+        window->installEventFilter(this);
+        d->popupItem->setZ(10001); // DefaultWindowDecoration+1
+        d->popupItem->setParentItem(window->contentItem());
+    } else {
+        d->popupItem->setParentItem(applicationWindow->overlay());
     }
 
-    d->overlay = static_cast<QQuickOverlay *>(applicationWindow->overlay());
-    d->popupItem->setParentItem(d->overlay);
-    d->positioner.setParentItem(d->parentItem);
     emit aboutToShow();
+    d->popupItem->setVisible(true);
+    d->positioner.setParentItem(d->parentItem);
     d->transitionManager.transitionEnter();
-    emit visibleChanged();
 }
 
 /*!
@@ -653,9 +677,14 @@ void QQuickPopup::open()
 void QQuickPopup::close()
 {
     Q_D(QQuickPopup);
-    if (!d->overlay) {
-        // popup already closed
+    if (!d->popupItem->isVisible())
         return;
+
+    if (d->parentItem) {
+        QQuickWindow *window = d->parentItem->window();
+        if (!qobject_cast<QQuickApplicationWindow *>(window)) {
+            window->removeEventFilter(this);
+        }
     }
 
     d->popupItem->setFocus(false);
@@ -1224,18 +1253,12 @@ QQuickItem *QQuickPopup::contentItem() const
 void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
-    if (d->overlay) {
-        // FIXME qmlInfo needs to know about QQuickItem and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "cannot set content item") << item << "while Popup is visible.";
-        return;
-    }
     if (d->contentItem != item) {
         contentItemChange(item, d->contentItem);
         delete d->contentItem;
         d->contentItem = item;
         if (item) {
             item->setParentItem(d->popupItem);
-            QQuickItemPrivate::get(item)->isTabFence = true;
             if (isComponentComplete())
                 d->resizeContent();
         }
@@ -1326,7 +1349,7 @@ void QQuickPopup::setModal(bool modal)
 bool QQuickPopup::isVisible() const
 {
     Q_D(const QQuickPopup);
-    return d->overlay != Q_NULLPTR /*&& !d->transitionManager.isRunning()*/;
+    return d->popupItem->isVisible();
 }
 
 void QQuickPopup::setVisible(bool visible)
@@ -1465,6 +1488,32 @@ bool QQuickPopup::isComponentComplete() const
 {
     Q_D(const QQuickPopup);
     return d->complete;
+}
+
+bool QQuickPopup::eventFilter(QObject *object, QEvent *event)
+{
+    Q_D(QQuickPopup);
+    Q_UNUSED(object);
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        if (d->modal)
+            event->setAccepted(true);
+        if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object)) {
+            if (d->tryClose(window->contentItem(), static_cast<QMouseEvent *>(event)))
+                return true;
+        }
+        return false;
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+    case QEvent::MouseMove:
+    case QEvent::Wheel:
+        if (d->modal)
+            event->setAccepted(true);
+        return false;
+    default:
+        return false;
+    }
 }
 
 void QQuickPopup::focusInEvent(QFocusEvent *event)

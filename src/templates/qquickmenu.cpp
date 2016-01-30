@@ -489,11 +489,8 @@ void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
 {
     Q_D(QQuickMenu);
-    if (d->contentModel->count() == 0)
-        return false;
-
-    if (object != d->contentItem || event->type() != QEvent::KeyRelease)
-        return false;
+    if (object != d->contentItem || event->type() != QEvent::KeyRelease || d->contentModel->count() == 0)
+        return QQuickPopup::eventFilter(object, event);
 
     // QTBUG-17051
     // Work around the fact that ListView has no way of distinguishing between
@@ -517,7 +514,7 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
         break;
     }
 
-    return false;
+    return QQuickPopup::eventFilter(object, event);
 }
 
 QT_END_NAMESPACE

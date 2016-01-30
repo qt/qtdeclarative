@@ -35,13 +35,14 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Window 2.2
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.material 1.0
 
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay
+    parent: T.ApplicationWindow.overlay || Window.contentItem
     width: parent ? parent.width : 0 // TODO: Window.width
     height: parent ? parent.height : 0 // TODO: Window.height
 

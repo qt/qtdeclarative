@@ -60,7 +60,6 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
-class QQuickOverlay;
 class QQuickPopupPrivate;
 class QQuickPopupItemPrivate;
 
@@ -104,6 +103,7 @@ protected:
     void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
@@ -157,6 +157,7 @@ public:
     }
 
     void init();
+    bool tryClose(QQuickItem *item, QMouseEvent *event);
 
     void finalizeEnterTransition();
     void finalizeExitTransition();
@@ -203,7 +204,6 @@ public:
     QQuickItem *parentItem;
     QQuickItem *background;
     QQuickItem *contentItem;
-    QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;
