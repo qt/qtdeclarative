@@ -357,9 +357,11 @@ Module {
             name: "ClosePolicy"
             values: {
                 "NoAutoClose": 0,
-                "CloseOnPressOutside": 1,
-                "CloseOnReleaseOutside": 2,
-                "CloseOnEscape": 4
+                "OnPressOutside": 1,
+                "OnPressOutsideParent": 2,
+                "OnReleaseOutside": 4,
+                "OnReleaseOutsideParent": 8,
+                "OnEscape": 16
             }
         }
         Enum {
@@ -386,6 +388,11 @@ Module {
         Property { name: "contentHeight"; type: "double" }
         Property { name: "availableWidth"; type: "double"; isReadonly: true }
         Property { name: "availableHeight"; type: "double"; isReadonly: true }
+        Property { name: "margins"; type: "double" }
+        Property { name: "topMargin"; type: "double" }
+        Property { name: "leftMargin"; type: "double" }
+        Property { name: "rightMargin"; type: "double" }
+        Property { name: "bottomMargin"; type: "double" }
         Property { name: "padding"; type: "double" }
         Property { name: "topPadding"; type: "double" }
         Property { name: "leftPadding"; type: "double" }
