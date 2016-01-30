@@ -133,6 +133,7 @@ T.ComboBox {
         }
 
         background: Rectangle {
+            radius: 3
             color: control.Material.dialogColor
 
             layer.enabled: control.enabled
