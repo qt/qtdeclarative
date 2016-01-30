@@ -164,6 +164,13 @@ public:
     void resizeBackground();
     void resizeContent();
 
+    QMarginsF getMargins() const;
+
+    void setTopMargin(qreal value, bool reset = false);
+    void setLeftMargin(qreal value, bool reset = false);
+    void setRightMargin(qreal value, bool reset = false);
+    void setBottomMargin(qreal value, bool reset = false);
+
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
@@ -172,10 +179,19 @@ public:
     bool focus;
     bool modal;
     bool complete;
+    bool hasTopMargin;
+    bool hasLeftMargin;
+    bool hasRightMargin;
+    bool hasBottomMargin;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
     bool hasBottomPadding;
+    qreal margins;
+    qreal topMargin;
+    qreal leftMargin;
+    qreal rightMargin;
+    qreal bottomMargin;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;
