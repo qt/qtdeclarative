@@ -437,6 +437,11 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
+
+    // ### A temporary workaround to unblock the CI until the crash caused
+    // by https://codereview.qt-project.org/#/c/108517/ has been fixed...
+    window->hide();
+    qApp->processEvents();
 }
 
 void tst_applicationwindow::font()
