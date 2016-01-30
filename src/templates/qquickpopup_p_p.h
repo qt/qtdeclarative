@@ -124,6 +124,8 @@ public:
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
 
+    void repositionPopup();
+
 protected:
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
     void itemParentChanged(QQuickItem *, QQuickItem *parent);
@@ -131,8 +133,6 @@ protected:
     void itemDestroyed(QQuickItem *item);
 
 private:
-    void repositionPopup();
-
     void removeAncestorListeners(QQuickItem *item);
     void addAncestorListeners(QQuickItem *item);
 

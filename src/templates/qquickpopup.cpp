@@ -323,7 +323,8 @@ void QQuickPopupPositioner::setX(qreal x)
 {
     if (m_x != x) {
         m_x = x;
-        repositionPopup();
+        if (m_popup->overlay) // isVisible
+            repositionPopup();
     }
 }
 
@@ -336,7 +337,8 @@ void QQuickPopupPositioner::setY(qreal y)
 {
     if (m_y != y) {
         m_y = y;
-        repositionPopup();
+        if (m_popup->overlay) // isVisible
+            repositionPopup();
     }
 }
 
@@ -363,12 +365,14 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
     QQuickItemPrivate::get(parent)->addItemChangeListener(this, ItemChangeTypes);
     addAncestorListeners(parent->parentItem());
 
-    repositionPopup();
+    if (m_popup->overlay) // isVisible
+        repositionPopup();
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    repositionPopup();
+    if (m_popup->overlay) // isVisible
+        repositionPopup();
 }
 
 void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
@@ -1295,6 +1299,7 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
     Q_D(QQuickPopup);
     d->resizeBackground();
     d->resizeContent();
+    d->positioner.repositionPopup();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
         emit availableWidthChanged();
