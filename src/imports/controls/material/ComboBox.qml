@@ -108,8 +108,10 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height
         implicitWidth: control.width
-        implicitHeight: Math.min(200, listview.contentHeight)
+        implicitHeight: Math.min(396, listview.contentHeight)
         transformOrigin: Item.Top
+        topMargin: 12
+        bottomMargin: 12
 
         enter: Transition {
             // grow_fade_in
