@@ -89,20 +89,20 @@ void QQuickWindowAttached::windowChanged(QQuickWindow *window)
         if (oldWindow)
             oldWindow->disconnect(this);
 
-        if (!window)
-            return; // No values to get, therefore nothing to emit
-
-        if (!oldWindow || window->visibility() != oldWindow->visibility())
+        if (!oldWindow || !window || window->visibility() != oldWindow->visibility())
             emit visibilityChanged();
-        if (!oldWindow || window->isActive() != oldWindow->isActive())
+        if (!oldWindow || !window || window->isActive() != oldWindow->isActive())
             emit activeChanged();
-        if (!oldWindow || window->activeFocusItem() != oldWindow->activeFocusItem())
+        if (!oldWindow || !window || window->activeFocusItem() != oldWindow->activeFocusItem())
             emit activeFocusItemChanged();
         emit contentItemChanged();
-        if (!oldWindow || window->width() != oldWindow->width())
+        if (!oldWindow || !window || window->width() != oldWindow->width())
             emit widthChanged();
-        if (!oldWindow || window->height() != oldWindow->height())
+        if (!oldWindow || !window || window->height() != oldWindow->height())
             emit heightChanged();
+
+        if (!window)
+            return;
 
         // QQuickWindowQmlImpl::visibilityChanged also exists, and window might even
         // be QQuickWindowQmlImpl, but that's not what we are connecting to.

@@ -2050,6 +2050,11 @@ void tst_qquickwindow::attachedProperty()
     QCOMPARE(text->property("contentItem").value<QQuickItem*>(), innerWindow->contentItem());
     QCOMPARE(text->property("windowWidth").toInt(), innerWindow->width());
     QCOMPARE(text->property("windowHeight").toInt(), innerWindow->height());
+
+    text->setParentItem(0);
+    QVERIFY(!text->property("contentItem").value<QQuickItem*>());
+    QCOMPARE(text->property("windowWidth").toInt(), 0);
+    QCOMPARE(text->property("windowHeight").toInt(), 0);
 }
 
 class RenderJob : public QRunnable
