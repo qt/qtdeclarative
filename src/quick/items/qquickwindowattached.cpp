@@ -51,9 +51,9 @@ QQuickWindowAttached::QQuickWindowAttached(QObject* attachee)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
     if (m_attachee && m_attachee->window()) // It might not be in a window yet
-        windowChanged(m_attachee->window());
+        windowChange(m_attachee->window());
     if (m_attachee)
-        connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChanged);
+        connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChange);
 }
 
 QWindow::Visibility QQuickWindowAttached::visibility() const
@@ -86,7 +86,12 @@ int QQuickWindowAttached::height() const
     return (m_window ? m_window->height() : 0);
 }
 
-void QQuickWindowAttached::windowChanged(QQuickWindow *window)
+QQuickWindow *QQuickWindowAttached::window() const
+{
+    return m_window;
+}
+
+void QQuickWindowAttached::windowChange(QQuickWindow *window)
 {
     if (window != m_window) {
         QQuickWindow* oldWindow = m_window;
@@ -94,6 +99,8 @@ void QQuickWindowAttached::windowChanged(QQuickWindow *window)
 
         if (oldWindow)
             oldWindow->disconnect(this);
+
+        emit windowChanged();
 
         if (!oldWindow || !window || window->visibility() != oldWindow->visibility())
             emit visibilityChanged();

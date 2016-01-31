@@ -69,6 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickWindowAttached : public QObject
     Q_PROPERTY(QQuickItem* contentItem READ contentItem NOTIFY contentItemChanged)
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
+    Q_PROPERTY(QQuickWindow *window READ window NOTIFY windowChanged)
 
 public:
     QQuickWindowAttached(QObject* attachee);
@@ -79,6 +80,7 @@ public:
     QQuickItem* contentItem() const;
     int width() const;
     int height() const;
+    QQuickWindow *window() const;
 
 Q_SIGNALS:
 
@@ -88,9 +90,10 @@ Q_SIGNALS:
     void contentItemChanged();
     void widthChanged();
     void heightChanged();
+    void windowChanged();
 
 protected Q_SLOTS:
-    void windowChanged(QQuickWindow*);
+    void windowChange(QQuickWindow*);
 
 private:
     QQuickWindow* m_window;
