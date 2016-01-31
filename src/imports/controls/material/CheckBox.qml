@@ -51,8 +51,11 @@ T.CheckBox {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 6
-    spacing: 6
+    spacing: 8
+    topPadding: 14
+    leftPadding: 8
+    rightPadding: 8
+    bottomPadding: 14
 
     //! [indicator]
     indicator: Rectangle {
@@ -62,7 +65,7 @@ T.CheckBox {
         implicitWidth: 20
         implicitHeight: 20
         color: "transparent"
-        border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
+        border.color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
         border.width: control.checked ? width / 2 : 2
         radius: 2
 
@@ -98,14 +101,28 @@ T.CheckBox {
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
             fillMode: Image.PreserveAspectFit
 
-            scale: control.checked ? 1 : 0
+            scale: control.checkState === Qt.Checked ? 1 : 0
             Behavior on scale { NumberAnimation { duration: 100 } }
         }
 
-        states: State {
-            name: "checked"
-            when: control.checked
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 12
+            height: 3
+            visible: control.checkState === Qt.PartiallyChecked
         }
+
+        states: [
+            State {
+                name: "checked"
+                when: control.checkState === Qt.Checked
+            },
+            State {
+                name: "partiallychecked"
+                when: control.checkState === Qt.PartiallyChecked
+            }
+        ]
 
         transitions: Transition {
             SequentialAnimation {

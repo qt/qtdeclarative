@@ -711,6 +711,10 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         return;
 
     switch (event->key()) {
+    case Qt::Key_Escape:
+        if (d->isPopupVisible())
+            event->accept();
+        break;
     case Qt::Key_Space:
         if (!event->isAutoRepeat())
             setPressed(true);

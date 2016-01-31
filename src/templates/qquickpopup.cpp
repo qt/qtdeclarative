@@ -71,10 +71,19 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
     , modal(false)
+    , hasTopMargin(false)
+    , hasLeftMargin(false)
+    , hasRightMargin(false)
+    , hasBottomMargin(false)
     , hasTopPadding(false)
     , hasLeftPadding(false)
     , hasRightPadding(false)
     , hasBottomPadding(false)
+    , margins(0)
+    , topMargin(0)
+    , leftMargin(0)
+    , rightMargin(0)
+    , bottomMargin(0)
     , padding(0)
     , topPadding(0)
     , leftPadding(0)
@@ -86,7 +95,6 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , parentItem(nullptr)
     , background(nullptr)
     , contentItem(nullptr)
-    , overlay(nullptr)
     , enter(nullptr)
     , exit(nullptr)
     , popupItem(nullptr)
@@ -99,8 +107,30 @@ void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
-    popupItem->setParent(q);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
+}
+
+bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+{
+    Q_Q(QQuickPopup);
+    const bool isPress = event->type() == QEvent::MouseButtonPress;
+    const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
+    const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
+    if (onOutside || onOutsideParent) {
+        if (onOutsideParent) {
+            if (!popupItem->contains(item->mapToItem(popupItem, event->pos())) &&
+                    (!parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos())))) {
+                q->close();
+                return true;
+            }
+        } else if (onOutside) {
+            if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+                q->close();
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void QQuickPopupPrivate::finalizeEnterTransition()
@@ -111,11 +141,9 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 
 void QQuickPopupPrivate::finalizeExitTransition()
 {
-    Q_Q(QQuickPopup);
-    overlay = nullptr;
     positioner.setParentItem(nullptr);
     popupItem->setParentItem(nullptr);
-    emit q->visibleChanged();
+    popupItem->setVisible(false);
 }
 
 void QQuickPopupPrivate::resizeBackground()
@@ -140,6 +168,64 @@ void QQuickPopupPrivate::resizeContent()
     if (contentItem) {
         contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
         contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight()));
+    }
+}
+
+QMarginsF QQuickPopupPrivate::getMargins() const
+{
+    Q_Q(const QQuickPopup);
+    return QMarginsF(q->leftMargin(), q->topMargin(), q->rightMargin(), q->bottomMargin());
+}
+
+void QQuickPopupPrivate::setTopMargin(qreal value, bool reset)
+{
+    Q_Q(QQuickPopup);
+    qreal oldMargin = q->topMargin();
+    topMargin = value;
+    hasTopMargin = !reset;
+    if ((!reset && !qFuzzyCompare(oldMargin, value)) || (reset && !qFuzzyCompare(oldMargin, margins))) {
+        emit q->topMarginChanged();
+        q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
+                         QMarginsF(leftMargin, oldMargin, rightMargin, bottomMargin));
+    }
+}
+
+void QQuickPopupPrivate::setLeftMargin(qreal value, bool reset)
+{
+    Q_Q(QQuickPopup);
+    qreal oldMargin = q->leftMargin();
+    leftMargin = value;
+    hasLeftMargin = !reset;
+    if ((!reset && !qFuzzyCompare(oldMargin, value)) || (reset && !qFuzzyCompare(oldMargin, margins))) {
+        emit q->leftMarginChanged();
+        q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
+                         QMarginsF(oldMargin, topMargin, rightMargin, bottomMargin));
+    }
+}
+
+void QQuickPopupPrivate::setRightMargin(qreal value, bool reset)
+{
+    Q_Q(QQuickPopup);
+    qreal oldMargin = q->rightMargin();
+    rightMargin = value;
+    hasRightMargin = !reset;
+    if ((!reset && !qFuzzyCompare(oldMargin, value)) || (reset && !qFuzzyCompare(oldMargin, margins))) {
+        emit q->rightMarginChanged();
+        q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
+                         QMarginsF(leftMargin, topMargin, oldMargin, bottomMargin));
+    }
+}
+
+void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
+{
+    Q_Q(QQuickPopup);
+    qreal oldMargin = q->bottomMargin();
+    bottomMargin = value;
+    hasBottomMargin = !reset;
+    if ((!reset && !qFuzzyCompare(oldMargin, value)) || (reset && !qFuzzyCompare(oldMargin, margins))) {
+        emit q->bottomMarginChanged();
+        q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
+                         QMarginsF(leftMargin, topMargin, rightMargin, oldMargin));
     }
 }
 
@@ -214,6 +300,7 @@ public:
 
 QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
 {
+    isTabFence = true;
 }
 
 void QQuickPopupItemPrivate::implicitWidthChanged()
@@ -229,6 +316,9 @@ void QQuickPopupItemPrivate::implicitHeightChanged()
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     QQuickItem(*(new QQuickPopupItemPrivate(popup)))
 {
+    setParent(popup);
+    setVisible(false);
+    setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
 }
 
@@ -298,6 +388,19 @@ void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
     d->popup->geometryChanged(newGeometry, oldGeometry);
 }
 
+void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    Q_D(QQuickPopupItem);
+    QQuickItem::itemChange(change, data);
+    switch (change) {
+    case ItemVisibleHasChanged:
+        emit d->popup->visibleChanged();
+        break;
+    default:
+        break;
+    }
+}
+
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
     m_x(0),
     m_y(0),
@@ -323,7 +426,8 @@ void QQuickPopupPositioner::setX(qreal x)
 {
     if (m_x != x) {
         m_x = x;
-        repositionPopup();
+        if (m_popup->popupItem->isVisible())
+            repositionPopup();
     }
 }
 
@@ -336,7 +440,8 @@ void QQuickPopupPositioner::setY(qreal y)
 {
     if (m_y != y) {
         m_y = y;
-        repositionPopup();
+        if (m_popup->popupItem->isVisible())
+            repositionPopup();
     }
 }
 
@@ -363,12 +468,14 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
     QQuickItemPrivate::get(parent)->addItemChangeListener(this, ItemChangeTypes);
     addAncestorListeners(parent->parentItem());
 
-    repositionPopup();
+    if (m_popup->popupItem->isVisible())
+        repositionPopup();
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    repositionPopup();
+    if (m_popup->popupItem->isVisible())
+        repositionPopup();
 }
 
 void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
@@ -393,22 +500,44 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
 
 void QQuickPopupPositioner::repositionPopup()
 {
-    QRectF rect(m_x, m_y, m_popup->popupItem->width(), m_popup->popupItem->height());
+    const qreal w = m_popup->popupItem->width();
+    const qreal h = m_popup->popupItem->height();
+    const qreal iw = m_popup->popupItem->implicitWidth();
+    const qreal ih = m_popup->popupItem->implicitHeight();
+
+    QRectF rect(m_x, m_y, iw > 0 ? iw : w, ih > 0 ? ih : h);
     if (m_parentItem) {
         rect = m_parentItem->mapRectToScene(rect);
 
         QQuickWindow *window = m_parentItem->window();
         if (window) {
-            if (rect.top() < 0 || rect.bottom() > window->height()) {
-                // if the popup doesn't fit on the screen, try flipping it around (below <-> above)
-                QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
-                if (flipped.y() >= 0 && flipped.bottom() < window->height())
+            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(m_popup->getMargins());
+            if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
+                // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
+                const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
+                if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom()) {
                     rect = flipped;
+                } else if (ih > 0) {
+                    // neither the flipped around geometry fits inside the window, choose
+                    // whichever side (above vs. below) fits larger part of the popup
+                    const QRectF primary = rect.intersected(bounds);
+                    const QRectF secondary = flipped.intersected(bounds);
+
+                    if (primary.height() > secondary.height()) {
+                        rect.setY(primary.y());
+                        rect.setHeight(primary.height());
+                    } else {
+                        rect.setY(secondary.y());
+                        rect.setHeight(secondary.height());
+                    }
+                }
             }
         }
     }
 
     m_popup->popupItem->setPosition(rect.topLeft());
+    if (ih > 0)
+        m_popup->popupItem->setHeight(rect.height());
 }
 
 void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
@@ -514,24 +643,12 @@ QQuickPopup::~QQuickPopup()
 void QQuickPopup::open()
 {
     Q_D(QQuickPopup);
-    if (d->overlay) {
-        // popup already open
+    if (d->popupItem->isVisible())
         return;
-    }
 
     QQuickWindow *window = nullptr;
-    QObject *p = parent();
-    while (p && !window) {
-        if (QQuickItem *item = qobject_cast<QQuickItem *>(p)) {
-            window = item->window();
-            if (!window)
-                p = item->parentItem();
-        } else {
-            window = qobject_cast<QQuickWindow *>(p);
-            if (!window)
-                p = p->parent();
-        }
-    }
+    if (d->parentItem)
+        window = d->parentItem->window();
     if (!window) {
         qmlInfo(this) << "cannot find any window to open popup in.";
         return;
@@ -539,17 +656,17 @@ void QQuickPopup::open()
 
     QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
     if (!applicationWindow) {
-        // FIXME Maybe try to open it in that window somehow
-        qmlInfo(this) << "is not in an ApplicationWindow.";
-        return;
+        window->installEventFilter(this);
+        d->popupItem->setZ(10001); // DefaultWindowDecoration+1
+        d->popupItem->setParentItem(window->contentItem());
+    } else {
+        d->popupItem->setParentItem(applicationWindow->overlay());
     }
 
-    d->overlay = static_cast<QQuickOverlay *>(applicationWindow->overlay());
-    d->popupItem->setParentItem(d->overlay);
-    d->positioner.setParentItem(d->parentItem);
     emit aboutToShow();
+    d->popupItem->setVisible(true);
+    d->positioner.setParentItem(d->parentItem);
     d->transitionManager.transitionEnter();
-    emit visibleChanged();
 }
 
 /*!
@@ -560,9 +677,14 @@ void QQuickPopup::open()
 void QQuickPopup::close()
 {
     Q_D(QQuickPopup);
-    if (!d->overlay) {
-        // popup already closed
+    if (!d->popupItem->isVisible())
         return;
+
+    if (d->parentItem) {
+        QQuickWindow *window = d->parentItem->window();
+        if (!qobject_cast<QQuickApplicationWindow *>(window)) {
+            window->removeEventFilter(this);
+        }
     }
 
     d->popupItem->setFocus(false);
@@ -754,6 +876,152 @@ qreal QQuickPopup::availableWidth() const
 qreal QQuickPopup::availableHeight() const
 {
     return qMax<qreal>(0.0, height() - topPadding() - bottomPadding());
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::margins
+
+    This property holds the default margins around the popup.
+
+    \sa topMargin, leftMargin, rightMargin, bottomMargin
+*/
+qreal QQuickPopup::margins() const
+{
+    Q_D(const QQuickPopup);
+    return d->margins;
+}
+
+void QQuickPopup::setMargins(qreal margins)
+{
+    Q_D(QQuickPopup);
+    if (qFuzzyCompare(d->margins, margins))
+        return;
+    QMarginsF oldMargins(leftMargin(), topMargin(), rightMargin(), bottomMargin());
+    d->margins = margins;
+    emit marginsChanged();
+    QMarginsF newMargins(leftMargin(), topMargin(), rightMargin(), bottomMargin());
+    if (!qFuzzyCompare(newMargins.top(), oldMargins.top()))
+        emit topMarginChanged();
+    if (!qFuzzyCompare(newMargins.left(), oldMargins.left()))
+        emit leftMarginChanged();
+    if (!qFuzzyCompare(newMargins.right(), oldMargins.right()))
+        emit rightMarginChanged();
+    if (!qFuzzyCompare(newMargins.bottom(), oldMargins.bottom()))
+        emit bottomMarginChanged();
+    marginsChange(newMargins, oldMargins);
+}
+
+void QQuickPopup::resetMargins()
+{
+    setMargins(0);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::topMargin
+
+    This property holds the top margin around the popup.
+
+    \sa margin, bottomMargin
+*/
+qreal QQuickPopup::topMargin() const
+{
+    Q_D(const QQuickPopup);
+    if (d->hasTopMargin)
+        return d->topMargin;
+    return d->margins;
+}
+
+void QQuickPopup::setTopMargin(qreal margin)
+{
+    Q_D(QQuickPopup);
+    d->setTopMargin(margin);
+}
+
+void QQuickPopup::resetTopMargin()
+{
+    Q_D(QQuickPopup);
+    d->setTopMargin(0, true);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::leftMargin
+
+    This property holds the left margin around the popup.
+
+    \sa margin, rightMargin
+*/
+qreal QQuickPopup::leftMargin() const
+{
+    Q_D(const QQuickPopup);
+    if (d->hasLeftMargin)
+        return d->leftMargin;
+    return d->margins;
+}
+
+void QQuickPopup::setLeftMargin(qreal margin)
+{
+    Q_D(QQuickPopup);
+    d->setLeftMargin(margin);
+}
+
+void QQuickPopup::resetLeftMargin()
+{
+    Q_D(QQuickPopup);
+    d->setLeftMargin(0, true);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::rightMargin
+
+    This property holds the right margin around the popup.
+
+    \sa margin, leftMargin
+*/
+qreal QQuickPopup::rightMargin() const
+{
+    Q_D(const QQuickPopup);
+    if (d->hasRightMargin)
+        return d->rightMargin;
+    return d->margins;
+}
+
+void QQuickPopup::setRightMargin(qreal margin)
+{
+    Q_D(QQuickPopup);
+    d->setRightMargin(margin);
+}
+
+void QQuickPopup::resetRightMargin()
+{
+    Q_D(QQuickPopup);
+    d->setRightMargin(0, true);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::bottomMargin
+
+    This property holds the bottom margin around the popup.
+
+    \sa margin, topMargin
+*/
+qreal QQuickPopup::bottomMargin() const
+{
+    Q_D(const QQuickPopup);
+    if (d->hasBottomMargin)
+        return d->bottomMargin;
+    return d->margins;
+}
+
+void QQuickPopup::setBottomMargin(qreal margin)
+{
+    Q_D(QQuickPopup);
+    d->setBottomMargin(margin);
+}
+
+void QQuickPopup::resetBottomMargin()
+{
+    Q_D(QQuickPopup);
+    d->setBottomMargin(0, true);
 }
 
 /*!
@@ -985,18 +1253,12 @@ QQuickItem *QQuickPopup::contentItem() const
 void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
-    if (d->overlay) {
-        // FIXME qmlInfo needs to know about QQuickItem and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "cannot set content item") << item << "while Popup is visible.";
-        return;
-    }
     if (d->contentItem != item) {
         contentItemChange(item, d->contentItem);
         delete d->contentItem;
         d->contentItem = item;
         if (item) {
             item->setParentItem(d->popupItem);
-            QQuickItemPrivate::get(item)->isTabFence = true;
             if (isComponentComplete())
                 d->resizeContent();
         }
@@ -1087,7 +1349,7 @@ void QQuickPopup::setModal(bool modal)
 bool QQuickPopup::isVisible() const
 {
     Q_D(const QQuickPopup);
-    return d->overlay != nullptr /*&& !d->transitionManager.isRunning()*/;
+    return d->popupItem->isVisible();
 }
 
 void QQuickPopup::setVisible(bool visible)
@@ -1214,6 +1476,32 @@ bool QQuickPopup::isComponentComplete() const
     return d->complete;
 }
 
+bool QQuickPopup::eventFilter(QObject *object, QEvent *event)
+{
+    Q_D(QQuickPopup);
+    Q_UNUSED(object);
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        if (d->modal)
+            event->setAccepted(true);
+        if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object)) {
+            if (d->tryClose(window->contentItem(), static_cast<QMouseEvent *>(event)))
+                return true;
+        }
+        return false;
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+    case QEvent::MouseMove:
+    case QEvent::Wheel:
+        if (d->modal)
+            event->setAccepted(true);
+        return false;
+    default:
+        return false;
+    }
+}
+
 void QQuickPopup::focusInEvent(QFocusEvent *event)
 {
     event->accept();
@@ -1281,6 +1569,7 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
     Q_D(QQuickPopup);
     d->resizeBackground();
     d->resizeContent();
+    d->positioner.repositionPopup();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
         emit availableWidthChanged();
@@ -1289,6 +1578,14 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
         emit heightChanged();
         emit availableHeightChanged();
     }
+}
+
+void QQuickPopup::marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins)
+{
+    Q_D(QQuickPopup);
+    Q_UNUSED(newMargins);
+    Q_UNUSED(oldMargins);
+    d->positioner.repositionPopup();
 }
 
 void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

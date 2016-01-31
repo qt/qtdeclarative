@@ -258,6 +258,9 @@ bool QQuickAbstractButton::isChecked() const
 void QQuickAbstractButton::setChecked(bool checked)
 {
     Q_D(QQuickAbstractButton);
+    if (checked && !d->checkable)
+        setCheckable(true);
+
     if (d->checked != checked) {
         d->checked = checked;
         setAccessibleProperty("checked", checked);

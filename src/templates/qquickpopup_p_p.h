@@ -60,7 +60,6 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
-class QQuickOverlay;
 class QQuickPopupPrivate;
 class QQuickPopupItemPrivate;
 
@@ -104,6 +103,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
@@ -124,6 +124,8 @@ public:
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
 
+    void repositionPopup();
+
 protected:
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
     void itemParentChanged(QQuickItem *, QQuickItem *parent);
@@ -131,8 +133,6 @@ protected:
     void itemDestroyed(QQuickItem *item);
 
 private:
-    void repositionPopup();
-
     void removeAncestorListeners(QQuickItem *item);
     void addAncestorListeners(QQuickItem *item);
 
@@ -157,12 +157,20 @@ public:
     }
 
     void init();
+    bool tryClose(QQuickItem *item, QMouseEvent *event);
 
     void finalizeEnterTransition();
     void finalizeExitTransition();
 
     void resizeBackground();
     void resizeContent();
+
+    QMarginsF getMargins() const;
+
+    void setTopMargin(qreal value, bool reset = false);
+    void setLeftMargin(qreal value, bool reset = false);
+    void setRightMargin(qreal value, bool reset = false);
+    void setBottomMargin(qreal value, bool reset = false);
 
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
@@ -172,10 +180,19 @@ public:
     bool focus;
     bool modal;
     bool complete;
+    bool hasTopMargin;
+    bool hasLeftMargin;
+    bool hasRightMargin;
+    bool hasBottomMargin;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
     bool hasBottomPadding;
+    qreal margins;
+    qreal topMargin;
+    qreal leftMargin;
+    qreal rightMargin;
+    qreal bottomMargin;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;
@@ -187,7 +204,6 @@ public:
     QQuickItem *parentItem;
     QQuickItem *background;
     QQuickItem *contentItem;
-    QQuickOverlay *overlay;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;

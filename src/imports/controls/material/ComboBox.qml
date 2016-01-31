@@ -109,8 +109,10 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height
         implicitWidth: control.width
-        implicitHeight: Math.min(200, listview.contentHeight)
+        implicitHeight: Math.min(396, listview.contentHeight)
         transformOrigin: Item.Top
+        topMargin: 12
+        bottomMargin: 12
 
         enter: Transition {
             // grow_fade_in
@@ -130,10 +132,11 @@ T.ComboBox {
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
 
-//            ScrollIndicator.vertical: ScrollIndicator { }
+            T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle {
+            radius: 3
             color: control.Material.dialogColor
 
             layer.enabled: control.enabled

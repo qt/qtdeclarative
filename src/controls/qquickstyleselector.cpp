@@ -74,12 +74,6 @@ QQuickStyleSelector::~QQuickStyleSelector()
 {
 }
 
-QString QQuickStyleSelector::select(const QString &filePath) const
-{
-    Q_D(const QQuickStyleSelector);
-    return select(QUrl(d->baseUrl.toString() + filePath)).toString();
-}
-
 static bool isLocalScheme(const QString &file)
 {
     bool local = file == QLatin1String("qrc");
@@ -89,20 +83,20 @@ static bool isLocalScheme(const QString &file)
     return local;
 }
 
-QUrl QQuickStyleSelector::select(const QUrl &filePath) const
+QString QQuickStyleSelector::select(const QString &filePath) const
 {
     Q_D(const QQuickStyleSelector);
-    if (!isLocalScheme(filePath.scheme()) && !filePath.isLocalFile())
-        return filePath;
-    QUrl ret(filePath);
-    if (isLocalScheme(filePath.scheme())) {
-        QString equivalentPath = QLatin1Char(':') + filePath.path();
-        QString selectedPath = d->select(equivalentPath, allSelectors());
-        ret.setPath(selectedPath.remove(0, 1));
-    } else {
-        ret = QUrl::fromLocalFile(d->select(ret.toLocalFile(), allSelectors()));
+    QUrl url(d->baseUrl.toString() + filePath);
+    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
+        if (isLocalScheme(url.scheme())) {
+            QString equivalentPath = QLatin1Char(':') + url.path();
+            QString selectedPath = d->select(equivalentPath);
+            url.setPath(selectedPath.remove(0, 1));
+        } else {
+            url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
+        }
     }
-    return ret;
+    return url.toString();
 }
 
 static QString selectionHelper(const QString &path, const QString &fileName, const QStringList &selectors)
@@ -131,7 +125,7 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     return path + fileName;
 }
 
-QString QQuickStyleSelectorPrivate::select(const QString &filePath, const QStringList &allSelectors) const
+QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 {
     QFileInfo fi(filePath);
     // If file doesn't exist, don't select
@@ -139,7 +133,7 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath, const QStrin
         return filePath;
 
     QString ret = selectionHelper(fi.path().isEmpty() ? QString() : fi.path() + QLatin1Char('/'),
-            fi.fileName(), allSelectors);
+            fi.fileName(), allSelectors());
 
     if (!ret.isEmpty())
         return ret;
@@ -158,14 +152,13 @@ void QQuickStyleSelector::setStyle(const QString &s)
     d->style = s;
 }
 
-QStringList QQuickStyleSelector::allSelectors() const
+QStringList QQuickStyleSelectorPrivate::allSelectors() const
 {
-    Q_D(const QQuickStyleSelector);
     QMutexLocker locker(&sharedDataMutex);
-    QQuickStyleSelectorPrivate::updateSelectors();
+    updateSelectors();
     QStringList selectors = sharedData->staticSelectors;
-    if (!d->style.isEmpty())
-        selectors.prepend(d->style);
+    if (!style.isEmpty())
+        selectors.prepend(style);
     return selectors;
 }
 

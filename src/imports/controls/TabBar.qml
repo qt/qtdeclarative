@@ -50,7 +50,7 @@ T.TabBar {
     //! [contentItem]
     contentItem: ListView {
         implicitWidth: contentWidth
-        implicitHeight: contentHeight
+        implicitHeight: 40
 
         model: control.contentModel
         currentIndex: control.currentIndex
@@ -63,9 +63,6 @@ T.TabBar {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
-        implicitWidth: 40
-        implicitHeight: 40
-    }
+    background: Rectangle { }
     //! [background]
 }

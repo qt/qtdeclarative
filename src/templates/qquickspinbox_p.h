@@ -121,7 +121,6 @@ protected:
     void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
 
-    void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 

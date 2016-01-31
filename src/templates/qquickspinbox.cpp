@@ -116,8 +116,8 @@ public:
     QQuickSpinButton *up;
     QQuickSpinButton *down;
     QValidator *validator;
-    QJSValue textFromValue;
-    QJSValue valueFromText;
+    mutable QJSValue textFromValue;
+    mutable QJSValue valueFromText;
 };
 
 int QQuickSpinBoxPrivate::boundValue(int value) const
@@ -384,6 +384,11 @@ void QQuickSpinBox::setValidator(QValidator *validator)
 QJSValue QQuickSpinBox::textFromValue() const
 {
     Q_D(const QQuickSpinBox);
+    if (!d->textFromValue.isCallable()) {
+        QQmlEngine *engine = qmlEngine(this);
+        if (engine)
+            d->textFromValue = engine->evaluate(QStringLiteral("function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }"));
+    }
     return d->textFromValue;
 }
 
@@ -420,6 +425,11 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
 QJSValue QQuickSpinBox::valueFromText() const
 {
     Q_D(const QQuickSpinBox);
+    if (!d->valueFromText.isCallable()) {
+        QQmlEngine *engine = qmlEngine(this);
+        if (engine)
+            d->valueFromText = engine->evaluate(QStringLiteral("function(text, locale) { return Number.fromLocaleString(locale, text); }"));
+    }
     return d->valueFromText;
 }
 
@@ -584,19 +594,6 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
             increase();
         else if (d->down->isPressed())
             decrease();
-    }
-}
-
-void QQuickSpinBox::componentComplete()
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::componentComplete();
-    QQmlEngine *engine = qmlEngine(this);
-    if (engine) {
-        if (!d->textFromValue.isCallable())
-            setTextFromValue(engine->evaluate(QStringLiteral("function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }")));
-        if (!d->valueFromText.isCallable())
-            setValueFromText(engine->evaluate(QStringLiteral("function(text, locale) { return Number.fromLocaleString(locale, text); }")));
     }
 }
 

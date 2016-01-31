@@ -67,7 +67,16 @@ T.CheckBox {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png"
-            visible: control.checked
+            visible: control.checkState === Qt.Checked
+        }
+
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 16
+            height: 3
+            color: "#353637"
+            visible: control.checkState === Qt.PartiallyChecked
         }
     }
     //! [indicator]

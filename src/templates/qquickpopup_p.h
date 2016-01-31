@@ -77,6 +77,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
+    Q_PROPERTY(qreal margins READ margins WRITE setMargins RESET resetMargins NOTIFY marginsChanged FINAL)
+    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged FINAL)
+    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged FINAL)
+    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin RESET resetRightMargin NOTIFY rightMarginChanged FINAL)
+    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin RESET resetBottomMargin NOTIFY bottomMarginChanged FINAL)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL)
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
@@ -128,6 +133,26 @@ public:
 
     qreal availableWidth() const;
     qreal availableHeight() const;
+
+    qreal margins() const;
+    void setMargins(qreal margins);
+    void resetMargins();
+
+    qreal topMargin() const;
+    void setTopMargin(qreal margin);
+    void resetTopMargin();
+
+    qreal leftMargin() const;
+    void setLeftMargin(qreal margin);
+    void resetLeftMargin();
+
+    qreal rightMargin() const;
+    void setRightMargin(qreal margin);
+    void resetRightMargin();
+
+    qreal bottomMargin() const;
+    void setBottomMargin(qreal margin);
+    void resetBottomMargin();
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -218,6 +243,11 @@ Q_SIGNALS:
     void contentHeightChanged();
     void availableWidthChanged();
     void availableHeightChanged();
+    void marginsChanged();
+    void topMarginChanged();
+    void leftMarginChanged();
+    void rightMarginChanged();
+    void bottomMarginChanged();
     void paddingChanged();
     void topPaddingChanged();
     void leftPaddingChanged();
@@ -244,6 +274,7 @@ protected:
     void componentComplete() override;
     bool isComponentComplete() const;
 
+    bool eventFilter(QObject *object, QEvent *event) override;
     virtual void focusInEvent(QFocusEvent *event);
     virtual void focusOutEvent(QFocusEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
@@ -257,6 +288,7 @@ protected:
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
 
 private:

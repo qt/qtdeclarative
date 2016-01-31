@@ -49,6 +49,7 @@
 #include <QtCore/QString>
 #include <QtCore/QUrl>
 #include <private/qobject_p.h>
+#include <QtCore/qstringlist.h>
 
 #include "qquickstyleselector_p.h"
 
@@ -67,7 +68,8 @@ public:
     static QStringList platformSelectors();
     static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
     QQuickStyleSelectorPrivate();
-    QString select(const QString &filePath, const QStringList &allSelectors) const;
+    QString select(const QString &filePath) const;
+    QStringList allSelectors() const;
 
     QString style;
     QUrl baseUrl;
