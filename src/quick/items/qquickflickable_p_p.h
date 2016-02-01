@@ -212,6 +212,7 @@ public:
     bool calcVelocity : 1;
     bool pixelAligned : 1;
     QElapsedTimer timer;
+    QBasicTimer movementEndingTimer;
     qint64 lastPosTime;
     qint64 lastPressTime;
     QPointF lastPos;
