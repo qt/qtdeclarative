@@ -97,3 +97,12 @@ android-*.so-deployment-settings.json
 *.directory
 *_wrapper.sh
 *_wrapper.bat
+*.mak
+*.xib
+*.plist
+*.pbxproj
+*_plugin_import.cpp
+*.xcsettings
+*.xcscheme
+*.xcodeproj
+qt.conf
