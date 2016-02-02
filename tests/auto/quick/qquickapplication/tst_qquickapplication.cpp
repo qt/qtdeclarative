@@ -47,6 +47,7 @@ private slots:
     void active();
     void state();
     void layoutDirection();
+    void font();
     void inputMethod();
     void styleHints();
     void cleanup();
@@ -194,6 +195,21 @@ void tst_qquickapplication::layoutDirection()
     // not mirrored again
     QGuiApplication::setLayoutDirection(Qt::LeftToRight);
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::LeftToRight);
+}
+
+void tst_qquickapplication::font()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; Item { property font defaultFont: Qt.application.font }", QUrl::fromLocalFile(""));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickView view;
+    item->setParentItem(view.rootObject());
+
+    QVariant defaultFontProperty = item->property("defaultFont");
+    QVERIFY(defaultFontProperty.isValid());
+    QCOMPARE(defaultFontProperty.type(), QVariant::Font);
+    QCOMPARE(defaultFontProperty.value<QFont>(), qApp->font());
 }
 
 void tst_qquickapplication::inputMethod()

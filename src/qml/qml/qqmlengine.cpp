@@ -493,6 +493,10 @@ The following functions are also on the Qt object.
                         from right to left.
     \endlist
     \row
+    \li \c application.font
+    \li This read-only property holds the default application font as
+        returned by \l QGuiApplication::font().
+    \row
     \li \c application.arguments
     \li This is a string list of the arguments the executable was invoked with.
     \row
@@ -531,6 +535,7 @@ The following functions are also on the Qt object.
     \li application.active
     \li application.state
     \li application.layoutDirection
+    \li application.font
     \endlist
 */
 

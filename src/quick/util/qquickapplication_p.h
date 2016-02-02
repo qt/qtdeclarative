@@ -52,6 +52,7 @@
 //
 
 #include <QtCore/QObject>
+#include <QtGui/QFont>
 #include <qqml.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <private/qtquickglobal_p.h>
@@ -66,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
     Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged)
+    Q_PROPERTY(QFont font READ font CONSTANT)
 
 public:
     explicit QQuickApplication(QObject *parent = 0);
@@ -74,6 +76,7 @@ public:
     Qt::LayoutDirection layoutDirection() const;
     bool supportsMultipleWindows() const;
     Qt::ApplicationState state() const;
+    QFont font() const;
 
 Q_SIGNALS:
     void activeChanged();
