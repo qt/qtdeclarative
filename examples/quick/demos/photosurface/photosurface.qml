@@ -56,6 +56,7 @@ Window {
         id: fileDialog
         title: "Choose a folder with some images"
         selectFolder: true
+        folder: picturesLocation
         onAccepted: folderModel.folder = fileUrl + "/"
     }
 
@@ -69,7 +70,7 @@ Window {
                 id: folderModel
                 objectName: "folderModel"
                 showDirs: false
-                nameFilters: ["*.png", "*.jpg", "*.gif"]
+                nameFilters: imageNameFilters
             }
             Rectangle {
                 id: photoFrame
@@ -255,5 +256,21 @@ Window {
 
     Shortcut { sequence: StandardKey.Quit; onActivated: Qt.quit() }
 
-    Component.onCompleted: fileDialog.open()
+    Component.onCompleted: {
+        if (typeof contextInitialUrl !== 'undefined') {
+            // Launched from C++ with context properties set.
+            imageNameFilters = contextImageNameFilters;
+            picturesLocation = contextPicturesLocation;
+            if (contextInitialUrl == "")
+                fileDialog.open();
+            else
+                folderModel.folder = contextInitialUrl + "/";
+        } else {
+            // Launched via QML viewer without context properties set.
+            fileDialog.open();
+        }
+    }
+
+    property var imageNameFilters : ["*.png", "*.jpg", "*.gif"];
+    property string picturesLocation : "";
 }

@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "."
 
 Rectangle {
     id: root
@@ -60,7 +61,7 @@ Rectangle {
             Text {
                 id: stockIdText
                 color: "#000000"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 28
                 font.weight: Font.DemiBold
                 text: root.stock.stockId
@@ -69,7 +70,7 @@ Rectangle {
             Text {
                 id: price
                 color: "#6d6d6d"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 28
                 font.weight: Font.DemiBold
                 text: parseFloat(Math.round(root.stock.stockPrice * 100) / 100).toFixed(2);
@@ -79,7 +80,7 @@ Rectangle {
         Text {
             id: stockNameText
             color: "#0c0c0c"
-            font.family: "Open Sans"
+            font.family: Settings.fontFamily
             font.pointSize: 16
             width: stockColumn.width
             elide: Text.ElideRight
@@ -96,7 +97,7 @@ Rectangle {
                 id: priceChange
                 horizontalAlignment: Text.AlignRight
                 color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 18
                 text: parseFloat(Math.round(root.stock.stockPriceChanged * 100) / 100).toFixed(2);
             }
@@ -105,7 +106,7 @@ Rectangle {
                 id: priceChangePercentage
                 horizontalAlignment: Text.AlignRight
                 color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
-                font.family: "Open Sans"
+                font.family: Settings.fontFamily
                 font.pointSize: 18
                 font.weight: Font.DemiBold
                 text: "(" +
