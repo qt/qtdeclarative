@@ -40,6 +40,7 @@
 #include <QtTest/QTest>
 
 #include <private/qquickwindow_p.h>
+#include <private/qquickitemview_p_p.h>
 
 
 QQuickView *QQuickViewTestUtil::createView()
@@ -346,6 +347,85 @@ QList<QPair<QString,QString> > QQuickViewTestUtil::ListRange::getModelDataValues
     for (int i=0; i<indexes.count(); i++)
         data.append(qMakePair(model.name(indexes[i]), model.number(indexes[i])));
     return data;
+}
+
+QQuickViewTestUtil::StressTestModel::StressTestModel()
+    : QAbstractListModel()
+    , m_rowCount(20)
+{
+    QTimer *t = new QTimer(this);
+    t->setInterval(500);
+    t->start();
+
+    qsrand(qHash(QDateTime::currentDateTime()));
+    connect(t, &QTimer::timeout, this, &StressTestModel::updateModel);
+}
+
+int QQuickViewTestUtil::StressTestModel::rowCount(const QModelIndex &) const
+{
+    return m_rowCount;
+}
+
+QVariant QQuickViewTestUtil::StressTestModel::data(const QModelIndex &, int) const
+{
+    return QVariant();
+}
+
+void QQuickViewTestUtil::StressTestModel::updateModel()
+{
+    if (m_rowCount > 10) {
+        for (int i = 0; i < 10; ++i) {
+            int rnum = qrand() % m_rowCount;
+            beginRemoveRows(QModelIndex(), rnum, rnum);
+            m_rowCount--;
+            endRemoveRows();
+        }
+    }
+    if (m_rowCount < 20) {
+        for (int i = 0; i < 10; ++i) {
+            int rnum = qrand() % m_rowCount;
+            beginInsertRows(QModelIndex(), rnum, rnum);
+            m_rowCount++;
+            endInsertRows();
+        }
+    }
+}
+
+bool QQuickViewTestUtil::testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx)
+{
+    QHash<QQuickItem*, int> uniqueItems;
+
+    int skip = 0;
+    for (int i = 0; i < priv->visibleItems.count(); ++i) {
+        FxViewItem *item = priv->visibleItems.at(i);
+        if (!item) {
+            *failItem = Q_NULLPTR;
+            return false;
+        }
+#if 0
+        qDebug() << "\t" << item->index
+                 << item->item
+                 << item->position()
+                 << (!item->item || QQuickItemPrivate::get(item->item)->culled ? "hidden" : "visible");
+#endif
+        if (item->index == -1) {
+            ++skip;
+        } else if (item->index != priv->visibleIndex + i - skip) {
+            *nonUnique = false;
+            *failItem = item;
+            *expectedIdx = priv->visibleIndex + i - skip;
+            return false;
+        } else if (uniqueItems.contains(item->item)) {
+            *nonUnique = true;
+            *failItem = item;
+            *expectedIdx = uniqueItems.find(item->item).value();
+            return false;
+        }
+
+        uniqueItems.insert(item->item, item->index);
+    }
+
+    return true;
 }
 
 namespace QQuickTouchUtils {
