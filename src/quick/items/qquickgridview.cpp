@@ -176,6 +176,8 @@ public:
     bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) Q_DECL_OVERRIDE;
     bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) Q_DECL_OVERRIDE;
 
+    void removeItem(FxViewItem *item);
+
     FxViewItem *newViewItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
     void initializeViewItem(FxViewItem *item) Q_DECL_OVERRIDE;
     void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer) Q_DECL_OVERRIDE;
@@ -561,6 +563,17 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     return changed;
 }
 
+void QQuickGridViewPrivate::removeItem(FxViewItem *item)
+{
+    if (item->transitionScheduledOrRunning()) {
+        qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
+        item->releaseAfterTransition = true;
+        releasePendingTransition.append(item);
+    } else {
+        releaseItem(item);
+    }
+}
+
 bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
     FxGridItemSG *item = 0;
@@ -575,13 +588,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
         if (item->index != -1)
             visibleIndex++;
         visibleItems.removeFirst();
-        if (item->transitionScheduledOrRunning()) {
-            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
-            item->releaseAfterTransition = true;
-            releasePendingTransition.append(item);
-        } else {
-            releaseItem(item);
-        }
+        removeItem(item);
         changed = true;
     }
     while (visibleItems.count() > 1
@@ -591,13 +598,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1;
         visibleItems.removeLast();
-        if (item->transitionScheduledOrRunning()) {
-            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
-            item->releaseAfterTransition = true;
-            releasePendingTransition.append(item);
-        } else {
-            releaseItem(item);
-        }
+        removeItem(item);
         changed = true;
     }
 
