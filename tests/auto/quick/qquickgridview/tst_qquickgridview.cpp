@@ -41,6 +41,7 @@
 #include <QtQml/qqmlincubator.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
@@ -210,6 +211,7 @@ private slots:
     void contentHeightWithDelayRemove();
 
     void QTBUG_45640();
+    void QTBUG_48870_fastModelUpdates();
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -6564,6 +6566,42 @@ void tst_QQuickGridView::QTBUG_45640()
     QTRY_VERIFY(gridview->contentY() > qreal(-50.0) && gridview->contentY() < qreal(0.0));
 
     delete window;
+}
+
+void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
+{
+    StressTestModel model;
+
+    QScopedPointer<QQuickView> window(createView());
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    window->setSource(testFileUrl("qtbug48870.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickGridView *view = findItem<QQuickGridView>(window->rootObject(), "view");
+    QTRY_VERIFY(view != 0);
+
+    QQuickItemViewPrivate *priv = QQuickItemViewPrivate::get(view);
+    bool nonUnique;
+    FxViewItem *item = Q_NULLPTR;
+    int expectedIdx;
+    QVERIFY(testVisibleItems(priv, &nonUnique, &item, &expectedIdx));
+
+    for (int i = 0; i < 10; i++) {
+        QTest::qWait(100);
+        QVERIFY2(testVisibleItems(priv, &nonUnique, &item, &expectedIdx),
+                 qPrintable(!item ? QString("Unexpected null item")
+                            : nonUnique ? QString("Non-unique item at %1 and %2").arg(item->index).arg(expectedIdx)
+                                        : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
+        if (i % 3 != 0) {
+            if (i & 1)
+                flick(window.data(), QPoint(100, 200), QPoint(100, 0), 100);
+            else
+                flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickGridView)
