@@ -599,6 +599,11 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
 void QQuickContext2DFBOTexture::endPainting()
 {
     QQuickContext2DTexture::endPainting();
+
+    // There may not be an FBO due to zero width or height.
+    if (!m_fbo)
+        return;
+
     if (m_multisampledFbo)
         QOpenGLFramebufferObject::blitFramebuffer(m_fbo, m_multisampledFbo);
 
