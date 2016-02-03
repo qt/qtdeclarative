@@ -65,6 +65,7 @@ sourcedirs += ../../plugins
 excludedirs += ../../imports/models \
                ../../imports/statemachine
 
+excludefiles += ../util/qquickpropertychanges_p.h
 examples.fileextensions        += "*.qm"
 
 manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
