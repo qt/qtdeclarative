@@ -822,14 +822,15 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                 for (int i = 0; i < node->ranges.size(); ++i) {
                     const QPair<int, int> &range = node->ranges.at(i);
 
-                    int rangeLength = range.second - range.first;
+                    int rangeLength = range.second - range.first + 1;
                     if (previousNode != 0) {
                         for (int j = 0; j < previousNode->ranges.size(); ++j) {
                             const QPair<int, int> &otherRange = previousNode->ranges.at(j);
+
                             if (range.first < otherRange.second && range.second > otherRange.first) {
                                 int start = qMax(range.first, otherRange.first);
                                 int end = qMin(range.second, otherRange.second);
-                                rangeLength -= end - start;
+                                rangeLength -= end - start + 1;
                                 if (rangeLength == 0)
                                     break;
                             }
@@ -843,7 +844,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                             if (range.first < otherRange.second && range.second > otherRange.first) {
                                 int start = qMax(range.first, otherRange.first);
                                 int end = qMin(range.second, otherRange.second);
-                                rangeLength -= end - start;
+                                rangeLength -= end - start + 1;
                                 if (rangeLength == 0)
                                     break;
                             }
