@@ -30,8 +30,6 @@
   \relates QQmlEngine
 
   Equivalent to \c Q_DECLARE_METATYPE(TYPE *) and \c Q_DECLARE_METATYPE(QQmlListProperty<TYPE>)
-
-  #include <QtQml> to use this macro.
 */
 
 /*!
@@ -44,8 +42,6 @@
   Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
   declares that the \a Type supports \l {Attached Properties and Attached Signal Handlers}
   {attached properties}.
-
-  #include <QtQml> to use this macro.
 */
 
 /*!
@@ -58,8 +54,6 @@
   Any existing QQmlEngines must be deleted before calling this function.  This function
   only affects the application global cache. Delete the QQmlEngine to clear all cached
   data relating to that engine.
-
-  #include <QtQml> to use this method.
 */
 
 
@@ -93,10 +87,6 @@
   "com.mycompany.qmlcomponents":
 
   \code
-  #include <QtQml>
-
-  ...
-
   qmlRegisterType<MySliderItem>("com.mycompany.qmlcomponents", 1, 0, "Slider");
   \endcode
 
@@ -151,8 +141,6 @@
 
   Returns the QML type id.
 
-  #include <QtQml> to use this function.
-
   \sa qmlRegisterTypeNotAvailable()
 */
 
@@ -166,8 +154,6 @@
   not available in the main type will be searched for in the extension object.
 
   Returns the QML type id.
-
-  #include <QtQml> to use this function.
 
   \sa qmlRegisterType(), {Registering Extension Objects}
 */
@@ -190,8 +176,6 @@
 
   Returns the QML type id.
 
-  #include <QtQml> to use this function.
-
   \sa qmlRegisterUncreatableType()
 */
 
@@ -208,8 +192,6 @@
   the \a parser provided.
 
   Returns the QML type id.
-
-  #include <QtQml> to use this function.
 */
 
 /*!
@@ -244,8 +226,6 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  #include <QtQml> to use this function.
-
   \sa qmlRegisterUncreatableType()
 */
 
@@ -258,8 +238,6 @@
   system. Instances of this type cannot be created from the QML
   system.
 
-  #include <QtQml> to use this function.
-
   Returns the QML type id.
 */
 
@@ -269,8 +247,6 @@
 
   This template function registers the C++ type in the QML system
   under the name \a typeName.
-
-  #include <QtQml> to use this function.
 
   Returns the QML type id.
 */
@@ -305,10 +281,7 @@
    }
 
    // Second, register the singleton type provider with QML by calling this function in an initialization function.
-   #include <QtQml>
-   ...
    qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", example_qjsvalue_singletontype_provider);
-   ...
    \endcode
 
    In order to use the registered singleton type in QML, you must import the singleton type.
@@ -408,10 +381,7 @@
    }
 
    // Third, register the singleton type provider with QML by calling this function in an initialization function.
-   #include <QtQml>
-   ...
    qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", example_qobject_singletontype_provider);
-   ...
    \endcode
 
    In order to use the registered singleton type in QML, you must import the singleton type.
@@ -481,10 +451,7 @@
 
    \code
    // Second, register the QML singleton type by calling this function in an initialization function.
-   #include <QtQml>
-   ...
    qmlRegisterSingletonType(QUrl("file:///absolute/path/SingletonType.qml"), "Qt.example.qobjectSingleton", 1, 0, "RegisteredSingleton");
-   ...
    \endcode
 
    In order to use the registered singleton type in QML, you must import the singleton type.
@@ -514,8 +481,6 @@
   Normally QML files can be loaded as types directly from other QML files, or using a qmldir file. This function allows
   registration of files to types from C++ code, such as when the type mapping needs to be procedurally determined at startup.
 
-  #include <QtQml> to use this function.
-
   Returns -1 if the registration was not successful.
 */
 
@@ -537,8 +502,6 @@
   After this function is called, any attempt to register C++ types into this
   uri, major version combination will lead to a runtime error. Call this after
   you have registered all of your types with the engine.
-
-  #include <QtQml> to use this function.
 
   Returns true if the module with \a uri as a \l{Identified Modules}
   {module identifier} and \a majVersion as a major version number was found

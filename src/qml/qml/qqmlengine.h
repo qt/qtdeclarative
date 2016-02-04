@@ -44,6 +44,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qmap.h>
 #include <QtQml/qjsengine.h>
+#include <QtQml/qqml.h>
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmldebug.h>
 
