@@ -372,6 +372,13 @@ QQmlComponent::~QQmlComponent()
 
     if (d->state.completePending) {
         qWarning("QQmlComponent: Component destroyed while completion pending");
+
+        if (isError()) {
+            qWarning() << "This may have been caused by one of the following errors:";
+            foreach (const QQmlError &error, d->state.errors)
+                qWarning().nospace().noquote() << QLatin1String("    ") << error;
+        }
+
         d->completeCreate();
     }
 
