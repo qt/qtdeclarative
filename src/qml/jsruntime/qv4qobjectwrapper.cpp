@@ -84,7 +84,7 @@ QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
 
 using namespace QV4;
 
-static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
+QPair<QObject *, int> QObjectMethod::extractQtMethod(const QV4::FunctionObject *function)
 {
     QV4::ExecutionEngine *v4 = function->engine();
     if (v4) {
@@ -104,7 +104,7 @@ static QPair<QObject *, int> extractQtSignal(const Value &value)
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope, value);
         if (function)
-            return extractQtMethod(function);
+            return QObjectMethod::extractQtMethod(function);
 
         QV4::Scoped<QV4::QmlSignalHandler> handler(scope, value);
         if (handler)
@@ -863,7 +863,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                         (connection->thisObject.isUndefined() || RuntimeHelpers::strictEqual(*connection->thisObject.valueRef(), thisObject))) {
 
                     QV4::ScopedFunctionObject f(scope, connection->function.value());
-                    QPair<QObject *, int> connectedFunctionData = extractQtMethod(f);
+                    QPair<QObject *, int> connectedFunctionData = QObjectMethod::extractQtMethod(f);
                     if (connectedFunctionData.first == receiverToDisconnect &&
                         connectedFunctionData.second == slotIndexToDisconnect) {
                         *ret = true;
@@ -978,7 +978,7 @@ ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
     if (!functionThisValue->isUndefined() && !functionThisValue->isObject())
         V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
-    QPair<QObject *, int> functionData = extractQtMethod(functionValue);
+    QPair<QObject *, int> functionData = QObjectMethod::extractQtMethod(functionValue);
 
     void *a[] = {
         ctx->d()->engine,

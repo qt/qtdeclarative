@@ -53,6 +53,7 @@ public:
     tst_qqmlqt() {}
 
 private slots:
+    void initTestCase();
     void enums();
     void rgba();
     void hsla();
@@ -87,10 +88,67 @@ private slots:
     void fontFamilies();
     void quit();
     void resolvedUrl();
+    void later_data();
+    void later();
 
 private:
     QQmlEngine engine;
 };
+
+// for callLater()
+class TestElement : public QQuickItem
+{
+    Q_OBJECT
+public:
+    TestElement() : m_intptr(new int) {}
+    ~TestElement() { delete m_intptr; }
+
+    Q_INVOKABLE void dangerousFunction() {
+        delete m_intptr;
+        m_intptr = new int;
+        *m_intptr = 5;
+    }
+private:
+    int *m_intptr;
+};
+
+// for callLater()
+class TestModuleApi : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int intProp READ intProp WRITE setIntProp NOTIFY intPropChanged)
+
+public:
+    TestModuleApi() : m_int(0) {}
+    ~TestModuleApi() {}
+
+    int intProp() const { return m_int; }
+    void setIntProp(int v) { m_int = v; emit intPropChanged(); }
+
+    Q_INVOKABLE void testFunc() { ++m_int; emit intPropChanged(); }
+    Q_INVOKABLE void resetIntProp() { m_int = 0; emit intPropChanged(); }
+
+signals:
+    void intPropChanged();
+
+private:
+    int m_int;
+};
+
+static QObject *test_module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+   Q_UNUSED(engine)
+   Q_UNUSED(scriptEngine)
+   TestModuleApi *api = new TestModuleApi;
+   return api;
+}
+
+void tst_qqmlqt::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qmlRegisterSingletonType<TestModuleApi>("LaterImports", 1, 0, "SingletonType", test_module_api_factory);
+    qmlRegisterType<TestElement>("LaterImports", 1, 0, "TestElement");
+}
 
 void tst_qqmlqt::enums()
 {
@@ -932,6 +990,107 @@ void tst_qqmlqt::resolvedUrl()
     QCOMPARE(object->property("isString").toBool(), true);
 
     delete object;
+}
+
+void tst_qqmlqt::later_data()
+{
+    QTest::addColumn<QString>("function");
+    QTest::addColumn<QStringList>("expectedWarnings");
+    QTest::addColumn<QStringList>("propNames");
+    QTest::addColumn<QVariantList>("values");
+
+    QVariant vtrue = QVariant(true);
+
+    QTest::newRow("callLater from onCompleted")
+            << QString()
+            << QStringList()
+            << (QStringList() << "test1_1" << "test2_1" << "processEvents" << "test1_2" << "test2_2")
+            << (QVariantList() << vtrue << vtrue << QVariant() << vtrue << vtrue);
+
+    QTest::newRow("trigger Qt.callLater() via repeater")
+            << QString(QLatin1String("test2"))
+            << QStringList()
+            << (QStringList() << "processEvents" << "test2_2")
+            << (QVariantList() << QVariant() << vtrue);
+
+    QTest::newRow("recursive Qt.callLater()")
+            << QString(QLatin1String("test3"))
+            << QStringList()
+            << (QStringList() << "processEvents" << "test3_1" << "processEvents" << "test3_2" << "processEvents" << "test3_3")
+            << (QVariantList() << QVariant() << vtrue << QVariant() << vtrue << QVariant() << vtrue);
+
+    QTest::newRow("nonexistent function")
+            << QString(QLatin1String("test4"))
+            << (QStringList() << QString(testFileUrl("later.qml").toString() + QLatin1String(":70: ReferenceError: functionThatDoesNotExist is not defined")))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("callLater with different args")
+            << QString(QLatin1String("test5"))
+            << QStringList()
+            << (QStringList() << "processEvents" << "test5_1")
+            << (QVariantList() << QVariant() << vtrue);
+
+    QTest::newRow("delayed call ordering")
+            << QString(QLatin1String("test6"))
+            << QStringList()
+            << (QStringList() << "processEvents" << "test6_1")
+            << (QVariantList() << QVariant() << vtrue);
+
+    QTest::newRow("invoke module api invokable")
+            << QString(QLatin1String("test9"))
+            << QStringList()
+            << (QStringList() << "processEvents" << "test9_1" << "processEvents")
+            << (QVariantList() << QVariant() << QVariant(1) << QVariant());
+
+    QTest::newRow("invoke function of deleted QObject via callLater() causing deletion")
+            << QString(QLatin1String("test10"))
+            << (QStringList() << QString(testFileUrl("LaterComponent.qml").toString() + QLatin1String(":8: ReferenceError: dangerousFunction is not defined (exception occurred during delayed function evaluation)")))
+            << (QStringList() << "processEvents" << "test10_1" << "processEvents")
+            << (QVariantList() << QVariant() << QVariant(0) << QVariant());
+
+    QTest::newRow("invoke function of deleted QObject via callLater() after deletion")
+            << QString(QLatin1String("test11"))
+            << QStringList()
+            << (QStringList() << "collectGarbage" << "processEvents" << "test11_1" << "processEvents")
+            << (QVariantList() << QVariant() << QVariant() << QVariant(1) << QVariant());
+
+    QTest::newRow("invoke function which has no script origin")
+            << QString(QLatin1String("test14"))
+            << QStringList()
+            << (QStringList() << "collectGarbage")
+            << (QVariantList() << QVariant());
+}
+
+void tst_qqmlqt::later()
+{
+    QFETCH(QString, function);
+    QFETCH(QStringList, expectedWarnings);
+    QFETCH(QStringList, propNames);
+    QFETCH(QVariantList, values);
+
+    foreach (const QString &w, expectedWarnings)
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(w));
+
+    QQmlComponent component(&engine, testFileUrl("later.qml"));
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    if (!function.isEmpty())
+        QMetaObject::invokeMethod(root, qPrintable(function));
+
+    for (int i = 0; i < propNames.size(); ++i) {
+        if (propNames.at(i) == QLatin1String("processEvents")) {
+            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+            QCoreApplication::processEvents();
+        } else if (propNames.at(i) == QLatin1String("collectGarbage")) {
+            engine.collectGarbage();
+        } else {
+            QCOMPARE(root->property(qPrintable(propNames.at(i))), values.at(i));
+        }
+    }
+
+    delete root;
 }
 
 QTEST_MAIN(tst_qqmlqt)

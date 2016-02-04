@@ -45,6 +45,7 @@
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
+#include <private/qqmldelayedcallqueue_p.h>
 #include <QFileInfo>
 
 #include <private/qqmldebugconnector_p.h>
@@ -149,6 +150,8 @@ Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
     o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, 0);
 #endif
     o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, 0);
+
+    o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
 }
 
 
@@ -1934,6 +1937,30 @@ ReturnedValue GlobalExtensions::method_string_arg(CallContext *ctx)
     return ctx->d()->engine->newString(value.arg(arg->toQString()))->asReturnedValue();
 }
 
+/*!
+\qmlmethod Qt::callLater(function)
+\qmlmethod Qt::callLater(function, argument1, argument2, ...)
+Use this function to eliminate redundant calls to a function or signal.
+
+The function passed as the first argument to \l{QML:Qt::callLater()}{Qt.callLater()}
+will be called later, once the QML engine returns to the event loop.
+
+When this function is called multiple times in quick succession with the
+same function as its first argument, that function will be called only once.
+
+For example:
+\snippet doc/src/snippets/qml/qtLater.qml 0
+
+Any additional arguments passed to \l{QML:Qt::callLater()}{Qt.callLater()} will
+be passed on to the function invoked. Note that if redundant calls
+are eliminated, then only the last set of arguments will be passed to the
+function.
+*/
+ReturnedValue QtObject::method_callLater(CallContext *ctx)
+{
+    QV8Engine *v8engine = ctx->engine()->v8Engine;
+    return v8engine->delayedCallQueue()->addUniquelyAndExecuteLater(ctx);
+}
 
 QT_END_NAMESPACE
 

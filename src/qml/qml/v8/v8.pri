@@ -9,4 +9,3 @@ SOURCES += \
     $$PWD/qv4domerrors.cpp \
     $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
-

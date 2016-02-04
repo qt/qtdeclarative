@@ -170,6 +170,8 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     ReturnedValue callInternal(CallData *callData) const;
 
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
+
+    static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
 
 struct QmlSignalHandler : public QV4::Object

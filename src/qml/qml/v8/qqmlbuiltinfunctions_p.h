@@ -124,6 +124,8 @@ struct QtObject : Object
     static ReturnedValue method_get_inputMethod(CallContext *ctx);
 #endif
     static ReturnedValue method_get_styleHints(CallContext *ctx);
+
+    static ReturnedValue method_callLater(CallContext *ctx);
 };
 
 struct ConsoleObject : Object
