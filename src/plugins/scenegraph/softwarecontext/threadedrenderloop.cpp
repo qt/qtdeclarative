@@ -339,7 +339,10 @@ bool RenderThread::event(QEvent *e)
 
         mutex.lock();
         if (window) {
-            QQuickWindowPrivate::get(window)->fireAboutToStop();
+            QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+            d->fireAboutToStop();
+            d->cleanupNodesOnShutdown();
+
             qCDebug(QSG_RASTER_LOG_RENDERLOOP) << QSG_RT_PAD << "- window removed";
             window = 0;
         }
