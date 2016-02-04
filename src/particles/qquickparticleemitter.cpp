@@ -337,7 +337,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if ((!m_enabled || !m_particlesPerSecond)&& !m_pulseLeft && m_burstQueue.isEmpty()){
+    if ((!m_enabled || m_particlesPerSecond <= 0)&& !m_pulseLeft && m_burstQueue.isEmpty()){
         m_reset_last = true;
         return;
     }
