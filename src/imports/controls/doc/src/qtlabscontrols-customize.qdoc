@@ -552,7 +552,7 @@
     \section1 Customizing ToolButton
 
         ToolButton consists of two visual items: \l {Control::background}{background}
-        and \l {AbstractButton::label}{label}.
+        and \l {Control::contentItem}{content item}.
 
         \section3 Background
 
@@ -560,11 +560,11 @@
 
             \snippet ToolButton.qml background
 
-        \section3 Label
+        \section3 Content item
 
-            \image qtlabscontrols-toolbutton-label.png
+            \image qtlabscontrols-toolbutton-contentItem.png
 
-            \snippet ToolButton.qml label
+            \snippet ToolButton.qml contentItem
 
     \section1 Customizing Tumbler
 

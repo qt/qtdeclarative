@@ -41,20 +41,15 @@ T.ToolButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
+    //! [contentItem]
+    contentItem: Text {
         text: control.text
         font: control.font
         color: control.enabled ? "#26282a" : "#c2c2c2"
@@ -62,7 +57,7 @@ T.ToolButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-    //! [label]
+    //! [contentItem]
 
     //! [background]
     background: Rectangle {

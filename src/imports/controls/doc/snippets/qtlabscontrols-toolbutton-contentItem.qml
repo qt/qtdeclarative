@@ -31,7 +31,7 @@ import Qt.labs.controls 1.0
 ToolButton {
     text: "ToolButton"
     Rectangle {
-        anchors.fill: label
+        anchors.fill: contentItem
         color: 'transparent'
         border.color: 'red'
     }
