@@ -265,9 +265,10 @@ void WindowSingleThreaded::startQuick(const QString &filename)
 void WindowSingleThreaded::exposeEvent(QExposeEvent *)
 {
     if (isExposed()) {
-        m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
-        if (!m_quickInitialized)
+        if (!m_quickInitialized) {
+            m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
             startQuick(QStringLiteral("qrc:/rendercontrol/demo.qml"));
+        }
     }
 }
 
