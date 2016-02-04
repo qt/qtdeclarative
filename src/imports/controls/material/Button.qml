@@ -43,23 +43,18 @@ T.Button {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     // external vertical padding is 6 (to increase touch area)
     padding: 12
     leftPadding: 8
     rightPadding: 8
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
+    //! [contentItem]
+    contentItem: Text {
         text: control.text
         font: control.font
         color: !control.enabled ? control.Material.hintTextColor :
@@ -68,7 +63,7 @@ T.Button {
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [label]
+    //! [contentItem]
 
     //! [background]
     background: Rectangle {

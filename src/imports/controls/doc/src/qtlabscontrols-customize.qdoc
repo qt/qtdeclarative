@@ -57,7 +57,7 @@
     \section1 Customizing Button
 
         Button consists of two visual items: \l {Control::background}{background}
-        and \l {AbstractButton::label}{label}.
+        and \l {Control::contentItem}{content item}.
 
         \section3 Background
 
@@ -65,11 +65,11 @@
 
             \snippet Button.qml background
 
-        \section3 Label
+        \section3 Content item
 
-            \image qtlabscontrols-button-label.png
+            \image qtlabscontrols-button-contentItem.png
 
-            \snippet Button.qml label
+            \snippet Button.qml contentItem
 
 
     \section1 Customizing CheckBox
