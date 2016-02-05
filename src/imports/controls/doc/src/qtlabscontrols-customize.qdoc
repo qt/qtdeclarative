@@ -75,7 +75,7 @@
     \section1 Customizing CheckBox
 
         CheckBox consists of three visual items: \l {Control::background}{background},
-        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
 
         \section3 Background
 
@@ -83,11 +83,11 @@
 
             CheckBox has no background item by default.
 
-        \section3 Label
+        \section3 Content item
 
-            \image qtlabscontrols-checkbox-label.png
+            \image qtlabscontrols-checkbox-contentItem.png
 
-            \snippet CheckBox.qml label
+            \snippet CheckBox.qml contentItem
 
         \section3 Indicator
 
