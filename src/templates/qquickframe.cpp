@@ -65,10 +65,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Frame}, {Container Controls}
 */
 
-QQuickFramePrivate::QQuickFramePrivate() : frame(nullptr)
-{
-}
-
 QQuickFrame::QQuickFrame(QQuickItem *parent) :
     QQuickPane(*(new QQuickFramePrivate), parent)
 {
@@ -77,31 +73,6 @@ QQuickFrame::QQuickFrame(QQuickItem *parent) :
 QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
     QQuickPane(dd, parent)
 {
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::Frame::frame
-
-    This property holds the visual frame item.
-
-    \sa {Customizing Frame}
-*/
-QQuickItem *QQuickFrame::frame() const
-{
-    Q_D(const QQuickFrame);
-    return d->frame;
-}
-
-void QQuickFrame::setFrame(QQuickItem *frame)
-{
-    Q_D(QQuickFrame);
-    if (d->frame != frame) {
-        delete d->frame;
-        d->frame = frame;
-        if (frame && !frame->parentItem())
-            frame->setParentItem(this);
-        emit frameChanged();
-    }
 }
 
 QT_END_NAMESPACE

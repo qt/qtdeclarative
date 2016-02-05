@@ -56,12 +56,6 @@ class QQuickFrame;
 
 class Q_LABSTEMPLATES_EXPORT QQuickFramePrivate : public QQuickPanePrivate
 {
-    Q_DECLARE_PUBLIC(QQuickFrame)
-
-public:
-    QQuickFramePrivate();
-
-    QQuickItem *frame;
 };
 
 QT_END_NAMESPACE
