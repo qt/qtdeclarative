@@ -100,7 +100,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
     pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false),
-    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(nullptr), indicator(nullptr), group(nullptr)
+    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), indicator(nullptr), group(nullptr)
 {
 }
 
@@ -203,9 +203,9 @@ QQuickAbstractButton::~QQuickAbstractButton()
     This property holds a textual description of the button.
 
     \note The text is used for accessibility purposes, so it makes sense to
-          set a textual description even if the label item is an image.
+          set a textual description even if the content item is an image.
 
-    \sa label
+    \sa contentItem
 */
 QString QQuickAbstractButton::text() const
 {
@@ -391,31 +391,6 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
             indicator->setAcceptedMouseButtons(Qt::LeftButton);
         }
         emit indicatorChanged();
-    }
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::AbstractButton::label
-
-    This property holds the label item.
-
-    \sa text
-*/
-QQuickItem *QQuickAbstractButton::label() const
-{
-    Q_D(const QQuickAbstractButton);
-    return d->label;
-}
-
-void QQuickAbstractButton::setLabel(QQuickItem *label)
-{
-    Q_D(QQuickAbstractButton);
-    if (d->label != label) {
-        delete d->label;
-        d->label = label;
-        if (label && !label->parentItem())
-            label->setParentItem(this);
-        emit labelChanged();
     }
 }
 

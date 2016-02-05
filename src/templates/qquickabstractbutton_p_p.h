@@ -85,7 +85,6 @@ public:
     int repeatTimer;
     QPointF pressPoint;
     Qt::MouseButton repeatButton;
-    QQuickItem *label;
     QQuickItem *indicator;
     QQuickButtonGroup *group;
 };

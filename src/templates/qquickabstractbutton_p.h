@@ -65,7 +65,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
-    Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -95,9 +94,6 @@ public:
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
-    QQuickItem *label() const;
-    void setLabel(QQuickItem *label);
-
 public Q_SLOTS:
     void toggle();
 
@@ -115,7 +111,6 @@ Q_SIGNALS:
     void autoExclusiveChanged();
     void autoRepeatChanged();
     void indicatorChanged();
-    void labelChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

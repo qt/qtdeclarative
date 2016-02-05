@@ -28,7 +28,6 @@ Module {
         Property { name: "autoExclusive"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
-        Property { name: "label"; type: "QQuickItem"; isPointer: true }
         Signal { name: "pressed" }
         Signal { name: "released" }
         Signal { name: "canceled" }
