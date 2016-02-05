@@ -155,7 +155,7 @@
 
     \qml
     Button {
-        label: Label {
+        contentItem: Label {
             // ...
         }
     }

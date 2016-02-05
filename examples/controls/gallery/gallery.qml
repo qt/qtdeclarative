@@ -63,8 +63,10 @@ ApplicationWindow {
             anchors.fill: parent
 
             ToolButton {
-                label: Image {
-                    anchors.centerIn: parent
+                contentItem: Image {
+                    fillMode: Image.Pad
+                    horizontalAlignment: Image.AlignHCenter
+                    verticalAlignment: Image.AlignVCenter
                     source: "qrc:/images/drawer.png"
                 }
                 onClicked: drawer.open()
@@ -81,8 +83,10 @@ ApplicationWindow {
             }
 
             ToolButton {
-                label: Image {
-                    anchors.centerIn: parent
+                contentItem: Image {
+                    fillMode: Image.Pad
+                    horizontalAlignment: Image.AlignHCenter
+                    verticalAlignment: Image.AlignVCenter
                     source: "qrc:/images/menu.png"
                 }
                 onClicked: optionsMenu.open()
