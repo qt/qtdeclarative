@@ -71,8 +71,8 @@ T.GroupBox {
     }
     //! [label]
 
-    //! [frame]
-    frame: Rectangle {
+    //! [background]
+    background: Rectangle {
         y: control.topPadding - control.padding
         width: parent.width
         height: parent.height - control.topPadding + control.padding
@@ -81,5 +81,5 @@ T.GroupBox {
         color: "transparent"
         border.color: control.Material.frameColor
     }
-    //! [frame]
+    //! [background]
 }

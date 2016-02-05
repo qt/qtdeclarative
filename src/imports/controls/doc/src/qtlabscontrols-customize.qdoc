@@ -180,20 +180,14 @@
 
     \section1 Customizing GroupBox
 
-        GroupBox consists of three visual items: \l {Control::background}{background},
-        \l {Frame::frame}{frame} and \l {GroupBox::label}{label}.
+        GroupBox consists of two visual items: \l {Control::background}{background}
+        and \l {GroupBox::label}{label}.
 
         \section3 Background
 
             \image qtlabscontrols-groupbox-background.png
 
-            GroupBox has no background item by default.
-
-        \section3 Frame
-
-            \image qtlabscontrols-groupbox-frame.png
-
-            \snippet GroupBox.qml frame
+            \snippet GroupBox.qml background
 
         \section3 Label
 
