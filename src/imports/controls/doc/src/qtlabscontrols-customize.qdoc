@@ -162,20 +162,13 @@
 
     \section1 Customizing Frame
 
-        Frame consists of two visual items: \l {Control::background}{background}
-        and \l {Frame::frame}{frame}.
+        Frame consists of one visual item: \l {Control::background}{background}.
 
         \section3 Background
 
             \image qtlabscontrols-frame-background.png
 
-            Frame has no background item by default.
-
-        \section3 Frame
-
-            \image qtlabscontrols-frame-frame.png
-
-            \snippet Frame.qml frame
+            \snippet Frame.qml background
 
 
     \section1 Customizing GroupBox

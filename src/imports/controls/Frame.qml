@@ -52,13 +52,10 @@ T.Frame {
     contentItem: Item { }
     //! [contentItem]
 
-    //! [frame]
-    frame: Rectangle {
-        width: parent.width
-        height: parent.height
-
+    //! [background]
+    background: Rectangle {
         color: "transparent"
         border.color: "#bdbebf"
     }
-    //! [frame]
+    //! [background]
 }

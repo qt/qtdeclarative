@@ -53,14 +53,11 @@ T.Frame {
     contentItem: Item { }
     //! [contentItem]
 
-    //! [frame]
-    frame: Rectangle {
-        width: parent.width
-        height: parent.height
-
+    //! [background]
+    background: Rectangle {
         radius: 3
         color: "transparent"
         border.color: control.Material.frameColor
     }
-    //! [frame]
+    //! [background]
 }
