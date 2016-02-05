@@ -33,7 +33,7 @@ ItemDelegate {
     checked: true
     checkable: true
     Rectangle {
-        anchors.fill: label
+        anchors.fill: contentItem
         color: "transparent"
         border.color: "red"
     }

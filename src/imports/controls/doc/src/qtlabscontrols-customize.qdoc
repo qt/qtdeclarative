@@ -205,7 +205,7 @@
     \section1 Customizing ItemDelegate
 
         ItemDelegate consists of three visual items: \l {Control::background}{background},
-        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
         The indicator is only visible for \l {AbstractButton::checkable}{checkable} items.
 
         \section3 Background
@@ -214,11 +214,11 @@
 
             \snippet ItemDelegate.qml background
 
-        \section3 Label
+        \section3 Content item
 
-            \image qtlabscontrols-itemdelegate-label.png
+            \image qtlabscontrols-itemdelegate-contentItem.png
 
-            \snippet ItemDelegate.qml label
+            \snippet ItemDelegate.qml contentItem
 
         \section3 Indicator
 
