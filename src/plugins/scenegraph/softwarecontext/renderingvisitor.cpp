@@ -74,7 +74,7 @@ void RenderingVisitor::endVisit(QSGClipNode *)
 bool RenderingVisitor::visit(QSGGeometryNode *node)
 {
     if (QSGSimpleRectNode *rectNode = dynamic_cast<QSGSimpleRectNode *>(node)) {
-        if (!rectNode->material()->flags() & QSGMaterial::Blending)
+        if (!(rectNode->material()->flags() & QSGMaterial::Blending))
             painter->setCompositionMode(QPainter::CompositionMode_Source);
         painter->fillRect(rectNode->rect(), rectNode->color());
         painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
