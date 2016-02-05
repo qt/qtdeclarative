@@ -41,12 +41,12 @@ import Qt.labs.controls.universal 1.0
 T.MenuItem {
     id: control
 
-    implicitWidth: background ? background.implicitWidth
-        : (label ? label.implicitWidth : 0) + (indicator ? indicator.implicitWidth : 0)
-            + (label && indicator ? spacing : 0) + leftPadding + rightPadding
-    implicitHeight: background ? background.implicitHeight
-        : (label ? label.implicitHeight : 0) + (indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             Math.max(contentItem.implicitHeight,
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     topPadding: 11
     leftPadding: 12
@@ -54,12 +54,10 @@ T.MenuItem {
     bottomPadding: 13
     spacing: 12
 
-    //! [label]
-    label: Text {
-        x: control.mirrored || !control.checkable ? control.leftPadding : (indicator.x + indicator.width + control.spacing)
-        y: control.topPadding
-        width: control.availableWidth - (control.checkable ? indicator.width + control.spacing : 0)
-        height: control.availableHeight
+    //! [contentItem]
+    contentItem: Text {
+        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -69,7 +67,7 @@ T.MenuItem {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [label]
+    //! [contentItem]
 
     //! [indicator]
     indicator: Image {
