@@ -1398,7 +1398,7 @@ LifeTimeInterval *RegisterAllocator::cloneFixedInterval(int reg, bool isFP, cons
 void RegisterAllocator::prepareRanges()
 {
     LifeTimeInterval ltiWithCalls = createFixedInterval(int(_info->calls().size()));
-    foreach (int callPosition, _info->calls())
+    for (int callPosition : _info->calls())
         ltiWithCalls.addRange(callPosition, callPosition);
 
     const int regCount = _normalRegisters.size();

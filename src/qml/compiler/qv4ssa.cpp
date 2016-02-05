@@ -570,7 +570,7 @@ class DominatorTree
             bucket[s].push_back(n);
             link(p, n);
             if (bucket.contains(p)) {
-                foreach (BasicBlockIndex v, bucket[p]) {
+                for (BasicBlockIndex v : bucket[p]) {
                     BasicBlockIndex y = ancestorWithLowestSemi(v, worklist);
                     BasicBlockIndex semi_v = d->semi[v];
                     if (d->semi[y] == semi_v)
@@ -670,7 +670,7 @@ public:
                 foreach (BasicBlock *y, function->basicBlock(node)->out)
                     if (idom[y->index()] != node)
                         S.insert(y);
-                foreach (BasicBlockIndex child, np.children) {
+                for (BasicBlockIndex child : np.children) {
                     const BasicBlockSet &ws = DF[child];
                     for (BasicBlockSet::const_iterator it = ws.begin(), eit = ws.end(); it != eit; ++it) {
                         BasicBlock *w = *it;
@@ -1733,7 +1733,7 @@ void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defU
     W.reserve(8);
 
     // Place phi functions:
-    foreach (const Temp &a, variables.allTemps()) {
+    for (const Temp &a : variables.allTemps()) {
         if (a.isInvalid())
             continue;
         if (!variables.isNonLocal(a))
@@ -1791,7 +1791,7 @@ void cleanupPhis(DefUses &defUses)
     std::vector<Phi *> allPhis;
     allPhis.reserve(32);
 
-    foreach (const Temp *def, defUses.defs()) {
+    for (const Temp *def : defUses.defs()) {
         Stmt *defStmt = defUses.defStmt(*def);
         if (!defStmt)
             continue;
@@ -1808,7 +1808,7 @@ void cleanupPhis(DefUses &defUses)
             toRemove |= collectedPhis;
     }
 
-    foreach (Phi *phi, allPhis) {
+    for (Phi *phi : allPhis) {
         if (!toRemove.at(phi->id()))
             continue;
 
