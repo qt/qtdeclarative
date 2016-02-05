@@ -42,13 +42,11 @@ T.Switch {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            (label ? label.implicitWidth : 0) +
-                            (indicator ? indicator.implicitWidth : 0) +
-                            (label && indicator ? spacing : 0) + leftPadding + rightPadding)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(label ? label.implicitHeight : 0,
+                             Math.max(contentItem.implicitHeight,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 5
     spacing: 8
@@ -90,12 +88,10 @@ T.Switch {
     }
     //! [indicator]
 
-    //! [label]
-    label: Text {
-        x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.spacing)
-        y: control.topPadding
-        width: control.availableWidth - indicator.width - control.spacing
-        height: control.availableHeight
+    //! [contentItem]
+    contentItem: Text {
+        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -107,5 +103,5 @@ T.Switch {
 
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
     }
-    //! [label]
+    //! [contentItem]
 }
