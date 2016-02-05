@@ -42,20 +42,15 @@ T.TabButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.contentWidth + leftPadding + rightPadding : 0)
+                            contentItem.contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.contentHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+                             contentItem.contentHeight + topPadding + bottomPadding)
+    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
+    //! [contentItem]
+    contentItem: Text {
         text: control.text
         font: control.font
         elide: Text.ElideRight
@@ -63,7 +58,7 @@ T.TabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-    //! [label]
+    //! [contentItem]
 
     //! [background]
     background: Item {

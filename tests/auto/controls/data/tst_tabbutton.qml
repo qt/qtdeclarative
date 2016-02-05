@@ -85,7 +85,7 @@ TestCase {
     function test_baseline() {
         var control = tabButton.createObject(testCase)
         verify(control)
-        compare(control.baselineOffset, control.label.y + control.label.baselineOffset)
+        compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
 }
