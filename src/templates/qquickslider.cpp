@@ -110,9 +110,15 @@ qreal QQuickSliderPrivate::valueAt(qreal position) const
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
 {
-    if (qFuzzyIsNull(stepSize))
+    const qreal range = from + (to - from);
+    if (qFuzzyIsNull(range))
         return position;
-    return qRound(position / stepSize) * stepSize;
+
+    const qreal effectiveStep = stepSize / range;
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
 }
 
 qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
