@@ -42,12 +42,17 @@
 #include <QtQuick/private/qquickpainteditem_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qopenglextensions_p.h>
+
 #include <qopenglframebufferobject.h>
 #include <qopenglfunctions.h>
 #include <qopenglpaintdevice.h>
+
 #include <qmath.h>
 #include <qpainter.h>
+
+#ifndef QT_NO_OPENGL
+#include <private/qopenglextensions_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 

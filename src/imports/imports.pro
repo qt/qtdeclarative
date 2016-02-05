@@ -11,9 +11,13 @@ SUBDIRS += \
 qtHaveModule(quick) {
     SUBDIRS += \
         qtquick2 \
-        particles \
-        window \
-        testlib
+        window
+
+    contains(QT_CONFIG, opengl(es1|es2)?) {
+        SUBDIRS += \
+            particles \
+            testlib
+    }
 }
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel
