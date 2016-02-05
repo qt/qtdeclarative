@@ -520,8 +520,7 @@
 
     \section1 Customizing ToolBar
 
-        ToolBar consists of two visual items: \l {Control::background}{background} and
-        \l {Frame::frame}{frame}.
+        ToolBar consists of one visual item: \l {Control::background}{background}.
 
         \section3 Background
 
