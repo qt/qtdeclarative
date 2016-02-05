@@ -292,7 +292,7 @@
     \section1 Customizing RadioButton
 
         RadioButton consists of three visual items: \l {Control::background}{background},
-        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
 
         \section3 Background
 
@@ -300,11 +300,11 @@
 
             RadioButton has no background item by default.
 
-        \section3 Label
+        \section3 Content item
 
-            \image qtlabscontrols-radiobutton-label.png
+            \image qtlabscontrols-radiobutton-contentItem.png
 
-            \snippet RadioButton.qml label
+            \snippet RadioButton.qml contentItem
 
         \section3 Indicator
 
