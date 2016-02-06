@@ -950,7 +950,7 @@ void QQuickPopup::resetMargins()
 
     This property holds the top margin around the popup.
 
-    \sa margin, bottomMargin
+    \sa margins, bottomMargin
 */
 qreal QQuickPopup::topMargin() const
 {
@@ -977,7 +977,7 @@ void QQuickPopup::resetTopMargin()
 
     This property holds the left margin around the popup.
 
-    \sa margin, rightMargin
+    \sa margins, rightMargin
 */
 qreal QQuickPopup::leftMargin() const
 {
@@ -1004,7 +1004,7 @@ void QQuickPopup::resetLeftMargin()
 
     This property holds the right margin around the popup.
 
-    \sa margin, leftMargin
+    \sa margins, leftMargin
 */
 qreal QQuickPopup::rightMargin() const
 {
@@ -1031,7 +1031,7 @@ void QQuickPopup::resetRightMargin()
 
     This property holds the bottom margin around the popup.
 
-    \sa margin, topMargin
+    \sa margins, topMargin
 */
 qreal QQuickPopup::bottomMargin() const
 {
