@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,70 +31,33 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKANIMATOR_P_P_H
-#define QQUICKANIMATOR_P_P_H
+import QtQuick 2.2
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Column {
+    width: 200
+    height: 200
 
-#include "qquickanimator_p.h"
-#include "qquickanimation_p_p.h"
-#include <QtQuick/qquickitem.h>
+    property alias repeater: repeater
+    property alias transition: transition
 
-QT_BEGIN_NAMESPACE
-
-class QQuickAnimatorJob;
-
-class QQuickAnimatorPrivate : public QQuickAbstractAnimationPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickAnimator)
-public:
-    QQuickAnimatorPrivate()
-        : target(0)
-        , duration(250)
-        , from(0)
-        , to(0)
-        , isFromDefined(false)
-        , isToDefined(false)
-    {
+    anchors.centerIn: parent
+    populate: Transition {
+        id: transition
+        ScaleAnimator {
+            from: 0
+            to: 1
+        }
     }
 
-    QPointer<QQuickItem> target;
-    int duration;
-    QEasingCurve easing;
-    qreal from;
-    qreal to;
+    Repeater {
+        id: repeater
+        model: ["red", "green", "blue"]
 
-    uint isFromDefined : 1;
-    uint isToDefined : 1;
-
-    void apply(QQuickAnimatorJob *job, const QString &propertyName, QQuickStateActions &actions, QQmlProperties &modified, QObject *defaultTarget);
-};
-
-class QQuickRotationAnimatorPrivate : public QQuickAnimatorPrivate
-{
-public:
-    QQuickRotationAnimatorPrivate()
-        : direction(QQuickRotationAnimator::Numerical)
-    {
+        Rectangle {
+            width: 100
+            height: 100
+            color: modelData
+            scale: 0
+        }
     }
-    QQuickRotationAnimator::RotationDirection direction;
-};
-
-class QQuickUniformAnimatorPrivate : public QQuickAnimatorPrivate
-{
-public:
-    QString uniform;
-};
-
-QT_END_NAMESPACE
-
-#endif // QQUICKANIMATOR_P_P_H
+}

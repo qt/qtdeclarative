@@ -35,6 +35,8 @@
 
 #include <QtQuick>
 #include <private/qquickanimator_p.h>
+#include <private/qquickrepeater_p.h>
+#include <private/qquicktransition_p.h>
 
 #include <QtQml>
 
@@ -45,6 +47,7 @@ class tst_Animators: public QObject
 private slots:
     void testMultiWinAnimator_data();
     void testMultiWinAnimator();
+    void testTransitions();
 };
 
 void tst_Animators::testMultiWinAnimator_data()
@@ -97,6 +100,28 @@ void tst_Animators::testMultiWinAnimator()
         }
     }
     QVERIFY(true);
+}
+
+void tst_Animators::testTransitions()
+{
+    QQuickView view(QUrl::fromLocalFile("data/positionerWithAnimator.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickRepeater *repeater = view.rootObject()->property("repeater").value<QQuickRepeater *>();
+    QVERIFY(repeater);
+
+    QQuickItem *child = repeater->itemAt(0);
+    QVERIFY(child);
+    QCOMPARE(child->scale(), qreal(0.0));
+
+    QQuickTransition *transition = view.rootObject()->property("transition").value<QQuickTransition *>();
+    QVERIFY(transition);
+
+    QTRY_VERIFY(transition->running());
+    QTRY_VERIFY(!transition->running());
+    QCOMPARE(child->scale(), qreal(1.0));
 }
 
 #include "tst_qquickanimators.moc"
