@@ -49,6 +49,9 @@ QQuickUniversalFocusRectangle::QQuickUniversalFocusRectangle(QQuickItem *parent)
 
 void QQuickUniversalFocusRectangle::paint(QPainter *painter)
 {
+    if (!isVisible() || width() <= 0 || height() <= 0)
+        return;
+
     const QRect bounds = boundingRect().toAlignedRect().adjusted(0, 0, -1, -1);
 
     QPen pen;
