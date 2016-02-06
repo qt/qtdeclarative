@@ -447,6 +447,7 @@ void QQuickComboBox::setPressed(bool pressed)
 }
 
 /*!
+    \readonly
     \qmlproperty int Qt.labs.controls::ComboBox::highlightedIndex
 
     This property holds the index of the highlighted item in the combo box popup list.

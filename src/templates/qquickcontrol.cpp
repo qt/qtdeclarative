@@ -418,6 +418,7 @@ void QQuickControl::resetFont()
 
 /*!
     \qmlproperty real Qt.labs.controls::Control::availableWidth
+    \readonly
 
     This property holds the width available after deducting horizontal padding.
 
@@ -430,6 +431,7 @@ qreal QQuickControl::availableWidth() const
 
 /*!
     \qmlproperty real Qt.labs.controls::Control::availableHeight
+    \readonly
 
     This property holds the height available after deducting vertical padding.
 
@@ -715,6 +717,7 @@ bool QQuickControl::isMirrored() const
 
 /*!
     \qmlproperty enumeration Qt.labs.controls::Control::focusReason
+    \readonly
 
     This property holds the reason of the last focus change.
 

@@ -219,6 +219,7 @@ void QQuickTumbler::setModel(const QVariant &model)
 
 /*!
     \qmlproperty int Qt.labs.controls::Tumbler::count
+    \readonly
 
     This property holds the number of items in the model.
 */
@@ -247,6 +248,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 
 /*!
     \qmlproperty Item Qt.labs.controls::Tumbler::currentItem
+    \readonly
 
     This property holds the item at the current index.
 */

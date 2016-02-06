@@ -931,6 +931,7 @@ QQuickStackAttached::~QQuickStackAttached()
 
 /*!
     \qmlattachedproperty int Qt.labs.controls::StackView::index
+    \readonly
 
     This attached property holds the stack index of the item it's
     attached to, or \c -1 if the item is not in a stack.
@@ -943,6 +944,7 @@ int QQuickStackAttached::index() const
 
 /*!
     \qmlattachedproperty StackView Qt.labs.controls::StackView::view
+    \readonly
 
     This attached property holds the stack view of the item it's
     attached to, or \c null if the item is not in a stack.
@@ -955,6 +957,7 @@ QQuickStackView *QQuickStackAttached::view() const
 
 /*!
     \qmlattachedproperty enumeration Qt.labs.controls::StackView::status
+    \readonly
 
     This attached property holds the stack status of the item it's
     attached to, or \c StackView.Inactive if the item is not in a stack.
