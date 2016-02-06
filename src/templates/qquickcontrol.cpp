@@ -785,7 +785,9 @@ void QQuickControl::setBackground(QQuickItem *background)
 /*!
     \qmlproperty Item Qt.labs.controls::Control::contentItem
 
-    TODO
+    This property holds the visual content item.
+
+    \note The content item is automatically resized inside the \l padding of the control.
 */
 QQuickItem *QQuickControl::contentItem() const
 {
