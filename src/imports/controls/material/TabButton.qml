@@ -67,8 +67,7 @@ T.TabButton {
 
     //! [background]
     background: Item {
-        height: parent.height - 1
-        implicitHeight: 26
+        implicitHeight: 48
     }
     //! [background]
 }
