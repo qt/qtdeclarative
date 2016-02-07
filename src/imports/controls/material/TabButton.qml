@@ -47,7 +47,7 @@ T.TabButton {
                              label ? label.contentHeight + topPadding + bottomPadding : 0)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
-    padding: 6
+    padding: 12
 
     //! [label]
     label: Text {
