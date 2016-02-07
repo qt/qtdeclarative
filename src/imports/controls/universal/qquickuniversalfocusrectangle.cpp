@@ -36,7 +36,9 @@
 
 #include "qquickuniversalfocusrectangle_p.h"
 
+#include <QtGui/qpixmap.h>
 #include <QtGui/qpainter.h>
+#include <QtGui/qpixmapcache.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -49,20 +51,32 @@ QQuickUniversalFocusRectangle::QQuickUniversalFocusRectangle(QQuickItem *parent)
 
 void QQuickUniversalFocusRectangle::paint(QPainter *painter)
 {
-    const QRect bounds = boundingRect().toAlignedRect().adjusted(0, 0, -1, -1);
+    if (!isVisible() || width() <= 0 || height() <= 0)
+        return;
 
-    QPen pen;
-    pen.setWidth(1);
-    pen.setDashPattern(QVector<qreal>() << 1 << 1);
+    QRect bounds = boundingRect().toAlignedRect();
+    const QString key = QStringLiteral("qquickuniversalfocusrectangle_%1_%2").arg(bounds.width()).arg(bounds.height());
 
-    pen.setColor(Qt::white);
-    painter->setPen(pen);
-    painter->drawRect(bounds);
+    QPixmap pixmap(bounds.width(), bounds.height());
+    if (!QPixmapCache::find(key, &pixmap)) {
+        bounds.adjust(0, 0, -1, -1);
+        pixmap.fill(Qt::transparent);
+        QPainter p(&pixmap);
 
-    pen.setColor(Qt::black);
-    pen.setDashOffset(1);
-    painter->setPen(pen);
-    painter->drawRect(bounds);
+        QPen pen;
+        pen.setWidth(1);
+        pen.setColor(Qt::white);
+        p.setPen(pen);
+        p.drawRect(bounds);
+
+        pen.setColor(Qt::black);
+        pen.setDashPattern(QVector<qreal>() << 1 << 1);
+        p.setPen(pen);
+        p.drawRect(bounds);
+
+        QPixmapCache::insert(key, pixmap);
+    }
+    painter->drawPixmap(0, 0, pixmap);
 }
 
 QT_END_NAMESPACE

@@ -379,6 +379,7 @@ Module {
         }
         Property { name: "x"; type: "double" }
         Property { name: "y"; type: "double" }
+        Property { name: "z"; type: "double" }
         Property { name: "width"; type: "double" }
         Property { name: "height"; type: "double" }
         Property { name: "implicitWidth"; type: "double" }
@@ -402,9 +403,13 @@ Module {
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+        Property { name: "clip"; type: "bool" }
         Property { name: "focus"; type: "bool" }
+        Property { name: "activeFocus"; type: "bool"; isReadonly: true }
         Property { name: "modal"; type: "bool" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "opacity"; type: "double" }
+        Property { name: "scale"; type: "double" }
         Property { name: "closePolicy"; type: "ClosePolicy" }
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }

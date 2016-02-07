@@ -396,6 +396,12 @@ void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
     case ItemVisibleHasChanged:
         emit d->popup->visibleChanged();
         break;
+    case ItemActiveFocusHasChanged:
+        emit d->popup->activeFocusChanged();
+        break;
+    case ItemOpacityHasChanged:
+        emit d->popup->opacityChanged();
+        break;
     default:
         break;
     }
@@ -727,6 +733,27 @@ void QQuickPopup::setY(qreal y)
 }
 
 /*!
+    \qmlproperty real Qt.labs.controls::Popup::z
+
+    This property holds the z-value of the popup. Z-value determines
+    the stacking order of popups. The default z-value is \c 0.
+*/
+qreal QQuickPopup::z() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->z();
+}
+
+void QQuickPopup::setZ(qreal z)
+{
+    Q_D(QQuickPopup);
+    if (qFuzzyCompare(z, d->popupItem->z()))
+        return;
+    d->popupItem->setZ(z);
+    emit zChanged();
+}
+
+/*!
     \qmlproperty real Qt.labs.controls::Popup::width
 
     This property holds the width of the popup.
@@ -856,6 +883,7 @@ void QQuickPopup::setContentHeight(qreal height)
 
 /*!
     \qmlproperty real Qt.labs.controls::Popup::availableWidth
+    \readonly
 
     This property holds the width available after deducting horizontal padding.
 
@@ -868,6 +896,7 @@ qreal QQuickPopup::availableWidth() const
 
 /*!
     \qmlproperty real Qt.labs.controls::Popup::availableHeight
+    \readonly
 
     This property holds the height available after deducting vertical padding.
 
@@ -921,7 +950,7 @@ void QQuickPopup::resetMargins()
 
     This property holds the top margin around the popup.
 
-    \sa margin, bottomMargin
+    \sa margins, bottomMargin
 */
 qreal QQuickPopup::topMargin() const
 {
@@ -948,7 +977,7 @@ void QQuickPopup::resetTopMargin()
 
     This property holds the left margin around the popup.
 
-    \sa margin, rightMargin
+    \sa margins, rightMargin
 */
 qreal QQuickPopup::leftMargin() const
 {
@@ -975,7 +1004,7 @@ void QQuickPopup::resetLeftMargin()
 
     This property holds the right margin around the popup.
 
-    \sa margin, leftMargin
+    \sa margins, leftMargin
 */
 qreal QQuickPopup::rightMargin() const
 {
@@ -1002,7 +1031,7 @@ void QQuickPopup::resetRightMargin()
 
     This property holds the bottom margin around the popup.
 
-    \sa margin, topMargin
+    \sa margins, topMargin
 */
 qreal QQuickPopup::bottomMargin() const
 {
@@ -1302,9 +1331,29 @@ QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::Popup::clip
+
+    This property holds whether clipping is enabled. The default value is \c false.
+*/
+bool QQuickPopup::clip() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->clip();
+}
+
+void QQuickPopup::setClip(bool clip)
+{
+    Q_D(QQuickPopup);
+    if (clip == d->popupItem->clip())
+        return;
+    d->popupItem->setClip(clip);
+    emit clipChanged();
+}
+
+/*!
     \qmlproperty bool Qt.labs.controls::Popup::focus
 
-    This property holds whether the popup has focus.
+    This property holds whether the popup has focus. The default value is \c false.
 */
 bool QQuickPopup::hasFocus() const
 {
@@ -1322,9 +1371,21 @@ void QQuickPopup::setFocus(bool focus)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::Popup::activeFocus
+    \readonly
+
+    This property holds whether the popup has active focus.
+*/
+bool QQuickPopup::hasActiveFocus() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->hasActiveFocus();
+}
+
+/*!
     \qmlproperty bool Qt.labs.controls::Popup::modal
 
-    This property holds whether the popup is modal.
+    This property holds whether the popup is modal. The default value is \c false.
 */
 bool QQuickPopup::isModal() const
 {
@@ -1344,7 +1405,7 @@ void QQuickPopup::setModal(bool modal)
 /*!
     \qmlproperty bool Qt.labs.controls::Popup::visible
 
-    This property holds whether the popup is visible.
+    This property holds whether the popup is visible. The default value is \c false.
 */
 bool QQuickPopup::isVisible() const
 {
@@ -1358,6 +1419,43 @@ void QQuickPopup::setVisible(bool visible)
         open();
     else
         close();
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::opacity
+
+    This property holds the opacity of the popup. The default value is \c 1.0.
+*/
+qreal QQuickPopup::opacity() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->opacity();
+}
+
+void QQuickPopup::setOpacity(qreal opacity)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setOpacity(opacity);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Popup::scale
+
+    This property holds the scale factor of the popup. The default value is \c 1.0.
+*/
+qreal QQuickPopup::scale() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->scale();
+}
+
+void QQuickPopup::setScale(qreal scale)
+{
+    Q_D(QQuickPopup);
+    if (qFuzzyCompare(scale, d->popupItem->scale()))
+        return;
+    d->popupItem->setScale(scale);
+    emit scaleChanged();
 }
 
 /*!

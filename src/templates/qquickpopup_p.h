@@ -69,6 +69,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal z READ z WRITE setZ NOTIFY zChanged FINAL)
     Q_PROPERTY(qreal width READ width WRITE setWidth RESET resetWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(qreal height READ height WRITE setHeight RESET resetHeight NOTIFY heightChanged FINAL)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
@@ -92,9 +93,13 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStat
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
-    Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
-    Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
-    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(bool clip READ clip WRITE setClip NOTIFY clipChanged FINAL)
+    Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
+    Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
+    Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged FINAL)
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
+    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged FINAL)
     Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy NOTIFY closePolicyChanged FINAL)
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
@@ -110,6 +115,9 @@ public:
 
     qreal y() const;
     void setY(qreal y);
+
+    qreal z() const;
+    void setZ(qreal z);
 
     qreal width() const;
     void setWidth(qreal width);
@@ -188,14 +196,25 @@ public:
     QQmlListProperty<QObject> contentData();
     QQmlListProperty<QQuickItem> contentChildren();
 
+    bool clip() const;
+    void setClip(bool clip);
+
     bool hasFocus() const;
     void setFocus(bool focus);
+
+    bool hasActiveFocus() const;
 
     bool isModal() const;
     void setModal(bool modal);
 
     bool isVisible() const;
     void setVisible(bool visible);
+
+    qreal opacity() const;
+    void setOpacity(qreal opacity);
+
+    qreal scale() const;
+    void setScale(qreal scale);
 
     enum ClosePolicyFlag {
         NoAutoClose = 0x00,
@@ -235,6 +254,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void xChanged();
     void yChanged();
+    void zChanged();
     void widthChanged();
     void heightChanged();
     void implicitWidthChanged();
@@ -257,9 +277,13 @@ Q_SIGNALS:
     void backgroundChanged();
     void contentItemChanged();
     void contentChildrenChanged();
+    void clipChanged();
     void focusChanged();
+    void activeFocusChanged();
     void modalChanged();
     void visibleChanged();
+    void opacityChanged();
+    void scaleChanged();
     void closePolicyChanged();
     void enterChanged();
     void exitChanged();

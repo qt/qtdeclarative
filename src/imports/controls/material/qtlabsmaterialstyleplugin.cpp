@@ -94,7 +94,7 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 
     QQuickStyleSelector selector;
     if (selector.style() == QLatin1String("material")) {
-        if (QFont(QStringLiteral("Roboto")).family() == QLatin1String("Roboto")) {
+        if (QFont(QStringLiteral("Roboto")).exactMatch()) {
             QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
             if (old) {
                 QQuickProxyTheme *theme = new QQuickMaterialTheme(old);

@@ -247,6 +247,7 @@ void QQuickSlider::setValue(qreal value)
 
 /*!
     \qmlproperty real Qt.labs.controls::Slider::position
+    \readonly
 
     This property holds the logical position of the handle.
 

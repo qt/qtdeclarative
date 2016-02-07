@@ -49,6 +49,8 @@ T.ToolButton {
 
     padding: 6
 
+    property bool useSystemFocusVisuals: true
+
     //! [contentItem]
     contentItem: Text {
         text: control.text

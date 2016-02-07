@@ -340,6 +340,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
 
 /*!
     \qmlproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+    \readonly
 
     This property holds the control that currently has active focus, or \c null if there is
     no control with active focus.
@@ -547,6 +548,7 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
 
 /*!
     \qmlattachedproperty ApplicationWindow Qt.labs.controls::ApplicationWindow::window
+    \readonly
 
     This attached property holds the application window. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
@@ -559,6 +561,7 @@ QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 
 /*!
     \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::contentItem
+    \readonly
 
     This attached property holds the window content item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
@@ -571,6 +574,7 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 
 /*!
     \qmlattachedproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+    \readonly
 
     This attached property holds the control that currently has active focus, or \c null
     if there is no control with active focus. The property can be attached to any item.
@@ -587,6 +591,7 @@ QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 
 /*!
     \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::header
+    \readonly
 
     This attached property holds the window header item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow, or
@@ -600,6 +605,7 @@ QQuickItem *QQuickApplicationWindowAttached::header() const
 
 /*!
     \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::footer
+    \readonly
 
     This attached property holds the window footer item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow, or
@@ -613,6 +619,7 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 
 /*!
     \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::overlay
+    \readonly
 
     This attached property holds the window overlay item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.

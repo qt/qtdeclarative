@@ -254,6 +254,7 @@ void QQuickDial::setValue(qreal value)
 
 /*!
     \qmlproperty real Qt.labs.controls::Dial::position
+    \readonly
 
     This property holds the logical position of the handle.
 
@@ -271,7 +272,8 @@ qreal QQuickDial::position() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Dial::angle \readonly
+    \qmlproperty real Qt.labs.controls::Dial::angle
+    \readonly
 
     This property holds the angle of the handle.
 

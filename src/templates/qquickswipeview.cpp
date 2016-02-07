@@ -133,6 +133,7 @@ void QQuickSwipeView::itemAdded(int, QQuickItem *item)
 
 /*!
     \qmlattachedproperty int Qt.labs.controls::SwipeView::index
+    \readonly
 
     This attached property holds the index of each child item in the SwipeView.
 
@@ -141,6 +142,7 @@ void QQuickSwipeView::itemAdded(int, QQuickItem *item)
 
 /*!
     \qmlattachedproperty bool Qt.labs.controls::SwipeView::isCurrentItem
+    \readonly
 
     This attached property is \c true if this child is the current item.
 
@@ -149,6 +151,7 @@ void QQuickSwipeView::itemAdded(int, QQuickItem *item)
 
 /*!
     \qmlattachedproperty SwipeView Qt.labs.controls::SwipeView::view
+    \readonly
 
     This attached property holds the view that manages this child item.
 

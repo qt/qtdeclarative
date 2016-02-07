@@ -419,6 +419,7 @@ void QQuickControl::resetFont()
 
 /*!
     \qmlproperty real Qt.labs.controls::Control::availableWidth
+    \readonly
 
     This property holds the width available after deducting horizontal padding.
 
@@ -431,6 +432,7 @@ qreal QQuickControl::availableWidth() const
 
 /*!
     \qmlproperty real Qt.labs.controls::Control::availableHeight
+    \readonly
 
     This property holds the height available after deducting vertical padding.
 
@@ -717,6 +719,7 @@ bool QQuickControl::isMirrored() const
 
 /*!
     \qmlproperty enumeration Qt.labs.controls::Control::focusReason
+    \readonly
 
     This property holds the reason of the last focus change.
 
@@ -784,7 +787,9 @@ void QQuickControl::setBackground(QQuickItem *background)
 /*!
     \qmlproperty Item Qt.labs.controls::Control::contentItem
 
-    TODO
+    This property holds the visual content item.
+
+    \note The content item is automatically resized inside the \l padding of the control.
 */
 QQuickItem *QQuickControl::contentItem() const
 {
