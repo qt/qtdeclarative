@@ -27,6 +27,7 @@ Module {
         Signal { name: "released" }
         Signal { name: "canceled" }
         Signal { name: "clicked" }
+        Signal { name: "pressAndHold" }
         Signal { name: "doubleClicked" }
         Method { name: "toggle" }
     }

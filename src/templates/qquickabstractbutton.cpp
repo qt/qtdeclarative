@@ -38,6 +38,7 @@
 #include "qquickabstractbutton_p_p.h"
 #include "qquickbuttongroup_p.h"
 
+#include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQml/qqmllist.h>
@@ -93,15 +94,45 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
+    \qmlsignal Qt.labs.controls::AbstractButton::pressAndHold()
+
+    This signal is emitted when the button is interactively perssed and held down by the user.
+*/
+
+/*!
     \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked()
 
     This signal is emitted when the button is interactively double clicked by the user.
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false),
-    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR), group(Q_NULLPTR)
+    pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false), wasHeld(false),
+    holdTimer(0), delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton),
+    label(Q_NULLPTR), indicator(Q_NULLPTR), group(Q_NULLPTR)
 {
+}
+
+bool QQuickAbstractButtonPrivate::isPressAndHoldConnected()
+{
+    Q_Q(QQuickAbstractButton);
+    IS_SIGNAL_CONNECTED(q, QQuickAbstractButton, pressAndHold, ());
+}
+
+void QQuickAbstractButtonPrivate::startPressAndHold()
+{
+    Q_Q(QQuickAbstractButton);
+    wasHeld = false;
+    if (isPressAndHoldConnected())
+        holdTimer = q->startTimer(QGuiApplication::styleHints()->mousePressAndHoldInterval());
+}
+
+void QQuickAbstractButtonPrivate::stopPressAndHold()
+{
+    Q_Q(QQuickAbstractButton);
+    if (holdTimer > 0) {
+        q->killTimer(holdTimer);
+        holdTimer = 0;
+    }
 }
 
 void QQuickAbstractButtonPrivate::startRepeatDelay()
@@ -484,6 +515,8 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
     if (d->autoRepeat) {
         d->startRepeatDelay();
         d->repeatButton = event->button();
+    } else {
+        d->startPressAndHold();
     }
 }
 
@@ -495,6 +528,8 @@ void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 
     if (d->autoRepeat)
         d->stopPressRepeat();
+    else if (!d->pressed)
+        d->stopPressAndHold();
 }
 
 void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
@@ -506,7 +541,8 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
 
     if (wasPressed) {
         emit released();
-        emit clicked();
+        if (!d->wasHeld)
+            emit clicked();
     } else {
         emit canceled();
     }
@@ -516,6 +552,8 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
 
     if (d->autoRepeat)
         d->stopPressRepeat();
+    else
+        d->stopPressAndHold();
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
@@ -531,6 +569,7 @@ void QQuickAbstractButton::mouseUngrabEvent()
     if (d->pressed) {
         setPressed(false);
         d->stopPressRepeat();
+        d->stopPressAndHold();
         emit canceled();
     }
 }
@@ -539,7 +578,11 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::timerEvent(event);
-    if (event->timerId() == d->delayTimer) {
+    if (event->timerId() == d->holdTimer) {
+        d->stopPressAndHold();
+        d->wasHeld = true;
+        emit pressAndHold();
+    } else if (event->timerId() == d->delayTimer) {
         d->startPressRepeat();
     } else if (event->timerId() == d->repeatTimer) {
         emit released();
