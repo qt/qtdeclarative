@@ -537,7 +537,11 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
-        setValue(d->valueAt(pos));
+        qreal val = d->valueAt(pos);
+        if (!qFuzzyCompare(val, d->value))
+            setValue(val);
+        else if (d->snapMode != NoSnap)
+            d->setPosition(pos);
         setKeepMouseGrab(false);
     }
     setPressed(false);

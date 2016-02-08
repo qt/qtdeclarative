@@ -808,7 +808,11 @@ void QQuickRangeSlider::mouseReleaseEvent(QMouseEvent *event)
     qreal pos = positionAt(this, pressedNode->handle(), event->pos());
     if (d->snapMode != NoSnap)
         pos = snapPosition(this, pos);
-    pressedNode->setValue(valueAt(this, pos));
+    qreal val = valueAt(this, pos);
+    if (!qFuzzyCompare(val, pressedNode->value()))
+        pressedNode->setValue(val);
+    else if (d->snapMode != NoSnap)
+        QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
     setKeepMouseGrab(false);
     pressedNode->setPressed(false);
 }
