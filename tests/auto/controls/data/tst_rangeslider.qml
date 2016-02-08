@@ -586,4 +586,41 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_snapMode_data() {
+        return [
+            { tag: "NoSnap", snapMode: Slider.NoSnap, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
+            { tag: "SnapAlways", snapMode: Slider.SnapAlways, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] },
+            { tag: "SnapOnRelease", snapMode: Slider.SnapOnRelease, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] }
+        ]
+    }
+
+    function test_snapMode(data) {
+        var control = sliderComponent.createObject(testCase, {snapMode: data.snapMode, from: 0, to: 2, stepSize: 0.2})
+        verify(control)
+
+        control.first.value = 0
+        control.second.value = 2
+
+        function sliderCompare(left, right) {
+            return Math.abs(left - right) < 0.05
+        }
+
+        mousePress(control, control.first.handle.x, control.first.handle.y)
+        compare(control.first.pressed, true)
+        compare(control.first.value, data.values[0])
+        compare(control.first.position, data.positions[0])
+
+        mouseMove(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
+        compare(control.first.pressed, true)
+        verify(sliderCompare(control.first.value, data.values[1]))
+        verify(sliderCompare(control.first.position, data.positions[1]))
+
+        mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
+        compare(control.first.pressed, false)
+        verify(sliderCompare(control.first.value, data.values[2]))
+        verify(sliderCompare(control.first.position, data.positions[2]))
+
+        control.destroy()
+    }
 }

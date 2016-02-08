@@ -323,10 +323,15 @@ static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
 
 static qreal snapPosition(const QQuickRangeSlider *slider, qreal position)
 {
-    const qreal stepSize = slider->stepSize();
-    if (qFuzzyIsNull(stepSize))
+    const qreal range = slider->from() + (slider->to() - slider->from());
+    if (qFuzzyIsNull(range))
         return position;
-    return qRound(position / stepSize) * stepSize;
+
+    const qreal effectiveStep = slider->stepSize() / range;
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
 }
 
 static qreal positionAt(const QQuickRangeSlider *slider, QQuickItem *handle, const QPoint &point)
