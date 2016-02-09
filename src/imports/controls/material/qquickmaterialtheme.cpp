@@ -43,8 +43,18 @@ QT_BEGIN_NAMESPACE
 QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
-    systemFont = QFont(QStringLiteral("Roboto"));
-    tabButtonFont = QFont(QStringLiteral("Roboto"), 10);
+    QFont font;
+    font.setFamily(QStringLiteral("Roboto"));
+    if (!font.exactMatch())
+        font.setFamily(QStringLiteral("Noto"));
+
+    if (font.exactMatch()) {
+        systemFont.setFamily(font.family());
+        tabButtonFont.setFamily(font.family());
+    }
+
+    tabButtonFont.setPixelSize(14);
+    tabButtonFont.setCapitalization(QFont::AllUppercase);
 }
 
 QQuickMaterialTheme::~QQuickMaterialTheme()
