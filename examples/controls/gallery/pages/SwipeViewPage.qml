@@ -64,7 +64,8 @@ Pane {
                         width: parent.width
                         wrapMode: Label.Wrap
                         horizontalAlignment: Qt.AlignHCenter
-                        text: "SwipeView provides a swipe-based navigation model."
+                        text: "SwipeView provides a navigation model that simplifies horizontal paged scrolling. "
+                        + "The page indicator on the bottom shows which is the presently active page."
                     }
 
                     Image {

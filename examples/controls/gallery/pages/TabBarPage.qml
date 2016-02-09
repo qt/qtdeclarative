@@ -66,7 +66,8 @@ Pane {
                         width: parent.width
                         wrapMode: Label.Wrap
                         horizontalAlignment: Qt.AlignHCenter
-                        text: "TabBar provides a tab-based navigation model."
+                        text: "TabBar is a bar with icons or text which allows the user"
+                              + "to switch between different subtasks, views, or modes."
                     }
 
                     Image {

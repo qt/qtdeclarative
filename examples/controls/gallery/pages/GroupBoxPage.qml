@@ -54,7 +54,7 @@ Pane {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "GroupBox is used to layout a logical group of controls together, within a titled visual frame."
+            text: "A GroupBox provides a frame, a title on top of it, and a logical group of controls within that frame."
         }
 
         GroupBox {

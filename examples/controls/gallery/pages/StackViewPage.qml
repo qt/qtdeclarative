@@ -60,7 +60,9 @@ StackView {
                     width: parent.width
                     wrapMode: Label.Wrap
                     horizontalAlignment: Qt.AlignHCenter
-                    text: "StackView provides a stack-based navigation model."
+                    text: "StackView provides a stack-based navigation model which can be used with a set of interlinked pages. "
+                    + "Items are pushed onto the stack as the user navigates deeper into the material, and popped off again "
+                    + "when he chooses to go back."
                 }
 
                 Button {
