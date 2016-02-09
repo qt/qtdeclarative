@@ -761,6 +761,31 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
     } else if (secondHit) {
         hitNode = d->second;
         otherNode = d->first;
+    } else {
+        // find the nearest
+        const qreal firstDistance = QLineF(firstHandle->boundingRect().center(),
+                                           mapToItem(firstHandle, event->pos())).length();
+        const qreal secondDistance = QLineF(secondHandle->boundingRect().center(),
+                                            mapToItem(secondHandle, event->pos())).length();
+
+        if (qFuzzyCompare(firstDistance, secondDistance)) {
+            // same distance => choose the one that can be moved towards the press position
+            const bool inverted = d->from > d->to;
+            const qreal pos = positionAt(this, firstHandle, event->pos());
+            if ((!inverted && pos < d->first->position()) || (inverted && pos > d->first->position())) {
+                hitNode = d->first;
+                otherNode = d->second;
+            } else {
+                hitNode = d->second;
+                otherNode = d->first;
+            }
+        } else if (firstDistance < secondDistance) {
+            hitNode = d->first;
+            otherNode = d->second;
+        } else {
+            hitNode = d->second;
+            otherNode = d->first;
+        }
     }
 
     if (hitNode) {
