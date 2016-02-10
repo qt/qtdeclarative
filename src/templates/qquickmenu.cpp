@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickMenu
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-menus
-    \brief A menu control.
+    \brief A menu control that can be used as a context menu or popup menu.
 
     \image qtlabscontrols-menu.png
 

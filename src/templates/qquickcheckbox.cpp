@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickCheckBox
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-buttons
-    \brief A check box control.
+    \brief An option button that can be checked or unchecked.
 
     CheckBox presents an option button that can be toggled on (checked) or
     off (unchecked). Check boxes are typically used to select one or more

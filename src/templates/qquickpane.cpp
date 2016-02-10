@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPane
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-containers
-    \brief A pane control.
+    \brief Provides a background matching with the application style and theme.
 
     Pane provides a background color that matches with the application style
     and theme. Pane does not provide a layout of its own, but requires you to

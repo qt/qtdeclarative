@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
     \ingroup qtlabscontrols-containers
-    \brief A tab bar control.
+    \brief A bar with icons allowing to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.
 

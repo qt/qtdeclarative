@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickButtonGroup
     \inqmlmodule Qt.labs.controls
     \ingroup utilities
-    \brief An exclusive group of checkable controls.
+    \brief A mutually-exclusive group of checkable controls.
 
     ButtonGroup is a non-visual, mutually exclusive group of buttons.
     It is used with controls such as RadioButton, where only one of the options

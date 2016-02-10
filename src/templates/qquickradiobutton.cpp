@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickRadioButton
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-buttons
-    \brief A radio button control.
+    \brief An option button that can be toggled on or off.
 
     RadioButton presents an option button that can be toggled on (checked) or
     off (unchecked). Radio buttons are typically used to select one option

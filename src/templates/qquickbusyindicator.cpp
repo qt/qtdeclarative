@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickBusyIndicator
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-indicators
-    \brief A busy indicator.
+    \brief Indicates activity while content is being loaded.
 
     \image qtlabscontrols-busyindicator.gif
 

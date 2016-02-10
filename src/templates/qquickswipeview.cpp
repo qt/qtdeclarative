@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
     \ingroup qtlabscontrols-containers
-    \brief A swipe view control.
+    \brief Enables the user to navigate pages by swiping sideways.
 
     SwipeView provides a swipe-based navigation model.
 

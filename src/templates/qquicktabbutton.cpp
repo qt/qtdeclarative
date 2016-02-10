@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickTabButton
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
-    \brief A tab button control.
+    \brief A tab button control that can be found on a TabBar.
 
     \image qtlabscontrols-tabbutton.png
 

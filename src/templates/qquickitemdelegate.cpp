@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickItemDelegate
     \inqmlmodule Qt.labs.controls
-    \brief An item delegate.
+    \brief  A standard view item that can be used in various views and controls.
 
     ItemDelegate presents a standard view item. It can be used as a delegate
     in various views and controls, such as \l ListView and \l ComboBox.

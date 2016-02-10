@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPage
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-containers
-    \brief A page control.
+    \brief A control that makes it convenient to add a header and footer to a page.
 
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.

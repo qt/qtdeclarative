@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickComboBox
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-input
-    \brief A combo box control.
+    \brief A combined button and popup list taking minimal space.
 
     \image qtlabscontrols-combobox.png
 

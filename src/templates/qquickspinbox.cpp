@@ -56,7 +56,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \instantiates QQuickSpinBox
     \inqmlmodule Qt.labs.controls
     \ingroup input
-    \brief A spinbox control.
+    \brief A spinbox control that allows the user from a set of preset values.
 
     \image qtlabscontrols-spinbox.png
 

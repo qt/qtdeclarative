@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPageIndicator
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-indicators
-    \brief A page indicator control.
+    \brief Indicates the currently active page.
 
     PageIndicator is used to indicate the currently active page
     in a container of multiple pages. PageIndicator consists of

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
     \ingroup qtlabscontrols-containers
-    \brief A side panel control.
+    \brief Provides a swipe-based side panel.
 
     Drawer provides a swipe-based side panel, similar to those often used in
     touch interfaces to provide a central location for navigation.

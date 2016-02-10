@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickLabel
     \inqmlmodule Qt.labs.controls
     \ingroup text
-    \brief A text label.
+    \brief A text label with inherited styling and font.
 
     Label extends \l Text with styling and \l {Control::font}{font}
     inheritance. The default colors and font are style specific. Label

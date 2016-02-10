@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickSwitch
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-buttons
-    \brief A switch control.
+    \brief An option button that can be toggled on or off.
 
     \image qtlabscontrols-switch.gif
 

@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickSlider
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-input
-    \brief A slider control.
+    \brief Selects a value by sliding a handle along a track.
 
     \image qtlabscontrols-slider.gif
 

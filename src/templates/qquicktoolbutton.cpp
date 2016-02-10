@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickToolButton
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-buttons
-    \brief A tool button control.
+    \brief A button with a layout suitable for a ToolBar.
 
     ToolButton is functionally similar to \l Button, but provides a look that
     is more suitable within a \l ToolBar.

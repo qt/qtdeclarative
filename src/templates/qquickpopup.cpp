@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPopup
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-popups
-    \brief A popup control.
+    \brief The base type of popup-like user interface controls.
 
     Popup is the base type of popup-like user interface controls.
 

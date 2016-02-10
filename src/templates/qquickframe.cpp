@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickFrame
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-containers
-    \brief A frame control.
+    \brief A logical group of controls within a visual frame.
 
     Frame is used to layout a logical group of controls together, within a
     visual frame. Frame does not provide a layout of its own, but requires

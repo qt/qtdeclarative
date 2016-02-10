@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \inherits Item
     \instantiates QQuickControl
     \inqmlmodule Qt.labs.controls
-    \brief A user interface control.
+    \brief The base type of user interface controls.
 
     Control is the base type of user interface controls.
 

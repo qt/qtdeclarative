@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickButton
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-buttons
-    \brief A button control.
+    \brief A push-button control that can be clicked by the user.
 
     \image qtlabscontrols-button.gif
 
