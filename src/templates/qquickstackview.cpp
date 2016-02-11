@@ -901,8 +901,7 @@ void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem 
     QQuickStackView::Status oldStatus = element ? element->status : QQuickStackView::Inactive;
 
     QQuickStackView *newView = qobject_cast<QQuickStackView *>(parent);
-    if (newView)
-        element = QQuickStackViewPrivate::get(newView)->findElement(item);
+    element = newView ? QQuickStackViewPrivate::get(newView)->findElement(item) : Q_NULLPTR;
 
     int newIndex = element ? element->index : -1;
     QQuickStackView::Status newStatus = element ? element->status : QQuickStackView::Inactive;
