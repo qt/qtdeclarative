@@ -626,4 +626,95 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: component
+        Pane {
+            id: panel
+            property alias button: _button;
+            property alias combobox: _combobox;
+            font.pixelSize: 30
+            Column {
+                Button {
+                    id: _button
+                    text: "Button"
+                    font.pixelSize: 20
+                }
+                ComboBox {
+                    id: _combobox
+                    model: ["ComboBox", "With"]
+                    delegate: ItemDelegate {
+                        width: _combobox.width
+                        text: _combobox.textRole ? (Array.isArray(_combobox.model) ? modelData[_combobox.textRole] : model[_combobox.textRole]) : modelData
+                        objectName: "delegate"
+                        checkable: true
+                        autoExclusive: true
+                        checked: _combobox.currentIndex === index
+                        highlighted: _combobox.highlightedIndex === index
+                        pressed: highlighted && _combobox.pressed
+                    }
+                }
+            }
+        }
+    }
+
+    function getChild(control, objname, idx) {
+        var index = idx
+        for (var i = index+1; i < control.children.length; i++)
+        {
+            if (control.children[i].objectName === objname) {
+                index = i
+                break
+            }
+        }
+        return index
+    }
+
+    function test_font() { // QTBUG_50984
+        var control = component.createObject(window.contentItem)
+        verify(control)
+        verify(control.button)
+        verify(control.combobox)
+
+        waitForRendering(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        compare(control.font.pixelSize, 30)
+        compare(control.button.font.pixelSize, 20)
+        compare(control.combobox.font.pixelSize, 30)
+
+        verify(control.combobox.popup)
+        var popup = control.combobox.popup
+        popup.open()
+
+        verify(popup.contentItem)
+
+        var listview = popup.contentItem
+        verify(listview.contentItem)
+        waitForRendering(listview)
+
+        var idx1 = getChild(listview.contentItem, "delegate", -1)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 30)
+        var idx2 = getChild(listview.contentItem, "delegate", idx1)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 30)
+
+        control.font.pixelSize = control.font.pixelSize + 10
+        compare(control.combobox.font.pixelSize, 40)
+        waitForRendering(listview)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
+
+        control.combobox.font.pixelSize = control.combobox.font.pixelSize + 5
+        compare(control.combobox.font.pixelSize, 45)
+        waitForRendering(listview)
+
+        idx1 = getChild(listview.contentItem, "delegate", -1)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 45)
+        idx2 = getChild(listview.contentItem, "delegate", idx1)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 45)
+
+        control.destroy()
+    }
 }

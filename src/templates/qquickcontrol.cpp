@@ -44,6 +44,8 @@
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
+#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
@@ -223,7 +225,12 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
     QQuickItem *p = q->parentItem();
     bool found = false;
     while (p) {
-        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
+        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
+            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
+                p = qp->parentItem();
+                continue;
+            }
+        } else if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
             naturalFont = qc->font();
             found = true;
             break;
@@ -295,6 +302,13 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
             QQuickTextFieldPrivate::get(textField)->resolveFont();
         else
             QQuickControlPrivate::updateFontRecur(child, f);
+    }
+
+    foreach (QObject *child, item->children()) {
+        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
+            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
+                QQuickControlPrivate::updateFontRecur(qpi, f);
+        }
     }
 }
 

@@ -38,6 +38,7 @@
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
@@ -285,7 +286,7 @@ void QQuickPopupPrivate::setBottomPadding(qreal value, bool reset)
     }
 }
 
-class QQuickPopupItemPrivate : public QQuickItemPrivate
+class QQuickPopupItemPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupItem)
 
@@ -314,7 +315,7 @@ void QQuickPopupItemPrivate::implicitHeightChanged()
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
-    QQuickItem(*(new QQuickPopupItemPrivate(popup)))
+    QQuickControl(*(new QQuickPopupItemPrivate(popup)), Q_NULLPTR)
 {
     setParent(popup);
     setVisible(false);
@@ -391,7 +392,7 @@ void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
 void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
     Q_D(QQuickPopupItem);
-    QQuickItem::itemChange(change, data);
+    QQuickControl::itemChange(change, data);
     switch (change) {
     case ItemVisibleHasChanged:
         emit d->popup->visibleChanged();
@@ -1227,6 +1228,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
         d->parentItem = parent;
         if (d->positioner.parentItem())
             d->positioner.setParentItem(parent);
+        if (d->popupItem)
+            QQuickControlPrivate::updateFontRecur(d->popupItem, QQuickControlPrivate::naturalControlFont(parent));
         emit parentChanged();
     }
 }

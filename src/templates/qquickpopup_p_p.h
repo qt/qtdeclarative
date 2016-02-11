@@ -49,6 +49,7 @@
 //
 
 #include "qquickpopup_p.h"
+#include "qquickcontrol_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
@@ -83,7 +84,7 @@ private:
     QQuickPopupPrivate *popup;
 };
 
-class QQuickPopupItem : public QQuickItem
+class QQuickPopupItem : public QQuickControl
 {
     Q_OBJECT
 
