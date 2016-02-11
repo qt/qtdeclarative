@@ -101,10 +101,11 @@ qreal QQuickPane::contentWidth() const
 void QQuickPane::setContentWidth(qreal width)
 {
     Q_D(QQuickPane);
-    if (d->contentWidth != width) {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
+    if (qFuzzyCompare(d->contentWidth, width))
+        return;
+
+    d->contentWidth = width;
+    emit contentWidthChanged();
 }
 
 /*!
@@ -125,10 +126,11 @@ qreal QQuickPane::contentHeight() const
 void QQuickPane::setContentHeight(qreal height)
 {
     Q_D(QQuickPane);
-    if (d->contentHeight != height) {
-        d->contentHeight = height;
-        emit contentHeightChanged();
-    }
+    if (qFuzzyCompare(d->contentHeight, height))
+        return;
+
+    d->contentHeight = height;
+    emit contentHeightChanged();
 }
 
 /*!

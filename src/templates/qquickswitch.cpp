@@ -188,11 +188,12 @@ void QQuickSwitch::setPosition(qreal position)
 {
     Q_D(QQuickSwitch);
     position = qBound<qreal>(0.0, position, 1.0);
-    if (d->position != position) {
-        d->position = position;
-        emit positionChanged();
-        emit visualPositionChanged();
-    }
+    if (qFuzzyCompare(d->position, position))
+        return;
+
+    d->position = position;
+    emit positionChanged();
+    emit visualPositionChanged();
 }
 
 /*!

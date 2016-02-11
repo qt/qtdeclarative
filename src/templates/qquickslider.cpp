@@ -147,11 +147,12 @@ void QQuickSliderPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickSlider);
     pos = qBound<qreal>(0.0, pos, 1.0);
-    if (!qFuzzyCompare(position, pos)) {
-        position = pos;
-        emit q->positionChanged();
-        emit q->visualPositionChanged();
-    }
+    if (qFuzzyCompare(position, pos))
+        return;
+
+    position = pos;
+    emit q->positionChanged();
+    emit q->visualPositionChanged();
 }
 
 void QQuickSliderPrivate::updatePosition()
@@ -185,13 +186,14 @@ qreal QQuickSlider::from() const
 void QQuickSlider::setFrom(qreal from)
 {
     Q_D(QQuickSlider);
-    if (!qFuzzyCompare(d->from, from)) {
-        d->from = from;
-        emit fromChanged();
-        if (isComponentComplete()) {
-            setValue(d->value);
-            d->updatePosition();
-        }
+    if (qFuzzyCompare(d->from, from))
+        return;
+
+    d->from = from;
+    emit fromChanged();
+    if (isComponentComplete()) {
+        setValue(d->value);
+        d->updatePosition();
     }
 }
 
@@ -211,13 +213,14 @@ qreal QQuickSlider::to() const
 void QQuickSlider::setTo(qreal to)
 {
     Q_D(QQuickSlider);
-    if (!qFuzzyCompare(d->to, to)) {
-        d->to = to;
-        emit toChanged();
-        if (isComponentComplete()) {
-            setValue(d->value);
-            d->updatePosition();
-        }
+    if (qFuzzyCompare(d->to, to))
+        return;
+
+    d->to = to;
+    emit toChanged();
+    if (isComponentComplete()) {
+        setValue(d->value);
+        d->updatePosition();
     }
 }
 
@@ -244,11 +247,12 @@ void QQuickSlider::setValue(qreal value)
     if (isComponentComplete())
         value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
 
-    if (!qFuzzyCompare(d->value, value)) {
-        d->value = value;
-        d->updatePosition();
-        emit valueChanged();
-    }
+    if (qFuzzyCompare(d->value, value))
+        return;
+
+    d->value = value;
+    d->updatePosition();
+    emit valueChanged();
 }
 
 /*!
@@ -307,10 +311,11 @@ qreal QQuickSlider::stepSize() const
 void QQuickSlider::setStepSize(qreal step)
 {
     Q_D(QQuickSlider);
-    if (!qFuzzyCompare(d->stepSize, step)) {
-        d->stepSize = step;
-        emit stepSizeChanged();
-    }
+    if (qFuzzyCompare(d->stepSize, step))
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -334,10 +339,11 @@ QQuickSlider::SnapMode QQuickSlider::snapMode() const
 void QQuickSlider::setSnapMode(SnapMode mode)
 {
     Q_D(QQuickSlider);
-    if (d->snapMode != mode) {
-        d->snapMode = mode;
-        emit snapModeChanged();
-    }
+    if (d->snapMode == mode)
+        return;
+
+    d->snapMode = mode;
+    emit snapModeChanged();
 }
 
 /*!
@@ -354,11 +360,12 @@ bool QQuickSlider::isPressed() const
 void QQuickSlider::setPressed(bool pressed)
 {
     Q_D(QQuickSlider);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        setAccessibleProperty("pressed", pressed);
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    setAccessibleProperty("pressed", pressed);
+    emit pressedChanged();
 }
 
 /*!
@@ -379,10 +386,11 @@ Qt::Orientation QQuickSlider::orientation() const
 void QQuickSlider::setOrientation(Qt::Orientation orientation)
 {
     Q_D(QQuickSlider);
-    if (d->orientation != orientation) {
-        d->orientation = orientation;
-        emit orientationChanged();
-    }
+    if (d->orientation == orientation)
+        return;
+
+    d->orientation = orientation;
+    emit orientationChanged();
 }
 
 /*!
@@ -401,13 +409,14 @@ QQuickItem *QQuickSlider::handle() const
 void QQuickSlider::setHandle(QQuickItem *handle)
 {
     Q_D(QQuickSlider);
-    if (d->handle != handle) {
-        delete d->handle;
-        d->handle = handle;
-        if (handle && !handle->parentItem())
-            handle->setParentItem(this);
-        emit handleChanged();
-    }
+    if (d->handle == handle)
+        return;
+
+    delete d->handle;
+    d->handle = handle;
+    if (handle && !handle->parentItem())
+        handle->setParentItem(this);
+    emit handleChanged();
 }
 
 /*!
@@ -426,13 +435,14 @@ QQuickItem *QQuickSlider::track() const
 void QQuickSlider::setTrack(QQuickItem *track)
 {
     Q_D(QQuickSlider);
-    if (d->track != track) {
-        delete d->track;
-        d->track = track;
-        if (track && !track->parentItem())
-            track->setParentItem(this);
-        emit trackChanged();
-    }
+    if (d->track == track)
+        return;
+
+    delete d->track;
+    d->track = track;
+    if (track && !track->parentItem())
+        track->setParentItem(this);
+    emit trackChanged();
 }
 
 /*!

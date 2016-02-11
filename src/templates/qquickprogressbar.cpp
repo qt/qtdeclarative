@@ -102,14 +102,15 @@ qreal QQuickProgressBar::from() const
 void QQuickProgressBar::setFrom(qreal from)
 {
     Q_D(QQuickProgressBar);
-    if (!qFuzzyCompare(d->from, from)) {
-        d->from = from;
-        emit fromChanged();
-        emit positionChanged();
-        emit visualPositionChanged();
-        if (isComponentComplete())
-            setValue(d->value);
-    }
+    if (qFuzzyCompare(d->from, from))
+        return;
+
+    d->from = from;
+    emit fromChanged();
+    emit positionChanged();
+    emit visualPositionChanged();
+    if (isComponentComplete())
+        setValue(d->value);
 }
 
 /*!
@@ -128,14 +129,15 @@ qreal QQuickProgressBar::to() const
 void QQuickProgressBar::setTo(qreal to)
 {
     Q_D(QQuickProgressBar);
-    if (!qFuzzyCompare(d->to, to)) {
-        d->to = to;
-        emit toChanged();
-        emit positionChanged();
-        emit visualPositionChanged();
-        if (isComponentComplete())
-            setValue(d->value);
-    }
+    if (qFuzzyCompare(d->to, to))
+        return;
+
+    d->to = to;
+    emit toChanged();
+    emit positionChanged();
+    emit visualPositionChanged();
+    if (isComponentComplete())
+        setValue(d->value);
 }
 
 /*!
@@ -157,12 +159,13 @@ void QQuickProgressBar::setValue(qreal value)
     if (isComponentComplete())
         value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
 
-    if (!qFuzzyCompare(d->value, value)) {
-        d->value = value;
-        emit valueChanged();
-        emit positionChanged();
-        emit visualPositionChanged();
-    }
+    if (qFuzzyCompare(d->value, value))
+        return;
+
+    d->value = value;
+    emit valueChanged();
+    emit positionChanged();
+    emit visualPositionChanged();
 }
 
 /*!
@@ -219,10 +222,11 @@ bool QQuickProgressBar::isIndeterminate() const
 void QQuickProgressBar::setIndeterminate(bool indeterminate)
 {
     Q_D(QQuickProgressBar);
-    if (d->indeterminate != indeterminate) {
-        d->indeterminate = indeterminate;
-        emit indeterminateChanged();
-    }
+    if (d->indeterminate == indeterminate)
+        return;
+
+    d->indeterminate = indeterminate;
+    emit indeterminateChanged();
 }
 
 /*!
@@ -241,13 +245,14 @@ QQuickItem *QQuickProgressBar::indicator() const
 void QQuickProgressBar::setIndicator(QQuickItem *indicator)
 {
     Q_D(QQuickProgressBar);
-    if (d->indicator != indicator) {
-        delete d->indicator;
-        d->indicator = indicator;
-        if (indicator && !indicator->parentItem())
-            indicator->setParentItem(this);
-        emit indicatorChanged();
-    }
+    if (d->indicator == indicator)
+        return;
+
+    delete d->indicator;
+    d->indicator = indicator;
+    if (indicator && !indicator->parentItem())
+        indicator->setParentItem(this);
+    emit indicatorChanged();
 }
 
 void QQuickProgressBar::mirrorChange()

@@ -221,14 +221,15 @@ QQuickAbstractButton *QQuickButtonGroup::checkedButton() const
 void QQuickButtonGroup::setCheckedButton(QQuickAbstractButton *checkedButton)
 {
     Q_D(QQuickButtonGroup);
-    if (d->checkedButton != checkedButton) {
-        if (d->checkedButton)
-            d->checkedButton->setChecked(false);
-        d->checkedButton = checkedButton;
-        if (checkedButton)
-            checkedButton->setChecked(true);
-        emit checkedButtonChanged();
-    }
+    if (d->checkedButton == checkedButton)
+        return;
+
+    if (d->checkedButton)
+        d->checkedButton->setChecked(false);
+    d->checkedButton = checkedButton;
+    if (checkedButton)
+        checkedButton->setChecked(true);
+    emit checkedButtonChanged();
 }
 
 /*!
@@ -366,14 +367,15 @@ QQuickButtonGroup *QQuickButtonGroupAttached::group() const
 void QQuickButtonGroupAttached::setGroup(QQuickButtonGroup *group)
 {
     Q_D(QQuickButtonGroupAttached);
-    if (d->group != group) {
-        if (d->group)
-            d->group->removeButton(qobject_cast<QQuickAbstractButton*>(parent()));
-        d->group = group;
-        if (group)
-            group->addButton(qobject_cast<QQuickAbstractButton*>(parent()));
-        emit groupChanged();
-    }
+    if (d->group == group)
+        return;
+
+    if (d->group)
+        d->group->removeButton(qobject_cast<QQuickAbstractButton*>(parent()));
+    d->group = group;
+    if (group)
+        group->addButton(qobject_cast<QQuickAbstractButton*>(parent()));
+    emit groupChanged();
 }
 
 QT_END_NAMESPACE

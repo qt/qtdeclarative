@@ -290,12 +290,13 @@ Qt::Edge QQuickDrawer::edge() const
 void QQuickDrawer::setEdge(Qt::Edge edge)
 {
     Q_D(QQuickDrawer);
-    if (d->edge != edge) {
-        d->edge = edge;
-        if (isComponentComplete())
-            d->updateContent();
-        emit edgeChanged();
-    }
+    if (d->edge == edge)
+        return;
+
+    d->edge = edge;
+    if (isComponentComplete())
+        d->updateContent();
+    emit edgeChanged();
 }
 
 /*!
@@ -315,12 +316,13 @@ void QQuickDrawer::setPosition(qreal position)
 {
     Q_D(QQuickDrawer);
     position = qBound<qreal>(0.0, position, 1.0);
-    if (!qFuzzyCompare(d->position, position)) {
-        d->position = position;
-        if (isComponentComplete())
-            d->updateContent();
-        emit positionChanged();
-    }
+    if (qFuzzyCompare(d->position, position))
+        return;
+
+    d->position = position;
+    if (isComponentComplete())
+        d->updateContent();
+    emit positionChanged();
 }
 
 
@@ -338,20 +340,21 @@ QQuickItem *QQuickDrawer::contentItem() const
 void QQuickDrawer::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickDrawer);
-    if (d->content != item) {
-        if (d->content) {
-            QQuickItemPrivate::get(d->content)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-            delete d->content;
-        }
-        d->content = item;
-        if (item) {
-            item->setParentItem(this);
-            QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
-            if (isComponentComplete())
-                d->updateContent();
-        }
-        emit contentItemChanged();
+    if (d->content == item)
+        return;
+
+    if (d->content) {
+        QQuickItemPrivate::get(d->content)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        delete d->content;
     }
+    d->content = item;
+    if (item) {
+        item->setParentItem(this);
+        QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+        if (isComponentComplete())
+            d->updateContent();
+    }
+    emit contentItemChanged();
 }
 
 /*!
@@ -371,15 +374,16 @@ QQuickPropertyAnimation *QQuickDrawer::animation() const
 void QQuickDrawer::setAnimation(QQuickPropertyAnimation *animation)
 {
     Q_D(QQuickDrawer);
-    if (d->animation != animation) {
-        delete d->animation;
-        d->animation = animation;
-        if (animation) {
-            animation->setTargetObject(this);
-            animation->setProperty(QStringLiteral("position"));
-        }
-        emit animationChanged();
+    if (d->animation == animation)
+        return;
+
+    delete d->animation;
+    d->animation = animation;
+    if (animation) {
+        animation->setTargetObject(this);
+        animation->setProperty(QStringLiteral("position"));
     }
+    emit animationChanged();
 }
 
 /*!

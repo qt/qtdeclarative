@@ -302,10 +302,11 @@ void QQuickComboBoxPrivate::decrease()
 void QQuickComboBoxPrivate::setHighlightedIndex(int index)
 {
     Q_Q(QQuickComboBox);
-    if (highlightedIndex != index) {
-        highlightedIndex = index;
-        emit q->highlightedIndexChanged();
-    }
+    if (highlightedIndex == index)
+        return;
+
+    highlightedIndex = index;
+    emit q->highlightedIndexChanged();
 }
 
 void QQuickComboBoxPrivate::createDelegateModel()
@@ -403,15 +404,16 @@ void QQuickComboBox::setModel(const QVariant& m)
     if (model.userType() == qMetaTypeId<QJSValue>())
         model = model.value<QJSValue>().toVariant();
 
-    if (d->model != model) {
-        d->model = model;
-        d->createDelegateModel();
-        if (isComponentComplete()) {
-            setCurrentIndex(count() > 0 ? 0 : -1);
-            d->updateCurrentText();
-        }
-        emit modelChanged();
+    if (d->model == model)
+        return;
+
+    d->model = model;
+    d->createDelegateModel();
+    if (isComponentComplete()) {
+        setCurrentIndex(count() > 0 ? 0 : -1);
+        d->updateCurrentText();
     }
+    emit modelChanged();
 }
 
 /*!
@@ -440,10 +442,11 @@ bool QQuickComboBox::isPressed() const
 void QQuickComboBox::setPressed(bool pressed)
 {
     Q_D(QQuickComboBox);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    emit pressedChanged();
 }
 
 /*!
@@ -476,12 +479,13 @@ int QQuickComboBox::currentIndex() const
 void QQuickComboBox::setCurrentIndex(int index)
 {
     Q_D(QQuickComboBox);
-    if (d->currentIndex != index) {
-        d->currentIndex = index;
-        emit currentIndexChanged();
-        if (isComponentComplete())
-            d->updateCurrentText();
-    }
+    if (d->currentIndex == index)
+        return;
+
+    d->currentIndex = index;
+    emit currentIndexChanged();
+    if (isComponentComplete())
+        d->updateCurrentText();
 }
 
 /*!
@@ -527,19 +531,21 @@ void QQuickComboBox::setDisplayText(const QString &text)
 {
     Q_D(QQuickComboBox);
     d->hasDisplayText = true;
-    if (d->displayText != text) {
-        d->displayText = text;
-        emit displayTextChanged();
-    }
+    if (d->displayText == text)
+        return;
+
+    d->displayText = text;
+    emit displayTextChanged();
 }
 
 void QQuickComboBox::resetDisplayText()
 {
     Q_D(QQuickComboBox);
-    if (d->hasDisplayText) {
-        d->hasDisplayText = false;
-        d->updateCurrentText();
-    }
+    if (!d->hasDisplayText)
+        return;
+
+    d->hasDisplayText = false;
+    d->updateCurrentText();
 }
 
 /*!
@@ -558,12 +564,13 @@ QString QQuickComboBox::textRole() const
 void QQuickComboBox::setTextRole(const QString &role)
 {
     Q_D(QQuickComboBox);
-    if (d->textRole != role) {
-        d->textRole = role;
-        if (isComponentComplete())
-            d->updateCurrentText();
-        emit textRoleChanged();
-    }
+    if (d->textRole == role)
+        return;
+
+    d->textRole = role;
+    if (isComponentComplete())
+        d->updateCurrentText();
+    emit textRoleChanged();
 }
 
 /*!
@@ -582,14 +589,15 @@ QQmlComponent *QQuickComboBox::delegate() const
 void QQuickComboBox::setDelegate(QQmlComponent* delegate)
 {
     Q_D(QQuickComboBox);
-    if (d->delegate != delegate) {
-        delete d->delegate;
-        d->delegate = delegate;
-        QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel*>(d->delegateModel);
-        if (delegateModel)
-            delegateModel->setDelegate(d->delegate);
-        emit delegateChanged();
-    }
+    if (d->delegate == delegate)
+        return;
+
+    delete d->delegate;
+    d->delegate = delegate;
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel*>(d->delegateModel);
+    if (delegateModel)
+        delegateModel->setDelegate(d->delegate);
+    emit delegateChanged();
 }
 
 /*!
@@ -608,13 +616,14 @@ QQuickPopup *QQuickComboBox::popup() const
 void QQuickComboBox::setPopup(QQuickPopup *popup)
 {
     Q_D(QQuickComboBox);
-    if (d->popup != popup) {
-        delete d->popup;
-        if (popup)
-            popup->setClosePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutsideParent);
-        d->popup = popup;
-        emit popupChanged();
-    }
+    if (d->popup == popup)
+        return;
+
+    delete d->popup;
+    if (popup)
+        popup->setClosePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutsideParent);
+    d->popup = popup;
+    emit popupChanged();
 }
 
 /*!

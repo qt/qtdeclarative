@@ -442,11 +442,12 @@ int QQuickContainer::currentIndex() const
 void QQuickContainer::setCurrentIndex(int index)
 {
     Q_D(QQuickContainer);
-    if (d->currentIndex != index) {
-        d->currentIndex = index;
-        emit currentIndexChanged();
-        emit currentItemChanged();
-    }
+    if (d->currentIndex == index)
+        return;
+
+    d->currentIndex = index;
+    emit currentIndexChanged();
+    emit currentItemChanged();
 }
 
 /*!

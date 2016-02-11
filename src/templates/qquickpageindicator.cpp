@@ -165,10 +165,11 @@ int QQuickPageIndicator::count() const
 void QQuickPageIndicator::setCount(int count)
 {
     Q_D(QQuickPageIndicator);
-    if (d->count != count) {
-        d->count = count;
-        emit countChanged();
-    }
+    if (d->count == count)
+        return;
+
+    d->count = count;
+    emit countChanged();
 }
 
 /*!
@@ -185,10 +186,11 @@ int QQuickPageIndicator::currentIndex() const
 void QQuickPageIndicator::setCurrentIndex(int index)
 {
     Q_D(QQuickPageIndicator);
-    if (d->currentIndex != index) {
-        d->currentIndex = index;
-        emit currentIndexChanged();
-    }
+    if (d->currentIndex == index)
+        return;
+
+    d->currentIndex = index;
+    emit currentIndexChanged();
 }
 
 /*!
@@ -209,11 +211,12 @@ bool QQuickPageIndicator::isInteractive() const
 void QQuickPageIndicator::setInteractive(bool interactive)
 {
     Q_D(QQuickPageIndicator);
-    if (d->interactive != interactive) {
-        d->interactive = interactive;
-        setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
-        emit interactiveChanged();
-    }
+    if (d->interactive == interactive)
+        return;
+
+    d->interactive = interactive;
+    setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
+    emit interactiveChanged();
 }
 
 /*!
@@ -236,10 +239,11 @@ QQmlComponent *QQuickPageIndicator::delegate() const
 void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickPageIndicator);
-    if (d->delegate != delegate) {
-        d->delegate = delegate;
-        emit delegateChanged();
-    }
+    if (d->delegate == delegate)
+        return;
+
+    d->delegate = delegate;
+    emit delegateChanged();
 }
 
 void QQuickPageIndicator::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

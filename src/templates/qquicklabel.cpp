@@ -195,16 +195,17 @@ QQuickItem *QQuickLabel::background() const
 void QQuickLabel::setBackground(QQuickItem *background)
 {
     Q_D(QQuickLabel);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setParentItem(this);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-        }
-        emit backgroundChanged();
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(this);
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
     }
+    emit backgroundChanged();
 }
 
 void QQuickLabel::classBegin()

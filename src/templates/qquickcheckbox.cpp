@@ -121,10 +121,11 @@ bool QQuickCheckBox::isTristate() const
 void QQuickCheckBox::setTristate(bool tristate)
 {
     Q_D(QQuickCheckBox);
-    if (d->tristate != tristate) {
-        d->tristate = tristate;
-        emit tristateChanged();
-    }
+    if (d->tristate == tristate)
+        return;
+
+    d->tristate = tristate;
+    emit tristateChanged();
 }
 
 /*!
@@ -148,16 +149,18 @@ Qt::CheckState QQuickCheckBox::checkState() const
 void QQuickCheckBox::setCheckState(Qt::CheckState state)
 {
     Q_D(QQuickCheckBox);
+    if (d->checkState == state)
+        return;
+
     if (!d->tristate && state == Qt::PartiallyChecked)
         setTristate(true);
-    if (d->checkState != state) {
-        bool wasChecked = isChecked();
-        d->checked = state != Qt::Unchecked;
-        d->checkState = state;
-        emit checkStateChanged();
-        if (d->checked != wasChecked)
-            emit checkedChanged();
-    }
+
+    bool wasChecked = isChecked();
+    d->checked = state != Qt::Unchecked;
+    d->checkState = state;
+    emit checkStateChanged();
+    if (d->checked != wasChecked)
+        emit checkedChanged();
 }
 
 QFont QQuickCheckBox::defaultFont() const

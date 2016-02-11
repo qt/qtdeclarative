@@ -246,11 +246,12 @@ QString QQuickAbstractButton::text() const
 void QQuickAbstractButton::setText(const QString &text)
 {
     Q_D(QQuickAbstractButton);
-    if (d->text != text) {
-        d->text = text;
-        setAccessibleName(text);
-        emit textChanged();
-    }
+    if (d->text == text)
+        return;
+
+    d->text = text;
+    setAccessibleName(text);
+    emit textChanged();
 }
 
 /*!
@@ -267,11 +268,12 @@ bool QQuickAbstractButton::isPressed() const
 void QQuickAbstractButton::setPressed(bool isPressed)
 {
     Q_D(QQuickAbstractButton);
-    if (d->pressed != isPressed) {
-        d->pressed = isPressed;
-        setAccessibleProperty("pressed", isPressed);
-        emit pressedChanged();
-    }
+    if (d->pressed == isPressed)
+        return;
+
+    d->pressed = isPressed;
+    setAccessibleProperty("pressed", isPressed);
+    emit pressedChanged();
 }
 
 /*!
@@ -288,15 +290,16 @@ bool QQuickAbstractButton::isChecked() const
 void QQuickAbstractButton::setChecked(bool checked)
 {
     Q_D(QQuickAbstractButton);
+    if (d->checked == checked)
+        return;
+
     if (checked && !d->checkable)
         setCheckable(true);
 
-    if (d->checked != checked) {
-        d->checked = checked;
-        setAccessibleProperty("checked", checked);
-        checkStateSet();
-        emit checkedChanged();
-    }
+    d->checked = checked;
+    setAccessibleProperty("checked", checked);
+    checkStateSet();
+    emit checkedChanged();
 }
 
 /*!
@@ -313,11 +316,12 @@ bool QQuickAbstractButton::isCheckable() const
 void QQuickAbstractButton::setCheckable(bool checkable)
 {
     Q_D(QQuickAbstractButton);
-    if (d->checkable != checkable) {
-        d->checkable = checkable;
-        setAccessibleProperty("checkable", checkable);
-        emit checkableChanged();
-    }
+    if (d->checkable == checkable)
+        return;
+
+    d->checkable = checkable;
+    setAccessibleProperty("checkable", checkable);
+    emit checkableChanged();
 }
 
 /*!
@@ -339,10 +343,11 @@ bool QQuickAbstractButton::isHighlighted() const
 void QQuickAbstractButton::setHighlighted(bool highlighted)
 {
     Q_D(QQuickAbstractButton);
-    if (highlighted != d->highlighted) {
-        d->highlighted = highlighted;
-        emit highlightedChanged();
-    }
+    if (highlighted == d->highlighted)
+        return;
+
+    d->highlighted = highlighted;
+    emit highlightedChanged();
 }
 
 /*!
@@ -368,10 +373,11 @@ bool QQuickAbstractButton::autoExclusive() const
 void QQuickAbstractButton::setAutoExclusive(bool exclusive)
 {
     Q_D(QQuickAbstractButton);
-    if (d->autoExclusive != exclusive) {
-        d->autoExclusive = exclusive;
-        emit autoExclusiveChanged();
-    }
+    if (d->autoExclusive == exclusive)
+        return;
+
+    d->autoExclusive = exclusive;
+    emit autoExclusiveChanged();
 }
 
 /*!
@@ -391,11 +397,12 @@ bool QQuickAbstractButton::autoRepeat() const
 void QQuickAbstractButton::setAutoRepeat(bool repeat)
 {
     Q_D(QQuickAbstractButton);
-    if (d->autoRepeat != repeat) {
-        d->stopPressRepeat();
-        d->autoRepeat = repeat;
-        emit autoRepeatChanged();
-    }
+    if (d->autoRepeat == repeat)
+        return;
+
+    d->stopPressRepeat();
+    d->autoRepeat = repeat;
+    emit autoRepeatChanged();
 }
 
 /*!
@@ -412,16 +419,17 @@ QQuickItem *QQuickAbstractButton::indicator() const
 void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 {
     Q_D(QQuickAbstractButton);
-    if (d->indicator != indicator) {
-        delete d->indicator;
-        d->indicator = indicator;
-        if (indicator) {
-            if (!indicator->parentItem())
-                indicator->setParentItem(this);
-            indicator->setAcceptedMouseButtons(Qt::LeftButton);
-        }
-        emit indicatorChanged();
+    if (d->indicator == indicator)
+        return;
+
+    delete d->indicator;
+    d->indicator = indicator;
+    if (indicator) {
+        if (!indicator->parentItem())
+            indicator->setParentItem(this);
+        indicator->setAcceptedMouseButtons(Qt::LeftButton);
     }
+    emit indicatorChanged();
 }
 
 /*!

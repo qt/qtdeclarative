@@ -260,12 +260,13 @@ int QQuickSpinBox::from() const
 void QQuickSpinBox::setFrom(int from)
 {
     Q_D(QQuickSpinBox);
-    if (d->from != from) {
-        d->from = from;
-        emit fromChanged();
-        if (isComponentComplete())
-            setValue(d->value);
-    }
+    if (d->from == from)
+        return;
+
+    d->from = from;
+    emit fromChanged();
+    if (isComponentComplete())
+        setValue(d->value);
 }
 
 /*!
@@ -284,12 +285,13 @@ int QQuickSpinBox::to() const
 void QQuickSpinBox::setTo(int to)
 {
     Q_D(QQuickSpinBox);
-    if (d->to != to) {
-        d->to = to;
-        emit toChanged();
-        if (isComponentComplete())
-            setValue(d->value);
-    }
+    if (d->to == to)
+        return;
+
+    d->to = to;
+    emit toChanged();
+    if (isComponentComplete())
+        setValue(d->value);
 }
 
 /*!
@@ -309,10 +311,11 @@ void QQuickSpinBox::setValue(int value)
     if (isComponentComplete())
         value = d->boundValue(value);
 
-    if (d->value != value) {
-        d->value = value;
-        emit valueChanged();
-    }
+    if (d->value == value)
+        return;
+
+    d->value = value;
+    emit valueChanged();
 }
 
 /*!
@@ -331,10 +334,11 @@ int QQuickSpinBox::stepSize() const
 void QQuickSpinBox::setStepSize(int step)
 {
     Q_D(QQuickSpinBox);
-    if (d->stepSize != step) {
-        d->stepSize = step;
-        emit stepSizeChanged();
-    }
+    if (d->stepSize == step)
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -356,10 +360,11 @@ QValidator *QQuickSpinBox::validator() const
 void QQuickSpinBox::setValidator(QValidator *validator)
 {
     Q_D(QQuickSpinBox);
-    if (d->validator != validator) {
-        d->validator = validator;
-        emit validatorChanged();
-    }
+    if (d->validator == validator)
+        return;
+
+    d->validator = validator;
+    emit validatorChanged();
 }
 
 /*!
@@ -641,10 +646,11 @@ bool QQuickSpinButton::isPressed() const
 void QQuickSpinButton::setPressed(bool pressed)
 {
     Q_D(QQuickSpinButton);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    emit pressedChanged();
 }
 
 QQuickItem *QQuickSpinButton::indicator() const
@@ -656,16 +662,17 @@ QQuickItem *QQuickSpinButton::indicator() const
 void QQuickSpinButton::setIndicator(QQuickItem *indicator)
 {
     Q_D(QQuickSpinButton);
-    if (d->indicator != indicator) {
-        delete d->indicator;
-        d->indicator = indicator;
-        if (indicator) {
-            if (!indicator->parentItem())
-                indicator->setParentItem(static_cast<QQuickItem *>(parent()));
-            indicator->setAcceptedMouseButtons(Qt::LeftButton);
-        }
-        emit indicatorChanged();
+    if (d->indicator == indicator)
+        return;
+
+    delete d->indicator;
+    d->indicator = indicator;
+    if (indicator) {
+        if (!indicator->parentItem())
+            indicator->setParentItem(static_cast<QQuickItem *>(parent()));
+        indicator->setAcceptedMouseButtons(Qt::LeftButton);
     }
+    emit indicatorChanged();
 }
 
 QT_END_NAMESPACE

@@ -132,19 +132,20 @@ QQuickItem *QQuickOverlay::background() const
 void QQuickOverlay::setBackground(QQuickItem *background)
 {
     Q_D(QQuickOverlay);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setOpacity(0.0);
-            background->setParentItem(this);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-            if (isComponentComplete())
-                d->resizeBackground();
-        }
-        emit backgroundChanged();
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setOpacity(0.0);
+        background->setParentItem(this);
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->resizeBackground();
     }
+    emit backgroundChanged();
 }
 
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)

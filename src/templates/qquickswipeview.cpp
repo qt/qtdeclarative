@@ -241,20 +241,22 @@ void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
 
 void QQuickSwipeViewAttachedPrivate::setIsCurrent(bool current)
 {
-    if (current != isCurrent) {
-        isCurrent = current;
-        Q_Q(QQuickSwipeViewAttached);
-        emit q->isCurrentItemChanged();
-    }
+    if (current == isCurrent)
+        return;
+
+    isCurrent = current;
+    Q_Q(QQuickSwipeViewAttached);
+    emit q->isCurrentItemChanged();
 }
 
 void QQuickSwipeViewAttachedPrivate::setIndex(int i)
 {
-    if (i != index) {
-        index = i;
-        Q_Q(QQuickSwipeViewAttached);
-        emit q->indexChanged();
-    }
+    if (i == index)
+        return;
+
+    index = i;
+    Q_Q(QQuickSwipeViewAttached);
+    emit q->indexChanged();
 }
 
 void QQuickSwipeViewAttachedPrivate::updateView(QQuickItem *parent)

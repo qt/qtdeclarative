@@ -135,10 +135,11 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
-    if (!qFuzzyCompare(d->size, size)) {
-        d->size = size;
-        emit sizeChanged();
-    }
+    if (qFuzzyCompare(d->size, size))
+        return;
+
+    d->size = size;
+    emit sizeChanged();
 }
 
 /*!
@@ -157,10 +158,11 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
-    if (!qFuzzyCompare(d->position, position)) {
-        d->position = position;
-        emit positionChanged();
-    }
+    if (qFuzzyCompare(d->position, position))
+        return;
+
+    d->position = position;
+    emit positionChanged();
 }
 
 /*!
@@ -178,10 +180,11 @@ bool QQuickScrollBar::isActive() const
 void QQuickScrollBar::setActive(bool active)
 {
     Q_D(QQuickScrollBar);
-    if (d->active != active) {
-        d->active = active;
-        emit activeChanged();
-    }
+    if (d->active == active)
+        return;
+
+    d->active = active;
+    emit activeChanged();
 }
 
 /*!
@@ -198,12 +201,13 @@ bool QQuickScrollBar::isPressed() const
 void QQuickScrollBar::setPressed(bool pressed)
 {
     Q_D(QQuickScrollBar);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        setAccessibleProperty("pressed", pressed);
-        setActive(d->pressed || d->moving);
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    setAccessibleProperty("pressed", pressed);
+    setActive(d->pressed || d->moving);
+    emit pressedChanged();
 }
 
 /*!
@@ -224,10 +228,11 @@ Qt::Orientation QQuickScrollBar::orientation() const
 void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
 {
     Q_D(QQuickScrollBar);
-    if (d->orientation != orientation) {
-        d->orientation = orientation;
-        emit orientationChanged();
-    }
+    if (d->orientation == orientation)
+        return;
+
+    d->orientation = orientation;
+    emit orientationChanged();
 }
 
 /*!
@@ -246,13 +251,14 @@ QQuickItem *QQuickScrollBar::handle() const
 void QQuickScrollBar::setHandle(QQuickItem *handle)
 {
     Q_D(QQuickScrollBar);
-    if (d->handle != handle) {
-        delete d->handle;
-        d->handle = handle;
-        if (handle && !handle->parentItem())
-            handle->setParentItem(this);
-        emit handleChanged();
-    }
+    if (d->handle == handle)
+        return;
+
+    delete d->handle;
+    d->handle = handle;
+    if (handle && !handle->parentItem())
+        handle->setParentItem(this);
+    emit handleChanged();
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
@@ -436,40 +442,41 @@ QQuickScrollBar *QQuickScrollBarAttached::horizontal() const
 void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
 {
     Q_D(QQuickScrollBarAttached);
-    if (d->horizontal != horizontal) {
-        if (d->horizontal) {
-            QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-            QObjectPrivate::disconnect(d->horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
-            QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollBarAttachedPrivate::activateHorizontal);
+    if (d->horizontal == horizontal)
+        return;
 
-            // TODO: export QQuickFlickableVisibleArea
-            QObject *area = d->flickable->property("visibleArea").value<QObject *>();
-            disconnect(area, SIGNAL(widthRatioChanged(qreal)), d->horizontal, SLOT(setSize(qreal)));
-            disconnect(area, SIGNAL(xPositionChanged(qreal)), d->horizontal, SLOT(setPosition(qreal)));
-        }
+    if (d->horizontal) {
+        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        QObjectPrivate::disconnect(d->horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
+        QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollBarAttachedPrivate::activateHorizontal);
 
-        d->horizontal = horizontal;
-
-        if (horizontal) {
-            if (!horizontal->parentItem())
-                horizontal->setParentItem(d->flickable);
-            horizontal->setOrientation(Qt::Horizontal);
-
-            QQuickItemPrivate::get(horizontal)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
-            QObjectPrivate::connect(horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
-            QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollBarAttachedPrivate::activateHorizontal);
-
-            // TODO: export QQuickFlickableVisibleArea
-            QObject *area = d->flickable->property("visibleArea").value<QObject *>();
-            connect(area, SIGNAL(widthRatioChanged(qreal)), horizontal, SLOT(setSize(qreal)));
-            connect(area, SIGNAL(xPositionChanged(qreal)), horizontal, SLOT(setPosition(qreal)));
-
-            d->layoutHorizontal();
-            horizontal->setSize(area->property("widthRatio").toReal());
-            horizontal->setPosition(area->property("xPosition").toReal());
-        }
-        emit horizontalChanged();
+        // TODO: export QQuickFlickableVisibleArea
+        QObject *area = d->flickable->property("visibleArea").value<QObject *>();
+        disconnect(area, SIGNAL(widthRatioChanged(qreal)), d->horizontal, SLOT(setSize(qreal)));
+        disconnect(area, SIGNAL(xPositionChanged(qreal)), d->horizontal, SLOT(setPosition(qreal)));
     }
+
+    d->horizontal = horizontal;
+
+    if (horizontal) {
+        if (!horizontal->parentItem())
+            horizontal->setParentItem(d->flickable);
+        horizontal->setOrientation(Qt::Horizontal);
+
+        QQuickItemPrivate::get(horizontal)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+        QObjectPrivate::connect(horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
+        QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollBarAttachedPrivate::activateHorizontal);
+
+        // TODO: export QQuickFlickableVisibleArea
+        QObject *area = d->flickable->property("visibleArea").value<QObject *>();
+        connect(area, SIGNAL(widthRatioChanged(qreal)), horizontal, SLOT(setSize(qreal)));
+        connect(area, SIGNAL(xPositionChanged(qreal)), horizontal, SLOT(setPosition(qreal)));
+
+        d->layoutHorizontal();
+        horizontal->setSize(area->property("widthRatio").toReal());
+        horizontal->setPosition(area->property("xPosition").toReal());
+    }
+    emit horizontalChanged();
 }
 
 /*!
@@ -493,40 +500,41 @@ QQuickScrollBar *QQuickScrollBarAttached::vertical() const
 void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
 {
     Q_D(QQuickScrollBarAttached);
-    if (d->vertical != vertical) {
-        if (d->vertical) {
-            QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-            QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
-            QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
+    if (d->vertical == vertical)
+        return;
 
-            // TODO: export QQuickFlickableVisibleArea
-            QObject *area = d->flickable->property("visibleArea").value<QObject *>();
-            disconnect(area, SIGNAL(heightRatioChanged(qreal)), d->vertical, SLOT(setSize(qreal)));
-            disconnect(area, SIGNAL(yPositionChanged(qreal)), d->vertical, SLOT(setPosition(qreal)));
-        }
+    if (d->vertical) {
+        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
+        QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
 
-        d->vertical = vertical;
-
-        if (vertical) {
-            if (!vertical->parentItem())
-                vertical->setParentItem(d->flickable);
-            vertical->setOrientation(Qt::Vertical);
-
-            QQuickItemPrivate::get(vertical)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
-            QObjectPrivate::connect(vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
-            QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
-
-            // TODO: export QQuickFlickableVisibleArea
-            QObject *area = d->flickable->property("visibleArea").value<QObject *>();
-            connect(area, SIGNAL(heightRatioChanged(qreal)), vertical, SLOT(setSize(qreal)));
-            connect(area, SIGNAL(yPositionChanged(qreal)), vertical, SLOT(setPosition(qreal)));
-
-            d->layoutVertical();
-            vertical->setSize(area->property("heightRatio").toReal());
-            vertical->setPosition(area->property("yPosition").toReal());
-        }
-        emit verticalChanged();
+        // TODO: export QQuickFlickableVisibleArea
+        QObject *area = d->flickable->property("visibleArea").value<QObject *>();
+        disconnect(area, SIGNAL(heightRatioChanged(qreal)), d->vertical, SLOT(setSize(qreal)));
+        disconnect(area, SIGNAL(yPositionChanged(qreal)), d->vertical, SLOT(setPosition(qreal)));
     }
+
+    d->vertical = vertical;
+
+    if (vertical) {
+        if (!vertical->parentItem())
+            vertical->setParentItem(d->flickable);
+        vertical->setOrientation(Qt::Vertical);
+
+        QQuickItemPrivate::get(vertical)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+        QObjectPrivate::connect(vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
+        QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
+
+        // TODO: export QQuickFlickableVisibleArea
+        QObject *area = d->flickable->property("visibleArea").value<QObject *>();
+        connect(area, SIGNAL(heightRatioChanged(qreal)), vertical, SLOT(setSize(qreal)));
+        connect(area, SIGNAL(yPositionChanged(qreal)), vertical, SLOT(setPosition(qreal)));
+
+        d->layoutVertical();
+        vertical->setSize(area->property("heightRatio").toReal());
+        vertical->setPosition(area->property("yPosition").toReal());
+    }
+    emit verticalChanged();
 }
 
 QT_END_NAMESPACE

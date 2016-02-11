@@ -108,10 +108,11 @@ QString QQuickGroupBox::title() const
 void QQuickGroupBox::setTitle(const QString &title)
 {
     Q_D(QQuickGroupBox);
-    if (d->title != title) {
-        d->title = title;
-        emit titleChanged();
-    }
+    if (d->title == title)
+        return;
+
+    d->title = title;
+    emit titleChanged();
 }
 
 /*!
@@ -130,13 +131,14 @@ QQuickItem *QQuickGroupBox::label() const
 void QQuickGroupBox::setLabel(QQuickItem *label)
 {
     Q_D(QQuickGroupBox);
-    if (d->label != label) {
-        delete d->label;
-        d->label = label;
-        if (label && !label->parentItem())
-            label->setParentItem(this);
-        emit labelChanged();
-    }
+    if (d->label == label)
+        return;
+
+    delete d->label;
+    d->label = label;
+    if (label && !label->parentItem())
+        label->setParentItem(this);
+    emit labelChanged();
 }
 
 QFont QQuickGroupBox::defaultFont() const

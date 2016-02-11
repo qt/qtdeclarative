@@ -98,10 +98,11 @@ bool QQuickBusyIndicator::isRunning() const
 void QQuickBusyIndicator::setRunning(bool running)
 {
     Q_D(QQuickBusyIndicator);
-    if (d->running != running) {
-        d->running = running;
-        emit runningChanged();
-    }
+    if (d->running == running)
+        return;
+
+    d->running = running;
+    emit runningChanged();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

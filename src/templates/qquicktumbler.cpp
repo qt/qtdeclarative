@@ -213,10 +213,11 @@ QVariant QQuickTumbler::model() const
 void QQuickTumbler::setModel(const QVariant &model)
 {
     Q_D(QQuickTumbler);
-    if (model != d->model) {
-        d->model = model;
-        emit modelChanged();
-    }
+    if (model == d->model)
+        return;
+
+    d->model = model;
+    emit modelChanged();
 }
 
 /*!
@@ -274,10 +275,11 @@ QQmlComponent *QQuickTumbler::delegate() const
 void QQuickTumbler::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickTumbler);
-    if (delegate != d->delegate) {
-        d->delegate = delegate;
-        emit delegateChanged();
-    }
+    if (delegate == d->delegate)
+        return;
+
+    d->delegate = delegate;
+    emit delegateChanged();
 }
 
 /*!
@@ -295,11 +297,12 @@ int QQuickTumbler::visibleItemCount() const
 void QQuickTumbler::setVisibleItemCount(int visibleItemCount)
 {
     Q_D(QQuickTumbler);
-    if (visibleItemCount != d->visibleItemCount) {
-        d->visibleItemCount = visibleItemCount;
-        d->_q_updateItemHeights();
-        emit visibleItemCountChanged();
-    }
+    if (visibleItemCount == d->visibleItemCount)
+        return;
+
+    d->visibleItemCount = visibleItemCount;
+    d->_q_updateItemHeights();
+    emit visibleItemCountChanged();
 }
 
 QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)

@@ -746,10 +746,11 @@ Qt::FocusReason QQuickControl::focusReason() const
 void QQuickControl::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickControl);
-    if (d->focusReason != reason) {
-        d->focusReason = reason;
-        emit focusReasonChanged();
-    }
+    if (d->focusReason == reason)
+        return;
+
+    d->focusReason = reason;
+    emit focusReasonChanged();
 }
 
 /*!
@@ -770,18 +771,19 @@ QQuickItem *QQuickControl::background() const
 void QQuickControl::setBackground(QQuickItem *background)
 {
     Q_D(QQuickControl);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setParentItem(this);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-            if (isComponentComplete())
-                d->resizeBackground();
-        }
-        emit backgroundChanged();
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(this);
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->resizeBackground();
     }
+    emit backgroundChanged();
 }
 
 /*!
@@ -800,18 +802,19 @@ QQuickItem *QQuickControl::contentItem() const
 void QQuickControl::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickControl);
-    if (d->contentItem != item) {
-        contentItemChange(item, d->contentItem);
-        delete d->contentItem;
-        d->contentItem = item;
-        if (item) {
-            if (!item->parentItem())
-                item->setParentItem(this);
-            if (isComponentComplete())
-                d->resizeContent();
-        }
-        emit contentItemChanged();
+    if (d->contentItem == item)
+        return;
+
+    contentItemChange(item, d->contentItem);
+    delete d->contentItem;
+    d->contentItem = item;
+    if (item) {
+        if (!item->parentItem())
+            item->setParentItem(this);
+        if (isComponentComplete())
+            d->resizeContent();
     }
+    emit contentItemChanged();
 }
 
 void QQuickControl::componentComplete()

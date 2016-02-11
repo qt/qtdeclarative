@@ -143,14 +143,15 @@ void QQuickDialPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickDial);
     pos = qBound<qreal>(0.0, pos, 1.0);
-    if (!qFuzzyCompare(position, pos)) {
-        position = pos;
+    if (qFuzzyCompare(position, pos))
+        return;
 
-        angle = startAngle + position * qAbs(endAngle - startAngle);
+    position = pos;
 
-        emit q->positionChanged();
-        emit q->angleChanged();
-    }
+    angle = startAngle + position * qAbs(endAngle - startAngle);
+
+    emit q->positionChanged();
+    emit q->angleChanged();
 }
 
 void QQuickDialPrivate::updatePosition()
@@ -184,13 +185,14 @@ qreal QQuickDial::from() const
 void QQuickDial::setFrom(qreal from)
 {
     Q_D(QQuickDial);
-    if (!qFuzzyCompare(d->from, from)) {
-        d->from = from;
-        emit fromChanged();
-        if (isComponentComplete()) {
-            setValue(d->value);
-            d->updatePosition();
-        }
+    if (qFuzzyCompare(d->from, from))
+        return;
+
+    d->from = from;
+    emit fromChanged();
+    if (isComponentComplete()) {
+        setValue(d->value);
+        d->updatePosition();
     }
 }
 
@@ -211,13 +213,14 @@ qreal QQuickDial::to() const
 void QQuickDial::setTo(qreal to)
 {
     Q_D(QQuickDial);
-    if (!qFuzzyCompare(d->to, to)) {
-        d->to = to;
-        emit toChanged();
-        if (isComponentComplete()) {
-            setValue(d->value);
-            d->updatePosition();
-        }
+    if (qFuzzyCompare(d->to, to))
+        return;
+
+    d->to = to;
+    emit toChanged();
+    if (isComponentComplete()) {
+        setValue(d->value);
+        d->updatePosition();
     }
 }
 
@@ -245,11 +248,12 @@ void QQuickDial::setValue(qreal value)
     if (isComponentComplete())
         value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
 
-    if (!qFuzzyCompare(d->value, value)) {
-        d->value = value;
-        d->updatePosition();
-        emit valueChanged();
-    }
+    if (qFuzzyCompare(d->value, value))
+        return;
+
+    d->value = value;
+    d->updatePosition();
+    emit valueChanged();
 }
 
 /*!
@@ -304,10 +308,11 @@ qreal QQuickDial::stepSize() const
 void QQuickDial::setStepSize(qreal step)
 {
     Q_D(QQuickDial);
-    if (!qFuzzyCompare(d->stepSize, step)) {
-        d->stepSize = step;
-        emit stepSizeChanged();
-    }
+    if (qFuzzyCompare(d->stepSize, step))
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -334,10 +339,11 @@ QQuickDial::SnapMode QQuickDial::snapMode() const
 void QQuickDial::setSnapMode(SnapMode mode)
 {
     Q_D(QQuickDial);
-    if (d->snapMode != mode) {
-        d->snapMode = mode;
-        emit snapModeChanged();
-    }
+    if (d->snapMode == mode)
+        return;
+
+    d->snapMode = mode;
+    emit snapModeChanged();
 }
 
 /*!
@@ -367,11 +373,12 @@ bool QQuickDial::isPressed() const
 void QQuickDial::setPressed(bool pressed)
 {
     Q_D(QQuickDial);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        setAccessibleProperty("pressed", pressed);
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    setAccessibleProperty("pressed", pressed);
+    emit pressedChanged();
 }
 
 /*!
@@ -420,12 +427,13 @@ QQuickItem *QQuickDial::handle() const
 void QQuickDial::setHandle(QQuickItem *handle)
 {
     Q_D(QQuickDial);
-    if (handle != d->handle) {
-        d->handle = handle;
-        if (d->handle && !d->handle->parentItem())
-            d->handle->setParentItem(this);
-        emit handleChanged();
-    }
+    if (handle == d->handle)
+        return;
+
+    d->handle = handle;
+    if (d->handle && !d->handle->parentItem())
+        d->handle->setParentItem(this);
+    emit handleChanged();
 }
 
 void QQuickDial::keyPressEvent(QKeyEvent *event)

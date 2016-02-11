@@ -187,32 +187,35 @@ void QQuickStackElement::initialize()
 
 void QQuickStackElement::setIndex(int value)
 {
-    if (index != value) {
-        index = value;
-        QQuickStackAttached *attached = attachedStackObject(this);
-        if (attached)
-            emit attached->indexChanged();
-    }
+    if (index == value)
+        return;
+
+    index = value;
+    QQuickStackAttached *attached = attachedStackObject(this);
+    if (attached)
+        emit attached->indexChanged();
 }
 
 void QQuickStackElement::setView(QQuickStackView *value)
 {
-    if (view != value) {
-        view = value;
-        QQuickStackAttached *attached = attachedStackObject(this);
-        if (attached)
-            emit attached->viewChanged();
-    }
+    if (view == value)
+        return;
+
+    view = value;
+    QQuickStackAttached *attached = attachedStackObject(this);
+    if (attached)
+        emit attached->viewChanged();
 }
 
 void QQuickStackElement::setStatus(QQuickStackView::Status value)
 {
-    if (status != value) {
-        status = value;
-        QQuickStackAttached *attached = attachedStackObject(this);
-        if (attached)
-            emit attached->statusChanged();
-    }
+    if (status == value)
+        return;
+
+    status = value;
+    QQuickStackAttached *attached = attachedStackObject(this);
+    if (attached)
+        emit attached->statusChanged();
 }
 
 void QQuickStackElement::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
@@ -251,12 +254,13 @@ QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(null
 void QQuickStackViewPrivate::setCurrentItem(QQuickItem *item)
 {
     Q_Q(QQuickStackView);
-    if (currentItem != item) {
-        currentItem = item;
-        if (item)
-            item->setVisible(true);
-        emit q->currentItemChanged();
-    }
+    if (currentItem == item)
+        return;
+
+    currentItem = item;
+    if (item)
+        item->setVisible(true);
+    emit q->currentItemChanged();
 }
 
 static bool initProperties(QQuickStackElement *element, const QV4::Value &props, QQmlV4Function *args)
@@ -528,11 +532,12 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
 void QQuickStackViewPrivate::setBusy(bool b)
 {
     Q_Q(QQuickStackView);
-    if (busy != b) {
-        busy = b;
-        q->setFiltersChildMouseEvents(busy);
-        emit q->busyChanged();
-    }
+    if (busy == b)
+        return;
+
+    busy = b;
+    q->setFiltersChildMouseEvents(busy);
+    emit q->busyChanged();
 }
 
 QT_END_NAMESPACE

@@ -224,35 +224,36 @@ QQuickItem *QQuickRangeSliderNode::handle() const
 void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
 {
     Q_D(QQuickRangeSliderNode);
-    if (d->handle != handle) {
-        delete d->handle;
-        d->handle = handle;
-        if (handle) {
-            if (!handle->parentItem())
-                handle->setParentItem(d->slider);
+    if (d->handle == handle)
+        return;
 
-            QQuickItem *firstHandle = d->slider->first()->handle();
-            QQuickItem *secondHandle = d->slider->second()->handle();
-            if (firstHandle && secondHandle) {
-                // The order of property assignments in QML is undefined,
-                // but we need the first handle to be before the second due
-                // to focus order constraints, so check for that here.
-                const QList<QQuickItem *> childItems = d->slider->childItems();
-                const int firstIndex = childItems.indexOf(firstHandle);
-                const int secondIndex = childItems.indexOf(secondHandle);
-                if (firstIndex != -1 && secondIndex != -1 && firstIndex > secondIndex) {
-                    firstHandle->stackBefore(secondHandle);
-                    // Ensure we have some way of knowing which handle is above
-                    // the other when it comes to mouse presses, and also that
-                    // they are rendered in the correct order.
-                    secondHandle->setZ(secondHandle->z() + 1);
-                }
+    delete d->handle;
+    d->handle = handle;
+    if (handle) {
+        if (!handle->parentItem())
+            handle->setParentItem(d->slider);
+
+        QQuickItem *firstHandle = d->slider->first()->handle();
+        QQuickItem *secondHandle = d->slider->second()->handle();
+        if (firstHandle && secondHandle) {
+            // The order of property assignments in QML is undefined,
+            // but we need the first handle to be before the second due
+            // to focus order constraints, so check for that here.
+            const QList<QQuickItem *> childItems = d->slider->childItems();
+            const int firstIndex = childItems.indexOf(firstHandle);
+            const int secondIndex = childItems.indexOf(secondHandle);
+            if (firstIndex != -1 && secondIndex != -1 && firstIndex > secondIndex) {
+                firstHandle->stackBefore(secondHandle);
+                // Ensure we have some way of knowing which handle is above
+                // the other when it comes to mouse presses, and also that
+                // they are rendered in the correct order.
+                secondHandle->setZ(secondHandle->z() + 1);
             }
-
-            handle->setActiveFocusOnTab(true);
         }
-        emit handleChanged();
+
+        handle->setActiveFocusOnTab(true);
     }
+    emit handleChanged();
 }
 
 bool QQuickRangeSliderNode::isPressed() const
@@ -264,11 +265,12 @@ bool QQuickRangeSliderNode::isPressed() const
 void QQuickRangeSliderNode::setPressed(bool pressed)
 {
     Q_D(QQuickRangeSliderNode);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
-        d->slider->setAccessibleProperty("pressed", pressed || d->slider->second()->isPressed());
-        emit pressedChanged();
-    }
+    if (d->pressed == pressed)
+        return;
+
+    d->pressed = pressed;
+    d->slider->setAccessibleProperty("pressed", pressed || d->slider->second()->isPressed());
+    emit pressedChanged();
 }
 
 void QQuickRangeSliderNode::increase()
@@ -552,10 +554,11 @@ qreal QQuickRangeSlider::stepSize() const
 void QQuickRangeSlider::setStepSize(qreal step)
 {
     Q_D(QQuickRangeSlider);
-    if (!qFuzzyCompare(d->stepSize, step)) {
-        d->stepSize = step;
-        emit stepSizeChanged();
-    }
+    if (qFuzzyCompare(d->stepSize, step))
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -579,10 +582,11 @@ QQuickRangeSlider::SnapMode QQuickRangeSlider::snapMode() const
 void QQuickRangeSlider::setSnapMode(SnapMode mode)
 {
     Q_D(QQuickRangeSlider);
-    if (d->snapMode != mode) {
-        d->snapMode = mode;
-        emit snapModeChanged();
-    }
+    if (d->snapMode == mode)
+        return;
+
+    d->snapMode = mode;
+    emit snapModeChanged();
 }
 
 /*!
@@ -603,10 +607,11 @@ Qt::Orientation QQuickRangeSlider::orientation() const
 void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 {
     Q_D(QQuickRangeSlider);
-    if (d->orientation != orientation) {
-        d->orientation = orientation;
-        emit orientationChanged();
-    }
+    if (d->orientation == orientation)
+        return;
+
+    d->orientation = orientation;
+    emit orientationChanged();
 }
 
 /*!
@@ -625,13 +630,14 @@ QQuickItem *QQuickRangeSlider::track() const
 void QQuickRangeSlider::setTrack(QQuickItem *track)
 {
     Q_D(QQuickRangeSlider);
-    if (d->track != track) {
-        delete d->track;
-        d->track = track;
-        if (track && !track->parentItem())
-            track->setParentItem(this);
-        emit trackChanged();
-    }
+    if (d->track == track)
+        return;
+
+    delete d->track;
+    d->track = track;
+    if (track && !track->parentItem())
+        track->setParentItem(this);
+    emit trackChanged();
 }
 
 /*!

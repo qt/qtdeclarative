@@ -164,25 +164,26 @@ QQuickItem *QQuickPage::header() const
 void QQuickPage::setHeader(QQuickItem *header)
 {
     Q_D(QQuickPage);
-    if (d->header != header) {
-        if (d->header)
-            QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
-        d->header = header;
-        if (header) {
-            header->setParentItem(this);
-            QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-            p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
-            if (qFuzzyIsNull(header->z()))
-                header->setZ(1);
-            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
-                toolBar->setPosition(QQuickToolBar::Header);
-            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
-                tabBar->setPosition(QQuickTabBar::Header);
-            if (isComponentComplete())
-                d->relayout();
-        }
-        emit headerChanged();
+    if (d->header == header)
+        return;
+
+    if (d->header)
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+    d->header = header;
+    if (header) {
+        header->setParentItem(this);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(header);
+        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        if (qFuzzyIsNull(header->z()))
+            header->setZ(1);
+        if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
+            toolBar->setPosition(QQuickToolBar::Header);
+        else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
+            tabBar->setPosition(QQuickTabBar::Header);
+        if (isComponentComplete())
+            d->relayout();
     }
+    emit headerChanged();
 }
 
 /*!
@@ -205,25 +206,26 @@ QQuickItem *QQuickPage::footer() const
 void QQuickPage::setFooter(QQuickItem *footer)
 {
     Q_D(QQuickPage);
-    if (d->footer != footer) {
-        if (d->footer)
-            QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
-        d->footer = footer;
-        if (footer) {
-            footer->setParentItem(this);
-            QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-            p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
-            if (qFuzzyIsNull(footer->z()))
-                footer->setZ(1);
-            if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
-                toolBar->setPosition(QQuickToolBar::Footer);
-            else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
-                tabBar->setPosition(QQuickTabBar::Footer);
-            if (isComponentComplete())
-                d->relayout();
-        }
-        emit footerChanged();
+    if (d->footer == footer)
+        return;
+
+    if (d->footer)
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+    d->footer = footer;
+    if (footer) {
+        footer->setParentItem(this);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
+        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        if (qFuzzyIsNull(footer->z()))
+            footer->setZ(1);
+        if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
+            toolBar->setPosition(QQuickToolBar::Footer);
+        else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
+            tabBar->setPosition(QQuickTabBar::Footer);
+        if (isComponentComplete())
+            d->relayout();
     }
+    emit footerChanged();
 }
 
 /*!

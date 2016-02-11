@@ -274,18 +274,19 @@ QQuickItem *QQuickTextField::background() const
 void QQuickTextField::setBackground(QQuickItem *background)
 {
     Q_D(QQuickTextField);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setParentItem(this);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-            if (isComponentComplete())
-                d->resizeBackground();
-        }
-        emit backgroundChanged();
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(this);
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->resizeBackground();
     }
+    emit backgroundChanged();
 }
 
 /*!
@@ -302,14 +303,15 @@ QString QQuickTextField::placeholderText() const
 void QQuickTextField::setPlaceholderText(const QString &text)
 {
     Q_D(QQuickTextField);
-    if (d->placeholder != text) {
-        d->placeholder = text;
+    if (d->placeholder == text)
+        return;
+
+    d->placeholder = text;
 #ifndef QT_NO_ACCESSIBILITY
-        if (d->accessibleAttached)
-            d->accessibleAttached->setDescription(text);
+    if (d->accessibleAttached)
+        d->accessibleAttached->setDescription(text);
 #endif
-        emit placeholderTextChanged();
-    }
+    emit placeholderTextChanged();
 }
 
 /*!
@@ -340,10 +342,11 @@ Qt::FocusReason QQuickTextField::focusReason() const
 void QQuickTextField::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickTextField);
-    if (d->focusReason != reason) {
-        d->focusReason = reason;
-        emit focusReasonChanged();
-    }
+    if (d->focusReason == reason)
+        return;
+
+    d->focusReason = reason;
+    emit focusReasonChanged();
 }
 
 void QQuickTextField::classBegin()

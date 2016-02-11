@@ -711,10 +711,11 @@ void QQuickStackView::setPopEnter(QQuickTransition *enter)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->removeDisplacedTransition != enter) {
-        d->transitioner->removeDisplacedTransition = enter;
-        emit popEnterChanged();
-    }
+    if (d->transitioner->removeDisplacedTransition == enter)
+        return;
+
+    d->transitioner->removeDisplacedTransition = enter;
+    emit popEnterChanged();
 }
 
 /*!
@@ -737,10 +738,11 @@ void QQuickStackView::setPopExit(QQuickTransition *exit)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->removeTransition != exit) {
-        d->transitioner->removeTransition = exit;
-        emit popExitChanged();
-    }
+    if (d->transitioner->removeTransition == exit)
+        return;
+
+    d->transitioner->removeTransition = exit;
+    emit popExitChanged();
 }
 
 /*!
@@ -763,10 +765,11 @@ void QQuickStackView::setPushEnter(QQuickTransition *enter)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->addTransition != enter) {
-        d->transitioner->addTransition = enter;
-        emit pushEnterChanged();
-    }
+    if (d->transitioner->addTransition == enter)
+        return;
+
+    d->transitioner->addTransition = enter;
+    emit pushEnterChanged();
 }
 
 /*!
@@ -789,10 +792,11 @@ void QQuickStackView::setPushExit(QQuickTransition *exit)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->addDisplacedTransition != exit) {
-        d->transitioner->addDisplacedTransition = exit;
-        emit pushExitChanged();
-    }
+    if (d->transitioner->addDisplacedTransition == exit)
+        return;
+
+    d->transitioner->addDisplacedTransition = exit;
+    emit pushExitChanged();
 }
 
 /*!
@@ -815,10 +819,11 @@ void QQuickStackView::setReplaceEnter(QQuickTransition *enter)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->moveTransition != enter) {
-        d->transitioner->moveTransition = enter;
-        emit replaceEnterChanged();
-    }
+    if (d->transitioner->moveTransition == enter)
+        return;
+
+    d->transitioner->moveTransition = enter;
+    emit replaceEnterChanged();
 }
 
 /*!
@@ -841,10 +846,11 @@ void QQuickStackView::setReplaceExit(QQuickTransition *exit)
 {
     Q_D(QQuickStackView);
     d->ensureTransitioner();
-    if (d->transitioner->moveDisplacedTransition != exit) {
-        d->transitioner->moveDisplacedTransition = exit;
-        emit replaceExitChanged();
-    }
+    if (d->transitioner->moveDisplacedTransition == exit)
+        return;
+
+    d->transitioner->moveDisplacedTransition = exit;
+    emit replaceExitChanged();
 }
 
 void QQuickStackView::componentComplete()

@@ -430,11 +430,12 @@ qreal QQuickPopupPositioner::x() const
 
 void QQuickPopupPositioner::setX(qreal x)
 {
-    if (m_x != x) {
-        m_x = x;
-        if (m_popup->popupItem->isVisible())
-            repositionPopup();
-    }
+    if (m_x == x)
+        return;
+
+    m_x = x;
+    if (m_popup->popupItem->isVisible())
+        repositionPopup();
 }
 
 qreal QQuickPopupPositioner::y() const
@@ -444,11 +445,12 @@ qreal QQuickPopupPositioner::y() const
 
 void QQuickPopupPositioner::setY(qreal y)
 {
-    if (m_y != y) {
-        m_y = y;
-        if (m_popup->popupItem->isVisible())
-            repositionPopup();
-    }
+    if (m_y == y)
+        return;
+
+    m_y = y;
+    if (m_popup->popupItem->isVisible())
+        repositionPopup();
 }
 
 QQuickItem *QQuickPopupPositioner::parentItem() const
@@ -851,10 +853,11 @@ qreal QQuickPopup::contentWidth() const
 void QQuickPopup::setContentWidth(qreal width)
 {
     Q_D(QQuickPopup);
-    if (d->contentWidth != width) {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
+    if (qFuzzyCompare(d->contentWidth, width))
+        return;
+
+    d->contentWidth = width;
+    emit contentWidthChanged();
 }
 
 /*!
@@ -875,10 +878,11 @@ qreal QQuickPopup::contentHeight() const
 void QQuickPopup::setContentHeight(qreal height)
 {
     Q_D(QQuickPopup);
-    if (d->contentHeight != height) {
-        d->contentHeight = height;
-        emit contentHeightChanged();
-    }
+    if (qFuzzyCompare(d->contentHeight, height))
+        return;
+
+    d->contentHeight = height;
+    emit contentHeightChanged();
 }
 
 /*!
@@ -1223,12 +1227,13 @@ QQuickItem *QQuickPopup::parentItem() const
 void QQuickPopup::setParentItem(QQuickItem *parent)
 {
     Q_D(QQuickPopup);
-    if (d->parentItem != parent) {
-        d->parentItem = parent;
-        if (d->positioner.parentItem())
-            d->positioner.setParentItem(parent);
-        emit parentChanged();
-    }
+    if (d->parentItem == parent)
+        return;
+
+    d->parentItem = parent;
+    if (d->positioner.parentItem())
+        d->positioner.setParentItem(parent);
+    emit parentChanged();
 }
 
 /*!
@@ -1249,18 +1254,19 @@ QQuickItem *QQuickPopup::background() const
 void QQuickPopup::setBackground(QQuickItem *background)
 {
     Q_D(QQuickPopup);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setParentItem(d->popupItem);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-            if (isComponentComplete())
-                d->resizeBackground();
-        }
-        emit backgroundChanged();
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(d->popupItem);
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->resizeBackground();
     }
+    emit backgroundChanged();
 }
 
 /*!
@@ -1282,17 +1288,18 @@ QQuickItem *QQuickPopup::contentItem() const
 void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
-    if (d->contentItem != item) {
-        contentItemChange(item, d->contentItem);
-        delete d->contentItem;
-        d->contentItem = item;
-        if (item) {
-            item->setParentItem(d->popupItem);
-            if (isComponentComplete())
-                d->resizeContent();
-        }
-        emit contentItemChanged();
+    if (d->contentItem == item)
+        return;
+
+    contentItemChange(item, d->contentItem);
+    delete d->contentItem;
+    d->contentItem = item;
+    if (item) {
+        item->setParentItem(d->popupItem);
+        if (isComponentComplete())
+            d->resizeContent();
     }
+    emit contentItemChanged();
 }
 
 /*!
