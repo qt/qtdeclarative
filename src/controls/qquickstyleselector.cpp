@@ -35,7 +35,6 @@
 #include "qquickstyleselector_p.h"
 #include "qquickstyleselector_p_p.h"
 
-#include <QtCore/QFile>
 #include <QtCore/QDir>
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
@@ -120,7 +119,7 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
 
     // If we reach here there were no successful files found at a lower level in this branch, so we
     // should check this level as a potential result.
-    if (!QFile::exists(path + fileName))
+    if (!QFileInfo::exists(path + fileName))
         return QString();
     return path + fileName;
 }
