@@ -36,6 +36,7 @@
 
 #include "qquickswipeview_p.h"
 
+#include <QtQml/qqmlinfo.h>
 #include <QtLabsTemplates/private/qquickcontainer_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -67,6 +68,12 @@ QT_BEGIN_NAMESPACE
     \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
     pages dynamically at run time.
 
+    \note SwipeView takes over the geometry management of items added to the
+          view. Using anchors on the items is not supported, and any \c width
+          or \c height assignment will be overridden by the view. Notice that
+          this only applies to the root of the item. Specifying width and height,
+          or using anchors for its children works as expected.
+
     \labs
 
     \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls}
@@ -89,8 +96,16 @@ void QQuickSwipeViewPrivate::resizeItems()
     const int count = q->count();
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = itemAt(i);
-        if (item)
+        if (item) {
+            QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+            // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
+            if (anchors && (anchors->fill() || anchors->centerIn()) && !item->property("_q_QQuickSwipeView_warned").toBool()) {
+                qmlInfo(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
+                item->setProperty("_q_QQuickSwipeView_warned", true);
+            }
+
             item->setSize(QSizeF(contentItem->width(), contentItem->height()));
+        }
     }
 }
 
