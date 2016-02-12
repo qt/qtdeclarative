@@ -107,6 +107,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void Qt.labs.controls::ComboBox::activated(int index)
 
     This signal is emitted when the item at \a index is activated by the user.
+    \a index is the activated model index. The corresponding handler is \c onActivated.
 
     \sa currentIndex
 */

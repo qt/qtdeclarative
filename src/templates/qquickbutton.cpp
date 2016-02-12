@@ -67,6 +67,13 @@ QT_BEGIN_NAMESPACE
          \li A button that is disabled.
     \endtable
 
+    A button emits the signal \l {AbstractButton::}{clicked()} when it is activated by the user.
+    Connect to this signal to perform the button's action. Buttons also
+    provide the signals \l {AbstractButton::}{canceled()}, \l {AbstractButton::}{doubleClicked()}, \l {AbstractButton::}{pressed()},
+    \l {AbstractButton::}{released()} and \l {AbstractButton::}{pressAndHold()} for long presses.
+
+    See the snippet below on how to connect to the button's signals.
+
     \code
     RowLayout {
         Button {

@@ -24,12 +24,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 import QtQuick 2.0
 import Qt.labs.controls 1.0
 
-//! [1]
 PageIndicator {
     count: 5
     currentIndex: 2
+    Rectangle {
+        parent: contentItem.children[0]
+        anchors.fill: parent
+        color: 'transparent'
+        border.color: 'red'
+    }
 }
-//! [1]

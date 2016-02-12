@@ -244,7 +244,26 @@
 
     \section1 Customizing PageIndicator
 
-        TODO
+        PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtlabscontrols-pageindicator-background.png
+
+        PageIndicator has no background item by default.
+
+        \section3 Content item
+
+            \image qtlabscontrols-pageindicator-contentItem.png
+
+            \snippet PageIndicator.qml contentItem
+
+        \section3 Delegate
+
+            \image qtlabscontrols-pageindicator-delegate.png
+
+            \snippet PageIndicator.qml delegate
+
 
 
     \section1 Customizing Pane

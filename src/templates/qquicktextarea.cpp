@@ -267,7 +267,8 @@ void QQuickTextArea::setBackground(QQuickItem *background)
 /*!
     \qmlproperty string Qt.labs.controls::TextArea::placeholderText
 
-    This property holds the placeholder text.
+    This property holds the short hint that is displayed in the text area before
+    the user enters a value.
 */
 QString QQuickTextArea::placeholderText() const
 {

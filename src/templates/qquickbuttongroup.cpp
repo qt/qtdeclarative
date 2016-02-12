@@ -116,8 +116,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    More advanced use cases can be handled using the addButton() and
-    removeButton() methods.
+    More advanced use cases can be handled using the \c addButton() and
+    \c removeButton() methods.
 
     \labs
 

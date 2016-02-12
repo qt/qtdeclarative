@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \image qtlabscontrols-stackview-wireframe.png
 
     StackView can be used with a set of inter-linked information pages. For
-    example, an email application with separate views to list latest emails,
+    example, an email application with separate views to list the latest emails,
     view a specific email, and list/view the attachments. The email list view
     is pushed onto the stack as users open an email, and popped out as they
     choose to go back.

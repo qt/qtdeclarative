@@ -292,7 +292,8 @@ void QQuickTextField::setBackground(QQuickItem *background)
 /*!
     \qmlproperty string Qt.labs.controls::TextField::placeholderText
 
-    This property holds the placeholder text.
+    This property holds the hint that is displayed in the TextField before the user
+    enters text.
 */
 QString QQuickTextField::placeholderText() const
 {

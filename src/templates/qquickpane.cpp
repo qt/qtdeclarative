@@ -52,6 +52,10 @@ QT_BEGIN_NAMESPACE
     position its contents, for instance by creating a \l RowLayout or a
     \l ColumnLayout.
 
+    Items declared as children of a Pane are automatically parented to the
+    Pane's contentItem. Items created dynamically need to be explicitly
+    parented to the contentItem.
+
     If only a single item is used within a Pane, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.

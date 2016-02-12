@@ -59,6 +59,10 @@ QT_BEGIN_NAMESPACE
     ApplicationWindow is a \l Window which makes it convenient to add
     a \l header and \l footer item to the window.
 
+    You can declare ApplicationWindow as the root item of your application,
+    and run it by using \l QQmlApplicationEngine.  In this way you can control
+    the window's properties, appearance and layout from QML.
+
     \image qtlabscontrols-applicationwindow-wireframe.png
 
     \qml

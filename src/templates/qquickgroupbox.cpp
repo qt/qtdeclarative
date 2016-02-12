@@ -54,6 +54,10 @@ QT_BEGIN_NAMESPACE
     requires you to position its contents, for instance by creating a \l RowLayout
     or a \l ColumnLayout.
 
+    Items declared as children of a GroupBox are automatically parented to the
+    GroupBox's contentItem. Items created dynamically need to be explicitly
+    parented to the contentItem.
+
     If only a single item is used within a GroupBox, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
@@ -70,8 +74,8 @@ QT_BEGIN_NAMESPACE
     \image qtlabscontrols-groupbox-checkable.png
 
     It is a common pattern to enable or disable the groupbox's children when
-    its check box is toggled on/off, respectively, but the semantics of the
-    check box is left to the application to decide.
+    its checkbox is toggled on or off, but it is the application that decides
+    on the behavior of the groupbox.
 
     \snippet qtlabscontrols-groupbox-checkable.qml 1
 

@@ -65,6 +65,16 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-label.qml 1
 
+    You can use the properties of Text to change the appearance of the text as desired:
+
+    \qml
+     Label {
+         text: "Hello world"
+         font.pixelSize: 22
+         font.italic: true
+     }
+    \endqml
+
     \labs
 
     \sa {Customizing Label}
