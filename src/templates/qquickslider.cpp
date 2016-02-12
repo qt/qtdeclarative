@@ -110,9 +110,15 @@ qreal QQuickSliderPrivate::valueAt(qreal position) const
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
 {
-    if (qFuzzyIsNull(stepSize))
+    const qreal range = from + (to - from);
+    if (qFuzzyIsNull(range))
         return position;
-    return qRound(position / stepSize) * stepSize;
+
+    const qreal effectiveStep = stepSize / range;
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
 }
 
 qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
@@ -531,7 +537,11 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
-        setValue(d->valueAt(pos));
+        qreal val = d->valueAt(pos);
+        if (!qFuzzyCompare(val, d->value))
+            setValue(val);
+        else if (d->snapMode != NoSnap)
+            d->setPosition(pos);
         setKeepMouseGrab(false);
     }
     setPressed(false);

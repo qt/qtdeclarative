@@ -93,12 +93,10 @@ void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char
 {
     QQuickStyleSelector selector;
     if (selector.style() == QLatin1String("universal")) {
-        if (QFont(QStringLiteral("Segoe UI")).exactMatch()) {
-            QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
-            if (old) {
-                QQuickProxyTheme *theme = new QQuickUniversalTheme(old);
-                QGuiApplicationPrivate::platform_theme = theme;
-            }
+        QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
+        if (old) {
+            QQuickProxyTheme *theme = new QQuickUniversalTheme(old);
+            QGuiApplicationPrivate::platform_theme = theme;
         }
     }
 

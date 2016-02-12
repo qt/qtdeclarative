@@ -309,8 +309,18 @@ TestCase {
         secondPressedSpy.target = control.second
         verify(secondPressedSpy.valid)
 
-        mousePress(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
-        compare(firstPressedSpy.count, 0)
+        mousePress(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
+        compare(firstPressedSpy.count, 1)
+        compare(secondPressedSpy.count, 0)
+        compare(control.first.pressed, true)
+        compare(control.first.value, 0.0)
+        compare(control.first.position, 0.0)
+        compare(control.second.pressed, false)
+        compare(control.second.value, 1.0)
+        compare(control.second.position, 1.0)
+
+        mouseRelease(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
+        compare(firstPressedSpy.count, 2)
         compare(secondPressedSpy.count, 0)
         compare(control.first.pressed, false)
         compare(control.first.value, 0.0)
@@ -319,9 +329,19 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
-        compare(firstPressedSpy.count, 0)
-        compare(secondPressedSpy.count, 0)
+        mousePress(control, control.width * 0.75, control.height * 0.25, Qt.LeftButton)
+        compare(firstPressedSpy.count, 2)
+        compare(secondPressedSpy.count, 1)
+        compare(control.first.pressed, false)
+        compare(control.first.value, 0.0)
+        compare(control.first.position, 0.0)
+        compare(control.second.pressed, true)
+        compare(control.second.value, 1.0)
+        compare(control.second.position, 1.0)
+
+        mouseRelease(control, control.width * 0.75, control.height * 0.25, Qt.LeftButton)
+        compare(firstPressedSpy.count, 2)
+        compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, false)
         compare(control.first.value, 0.0)
         compare(control.first.position, 0.0)
@@ -329,19 +349,19 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mousePress(control, 0, 0, Qt.LeftButton)
-        compare(firstPressedSpy.count, 0)
-        compare(secondPressedSpy.count, 0)
-        compare(control.first.pressed, false)
+        mousePress(control, 0, control.height, Qt.LeftButton)
+        compare(firstPressedSpy.count, 3)
+        compare(secondPressedSpy.count, 2)
+        compare(control.first.pressed, true)
         compare(control.first.value, 0.0)
         compare(control.first.position, 0.0)
         compare(control.second.pressed, false)
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, 0, 0, Qt.LeftButton)
-        compare(firstPressedSpy.count, 0)
-        compare(secondPressedSpy.count, 0)
+        mouseRelease(control, 0, control.height, Qt.LeftButton)
+        compare(firstPressedSpy.count, 4)
+        compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, false)
         compare(control.first.value, 0.0)
         compare(control.first.position, 0.0)
@@ -350,8 +370,8 @@ TestCase {
         compare(control.second.position, 1.0)
 
         mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)
-        compare(firstPressedSpy.count, 1)
-        compare(secondPressedSpy.count, 0)
+        compare(firstPressedSpy.count, 5)
+        compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, true)
         compare(control.first.value, 0.0)
         compare(control.first.position, 0.0)
@@ -363,10 +383,22 @@ TestCase {
         var toX = horizontal ? control.width * 0.5 : control.first.handle.x
         var toY = horizontal ? control.first.handle.y : control.height * 0.5
         mouseMove(control, toX, toY, Qt.LeftButton)
-        compare(firstPressedSpy.count, 1)
-        compare(secondPressedSpy.count, 0)
+        compare(firstPressedSpy.count, 5)
+        compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, true)
         compare(control.first.value, 0.0)
+        compare(control.first.position, 0.5)
+        compare(control.first.visualPosition, 0.5)
+        compare(control.second.pressed, false)
+        compare(control.second.value, 1.0)
+        compare(control.second.position, 1.0)
+        compare(control.second.visualPosition, horizontal ? 1.0 : 0.0)
+
+        mouseRelease(control, toX, toY, Qt.LeftButton)
+        compare(firstPressedSpy.count, 6)
+        compare(secondPressedSpy.count, 2)
+        compare(control.first.pressed, false)
+        compare(control.first.value, 0.5)
         compare(control.first.position, 0.5)
         compare(control.first.visualPosition, 0.5)
         compare(control.second.pressed, false)
@@ -583,6 +615,43 @@ TestCase {
         compare(control.first.value, 0.5)
         compare(control.first.position, 0.5)
         compare(control.first.visualPosition, 0.5)
+
+        control.destroy()
+    }
+
+    function test_snapMode_data() {
+        return [
+            { tag: "NoSnap", snapMode: Slider.NoSnap, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
+            { tag: "SnapAlways", snapMode: Slider.SnapAlways, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] },
+            { tag: "SnapOnRelease", snapMode: Slider.SnapOnRelease, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] }
+        ]
+    }
+
+    function test_snapMode(data) {
+        var control = sliderComponent.createObject(testCase, {snapMode: data.snapMode, from: 0, to: 2, stepSize: 0.2})
+        verify(control)
+
+        control.first.value = 0
+        control.second.value = 2
+
+        function sliderCompare(left, right) {
+            return Math.abs(left - right) < 0.05
+        }
+
+        mousePress(control, control.first.handle.x, control.first.handle.y)
+        compare(control.first.pressed, true)
+        compare(control.first.value, data.values[0])
+        compare(control.first.position, data.positions[0])
+
+        mouseMove(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
+        compare(control.first.pressed, true)
+        verify(sliderCompare(control.first.value, data.values[1]))
+        verify(sliderCompare(control.first.position, data.positions[1]))
+
+        mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
+        compare(control.first.pressed, false)
+        verify(sliderCompare(control.first.value, data.values[2]))
+        verify(sliderCompare(control.first.position, data.positions[2]))
 
         control.destroy()
     }

@@ -41,15 +41,17 @@ import Qt.labs.controls.material 1.0
 T.TabBar {
     id: control
 
-    implicitWidth: Math.max(26, contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(26, contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     spacing: 1
 
     //! [contentItem]
     contentItem: ListView {
         implicitWidth: contentWidth
-        implicitHeight: contentHeight
+        implicitHeight: 48
 
         model: control.contentModel
         currentIndex: control.currentIndex

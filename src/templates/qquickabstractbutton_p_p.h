@@ -67,6 +67,10 @@ public:
         return button->d_func();
     }
 
+    bool isPressAndHoldConnected();
+    void startPressAndHold();
+    void stopPressAndHold();
+
     void startRepeatDelay();
     void startPressRepeat();
     void stopPressRepeat();
@@ -81,6 +85,8 @@ public:
     bool highlighted;
     bool autoExclusive;
     bool autoRepeat;
+    bool wasHeld;
+    int holdTimer;
     int delayTimer;
     int repeatTimer;
     QPointF pressPoint;

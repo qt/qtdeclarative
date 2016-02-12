@@ -323,10 +323,15 @@ static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
 
 static qreal snapPosition(const QQuickRangeSlider *slider, qreal position)
 {
-    const qreal stepSize = slider->stepSize();
-    if (qFuzzyIsNull(stepSize))
+    const qreal range = slider->from() + (slider->to() - slider->from());
+    if (qFuzzyIsNull(range))
         return position;
-    return qRound(position / stepSize) * stepSize;
+
+    const qreal effectiveStep = slider->stepSize() / range;
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
 }
 
 static qreal positionAt(const QQuickRangeSlider *slider, QQuickItem *handle, const QPoint &point)
@@ -756,6 +761,31 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
     } else if (secondHit) {
         hitNode = d->second;
         otherNode = d->first;
+    } else {
+        // find the nearest
+        const qreal firstDistance = QLineF(firstHandle->boundingRect().center(),
+                                           mapToItem(firstHandle, event->pos())).length();
+        const qreal secondDistance = QLineF(secondHandle->boundingRect().center(),
+                                            mapToItem(secondHandle, event->pos())).length();
+
+        if (qFuzzyCompare(firstDistance, secondDistance)) {
+            // same distance => choose the one that can be moved towards the press position
+            const bool inverted = d->from > d->to;
+            const qreal pos = positionAt(this, firstHandle, event->pos());
+            if ((!inverted && pos < d->first->position()) || (inverted && pos > d->first->position())) {
+                hitNode = d->first;
+                otherNode = d->second;
+            } else {
+                hitNode = d->second;
+                otherNode = d->first;
+            }
+        } else if (firstDistance < secondDistance) {
+            hitNode = d->first;
+            otherNode = d->second;
+        } else {
+            hitNode = d->second;
+            otherNode = d->first;
+        }
     }
 
     if (hitNode) {
@@ -803,7 +833,11 @@ void QQuickRangeSlider::mouseReleaseEvent(QMouseEvent *event)
     qreal pos = positionAt(this, pressedNode->handle(), event->pos());
     if (d->snapMode != NoSnap)
         pos = snapPosition(this, pos);
-    pressedNode->setValue(valueAt(this, pos));
+    qreal val = valueAt(this, pos);
+    if (!qFuzzyCompare(val, pressedNode->value()))
+        pressedNode->setValue(val);
+    else if (d->snapMode != NoSnap)
+        QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
     setKeepMouseGrab(false);
     pressedNode->setPressed(false);
 }
