@@ -214,8 +214,8 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
     event->setAccepted(d->modalPopups > 0);
     emit pressed();
 
-    for (int i = d->popups.count() - 1; i >= 0; --i) {
-        if (QQuickPopupPrivate::get(d->popups.at(i))->tryClose(this, event))
+    for (auto it = d->popups.rbegin(), end = d->popups.rend(); it != end; ++it) {
+        if (QQuickPopupPrivate::get(*it)->tryClose(this, event))
             break;
     }
 }
@@ -232,8 +232,8 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     event->setAccepted(d->modalPopups > 0);
     emit released();
 
-    for (int i = d->popups.count() - 1; i >= 0; --i) {
-        if (QQuickPopupPrivate::get(d->popups.at(i))->tryClose(this, event))
+    for (auto it = d->popups.rbegin(), end = d->popups.rend(); it != end; ++it) {
+        if (QQuickPopupPrivate::get(*it)->tryClose(this, event))
             break;
     }
 }
@@ -258,8 +258,8 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     bool modalBlocked = false;
     const QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
     const QList<QQuickItem *> &sortedChildren = priv->paintOrderChildItems();
-    for (int i = sortedChildren.count() - 1; i >= 0; --i) {
-        QQuickItem *popupItem = sortedChildren[i];
+    for (auto it = sortedChildren.rbegin(), end = sortedChildren.rend(); it != end; ++it) {
+        QQuickItem *popupItem = *it;
         if (popupItem == item)
             break;
 
