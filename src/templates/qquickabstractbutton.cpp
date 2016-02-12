@@ -122,6 +122,7 @@ void QQuickAbstractButtonPrivate::startPressAndHold()
 {
     Q_Q(QQuickAbstractButton);
     wasHeld = false;
+    stopPressAndHold();
     if (isPressAndHoldConnected())
         holdTimer = q->startTimer(QGuiApplication::styleHints()->mousePressAndHoldInterval());
 }
@@ -515,8 +516,10 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
     if (d->autoRepeat) {
         d->startRepeatDelay();
         d->repeatButton = event->button();
-    } else {
+    } else if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         d->startPressAndHold();
+    } else {
+        d->stopPressAndHold();
     }
 }
 
@@ -528,7 +531,7 @@ void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 
     if (d->autoRepeat)
         d->stopPressRepeat();
-    else if (!d->pressed)
+    else if (d->holdTimer > 0 && QLineF(d->pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance())
         d->stopPressAndHold();
 }
 
