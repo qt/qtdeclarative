@@ -474,8 +474,9 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     const int previousDisplacement = displacement;
     displacement = 0;
 
+    const int count = tumbler->count();
     // This can happen in tests, so it may happen in normal usage too.
-    if (tumbler->count() == 0)
+    if (count == 0)
         return;
 
     ContentItemType contentType = contentItemType(tumbler->contentItem());
@@ -487,12 +488,12 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     if (contentType == PathViewContentItem) {
         offset = tumbler->contentItem()->property("offset").toReal();
 
-        displacement = tumbler->count() - index - offset;
+        displacement = count - index - offset;
         int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
         if (displacement > halfVisibleItems)
-            displacement -= tumbler->count();
+            displacement -= count;
         else if (displacement < -halfVisibleItems)
-            displacement += tumbler->count();
+            displacement += count;
     } else {
         const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
         const qreal delegateH = delegateHeight(tumbler);
