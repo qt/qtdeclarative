@@ -7256,7 +7256,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 }
 
 /*!
-  \qmlmethod object QtQuick::Item::contains(point point)
+  \qmlmethod bool QtQuick::Item::contains(point point)
 
   Returns true if this item contains \a point, which is in local coordinates;
   returns false otherwise.

@@ -259,6 +259,7 @@ protected Q_SLOTS:
     void movementStarting();
     void movementEnding();
     void movementEnding(bool hMovementEnding, bool vMovementEnding);
+    void velocityTimelineCompleted();
     void timelineCompleted();
 
 protected:
