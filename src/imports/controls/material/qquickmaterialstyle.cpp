@@ -431,22 +431,24 @@ QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
     m_explicitTheme = true;
-    if (m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
 {
-    if (!m_explicitTheme && m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_explicitTheme || m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagateTheme()
@@ -461,11 +463,12 @@ void QQuickMaterialStyle::propagateTheme()
 
 void QQuickMaterialStyle::resetTheme()
 {
-    if (m_explicitTheme) {
-        m_explicitTheme = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritTheme(material ? material->theme() : defaultTheme);
-    }
+    if (!m_explicitTheme)
+        return;
+
+    m_explicitTheme = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritTheme(material ? material->theme() : defaultTheme);
 }
 
 QVariant QQuickMaterialStyle::primary() const
@@ -500,23 +503,25 @@ void QQuickMaterialStyle::setPrimary(const QVariant &var)
     }
 
     m_explicitPrimary = true;
-    if (m_primary != primary) {
-        m_customPrimary = custom;
-        m_primary = primary;
-        propagatePrimary();
-        emit primaryChanged();
-        emit paletteChanged();
-    }
+    if (m_primary == primary)
+        return;
+
+    m_customPrimary = custom;
+    m_primary = primary;
+    propagatePrimary();
+    emit primaryChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
 {
-    if (!m_explicitPrimary && m_primary != primary) {
-        m_customPrimary = custom;
-        m_primary = primary;
-        propagatePrimary();
-        emit primaryChanged();
-    }
+    if (m_explicitPrimary || m_primary == primary)
+        return;
+
+    m_customPrimary = custom;
+    m_primary = primary;
+    propagatePrimary();
+    emit primaryChanged();
 }
 
 void QQuickMaterialStyle::propagatePrimary()
@@ -531,12 +536,13 @@ void QQuickMaterialStyle::propagatePrimary()
 
 void QQuickMaterialStyle::resetPrimary()
 {
-    if (m_explicitPrimary) {
-        m_customPrimary = false;
-        m_explicitPrimary = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritPrimary(material ? material->m_primary : defaultPrimary, true);
-    }
+    if (!m_explicitPrimary)
+        return;
+
+    m_customPrimary = false;
+    m_explicitPrimary = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritPrimary(material ? material->m_primary : defaultPrimary, true);
 }
 
 QVariant QQuickMaterialStyle::accent() const
@@ -571,23 +577,25 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
     }
 
     m_explicitAccent = true;
-    if (m_accent != accent) {
-        m_customAccent = custom;
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-        emit paletteChanged();
-    }
+    if (m_accent == accent)
+        return;
+
+    m_customAccent = custom;
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
 {
-    if (!m_explicitAccent && m_accent != accent) {
-        m_customAccent = custom;
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-    }
+    if (m_explicitAccent || m_accent == accent)
+        return;
+
+    m_customAccent = custom;
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
 }
 
 void QQuickMaterialStyle::propagateAccent()
@@ -602,12 +610,13 @@ void QQuickMaterialStyle::propagateAccent()
 
 void QQuickMaterialStyle::resetAccent()
 {
-    if (m_explicitAccent) {
-        m_customAccent = false;
-        m_explicitAccent = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritAccent(material ? material->m_accent : defaultAccent, true);
-    }
+    if (!m_explicitAccent)
+        return;
+
+    m_customAccent = false;
+    m_explicitAccent = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritAccent(material ? material->m_accent : defaultAccent, true);
 }
 
 QColor QQuickMaterialStyle::primaryColor() const
