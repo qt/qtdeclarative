@@ -1,10 +1,6 @@
 TARGET = qmldbg_inspector
 QT    += qml-private quick-private core-private gui-private
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QQmlInspectorServiceFactory
-load(qt_plugin)
-
 INCLUDEPATH *= $$PWD $$PWD/../shared
 
 SOURCES += \
@@ -25,3 +21,7 @@ HEADERS += \
 
 OTHER_FILES += \
     qqmlinspectorservice.json
+
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QQmlInspectorServiceFactory
+load(qt_plugin)

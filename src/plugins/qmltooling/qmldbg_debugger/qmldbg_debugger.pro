@@ -1,10 +1,6 @@
 TARGET = qmldbg_debugger
 QT = qml-private core-private
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QQmlDebuggerServiceFactory
-load(qt_plugin)
-
 SOURCES += \
     $$PWD/qdebugmessageservice.cpp \
     $$PWD/qqmldebuggerservicefactory.cpp \
@@ -32,3 +28,6 @@ INCLUDEPATH += $$PWD \
 OTHER_FILES += \
     $$PWD/qqmldebuggerservice.json
 
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QQmlDebuggerServiceFactory
+load(qt_plugin)

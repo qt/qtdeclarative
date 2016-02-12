@@ -14,6 +14,7 @@ exists("qqml_enable_gcov") {
 }
 
 MODULE = quickparticles
-load(qt_module)
 
 include(particles.pri)
+
+load(qt_module)

@@ -1,10 +1,6 @@
 TARGET = qmldbg_profiler
 QT = qml-private core-private
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QQmlProfilerServiceFactory
-load(qt_plugin)
-
 SOURCES += \
     $$PWD/qqmlenginecontrolservice.cpp \
     $$PWD/qqmlprofileradapter.cpp \
@@ -26,3 +22,6 @@ INCLUDEPATH += $$PWD \
 OTHER_FILES += \
     $$PWD/qqmlprofilerservice.json
 
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QQmlProfilerServiceFactory
+load(qt_plugin)

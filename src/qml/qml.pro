@@ -11,9 +11,6 @@ solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 # Ensure this gcc optimization is switched off for mips platforms to avoid trouble with JIT.
 gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 
-MODULE_PLUGIN_TYPES = \
-  qmltooling
-
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov
@@ -28,8 +25,6 @@ greaterThan(QT_CLANG_MAJOR_VERSION, 3)|greaterThan(QT_CLANG_MINOR_VERSION, 3)| \
         greaterThan(QT_APPLE_CLANG_MAJOR_VERSION, 5)| \
         if(equals(QT_APPLE_CLANG_MAJOR_VERSION, 5):greaterThan(QT_APPLE_CLANG_MINOR_VERSION, 0)): \
     WERROR += -Wno-error=unused-const-variable
-
-load(qt_module)
 
 HEADERS += qtqmlglobal.h \
            qtqmlglobal_p.h
@@ -46,3 +41,7 @@ include(qml/qml.pri)
 include(debugger/debugger.pri)
 include(animations/animations.pri)
 include(types/types.pri)
+
+MODULE_PLUGIN_TYPES = \
+    qmltooling
+load(qt_module)

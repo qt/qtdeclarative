@@ -13,8 +13,6 @@ qtHaveModule(widgets) {
     DEFINES += QT_QMLTEST_WITH_WIDGETS
 }
 
-load(qt_module)
-
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
 # can be used in customer applications to build against QtQuickTest.
 feature.path = $$[QT_INSTALL_DATA]/mkspecs/features
@@ -33,3 +31,5 @@ HEADERS += \
     $$PWD/qtestoptions_p.h
 
 DEFINES += QT_QML_DEBUG_NO_WARNING
+
+load(qt_module)
