@@ -1,4 +1,5 @@
 TARGET = QtQuickParticles
+MODULE = quickparticles
 
 CONFIG += internal_module
 
@@ -12,8 +13,6 @@ exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov
 }
-
-MODULE = quickparticles
 
 include(particles.pri)
 
