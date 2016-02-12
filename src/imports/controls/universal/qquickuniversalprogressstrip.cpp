@@ -241,11 +241,12 @@ QColor QQuickUniversalProgressStrip::color() const
 
 void QQuickUniversalProgressStrip::setColor(const QColor &color)
 {
-    if (m_color != color) {
-        m_color = color;
-        update();
-        emit colorChanged();
-    }
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    update();
+    emit colorChanged();
 }
 
 QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
