@@ -521,7 +521,8 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
 
 void QQuickMaterialStyle::propagatePrimary()
 {
-    foreach (QQuickStyle *child, childStyles()) {
+    const auto styles = childStyles();
+    for (QQuickStyle *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritPrimary(m_primary, m_customPrimary);
