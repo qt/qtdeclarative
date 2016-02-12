@@ -38,6 +38,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/private/qfileselector_p.h>
 
 #include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
@@ -88,6 +89,10 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
         selector.setBaseUrl(QUrl(QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls")));\
     else
         selector.setBaseUrl(baseUrl());
+
+    const QString style = selector.style();
+    if (!style.isEmpty())
+        QFileSelectorPrivate::addStatics(QStringList() << style);
 
     qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
