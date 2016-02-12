@@ -53,12 +53,9 @@
 
 #include <QtCore/qsize.h>
 #include <QtGui/private/qopenglcontext_p.h>
+#include <QtGui/private/qopenglextensions_p.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qhash.h>
-
-#ifndef QT_NO_OPENGL
-#include <QtGui/private/qopenglextensions_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 

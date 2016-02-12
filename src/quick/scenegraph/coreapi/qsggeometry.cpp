@@ -42,10 +42,7 @@
 
 #include <qopenglcontext.h>
 #include <qopenglfunctions.h>
-
-#ifndef QT_NO_OPENGL
 #include <private/qopenglextensions_p.h>
-#endif
 
 #ifdef Q_OS_QNX
 #include <malloc.h>

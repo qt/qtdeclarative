@@ -45,10 +45,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 #include <private/qfontengine_p.h>
-
-#ifndef QT_NO_OPENGL
 #include <private/qopenglextensions_p.h>
-#endif
 
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qsgtexture_p.h>
