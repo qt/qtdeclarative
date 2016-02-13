@@ -204,6 +204,9 @@ public:
     const QMatrix4x4 *matrix() const { return m_matrix; }
     const QSGClipNode *clipList() const { return m_clip_list; }
 
+    void setMatrix(const QMatrix4x4 *matrix) { m_matrix = matrix; }
+    void setClipList(const QSGClipNode *clipList) { m_clip_list = clipList; }
+
 protected:
     QSGBasicGeometryNode(NodeType type);
     QSGBasicGeometryNode(QSGBasicGeometryNodePrivate &dd, NodeType type);

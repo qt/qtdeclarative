@@ -45,6 +45,9 @@
 
 // Built-in adaptations
 #include <QtQuick/private/qsgdummyadaptation_p.h>
+#ifdef QSG_D3D12
+#include <QtQuick/private/qsgd3d12adaptation_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -81,6 +84,9 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGDummyAdaptation);
+#ifdef QSG_D3D12
+    builtIns.append(new QSGD3D12Adaptation);
+#endif
 }
 
 Q_GLOBAL_STATIC(QSGAdaptionBackendData, qsg_adaptation_data)

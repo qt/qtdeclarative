@@ -53,10 +53,15 @@ QT_BEGIN_NAMESPACE
 
 QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tupleSize, int primitiveType, bool isPrimitive)
 {
-    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, 0 };
+    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, UNKNOWN, 0 };
     return a;
 }
 
+QSGGeometry::Attribute QSGGeometry::Attribute::createWithSemantic(int pos, int tupleSize, int type, Semantic semantic)
+{
+    Attribute a = { pos, tupleSize, type, semantic == POSITION, semantic, 0 };
+    return a;
+}
 
 /*!
     Convenience function which returns attributes to be used for 2D solid
@@ -66,7 +71,7 @@ QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tu
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 {
     static Attribute data[] = {
-        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true)
+        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION)
     };
     static AttributeSet attrs = { 1, sizeof(float) * 2, data };
     return attrs;
@@ -79,8 +84,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()
 {
     static Attribute data[] = {
-        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
-        QSGGeometry::Attribute::create(1, 2, GL_FLOAT)
+        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION),
+        Attribute::createWithSemantic(1, 2, GL_FLOAT, Attribute::TEXCOORD)
     };
     static AttributeSet attrs = { 2, sizeof(float) * 4, data };
     return attrs;
@@ -93,8 +98,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D(
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 {
     static Attribute data[] = {
-        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
-        QSGGeometry::Attribute::create(1, 4, GL_UNSIGNED_BYTE)
+        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION),
+        Attribute::createWithSemantic(1, 4, GL_UNSIGNED_BYTE, Attribute::COLOR)
     };
     static AttributeSet attrs = { 2, 2 * sizeof(float) + 4 * sizeof(char), data };
     return attrs;

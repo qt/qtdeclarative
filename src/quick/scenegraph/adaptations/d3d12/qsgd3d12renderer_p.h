@@ -37,9 +37,8 @@
 **
 ****************************************************************************/
 
-
-#ifndef QSGDEFAULTRECTANGLENODE_P_H
-#define QSGDEFAULTRECTANGLENODE_P_H
+#ifndef QSGD3D12RENDERER_P_H
+#define QSGD3D12RENDERER_P_H
 
 //
 //  W A R N I N G
@@ -52,76 +51,51 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
-
-#include <QtQuick/qsgvertexcolormaterial.h>
+#include <private/qsgrenderer_p.h>
+#include <QtGui/private/qdatabuffer_p.h>
+#include "qsgd3d12engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
-
-class Q_QUICK_PRIVATE_EXPORT QSGSmoothColorMaterial : public QSGMaterial
+class QSGD3D12Renderer : public QSGRenderer
 {
 public:
-    QSGSmoothColorMaterial();
+    QSGD3D12Renderer(QSGRenderContext *context);
 
-    int compare(const QSGMaterial *other) const;
-
-protected:
-    QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultNoMaterialRectangleNode : public QSGRectangleNode
-{
-public:
-    QSGDefaultNoMaterialRectangleNode();
-
-    void setRect(const QRectF &rect) override;
-    void setColor(const QColor &color) override;
-    void setPenColor(const QColor &color) override;
-    void setPenWidth(qreal width) override;
-    void setGradientStops(const QGradientStops &stops) override;
-    void setRadius(qreal radius) override;
-    void setAntialiasing(bool antialiasing) override;
-    void setAligned(bool aligned) override;
-    void update() override;
-
-protected:
-    virtual void updateMaterialAntialiasing() = 0;
-    virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
-
-    void updateGeometry();
-    void updateGradientTexture();
-
-    QRectF m_rect;
-    QGradientStops m_gradient_stops;
-    QColor m_color;
-    QColor m_border_color;
-    qreal m_radius;
-    qreal m_pen_width;
-
-    uint m_aligned : 1;
-    uint m_antialiasing : 1;
-    uint m_gradient_is_opaque : 1;
-    uint m_dirty_geometry : 1;
-
-    QSGGeometry m_geometry;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRectangleNode : public QSGDefaultNoMaterialRectangleNode
-{
-public:
-    QSGDefaultRectangleNode();
+    void renderScene(GLuint fboId) override;
+    void render() override;
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
 private:
-    void updateMaterialAntialiasing() override;
-    void updateMaterialBlending(QSGNode::DirtyState *state) override;
+    void updateMatrices(QSGNode *node, QSGTransformNode *xform);
+    void buildRenderList(QSGNode *node, QSGClipNode *clip);
+    void renderElements();
+    void renderElement(int elementIndex);
 
-    QSGVertexColorMaterial m_material;
-    QSGSmoothColorMaterial m_smoothMaterial;
+    struct Element {
+        QSGBasicGeometryNode *node = nullptr;
+        qint32 vboOffset = -1;
+        qint32 iboOffset = -1;
+        quint32 iboStride = 0;
+        qint32 cboOffset = -1;
+        quint32 cboSize = 0;
+        bool cboPrepared = false;
+    };
+
+    QSet<QSGNode *> m_dirtyTransformNodes;
+    QBitArray m_opaqueElements;
+    bool m_rebuild = true;
+    bool m_dirtyOpaqueElements = true;
+    QDataBuffer<quint8> m_vboData;
+    QDataBuffer<quint8> m_iboData;
+    QDataBuffer<quint8> m_cboData;
+    QDataBuffer<Element> m_renderList;
+    QSGD3D12Engine *m_engine;
+
+    QSGMaterialType *m_lastMaterialType = nullptr;
+    QSGD3D12PipelineState m_pipelineState;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGD3D12RENDERER_P_H

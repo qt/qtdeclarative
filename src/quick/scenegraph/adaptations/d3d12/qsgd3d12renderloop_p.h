@@ -37,9 +37,8 @@
 **
 ****************************************************************************/
 
-
-#ifndef QSGDEFAULTRECTANGLENODE_P_H
-#define QSGDEFAULTRECTANGLENODE_P_H
+#ifndef QSGD3D12RENDERLOOP_P_H
+#define QSGD3D12RENDERLOOP_P_H
 
 //
 //  W A R N I N G
@@ -52,76 +51,59 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
-
-#include <QtQuick/qsgvertexcolormaterial.h>
+#include <private/qsgrenderloop_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
+class QSGD3D12Engine;
+class QSGD3D12Context;
+class QSGD3D12RenderContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGSmoothColorMaterial : public QSGMaterial
+class QSGD3D12RenderLoop : public QSGRenderLoop
 {
 public:
-    QSGSmoothColorMaterial();
+    QSGD3D12RenderLoop();
+    ~QSGD3D12RenderLoop();
 
-    int compare(const QSGMaterial *other) const;
+    void show(QQuickWindow *window) override;
+    void hide(QQuickWindow *window) override;
+    void resize(QQuickWindow *window) override;
 
-protected:
-    QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
-};
+    void windowDestroyed(QQuickWindow *window) override;
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultNoMaterialRectangleNode : public QSGRectangleNode
-{
-public:
-    QSGDefaultNoMaterialRectangleNode();
+    void exposureChanged(QQuickWindow *window) override;
 
-    void setRect(const QRectF &rect) override;
-    void setColor(const QColor &color) override;
-    void setPenColor(const QColor &color) override;
-    void setPenWidth(qreal width) override;
-    void setGradientStops(const QGradientStops &stops) override;
-    void setRadius(qreal radius) override;
-    void setAntialiasing(bool antialiasing) override;
-    void setAligned(bool aligned) override;
-    void update() override;
+    QImage grab(QQuickWindow *window) override;
 
-protected:
-    virtual void updateMaterialAntialiasing() = 0;
-    virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
+    void update(QQuickWindow *window) override;
+    void maybeUpdate(QQuickWindow *window) override;
+    void handleUpdateRequest(QQuickWindow *window) override;
 
-    void updateGeometry();
-    void updateGradientTexture();
+    QAnimationDriver *animationDriver() const override;
 
-    QRectF m_rect;
-    QGradientStops m_gradient_stops;
-    QColor m_color;
-    QColor m_border_color;
-    qreal m_radius;
-    qreal m_pen_width;
+    QSGContext *sceneGraphContext() const override;
+    QSGRenderContext *createRenderContext(QSGContext *) const override;
 
-    uint m_aligned : 1;
-    uint m_antialiasing : 1;
-    uint m_gradient_is_opaque : 1;
-    uint m_dirty_geometry : 1;
+    void releaseResources(QQuickWindow *window) override;
+    void postJob(QQuickWindow *window, QRunnable *job) override;
 
-    QSGGeometry m_geometry;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRectangleNode : public QSGDefaultNoMaterialRectangleNode
-{
-public:
-    QSGDefaultRectangleNode();
+    QSurface::SurfaceType windowSurfaceType() const override;
 
 private:
-    void updateMaterialAntialiasing() override;
-    void updateMaterialBlending(QSGNode::DirtyState *state) override;
+    void renderWindow(QQuickWindow *window);
 
-    QSGVertexColorMaterial m_material;
-    QSGSmoothColorMaterial m_smoothMaterial;
+    QSGD3D12Context *sg;
+    QSGD3D12RenderContext *rc;
+
+    struct WindowData {
+        QSGD3D12Engine *engine = nullptr;
+        bool updatePending = false;
+        bool grabOnly = false;
+    };
+
+    QHash<QQuickWindow *, WindowData> m_windows;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGD3D12RENDERLOOP_P_H

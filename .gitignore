@@ -282,3 +282,7 @@ src/qml/RegExpJitTables.h
 src/qml/udis86_itab.c
 src/qml/udis86_itab.h
 
+# Generated HLSL bytecode headers
+hlsl_vs_*.h
+hlsl_ps_*.h
+hlsl_cs_*.h

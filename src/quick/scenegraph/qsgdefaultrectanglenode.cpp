@@ -96,9 +96,9 @@ namespace
     const QSGGeometry::AttributeSet &smoothAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
-            QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
-            QSGGeometry::Attribute::create(1, 4, GL_UNSIGNED_BYTE, false),
-            QSGGeometry::Attribute::create(2, 2, GL_FLOAT, false)
+            QSGGeometry::Attribute::create(0, 2, QSGGeometry::TypeFloat, true),
+            QSGGeometry::Attribute::create(1, 4, QSGGeometry::TypeUnsignedByte, false),
+            QSGGeometry::Attribute::create(2, 2, QSGGeometry::TypeFloat, false)
         };
         static QSGGeometry::AttributeSet attrs = { 3, sizeof(SmoothVertex), data };
         return attrs;
@@ -184,7 +184,7 @@ QSGMaterialShader *QSGSmoothColorMaterial::createShader() const
 }
 
 
-QSGDefaultRectangleNode::QSGDefaultRectangleNode()
+QSGDefaultNoMaterialRectangleNode::QSGDefaultNoMaterialRectangleNode()
     : m_radius(0)
     , m_pen_width(0)
     , m_aligned(true)
@@ -194,14 +194,13 @@ QSGDefaultRectangleNode::QSGDefaultRectangleNode()
     , m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0)
 {
     setGeometry(&m_geometry);
-    setMaterial(&m_material);
 
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("rectangle"));
 #endif
 }
 
-void QSGDefaultRectangleNode::setRect(const QRectF &rect)
+void QSGDefaultNoMaterialRectangleNode::setRect(const QRectF &rect)
 {
     if (rect == m_rect)
         return;
@@ -209,7 +208,7 @@ void QSGDefaultRectangleNode::setRect(const QRectF &rect)
     m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setColor(const QColor &color)
+void QSGDefaultNoMaterialRectangleNode::setColor(const QColor &color)
 {
     if (color == m_color)
         return;
@@ -218,7 +217,7 @@ void QSGDefaultRectangleNode::setColor(const QColor &color)
         m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setPenColor(const QColor &color)
+void QSGDefaultNoMaterialRectangleNode::setPenColor(const QColor &color)
 {
     if (color == m_border_color)
         return;
@@ -227,7 +226,7 @@ void QSGDefaultRectangleNode::setPenColor(const QColor &color)
         m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setPenWidth(qreal width)
+void QSGDefaultNoMaterialRectangleNode::setPenWidth(qreal width)
 {
     if (width == m_pen_width)
         return;
@@ -236,7 +235,7 @@ void QSGDefaultRectangleNode::setPenWidth(qreal width)
 }
 
 
-void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
+void QSGDefaultNoMaterialRectangleNode::setGradientStops(const QGradientStops &stops)
 {
     if (stops.constData() == m_gradient_stops.constData())
         return;
@@ -249,7 +248,7 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
     m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setRadius(qreal radius)
+void QSGDefaultNoMaterialRectangleNode::setRadius(qreal radius)
 {
     if (radius == m_radius)
         return;
@@ -257,24 +256,23 @@ void QSGDefaultRectangleNode::setRadius(qreal radius)
     m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setAntialiasing(bool antialiasing)
+void QSGDefaultNoMaterialRectangleNode::setAntialiasing(bool antialiasing)
 {
     if (antialiasing == m_antialiasing)
         return;
     m_antialiasing = antialiasing;
     if (m_antialiasing) {
-        setMaterial(&m_smoothMaterial);
         setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
         setFlag(OwnsGeometry, true);
     } else {
-        setMaterial(&m_material);
         setGeometry(&m_geometry);
         setFlag(OwnsGeometry, false);
     }
+    updateMaterialAntialiasing();
     m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::setAligned(bool aligned)
+void QSGDefaultNoMaterialRectangleNode::setAligned(bool aligned)
 {
     if (aligned == m_aligned)
         return;
@@ -282,30 +280,19 @@ void QSGDefaultRectangleNode::setAligned(bool aligned)
     m_dirty_geometry = true;
 }
 
-void QSGDefaultRectangleNode::update()
+void QSGDefaultNoMaterialRectangleNode::update()
 {
     if (m_dirty_geometry) {
         updateGeometry();
         m_dirty_geometry = false;
 
         QSGNode::DirtyState state = QSGNode::DirtyGeometry;
-        // smoothed material is always blended, so no change in material state
-        if (material() == &m_material) {
-            bool wasBlending = (m_material.flags() & QSGMaterial::Blending);
-            bool isBlending = (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
-                               || (m_color.alpha() < 255 && m_color.alpha() != 0)
-                               || (m_pen_width > 0 && m_border_color.alpha() < 255);
-            if (wasBlending != isBlending) {
-                m_material.setFlag(QSGMaterial::Blending, isBlending);
-                state |= QSGNode::DirtyMaterial;
-            }
-        }
-
+        updateMaterialBlending(&state);
         markDirty(state);
     }
 }
 
-void QSGDefaultRectangleNode::updateGeometry()
+void QSGDefaultNoMaterialRectangleNode::updateGeometry()
 {
     float width = float(m_rect.width());
     float height = float(m_rect.height());
@@ -315,7 +302,7 @@ void QSGDefaultRectangleNode::updateGeometry()
         penWidth = qRound(penWidth);
 
     QSGGeometry *g = geometry();
-    g->setDrawingMode(GL_TRIANGLE_STRIP);
+    g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
     int vertexStride = g->sizeOfVertex();
 
     union {
@@ -782,5 +769,32 @@ void QSGDefaultRectangleNode::updateGeometry()
     }
 }
 
+QSGDefaultRectangleNode::QSGDefaultRectangleNode()
+{
+    setMaterial(&m_material);
+}
+
+void QSGDefaultRectangleNode::updateMaterialAntialiasing()
+{
+    if (m_antialiasing)
+        setMaterial(&m_smoothMaterial);
+    else
+        setMaterial(&m_material);
+}
+
+void QSGDefaultRectangleNode::updateMaterialBlending(QSGNode::DirtyState *state)
+{
+    // smoothed material is always blended, so no change in material state
+    if (material() == &m_material) {
+        bool wasBlending = (m_material.flags() & QSGMaterial::Blending);
+        bool isBlending = (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
+                           || (m_color.alpha() < 255 && m_color.alpha() != 0)
+                           || (m_pen_width > 0 && m_border_color.alpha() < 255);
+        if (wasBlending != isBlending) {
+            m_material.setFlag(QSGMaterial::Blending, isBlending);
+            *state |= QSGNode::DirtyMaterial;
+        }
+    }
+}
 
 QT_END_NAMESPACE
