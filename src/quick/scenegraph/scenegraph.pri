@@ -100,6 +100,9 @@ SOURCES += \
     $$PWD/qsgwindowsrenderloop.cpp \
     $$PWD/qsgdefaultlayer.cpp
 
+# Built-in, non-plugin-based adaptations
+include(adaptations/adaptations.pri)
+
 RESOURCES += \
     $$PWD/scenegraph.qrc
 
