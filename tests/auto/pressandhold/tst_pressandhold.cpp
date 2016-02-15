@@ -37,19 +37,30 @@
 #include <QtTest>
 #include <QtQuick>
 
-// TODO: add QStyleHints::setMousePressAndHoldInterval() to speedup the test
-
 class tst_PressAndHold : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
     void pressAndHold_data();
     void pressAndHold();
 
     void keepSelection_data();
     void keepSelection();
 };
+
+void tst_PressAndHold::initTestCase()
+{
+    QGuiApplication::styleHints()->setMousePressAndHoldInterval(100);
+}
+
+void tst_PressAndHold::cleanupTestCase()
+{
+    QGuiApplication::styleHints()->setMousePressAndHoldInterval(-1);
+}
 
 void tst_PressAndHold::pressAndHold_data()
 {
