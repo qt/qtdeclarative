@@ -305,4 +305,25 @@ TestCase {
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
+
+    function test_focus() {
+        var control = spinBox.createObject(testCase, {from: 10, to: 1000, value: 100, focus: true})
+        verify(control)
+
+        control.forceActiveFocus()
+        compare(control.activeFocus, true)
+
+        compare(control.from, 10)
+        compare(control.to, 1000)
+        compare(control.value, 100)
+
+        control.focus = false
+        compare(control.activeFocus, false)
+
+        compare(control.from, 10)
+        compare(control.to, 1000)
+        compare(control.value, 100)
+
+        control.destroy()
+    }
 }
