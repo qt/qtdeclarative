@@ -95,6 +95,7 @@ class QQuickMaterialStyle : public QQuickStyle
     Q_PROPERTY(QColor drawerBackgroundColor READ drawerBackgroundColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -201,6 +202,7 @@ public:
     QColor drawerBackgroundColor() const;
     QColor dialogColor() const;
     QColor backgroundDimColor() const;
+    QColor listHighlightColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;

@@ -793,6 +793,11 @@ QColor QQuickMaterialStyle::backgroundDimColor() const
     return QColor::fromRgba(m_theme == Light ? 0x99303030 : 0x99fafafa);
 }
 
+QColor QQuickMaterialStyle::listHighlightColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? 0x1e000000 : 0x1effffff);
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);
