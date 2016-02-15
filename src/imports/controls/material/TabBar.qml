@@ -69,7 +69,7 @@ T.TabBar {
             Rectangle {
                 height: 2
                 width: parent.width
-                y: parent.height - height
+                y: control.position === T.TabBar.Footer ? 0 : parent.height - height
                 color: control.Material.accentColor
             }
         }
