@@ -60,11 +60,9 @@ private slots:
 
     void allControls();
     void textControls();
+
 private:
     QQmlEngine engine;
-    bool qt_tab_all_controls() {
-        return QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
-    }
 };
 
 tst_activeFocusOnTab::tst_activeFocusOnTab()
@@ -82,8 +80,7 @@ void tst_activeFocusOnTab::cleanup()
 
 void tst_activeFocusOnTab::allControls()
 {
-    if (!qt_tab_all_controls())
-        QSKIP("This platform iterates only text controls. Cannot test iterating all controls.");
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
 
     QQuickView *window = new QQuickView(0);
     window->setBaseSize(QSize(800,600));
@@ -428,12 +425,13 @@ void tst_activeFocusOnTab::allControls()
     QVERIFY(item->hasActiveFocus());
 
     delete window;
+
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
 }
 
 void tst_activeFocusOnTab::textControls()
 {
-    if (qt_tab_all_controls())
-        QSKIP("This platform iterates all controls. Cannot test iterating text controls only.");
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusTextControls);
 
     QQuickView *window = new QQuickView(0);
     window->setBaseSize(QSize(800,600));
@@ -487,6 +485,8 @@ void tst_activeFocusOnTab::textControls()
     QVERIFY(item->hasActiveFocus());
 
     delete window;
+
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
 }
 
 QTEST_MAIN(tst_activeFocusOnTab)
