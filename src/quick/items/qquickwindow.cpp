@@ -285,10 +285,43 @@ void QQuickWindow::update()
         QQuickRenderControlPrivate::get(d->renderControl)->update();
 }
 
+static void updatePixelRatioHelper(QQuickItem *item, float pixelRatio)
+{
+    if (item->flags() & QQuickItem::ItemHasContents) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        itemPrivate->itemChange(QQuickItem::ItemDevicePixelRatioHasChanged, pixelRatio);
+    }
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i = 0; i < items.size(); ++i)
+        updatePixelRatioHelper(items.at(i), pixelRatio);
+}
+
+void QQuickWindow::physicalDpiChanged()
+{
+    Q_D(QQuickWindow);
+    const qreal newPixelRatio = screen()->devicePixelRatio();
+    if (qFuzzyCompare(newPixelRatio, d->devicePixelRatio))
+        return;
+    d->devicePixelRatio = newPixelRatio;
+    if (d->contentItem)
+        updatePixelRatioHelper(d->contentItem, newPixelRatio);
+}
+
 void QQuickWindow::handleScreenChanged(QScreen *screen)
 {
     Q_D(QQuickWindow);
-    Q_UNUSED(screen)
+    if (screen) {
+        physicalDpiChanged();
+        // When physical DPI changes on the same screen, either the resolution or the device pixel
+        // ratio changed. We must check what it is. Device pixel ratio does not have its own
+        // ...Changed() signal.
+        d->physicalDpiChangedConnection = connect(screen, SIGNAL(physicalDotsPerInchChanged(qreal)),
+                                                  this, SLOT(physicalDpiChanged()));
+    } else {
+        disconnect(d->physicalDpiChangedConnection);
+    }
+
     d->forcePolish();
 }
 
@@ -407,6 +440,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
     , dirtyItemList(0)
+    , devicePixelRatio(0)
     , context(0)
     , renderer(0)
     , windowManager(0)
@@ -458,6 +492,9 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         windowManager = QSGRenderLoop::instance();
 
     Q_ASSERT(windowManager || renderControl);
+
+    if (QScreen *screen = q->screen())
+       devicePixelRatio = screen->devicePixelRatio();
 
     QSGContext *sg;
     if (renderControl) {

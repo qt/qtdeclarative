@@ -196,6 +196,7 @@ protected:
 private Q_SLOTS:
     void maybeUpdate();
     void cleanupSceneGraph();
+    void physicalDpiChanged();
     void handleScreenChanged(QScreen *screen);
     void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
