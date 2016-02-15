@@ -2654,7 +2654,9 @@ void Renderer::render()
         if (m_alphaBatches.size())
             std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
 
-        m_zRange = 1.0 / (m_nextRenderOrder);
+        m_zRange = m_nextRenderOrder != 0
+                 ? 1.0 / (m_nextRenderOrder)
+                 : 0;
     }
 
     if (Q_UNLIKELY(debug_render())) timeSorting = timer.restart();
