@@ -36,6 +36,7 @@
 
 #include "qquickstackview_p_p.h"
 
+#include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -227,6 +228,13 @@ void QQuickStackElement::transitionNextReposition(QQuickItemViewTransitioner *tr
 bool QQuickStackElement::prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds)
 {
     if (transitioner) {
+        if (item) {
+            QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+            // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
+            if (anchors && (anchors->fill() || anchors->centerIn()))
+                qmlInfo(item) << "StackView has detected conflicting anchors. Transitions may not execute properly.";
+        }
+
         // TODO: add force argument to QQuickItemViewTransitionableItem::prepareTransition()?
         nextTransitionToSet = true;
         nextTransitionFromSet = true;

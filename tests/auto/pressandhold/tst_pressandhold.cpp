@@ -54,14 +54,17 @@ private slots:
 void tst_PressAndHold::pressAndHold_data()
 {
     QTest::addColumn<QByteArray>("data");
+    QTest::addColumn<QByteArray>("signal");
 
-    QTest::newRow("TextField") << QByteArray("import Qt.labs.controls 1.0; TextField { text: 'TextField' }");
-    QTest::newRow("TextArea") << QByteArray("import Qt.labs.controls 1.0; TextArea { text: 'TextArea' }");
+    QTest::newRow("Button") << QByteArray("import Qt.labs.controls 1.0; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
+    QTest::newRow("TextField") << QByteArray("import Qt.labs.controls 1.0; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
+    QTest::newRow("TextArea") << QByteArray("import Qt.labs.controls 1.0; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
 }
 
 void tst_PressAndHold::pressAndHold()
 {
     QFETCH(QByteArray, data);
+    QFETCH(QByteArray, signal);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -71,8 +74,8 @@ void tst_PressAndHold::pressAndHold()
     QScopedPointer<QObject> waitControl(component.create());
     QVERIFY(!control.isNull() && !waitControl.isNull());
 
-    QSignalSpy spy(control.data(), SIGNAL(pressAndHold(QQuickMouseEvent*)));
-    QSignalSpy waitSpy(waitControl.data(), SIGNAL(pressAndHold(QQuickMouseEvent*)));
+    QSignalSpy spy(control.data(), signal);
+    QSignalSpy waitSpy(waitControl.data(), signal);
     QVERIFY(spy.isValid() && waitSpy.isValid());
 
     int startDragDistance = QGuiApplication::styleHints()->startDragDistance();

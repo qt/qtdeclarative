@@ -133,7 +133,7 @@ void QQuickSpinBoxPrivate::updateValue()
         if (text.isValid()) {
             QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(q));
             QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
-            QJSValue val = valueFromText.call(QJSValueList() << text.toString() << loc);
+            QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
             q->setValue(val.toInt());
         }
     }

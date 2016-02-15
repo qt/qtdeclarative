@@ -257,6 +257,12 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \note Using anchors on the items added to a StackView is not supported.
+          Typically push, pop, and replace transitions animate the position,
+          which is not possible when anchors are applied. Notice that this
+          only applies to the root of the item. Using anchors for its children
+          works as expected.
+
     \labs
 
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
