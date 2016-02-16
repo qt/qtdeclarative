@@ -2195,7 +2195,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     existing applications. When explicitly set, it will cease to be bound to
     the interactive property.
 
-    \sa \l {Flickable::}{interactive}
+    \sa {Flickable::}{interactive}
 */
 
 
