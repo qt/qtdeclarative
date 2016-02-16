@@ -53,7 +53,9 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qatomic.h>
+#ifndef QT_NO_NETWORK
 #include <QtNetwork/qnetworkreply.h>
+#endif
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
@@ -156,7 +158,9 @@ protected:
     virtual void dataReceived(const Data &) = 0;
     virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) = 0;
     virtual void done();
+#ifndef QT_NO_NETWORK
     virtual void networkError(QNetworkReply::NetworkError);
+#endif
     virtual void dependencyError(QQmlDataBlob *);
     virtual void dependencyComplete(QQmlDataBlob *);
     virtual void allDependenciesDone();
@@ -320,17 +324,21 @@ public:
 private:
     friend class QQmlDataBlob;
     friend class QQmlTypeLoaderThread;
+#ifndef QT_NO_NETWORK
     friend class QQmlTypeLoaderNetworkReplyProxy;
+#endif // QT_NO_NETWORK
 
     void shutdownThread();
 
     void loadThread(QQmlDataBlob *);
     void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
     void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
+#ifndef QT_NO_NETWORK
     void networkReplyFinished(QNetworkReply *);
     void networkReplyProgress(QNetworkReply *, qint64, qint64);
 
     typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
+#endif
 
     void setData(QQmlDataBlob *, const QByteArray &);
     void setData(QQmlDataBlob *, QQmlFile *);
@@ -362,7 +370,9 @@ private:
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
+#ifndef QT_NO_NETWORK
     NetworkReplies m_networkReplies;
+#endif
     TypeCache m_typeCache;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;

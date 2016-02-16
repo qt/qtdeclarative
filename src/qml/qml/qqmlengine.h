@@ -87,8 +87,10 @@ class QQmlExpression;
 class QQmlContext;
 class QQmlType;
 class QUrl;
+#ifndef QT_NO_NETWORK
 class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
+#endif
 class QQmlIncubationController;
 class Q_QML_EXPORT QQmlEngine : public QJSEngine
 {
@@ -115,10 +117,12 @@ public:
 
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
 
+#ifndef QT_NO_NETWORK
     void setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *);
     QQmlNetworkAccessManagerFactory *networkAccessManagerFactory() const;
 
     QNetworkAccessManager *networkAccessManager() const;
+#endif
 
     void setUrlInterceptor(QQmlAbstractUrlInterceptor* urlInterceptor);
     QQmlAbstractUrlInterceptor* urlInterceptor() const;

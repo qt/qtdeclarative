@@ -45,6 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_NETWORK
 
 class QNetworkAccessManager;
 class Q_QML_EXPORT QQmlNetworkAccessManagerFactory
@@ -54,6 +55,8 @@ public:
     virtual QNetworkAccessManager *create(QObject *parent) = 0;
 
 };
+
+#endif //QT_NO_NETWORK
 
 QT_END_NAMESPACE
 

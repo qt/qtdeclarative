@@ -58,17 +58,20 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_NETWORK
 class QNetworkReply;
+#endif
 class QQuickBorderImagePrivate : public QQuickImageBasePrivate
 {
     Q_DECLARE_PUBLIC(QQuickBorderImage)
 
 public:
     QQuickBorderImagePrivate()
-      : border(0), sciReply(0),
-        horizontalTileMode(QQuickBorderImage::Stretch),
-        verticalTileMode(QQuickBorderImage::Stretch),
-        redirectCount(0), pixmapChanged(false)
+      : border(0), horizontalTileMode(QQuickBorderImage::Stretch),
+        verticalTileMode(QQuickBorderImage::Stretch), pixmapChanged(false)
+#ifndef QT_NO_NETWORK
+      , sciReply(0), redirectCount(0)
+#endif
     {
     }
 
@@ -90,12 +93,14 @@ public:
 
     QQuickScaleGrid *border;
     QUrl sciurl;
-    QNetworkReply *sciReply;
     QQuickBorderImage::TileMode horizontalTileMode;
     QQuickBorderImage::TileMode verticalTileMode;
-    int redirectCount;
-
     bool pixmapChanged : 1;
+
+#ifndef QT_NO_NETWORK
+    QNetworkReply *sciReply;
+    int redirectCount;
+#endif
 };
 
 QT_END_NAMESPACE

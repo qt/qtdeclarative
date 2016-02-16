@@ -67,6 +67,8 @@ static char assets_string[] = "assets";
 #endif
 
 class QQmlFilePrivate;
+
+#ifndef QT_NO_NETWORK
 class QQmlFileNetworkReply : public QObject
 {
 Q_OBJECT
@@ -97,6 +99,7 @@ private:
     int m_redirectCount;
     QNetworkReply *m_reply;
 };
+#endif
 
 class QQmlFilePrivate
 {
@@ -114,10 +117,12 @@ public:
 
     Error error;
     QString errorString;
-
+#ifndef QT_NO_NETWORK
     QQmlFileNetworkReply *reply;
+#endif
 };
 
+#ifndef QT_NO_NETWORK
 int QQmlFileNetworkReply::finishedIndex = -1;
 int QQmlFileNetworkReply::downloadProgressIndex = -1;
 int QQmlFileNetworkReply::networkFinishedIndex = -1;
@@ -200,9 +205,13 @@ void QQmlFileNetworkReply::networkDownloadProgress(qint64 a, qint64 b)
 {
     emit downloadProgress(a, b);
 }
+#endif // QT_NO_NETWORK
 
 QQmlFilePrivate::QQmlFilePrivate()
-: error(None), reply(0)
+: error(None)
+#ifndef QT_NO_NETWORK
+, reply(0)
+#endif
 {
 }
 
@@ -225,7 +234,9 @@ QQmlFile::QQmlFile(QQmlEngine *e, const QString &url)
 
 QQmlFile::~QQmlFile()
 {
+#ifndef QT_NO_NETWORK
     delete d->reply;
+#endif
     delete d;
     d = 0;
 }
@@ -263,8 +274,10 @@ QQmlFile::Status QQmlFile::status() const
 {
     if (d->url.isEmpty() && d->urlString.isEmpty())
         return Null;
+#ifndef QT_NO_NETWORK
     else if (d->reply)
         return Loading;
+#endif
     else if (d->error != QQmlFilePrivate::None)
         return Error;
     else
@@ -321,7 +334,11 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
             d->error = QQmlFilePrivate::NotFound;
         }
     } else {
+#ifndef QT_NO_NETWORK
         d->reply = new QQmlFileNetworkReply(engine, d, url);
+#else
+        d->error = QQmlFilePrivate::NotFound;
+#endif
     }
 }
 
@@ -348,10 +365,14 @@ void QQmlFile::load(QQmlEngine *engine, const QString &url)
             d->error = QQmlFilePrivate::NotFound;
         }
     } else {
+#ifndef QT_NO_NETWORK
         QUrl qurl(url);
         d->url = qurl;
         d->urlString = QString();
         d->reply = new QQmlFileNetworkReply(engine, d, qurl);
+#else
+        d->error = QQmlFilePrivate::NotFound;
+#endif
     }
 }
 
@@ -368,6 +389,7 @@ void QQmlFile::clear(QObject *)
     clear();
 }
 
+#ifndef QT_NO_NETWORK
 bool QQmlFile::connectFinished(QObject *object, const char *method)
 {
     if (!d || !d->reply) {
@@ -411,6 +433,7 @@ bool QQmlFile::connectDownloadProgress(QObject *object, int method)
     return QMetaObject::connect(d->reply, QQmlFileNetworkReply::downloadProgressIndex,
                                 object, method);
 }
+#endif
 
 /*!
 Returns true if QQmlFile will open \a url synchronously.

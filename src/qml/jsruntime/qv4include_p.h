@@ -62,7 +62,9 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
+#ifndef QT_NO_NETWORK
 class QNetworkAccessManager;
+#endif
 class QNetworkReply;
 class QV4Include : public QObject
 {
@@ -90,15 +92,16 @@ private:
     static void callback(const QV4::Value &callback, const QV4::Value &status);
 
     QV4::ExecutionEngine *v4;
+    QUrl m_url;
+
+#ifndef QT_NO_NETWORK
+    int m_redirectCount;
     QNetworkAccessManager *m_network;
     QPointer<QNetworkReply> m_reply;
-
-    QUrl m_url;
-    int m_redirectCount;
+#endif
 
     QV4::PersistentValue m_callbackFunction;
     QV4::PersistentValue m_resultObject;
-
     QV4::PersistentValue m_qmlContext;
 };
 
