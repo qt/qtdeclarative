@@ -352,13 +352,6 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 {
 }
 
-void QQuickControl::classBegin()
-{
-    Q_D(QQuickControl);
-    QQuickItem::classBegin();
-    d->resolveFont();
-}
-
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickControl);
@@ -816,6 +809,7 @@ void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
     QQuickItem::componentComplete();
+    d->resolveFont();
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
