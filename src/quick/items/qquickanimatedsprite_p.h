@@ -351,19 +351,19 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void createEngine();
-    void sizeVertices();
+    void sizeVertices(QSGGeometryNode *node);
+
+protected Q_SLOTS:
+    void reset();
 
 protected:
-    void reset();
     void componentComplete() Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
     bool isCurrentFrameChangedConnected();
-    void prepareNextFrame();
+    void prepareNextFrame(QSGGeometryNode *node);
     void reloadImage();
     QSGGeometryNode* buildNode();
-    QSGGeometryNode *m_node;
-    QQuickAnimatedSpriteMaterial *m_material;
     QQuickSprite* m_sprite;
     QQuickSpriteEngine* m_spriteEngine;
     QElapsedTimer m_timestamp;

@@ -35,6 +35,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
+#include <private/qquickitem_p.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qopenglfunctions.h>
@@ -53,6 +54,7 @@ private slots:
     void test_frameChangedSignal();
     void test_largeAnimation_data();
     void test_largeAnimation();
+    void test_reparenting();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -268,6 +270,26 @@ void tst_qquickanimatedsprite::test_largeAnimation()
     delete window;
 }
 
+void tst_qquickanimatedsprite::test_reparenting()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("basic.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QVERIFY(window.rootObject());
+    QQuickAnimatedSprite* sprite = window.rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QTRY_VERIFY(sprite->running());
+    sprite->setParentItem(0);
+
+    sprite->setParentItem(window.rootObject());
+    // don't crash (QTBUG-51162)
+    sprite->polish();
+    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, true);
+    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, false);
+}
 
 QTEST_MAIN(tst_qquickanimatedsprite)
 
