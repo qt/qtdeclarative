@@ -55,7 +55,40 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-popups
     \brief A popup control.
 
-    Popup is the base type of popup-like user interface controls.
+    Popup is the base type of popup-like user interface controls. It can be
+    used with Window or ApplicationWindow.
+
+    \qml
+    import QtQuick.Window 2.2
+    import Qt.labs.controls 1.0
+
+    Window {
+        id: window
+        width: 400
+        height: 400
+        visible: true
+
+        Button {
+            text: "Open"
+            onClicked: popup.open()
+        }
+
+        Popup {
+            id: popup
+            x: 100
+            y: 100
+            width: 200
+            height: 300
+            modal: true
+            focus: true
+            closePolicy: Popup.OnEscape | Popup.OnPressOutside
+        }
+    }
+    \endqml
+
+    In order to ensure that a popup is displayed above other items in the
+    scene, it is recommended to use ApplicationWindow. ApplicationWindow also
+    provides background dimming effects.
 
     \labs
 */

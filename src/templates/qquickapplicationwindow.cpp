@@ -79,6 +79,10 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    ApplicationWindow supports popups via its \l overlay property, which
+    ensures that popups are displayed above other content and that the
+    background is dimmed when a modal popup is visible.
+
     \note By default, an ApplicationWindow is not visible.
 
     \labs
