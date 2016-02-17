@@ -9,6 +9,7 @@ Rectangle {
     property Item contentItem: root.Window.contentItem
     property int windowWidth: root.Window.width
     property int windowHeight: root.Window.height
+    property var window: root.Window.window
     Text {
         objectName: "rectangleWindowText"
         anchors.centerIn: parent
@@ -26,6 +27,7 @@ Rectangle {
             property Item contentItem: Window.contentItem
             property int windowWidth: Window.width
             property int windowHeight: Window.height
+            property var window: Window.window
         }
     }
 }
