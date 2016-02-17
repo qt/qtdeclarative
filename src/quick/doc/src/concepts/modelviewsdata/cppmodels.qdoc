@@ -102,7 +102,7 @@ has changed.  If the QList changes, it is necessary to reset
 the model by calling QQmlContext::setContextProperty() again.
 
 
-\section2 QAbstractItemModel
+\section2 QAbstractItemModel subclass
 
 A model can be defined by subclassing QAbstractItemModel. This is the
 best approach if you have a more complex model that cannot be supported
