@@ -297,7 +297,7 @@ public:
         emit flagPropertyChanged();
     }
 
-    enum MyEnum { EnumVal1, EnumVal2 };
+    enum MyEnum { EnumVal1, EnumVal2, lowercaseEnumVal };
     MyEnum enumPropertyValue;
     MyEnum enumProperty() const {
         return enumPropertyValue;
@@ -597,6 +597,12 @@ signals:
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(MyTypeObject::MyFlags)
 
+// FIXME: If no subclass is used for the singleton registration with qmlRegisterSingletonType(),
+//        the valueTypes() test will fail.
+class MyTypeObjectSingleton : public MyTypeObject
+{
+    Q_OBJECT
+};
 
 class MyContainer : public QObject
 {

@@ -34,6 +34,14 @@
 
 #include <private/qqmlcompiler_p.h>
 
+static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    return new MyTypeObject();
+}
+
 void registerTypes()
 {
     qmlRegisterInterface<MyInterface>("MyInterface");
@@ -93,6 +101,8 @@ void registerTypes()
     qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
 
     qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
+
+    qmlRegisterSingletonType<MyTypeObjectSingleton>("Test", 1, 0, "MyTypeObjectSingleton", myTypeObjectSingleton);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

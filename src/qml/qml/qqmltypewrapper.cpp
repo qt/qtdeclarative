@@ -119,6 +119,28 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, Q
     return w.asReturnedValue();
 }
 
+static int enumForSingleton(String *name, QObject *qobjectSingleton)
+{
+    // ### Optimize
+    QByteArray enumName = name->toQString().toUtf8();
+    const QMetaObject *metaObject = qobjectSingleton->metaObject();
+    for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
+        QMetaEnum e = metaObject->enumerator(ii);
+        bool ok;
+        int value = e.keyToValue(enumName.constData(), &ok);
+        if (ok)
+            return value;
+    }
+    return -1;
+}
+
+static ReturnedValue throwLowercaseEnumError(QV4::ExecutionEngine *v4, String *name, QQmlType *type)
+{
+    const QString message =
+            QStringLiteral("Cannot access enum value '%1' of '%2', enum values need to start with an uppercase letter.")
+                .arg(name->toQString()).arg(QLatin1String(type->typeName()));
+    return v4->throwTypeError(message);
+}
 
 ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
@@ -135,9 +157,9 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
     QQmlContextData *context = v4->callingQmlContext();
 
     QObject *object = w->d()->object;
+    QQmlType *type = w->d()->type;
 
-    if (w->d()->type) {
-        QQmlType *type = w->d()->type;
+    if (type) {
 
         // singleton types are handled differently to other types.
         if (type->isSingleton()) {
@@ -147,24 +169,29 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 
             QObject *qobjectSingleton = siinfo->qobjectApi(e);
             if (qobjectSingleton) {
+
                 // check for enum value
-                if (name->startsWithUpper()) {
-                    if (w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums) {
-                        // ### Optimize
-                        QByteArray enumName = name->toQString().toUtf8();
-                        const QMetaObject *metaObject = qobjectSingleton->metaObject();
-                        for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
-                            QMetaEnum e = metaObject->enumerator(ii);
-                            bool ok;
-                            int value = e.keyToValue(enumName.constData(), &ok);
-                            if (ok)
-                                return QV4::Primitive::fromInt32(value).asReturnedValue();
-                        }
-                    }
+                const bool includeEnums = w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums;
+                if (includeEnums && name->startsWithUpper()) {
+                    const int value = enumForSingleton(name, qobjectSingleton);
+                    if (value != -1)
+                        return QV4::Primitive::fromInt32(value).asReturnedValue();
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                bool ok;
+                const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, &ok);
+                if (hasProperty)
+                    *hasProperty = ok;
+
+                // Warn when attempting to access a lowercased enum value, singleton case
+                if (!ok && includeEnums && !name->startsWithUpper()) {
+                    const int value = enumForSingleton(name, qobjectSingleton);
+                    if (value != -1)
+                        return throwLowercaseEnumError(v4, name, type);
+                }
+
+                return result;
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                 QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
@@ -221,9 +248,20 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
         Q_ASSERT(!"Unreachable");
     }
 
+    bool ok = false;
+    const ReturnedValue result = Object::get(m, name, &ok);
     if (hasProperty)
-        *hasProperty = false;
-    return Object::get(m, name, hasProperty);
+        *hasProperty = ok;
+
+    // Warn when attempting to access a lowercased enum value, non-singleton case
+    if (!ok && type && !type->isSingleton() && !name->startsWithUpper()) {
+        bool enumOk = false;
+        type->enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &enumOk);
+        if (enumOk)
+            return throwLowercaseEnumError(v4, name, type);
+    }
+
+    return result;
 }
 
 
