@@ -99,22 +99,22 @@ QQuickProfiler::~QQuickProfiler()
 void QQuickProfiler::startProfilingImpl(quint64 features)
 {
     QMutexLocker lock(&m_dataMutex);
-    m_data.clear();
     featuresEnabled = features;
 }
 
 void QQuickProfiler::stopProfilingImpl()
 {
-    {
-        QMutexLocker lock(&m_dataMutex);
-        featuresEnabled = 0;
-    }
+    QMutexLocker lock(&m_dataMutex);
+    featuresEnabled = 0;
     emit dataReady(m_data);
+    m_data.clear();
 }
 
 void QQuickProfiler::reportDataImpl()
 {
+    QMutexLocker lock(&m_dataMutex);
     emit dataReady(m_data);
+    m_data.clear();
 }
 
 void QQuickProfiler::setTimer(const QElapsedTimer &t)
