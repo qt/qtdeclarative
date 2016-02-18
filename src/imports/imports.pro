@@ -10,6 +10,7 @@ SUBDIRS += \
 
 qtHaveModule(quick) {
     SUBDIRS += \
+        layouts \
         qtquick2 \
         particles \
         window \

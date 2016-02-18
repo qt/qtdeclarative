@@ -21,6 +21,7 @@ PRIVATETESTS += \
     qquickfontloader_static \
     qquickfontmetrics \
     qquickimageprovider \
+    qquicklayouts \
     qquickpath \
     qquicksmoothedanimation \
     qquickspringanimation \
