@@ -136,4 +136,186 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: localeComponent
+        Pane {
+            id: panel
+            property alias button: _button;
+            property alias popup: _popup;
+            property alias button1: _button1;
+            property alias button2: _button2;
+            locale: Qt.locale("en_US")
+            Column {
+                Button {
+                    id: _button
+                    text: "Button"
+                    locale: Qt.locale("nb_NO")
+                    Popup {
+                        id: _popup
+                        y: _button.height
+                        implicitHeight: Math.min(396, _column.contentHeight)
+                        contentItem: Column {
+                            id: _column
+                            Button {
+                                id: _button1
+                                text: "Button 1"
+                            }
+                            Button {
+                                id: _button2
+                                text: "Button 2"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function test_locale() { // QTBUG_50984
+        // test looking up natural locale from ancestors
+        var control = localeComponent.createObject(testCase)
+        verify(control)
+        verify(control.button)
+        verify(control.popup)
+        verify(control.button1)
+        verify(control.button2)
+
+        waitForRendering(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        var popup = control.popup
+        popup.open()
+
+        compare(control.locale.name, "en_US")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.button1.locale.name, "nb_NO")
+        compare(control.button2.locale.name, "nb_NO")
+
+        control.destroy()
+    }
+
+    Component {
+        id: localeComponent2
+        Pane {
+            id: panel
+            property alias button: _button;
+            property alias popup: _popup;
+            property alias button1: _button1;
+            property alias button2: _button2;
+            property alias localespy: _lspy;
+            property alias mirroredspy: _mspy;
+            property alias localespy_1: _lspy_1;
+            property alias mirroredspy_1: _mspy_1;
+            property alias localespy_2: _lspy_2;
+            property alias mirroredspy_2: _mspy_2;
+            Column {
+                Button {
+                    id: _button
+                    text: "Button"
+                    Popup {
+                        id: _popup
+                        y: _button.height
+                        implicitHeight: Math.min(396, _column.contentHeight)
+                        contentItem: Column {
+                            id: _column
+                            Button {
+                                id: _button1
+                                text: "Button 1"
+                                SignalSpy {
+                                    id: _lspy_1
+                                    target: _button1
+                                    signalName: "localeChanged"
+                                }
+                                SignalSpy {
+                                    id: _mspy_1
+                                    target: _button1
+                                    signalName: "mirroredChanged"
+                                }
+                            }
+                            Button {
+                                id: _button2
+                                text: "Button 2"
+                                SignalSpy {
+                                    id: _lspy_2
+                                    target: _button2
+                                    signalName: "localeChanged"
+                                }
+                                SignalSpy {
+                                    id: _mspy_2
+                                    target: _button2
+                                    signalName: "mirroredChanged"
+                                }
+                            }
+                        }
+                    }
+                    SignalSpy {
+                        id: _lspy
+                        target: _button
+                        signalName: "localeChanged"
+                    }
+                    SignalSpy {
+                        id: _mspy
+                        target: _button
+                        signalName: "mirroredChanged"
+                    }
+                }
+            }
+        }
+    }
+
+    function test_locale_2() { // QTBUG_50984
+        // test default locale and locale inheritance
+        var control = localeComponent2.createObject(testCase)
+        verify(control)
+        verify(control.button)
+        verify(control.popup)
+        verify(control.button1)
+        verify(control.button2)
+
+        waitForRendering(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        var popup = control.popup
+        popup.open()
+
+        var defaultLocale = Qt.locale()
+
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.button.locale.name, defaultLocale.name)
+        compare(control.button1.locale.name, defaultLocale.name)
+        compare(control.button2.locale.name, defaultLocale.name)
+
+        control.locale = Qt.locale("nb_NO")
+        control.localespy.wait()
+        compare(control.localespy.count, 1)
+        compare(control.mirroredspy.count, 0)
+        compare(control.locale.name, "nb_NO")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.button1.locale.name, "nb_NO")
+        compare(control.button2.locale.name, "nb_NO")
+        compare(control.localespy_1.count, 1)
+        compare(control.mirroredspy_1.count, 0)
+        compare(control.localespy_2.count, 1)
+        compare(control.mirroredspy_2.count, 0)
+
+        control.locale = Qt.locale("ar_EG")
+        control.localespy.wait()
+        compare(control.localespy.count, 2)
+        compare(control.mirroredspy.count, 1)
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "ar_EG")
+        compare(control.button1.locale.name, "ar_EG")
+        compare(control.button2.locale.name, "ar_EG")
+        compare(control.localespy_1.count, 2)
+        compare(control.mirroredspy_1.count, 1)
+        compare(control.localespy_2.count, 2)
+        compare(control.mirroredspy_2.count, 1)
+
+        control.destroy()
+    }
 }

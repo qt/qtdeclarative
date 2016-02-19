@@ -373,7 +373,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     if (change == ItemParentHasChanged && isComponentComplete()) {
         d->resolveFont();
         if (!d->hasLocale)
-            d->locale = d->calcLocale();
+            d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
     }
 }
 
@@ -652,14 +652,20 @@ void QQuickControl::resetLocale()
     if (!d->hasLocale)
         return;
 
-    d->updateLocale(d->calcLocale(), false); // explicit=false
+    d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
 }
 
-QLocale QQuickControlPrivate::calcLocale() const
+QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
 {
-    Q_Q(const QQuickControl);
-    QQuickItem *p = q->parentItem();
+    QQuickItem *p = q;
     while (p) {
+        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
+            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
+                p = qp->parentItem();
+                continue;
+            }
+        }
+
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
             return qc->locale();
 
@@ -670,8 +676,10 @@ QLocale QQuickControlPrivate::calcLocale() const
         p = p->parentItem();
     }
 
-    if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
-        return w->locale();
+    if (q) {
+        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+            return w->locale();
+    }
 
     return QLocale();
 }
@@ -702,6 +710,13 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
             QQuickControlPrivate::get(control)->updateLocale(l, false);
         else
             updateLocaleRecur(child, l);
+    }
+
+    foreach (QObject *child, item->children()) {
+        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
+            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
+                updateLocaleRecur(qpi, l);
+        }
     }
 }
 
@@ -824,6 +839,8 @@ void QQuickControl::componentComplete()
     Q_D(QQuickControl);
     QQuickItem::componentComplete();
     d->resolveFont();
+    if (!d->hasLocale)
+        d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
