@@ -37,6 +37,7 @@
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include "qquicklabel_p.h"
 #include "qquicklabel_p_p.h"
@@ -71,7 +72,8 @@ QT_BEGIN_NAMESPACE
 
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
+    focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
     background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -740,6 +742,38 @@ bool QQuickControl::isMirrored() const
 }
 
 /*!
+    \qmlproperty enumeration Qt.labs.controls::Control::focusPolicy
+    \readonly
+
+    This property determines the way the control accepts focus.
+
+    \value Qt.TabFocus    The control accepts focus by tabbing.
+    \value Qt.ClickFocus  The control accepts focus by clicking.
+    \value Qt.StrongFocus The control accepts focus by both tabbing and clicking.
+    \value Qt.WheelFocus  The control accepts focus by tabbing, clicking, and using the mouse wheel.
+    \value Qt.NoFocus     The control does not accept focus.
+*/
+Qt::FocusPolicy QQuickControl::focusPolicy() const
+{
+    Q_D(const QQuickControl);
+    uint policy = d->focusPolicy;
+    if (activeFocusOnTab())
+        policy |= Qt::TabFocus;
+    return static_cast<Qt::FocusPolicy>(policy);
+}
+
+void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
+{
+    Q_D(QQuickControl);
+    if (d->focusPolicy == policy)
+        return;
+
+    d->focusPolicy = policy;
+    setActiveFocusOnTab(policy & Qt::TabFocus);
+    emit focusPolicyChanged();
+}
+
+/*!
     \qmlproperty enumeration Qt.labs.controls::Control::focusReason
     \readonly
 
@@ -871,6 +905,10 @@ void QQuickControl::focusOutEvent(QFocusEvent *event)
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        forceActiveFocus(Qt::MouseFocusReason);
+
     event->accept();
 }
 
@@ -881,7 +919,20 @@ void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        forceActiveFocus(Qt::MouseFocusReason);
+
     event->accept();
+}
+
+void QQuickControl::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::WheelFocus) == Qt::WheelFocus)
+        forceActiveFocus(Qt::MouseFocusReason);
+
+    QQuickItem::wheelEvent(event);
 }
 
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

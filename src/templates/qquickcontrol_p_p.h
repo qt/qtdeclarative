@@ -119,6 +119,7 @@ public:
     qreal bottomPadding;
     qreal spacing;
     QLocale locale;
+    Qt::FocusPolicy focusPolicy;
     Qt::FocusReason focusReason;
     QQuickItem *background;
     QQuickItem *contentItem;

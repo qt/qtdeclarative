@@ -56,6 +56,11 @@ TestCase {
         T.Control { }
     }
 
+    Component {
+        id: button
+        T.Button { }
+    }
+
     SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
@@ -846,6 +851,46 @@ TestCase {
         testCase.forceActiveFocus(Qt.TabFocusReason)
         compare(control.activeFocus, false)
         compare(control.focusReason, Qt.TabFocusReason)
+
+        control.destroy()
+    }
+
+    function test_focusPolicy() {
+        var control = button.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        // Qt.TabFocus vs. Item::activeFocusOnTab
+        control.activeFocusOnTab = true
+        compare(control.focusPolicy, Qt.TabFocus)
+        control.activeFocusOnTab = false
+        compare(control.focusPolicy, Qt.NoFocus)
+
+        control.focusPolicy = Qt.TabFocus
+        compare(control.focusPolicy, Qt.TabFocus)
+        compare(control.activeFocusOnTab, true)
+
+        // Qt.ClickFocus
+        mouseClick(control)
+        verify(!control.activeFocus)
+
+        control.focusPolicy = Qt.ClickFocus
+        compare(control.focusPolicy, Qt.ClickFocus)
+
+        mouseClick(control)
+        verify(control.activeFocus)
+
+        control.focus = false
+        verify(!control.activeFocus)
+
+        // Qt.WheelFocus
+        mouseWheel(control, control.width / 2, control.height / 2, 10)
+        verify(!control.activeFocus)
+
+        control.focusPolicy = Qt.WheelFocus
+        compare(control.focusPolicy, Qt.WheelFocus)
+
+        mouseWheel(control, control.width / 2, control.height / 2, 10)
+        verify(control.activeFocus)
 
         control.destroy()
     }
