@@ -41,6 +41,7 @@
 import QtQuick 2.4
 import QtTest 1.0
 import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
 TestCase {
     id: testCase
@@ -48,7 +49,279 @@ TestCase {
     height: 360
     visible: true
     when: windowShown
-    name: "Control"
+    name: "Popup"
+
+    Component {
+        id: popup
+        T.Popup { }
+    }
+
+    Component {
+        id: rect
+        Rectangle { }
+    }
+
+    SignalSpy {
+        id: availableWidthSpy
+        signalName: "availableWidthChanged"
+    }
+
+    SignalSpy {
+        id: availableHeightSpy
+        signalName: "availableHeightChanged"
+    }
+
+    SignalSpy {
+        id: paddingSpy
+        signalName: "paddingChanged"
+    }
+
+    SignalSpy {
+        id: topPaddingSpy
+        signalName: "topPaddingChanged"
+    }
+
+    SignalSpy {
+        id: leftPaddingSpy
+        signalName: "leftPaddingChanged"
+    }
+
+    SignalSpy {
+        id: rightPaddingSpy
+        signalName: "rightPaddingChanged"
+    }
+
+    SignalSpy {
+        id: bottomPaddingSpy
+        signalName: "bottomPaddingChanged"
+    }
+
+    function test_padding() {
+        var control = popup.createObject(testCase)
+        verify(control)
+
+        paddingSpy.target = control
+        topPaddingSpy.target = control
+        leftPaddingSpy.target = control
+        rightPaddingSpy.target = control
+        bottomPaddingSpy.target = control
+
+        verify(paddingSpy.valid)
+        verify(topPaddingSpy.valid)
+        verify(leftPaddingSpy.valid)
+        verify(rightPaddingSpy.valid)
+        verify(bottomPaddingSpy.valid)
+
+        var paddingChanges = 0
+        var topPaddingChanges = 0
+        var leftPaddingChanges = 0
+        var rightPaddingChanges = 0
+        var bottomPaddingChanges = 0
+
+        compare(control.padding, 0)
+        compare(control.topPadding, 0)
+        compare(control.leftPadding, 0)
+        compare(control.rightPadding, 0)
+        compare(control.bottomPadding, 0)
+        compare(control.availableWidth, 0)
+        compare(control.availableHeight, 0)
+
+        control.width = 100
+        control.height = 100
+
+        control.padding = 10
+        compare(control.padding, 10)
+        compare(control.topPadding, 10)
+        compare(control.leftPadding, 10)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+        compare(paddingSpy.count, ++paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+
+        control.topPadding = 20
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 10)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+
+        control.leftPadding = 30
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+
+        control.rightPadding = 40
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+
+        control.bottomPadding = 50
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+
+        control.padding = 60
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+        compare(paddingSpy.count, ++paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+
+        control.destroy()
+    }
+
+    function test_availableSize() {
+        var control = popup.createObject(testCase)
+        verify(control)
+
+        availableWidthSpy.target = control
+        availableHeightSpy.target = control
+
+        verify(availableWidthSpy.valid)
+        verify(availableHeightSpy.valid)
+
+        var availableWidthChanges = 0
+        var availableHeightChanges = 0
+
+        control.width = 100
+        compare(control.availableWidth, 100)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 100
+        compare(control.availableHeight, 100)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.padding = 10
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 80)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.topPadding = 20
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.leftPadding = 30
+        compare(control.availableWidth, 60)
+        compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.rightPadding = 40
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.bottomPadding = 50
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.padding = 60
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.width = 0
+        compare(control.availableWidth, 0)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 0
+        compare(control.availableHeight, 0)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.destroy()
+    }
+
+    function test_background() {
+        var control = popup.createObject(testCase)
+        verify(control)
+
+        control.background = rect.createObject(testCase)
+
+        // background has no x or width set, so its width follows control's width
+        control.width = 320
+        compare(control.background.width, control.width)
+
+        // background has no y or height set, so its height follows control's height
+        compare(control.background.height, control.height)
+        control.height = 240
+
+        // has width => width does not follow
+        control.background.width /= 2
+        control.width += 20
+        verify(control.background.width !== control.width)
+
+        // reset width => width follows again
+        control.background.width = undefined
+        control.width += 20
+        compare(control.background.width, control.width)
+
+        // has x => width does not follow
+        control.background.x = 10
+        control.width += 20
+        verify(control.background.width !== control.width)
+
+        // has height => height does not follow
+        control.background.height /= 2
+        control.height -= 20
+        verify(control.background.height !== control.height)
+
+        // reset height => height follows again
+        control.background.height = undefined
+        control.height -= 20
+        compare(control.background.height, control.height)
+
+        // has y => height does not follow
+        control.background.y = 10
+        control.height -= 20
+        verify(control.background.height !== control.height)
+
+        control.destroy()
+    }
 
     function getChild(control, objname, idx) {
         var index = idx

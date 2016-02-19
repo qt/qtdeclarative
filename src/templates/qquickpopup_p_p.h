@@ -103,8 +103,10 @@ protected:
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
     void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
@@ -163,20 +165,12 @@ public:
     void finalizeEnterTransition();
     void finalizeExitTransition();
 
-    void resizeBackground();
-    void resizeContent();
-
     QMarginsF getMargins() const;
 
     void setTopMargin(qreal value, bool reset = false);
     void setLeftMargin(qreal value, bool reset = false);
     void setRightMargin(qreal value, bool reset = false);
     void setBottomMargin(qreal value, bool reset = false);
-
-    void setTopPadding(qreal value, bool reset = false);
-    void setLeftPadding(qreal value, bool reset = false);
-    void setRightPadding(qreal value, bool reset = false);
-    void setBottomPadding(qreal value, bool reset = false);
 
     bool focus;
     bool modal;
@@ -185,26 +179,15 @@ public:
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
-    bool hasTopPadding;
-    bool hasLeftPadding;
-    bool hasRightPadding;
-    bool hasBottomPadding;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;
     qreal rightMargin;
     qreal bottomMargin;
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
     qreal contentWidth;
     qreal contentHeight;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
-    QQuickItem *background;
-    QQuickItem *contentItem;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;

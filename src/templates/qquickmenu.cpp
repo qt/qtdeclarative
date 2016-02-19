@@ -484,6 +484,7 @@ void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 
         QObjectPrivate::connect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
     }
+    d->contentItem = newItem;
 }
 
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
