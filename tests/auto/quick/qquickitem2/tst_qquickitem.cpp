@@ -70,6 +70,8 @@ private slots:
 
     void tabFence();
     void qtbug_50516();
+    void qtbug_50516_2_data();
+    void qtbug_50516_2();
 
     void keys();
     void standardKeys_data();
@@ -305,6 +307,22 @@ public:
 
 QML_DECLARE_TYPE(TabFenceItem);
 
+class TabFenceItem2 : public QQuickItem
+{
+    Q_OBJECT
+
+public:
+    TabFenceItem2(QQuickItem *parent = Q_NULLPTR)
+        : QQuickItem(parent)
+    {
+        QQuickItemPrivate *d = QQuickItemPrivate::get(this);
+        d->isTabFence = true;
+        setFlag(ItemIsFocusScope);
+    }
+};
+
+QML_DECLARE_TYPE(TabFenceItem2);
+
 tst_QQuickItem::tst_QQuickItem()
 {
 }
@@ -315,6 +333,7 @@ void tst_QQuickItem::initTestCase()
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
     qmlRegisterType<HollowTestItem>("Test", 1, 0, "HollowTestItem");
     qmlRegisterType<TabFenceItem>("Test", 1, 0, "TabFence");
+    qmlRegisterType<TabFenceItem2>("Test", 1, 0, "TabFence2");
 }
 
 void tst_QQuickItem::cleanup()
@@ -1208,6 +1227,51 @@ void tst_QQuickItem::qtbug_50516()
     QCOMPARE(next, contentItem);
     next = contentItem->nextItemInFocusChain(false);
     QCOMPARE(next, contentItem);
+
+    delete window;
+}
+
+void tst_QQuickItem::qtbug_50516_2_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<QString>("item1");
+    QTest::addColumn<QString>("item2");
+
+    QTest::newRow("FocusScope TabFence with one Item(focused)")
+            << QStringLiteral("qtbug_50516_2_1.qml") << QStringLiteral("root") << QStringLiteral("root");
+    QTest::newRow("FocusScope TabFence with one Item(unfocused)")
+            << QStringLiteral("qtbug_50516_2_2.qml") << QStringLiteral("root") << QStringLiteral("root");
+    QTest::newRow("FocusScope TabFence with two Items(focused)")
+            << QStringLiteral("qtbug_50516_2_3.qml") << QStringLiteral("root") << QStringLiteral("root");
+    QTest::newRow("FocusScope TabFence with two Items(unfocused)")
+            << QStringLiteral("qtbug_50516_2_4.qml") << QStringLiteral("root") << QStringLiteral("root");
+    QTest::newRow("FocusScope TabFence with one Item and one TextInput(unfocused)")
+            << QStringLiteral("qtbug_50516_2_5.qml") << QStringLiteral("item1") << QStringLiteral("item1");
+    QTest::newRow("FocusScope TabFence with two TextInputs(unfocused)")
+            << QStringLiteral("qtbug_50516_2_6.qml") << QStringLiteral("item1") << QStringLiteral("item2");
+}
+
+void tst_QQuickItem::qtbug_50516_2()
+{
+    QFETCH(QString, filename);
+    QFETCH(QString, item1);
+    QFETCH(QString, item2);
+
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl(filename));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(window->rootObject()->hasActiveFocus());
+
+    QQuickItem *contentItem = window->rootObject();
+    QQuickItem *next = contentItem->nextItemInFocusChain(true);
+    QCOMPARE(next->objectName(), item1);
+    next = contentItem->nextItemInFocusChain(false);
+    QCOMPARE(next->objectName(), item2);
 
     delete window;
 }

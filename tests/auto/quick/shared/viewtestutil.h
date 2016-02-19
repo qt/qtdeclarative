@@ -34,6 +34,8 @@
 #include <QtCore/QAbstractListModel>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
+QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)
+QT_FORWARD_DECLARE_CLASS(FxViewItem)
 
 namespace QQuickViewTestUtil
 {
@@ -154,6 +156,26 @@ namespace QQuickViewTestUtil
         for (; f != replaced.end(); ++f, ++t)
             *t = *f;
     }
+
+    class StressTestModel : public QAbstractListModel
+    {
+        Q_OBJECT
+
+    public:
+
+        StressTestModel();
+
+        int rowCount(const QModelIndex &) const;
+        QVariant data(const QModelIndex &, int) const;
+
+    public Q_SLOTS:
+        void updateModel();
+
+    private:
+        int m_rowCount;
+    };
+
+    bool testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx);
 }
 
 namespace QQuickTouchUtils {
