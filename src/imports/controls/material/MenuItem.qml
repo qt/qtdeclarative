@@ -149,7 +149,7 @@ T.MenuItem {
     background: Rectangle {
         implicitWidth: 200
         visible: control.pressed || control.highlighted
-        color: control.pressed ? control.Material.flatButtonPressColor : control.Material.backgroundColor
+        color: control.pressed ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
     }
     //! [background]
 }
