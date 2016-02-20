@@ -100,7 +100,7 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height - 1
         implicitWidth: control.width
-        implicitHeight: Math.min(396, listview.contentHeight)
+        implicitHeight: listview.contentHeight
         topMargin: 6
         bottomMargin: 6
 
