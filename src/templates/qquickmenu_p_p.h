@@ -89,6 +89,7 @@ public:
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
+    QQuickItem *contentItem; // TODO: cleanup
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;
     QPointer<QQuickItem> dummyFocusItem;

@@ -49,6 +49,7 @@
 //
 
 #include "qquickpopup_p.h"
+#include "qquickcontrol_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
@@ -83,7 +84,7 @@ private:
     QQuickPopupPrivate *popup;
 };
 
-class QQuickPopupItem : public QQuickItem
+class QQuickPopupItem : public QQuickControl
 {
     Q_OBJECT
 
@@ -102,8 +103,10 @@ protected:
     void mouseUngrabEvent() override;
     void wheelEvent(QWheelEvent *event) override;
 
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
@@ -162,20 +165,12 @@ public:
     void finalizeEnterTransition();
     void finalizeExitTransition();
 
-    void resizeBackground();
-    void resizeContent();
-
     QMarginsF getMargins() const;
 
     void setTopMargin(qreal value, bool reset = false);
     void setLeftMargin(qreal value, bool reset = false);
     void setRightMargin(qreal value, bool reset = false);
     void setBottomMargin(qreal value, bool reset = false);
-
-    void setTopPadding(qreal value, bool reset = false);
-    void setLeftPadding(qreal value, bool reset = false);
-    void setRightPadding(qreal value, bool reset = false);
-    void setBottomPadding(qreal value, bool reset = false);
 
     bool focus;
     bool modal;
@@ -184,26 +179,15 @@ public:
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
-    bool hasTopPadding;
-    bool hasLeftPadding;
-    bool hasRightPadding;
-    bool hasBottomPadding;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;
     qreal rightMargin;
     qreal bottomMargin;
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
     qreal contentWidth;
     qreal contentHeight;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
-    QQuickItem *background;
-    QQuickItem *contentItem;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;

@@ -176,7 +176,6 @@ ApplicationWindow {
 
         initialItem: Pane {
             id: pane
-            anchors.fill: parent
 
             Image {
                 id: logo

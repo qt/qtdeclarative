@@ -104,8 +104,7 @@ public:
     static QFont themeFont(QPlatformTheme::Font type);
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
-
-    QLocale calcLocale() const;
+    static QLocale calcLocale(QQuickItem *);
 
     QFont font;
     bool hasTopPadding;

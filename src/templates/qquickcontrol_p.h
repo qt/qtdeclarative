@@ -144,7 +144,6 @@ protected:
 
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
-    void classBegin() override;
     void componentComplete() override;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;

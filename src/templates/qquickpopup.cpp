@@ -38,6 +38,7 @@
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
@@ -54,7 +55,40 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-popups
     \brief The base type of popup-like user interface controls.
 
-    Popup is the base type of popup-like user interface controls.
+    Popup is the base type of popup-like user interface controls. It can be
+    used with Window or ApplicationWindow.
+
+    \qml
+    import QtQuick.Window 2.2
+    import Qt.labs.controls 1.0
+
+    Window {
+        id: window
+        width: 400
+        height: 400
+        visible: true
+
+        Button {
+            text: "Open"
+            onClicked: popup.open()
+        }
+
+        Popup {
+            id: popup
+            x: 100
+            y: 100
+            width: 200
+            height: 300
+            modal: true
+            focus: true
+            closePolicy: Popup.OnEscape | Popup.OnPressOutside
+        }
+    }
+    \endqml
+
+    In order to ensure that a popup is displayed above other items in the
+    scene, it is recommended to use ApplicationWindow. ApplicationWindow also
+    provides background dimming effects.
 
     \labs
 */
@@ -75,26 +109,15 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasLeftMargin(false)
     , hasRightMargin(false)
     , hasBottomMargin(false)
-    , hasTopPadding(false)
-    , hasLeftPadding(false)
-    , hasRightPadding(false)
-    , hasBottomPadding(false)
     , margins(0)
     , topMargin(0)
     , leftMargin(0)
     , rightMargin(0)
     , bottomMargin(0)
-    , padding(0)
-    , topPadding(0)
-    , leftPadding(0)
-    , rightPadding(0)
-    , bottomPadding(0)
     , contentWidth(0)
     , contentHeight(0)
     , closePolicy(QQuickPopup::OnEscape)
     , parentItem(nullptr)
-    , background(nullptr)
-    , contentItem(nullptr)
     , enter(nullptr)
     , exit(nullptr)
     , popupItem(nullptr)
@@ -108,6 +131,7 @@ void QQuickPopupPrivate::init()
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
+    QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
 }
 
 bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
@@ -144,31 +168,6 @@ void QQuickPopupPrivate::finalizeExitTransition()
     positioner.setParentItem(nullptr);
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
-}
-
-void QQuickPopupPrivate::resizeBackground()
-{
-    Q_Q(QQuickPopup);
-    if (background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid && qFuzzyIsNull(background->x())) {
-            background->setWidth(q->width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid && qFuzzyIsNull(background->y())) {
-            background->setHeight(q->height());
-            p->heightValid = false;
-        }
-    }
-}
-
-void QQuickPopupPrivate::resizeContent()
-{
-    Q_Q(QQuickPopup);
-    if (contentItem) {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight()));
-    }
 }
 
 QMarginsF QQuickPopupPrivate::getMargins() const
@@ -229,63 +228,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
     }
 }
 
-void QQuickPopupPrivate::setTopPadding(qreal value, bool reset)
-{
-    Q_Q(QQuickPopup);
-    qreal oldPadding = q->topPadding();
-    topPadding = value;
-    hasTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
-        emit q->topPaddingChanged();
-        emit q->availableHeightChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, oldPadding, rightPadding, bottomPadding));
-    }
-}
-
-void QQuickPopupPrivate::setLeftPadding(qreal value, bool reset)
-{
-    Q_Q(QQuickPopup);
-    qreal oldPadding = q->leftPadding();
-    leftPadding = value;
-    hasLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
-        emit q->leftPaddingChanged();
-        emit q->availableWidthChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(oldPadding, topPadding, rightPadding, bottomPadding));
-    }
-}
-
-void QQuickPopupPrivate::setRightPadding(qreal value, bool reset)
-{
-    Q_Q(QQuickPopup);
-    qreal oldPadding = q->rightPadding();
-    rightPadding = value;
-    hasRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
-        emit q->rightPaddingChanged();
-        emit q->availableWidthChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, topPadding, oldPadding, bottomPadding));
-    }
-}
-
-void QQuickPopupPrivate::setBottomPadding(qreal value, bool reset)
-{
-    Q_Q(QQuickPopup);
-    qreal oldPadding = q->bottomPadding();
-    bottomPadding = value;
-    hasBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
-        emit q->bottomPaddingChanged();
-        emit q->availableHeightChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, topPadding, rightPadding, oldPadding));
-    }
-}
-
-class QQuickPopupItemPrivate : public QQuickItemPrivate
+class QQuickPopupItemPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupItem)
 
@@ -305,16 +248,18 @@ QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup
 
 void QQuickPopupItemPrivate::implicitWidthChanged()
 {
+    QQuickControlPrivate::implicitWidthChanged();
     emit popup->implicitHeightChanged();
 }
 
 void QQuickPopupItemPrivate::implicitHeightChanged()
 {
+    QQuickControlPrivate::implicitHeightChanged();
     emit popup->implicitHeightChanged();
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
-    QQuickItem(*(new QQuickPopupItemPrivate(popup)))
+    QQuickControl(*(new QQuickPopupItemPrivate(popup)), nullptr)
 {
     setParent(popup);
     setVisible(false);
@@ -382,16 +327,24 @@ void QQuickPopupItem::wheelEvent(QWheelEvent *event)
     d->popup->wheelEvent(event);
 }
 
+void QQuickPopupItem::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::contentItemChange(newItem, oldItem);
+    d->popup->contentItemChange(newItem, oldItem);
+}
+
 void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopupItem);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
     d->popup->geometryChanged(newGeometry, oldGeometry);
 }
 
 void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
     Q_D(QQuickPopupItem);
-    QQuickItem::itemChange(change, data);
+    QQuickControl::itemChange(change, data);
     switch (change) {
     case ItemVisibleHasChanged:
         emit d->popup->visibleChanged();
@@ -405,6 +358,13 @@ void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
     default:
         break;
     }
+}
+
+void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::paddingChange(newPadding, oldPadding);
+    d->popup->paddingChange(newPadding, oldPadding);
 }
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
@@ -895,7 +855,8 @@ void QQuickPopup::setContentHeight(qreal height)
 */
 qreal QQuickPopup::availableWidth() const
 {
-    return qMax<qreal>(0.0, width() - leftPadding() - rightPadding());
+    Q_D(const QQuickPopup);
+    return d->popupItem->availableWidth();
 }
 
 /*!
@@ -908,7 +869,8 @@ qreal QQuickPopup::availableWidth() const
 */
 qreal QQuickPopup::availableHeight() const
 {
-    return qMax<qreal>(0.0, height() - topPadding() - bottomPadding());
+    Q_D(const QQuickPopup);
+    return d->popupItem->availableHeight();
 }
 
 /*!
@@ -1067,36 +1029,19 @@ void QQuickPopup::resetBottomMargin()
 qreal QQuickPopup::padding() const
 {
     Q_D(const QQuickPopup);
-    return d->padding;
+    return d->popupItem->padding();
 }
 
 void QQuickPopup::setPadding(qreal padding)
 {
     Q_D(QQuickPopup);
-    if (qFuzzyCompare(d->padding, padding))
-        return;
-    QMarginsF oldPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
-    d->padding = padding;
-    emit paddingChanged();
-    QMarginsF newPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
-    if (!qFuzzyCompare(newPadding.top(), oldPadding.top()))
-        emit topPaddingChanged();
-    if (!qFuzzyCompare(newPadding.left(), oldPadding.left()))
-        emit leftPaddingChanged();
-    if (!qFuzzyCompare(newPadding.right(), oldPadding.right()))
-        emit rightPaddingChanged();
-    if (!qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
-        emit bottomPaddingChanged();
-    if (!qFuzzyCompare(newPadding.top(), oldPadding.top()) || !qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
-        emit availableHeightChanged();
-    if (!qFuzzyCompare(newPadding.left(), oldPadding.left()) || !qFuzzyCompare(newPadding.right(), oldPadding.right()))
-        emit availableWidthChanged();
-    paddingChange(newPadding, oldPadding);
+    d->popupItem->setPadding(padding);
 }
 
 void QQuickPopup::resetPadding()
 {
-    setPadding(0);
+    Q_D(QQuickPopup);
+    d->popupItem->resetPadding();
 }
 
 /*!
@@ -1109,21 +1054,19 @@ void QQuickPopup::resetPadding()
 qreal QQuickPopup::topPadding() const
 {
     Q_D(const QQuickPopup);
-    if (d->hasTopPadding)
-        return d->topPadding;
-    return d->padding;
+    return d->popupItem->topPadding();
 }
 
 void QQuickPopup::setTopPadding(qreal padding)
 {
     Q_D(QQuickPopup);
-    d->setTopPadding(padding);
+    d->popupItem->setTopPadding(padding);
 }
 
 void QQuickPopup::resetTopPadding()
 {
     Q_D(QQuickPopup);
-    d->setTopPadding(0, true);
+    d->popupItem->resetTopPadding();
 }
 
 /*!
@@ -1136,21 +1079,19 @@ void QQuickPopup::resetTopPadding()
 qreal QQuickPopup::leftPadding() const
 {
     Q_D(const QQuickPopup);
-    if (d->hasLeftPadding)
-        return d->leftPadding;
-    return d->padding;
+    return d->popupItem->leftPadding();
 }
 
 void QQuickPopup::setLeftPadding(qreal padding)
 {
     Q_D(QQuickPopup);
-    d->setLeftPadding(padding);
+    d->popupItem->setLeftPadding(padding);
 }
 
 void QQuickPopup::resetLeftPadding()
 {
     Q_D(QQuickPopup);
-    d->setLeftPadding(0, true);
+    d->popupItem->resetLeftPadding();
 }
 
 /*!
@@ -1163,21 +1104,19 @@ void QQuickPopup::resetLeftPadding()
 qreal QQuickPopup::rightPadding() const
 {
     Q_D(const QQuickPopup);
-    if (d->hasRightPadding)
-        return d->rightPadding;
-    return d->padding;
+    return d->popupItem->rightPadding();
 }
 
 void QQuickPopup::setRightPadding(qreal padding)
 {
     Q_D(QQuickPopup);
-    d->setRightPadding(padding);
+    d->popupItem->setRightPadding(padding);
 }
 
 void QQuickPopup::resetRightPadding()
 {
     Q_D(QQuickPopup);
-    d->setRightPadding(0, true);
+    d->popupItem->resetRightPadding();
 }
 
 /*!
@@ -1190,21 +1129,19 @@ void QQuickPopup::resetRightPadding()
 qreal QQuickPopup::bottomPadding() const
 {
     Q_D(const QQuickPopup);
-    if (d->hasBottomPadding)
-        return d->bottomPadding;
-    return d->padding;
+    return d->popupItem->bottomPadding();
 }
 
 void QQuickPopup::setBottomPadding(qreal padding)
 {
     Q_D(QQuickPopup);
-    d->setBottomPadding(padding);
+    d->popupItem->setBottomPadding(padding);
 }
 
 void QQuickPopup::resetBottomPadding()
 {
     Q_D(QQuickPopup);
-    d->setBottomPadding(0, true);
+    d->popupItem->resetBottomPadding();
 }
 
 QQuickItem *QQuickPopup::popupItem() const
@@ -1233,6 +1170,10 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
+    if (d->popupItem) {
+        QQuickControlPrivate::updateFontRecur(d->popupItem, QQuickControlPrivate::naturalControlFont(parent));
+        QQuickControlPrivate::updateLocaleRecur(d->popupItem, QQuickControlPrivate::calcLocale(parent));
+    }
     emit parentChanged();
 }
 
@@ -1248,24 +1189,16 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
 QQuickItem *QQuickPopup::background() const
 {
     Q_D(const QQuickPopup);
-    return d->background;
+    return d->popupItem->background();
 }
 
 void QQuickPopup::setBackground(QQuickItem *background)
 {
     Q_D(QQuickPopup);
-    if (d->background == background)
+    if (d->popupItem->background() == background)
         return;
 
-    delete d->background;
-    d->background = background;
-    if (background) {
-        background->setParentItem(d->popupItem);
-        if (qFuzzyIsNull(background->z()))
-            background->setZ(-1);
-        if (isComponentComplete())
-            d->resizeBackground();
-    }
+    d->popupItem->setBackground(background);
     emit backgroundChanged();
 }
 
@@ -1282,24 +1215,13 @@ void QQuickPopup::setBackground(QQuickItem *background)
 QQuickItem *QQuickPopup::contentItem() const
 {
     Q_D(const QQuickPopup);
-    return d->contentItem;
+    return d->popupItem->contentItem();
 }
 
 void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
-    if (d->contentItem == item)
-        return;
-
-    contentItemChange(item, d->contentItem);
-    delete d->contentItem;
-    d->contentItem = item;
-    if (item) {
-        item->setParentItem(d->popupItem);
-        if (isComponentComplete())
-            d->resizeContent();
-    }
-    emit contentItemChanged();
+    d->popupItem->setContentItem(item);
 }
 
 /*!
@@ -1313,7 +1235,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 QQmlListProperty<QObject> QQuickPopup::contentData()
 {
     Q_D(QQuickPopup);
-    return QQmlListProperty<QObject>(d->contentItem, nullptr,
+    return QQmlListProperty<QObject>(d->popupItem->contentItem(), nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -1330,7 +1252,7 @@ QQmlListProperty<QObject> QQuickPopup::contentData()
 QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
 {
     Q_D(QQuickPopup);
-    return QQmlListProperty<QQuickItem>(d->contentItem, nullptr,
+    return QQmlListProperty<QQuickItem>(d->popupItem->contentItem(), nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,
@@ -1667,13 +1589,12 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
+    emit contentItemChanged();
 }
 
 void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopup);
-    d->resizeBackground();
-    d->resizeContent();
     d->positioner.repositionPopup();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
@@ -1695,10 +1616,24 @@ void QQuickPopup::marginsChange(const QMarginsF &newMargins, const QMarginsF &ol
 
 void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
-    Q_D(QQuickPopup);
-    Q_UNUSED(newPadding);
-    Q_UNUSED(oldPadding);
-    d->resizeContent();
+    const bool tp = !qFuzzyCompare(newPadding.top(), oldPadding.top());
+    const bool lp = !qFuzzyCompare(newPadding.left(), oldPadding.left());
+    const bool rp = !qFuzzyCompare(newPadding.right(), oldPadding.right());
+    const bool bp = !qFuzzyCompare(newPadding.bottom(), oldPadding.bottom());
+
+    if (tp)
+        emit topPaddingChanged();
+    if (lp)
+        emit leftPaddingChanged();
+    if (rp)
+        emit rightPaddingChanged();
+    if (bp)
+        emit bottomPaddingChanged();
+
+    if (lp || rp)
+        emit availableWidthChanged();
+    if (tp || bp)
+        emit availableHeightChanged();
 }
 
 QT_END_NAMESPACE
