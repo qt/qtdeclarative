@@ -349,7 +349,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
 QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
     QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
-    setActiveFocusOnTab(true);
+    setFocusPolicy(Qt::StrongFocus);
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
@@ -796,8 +796,6 @@ void QQuickComboBox::mouseReleaseEvent(QMouseEvent *event)
     QQuickControl::mouseReleaseEvent(event);
     if (d->pressed) {
         setPressed(false);
-        if (!d->isPopupVisible())
-            forceActiveFocus(Qt::MouseFocusReason);
         d->togglePopup(false);
     }
 }
