@@ -101,6 +101,14 @@ T.ComboBox {
             opacity: !control.enabled ? 0.5 : 1.0
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/drop-indicator.png"
         }
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            radius: parent.radius
+            visible: control.activeFocus
+            color: control.Material.checkBoxUncheckedRippleColor
+        }
     }
     //! [background]
 
