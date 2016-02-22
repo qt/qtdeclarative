@@ -185,6 +185,7 @@ Module {
         Property { name: "spacing"; type: "double" }
         Property { name: "locale"; type: "QLocale" }
         Property { name: "mirrored"; type: "bool"; isReadonly: true }
+        Property { name: "focusPolicy"; type: "Qt::FocusPolicy" }
         Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
@@ -235,7 +236,6 @@ Module {
         prototype: "QQuickPane"
         exports: ["Qt.labs.templates/Frame 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "frame"; type: "QQuickItem"; isPointer: true }
     }
     Component {
         name: "QQuickGroupBox"
@@ -706,6 +706,14 @@ Module {
         prototype: "QQuickContainer"
         exports: ["Qt.labs.templates/TabBar 1.0"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "Position"
+            values: {
+                "Header": 0,
+                "Footer": 1
+            }
+        }
+        Property { name: "position"; type: "Position" }
     }
     Component {
         name: "QQuickTabButton"
@@ -1011,6 +1019,8 @@ Module {
         Property { name: "leftPadding"; revision: 6; type: "double" }
         Property { name: "rightPadding"; revision: 6; type: "double" }
         Property { name: "bottomPadding"; revision: 6; type: "double" }
+        Property { name: "preeditText"; revision: 7; type: "string"; isReadonly: true }
+        Signal { name: "preeditTextChanged"; revision: 7 }
         Signal { name: "contentSizeChanged" }
         Signal {
             name: "colorChanged"
@@ -1122,6 +1132,7 @@ Module {
             revision: 2
             Parameter { name: "text"; type: "string" }
         }
+        Method { name: "clear"; revision: 7 }
         Method {
             name: "inputMethodQuery"
             revision: 4
@@ -1274,6 +1285,7 @@ Module {
         Property { name: "passwordCharacter"; type: "string" }
         Property { name: "passwordMaskDelay"; revision: 3; type: "int" }
         Property { name: "displayText"; type: "string"; isReadonly: true }
+        Property { name: "preeditText"; revision: 7; type: "string"; isReadonly: true }
         Property { name: "autoScroll"; type: "bool" }
         Property { name: "selectByMouse"; type: "bool" }
         Property { name: "mouseSelectionMode"; type: "SelectionMode" }
@@ -1329,6 +1341,7 @@ Module {
             revision: 3
             Parameter { name: "delay"; type: "int" }
         }
+        Signal { name: "preeditTextChanged"; revision: 7 }
         Signal {
             name: "activeFocusOnPressChanged"
             Parameter { name: "activeFocusOnPress"; type: "bool" }
@@ -1385,6 +1398,7 @@ Module {
             revision: 3
             Parameter { name: "position"; type: "int" }
         }
+        Method { name: "clear"; revision: 7 }
         Method {
             name: "positionAt"
             Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
@@ -1423,6 +1437,14 @@ Module {
         prototype: "QQuickFrame"
         exports: ["Qt.labs.templates/ToolBar 1.0"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "Position"
+            values: {
+                "Header": 0,
+                "Footer": 1
+            }
+        }
+        Property { name: "position"; type: "Position" }
     }
     Component {
         name: "QQuickToolButton"
