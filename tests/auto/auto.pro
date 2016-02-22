@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     accessibility \
-    activeFocusOnTab \
     applicationwindow \
     calendar \
     controls \
@@ -13,3 +12,7 @@ SUBDIRS += \
     snippets \
     styles \
     universal
+
+# QTBUG-50295
+!linux: SUBDIRS += \
+    activeFocusOnTab
