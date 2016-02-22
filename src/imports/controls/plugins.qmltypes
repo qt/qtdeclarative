@@ -579,6 +579,7 @@ Module {
         Property { name: "to"; type: "int" }
         Property { name: "value"; type: "int" }
         Property { name: "stepSize"; type: "int" }
+        Property { name: "editable"; type: "bool" }
         Property { name: "validator"; type: "QValidator"; isPointer: true }
         Property { name: "textFromValue"; type: "QJSValue" }
         Property { name: "valueFromText"; type: "QJSValue" }

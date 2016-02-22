@@ -143,6 +143,7 @@ Item {
         SpinBox {
             id: spinbox
             objectName: "spinbox"
+            editable: true
             value: 50
         }
         // StackView

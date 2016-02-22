@@ -87,6 +87,7 @@ TestCase {
         compare(control.to, 99)
         compare(control.value, 0)
         compare(control.stepSize, 1)
+        compare(control.editable, false)
         compare(control.up.pressed, false)
         compare(control.down.pressed, false)
 
@@ -323,6 +324,29 @@ TestCase {
         compare(control.from, 10)
         compare(control.to, 1000)
         compare(control.value, 100)
+
+        control.destroy()
+    }
+
+    function test_editable() {
+        var control = spinBox.createObject(testCase)
+        verify(control)
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+
+        compare(control.editable, false)
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        keyClick(Qt.Key_Return)
+        compare(control.value, 0)
+
+        control.editable = true
+        compare(control.editable, true)
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        keyClick(Qt.Key_Return)
+        compare(control.value, 5)
 
         control.destroy()
     }
