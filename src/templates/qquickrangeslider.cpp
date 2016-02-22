@@ -691,6 +691,24 @@ void QQuickRangeSlider::setValues(qreal firstValue, qreal secondValue)
     secondPrivate->updatePosition();
 }
 
+void QQuickRangeSlider::focusInEvent(QFocusEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::focusInEvent(event);
+
+    // The active focus ends up to RangeSlider when using forceActiveFocus()
+    // or QML KeyNavigation. We must forward the focus to one of the handles,
+    // because RangeSlider handles key events for the focused handle. If
+    // neither handle has active focus, RangeSlider doesn't do anything.
+    QQuickItem *handle = nextItemInFocusChain();
+    // QQuickItem::nextItemInFocusChain() only works as desired with
+    // Qt::TabFocusAllControls. otherwise pick the first handle
+    if (!handle || handle == this)
+        handle = d->first->handle();
+    if (handle)
+        handle->forceActiveFocus(event->reason());
+}
+
 void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickRangeSlider);
