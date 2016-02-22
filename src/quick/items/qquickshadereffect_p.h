@@ -167,6 +167,7 @@ protected:
 
 private Q_SLOTS:
     void updateGeometry();
+    void updateGeometryIfAtlased();
     void updateLogAndStatus(const QString &log, int status);
     void sourceDestroyed(QObject *object);
     void propertyChanged(int mappedId);

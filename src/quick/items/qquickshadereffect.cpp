@@ -952,6 +952,12 @@ void QQuickShaderEffect::updateGeometry()
     update();
 }
 
+void QQuickShaderEffect::updateGeometryIfAtlased()
+{
+    if (m_supportsAtlasTextures)
+        updateGeometry();
+}
+
 void QQuickShaderEffect::updateLogAndStatus(const QString &log, int status)
 {
     m_log = parseLog() + log;
@@ -1000,6 +1006,8 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         m_dirtyUniforms = true;
         m_dirtyGeometry = true;
         connect(node, SIGNAL(logAndStatusChanged(QString,int)), this, SLOT(updateLogAndStatus(QString,int)));
+        connect(node, &QQuickShaderEffectNode::dirtyTexture,
+                this, &QQuickShaderEffect::updateGeometryIfAtlased);
     }
 
     QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(node->material());
