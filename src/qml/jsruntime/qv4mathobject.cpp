@@ -45,8 +45,6 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(MathObject);
 
-static const double qt_PI = 2.0 * ::asin(1.0);
-
 Heap::MathObject::MathObject()
 {
     Scope scope(internalClass->engine);
