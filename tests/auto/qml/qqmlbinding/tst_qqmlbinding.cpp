@@ -52,6 +52,8 @@ private slots:
     void deletedObject();
     void warningOnUnknownProperty();
     void warningOnReadOnlyProperty();
+    void disabledOnUnknownProperty();
+    void disabledOnReadonlyProperty();
 
 private:
     QQmlEngine engine;
@@ -256,6 +258,32 @@ void tst_qqmlbinding::warningOnReadOnlyProperty()
 
     const QString expectedMessage = c.url().toString() + QLatin1String(":8:5: QML Binding: Property 'name' on Item is read-only.");
     QCOMPARE(messageHandler.messages().first(), expectedMessage);
+}
+
+void tst_qqmlbinding::disabledOnUnknownProperty()
+{
+    QQmlTestMessageHandler messageHandler;
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("disabledUnknown.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+    delete item;
+
+    QCOMPARE(messageHandler.messages().count(), 0);
+}
+
+void tst_qqmlbinding::disabledOnReadonlyProperty()
+{
+    QQmlTestMessageHandler messageHandler;
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("disabledReadonly.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+    delete item;
+
+    QCOMPARE(messageHandler.messages().count(), 0);
 }
 
 QTEST_MAIN(tst_qqmlbinding)
