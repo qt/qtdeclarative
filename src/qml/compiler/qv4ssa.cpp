@@ -557,7 +557,7 @@ class DominatorTree
             BasicBlockIndex p = d->parent[n];
             BasicBlockIndex s = p;
 
-            foreach (BasicBlock *v, function->basicBlock(n)->in) {
+            for (BasicBlock *v : function->basicBlock(n)->in) {
                 BasicBlockIndex ss = InvalidBasicBlockIndex;
                 if (d->dfnum[v->index()] <= d->dfnum[n])
                     ss = v->index();
@@ -667,7 +667,7 @@ public:
             if (np.todo.empty()) {
                 BasicBlockSet &S = DF[node];
                 S.init(function);
-                foreach (BasicBlock *y, function->basicBlock(node)->out)
+                for (BasicBlock *y : function->basicBlock(node)->out)
                     if (idom[y->index()] != node)
                         S.insert(y);
                 for (BasicBlockIndex child : np.children) {
@@ -714,7 +714,7 @@ public:
                     BasicBlock *fBlock = *it;
                     Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
                     bool hasDominatedSucc = false;
-                    foreach (BasicBlock *succ, fBlock->in) {
+                    for (BasicBlock *succ : fBlock->in) {
                         if (dominates(n, succ)) {
                             hasDominatedSucc = true;
                             break;
@@ -945,8 +945,7 @@ private:
         std::vector<BasicBlockIndex> prefix;
         prefix.reserve(32);
 
-        for (int i = 0, ei = node->in.size(); i != ei; ++i) {
-            BasicBlock *in = node->in.at(i);
+        for (BasicBlock *in : node->in) {
             if (node == in) // back-edge to self
                 continue;
             if (dominates(node->index(), in->index())) // a known back-edge
@@ -1565,7 +1564,7 @@ private:
             processed.markAsProcessed(bb);
 
             BasicBlock *next = 0;
-            foreach (BasicBlock *out, bb->out) {
+            for (BasicBlock *out : bb->out) {
                 if (processed.alreadyProcessed(out))
                     continue;
                 if (!next)
@@ -1586,7 +1585,7 @@ private:
             s->accept(this);
         }
 
-        foreach (BasicBlock *Y, bb->out) {
+        for (BasicBlock *Y : bb->out) {
             const int j = Y->in.indexOf(bb);
             Q_ASSERT(j >= 0 && j < Y->in.size());
             foreach (Stmt *s, Y->statements()) {
@@ -3117,7 +3116,7 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
             df.setImmediateDominator(newBB, fromBB);
 
             bool toNeedsNewIdom = true;
-            foreach (BasicBlock *bb, toBB->in) {
+            for (BasicBlock *bb : toBB->in) {
                 if (bb != newBB && !df.dominates(toBB, bb)) {
                     toNeedsNewIdom = false;
                     break;
@@ -3227,7 +3226,7 @@ public:
 
             backedges.clear();
 
-            foreach (BasicBlock *in, bb->in)
+            for (BasicBlock *in : bb->in)
                 if (dt.dominates(bb, in))
                     backedges.push_back(in);
 
@@ -3304,7 +3303,7 @@ private:
                 // those predecessors are not in the current subloop. It might be the case
                 // that they are in other loops, which we will then add as a subloop to the
                 // current loop.
-                foreach (BasicBlock *predIn, predIt->in)
+                for (BasicBlock *predIn : predIt->in)
                     if (predIn->containingGroup() != subloop)
                         worklist.push_back(predIn);
             } else {
@@ -3315,7 +3314,7 @@ private:
                 predIt->setContainingGroup(loopHead);
 
                 // Add all incoming edges to the worklist.
-                foreach (BasicBlock *bb, predIt->in)
+                for (BasicBlock *bb : predIt->in)
                     worklist.push_back(bb);
             }
         }
@@ -3400,7 +3399,7 @@ class BlockScheduler
     {
         Q_ASSERT(candidate->containingGroup() == currentGroup.group);
 
-        foreach (BasicBlock *in, candidate->in) {
+        for (BasicBlock *in : candidate->in) {
             if (emitted.alreadyProcessed(in))
                 continue;
 
@@ -3510,7 +3509,7 @@ public:
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
     foreach (BasicBlock *bb, basicBlocks) {
         if (bb && bb->out.size() > 1) {
-            foreach (BasicBlock *bb2, bb->out) {
+            for (BasicBlock *bb2 : bb->out) {
                 if (bb2 && bb2->in.size() > 1) {
                     qDebug() << "found critical edge between block"
                              << bb->index() << "and block" << bb2->index();
@@ -3545,7 +3544,7 @@ static void cleanupBasicBlocks(IR::Function *function)
 
         reachableBlocks.setBit(bb->index());
 
-        foreach (BasicBlock *outBB, bb->out) {
+        for (BasicBlock *outBB : bb->out) {
             if (!reachableBlocks.at(outBB->index()))
                 postponed.append(outBB);
         }
@@ -3557,7 +3556,7 @@ static void cleanupBasicBlocks(IR::Function *function)
         if (reachableBlocks.at(bb->index())) // the block is reachable, so ignore it
             continue;
 
-        foreach (BasicBlock *outBB, bb->out) {
+        for (BasicBlock *outBB : bb->out) {
             if (outBB->isRemoved() || !reachableBlocks.at(outBB->index()))
                 continue; // We do not need to unlink from blocks that are scheduled to be removed.
 
@@ -3800,14 +3799,14 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
                 continue;
 
             // unlink all incoming edges
-            foreach (BasicBlock *in, bb->in) {
+            for (BasicBlock *in : bb->in) {
                 int idx = in->out.indexOf(bb);
                 if (idx != -1)
                     in->out.remove(idx);
             }
 
             // unlink all outgoing edges, including "arguments" to phi statements
-            foreach (BasicBlock *out, bb->out) {
+            for (BasicBlock *out : bb->out) {
                 if (out->isRemoved())
                     continue;
 
@@ -3949,7 +3948,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
         else
             qout << ", shape=circle";
         qout << "];\n";
-        foreach (BasicBlock *out, bb->out)
+        for (BasicBlock *out : bb->out)
             qout << "  L" << idx << " -> L" << out->index() << "\n";
     }
 
@@ -4420,7 +4419,7 @@ private:
     void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd)
     {
         LiveRegs live;
-        foreach (BasicBlock *successor, bb->out) {
+        for (BasicBlock *successor : bb->out) {
             live.unite(_liveIn[successor->index()]);
             const int bbIndex = successor->in.indexOf(bb);
             Q_ASSERT(bbIndex >= 0);
@@ -4731,7 +4730,8 @@ private:
         // the terminators will automatically insert that edge). The blocks where the originals
         // pointed to will have an extra incoming edge from the copied blocks.
 
-        foreach (BasicBlock *in, loop->loopHeader->in) {
+        BasicBlock::IncomingEdges inCopy = loop->loopHeader->in;
+        for (BasicBlock *in : inCopy) {
             if (unpeeled.loopHeader != in // this can happen for really tight loops (where there are no body blocks). This is a back-edge in that case.
                     && !unpeeled.loopBody.contains(in) // if the edge is not coming from within the copied set, leave it alone
                     && !dt.dominates(loop->loopHeader, in)) // an edge coming from within the loop (so a back-edge): this is handled when rewiring all outgoing edges
@@ -4837,14 +4837,14 @@ static void verifyCFG(IR::Function *function)
         }
 
         // Check the outgoing edges:
-        foreach (BasicBlock *out, bb->out) {
+        for (BasicBlock *out : bb->out) {
             Q_UNUSED(out);
             Q_ASSERT(!out->isRemoved());
             Q_ASSERT(out->in.contains(bb));
         }
 
         // Check the incoming edges:
-        foreach (BasicBlock *in, bb->in) {
+        for (BasicBlock *in : bb->in) {
             Q_UNUSED(in);
             Q_ASSERT(!in->isRemoved());
             Q_ASSERT(in->out.contains(bb));
@@ -5335,7 +5335,7 @@ void Optimizer::convertOutOfSSA() {
     foreach (BasicBlock *bb, function->basicBlocks()) {
         MoveMapping moves;
 
-        foreach (BasicBlock *successor, bb->out) {
+        for (BasicBlock *successor : bb->out) {
             const int inIdx = successor->in.indexOf(bb);
             Q_ASSERT(inIdx >= 0);
             foreach (Stmt *s, successor->statements()) {
