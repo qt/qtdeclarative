@@ -116,13 +116,20 @@
                 \image qtlabscontrols-universal-dark.png
     \endtable
 
-    \note The Universal style must be separately imported to gain access to
-    these style-specific attributes. It should be noted that regardless of the
-    references to the Universal style, the same application code runs with any
-    other style. The Universal style-specific attributes only have an effect
-    when the application is run with the Universal style. Furthermore, in case
-    of explicit Universal style-specific references, the Universal style must
-    be deployed with the application.
+    \section2 Dependency
+
+    The Universal style must be separately imported to gain access to the
+    attributes that are specific to the Universal style. It should be noted
+    that regardless of the references to the Universal style, the same
+    application code runs with any other style. Universal-specific attributes
+    only have an effect when the application is run with the Universal style.
+
+    If the Universal style is imported in a QML file that is always loaded, the
+    Universal style must be deployed with the application in order to be able
+    to run the application regardless of which style the application is run with.
+    By using \l {Using File Selectors with Qt Labs Controls}{file selectors},
+    style-specific tweaks can be applied without creating a hard dependency to
+    a style.
 
     \labs
 
