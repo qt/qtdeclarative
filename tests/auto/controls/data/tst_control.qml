@@ -894,4 +894,25 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_hover() {
+        var control = component.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        compare(control.hovered, false)
+        compare(control.hoverEnabled, false)
+
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.hovered, false)
+
+        control.hoverEnabled = true
+
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.hovered, true)
+
+        mouseMove(control, -10, -10)
+        compare(control.hovered, false)
+
+        control.destroy()
+    }
 }

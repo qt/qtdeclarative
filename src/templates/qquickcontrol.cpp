@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), wheelEnabled(false),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
     background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
@@ -809,6 +809,53 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::Control::hovered
+    \readonly
+
+    This property holds whether the control is hovered.
+
+    \sa hoverEnabled
+*/
+bool QQuickControl::isHovered() const
+{
+    Q_D(const QQuickControl);
+    return d->hovered;
+}
+
+void QQuickControl::setHovered(bool hovered)
+{
+    Q_D(QQuickControl);
+    if (hovered == d->hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::hoverEnabled
+
+    This property determines whether the control accepts hover events. The default value is \c false.
+
+    \sa hovered
+*/
+bool QQuickControl::isHoverEnabled() const
+{
+    Q_D(const QQuickControl);
+    return d->hoverEnabled;
+}
+
+void QQuickControl::setHoverEnabled(bool enabled)
+{
+    Q_D(QQuickControl);
+    if (enabled == d->hoverEnabled)
+        return;
+
+    setAcceptHoverEvents(enabled);
+    emit hoverEnabledChanged();
+}
+
+/*!
     \qmlproperty bool Qt.labs.controls::Control::wheelEnabled
 
     This property determines whether the control handles wheel events. The default value is \c false.
@@ -921,6 +968,20 @@ void QQuickControl::focusOutEvent(QFocusEvent *event)
 {
     QQuickItem::focusOutEvent(event);
     setFocusReason(event->reason());
+}
+
+void QQuickControl::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickControl);
+    setHovered(d->hoverEnabled);
+    event->setAccepted(d->hoverEnabled);
+}
+
+void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickControl);
+    setHovered(false);
+    event->setAccepted(d->hoverEnabled);
 }
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)

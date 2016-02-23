@@ -112,6 +112,7 @@ public:
     bool hasRightPadding;
     bool hasBottomPadding;
     bool hasLocale;
+    bool hovered;
     bool wheelEnabled;
     qreal padding;
     qreal topPadding;
