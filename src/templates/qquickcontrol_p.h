@@ -72,6 +72,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
@@ -121,6 +122,9 @@ public:
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
+    bool isWheelEnabled() const;
+    void setWheelEnabled(bool enabled);
+
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
@@ -141,6 +145,7 @@ Q_SIGNALS:
     void mirroredChanged();
     void focusPolicyChanged();
     void focusReasonChanged();
+    void wheelEnabledChanged();
     void backgroundChanged();
     void contentItemChanged();
 

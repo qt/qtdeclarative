@@ -187,6 +187,7 @@ Module {
         Property { name: "mirrored"; type: "bool"; isReadonly: true }
         Property { name: "focusPolicy"; type: "Qt::FocusPolicy" }
         Property { name: "focusReason"; type: "Qt::FocusReason" }
+        Property { name: "wheelEnabled"; type: "bool" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
     }

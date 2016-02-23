@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), wheelEnabled(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
     background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
@@ -809,6 +809,27 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::Control::wheelEnabled
+
+    This property determines whether the control handles wheel events. The default value is \c false.
+*/
+bool QQuickControl::isWheelEnabled() const
+{
+    Q_D(const QQuickControl);
+    return d->wheelEnabled;
+}
+
+void QQuickControl::setWheelEnabled(bool enabled)
+{
+    Q_D(QQuickControl);
+    if (d->wheelEnabled == enabled)
+        return;
+
+    d->wheelEnabled = enabled;
+    emit wheelEnabledChanged();
+}
+
+/*!
     \qmlproperty Item Qt.labs.controls::Control::background
 
     This property holds the background item.
@@ -931,7 +952,7 @@ void QQuickControl::wheelEvent(QWheelEvent *event)
     if ((d->focusPolicy & Qt::WheelFocus) == Qt::WheelFocus)
         forceActiveFocus(Qt::MouseFocusReason);
 
-    QQuickItem::wheelEvent(event);
+    event->setAccepted(d->wheelEnabled);
 }
 
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
