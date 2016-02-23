@@ -60,9 +60,28 @@ QT_BEGIN_NAMESPACE
         \row \li \b model.year : int \li The number of the year
     \endtable
 
+    The Qt Labs Calendar module uses 0-based month numbers to be consistent
+    with the JavaScript Date type, that is used by the QML language. This
+    means that \c Date::getMonth() can be passed to the methods as is. When
+    dealing with dealing with month numbers directly, it is highly recommended
+    to use the following enumeration values to avoid confusion.
+
+    \value Calendar.January January (0)
+    \value Calendar.February February (1)
+    \value Calendar.March March (2)
+    \value Calendar.April April (3)
+    \value Calendar.May May (4)
+    \value Calendar.June June (5)
+    \value Calendar.July July (6)
+    \value Calendar.August August (7)
+    \value Calendar.September September (8)
+    \value Calendar.October October (9)
+    \value Calendar.November November (10)
+    \value Calendar.December December (11)
+
     \labs
 
-    \sa MonthGrid
+    \sa MonthGrid, Calendar
 */
 
 class QQuickCalendarModelPrivate : public QAbstractItemModelPrivate
@@ -87,9 +106,16 @@ public:
 
 int QQuickCalendarModelPrivate::getCount(const QDate& from, const QDate &to)
 {
+    if (!from.isValid() || !to.isValid())
+        return 0;
+
     QDate f(from.year(), from.month(), 1);
     QDate t(to.year(), to.month(), to.daysInMonth());
-    QDate r = QDate(1, 1, 1).addDays(f.daysTo(t));
+    int days = f.daysTo(t);
+    if (days < 0)
+        return 0;
+
+    QDate r = QDate(1, 1, 1).addDays(days);
     int years = r.year() - 1;
     int months = r.month() - 1;
     return 12 * years + months + (r.day() / t.day());
@@ -169,7 +195,7 @@ void QQuickCalendarModel::setTo(const QDate &to)
 int QQuickCalendarModel::monthAt(int index) const
 {
     Q_D(const QQuickCalendarModel);
-    return d->from.addMonths(index).month();
+    return d->from.addMonths(index).month() - 1;
 }
 
 /*!
@@ -190,7 +216,8 @@ int QQuickCalendarModel::yearAt(int index) const
 */
 int QQuickCalendarModel::indexOf(const QDate &date) const
 {
-    return indexOf(date.year(), date.month());
+    Q_D(const QQuickCalendarModel);
+    return d->getCount(d->from, date) - 1;
 }
 
 /*!
@@ -200,8 +227,7 @@ int QQuickCalendarModel::indexOf(const QDate &date) const
 */
 int QQuickCalendarModel::indexOf(int year, int month) const
 {
-    Q_D(const QQuickCalendarModel);
-    return d->getCount(d->from, QDate(year, month, 1)) - 1;
+    return indexOf(QDate(year, month + 1, 1));
 }
 
 QVariant QQuickCalendarModel::data(const QModelIndex &index, int role) const
