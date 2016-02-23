@@ -350,4 +350,39 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_wheel(data) {
+        var control = spinBox.createObject(testCase, {wheelEnabled: true})
+        verify(control)
+
+        var delta = 120
+
+        compare(control.value, 0)
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 1)
+
+        control.stepSize = 2
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 3)
+
+        control.stepSize = 10
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.value, 0)
+
+        control.stepSize = 5
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 5)
+
+        mouseWheel(control, control.width / 2, control.height / 2, 0.5 * delta, 0.5 * delta)
+        compare(control.value, 8)
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.value, 3)
+
+        control.destroy()
+    }
 }

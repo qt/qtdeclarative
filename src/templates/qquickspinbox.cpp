@@ -627,6 +627,19 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
     }
 }
 
+void QQuickSpinBox::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::wheelEvent(event);
+    if (d->wheelEnabled) {
+        const int oldValue = d->value;
+        const QPointF angle = event->angleDelta();
+        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
+        setValue(oldValue + qRound(d->effectiveStepSize() * delta));
+        event->setAccepted(d->value != oldValue);
+    }
+}
+
 void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QQuickSpinBox);
