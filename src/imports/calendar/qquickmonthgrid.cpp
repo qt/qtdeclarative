@@ -187,7 +187,7 @@ QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
     The Qt Labs Calendar module uses 0-based month numbers to be consistent
     with the JavaScript Date type, that is used by the QML language. This
     means that \c Date::getMonth() can be assigned to this property as is.
-    When dealing with dealing with month numbers diretly, it is highly
+    When dealing with dealing with month numbers directly, it is highly
     recommended to use the following enumeration values to avoid confusion.
 
     \value Calendar.January January (0)

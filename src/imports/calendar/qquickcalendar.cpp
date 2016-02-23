@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     with the JavaScript Date type, that is used by the QML language. This
     means that \c Date::getMonth() can be assigned to MonthGrid::month and
     WeekNumberColumn::month as is. When dealing with dealing with month numbers
-    diretly, it is highly recommended to use the following enumeration values
+    directly, it is highly recommended to use the following enumeration values
     to avoid confusion.
 
     \value Calendar.January January (0)
