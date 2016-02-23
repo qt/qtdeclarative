@@ -743,7 +743,6 @@ bool QQuickControl::isMirrored() const
 
 /*!
     \qmlproperty enumeration Qt.labs.controls::Control::focusPolicy
-    \readonly
 
     This property determines the way the control accepts focus.
 
