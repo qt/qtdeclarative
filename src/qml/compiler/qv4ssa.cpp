@@ -617,7 +617,7 @@ public:
         // compute children of each node in the dominator tree
         std::vector<std::vector<BasicBlockIndex> > children; // BasicBlock index -> children
         children.resize(function->basicBlockCount());
-        foreach (BasicBlock *n, function->basicBlocks()) {
+        for (BasicBlock *n : function->basicBlocks()) {
             if (n->isRemoved())
                 continue;
             const BasicBlockIndex nodeIndex = n->index();
@@ -633,7 +633,7 @@ public:
         nodeStatus.resize(function->basicBlockCount());
         std::vector<BasicBlockIndex> worklist;
         worklist.reserve(function->basicBlockCount());
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             BasicBlockIndex nodeIndex = bb->index();
@@ -689,7 +689,7 @@ public:
             buf.open(QIODevice::WriteOnly);
             QTextStream qout(&buf);
             qout << "Dominator Frontiers:" << endl;
-            foreach (BasicBlock *n, function->basicBlocks()) {
+            for (BasicBlock *n : function->basicBlocks()) {
                 if (n->isRemoved())
                     continue;
 
@@ -706,7 +706,7 @@ public:
         }
 
         if (DebugDominatorFrontiers && DebugCodeCanUseLotsOfCpu) {
-            foreach (BasicBlock *n, function->basicBlocks()) {
+            for (BasicBlock *n : function->basicBlocks()) {
                 if (n->isRemoved())
                     continue;
                 const BasicBlockSet &fBlocks = DF[n->index()];
@@ -747,7 +747,7 @@ public:
             buf.open(QIODevice::WriteOnly);
             QTextStream qout(&buf);
             qout << "Immediate dominators:" << endl;
-            foreach (BasicBlock *to, function->basicBlocks()) {
+            for (BasicBlock *to : function->basicBlocks()) {
                 if (to->isRemoved())
                     continue;
 
@@ -881,7 +881,7 @@ private:
     {
         std::vector<int> nodeDepths(size_t(function->basicBlockCount()), -1);
         nodeDepths[0] = 0;
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -1054,7 +1054,7 @@ public:
         for (size_t i = 0; i != ei; ++i)
             A_orig[i].reserve(8);
 
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -1844,7 +1844,7 @@ public:
     {
         grow();
 
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -1904,7 +1904,7 @@ public:
 
     void applyToFunction()
     {
-        foreach (BasicBlock *bb, theFunction->basicBlocks()) {
+        for (BasicBlock *bb : theFunction->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -2833,7 +2833,7 @@ public:
 
     void run(IR::Function *f, StatementWorklist &worklist) {
         _f = f;
-        foreach (BasicBlock *bb, f->basicBlocks()) {
+        for (BasicBlock *bb : f->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             _conversions.clear();
@@ -3048,7 +3048,8 @@ protected:
 
 void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist, DefUses &defUses)
 {
-    foreach (BasicBlock *toBB, f->basicBlocks()) {
+    const QVector<BasicBlock *> copy = f->basicBlocks();
+    for (BasicBlock *toBB : copy) {
         if (toBB->isRemoved())
             continue;
         if (toBB->in.size() < 2)
@@ -3326,7 +3327,7 @@ private:
 
     void createLoopInfos(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             if (BasicBlock *loopHeader = bb->containingGroup())
@@ -3550,7 +3551,7 @@ static void cleanupBasicBlocks(IR::Function *function)
         }
     }
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved()) // the block has already been removed, so ignore it
             continue;
         if (reachableBlocks.at(bb->index())) // the block is reachable, so ignore it
@@ -3937,7 +3938,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
             Util(qout).genLoop(l);
     }
 
-    foreach (BasicBlock *bb, f->basicBlocks()) {
+    for (BasicBlock *bb : f->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -4482,7 +4483,7 @@ void removeUnreachleBlocks(IR::Function *function)
 {
     QVector<BasicBlock *> newSchedule;
     newSchedule.reserve(function->basicBlockCount());
-    foreach (BasicBlock *bb, function->basicBlocks())
+    for (BasicBlock *bb : function->basicBlocks())
         if (!bb->isRemoved())
             newSchedule.append(bb);
     function->setScheduledBlocks(newSchedule);
@@ -4527,7 +4528,7 @@ public:
             }
         }
 
-        foreach (BasicBlock *bb, function->basicBlocks())
+        for (BasicBlock *bb : function->basicBlocks())
             if (!bb->isRemoved())
                 for (Stmt *s : bb->statements())
                     s->accept(this);
@@ -4805,7 +4806,7 @@ static void verifyCFG(IR::Function *function)
     if (!DoVerification)
         return;
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved()) {
             Q_ASSERT(bb->in.isEmpty());
             Q_ASSERT(bb->out.isEmpty());
@@ -4861,7 +4862,7 @@ static void verifyImmediateDominators(const DominatorTree &dt, IR::Function *fun
     dt.dumpImmediateDominators();
     DominatorTree referenceTree(function);
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -4882,7 +4883,7 @@ static void verifyNoPointerSharing(IR::Function *function)
     public:
         void operator()(IR::Function *f)
         {
-            foreach (BasicBlock *bb, f->basicBlocks()) {
+            for (BasicBlock *bb : f->basicBlocks()) {
                 if (bb->isRemoved())
                     continue;
 
@@ -4950,7 +4951,7 @@ class RemoveLineNumbers: public SideEffectsChecker, public StmtVisitor
 public:
     static void run(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -5166,7 +5167,7 @@ LifeTimeIntervals::LifeTimeIntervals(IR::Function *function)
 // basic-block.
 void LifeTimeIntervals::renumber(IR::Function *function)
 {
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -5202,7 +5203,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 
     function->removeSharedExpressions();
     int statementCount = 0;
-    foreach (BasicBlock *bb, function->basicBlocks())
+    for (BasicBlock *bb : function->basicBlocks())
         if (!bb->isRemoved())
             statementCount += bb->statementCount();
 //    showMeTheCode(function);
@@ -5332,7 +5333,7 @@ void Optimizer::convertOutOfSSA() {
 
     // There should be no critical edges at this point.
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         MoveMapping moves;
 
         for (BasicBlock *successor : bb->out) {
@@ -5368,7 +5369,7 @@ void Optimizer::convertOutOfSSA() {
         moves.insertMoves(bb, function, true);
     }
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         while (!bb->isEmpty()) {
             if (bb->statements().first()->asPhi()) {
                 bb->removeStatement(0);

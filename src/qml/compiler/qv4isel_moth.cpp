@@ -385,7 +385,7 @@ void InstructionSelection::run(int functionIndex)
     addInstruction(push);
 
     currentLine = 0;
-    QVector<IR::BasicBlock *> basicBlocks = _function->basicBlocks();
+    const QVector<IR::BasicBlock *> &basicBlocks = _function->basicBlocks();
     for (int i = 0, ei = basicBlocks.size(); i != ei; ++i) {
         blockNeedsDebugInstruction = irModule->debugMode;
         _block = basicBlocks[i];

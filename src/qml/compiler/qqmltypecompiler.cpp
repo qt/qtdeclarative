@@ -2731,7 +2731,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
     if (function->basicBlockCount() > 10)
         return false;
 
-    foreach (QV4::IR::BasicBlock *bb, function->basicBlocks()) {
+    for (QV4::IR::BasicBlock *bb : function->basicBlocks()) {
         for (QV4::IR::Stmt *s : bb->statements()) {
             s->accept(this);
             if (!_canSimplify)
@@ -2901,7 +2901,7 @@ void QQmlIRFunctionCleanser::clean()
     module->functions = newFunctions;
 
     foreach (QV4::IR::Function *function, module->functions) {
-        foreach (QV4::IR::BasicBlock *block, function->basicBlocks()) {
+        for (QV4::IR::BasicBlock *block : function->basicBlocks()) {
             for (QV4::IR::Stmt *s : block->statements()) {
                 s->accept(this);
             }
