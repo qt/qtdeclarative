@@ -255,7 +255,7 @@ protected:
 
         if (IR::Jump *jump = s->asJump()) {
             IR::MoveMapping moves;
-            foreach (IR::Stmt *succStmt, jump->target->statements()) {
+            for (IR::Stmt *succStmt : jump->target->statements()) {
                 if (IR::Phi *phi = succStmt->asPhi()) {
                     forceActivation(*phi->targetTemp);
                     for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
@@ -404,7 +404,7 @@ void InstructionSelection::run(int functionIndex)
             exceptionHandler = _block->catchBlock;
         }
 
-        foreach (IR::Stmt *s, _block->statements()) {
+        for (IR::Stmt *s : _block->statements()) {
             _currentStatement = s;
 
             if (s->location.isValid()) {

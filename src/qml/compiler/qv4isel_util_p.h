@@ -149,7 +149,7 @@ public:
             if (bb->isRemoved())
                 continue;
             _currentBasicBlock = bb;
-            foreach (IR::Stmt *s, bb->statements())
+            for (IR::Stmt *s : bb->statements())
                 process(s);
         }
 

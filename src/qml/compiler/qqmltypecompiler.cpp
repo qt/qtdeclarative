@@ -2732,7 +2732,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
         return false;
 
     foreach (QV4::IR::BasicBlock *bb, function->basicBlocks()) {
-        foreach (QV4::IR::Stmt *s, bb->statements()) {
+        for (QV4::IR::Stmt *s : bb->statements()) {
             s->accept(this);
             if (!_canSimplify)
                 return false;
@@ -2902,7 +2902,7 @@ void QQmlIRFunctionCleanser::clean()
 
     foreach (QV4::IR::Function *function, module->functions) {
         foreach (QV4::IR::BasicBlock *block, function->basicBlocks()) {
-            foreach (QV4::IR::Stmt *s, block->statements()) {
+            for (QV4::IR::Stmt *s : block->statements()) {
                 s->accept(this);
             }
         }

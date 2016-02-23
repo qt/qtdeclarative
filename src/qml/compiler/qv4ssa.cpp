@@ -1060,7 +1060,7 @@ public:
 
             currentBB = bb;
             killed.assign(function->tempCount, false);
-            foreach (Stmt *s, bb->statements())
+            for (Stmt *s : bb->statements())
                 s->accept(this);
         }
     }
@@ -1580,7 +1580,7 @@ private:
     {
         currentBB = bb;
 
-        foreach (Stmt *s, bb->statements()) {
+        for (Stmt *s : bb->statements()) {
             currentStmt = s;
             s->accept(this);
         }
@@ -1588,7 +1588,7 @@ private:
         for (BasicBlock *Y : bb->out) {
             const int j = Y->in.indexOf(bb);
             Q_ASSERT(j >= 0 && j < Y->in.size());
-            foreach (Stmt *s, Y->statements()) {
+            for (Stmt *s : Y->statements()) {
                 if (Phi *phi = s->asPhi()) {
                     Temp *t = phi->d->incoming[j]->asTemp();
                     unsigned newTmp = currentNumber(*t);
@@ -1848,7 +1848,7 @@ public:
             if (bb->isRemoved())
                 continue;
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!s)
                     continue;
 
@@ -2838,7 +2838,7 @@ public:
                 continue;
             _conversions.clear();
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 _currStmt = s;
                 s->accept(this);
             }
@@ -3563,7 +3563,7 @@ static void cleanupBasicBlocks(IR::Function *function)
             int idx = outBB->in.indexOf(bb);
             if (idx != -1) {
                 outBB->in.remove(idx);
-                foreach (Stmt *s, outBB->statements()) {
+                for (Stmt *s : outBB->statements()) {
                     if (Phi *phi = s->asPhi())
                         phi->d->incoming.remove(idx);
                     else
@@ -3822,7 +3822,7 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
             }
 
             // unlink all defs/uses from the statements in the basic block
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!s)
                     continue;
 
@@ -4424,7 +4424,7 @@ private:
             const int bbIndex = successor->in.indexOf(bb);
             Q_ASSERT(bbIndex >= 0);
 
-            foreach (Stmt *s, successor->statements()) {
+            for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
                     if (Temp *t = phi->d->incoming.at(bbIndex)->asTemp())
                         live.insert(*t);
@@ -4434,7 +4434,7 @@ private:
             }
         }
 
-        QVector<Stmt *> statements = bb->statements();
+        const QVector<Stmt *> &statements = bb->statements();
 
         foreach (const Temp &opd, live)
             interval(&opd).addRange(start(bb), end(bb));
@@ -4529,7 +4529,7 @@ public:
 
         foreach (BasicBlock *bb, function->basicBlocks())
             if (!bb->isRemoved())
-                foreach (Stmt *s, bb->statements())
+                for (Stmt *s : bb->statements())
                     s->accept(this);
 
         if (convertArgs && function->formals.size() > 0)
@@ -4613,7 +4613,7 @@ public:
     {
         block = new BasicBlock(originalBlock->function, 0);
 
-        foreach (Stmt *s, originalBlock->statements()) {
+        for (Stmt *s : originalBlock->statements()) {
             s->accept(this);
             clonedStmt->location = s->location;
         }
@@ -4886,7 +4886,7 @@ static void verifyNoPointerSharing(IR::Function *function)
                 if (bb->isRemoved())
                     continue;
 
-                foreach (Stmt *s, bb->statements())
+                for (Stmt *s : bb->statements())
                     s->accept(this);
             }
         }
@@ -4954,7 +4954,7 @@ public:
             if (bb->isRemoved())
                 continue;
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!hasSideEffects(s)) {
                     s->location = QQmlJS::AST::SourceLocation();
                 }
@@ -5172,7 +5172,7 @@ void LifeTimeIntervals::renumber(IR::Function *function)
 
         _basicBlockPosition[bb->index()].start = _lastPosition + 1;
 
-        foreach (Stmt *s, bb->statements()) {
+        for (Stmt *s : bb->statements()) {
             if (s->asPhi())
                 continue;
 
@@ -5338,7 +5338,7 @@ void Optimizer::convertOutOfSSA() {
         for (BasicBlock *successor : bb->out) {
             const int inIdx = successor->in.indexOf(bb);
             Q_ASSERT(inIdx >= 0);
-            foreach (Stmt *s, successor->statements()) {
+            for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
                     moves.add(clone(phi->d->incoming[inIdx], function),
                               clone(phi->targetTemp, function)->asTemp());
