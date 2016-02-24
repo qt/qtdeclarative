@@ -1465,7 +1465,8 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QQuickText);
     Q_UNUSED(value);
-    if (change == ItemAntialiasingHasChanged) {
+    switch (change) {
+    case ItemAntialiasingHasChanged:
         if (!antialiasing())
             d->font.setStyleStrategy(QFont::NoAntialias);
         else
@@ -1473,6 +1474,22 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
         d->implicitWidthValid = false;
         d->implicitHeightValid = false;
         d->updateLayout();
+        break;
+
+    case ItemDevicePixelRatioHasChanged:
+        if (d->renderType == NativeRendering) {
+            // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
+            // Text layout code respects the current device pixel ratio automatically, we only need
+            // to rerun layout after the ratio changed.
+            // Changes of implicit size should be minimal; they are hard to avoid.
+            d->implicitWidthValid = false;
+            d->implicitHeightValid = false;
+            d->updateLayout();
+        }
+        break;
+
+    default:
+        break;
     }
     QQuickItem::itemChange(change, value);
 }

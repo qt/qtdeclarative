@@ -336,6 +336,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
         } else if (property->isV4Function()) {
             Scope scope(engine);
             ScopedContext global(scope, engine->qmlContext());
+            if (!global)
+                global = engine->rootContext();
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
         } else if (property->isSignalHandler()) {
             QmlSignalHandler::initProto(engine);

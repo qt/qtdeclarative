@@ -29,7 +29,7 @@ load(qt_module)
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
-include(designer/designer.pri)
+!wince:include(designer/designer.pri)
 contains(QT_CONFIG, accessibility) {
     include(accessible/accessible.pri)
 }

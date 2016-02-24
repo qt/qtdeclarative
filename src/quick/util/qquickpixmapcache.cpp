@@ -1194,8 +1194,6 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             *ok = true;
             return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestSize, autoTransform, appliedTransform);
         }
-        errorString = QQuickPixmap::tr("Invalid image data: %1").arg(url.toString());
-
     } else {
         errorString = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
     }
