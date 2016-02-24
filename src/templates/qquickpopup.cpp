@@ -471,6 +471,7 @@ void QQuickPopupPositioner::repositionPopup()
     const qreal iw = m_popup->popupItem->implicitWidth();
     const qreal ih = m_popup->popupItem->implicitHeight();
 
+    bool adjusted = false;
     QRectF rect(m_x, m_y, iw > 0 ? iw : w, ih > 0 ? ih : h);
     if (m_parentItem) {
         rect = m_parentItem->mapRectToScene(rect);
@@ -482,6 +483,7 @@ void QQuickPopupPositioner::repositionPopup()
                 // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
                 const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
                 if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom()) {
+                    adjusted = true;
                     rect = flipped;
                 } else if (ih > 0) {
                     // neither the flipped around geometry fits inside the window, choose
@@ -496,13 +498,14 @@ void QQuickPopupPositioner::repositionPopup()
                         rect.setY(secondary.y());
                         rect.setHeight(secondary.height());
                     }
+                    adjusted = true;
                 }
             }
         }
     }
 
     m_popup->popupItem->setPosition(rect.topLeft());
-    if (ih > 0)
+    if (adjusted && ih > 0)
         m_popup->popupItem->setHeight(rect.height());
 }
 
