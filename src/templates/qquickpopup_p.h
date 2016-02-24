@@ -56,6 +56,10 @@
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlparserstatus.h>
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtGui/qaccessible.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -316,6 +320,10 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+
+#ifndef QT_NO_ACCESSIBILITY
+    virtual QAccessible::Role accessibleRole() const;
+#endif
 
 private:
     Q_DISABLE_COPY(QQuickPopup)

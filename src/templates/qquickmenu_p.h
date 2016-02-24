@@ -89,6 +89,11 @@ protected:
 Q_SIGNALS:
     void titleChanged();
 
+protected:
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif // QT_NO_ACCESSIBILITY
+
 private:
     Q_DISABLE_COPY(QQuickMenu)
     Q_DECLARE_PRIVATE(QQuickMenu)

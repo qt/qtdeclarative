@@ -367,6 +367,14 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     d->popup->paddingChange(newPadding, oldPadding);
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPopupItem::accessibleRole() const
+{
+    Q_D(const QQuickPopupItem);
+    return d->popup->accessibleRole();
+}
+#endif // QT_NO_ACCESSIBILITY
+
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
     m_x(0),
     m_y(0),
@@ -1647,6 +1655,13 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
     if (tp || bp)
         emit availableHeightChanged();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPopup::accessibleRole() const
+{
+    return QAccessible::LayeredPane;
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE
 

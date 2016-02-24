@@ -108,6 +108,10 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
 };

@@ -199,10 +199,15 @@ void QQuickControl::accessibilityActiveChanged(bool active)
         return;
 
     d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached)
-        d->accessibleAttached->setRole(accessibleRole());
-    else
-        qWarning() << "QQuickControl: " << this << " QQuickAccessibleAttached object creation failed!";
+
+    // QQuickControl relies on the existence of a QQuickAccessibleAttached object.
+    // However, qmlAttachedPropertiesObject(create=true) creates an instance only
+    // for items that have been created by a QML engine. Therefore we create the
+    // object by hand for items created in C++ (QQuickPopupItem, for instance).
+    if (!d->accessibleAttached)
+        d->accessibleAttached = new QQuickAccessibleAttached(this);
+
+    d->accessibleAttached->setRole(accessibleRole());
 }
 #endif
 
