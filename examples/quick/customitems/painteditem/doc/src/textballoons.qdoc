@@ -24,8 +24,6 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-
 /*!
     \title Scene Graph - Painted Item
     \brief Shows how to implement QPainter-based custom scenegraph items.
