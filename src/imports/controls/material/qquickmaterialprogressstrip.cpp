@@ -225,6 +225,7 @@ QSGNode *QQuickMaterialProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePa
             transformNode->appendChildNode(rectNode);
         }
         Q_ASSERT(transformNode->type() == QSGNode::TransformNodeType);
+        static_cast<QSGTransformNode *>(transformNode)->setMatrix(QMatrix4x4());
 
         QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(transformNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);

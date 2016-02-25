@@ -55,12 +55,20 @@ Item {
         height: parent.height
         radius: width / 2
         color: root.control.Material.accentColor
-        scale: root.handlePressed || root.handleHasFocus ? 1.5 : 1
+        scale: root.handlePressed ? 1.5 : 1
 
         Behavior on scale {
             NumberAnimation {
                 duration: 250
             }
         }
+    }
+
+    Ripple {
+        width: parent.width
+        height: width
+        control: root.control
+        colored: true
+        opacity: root.handleHasFocus && !root.handlePressed ? 1 : 0
     }
 }

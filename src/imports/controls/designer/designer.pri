@@ -29,5 +29,4 @@ QML_FILES += \
     $$PWD/TumblerSpecifics.qml
 
 QML_FILES += \
-    $$PWD/images/todo.png \
-    $$PWD/images/todo16.png
+    $$PWD/images/*.png

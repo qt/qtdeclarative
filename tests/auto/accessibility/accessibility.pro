@@ -4,7 +4,7 @@ SOURCES += tst_accessibility.cpp
 
 osx:CONFIG -= app_bundle
 
-QT += core-private gui-private qml-private quick-private testlib
+QT += core-private gui-private qml-private quick-private labstemplates-private testlib
 
 include (../shared/util.pri)
 

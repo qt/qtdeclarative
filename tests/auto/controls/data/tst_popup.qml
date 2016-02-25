@@ -52,8 +52,13 @@ TestCase {
     name: "Popup"
 
     Component {
-        id: popup
+        id: popupTemplate
         T.Popup { }
+    }
+
+    Component {
+        id: popupControl
+        Popup { }
     }
 
     Component {
@@ -97,7 +102,7 @@ TestCase {
     }
 
     function test_padding() {
-        var control = popup.createObject(testCase)
+        var control = popupTemplate.createObject(testCase)
         verify(control)
 
         paddingSpy.target = control
@@ -205,7 +210,7 @@ TestCase {
     }
 
     function test_availableSize() {
-        var control = popup.createObject(testCase)
+        var control = popupTemplate.createObject(testCase)
         verify(control)
 
         availableWidthSpy.target = control
@@ -277,7 +282,7 @@ TestCase {
     }
 
     function test_background() {
-        var control = popup.createObject(testCase)
+        var control = popupTemplate.createObject(testCase)
         verify(control)
 
         control.background = rect.createObject(testCase)
@@ -588,6 +593,22 @@ TestCase {
         compare(control.mirroredspy_1.count, 1)
         compare(control.localespy_2.count, 2)
         compare(control.mirroredspy_2.count, 1)
+
+        control.destroy()
+    }
+
+    function test_size() {
+        var control = popupControl.createObject(testCase)
+        verify(control)
+
+        control.width = 200
+        control.height = 200
+
+        control.open()
+        waitForRendering(control.contentItem)
+
+        compare(control.width, 200)
+        compare(control.height, 200)
 
         control.destroy()
     }
