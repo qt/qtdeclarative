@@ -751,6 +751,10 @@ struct Ret: Stmt {
     virtual Ret *asRet() { return this; }
 };
 
+// Phi nodes can only occur at the start of a basic block. If there are any, they need to be
+// subsequent to eachother, and the first phi node should be the first statement in the basic-block.
+// A number of loops rely on this behavior, so they don't need to walk through the whole list
+// of instructions in a basic-block (e.g. the calls to destroyData in BasicBlock::~BasicBlock).
 struct Phi: Stmt {
     Temp *targetTemp;
     VarLengthArray<Expr *, 4> incoming;

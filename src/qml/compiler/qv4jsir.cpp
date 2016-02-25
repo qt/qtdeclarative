@@ -514,9 +514,11 @@ void Function::setStatementCount(int cnt)
 BasicBlock::~BasicBlock()
 {
     for (Stmt *s : qAsConst(_statements)) {
-        Phi *p = s->asPhi();
-        if (p)
+        if (Phi *p = s->asPhi()) {
             p->destroyData();
+        } else {
+            break;
+        }
     }
 }
 
@@ -769,14 +771,15 @@ void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
 {
     Q_ASSERT(!isRemoved());
     Q_ASSERT(newStatements.size() >= _statements.size());
-    // FIXME: this gets quite inefficient for large basic-blocks, so this function/case should be re-worked.
     for (Stmt *s : qAsConst(_statements)) {
-        Phi *p = s->asPhi();
-        if (!p)
-            continue;
-
-        if (!newStatements.contains(p))
-            p->destroyData();
+        if (Phi *p = s->asPhi()) {
+            if (!newStatements.contains(p)) {
+                // phi-node was not copied over, so:
+                p->destroyData();
+            }
+        } else {
+            break;
+        }
     }
     _statements = newStatements;
 }
@@ -825,27 +828,27 @@ void BasicBlock::insertStatementBeforeTerminator(Stmt *stmt)
 void BasicBlock::replaceStatement(int index, Stmt *newStmt)
 {
     Q_ASSERT(!isRemoved());
-    Phi *p = _statements[index]->asPhi();
-    if (p)
+    if (Phi *p = _statements[index]->asPhi()) {
         p->destroyData();
+    }
     _statements[index] = newStmt;
 }
 
 void BasicBlock::removeStatement(Stmt *stmt)
 {
     Q_ASSERT(!isRemoved());
-    Phi *p = stmt->asPhi();
-    if (p)
+    if (Phi *p = stmt->asPhi()) {
         p->destroyData();
+    }
     _statements.remove(_statements.indexOf(stmt));
 }
 
 void BasicBlock::removeStatement(int idx)
 {
     Q_ASSERT(!isRemoved());
-    Phi *p = _statements[idx]->asPhi();
-    if (p)
+    if (Phi *p = _statements[idx]->asPhi()) {
         p->destroyData();
+    }
     _statements.remove(idx);
 }
 
