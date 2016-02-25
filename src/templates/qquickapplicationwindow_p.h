@@ -63,6 +63,7 @@ class QQuickApplicationWindowAttachedPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
@@ -76,6 +77,9 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
 public:
     explicit QQuickApplicationWindow(QWindow *parent = nullptr);
     ~QQuickApplicationWindow();
+
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
 
     QQuickItem *contentItem() const;
     QQmlListProperty<QObject> contentData();
@@ -101,6 +105,7 @@ public:
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
+    void backgroundChanged();
     void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();

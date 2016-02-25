@@ -37,6 +37,7 @@ Module {
         exports: ["Qt.labs.templates/ApplicationWindow 1.0"]
         exportMetaObjectRevisions: [0]
         attachedType: "QQuickApplicationWindowAttached"
+        Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "activeFocusControl"; type: "QQuickItem"; isReadonly: true; isPointer: true }

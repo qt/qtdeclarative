@@ -99,6 +99,7 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 public:
     QQuickApplicationWindowPrivate()
         : complete(false)
+        , background(nullptr)
         , contentItem(nullptr)
         , header(nullptr)
         , footer(nullptr)
@@ -123,6 +124,7 @@ public:
     void setActiveFocusControl(QQuickItem *item);
 
     bool complete;
+    QQuickItem *background;
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
@@ -165,6 +167,18 @@ void QQuickApplicationWindowPrivate::relayout()
         if (!p->widthValid) {
             footer->setWidth(q->width());
             p->widthValid = false;
+        }
+    }
+
+    if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (!p->widthValid && qFuzzyIsNull(background->x())) {
+            background->setWidth(q->width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid && qFuzzyIsNull(background->y())) {
+            background->setHeight(q->height());
+            p->heightValid = false;
         }
     }
 }
@@ -228,6 +242,42 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
     if (d->footer)
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+}
+
+/*!
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::background
+
+    This property holds the background item.
+
+    The background item is stacked under the \l {contentItem}{content item},
+    but above the \l {Window::color}{background color} of the window.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
+*/
+QQuickItem *QQuickApplicationWindow::background() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->background;
+}
+
+void QQuickApplicationWindow::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(QQuickWindow::contentItem());
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->relayout();
+    }
+    emit backgroundChanged();
 }
 
 /*!
