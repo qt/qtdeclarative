@@ -634,7 +634,7 @@ QColor QQuickMaterialStyle::accentColor() const
         return QColor::fromRgba(m_accent);
     if (m_accent > BlueGrey)
         return QColor();
-    return colors[m_accent][Shade500];
+    return colors[m_accent][m_theme == Light ? Shade500 : Shade200];
 }
 
 QColor QQuickMaterialStyle::backgroundColor() const
@@ -744,7 +744,7 @@ QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
     QColor pressColor = accentColor();
     // TODO: find out actual value
-    pressColor.setAlpha(30);
+    pressColor.setAlpha(m_theme == Light ? 30 : 50);
     return pressColor;
 }
 

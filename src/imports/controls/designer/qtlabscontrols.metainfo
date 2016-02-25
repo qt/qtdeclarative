@@ -1,12 +1,12 @@
 MetaInfo {
     Type {
         name: "Qt.labs.controls.BusyIndicator"
-        icon: "images/todo16.png"
+        icon: "images/busyindicator-icon16.png"
 
         ItemLibraryEntry {
             name: "Busy Indicator"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/busyindicator-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
         }
@@ -14,12 +14,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Button"
-        icon: "images/todo16.png"
+        icon: "images/button-icon16.png"
 
         ItemLibraryEntry {
             name: "Button"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/button-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -29,12 +29,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.CheckBox"
-        icon: "images/todo16.png"
+        icon: "images/checkbox-icon16.png"
 
         ItemLibraryEntry {
             name: "Check Box"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/checkbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -44,12 +44,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.ComboBox"
-        icon: "images/todo16.png"
+        icon: "images/combobox-icon16.png"
 
         ItemLibraryEntry {
             name: "Combo Box"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/combobox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
         }
@@ -57,12 +57,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Dial"
-        icon: "images/todo16.png"
+        icon: "images/dial-icon16.png"
 
         ItemLibraryEntry {
             name: "Dial"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/dial-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
         }
@@ -70,12 +70,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Frame"
-        icon: "images/todo16.png"
+        icon: "images/frame-icon16.png"
 
         ItemLibraryEntry {
             name: "Frame"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/frame-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -86,12 +86,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.GroupBox"
-        icon: "images/todo16.png"
+        icon: "images/groupbox-icon16.png"
 
         ItemLibraryEntry {
             name: "Group Box"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/groupbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -103,12 +103,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.ItemDelegate"
-        icon: "images/todo16.png"
+        icon: "images/itemdelegate-icon16.png"
 
         ItemLibraryEntry {
             name: "Item Delegate"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/itemdelegate-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -118,12 +118,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Label"
-        icon: "images/todo16.png"
+        icon: "images/label-icon16.png"
 
         ItemLibraryEntry {
             name: "Label"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/label-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -133,12 +133,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.PageIndicator"
-        icon: "images/todo16.png"
+        icon: "images/pageindicator-icon16.png"
 
         ItemLibraryEntry {
             name: "Page Indicator"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/pageindicator-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -148,12 +148,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Pane"
-        icon: "images/todo16.png"
+        icon: "images/pane-icon16.png"
 
         ItemLibraryEntry {
             name: "Pane"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/pane-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -164,12 +164,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.ProgressBar"
-        icon: "images/todo16.png"
+        icon: "images/progressbar-icon16.png"
 
         ItemLibraryEntry {
             name: "Progress Bar"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/progressbar-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -179,12 +179,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.RadioButton"
-        icon: "images/todo16.png"
+        icon: "images/radiobutton-icon16.png"
 
         ItemLibraryEntry {
             name: "Radio Button"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/radiobutton-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -194,12 +194,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Slider"
-        icon: "images/todo16.png"
+        icon: "images/slider-icon16.png"
 
         ItemLibraryEntry {
             name: "Slider"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/slider-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -209,12 +209,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.SpinBox"
-        icon: "images/todo16.png"
+        icon: "images/spinbox-icon16.png"
 
         ItemLibraryEntry {
             name: "Spin Box"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/spinbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
         }
@@ -222,12 +222,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Switch"
-        icon: "images/todo16.png"
+        icon: "images/switch-icon16.png"
 
         ItemLibraryEntry {
             name: "Switch"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/switch-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -237,12 +237,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.TextArea"
-        icon: "images/todo16.png"
+        icon: "images/textarea-icon16.png"
 
         ItemLibraryEntry {
             name: "Text Area"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/textarea-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -252,12 +252,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.TextField"
-        icon: "images/todo16.png"
+        icon: "images/textfield-icon16.png"
 
         ItemLibraryEntry {
             name: "Text Field"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/textfield-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -267,12 +267,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.ToolButton"
-        icon: "images/todo16.png"
+        icon: "images/toolbutton-icon16.png"
 
         ItemLibraryEntry {
             name: "Tool Button"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/toolbutton-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -282,12 +282,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.ToolBar"
-        icon: "images/todo16.png"
+        icon: "images/toolbar-icon16.png"
 
         ItemLibraryEntry {
             name: "Tool Bar"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/toolbar-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
@@ -297,12 +297,12 @@ MetaInfo {
 
     Type {
         name: "Qt.labs.controls.Tumbler"
-        icon: "images/todo16.png"
+        icon: "images/tumbler-icon16.png"
 
         ItemLibraryEntry {
             name: "Tumbler"
             category: "Qt Labs - Controls"
-            libraryIcon: "images/todo.png"
+            libraryIcon: "images/tumbler-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
         }

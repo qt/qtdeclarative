@@ -105,6 +105,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
     , modal(false)
+    , complete(false)
     , hasTopMargin(false)
     , hasLeftMargin(false)
     , hasRightMargin(false)
@@ -367,6 +368,14 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     d->popup->paddingChange(newPadding, oldPadding);
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPopupItem::accessibleRole() const
+{
+    Q_D(const QQuickPopupItem);
+    return d->popup->accessibleRole();
+}
+#endif // QT_NO_ACCESSIBILITY
+
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
     m_x(0),
     m_y(0),
@@ -473,6 +482,7 @@ void QQuickPopupPositioner::repositionPopup()
     const qreal iw = m_popup->popupItem->implicitWidth();
     const qreal ih = m_popup->popupItem->implicitHeight();
 
+    bool adjusted = false;
     QRectF rect(m_x, m_y, iw > 0 ? iw : w, ih > 0 ? ih : h);
     if (m_parentItem) {
         rect = m_parentItem->mapRectToScene(rect);
@@ -484,6 +494,7 @@ void QQuickPopupPositioner::repositionPopup()
                 // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
                 const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));
                 if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom()) {
+                    adjusted = true;
                     rect = flipped;
                 } else if (ih > 0) {
                     // neither the flipped around geometry fits inside the window, choose
@@ -498,13 +509,14 @@ void QQuickPopupPositioner::repositionPopup()
                         rect.setY(secondary.y());
                         rect.setHeight(secondary.height());
                     }
+                    adjusted = true;
                 }
             }
         }
     }
 
     m_popup->popupItem->setPosition(rect.topLeft());
-    if (ih > 0)
+    if (adjusted && ih > 0)
         m_popup->popupItem->setHeight(rect.height());
 }
 
@@ -1635,6 +1647,13 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
     if (tp || bp)
         emit availableHeightChanged();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPopup::accessibleRole() const
+{
+    return QAccessible::LayeredPane;
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE
 

@@ -41,6 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -75,7 +76,9 @@ void tst_accessibility::a11y_data()
     // Frame
     // GroupBox
     QTest::newRow("Label") << "label" << 0x00000029 << "Label"; //QAccessible::StaticText
+    QTest::newRow("Menu") << "menu" << 0x0000000B << ""; //QAccessible::PopupMenu
     QTest::newRow("PageIndicator") << "pageindicator" << 0x00000027 << ""; //QAccessible::Indicator
+    QTest::newRow("Popup") << "popup" << 0x00000080 << ""; //QAccessible::LayeredPane
     QTest::newRow("ProgressBar") << "progressbar" << 0x00000030 << ""; //QAccessible::ProgressBar
     QTest::newRow("RadioButton") << "radiobutton" << 0x0000002D << "RadioButton"; //QAccessible::RadioButton
     QTest::newRow("RangeSlider") << "rangeslider" << 0x00000033 << ""; //QAccessible::Slider
@@ -100,6 +103,14 @@ void tst_accessibility::a11y_data()
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
     QTest::newRow("MonthGrid") << "monthgrid" << 0x0 << "MonthGrid"; //QAccessible::NoRole
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
+}
+
+static QQuickAccessibleAttached *accessibleAttached(QQuickItem *item)
+{
+    QQuickAccessibleAttached *acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+    if (!acc)
+        acc = item->findChild<QQuickAccessibleAttached *>();
+    return acc;
 }
 
 void tst_accessibility::a11y()
@@ -128,10 +139,15 @@ void tst_accessibility::a11y()
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickItem *item = findItem<QQuickItem>(window->contentItem(), name);
+    if (!item) {
+        QQuickPopup *popup = window->contentItem()->findChild<QQuickPopup *>(name);
+        if (popup)
+            item = popup->popupItem();
+    }
     QVERIFY(item);
 
 #ifndef QT_NO_ACCESSIBILITY
-    QQuickAccessibleAttached *acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+    QQuickAccessibleAttached *acc = accessibleAttached(item);
     if (name != QLatin1Literal("dayofweekrow")
             && name != QLatin1Literal("monthgrid")
             && name != QLatin1Literal("weeknumbercolumn")) {
@@ -140,7 +156,7 @@ void tst_accessibility::a11y()
         } else {
             QVERIFY(!acc);
             QAccessible::setActive(true);
-            acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+            acc = accessibleAttached(item);
         }
     }
     QVERIFY(acc);

@@ -518,6 +518,13 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     return QQuickPopup::eventFilter(object, event);
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickMenu::accessibleRole() const
+{
+    return QAccessible::PopupMenu;
+}
+#endif // QT_NO_ACCESSIBILITY
+
 QT_END_NAMESPACE
 
 #include "moc_qquickmenu_p.cpp"
