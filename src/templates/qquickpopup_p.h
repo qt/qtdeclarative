@@ -312,6 +312,7 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
+    virtual bool overlayEvent(QQuickItem *item, QEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
@@ -327,6 +328,7 @@ private:
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;
+    friend class QQuickOverlay;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)

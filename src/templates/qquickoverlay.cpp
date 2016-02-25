@@ -197,52 +197,26 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
         d->resizeBackground();
 }
 
-void QQuickOverlay::keyPressEvent(QKeyEvent *event)
+bool QQuickOverlay::event(QEvent *event)
 {
     Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
-}
-
-void QQuickOverlay::keyReleaseEvent(QKeyEvent *event)
-{
-    Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
-}
-
-void QQuickOverlay::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
-    emit pressed();
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+        emit pressed();
+        break;
+    case QEvent::MouseButtonRelease:
+        emit released();
+        break;
+    default:
+        break;
+    }
 
     for (auto it = d->popups.rbegin(), end = d->popups.rend(); it != end; ++it) {
-        if (QQuickPopupPrivate::get(*it)->tryClose(this, event))
-            break;
+        if ((*it)->overlayEvent(this, event))
+            return true;
     }
-}
 
-void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
-}
-
-void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
-    emit released();
-
-    for (auto it = d->popups.rbegin(), end = d->popups.rend(); it != end; ++it) {
-        if (QQuickPopupPrivate::get(*it)->tryClose(this, event))
-            break;
-    }
-}
-
-void QQuickOverlay::wheelEvent(QWheelEvent *event)
-{
-    Q_D(QQuickOverlay);
-    event->setAccepted(d->modalPopups > 0);
+    return QQuickItem::event(event);
 }
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
@@ -256,26 +230,18 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     while (item->parentItem() != this)
         item = item->parentItem();
 
-    bool modalBlocked = false;
-    const QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
-    const QList<QQuickItem *> &sortedChildren = priv->paintOrderChildItems();
+    const QList<QQuickItem *> sortedChildren = d->paintOrderChildItems();
     for (auto it = sortedChildren.rbegin(), end = sortedChildren.rend(); it != end; ++it) {
         QQuickItem *popupItem = *it;
         if (popupItem == item)
             break;
 
         QQuickPopup *popup = qobject_cast<QQuickPopup *>(popupItem->parent());
-        if (popup) {
-            QQuickPopup::ClosePolicy policy = popup->closePolicy();
-            if (policy.testFlag(QQuickPopup::OnPressOutside) || policy.testFlag(QQuickPopup::OnPressOutsideParent))
-                popup->close();
-
-            if (!modalBlocked && popup->isModal())
-                modalBlocked = true;
-        }
+        if (popup && popup->overlayEvent(item, event))
+            return true;
     }
 
-    return modalBlocked;
+    return false;
 }
 
 QT_END_NAMESPACE

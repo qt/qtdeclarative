@@ -1517,28 +1517,9 @@ bool QQuickPopup::isComponentComplete() const
 
 bool QQuickPopup::eventFilter(QObject *object, QEvent *event)
 {
-    Q_D(QQuickPopup);
-    Q_UNUSED(object);
-    switch (event->type()) {
-    case QEvent::MouseButtonPress:
-    case QEvent::MouseButtonRelease:
-        if (d->modal)
-            event->setAccepted(true);
-        if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object)) {
-            if (d->tryClose(window->contentItem(), static_cast<QMouseEvent *>(event)))
-                return true;
-        }
-        return false;
-    case QEvent::KeyPress:
-    case QEvent::KeyRelease:
-    case QEvent::MouseMove:
-    case QEvent::Wheel:
-        if (d->modal)
-            event->setAccepted(true);
-        return false;
-    default:
-        return false;
-    }
+    if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object))
+        return overlayEvent(window->contentItem(), event);
+    return false;
 }
 
 void QQuickPopup::focusInEvent(QFocusEvent *event)
@@ -1590,6 +1571,30 @@ void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
 
 void QQuickPopup::mouseUngrabEvent()
 {
+}
+
+bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
+{
+    Q_D(QQuickPopup);
+    switch (event->type()) {
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+    case QEvent::MouseMove:
+    case QEvent::Wheel:
+        if (d->modal)
+            event->accept();
+        return d->modal;
+
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        if (d->modal)
+            event->accept();
+        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        return d->modal;
+
+    default:
+        return false;
+    }
 }
 
 void QQuickPopup::wheelEvent(QWheelEvent *event)
