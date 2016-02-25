@@ -881,6 +881,10 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
     \e contentHeight is not equal to the \e height of the Flickable.
     Allows flicking horizontally if the \e contentWidth is not equal
     to the \e width of the Flickable.
+    \li Flickable.AutoFlickIfNeeded - allows flicking vertically if the
+    \e contentHeight is greater than the \e height of the Flickable.
+    Allows flicking horizontally if the \e contentWidth is greater than
+    to the \e width of the Flickable.
     \li Flickable.HorizontalFlick - allows flicking horizontally.
     \li Flickable.VerticalFlick - allows flicking vertically.
     \li Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
@@ -2167,6 +2171,8 @@ qreal QQuickFlickable::vHeight() const
 bool QQuickFlickable::xflick() const
 {
     Q_D(const QQuickFlickable);
+    if ((d->flickableDirection & QQuickFlickable::AutoFlickIfNeeded) && (vWidth() > width()))
+        return true;
     if (d->flickableDirection == QQuickFlickable::AutoFlickDirection)
         return std::floor(qAbs(vWidth() - width()));
     return d->flickableDirection & QQuickFlickable::HorizontalFlick;
@@ -2175,6 +2181,8 @@ bool QQuickFlickable::xflick() const
 bool QQuickFlickable::yflick() const
 {
     Q_D(const QQuickFlickable);
+    if ((d->flickableDirection & QQuickFlickable::AutoFlickIfNeeded) && (vHeight() > height()))
+        return true;
     if (d->flickableDirection == QQuickFlickable::AutoFlickDirection)
         return std::floor(qAbs(vHeight() - height()));
     return d->flickableDirection & QQuickFlickable::VerticalFlick;
