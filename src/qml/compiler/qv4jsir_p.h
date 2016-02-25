@@ -753,21 +753,15 @@ struct Ret: Stmt {
 
 struct Phi: Stmt {
     Temp *targetTemp;
-    struct Data {
-        QVector<Expr *> incoming; // used by Phi nodes
-    };
+    VarLengthArray<Expr *, 4> incoming;
 
-    Data *d;
-
-    Phi(int id): Stmt(id), d(0) {}
+    Phi(int id): Stmt(id) {}
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
 
-    void destroyData() {
-        delete d;
-        d = 0;
-    }
+    void destroyData()
+    { incoming.~VarLengthArray(); }
 };
 
 struct Q_QML_PRIVATE_EXPORT Module {

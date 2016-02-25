@@ -702,8 +702,8 @@ protected: // IRDecoder
     virtual void visitPhi(IR::Phi *s)
     {
         addDef(s->targetTemp, true);
-        for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
-            Expr *e = s->d->incoming.at(i);
+        for (int i = 0, ei = s->incoming.size(); i < ei; ++i) {
+            Expr *e = s->incoming.at(i);
             if (Temp *t = e->asTemp()) {
                 // The actual use of an incoming value in a phi node is right before the terminator
                 // of the other side of the incoming edge.
@@ -1024,7 +1024,7 @@ private:
             if (it->start() == successorStart) {
                 if (Phi *phi = findDefPhi(it->temp(), successor)) {
                     isPhiTarget = true;
-                    Expr *opd = phi->d->incoming[successor->in.indexOf(predecessor)];
+                    Expr *opd = phi->incoming[successor->in.indexOf(predecessor)];
                     if (opd->asConst()) {
                         moveFrom = opd;
                     } else {

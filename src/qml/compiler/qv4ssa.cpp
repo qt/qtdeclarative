@@ -1380,16 +1380,15 @@ public:
 
 void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
     Phi *phiNode = f->NewStmt<Phi>();
-    phiNode->d = new Phi::Data;
     phiNode->targetTemp = f->New<Temp>();
     phiNode->targetTemp->init(a.kind, a.index);
     y->prependStatement(phiNode);
 
-    phiNode->d->incoming.resize(y->in.size());
+    phiNode->incoming.resize(y->in.size());
     for (int i = 0, ei = y->in.size(); i < ei; ++i) {
         Temp *t = f->New<Temp>();
         t->init(a.kind, a.index);
-        phiNode->d->incoming[i] = t;
+        phiNode->incoming[i] = t;
     }
 }
 
@@ -1590,7 +1589,7 @@ private:
             Q_ASSERT(j >= 0 && j < Y->in.size());
             for (Stmt *s : Y->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    Temp *t = phi->d->incoming[j]->asTemp();
+                    Temp *t = phi->incoming[j]->asTemp();
                     unsigned newTmp = currentNumber(*t);
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
                     t->index = newTmp;
@@ -2273,7 +2272,7 @@ protected:
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
     virtual void visitPhi(Phi *s) {
         s->targetTemp->accept(this);
-        foreach (Expr *e, s->d->incoming)
+        foreach (Expr *e, s->incoming)
             e->accept(this);
     }
 };
@@ -2568,9 +2567,9 @@ protected:
     virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
     virtual void visitPhi(Phi *s) {
-        _ty = run(s->d->incoming[0]);
-        for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
-            TypingResult ty = run(s->d->incoming[i]);
+        _ty = run(s->incoming[0]);
+        for (int i = 1, ei = s->incoming.size(); i != ei; ++i) {
+            TypingResult ty = run(s->incoming[i]);
             if (!ty.fullyTyped && _ty.fullyTyped) {
                 // When one of the temps not fully typed, we already know that we cannot completely type this node.
                 // So, pick the type we calculated upto this point, and wait until the unknown one will be typed.
@@ -2889,7 +2888,7 @@ public:
                     _defUses.addUse(*source, conversion.stmt);
 
                     if (Phi *phi = conversion.stmt->asPhi()) {
-                        int idx = phi->d->incoming.indexOf(t);
+                        int idx = phi->incoming.indexOf(t);
                         Q_ASSERT(idx != -1);
                         bb->in[idx]->insertStatementBeforeTerminator(convCall);
                     } else {
@@ -3041,8 +3040,8 @@ protected:
     virtual void visitRet(Ret *s) { run(s->expr); }
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
-        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
-            run(s->d->incoming[i], ty);
+        for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
+            run(s->incoming[i], ty);
     }
 };
 
@@ -3566,7 +3565,7 @@ static void cleanupBasicBlocks(IR::Function *function)
                 outBB->in.remove(idx);
                 for (Stmt *s : outBB->statements()) {
                     if (Phi *phi = s->asPhi())
-                        phi->d->incoming.remove(idx);
+                        phi->incoming.remove(idx);
                     else
                         break;
                 }
@@ -3581,9 +3580,9 @@ static void cleanupBasicBlocks(IR::Function *function)
 
 inline Const *isConstPhi(Phi *phi)
 {
-    if (Const *c = phi->d->incoming[0]->asConst()) {
-        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
-            if (Const *cc = phi->d->incoming[i]->asConst()) {
+    if (Const *c = phi->incoming[0]->asConst()) {
+        for (int i = 1, ei = phi->incoming.size(); i != ei; ++i) {
+            if (Const *cc = phi->incoming[i]->asConst()) {
                 if (c->value != cc->value)
                     return 0;
                 if (!(c->type == cc->type || (c->type & NumberType && cc->type & NumberType)))
@@ -3684,8 +3683,8 @@ protected:
     virtual void visitCJump(CJump *s) { check(s->cond); }
     virtual void visitRet(Ret *s) { check(s->expr); }
     virtual void visitPhi(Phi *s) {
-        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
-            check(s->d->incoming[i]);
+        for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
+            check(s->incoming[i]);
     }
 
 private:
@@ -3746,11 +3745,11 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
                 if (!outStmt)
                     continue;
                 if (Phi *phi = outStmt->asPhi()) {
-                    if (Temp *t = phi->d->incoming[idx]->asTemp()) {
+                    if (Temp *t = phi->incoming[idx]->asTemp()) {
                         defUses.removeUse(phi, *t);
                         W += defUses.defStmt(*t);
                     }
-                    phi->d->incoming.remove(idx);
+                    phi->incoming.remove(idx);
                     W += phi;
                 } else {
                     break;
@@ -3987,9 +3986,9 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
             }
 
             // copy propagation:
-            if (phi->d->incoming.size() == 1) {
+            if (phi->incoming.size() == 1) {
                 Temp *t = phi->targetTemp;
-                Expr *e = phi->d->incoming.first();
+                Expr *e = phi->incoming.first();
 
                 QVector<Stmt *> newT2Uses;
                 replaceUses(t, e, W, &newT2Uses);
@@ -4427,7 +4426,7 @@ private:
 
             for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    if (Temp *t = phi->d->incoming.at(bbIndex)->asTemp())
+                    if (Temp *t = phi->incoming.at(bbIndex)->asTemp())
                         live.insert(*t);
                 } else {
                     break;
@@ -4644,9 +4643,8 @@ protected:
         clonedStmt = phi;
 
         phi->targetTemp = clone(stmt->targetTemp);
-        phi->d = new Phi::Data;
-        foreach (Expr *in, stmt->d->incoming)
-            phi->d->incoming.append(clone(in));
+        foreach (Expr *in, stmt->incoming)
+            phi->incoming.append(clone(in));
         block->appendStatement(phi);
     }
 
@@ -4902,7 +4900,7 @@ static void verifyNoPointerSharing(IR::Function *function)
         {
             check(s);
             s->targetTemp->accept(this);
-            foreach (Expr *e, s->d->incoming)
+            foreach (Expr *e, s->incoming)
                 e->accept(this);
         }
 
@@ -5341,7 +5339,7 @@ void Optimizer::convertOutOfSSA() {
             Q_ASSERT(inIdx >= 0);
             for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    moves.add(clone(phi->d->incoming[inIdx], function),
+                    moves.add(clone(phi->incoming[inIdx], function),
                               clone(phi->targetTemp, function)->asTemp());
                 } else {
                     break;

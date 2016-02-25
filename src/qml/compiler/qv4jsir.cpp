@@ -1084,13 +1084,13 @@ void IRPrinter::visitPhi(Phi *s)
 
     s->targetTemp->accept(this);
     *out << " = phi ";
-    for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
+    for (int i = 0, ei = s->incoming.size(); i < ei; ++i) {
         if (i > 0)
             *out << ", ";
         if (currentBB)
             *out << 'L' << currentBB->in.at(i)->index() << ": ";
-        if (s->d->incoming[i])
-            s->d->incoming[i]->accept(this);
+        if (s->incoming[i])
+            s->incoming[i]->accept(this);
     }
 }
 
