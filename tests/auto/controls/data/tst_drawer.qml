@@ -57,10 +57,8 @@ TestCase {
 
     function test_defaults() {
         var control = drawer.createObject(testCase)
-        verify(!control.contentItem)
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
-        verify(control.animation)
         control.destroy()
     }
 

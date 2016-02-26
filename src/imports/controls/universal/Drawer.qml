@@ -35,9 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtGraphicalEffects 1.0
 import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
+import Qt.labs.controls.universal 1.0
 
 T.Drawer {
     id: control
@@ -47,6 +46,11 @@ T.Drawer {
 
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
+
+    topPadding: control.edge === Qt.BottomEdge
+    leftPadding: control.edge === Qt.RightEdge
+    rightPadding: control.edge === Qt.LeftEdge
+    bottomPadding: control.edge === Qt.TopEdge
 
     //! [enter]
     enter: Transition { SmoothedAnimation { velocity: 5 } }
@@ -62,15 +66,14 @@ T.Drawer {
 
     //! [background]
     background: Rectangle {
-        color: control.Material.dialogColor
-
-        layer.enabled: control.position > 0
-        layer.effect: DropShadow {
-            horizontalOffset: control.edge === Qt.LeftEdge ? 1 : control.edge === Qt.RightEdge ? -1 : 0
-            verticalOffset: control.edge === Qt.TopEdge ? 1 : control.edge === Qt.BottomEdge ? -1 : 0
-            color: control.Material.dropShadowColor
-            samples: 15
-            spread: 0.5
+        color: control.Universal.chromeMediumLowColor
+        Rectangle {
+            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
+            width: horizontal ? 1 : parent.width
+            height: horizontal ? parent.height : 1
+            color: control.Universal.chromeHighColor
+            x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
+            y: control.edge === Qt.BottomEdge ? parent.height - 1 : 0
         }
     }
     //! [background]

@@ -181,7 +181,7 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 
     if (notify)
         emit q->aboutToShow();
-    visible = true;
+    visible = notify;
     popupItem->setVisible(true);
     positioner.setParentItem(parentItem);
     emit q->visibleChanged();

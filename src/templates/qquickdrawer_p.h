@@ -48,25 +48,20 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
 class QQuickDrawerPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickDrawer : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = nullptr);
+    explicit QQuickDrawer(QObject *parent = nullptr);
 
     Qt::Edge edge() const;
     void setEdge(Qt::Edge edge);
@@ -74,22 +69,9 @@ public:
     qreal position() const;
     void setPosition(qreal position);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
-
 Q_SIGNALS:
-    void clicked();
     void edgeChanged();
     void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
@@ -97,10 +79,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void componentComplete() override;
+    bool overlayEvent(QQuickItem *item, QEvent *event) override;
 
-    virtual qreal positionAt(const QPointF &point) const;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickDrawer)

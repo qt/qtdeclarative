@@ -35,20 +35,21 @@
 ****************************************************************************/
 
 #include "qquickdrawer_p.h"
+#include "qquickpopup_p_p.h"
+#include "qquickvelocitycalculator_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
-#include <QtQuickTemplates/private/qquickvelocitycalculator_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Drawer
-    \inherits Container
+    \inherits Popup
     \instantiates QQuickDrawer
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
@@ -86,54 +87,68 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Container Controls}
 */
 
-/*!
-    \qmlsignal Qt.labs.controls::Drawer::clicked()
-
-    This signal is emitted when the drawer is clicked.
-*/
-
-class QQuickDrawerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
+class QQuickDrawerPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
 public:
-    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0),
-        content(nullptr), animation(nullptr) { }
+    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0) { }
 
-    void updateContent();
+    qreal positionAt(const QPointF &point) const;
+    void reposition() override;
+
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) override;
+    void prepareEnterTransition(bool notify = true) override;
+    void prepareExitTransition() override;
+    void finalizeEnterTransition() override;
+    void finalizeExitTransition(bool hide = true) override;
 
     Qt::Edge edge;
     qreal offset;
     qreal position;
     QPointF pressPoint;
     QQuickVelocityCalculator velocityCalculator;
-    QQuickItem *content;
-    QQuickPropertyAnimation *animation;
 };
 
-void QQuickDrawerPrivate::updateContent()
+qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
+{
+    Q_Q(const QQuickDrawer);
+    switch (edge) {
+    case Qt::TopEdge:
+        return point.y() / q->height();
+    case Qt::LeftEdge:
+        return point.x() / q->width();
+    case Qt::RightEdge:
+        return (q->width() - point.x()) / popupItem->width();
+    case Qt::BottomEdge:
+        return (q->height() - point.y()) / popupItem->height();
+    default:
+        return 0;
+    }
+}
+
+void QQuickDrawerPrivate::reposition()
 {
     Q_Q(QQuickDrawer);
-    if (!content)
+    QQuickWindow *window = q->window();
+    if (!window)
         return;
 
     switch (edge) {
     case Qt::LeftEdge:
-        content->setX((position - 1.0) * content->width());
+        popupItem->setX((position - 1.0) * popupItem->width());
         break;
     case Qt::RightEdge:
-        content->setX(q->width() + - position * content->width());
+        popupItem->setX(window->width() - position * popupItem->width());
         break;
     case Qt::TopEdge:
-        content->setY((position - 1.0) * content->height());
+        popupItem->setY((position - 1.0) * popupItem->height());
         break;
     case Qt::BottomEdge:
-        content->setY(q->height() + - position * content->height());
+        popupItem->setY(window->height() - position * popupItem->height());
         break;
     }
 }
@@ -145,9 +160,12 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
 
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
-    Q_Q(QQuickDrawer);
     pressPoint = event->windowPos();
     offset = 0;
+
+    QQuickWindow *window = item->window();
+    if (!window)
+        return false;
 
     if (qFuzzyIsNull(position)) {
         // only accept pressing at drag margins when fully closed
@@ -156,31 +174,34 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
             event->setAccepted(!dragOverThreshold(event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::RightEdge:
-            event->setAccepted(!dragOverThreshold(q->width() - event->windowPos().x(), Qt::XAxis, event));
+            event->setAccepted(!dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event));
             break;
         case Qt::TopEdge:
             event->setAccepted(!dragOverThreshold(event->windowPos().y(), Qt::YAxis, event));
             break;
         case Qt::BottomEdge:
-            event->setAccepted(!dragOverThreshold(q->height() - event->windowPos().y(), Qt::YAxis, event));
+            event->setAccepted(!dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event));
             break;
         }
     } else {
-        event->accept();
+        event->setAccepted(item->isAncestorOf(popupItem));
     }
 
     velocityCalculator.startMeasuring(pressPoint, event->timestamp());
 
-    return item == q;
+    return event->isAccepted();
 }
 
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    Q_UNUSED(item);
+    QQuickWindow *window = item->window();
+    if (!window)
+        return false;
+
     QPointF movePoint = event->windowPos();
 
-    if (!q->keepMouseGrab()) {
+    if (!popupItem->keepMouseGrab()) {
         // Flickable uses a hard-coded threshold of 15 for flicking, and
         // QStyleHints::startDragDistance for dragging. Drawer uses a bit
         // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
@@ -191,86 +212,124 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
         else
             overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
 
-        if (window && overThreshold) {
-            QQuickItem *grabber = q->window()->mouseGrabberItem();
+        if (overThreshold) {
+            QQuickItem *grabber = window->mouseGrabberItem();
             if (!grabber || !grabber->keepMouseGrab()) {
-                q->grabMouse();
-                q->setKeepMouseGrab(overThreshold);
-                offset = qMin<qreal>(0.0, q->positionAt(movePoint) - position);
+                popupItem->grabMouse();
+                popupItem->setKeepMouseGrab(overThreshold);
+                offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
             }
         }
     }
 
-    if (q->keepMouseGrab())
-        q->setPosition(q->positionAt(movePoint) - offset);
+    if (popupItem->keepMouseGrab())
+        q->setPosition(positionAt(movePoint) - offset);
     event->accept();
 
-    return q->keepMouseGrab();
+    return popupItem->keepMouseGrab();
 }
 
 static const qreal openCloseVelocityThreshold = 300;
 
 bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
 {
-    Q_Q(QQuickDrawer);
-    bool wasGrabbed = q->keepMouseGrab();
+    Q_UNUSED(item);
+
+    bool wasGrabbed = popupItem->keepMouseGrab();
     if (wasGrabbed) {
         velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
         const qreal velocity = velocityCalculator.velocity().x();
 
         if (position > 0.7 || velocity > openCloseVelocityThreshold) {
-            q->open();
+            transitionManager.transitionEnter();
         } else if (position < 0.3 || velocity < -openCloseVelocityThreshold) {
-            q->close();
+            transitionManager.transitionExit();
         } else {
             switch (edge) {
             case Qt::LeftEdge:
                 if (event->x() - pressPoint.x() > 0)
-                    q->open();
+                    transitionManager.transitionEnter();
                 else
-                    q->close();
+                    transitionManager.transitionExit();
                 break;
             case Qt::RightEdge:
                 if (event->x() - pressPoint.x() < 0)
-                    q->open();
+                    transitionManager.transitionEnter();
                 else
-                    q->close();
+                    transitionManager.transitionExit();
                 break;
             case Qt::TopEdge:
                 if (event->y() - pressPoint.y() > 0)
-                    q->open();
+                    transitionManager.transitionEnter();
                 else
-                    q->close();
+                    transitionManager.transitionExit();
                 break;
             case Qt::BottomEdge:
                 if (event->y() - pressPoint.y() < 0)
-                    q->open();
+                    transitionManager.transitionEnter();
                 else
-                    q->close();
+                    transitionManager.transitionExit();
                 break;
             }
         }
-        q->setKeepMouseGrab(false);
-    } else {
-        if (item == q)
-            emit q->clicked();
+        popupItem->setKeepMouseGrab(false);
     }
     pressPoint = QPoint();
     event->accept();
     return wasGrabbed;
 }
 
-void QQuickDrawerPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTransition *transition, qreal to)
 {
-    updateContent();
+    QList<QQuickStateAction> actions;
+    if (!transition)
+        return actions;
+
+    qmlExecuteDeferred(transition);
+
+    QQmlProperty defaultTarget(drawer, QLatin1String("position"));
+    QQmlListProperty<QQuickAbstractAnimation> animations = transition->animations();
+    int count = animations.count(&animations);
+    for (int i = 0; i < count; ++i) {
+        QQuickAbstractAnimation *anim = animations.at(&animations, i);
+        anim->setDefaultTarget(defaultTarget);
+    }
+
+    actions << QQuickStateAction(drawer, QLatin1String("position"), to);
+    return actions;
 }
 
-QQuickDrawer::QQuickDrawer(QQuickItem *parent) :
-    QQuickControl(*(new QQuickDrawerPrivate), parent)
+void QQuickDrawerPrivate::prepareEnterTransition(bool notify)
 {
-    setZ(1);
+    Q_Q(QQuickDrawer);
+    enterActions = prepareTransition(q, enter, 1.0);
+    QQuickPopupPrivate::prepareEnterTransition(notify);
+}
+
+void QQuickDrawerPrivate::prepareExitTransition()
+{
+    Q_Q(QQuickDrawer);
+    exitActions = prepareTransition(q, exit, 0.0);
+    QQuickPopupPrivate::prepareExitTransition();
+}
+
+void QQuickDrawerPrivate::finalizeEnterTransition()
+{
+    QQuickPopupPrivate::finalizeEnterTransition();
+}
+
+void QQuickDrawerPrivate::finalizeExitTransition(bool hide)
+{
+    QQuickPopupPrivate::finalizeExitTransition(hide = false);
+}
+
+QQuickDrawer::QQuickDrawer(QObject *parent) :
+    QQuickPopup(*(new QQuickDrawerPrivate), parent)
+{
+    setFocus(true);
+    setModal(true);
     setFiltersChildMouseEvents(true);
-    setAcceptedMouseButtons(Qt::LeftButton);
+    setClosePolicy(OnEscape | OnReleaseOutside);
 }
 
 /*!
@@ -298,7 +357,7 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
 
     d->edge = edge;
     if (isComponentComplete())
-        d->updateContent();
+        d->reposition();
     emit edgeChanged();
 }
 
@@ -324,107 +383,8 @@ void QQuickDrawer::setPosition(qreal position)
 
     d->position = position;
     if (isComponentComplete())
-        d->updateContent();
+        d->reposition();
     emit positionChanged();
-}
-
-
-/*!
-    \qmlproperty Item Qt.labs.controls::Drawer::contentItem
-
-    This property holds the content item that the drawer displays when opened.
-*/
-QQuickItem *QQuickDrawer::contentItem() const
-{
-    Q_D(const QQuickDrawer);
-    return d->content;
-}
-
-void QQuickDrawer::setContentItem(QQuickItem *item)
-{
-    Q_D(QQuickDrawer);
-    if (d->content == item)
-        return;
-
-    if (d->content) {
-        QQuickItemPrivate::get(d->content)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
-        delete d->content;
-    }
-    d->content = item;
-    if (item) {
-        item->setParentItem(this);
-        QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
-        if (isComponentComplete())
-            d->updateContent();
-    }
-    emit contentItemChanged();
-}
-
-/*!
-    \qmlproperty Animation Qt.labs.controls::Drawer::animation
-
-    This property holds the animation for the \l position property. It is used
-    to animate the drawer's movement.
-
-    If no valid animation is set, the drawer's movement will not be animated.
-*/
-QQuickPropertyAnimation *QQuickDrawer::animation() const
-{
-    Q_D(const QQuickDrawer);
-    return d->animation;
-}
-
-void QQuickDrawer::setAnimation(QQuickPropertyAnimation *animation)
-{
-    Q_D(QQuickDrawer);
-    if (d->animation == animation)
-        return;
-
-    delete d->animation;
-    d->animation = animation;
-    if (animation) {
-        animation->setTargetObject(this);
-        animation->setProperty(QStringLiteral("position"));
-    }
-    emit animationChanged();
-}
-
-/*!
-    \qmlmethod void Qt.labs.controls::Drawer::open()
-
-    This method opens the drawer, animating the movement if a valid
-    \l animation has been set.
-*/
-void QQuickDrawer::open()
-{
-    Q_D(QQuickDrawer);
-    if (d->animation) {
-        d->animation->stop();
-        d->animation->setFrom(d->position);
-        d->animation->setTo(1.0);
-        d->animation->start();
-    } else {
-        setPosition(1.0);
-    }
-}
-
-/*!
-    \qmlmethod void Qt.labs.controls::Drawer::close()
-
-    This method closes the drawer, animating the movement if a valid
-    \l animation has been set.
-*/
-void QQuickDrawer::close()
-{
-    Q_D(QQuickDrawer);
-    if (d->animation) {
-        d->animation->stop();
-        d->animation->setFrom(d->position);
-        d->animation->setTo(0.0);
-        d->animation->start();
-    } else {
-        setPosition(0.0);
-    }
 }
 
 bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
@@ -445,65 +405,56 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 void QQuickDrawer::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickControl::mousePressEvent(event);
-    d->handleMousePressEvent(this, event);
+    QQuickPopup::mousePressEvent(event);
+    d->handleMousePressEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickControl::mouseMoveEvent(event);
-    d->handleMouseMoveEvent(this, event);
+    QQuickPopup::mouseMoveEvent(event);
+    d->handleMouseMoveEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickControl::mouseReleaseEvent(event);
-    d->handleMouseReleaseEvent(this, event);
+    QQuickPopup::mouseReleaseEvent(event);
+    d->handleMouseReleaseEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseUngrabEvent()
 {
     Q_D(QQuickDrawer);
-    QQuickControl::mouseUngrabEvent();
+    QQuickPopup::mouseUngrabEvent();
     d->pressPoint = QPoint();
     d->velocityCalculator.reset();
 }
 
-void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
-    if (isComponentComplete())
-        d->updateContent();
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        return d->handleMousePressEvent(item, static_cast<QMouseEvent *>(event));
+    case QEvent::MouseMove:
+        return d->handleMouseMoveEvent(item, static_cast<QMouseEvent *>(event));
+    case QEvent::MouseButtonRelease:
+        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
+    default:
+        return false;
+    }
 }
 
 void QQuickDrawer::componentComplete()
 {
     Q_D(QQuickDrawer);
-    QQuickControl::componentComplete();
-    d->updateContent();
-}
-
-qreal QQuickDrawer::positionAt(const QPointF &point) const
-{
-    Q_D(const QQuickDrawer);
-    if (!d->content)
-        return 0.0;
-
-    switch (d->edge) {
-    case Qt::TopEdge:
-        return point.y() / d->content->height();
-    case Qt::LeftEdge:
-        return point.x() / d->content->width();
-    case Qt::RightEdge:
-        return (width() - point.x()) / d->content->width();
-    case Qt::BottomEdge:
-        return (height() - point.y()) / d->content->height();
-    default:
-        return 0;
-    }
+    QQuickPopup::componentComplete();
+    bool notify = false;
+    d->prepareEnterTransition(notify);
+    d->reposition();
 }
 
 QT_END_NAMESPACE

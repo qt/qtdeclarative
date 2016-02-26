@@ -5,6 +5,7 @@ QML_FILES += \
     $$PWD/CheckBox.qml \
     $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
+    $$PWD/Drawer.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \
