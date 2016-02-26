@@ -158,8 +158,10 @@ public:
     bool tryClose(QQuickItem *item, QMouseEvent *event);
     virtual void reposition();
 
-    void finalizeEnterTransition();
-    void finalizeExitTransition();
+    virtual void prepareEnterTransition(bool notify = true);
+    virtual void prepareExitTransition();
+    virtual void finalizeEnterTransition();
+    virtual void finalizeExitTransition(bool hide = true);
 
     QMarginsF getMargins() const;
 
@@ -170,6 +172,7 @@ public:
 
     bool focus;
     bool modal;
+    bool visible;
     bool complete;
     bool hasTopMargin;
     bool hasLeftMargin;
@@ -190,7 +193,11 @@ public:
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;
     QQuickPopupPositioner positioner;
+    QList<QQuickStateAction> enterActions;
+    QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;
+
+    friend class QQuickPopupTransitionManager;
 };
 
 QT_END_NAMESPACE
