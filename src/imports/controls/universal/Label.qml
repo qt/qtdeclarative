@@ -43,5 +43,4 @@ T.Label {
 
     color: !control.enabled ? Universal.baseLowColor : Universal.baseHighColor
     linkColor: Universal.accent
-    renderType: Text.NativeRendering
 }

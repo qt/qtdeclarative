@@ -61,7 +61,6 @@ T.TextField {
     selectionColor: Universal.accent
     selectedTextColor: Universal.chromeWhiteColor
     verticalAlignment: TextInput.AlignVCenter
-    renderType: Text.NativeRendering
 
     Text {
         id: placeholder
@@ -77,7 +76,6 @@ T.TextField {
         visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        renderType: Text.NativeRendering
         elide: Text.ElideRight
     }
 

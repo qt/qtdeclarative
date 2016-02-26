@@ -80,7 +80,6 @@ T.ItemDelegate {
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
 
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
     }

@@ -60,7 +60,6 @@ T.TextArea {
             activeFocus ? Universal.chromeBlackHighColor : Universal.baseHighColor
     selectionColor: Universal.accent
     selectedTextColor: Universal.chromeWhiteColor
-    renderType: Text.NativeRendering
 
     Text {
         id: placeholder
@@ -76,7 +75,6 @@ T.TextArea {
         visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        renderType: Text.NativeRendering
         elide: Text.ElideRight
     }
 

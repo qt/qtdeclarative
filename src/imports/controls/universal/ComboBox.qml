@@ -70,7 +70,6 @@ T.ComboBox {
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
         elide: Text.ElideRight
         rightPadding: 12 + control.spacing
     }
