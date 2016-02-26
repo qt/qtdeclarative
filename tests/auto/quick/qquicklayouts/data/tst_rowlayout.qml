@@ -700,7 +700,7 @@ Item {
                     { tag: "abovePreferred",  spacing: 0, width: 150, hints: [{pref: 50}, {pref: 20}, {pref: 70}]},
                     { tag: "stretchSomethingToMaximum",  spacing: 0, width: 240, hints: [{pref: 50}, {pref: 20}, {pref: 70}],
                       expected: [90, 60, 90] },
-                    { tag: "minSizeHasFractions",  spacing: 2, width: 31 + 4, hints: [{min: 10+1/3}, {min: 10+1/3}, {min: 10+1/3}],
+                    { tag: "minSizeHasFractions",  spacing: 2, width: 33 + 4, hints: [{min: 10+1/3}, {min: 10+1/3}, {min: 10+1/3}],
                       /*expected: [11, 11, 11]*/ },     /* verify that nothing gets allocated a size smaller than its minimum */
                     { tag: "maxSizeHasFractions",  spacing: 2, width: 271 + 4, hints: [{max: 90+1/3}, {max: 90+1/3}, {max: 90+1/3}],
                       /*expected: [90, 90, 90]*/ },     /* verify that nothing gets allocated a size larger than its maximum */
