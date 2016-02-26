@@ -626,19 +626,17 @@ void QQuickPopup::open()
     if (d->popupItem->isVisible())
         return;
 
-    QQuickWindow *window = nullptr;
-    if (d->parentItem)
-        window = d->parentItem->window();
-    if (!window) {
+    QQuickWindow *quickWindow = window();
+    if (!quickWindow) {
         qmlInfo(this) << "cannot find any window to open popup in.";
         return;
     }
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(quickWindow);
     if (!applicationWindow) {
-        window->installEventFilter(this);
+        quickWindow->installEventFilter(this);
         d->popupItem->setZ(10001); // DefaultWindowDecoration+1
-        d->popupItem->setParentItem(window->contentItem());
+        d->popupItem->setParentItem(quickWindow->contentItem());
     } else {
         d->popupItem->setParentItem(applicationWindow->overlay());
     }
@@ -660,12 +658,9 @@ void QQuickPopup::close()
     if (!d->popupItem->isVisible())
         return;
 
-    if (d->parentItem) {
-        QQuickWindow *window = d->parentItem->window();
-        if (!qobject_cast<QQuickApplicationWindow *>(window)) {
-            window->removeEventFilter(this);
-        }
-    }
+    QQuickWindow *quickWindow = window();
+    if (quickWindow && !qobject_cast<QQuickApplicationWindow *>(quickWindow))
+        quickWindow->removeEventFilter(this);
 
     d->popupItem->setFocus(false);
     emit aboutToHide();
@@ -1154,6 +1149,15 @@ void QQuickPopup::resetBottomPadding()
 {
     Q_D(QQuickPopup);
     d->popupItem->resetBottomPadding();
+}
+
+QQuickWindow *QQuickPopup::window() const
+{
+    Q_D(const QQuickPopup);
+    if (!d->parentItem)
+        return nullptr;
+
+    return d->parentItem->window();
 }
 
 QQuickItem *QQuickPopup::popupItem() const

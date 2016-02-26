@@ -63,6 +63,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
+class QQuickWindow;
 class QQuickPopupPrivate;
 class QQuickTransition;
 class QQuickTransform;
@@ -186,6 +187,7 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    QQuickWindow *window() const;
     QQuickItem *popupItem() const;
 
     QQuickItem *parentItem() const;
