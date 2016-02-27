@@ -68,6 +68,7 @@ void tst_PressAndHold::pressAndHold_data()
     QTest::addColumn<QByteArray>("signal");
 
     QTest::newRow("Button") << QByteArray("import Qt.labs.controls 1.0; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
+    QTest::newRow("SwipeDelegate") << QByteArray("import Qt.labs.controls 1.0; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold()));
     QTest::newRow("TextField") << QByteArray("import Qt.labs.controls 1.0; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
     QTest::newRow("TextArea") << QByteArray("import Qt.labs.controls 1.0; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
 }

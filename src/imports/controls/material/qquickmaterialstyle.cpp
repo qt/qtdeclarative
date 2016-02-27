@@ -395,6 +395,14 @@ static const QRgb flatButtonPressColorLight = 0x66999999;
 static const QRgb flatButtonPressColorDark = 0x3FCCCCCC;
 static const QRgb flatButtonFocusColorLight = 0x33CCCCCC;
 static const QRgb flatButtonFocusColorDark = 0x26CCCCCC;
+static const QRgb swipeDelegateColorLight = 0xFFD6D7D7;
+static const QRgb swipeDelegateColorDark = 0xFF525252;
+static const QRgb swipeDelegateHoverColorLight = 0xFFDFDFDF;
+static const QRgb swipeDelegateHoverColorDark = 0xFF5D5D5D;
+static const QRgb swipeDelegatePressColorLight = 0xFFCFCFCF;
+static const QRgb swipeDelegatePressColorDark = 0xFF484848;
+static const QRgb swipeDelegateDisabledColorLight = 0xFFEFEFEF;
+static const QRgb swipeDelegateDisabledColorDark = 0xFF7C7C7C;
 static const QRgb frameColorLight = hintTextColorLight;
 static const QRgb frameColorDark = hintTextColorDark;
 static const QRgb switchUncheckedTrackColorLight = 0x42000000;
@@ -728,6 +736,26 @@ QColor QQuickMaterialStyle::flatButtonPressColor() const
 QColor QQuickMaterialStyle::flatButtonFocusColor() const
 {
     return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegateColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateColorLight : swipeDelegateColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegateHoverColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateHoverColorLight : swipeDelegateHoverColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegatePressColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegatePressColorLight : swipeDelegatePressColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegateDisabledColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateDisabledColorLight : swipeDelegateDisabledColorDark);
 }
 
 QColor QQuickMaterialStyle::frameColor() const

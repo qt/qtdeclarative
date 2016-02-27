@@ -472,6 +472,28 @@
 
             \snippet StackView.qml replaceExit
 
+    \section1 Customizing SwipeDelegate
+
+        SwipeDelegate consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \c exposure.left, and \c exposure.right.
+
+        \section3 Background
+
+            \image qtlabscontrols-swipedelegate-background.png
+
+            \snippet SwipeDelegate.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-swipedelegate-contentItem.png
+
+            \snippet SwipeDelegate.qml contentItem
+
+        \section3 Left, right, and behind
+
+            \image qtlabscontrols-swipedelegate.gif
+
+            By default, there are no left, right, or behind items defined.
 
     \section1 Customizing SwipeView
 

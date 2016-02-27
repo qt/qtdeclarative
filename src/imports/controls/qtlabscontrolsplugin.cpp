@@ -119,6 +119,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("/Slider.qml")), uri, 1, 0, "Slider");
     qmlRegisterType(selector.select(QStringLiteral("/SpinBox.qml")), uri, 1, 0, "SpinBox");
     qmlRegisterType(selector.select(QStringLiteral("/StackView.qml")), uri, 1, 0, "StackView");
+    qmlRegisterType(selector.select(QStringLiteral("/SwipeDelegate.qml")), uri, 1, 0, "SwipeDelegate");
     qmlRegisterType(selector.select(QStringLiteral("/SwipeView.qml")), uri, 1, 0, "SwipeView");
     qmlRegisterType(selector.select(QStringLiteral("/Switch.qml")), uri, 1, 0, "Switch");
     qmlRegisterType(selector.select(QStringLiteral("/TabBar.qml")), uri, 1, 0, "TabBar");

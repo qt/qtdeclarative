@@ -65,6 +65,7 @@
 #include <QtLabsTemplates/private/qquickslider_p.h>
 #include <QtLabsTemplates/private/qquickspinbox_p.h>
 #include <QtLabsTemplates/private/qquickstackview_p.h>
+#include <QtLabsTemplates/private/qquickswipedelegate_p.h>
 #include <QtLabsTemplates/private/qquickswipeview_p.h>
 #include <QtLabsTemplates/private/qquickswitch_p.h>
 #include <QtLabsTemplates/private/qquicktabbar_p.h>
@@ -133,6 +134,8 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSpinBox>(uri, 1, 0, "SpinBox");
     qmlRegisterType<QQuickSpinButton>();
     qmlRegisterType<QQuickStackView>(uri, 1, 0, "StackView");
+    qmlRegisterType<QQuickSwipeDelegate>(uri, 1, 0, "SwipeDelegate");
+    qmlRegisterType<QQuickSwipeExposure>();
     qmlRegisterType<QQuickSwipeViewAttached>();
     qmlRegisterType<QQuickSwipeView>(uri, 1, 0, "SwipeView");
     qmlRegisterType<QQuickSwitch>(uri, 1, 0, "Switch");

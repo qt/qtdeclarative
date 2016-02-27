@@ -41,6 +41,7 @@ HEADERS += \
     $$PWD/qquickspinbox_p.h \
     $$PWD/qquickstackview_p.h \
     $$PWD/qquickstackview_p_p.h \
+    $$PWD/qquickswipedelegate_p.h \
     $$PWD/qquickswipeview_p.h \
     $$PWD/qquickswitch_p.h \
     $$PWD/qquicktabbar_p.h \
@@ -86,6 +87,7 @@ SOURCES += \
     $$PWD/qquickspinbox.cpp \
     $$PWD/qquickstackview.cpp \
     $$PWD/qquickstackview_p.cpp \
+    $$PWD/qquickswipedelegate.cpp \
     $$PWD/qquickswipeview.cpp \
     $$PWD/qquickswitch.cpp \
     $$PWD/qquicktabbar.cpp \

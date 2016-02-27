@@ -81,6 +81,10 @@ class QQuickMaterialStyle : public QQuickStyle
     Q_PROPERTY(QColor raisedHighlightedButtonDisabledColor READ raisedHighlightedButtonDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor flatButtonPressColor READ flatButtonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor flatButtonFocusColor READ flatButtonFocusColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor swipeDelegateColor READ swipeDelegateColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor swipeDelegateHoverColor READ swipeDelegateHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor swipeDelegatePressColor READ swipeDelegatePressColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor swipeDelegateDisabledColor READ swipeDelegateDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor checkBoxUncheckedRippleColor READ checkBoxUncheckedRippleColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor checkBoxCheckedRippleColor READ checkBoxCheckedRippleColor NOTIFY paletteChanged FINAL)
@@ -188,6 +192,10 @@ public:
     QColor raisedHighlightedButtonDisabledColor() const;
     QColor flatButtonPressColor() const;
     QColor flatButtonFocusColor() const;
+    QColor swipeDelegateColor() const;
+    QColor swipeDelegateHoverColor() const;
+    QColor swipeDelegatePressColor() const;
+    QColor swipeDelegateDisabledColor() const;
     QColor frameColor() const;
     QColor checkBoxUncheckedRippleColor() const;
     QColor checkBoxCheckedRippleColor() const;

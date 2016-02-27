@@ -21,6 +21,7 @@ QML_FILES += \
     $$PWD/RadioButtonSpecifics.qml \
     $$PWD/SliderSpecifics.qml \
     $$PWD/SpinBoxSpecifics.qml \
+    $$PWD/SwipeDelegateSpecifics.qml \
     $$PWD/SwitchSpecifics.qml \
     $$PWD/TextAreaSpecifics.qml \
     $$PWD/TextFieldSpecifics.qml \
