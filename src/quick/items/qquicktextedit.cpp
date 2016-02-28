@@ -1534,8 +1534,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (!r)
         flags = flags | Qt::TextEditable;
     d->control->setTextInteractionFlags(flags);
-    if (!r)
-        d->control->moveCursor(QTextCursor::End);
+    d->control->moveCursor(QTextCursor::End);
 
 #ifndef QT_NO_IM
     updateInputMethod(Qt::ImEnabled);

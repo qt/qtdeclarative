@@ -679,8 +679,7 @@ void QQuickTextInput::setReadOnly(bool ro)
     setFlag(QQuickItem::ItemAcceptsInputMethod, !ro);
 #endif
     d->m_readOnly = ro;
-    if (!ro)
-        d->setCursorPosition(d->end());
+    d->setCursorPosition(d->end());
 #ifndef QT_NO_IM
     updateInputMethod(Qt::ImEnabled);
 #endif

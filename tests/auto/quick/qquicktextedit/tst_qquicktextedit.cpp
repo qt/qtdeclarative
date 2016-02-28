@@ -201,6 +201,7 @@ private slots:
     void doubleSelect_QTBUG_38704();
 
     void padding();
+    void QTBUG_51115_readOnlyResetsSelection();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -5534,6 +5535,17 @@ void tst_qquicktextedit::padding()
     QCOMPARE(obj->bottomPadding(), 0.0);
 
     delete root;
+}
+
+void tst_qquicktextedit::QTBUG_51115_readOnlyResetsSelection()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("qtbug51115.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(view.rootObject());
+
+    QCOMPARE(obj->selectedText(), QString());
 }
 
 QTEST_MAIN(tst_qquicktextedit)
