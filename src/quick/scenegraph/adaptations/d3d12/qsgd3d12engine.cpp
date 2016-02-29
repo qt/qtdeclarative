@@ -286,6 +286,11 @@ void QSGD3D12Engine::setConstantBuffer(const quint8 *data, int size)
     d->setConstantBuffer(data, size);
 }
 
+void QSGD3D12Engine::markConstantBufferDirty(int offset, int size)
+{
+    d->markConstantBufferDirty(offset, size);
+}
+
 void QSGD3D12Engine::queueViewport(const QRect &rect)
 {
     d->queueViewport(rect);
@@ -331,6 +336,59 @@ void QSGD3D12Engine::waitGPU()
 quint32 QSGD3D12Engine::alignedConstantBufferSize(quint32 size)
 {
     return (size + D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+}
+
+QSGD3D12Format QSGD3D12Engine::toDXGIFormat(QSGGeometry::Type sgtype, int tupleSize, int *size)
+{
+    QSGD3D12Format format = FmtUnknown;
+
+    static const QSGD3D12Format formatMap_ub[] = { FmtUnknown,
+                                                   FmtUNormByte,
+                                                   FmtUNormByte2,
+                                                   FmtUnknown,
+                                                   FmtUNormByte4 };
+
+    static const QSGD3D12Format formatMap_f[] = { FmtUnknown,
+                                                  FmtFloat,
+                                                  FmtFloat2,
+                                                  FmtFloat3,
+                                                  FmtFloat4 };
+
+    switch (sgtype) {
+    case QSGGeometry::TypeUnsignedByte:
+        format = formatMap_ub[tupleSize];
+        if (size)
+            *size = tupleSize;
+        break;
+    case QSGGeometry::TypeFloat:
+        format = formatMap_f[tupleSize];
+        if (size)
+            *size = sizeof(float) * tupleSize;
+        break;
+
+    case QSGGeometry::TypeUnsignedShort:
+        format = FmtUnsignedShort;
+        if (size)
+            *size = sizeof(ushort) * tupleSize;
+        break;
+    case QSGGeometry::TypeUnsignedInt:
+        format = FmtUnsignedInt;
+        if (size)
+            *size = sizeof(uint) * tupleSize;
+        break;
+
+    case QSGGeometry::TypeByte:
+    case QSGGeometry::TypeInt:
+    case QSGGeometry::TypeShort:
+        qWarning("no mapping for GL type 0x%x", sgtype);
+        break;
+
+    default:
+        qWarning("unknown GL type 0x%x", sgtype);
+        break;
+    }
+
+    return format;
 }
 
 void QSGD3D12EnginePrivate::releaseResources()
@@ -661,9 +719,32 @@ void QSGD3D12EnginePrivate::beginFrame()
     transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
+void QSGD3D12EnginePrivate::updateBuffer(StagingBufferRef *br, ID3D12Resource *r, const char *dbgstr)
+{
+    quint8 *p = nullptr;
+    const D3D12_RANGE readRange = { 0, 0 };
+    if (!br->dirty.isEmpty()) {
+        if (FAILED(r->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+            qWarning("Map failed for %s buffer of size %d", dbgstr, br->size);
+            return;
+        }
+        for (const auto &r : qAsConst(br->dirty)) {
+            qDebug("%s o %d s %d", dbgstr, r.first, r.second);
+            memcpy(p + r.first, br->p + r.first, r.second);
+        }
+        r->Unmap(0, nullptr);
+        br->dirty.clear();
+    }
+}
+
 void QSGD3D12EnginePrivate::endFrame()
 {
     qDebug() << "***** end frame";
+
+    // Now is the time to sync all the changed areas in the buffers.
+    updateBuffer(&vertexData, vertexBuffer.Get(), "vertex");
+    updateBuffer(&indexData, indexBuffer.Get(), "index");
+    updateBuffer(&constantData, constantBuffer.Get(), "constant");
 
     transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
@@ -754,17 +835,21 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
 
         psoDesc.RasterizerState = rastDesc;
 
-        // ### this is wrong
-        const D3D12_RENDER_TARGET_BLEND_DESC defaultRenderTargetBlendDesc = {
-            TRUE, FALSE,
-            D3D12_BLEND_SRC_ALPHA, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
-            D3D12_BLEND_ZERO, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-            D3D12_LOGIC_OP_NOOP,
-            D3D12_COLOR_WRITE_ENABLE_ALL
-        };
         D3D12_BLEND_DESC blendDesc = {};
-        blendDesc.RenderTarget[0] = defaultRenderTargetBlendDesc;
-
+        if (pipelineState.premulBlend) {
+            const D3D12_RENDER_TARGET_BLEND_DESC premulBlendDesc = {
+                TRUE, FALSE,
+                D3D12_BLEND_SRC_ALPHA, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
+                D3D12_BLEND_INV_DEST_ALPHA, D3D12_BLEND_ONE, D3D12_BLEND_OP_ADD,
+                D3D12_LOGIC_OP_NOOP,
+                D3D12_COLOR_WRITE_ENABLE_ALL
+            };
+            blendDesc.RenderTarget[0] = premulBlendDesc;
+        } else {
+            D3D12_RENDER_TARGET_BLEND_DESC noBlendDesc = {};
+            noBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            blendDesc.RenderTarget[0] = noBlendDesc;
+        }
         psoDesc.BlendState = blendDesc;
 
         psoDesc.DepthStencilState.DepthEnable = pipelineState.depthEnable;
@@ -796,21 +881,26 @@ void QSGD3D12EnginePrivate::setVertexBuffer(const quint8 *data, int size)
 {
     vertexData.p = data;
     vertexData.size = size;
-    vertexData.changed = true;
+    vertexData.fullChange = true;
 }
 
 void QSGD3D12EnginePrivate::setIndexBuffer(const quint8 *data, int size)
 {
     indexData.p = data;
     indexData.size = size;
-    indexData.changed = true;
+    indexData.fullChange = true;
 }
 
 void QSGD3D12EnginePrivate::setConstantBuffer(const quint8 *data, int size)
 {
     constantData.p = data;
     constantData.size = size;
-    constantData.changed = true;
+    constantData.fullChange = true;
+}
+
+void QSGD3D12EnginePrivate::markConstantBufferDirty(int offset, int size)
+{
+    constantData.dirty.append(qMakePair(offset, size));
 }
 
 void QSGD3D12EnginePrivate::queueViewport(const QRect &rect)
@@ -847,72 +937,52 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
                                       int cboOffset,
                                       int startIndexIndex, QSGD3D12Format indexFormat)
 {
-    // Due to the simplistic way our current renderer works, we can just upload the
-    // entire vertex/index data in case it was rebuilt.
-
-    if (vertexData.changed) {
-        vertexData.changed = false;
-        qDebug("upload vertex");
+    // Ensure buffers are created but do not copy the data here, leave that to endFrame().
+    if (vertexData.fullChange) {
+        vertexData.fullChange = false;
         // Only enlarge, never shrink
         const bool newBufferNeeded = vertexBuffer ? (vertexData.size > vertexBuffer->GetDesc().Width) : true;
         if (newBufferNeeded) {
             qDebug("new vertex buffer of size %d", vertexData.size);
             vertexBuffer.Attach(createBuffer(vertexData.size));
         }
-        if (!vertexBuffer)
+        vertexData.dirty.clear();
+        if (vertexBuffer)
+            vertexData.dirty.append(qMakePair(0, vertexData.size));
+        else
             return;
-        quint8 *p = nullptr;
-        D3D12_RANGE readRange = { 0, 0 };
-        if (FAILED(vertexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
-            qWarning("Map failed for buffer of size %d", vertexData.size);
-            return;
-        }
-        memcpy(p, vertexData.p, vertexData.size);
-        vertexBuffer->Unmap(0, nullptr);
     }
 
-    if (indexData.changed) {
-        indexData.changed = false;
+    if (indexData.fullChange) {
+        indexData.fullChange = false;
         if (indexData.size > 0) {
-            qDebug("upload index");
             const bool newBufferNeeded = indexBuffer ? (indexData.size > indexBuffer->GetDesc().Width) : true;
             if (newBufferNeeded) {
                 qDebug("new index buffer of size %d", indexData.size);
                 indexBuffer.Attach(createBuffer(indexData.size));
             }
-            if (!indexBuffer)
+            indexData.dirty.clear();
+            if (indexBuffer)
+                indexData.dirty.append(qMakePair(0, indexData.size));
+            else
                 return;
-            quint8 *p = nullptr;
-            D3D12_RANGE readRange = { 0, 0 };
-            if (FAILED(indexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
-                qWarning("Map failed for buffer of size %d", indexData.size);
-                return;
-            }
-            memcpy(p, indexData.p, indexData.size);
-            indexBuffer->Unmap(0, nullptr);
         } else {
             indexBuffer = nullptr;
         }
     }
 
-    if (constantData.changed) {
-        constantData.changed = false;
-        qDebug("upload constant");
+    if (constantData.fullChange) {
+        constantData.fullChange = false;
         const bool newBufferNeeded = constantBuffer ? (constantData.size > constantBuffer->GetDesc().Width) : true;
         if (newBufferNeeded) {
             qDebug("new constant buffer of size %d", constantData.size);
             constantBuffer.Attach(createBuffer(constantData.size));
         }
-        if (!constantBuffer)
+        constantData.dirty.clear();
+        if (constantBuffer)
+            constantData.dirty.append(qMakePair(0, constantData.size));
+        else
             return;
-        quint8 *p = nullptr;
-        D3D12_RANGE readRange = { 0, 0 };
-        if (FAILED(constantBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
-            qWarning("Map failed for buffer of size %d", constantData.size);
-            return;
-        }
-        memcpy(p, constantData.p, constantData.size);
-        constantBuffer->Unmap(0, nullptr);
     }
 
     if (cboOffset >= 0 && constantBuffer)

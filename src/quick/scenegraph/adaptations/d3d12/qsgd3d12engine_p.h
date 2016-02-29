@@ -200,6 +200,7 @@ public:
     void setVertexBuffer(const quint8 *data, int size);
     void setIndexBuffer(const quint8 *data, int size);
     void setConstantBuffer(const quint8 *data, int size);
+    void markConstantBufferDirty(int offset, int size);
 
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
@@ -215,6 +216,7 @@ public:
     void waitGPU();
 
     static quint32 alignedConstantBufferSize(quint32 size);
+    static QSGD3D12Format toDXGIFormat(QSGGeometry::Type sgtype, int tupleSize = 1, int *size = nullptr);
 
 private:
     QSGD3D12EnginePrivate *d;

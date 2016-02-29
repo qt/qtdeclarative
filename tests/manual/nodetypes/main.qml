@@ -47,6 +47,28 @@ Item {
         anchors.centerIn: parent
         color: "red"
         NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+
+        Rectangle {
+            color: "gray"
+            width: 50
+            height: 50
+            anchors.centerIn: parent
+
+            SequentialAnimation on opacity {
+                loops: Animation.Infinite
+                NumberAnimation {
+                    from: 1.0
+                    to: 0.0
+                    duration: 4000
+                }
+                NumberAnimation {
+                    from: 0.0
+                    to: 1.0
+                    duration: 4000
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
     }
 
     Rectangle {

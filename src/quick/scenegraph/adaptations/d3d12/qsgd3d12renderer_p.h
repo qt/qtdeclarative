@@ -54,6 +54,7 @@
 #include <private/qsgrenderer_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
 #include "qsgd3d12engine_p.h"
+#include "qsgd3d12material_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +69,7 @@ public:
 
 private:
     void updateMatrices(QSGNode *node, QSGTransformNode *xform);
+    void updateOpacities(QSGNode *node, float inheritedOpacity);
     void buildRenderList(QSGNode *node, QSGClipNode *clip);
     void renderElements();
     void renderElement(int elementIndex);
@@ -83,6 +85,7 @@ private:
     };
 
     QSet<QSGNode *> m_dirtyTransformNodes;
+    QSet<QSGNode *> m_dirtyOpacityNodes;
     QBitArray m_opaqueElements;
     bool m_rebuild = true;
     bool m_dirtyOpaqueElements = true;
@@ -94,6 +97,9 @@ private:
 
     QSGMaterialType *m_lastMaterialType = nullptr;
     QSGD3D12PipelineState m_pipelineState;
+
+    typedef QHash<QSGNode *, QSGD3D12Material::RenderState::DirtyStates> NodeDirtyMap;
+    NodeDirtyMap m_nodeDirtyMap;
 };
 
 QT_END_NAMESPACE

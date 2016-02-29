@@ -150,6 +150,7 @@ public:
     void setVertexBuffer(const quint8 *data, int size);
     void setIndexBuffer(const quint8 *data, int size);
     void setConstantBuffer(const quint8 *data, int size);
+    void markConstantBufferDirty(int offset, int size);
 
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
@@ -188,8 +189,12 @@ private:
     struct StagingBufferRef {
         const quint8 *p = nullptr;
         int size = 0;
-        bool changed = true;
+        bool fullChange = true;
+        QVector<QPair<int, int> > dirty;
+        StagingBufferRef() { dirty.reserve(256); }
     };
+
+    void updateBuffer(StagingBufferRef *br, ID3D12Resource *r, const char *dbgstr);
 
     bool initialized = false;
     QWindow *window = nullptr;

@@ -39,7 +39,6 @@
 
 #include "qsgd3d12renderer_p.h"
 #include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12material_p.h"
 #include <private/qsgnodeupdater_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -81,15 +80,15 @@ void QSGD3D12Renderer::renderScene(GLuint fboId)
     QSGRenderer::renderScene(bindable);
 }
 
-// Search through the node set and remove nodes that are leaves of other
+// Search through the node set and remove nodes that are descendants of other
 // nodes in the same set.
-static QSet<QSGNode *> qsg_filterSubTree(const QSet<QSGNode *> &nodes, QSGRootNode *root)
+static QSet<QSGNode *> qsg_removeDescendants(const QSet<QSGNode *> &nodes, QSGRootNode *root)
 {
     QSet<QSGNode *> result = nodes;
     for (QSGNode *node : nodes) {
         QSGNode *n = node;
         while (n != root) {
-            if (result.contains(n)) {
+            if (n != node && result.contains(n)) {
                 result.remove(node);
                 break;
             }
@@ -112,13 +111,39 @@ void QSGD3D12Renderer::updateMatrices(QSGNode *node, QSGTransformNode *xform)
             tn->setCombinedMatrix(tn->matrix());
         QSGNODE_TRAVERSE(node)
             updateMatrices(child, tn);
-
     } else {
         if (node->type() == QSGNode::GeometryNodeType || node->type() == QSGNode::ClipNodeType) {
-           static_cast<QSGBasicGeometryNode *>(node)->setMatrix(xform ? &xform->combinedMatrix() : 0);
+            m_nodeDirtyMap[node] |= QSGD3D12Material::RenderState::DirtyMatrix;
+            QSGBasicGeometryNode *gnode = static_cast<QSGBasicGeometryNode *>(node);
+            const QMatrix4x4 *newMatrix = xform ? &xform->combinedMatrix() : nullptr;
+            // NB the newMatrix ptr is usually the same as before as it just
+            // references the transform node's own matrix.
+            gnode->setMatrix(newMatrix);
         }
         QSGNODE_TRAVERSE(node)
             updateMatrices(child, xform);
+    }
+}
+
+void QSGD3D12Renderer::updateOpacities(QSGNode *node, float inheritedOpacity)
+{
+    if (node->isSubtreeBlocked())
+        return;
+
+    if (node->type() == QSGNode::OpacityNodeType) {
+        QSGOpacityNode *on = static_cast<QSGOpacityNode *>(node);
+        float combined = inheritedOpacity * on->opacity();
+        on->setCombinedOpacity(combined);
+        QSGNODE_TRAVERSE(node)
+            updateOpacities(child, combined);
+    } else {
+        if (node->type() == QSGNode::GeometryNodeType) {
+            m_nodeDirtyMap[node] |= QSGD3D12Material::RenderState::DirtyOpacity;
+            QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(node);
+            gn->setInheritedOpacity(inheritedOpacity);
+        }
+        QSGNODE_TRAVERSE(node)
+            updateOpacities(child, inheritedOpacity);
     }
 }
 
@@ -174,10 +199,12 @@ void QSGD3D12Renderer::render()
     m_engine->beginFrame();
 
     if (m_rebuild) {
-        // This changes everything, so discard all cached states
         m_rebuild = false;
+
         m_dirtyTransformNodes.clear();
         m_dirtyTransformNodes.insert(rootNode());
+        m_dirtyOpacityNodes.clear();
+        m_dirtyOpacityNodes.insert(rootNode());
 
         m_renderList.reset();
         m_vboData.reset();
@@ -188,6 +215,7 @@ void QSGD3D12Renderer::render()
 
         m_engine->setVertexBuffer(m_vboData.data(), m_vboData.size());
         m_engine->setIndexBuffer(m_iboData.data(), m_iboData.size());
+        m_engine->setConstantBuffer(m_cboData.data(), m_cboData.size());
 
         if (Q_UNLIKELY(debug_build())) {
             qDebug("renderList: %d elements in total", m_renderList.size());
@@ -199,7 +227,7 @@ void QSGD3D12Renderer::render()
     }
 
     if (m_dirtyTransformNodes.size()) {
-        const QSet<QSGNode *> subTreeRoots = qsg_filterSubTree(m_dirtyTransformNodes, rootNode());
+        const QSet<QSGNode *> subTreeRoots = qsg_removeDescendants(m_dirtyTransformNodes, rootNode());
         for (QSGNode *node : subTreeRoots) {
             // First find the parent transform so we have the accumulated
             // matrix up until this point.
@@ -217,6 +245,23 @@ void QSGD3D12Renderer::render()
         }
     }
 
+    if (m_dirtyOpacityNodes.size()) {
+        const QSet<QSGNode *> subTreeRoots = qsg_removeDescendants(m_dirtyOpacityNodes, rootNode());
+        for (QSGNode *node : subTreeRoots) {
+            float opacity = 1.0f;
+            QSGNode *n = node;
+            if (n->type() == QSGNode::OpacityNodeType)
+                n = node->parent();
+            while (n != rootNode() && n->type() != QSGNode::OpacityNodeType)
+                n = n->parent();
+            if (n != rootNode())
+                opacity = static_cast<QSGOpacityNode *>(n)->combinedOpacity();
+
+            updateOpacities(node, opacity);
+        }
+        m_dirtyOpaqueElements = true;
+    }
+
     if (m_dirtyOpaqueElements) {
         m_dirtyOpaqueElements = false;
         m_opaqueElements.clear();
@@ -231,9 +276,17 @@ void QSGD3D12Renderer::render()
         }
     }
 
+    // Build pipeline state and draw calls.
     renderElements();
 
+    m_dirtyTransformNodes.clear();
+    m_dirtyOpacityNodes.clear();
+    m_dirtyOpaqueElements = false;
+    m_nodeDirtyMap.clear();
+
+    // Finalize buffers and execute commands.
     m_engine->endFrame();
+
     m_engine = nullptr;
 }
 
@@ -279,6 +332,9 @@ void QSGD3D12Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     if (state & QSGNode::DirtyMatrix)
         m_dirtyTransformNodes << node;
 
+    if (state & QSGNode::DirtyOpacity)
+        m_dirtyOpacityNodes << node;
+
     if (state & QSGNode::DirtyMaterial)
         m_dirtyOpaqueElements = true;
 
@@ -302,11 +358,10 @@ void QSGD3D12Renderer::renderElements()
     m_current_projection_matrix = projectionMatrix();
 
     // First do opaque...
-    // The algorithm is quite simple. We traverse the list back-to-from
-    // and for every item, we start a second traversal from this point
-    // and draw all elements which have identical material. Then we clear
-    // the bit for this in the rendered list so we don't draw it again
-    // when we come to that index.
+    // The algorithm is quite simple. We traverse the list back-to-front, and
+    // for every item we start a second traversal and draw all elements which
+    // have identical material. Then we clear the bit for this in the rendered
+    // list so we don't draw it again when we come to that index.
     QBitArray rendered = m_opaqueElements;
     for (int i = m_renderList.size() - 1; i >= 0; --i) {
         if (rendered.testBit(i)) {
@@ -360,17 +415,16 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     if (gn->inheritedOpacity() < 0.001f) // pretty much invisible, don't draw it
         return;
 
-    QSGD3D12Material::RenderState::DirtyStates dirtyState = QSGD3D12Material::RenderState::DirtyMatrix;
+    // Update the QSGRenderer members which the materials will access.
     m_current_projection_matrix = projectionMatrix();
-    qreal scale = 1.0 / m_renderList.size();
+    const float scale = 1.0 / m_renderList.size();
     m_current_projection_matrix(2, 2) = scale;
     m_current_projection_matrix(2, 3) = 1.0f - (elementIndex + 1) * scale;
     m_current_model_view_matrix = gn->matrix() ? *gn->matrix() : QMatrix4x4();
     m_current_determinant = m_current_model_view_matrix.determinant();
-    if (gn->inheritedOpacity() != m_current_opacity) {
-        m_current_opacity = gn->inheritedOpacity();
-        dirtyState |= QSGD3D12Material::RenderState::DirtyOpacity;
-    }
+    m_current_opacity = gn->inheritedOpacity();
+
+    QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
 
     const QSGGeometry *g = gn->geometry();
     QSGD3D12Material *m = static_cast<QSGD3D12Material *>(gn->activeMaterial());
@@ -387,7 +441,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     if (e.cboSize > 0)
         cboPtr = m_cboData.data() + e.cboOffset;
 
-    qDebug() << "ds" << dirtyState;
+    qDebug() << "dirtystate for" << e.node << "is" << dirtyState;
     QSGD3D12Material::UpdateResults updRes = m->updatePipeline(QSGD3D12Material::makeRenderState(this, dirtyState),
                                                                &m_pipelineState.shaders,
                                                                cboPtr);
@@ -396,7 +450,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     // root signature and communicate the need for SRVs or UAVs to the engine.
 
     if (updRes.testFlag(QSGD3D12Material::UpdatedConstantBuffer))
-        m_engine->setConstantBuffer(m_cboData.data(), m_cboData.size());
+        m_engine->markConstantBufferDirty(e.cboOffset, e.cboSize);
 
     // Input element layout
     m_pipelineState.inputElements.resize(g->attributeCount());
@@ -409,37 +463,11 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
         const int tupleSize = attrs[i].tupleSize;
         ie.name = semanticNames[attrs[i].semantic];
         ie.offset = offset;
-        // ### move format mapping to engine
-        static const QSGD3D12Format formatMap_ub[] = { FmtUnknown,
-                                                       FmtUNormByte,
-                                                       FmtUNormByte2,
-                                                       FmtUnknown,
-                                                       FmtUNormByte4 };
-        static const QSGD3D12Format formatMap_f[] = { FmtUnknown,
-                                                      FmtFloat,
-                                                      FmtFloat2,
-                                                      FmtFloat3,
-                                                      FmtFloat4 };
-        switch (attrs[i].type) {
-        case QSGGeometry::TypeUnsignedByte:
-            ie.format = formatMap_ub[tupleSize];
-            offset += tupleSize;
-            break;
-        case QSGGeometry::TypeFloat:
-            ie.format = formatMap_f[tupleSize];
-            offset += sizeof(float) * tupleSize;
-            break;
-        case QSGGeometry::TypeByte:
-        case QSGGeometry::TypeInt:
-        case QSGGeometry::TypeUnsignedInt:
-        case QSGGeometry::TypeShort:
-        case QSGGeometry::TypeUnsignedShort:
-            qFatal("QSGD3D12Renderer: attribute type 0x%x is not currently supported", attrs[i].type);
-            break;
-        }
+        int bytesPerTuple = 0;
+        ie.format = QSGD3D12Engine::toDXGIFormat(QSGGeometry::Type(attrs[i].type), tupleSize, &bytesPerTuple);
         if (ie.format == FmtUnknown)
             qFatal("QSGD3D12Renderer: unsupported tuple size for attribute type 0x%x", attrs[i].type);
-
+        offset += bytesPerTuple;
         // There is one buffer with interleaved data so the slot is always 0.
         ie.slot = 0;
     }
@@ -451,20 +479,10 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     m_engine->setPipelineState(m_pipelineState);
 
     if (e.iboOffset >= 0) {
-        // ### move format mapping to engine
-        QSGD3D12Format indexFormat;
         const QSGGeometry::Type indexType = QSGGeometry::Type(g->indexType());
-        switch (indexType) {
-        case QSGGeometry::TypeUnsignedShort:
-            indexFormat = FmtUnsignedShort;
-            break;
-        case QSGGeometry::TypeUnsignedInt:
-            indexFormat = FmtUnsignedInt;
-            break;
-        default:
-            qFatal("QSGD3D12Renderer: unsupported index data type 0x%x", indexType);
-            break;
-        };
+        const QSGD3D12Format indexFormat = QSGD3D12Engine::toDXGIFormat(indexType);
+        if (indexFormat == FmtUnknown)
+            qFatal("QSGD3D12Renderer: unsupported index type 0x%x", indexType);
         m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->indexCount(), e.vboOffset, g->sizeOfVertex(),
                             e.cboOffset,
                             e.iboOffset / e.iboStride, indexFormat);

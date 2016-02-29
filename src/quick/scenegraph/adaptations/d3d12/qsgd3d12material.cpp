@@ -40,8 +40,8 @@
 #include "qsgd3d12material_p.h"
 #include <private/qsgrenderer_p.h>
 
-#include "hlsl_vs_vertexcolor.h"
-#include "hlsl_ps_vertexcolor.h"
+#include "vs_vertexcolor.hlslh"
+#include "ps_vertexcolor.hlslh"
 
 QT_BEGIN_NAMESPACE
 
