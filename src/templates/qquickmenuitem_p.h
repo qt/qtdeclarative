@@ -57,14 +57,17 @@ class QQuickMenuItemPrivate;
 class Q_QUICKTEMPLATES_EXPORT QQuickMenuItem : public QQuickAbstractButton
 {
     Q_OBJECT
+    Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
 
 public:
     explicit QQuickMenuItem(QQuickItem *parent = nullptr);
 
 Q_SIGNALS:
+    void checkableChanged();
     void triggered();
 
 protected:
+    void checkableChange() override;
     QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY

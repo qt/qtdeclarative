@@ -56,7 +56,6 @@ Window {
             id: repeater
             model: ["Option 1", "Option 2", "Option 3"]
             delegate: ItemDelegate {
-                checkable: true
                 text: modelData
             }
         }

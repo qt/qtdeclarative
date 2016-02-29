@@ -96,6 +96,17 @@ QQuickButton::QQuickButton(QQuickItem *parent) : QQuickAbstractButton(parent)
 {
 }
 
+/*!
+    \qmlproperty bool Qt.labs.controls::Button::checkable
+
+    This property holds whether the button is checkable.
+*/
+
+void QQuickButton::checkableChange()
+{
+    emit checkableChanged();
+}
+
 QFont QQuickButton::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);

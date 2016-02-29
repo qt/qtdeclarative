@@ -641,7 +641,6 @@ TestCase {
                         width: _combobox.width
                         text: _combobox.textRole ? (Array.isArray(_combobox.model) ? modelData[_combobox.textRole] : model[_combobox.textRole]) : modelData
                         objectName: "delegate"
-                        checkable: true
                         autoExclusive: true
                         checked: _combobox.currentIndex === index
                         highlighted: _combobox.highlightedIndex === index

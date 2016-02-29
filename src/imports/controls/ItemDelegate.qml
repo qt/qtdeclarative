@@ -52,8 +52,8 @@ T.ItemDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -64,16 +64,6 @@ T.ItemDelegate {
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
-
-    //! [indicator]
-    indicator: Image {
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-
-        visible: control.checked
-        source: control.checkable ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png" : ""
-    }
-    //! [indicator]
 
     //! [background]
     background: Rectangle {

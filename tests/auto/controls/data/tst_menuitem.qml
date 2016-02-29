@@ -61,4 +61,23 @@ TestCase {
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
+
+    function test_checkable() {
+        var control = menuItem.createObject(testCase)
+        verify(control)
+        verify(control.hasOwnProperty("checkable"))
+        verify(!control.checkable)
+
+        mouseClick(control)
+        verify(!control.checked)
+
+        control.checkable = true
+        mouseClick(control)
+        verify(control.checked)
+
+        mouseClick(control)
+        verify(!control.checked)
+
+        control.destroy()
+    }
 }

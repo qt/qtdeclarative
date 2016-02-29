@@ -46,8 +46,6 @@ Rectangle {
     border.width: control.checked ? width / 2 : 2
     radius: 2
 
-    visible: control.checkable
-
     property alias control: ripple.control
 
     Behavior on border.width {

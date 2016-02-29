@@ -303,11 +303,11 @@ void QQuickAbstractButton::setChecked(bool checked)
     emit checkedChanged();
 }
 
-/*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::checkable
-
-    This property holds whether the button is checkable.
-*/
+// We define these in QQuickAbstractButton without exposing checkable as a
+// property, and instead expose it as a property in QQuickButton.
+// QQuickRadioButton, QQuickSwitch and QQuickCheckBox are checkable by default,
+// but if we removed the checkable code from here, they'd each have to
+// duplicate it.
 bool QQuickAbstractButton::isCheckable() const
 {
     Q_D(const QQuickAbstractButton);
@@ -322,7 +322,7 @@ void QQuickAbstractButton::setCheckable(bool checkable)
 
     d->checkable = checkable;
     setAccessibleProperty("checkable", checkable);
-    emit checkableChanged();
+    checkableChange();
 }
 
 /*!
@@ -592,6 +592,10 @@ void QQuickAbstractButton::nextCheckState()
     Q_D(QQuickAbstractButton);
     if (d->checkable && (!d->checked || d->findCheckedButton() != this))
         setChecked(!d->checked);
+}
+
+void QQuickAbstractButton::checkableChange()
+{
 }
 
 #ifndef QT_NO_ACCESSIBILITY

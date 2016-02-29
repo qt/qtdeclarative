@@ -40,7 +40,6 @@ Item {
         delegate: ItemDelegate {
             width: combo.width
             text: modelData
-            checkable: true
             autoExclusive: true
             checked: combo.currentIndex === index
             Rectangle {

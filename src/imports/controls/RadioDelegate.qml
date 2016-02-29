@@ -52,8 +52,8 @@ T.RadioDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font

@@ -228,9 +228,7 @@
 
         \section3 Indicator
 
-            \image qtquickcontrols-itemdelegate-indicator.png
-
-            \snippet ItemDelegate.qml indicator
+            ItemDelegate has no indicator item by default.
 
 
     \section1 Customizing Label
@@ -505,8 +503,9 @@
 
     \section1 Customizing SwipeDelegate
 
-        SwipeDelegate consists of four visual items: \l {Control::background}{background},
-        \l {Control::contentItem}{content item}, \c exposure.left, and \c exposure.right.
+        SwipeDelegate consists of five visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \l {AbstractButton::indicator}{indicator},
+        \c exposure.left, and \c exposure.right.
 
         \section3 Background
 
@@ -519,6 +518,10 @@
             \image qtquickcontrols-swipedelegate-contentItem.png
 
             \snippet SwipeDelegate.qml contentItem
+
+        \section3 Indicator
+
+            SwipeDelegate has no indicator item by default.
 
         \section3 Left, right, and behind
 

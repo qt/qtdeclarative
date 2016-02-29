@@ -31,7 +31,6 @@ import Qt.labs.controls 1.0
 SwipeDelegate {
     text: "SwipeDelegate"
     checked: true
-    checkable: true
     Rectangle {
         anchors.fill: indicator
         color: "transparent"

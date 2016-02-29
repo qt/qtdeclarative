@@ -55,11 +55,17 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKTEMPLATES_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
+    Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
 
 public:
     explicit QQuickButton(QQuickItem *parent = nullptr);
 
+Q_SIGNALS:
+    void checkableChanged();
+
 protected:
+    void checkableChange() override;
+
     QFont defaultFont() const override;
 };
 

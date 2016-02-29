@@ -30,8 +30,6 @@ import Qt.labs.controls 1.0
 
 ItemDelegate {
     text: "ItemDelegate"
-    checked: true
-    checkable: true
     Rectangle {
         anchors.fill: contentItem
         color: "transparent"

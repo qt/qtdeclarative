@@ -57,7 +57,6 @@ T.ComboBox {
     delegate: ItemDelegate {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
-        checkable: true
         autoExclusive: true
         checked: control.currentIndex === index
         highlighted: control.highlightedIndex === index

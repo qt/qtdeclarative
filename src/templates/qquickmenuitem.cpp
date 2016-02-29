@@ -92,6 +92,17 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
 }
 
+/*!
+    \qmlproperty bool Qt.labs.controls::MenuItem::checkable
+
+    This property holds whether the menu item is checkable.
+*/
+
+void QQuickMenuItem::checkableChange()
+{
+    emit checkableChanged();
+}
+
 QFont QQuickMenuItem::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
