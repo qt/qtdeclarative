@@ -64,7 +64,7 @@ class QQuickStateActionEvent;
 class QQmlBinding;
 class QQmlExpression;
 
-class QQuickStateAction
+class Q_QUICK_PRIVATE_EXPORT QQuickStateAction
 {
 public:
     QQuickStateAction();
