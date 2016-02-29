@@ -123,16 +123,8 @@ public:
     explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
     ~QQuickPopupPositioner();
 
-    qreal x() const;
-    void setX(qreal x);
-
-    qreal y() const;
-    void setY(qreal y);
-
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
-
-    void repositionPopup();
 
 protected:
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
@@ -146,8 +138,6 @@ private:
 
     bool isAncestor(QQuickItem *item) const;
 
-    qreal m_x;
-    qreal m_y;
     QQuickItem *m_parentItem;
     QQuickPopupPrivate *m_popup;
 };
@@ -166,6 +156,7 @@ public:
 
     void init();
     bool tryClose(QQuickItem *item, QMouseEvent *event);
+    virtual void reposition();
 
     void finalizeEnterTransition();
     void finalizeExitTransition();
@@ -184,6 +175,8 @@ public:
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
+    qreal x;
+    qreal y;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;
