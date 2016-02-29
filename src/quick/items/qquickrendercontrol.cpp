@@ -48,6 +48,8 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtCore/private/qobject_p.h>
 
+#include <private/qquickshadereffectnode_p.h>
+
 QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -174,6 +176,8 @@ void QQuickRenderControlPrivate::windowDestroyed()
 
         delete QQuickWindowPrivate::get(window)->animationController;
         QQuickWindowPrivate::get(window)->animationController = 0;
+
+        QQuickShaderEffectMaterial::cleanupMaterialCache();
 
         window = 0;
     }
