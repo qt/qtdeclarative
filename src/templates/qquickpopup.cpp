@@ -268,6 +268,12 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     setAcceptedMouseButtons(Qt::AllButtons);
 }
 
+bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    return d->popup->childMouseEventFilter(child, event);
+}
+
 void QQuickPopupItem::focusInEvent(QFocusEvent *event)
 {
     Q_D(QQuickPopupItem);
@@ -1501,6 +1507,18 @@ void QQuickPopup::setExit(QQuickTransition *transition)
     emit exitChanged();
 }
 
+bool QQuickPopup::filtersChildMouseEvents() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->filtersChildMouseEvents();
+}
+
+void QQuickPopup::setFiltersChildMouseEvents(bool filter)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setFiltersChildMouseEvents(filter);
+}
+
 void QQuickPopup::classBegin()
 {
 }
@@ -1523,6 +1541,13 @@ bool QQuickPopup::eventFilter(QObject *object, QEvent *event)
 {
     if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object))
         return overlayEvent(window->contentItem(), event);
+    return false;
+}
+
+bool QQuickPopup::childMouseEventFilter(QQuickItem *child, QEvent *event)
+{
+    Q_UNUSED(child);
+    Q_UNUSED(event);
     return false;
 }
 

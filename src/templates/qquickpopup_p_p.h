@@ -92,6 +92,7 @@ public:
     explicit QQuickPopupItem(QQuickPopup *popup);
 
 protected:
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
