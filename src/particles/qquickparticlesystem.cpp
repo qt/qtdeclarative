@@ -199,24 +199,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
     Discards all currently existing particles.
 
 */
-const qreal EPSILON = 0.001;
-//Utility functions for when within 1ms is close enough
-bool timeEqualOrGreater(qreal a, qreal b)
-{
-    return (a+EPSILON >= b);
-}
 
-bool timeLess(qreal a, qreal b)
-{
-    return (a-EPSILON < b);
-}
-
-bool timeEqual(qreal a, qreal b)
-{
-    return (a+EPSILON > b) && (a-EPSILON < b);
-}
-
-int roundedTime(qreal a)
+static inline int roundedTime(qreal a)
 {// in ms
     return (int)qRound(a*1000.0);
 }
@@ -342,11 +326,6 @@ QQuickParticleGroupData::~QQuickParticleGroupData()
 {
     foreach (QQuickParticleData* d, data)
         delete d;
-}
-
-int QQuickParticleGroupData::size()
-{
-    return m_size;
 }
 
 QString QQuickParticleGroupData::name()//### Worth caching as well?
@@ -650,21 +629,6 @@ void QQuickParticleData::debugDump()
              << "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
              << "Time: " << t << "," <<lifeSpan << ";" << (system->timeInt / 1000.0) ;
-}
-
-bool QQuickParticleData::stillAlive()
-{
-    if (!system)
-        return false;
-    return (t + lifeSpan - EPSILON) > ((qreal)system->timeInt/1000.0);
-}
-
-bool QQuickParticleData::alive()
-{
-    if (!system)
-        return false;
-    qreal st = ((qreal)system->timeInt/1000.0);
-    return (t + EPSILON) < st && (t + lifeSpan - EPSILON) > st;
 }
 
 float QQuickParticleData::curSize()

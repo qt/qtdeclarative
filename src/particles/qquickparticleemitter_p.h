@@ -266,7 +266,12 @@ public Q_SLOTS:
 
        virtual void reset();
 public:
-       int particleCount() const;
+       int particleCount() const
+       {
+           if (m_maxParticleCount >= 0)
+               return m_maxParticleCount;
+           return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
+       }
 
        QQuickParticleExtruder* extruder() const
        {

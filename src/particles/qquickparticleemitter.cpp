@@ -319,13 +319,6 @@ void QQuickParticleEmitter::setMaxParticleCount(int arg)
     }
 }
 
-int QQuickParticleEmitter::particleCount() const
-{
-    if (m_maxParticleCount >= 0)
-        return m_maxParticleCount;
-    return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
-}
-
 void QQuickParticleEmitter::setVelocityFromMovement(qreal t)
 {
     if (t == m_velocity_from_movement)

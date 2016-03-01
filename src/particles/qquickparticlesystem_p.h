@@ -114,7 +114,9 @@ public:
     QQuickParticleGroupData(const QString &name, QQuickParticleSystem* sys);
     ~QQuickParticleGroupData();
 
-    int size();
+    int size()
+    { return m_size; }
+
     QString name();
 
     void setSize(int newSize);
@@ -248,6 +250,9 @@ public:
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
     QQmlV4Handle v4Value();
     void extendLife(float time);
+
+    static inline Q_DECL_CONSTEXPR qreal EPSILON() Q_DECL_NOTHROW { return 0.001; }
+
 private:
     QQuickV4ParticleData* v8Datum;
 };
@@ -396,6 +401,20 @@ private:
     QQuickParticleSystem* m_system;
 };
 
+inline bool QQuickParticleData::stillAlive()
+{
+    if (!system)
+        return false;
+    return (t + lifeSpan - EPSILON()) > ((qreal)system->timeInt/1000.0);
+}
+
+inline bool QQuickParticleData::alive()
+{
+    if (!system)
+        return false;
+    qreal st = ((qreal)system->timeInt/1000.0);
+    return (t + EPSILON()) < st && (t + lifeSpan - EPSILON()) > st;
+}
 
 QT_END_NAMESPACE
 
