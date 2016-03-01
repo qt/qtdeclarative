@@ -50,7 +50,6 @@ private slots:
     void screenshots_data();
 
 private:
-    QQuickView view;
     QMap<QString, QStringPair> filePaths;
 };
 
@@ -81,6 +80,7 @@ void tst_Snippets::screenshots()
 
     qRegisterMetaType<QList<QQmlError> >();
 
+    QQuickView view;
     QSignalSpy warnings(view.engine(), SIGNAL(warnings(QList<QQmlError>)));
     QVERIFY(warnings.isValid());
 
@@ -95,7 +95,7 @@ void tst_Snippets::screenshots()
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
-    QSharedPointer<QQuickItemGrabResult> result = view.rootObject()->grabToImage();
+    QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();
     QSignalSpy spy(result.data(), SIGNAL(ready()));
     QVERIFY(spy.isValid());
     QVERIFY(spy.wait());

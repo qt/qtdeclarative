@@ -575,6 +575,25 @@
 
             \snippet ToolButton.qml contentItem
 
+
+    \section1 Customizing ToolTip
+
+        ToolTip consists of two visual items: \l {Popup::background}{background}
+        and \l {Popup::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-tooltip-background.png
+
+            \snippet ToolTip.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-tooltip-contentItem.png
+
+            \snippet ToolTip.qml contentItem
+
+
     \section1 Customizing Tumbler
 
         Tumbler consists of three visual items:

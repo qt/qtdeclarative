@@ -52,6 +52,7 @@ HEADERS += \
     $$PWD/qquicktextfield_p_p.h \
     $$PWD/qquicktoolbar_p.h \
     $$PWD/qquicktoolbutton_p.h \
+    $$PWD/qquicktooltip_p.h \
     $$PWD/qquicktumbler_p.h \
     $$PWD/qquickvelocitycalculator_p_p.h
 
@@ -97,5 +98,6 @@ SOURCES += \
     $$PWD/qquicktextfield.cpp \
     $$PWD/qquicktoolbar.cpp \
     $$PWD/qquicktoolbutton.cpp \
+    $$PWD/qquicktooltip.cpp \
     $$PWD/qquicktumbler.cpp \
     $$PWD/qquickvelocitycalculator.cpp

@@ -69,6 +69,10 @@ ApplicationWindow {
 
             ToolButton {
                 text: "Normal"
+                hoverEnabled: true
+                ToolTip.text: text
+                ToolTip.delay: 1000
+                ToolTip.visible: hovered
                 onClicked: menu.visible ? menu.close() : menu.open()
 
                 Menu {
@@ -93,15 +97,27 @@ ApplicationWindow {
             ToolButton {
                 text: "Pressed"
                 pressed: true
+                hoverEnabled: true
+                ToolTip.text: text
+                ToolTip.delay: 1000
+                ToolTip.visible: hovered
             }
             ToolButton {
                 text: "Checked"
                 checkable: true
                 checked: true
+                hoverEnabled: true
+                ToolTip.text: text
+                ToolTip.delay: 1000
+                ToolTip.visible: hovered
             }
             ToolButton {
                 text: "Highlighted"
                 highlighted: true
+                hoverEnabled: true
+                ToolTip.text: text
+                ToolTip.delay: 1000
+                ToolTip.visible: hovered
             }
             ToolButton {
                 text: "Disabled"

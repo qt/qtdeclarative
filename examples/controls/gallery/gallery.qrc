@@ -46,6 +46,7 @@
         <file>pages/TabBarPage.qml</file>
         <file>pages/TextAreaPage.qml</file>
         <file>pages/TextFieldPage.qml</file>
+        <file>pages/ToolTipPage.qml</file>
         <file>pages/TumblerPage.qml</file>
         <file>pages/DelegatePage.qml</file>
     </qresource>

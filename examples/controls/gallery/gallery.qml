@@ -162,6 +162,7 @@ ApplicationWindow {
                     ListElement { title: "TabBar"; source: "qrc:/pages/TabBarPage.qml" }
                     ListElement { title: "TextArea"; source: "qrc:/pages/TextAreaPage.qml" }
                     ListElement { title: "TextField"; source: "qrc:/pages/TextFieldPage.qml" }
+                    ListElement { title: "ToolTip"; source: "qrc:/pages/ToolTipPage.qml" }
                     ListElement { title: "Tumbler"; source: "qrc:/pages/TumblerPage.qml" }
                 }
 

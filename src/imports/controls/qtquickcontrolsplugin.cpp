@@ -129,6 +129,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("TextField.qml")), uri, 1, 0, "TextField");
     qmlRegisterType(selector.select(QStringLiteral("ToolBar.qml")), uri, 1, 0, "ToolBar");
     qmlRegisterType(selector.select(QStringLiteral("ToolButton.qml")), uri, 1, 0, "ToolButton");
+    qmlRegisterType(selector.select(QStringLiteral("/ToolTip.qml")), uri, 1, 0, "ToolTip");
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 1, 0, "Tumbler");
 }
 

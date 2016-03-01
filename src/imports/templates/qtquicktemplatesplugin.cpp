@@ -74,6 +74,7 @@
 #include <QtQuickTemplates/private/qquicktextfield_p.h>
 #include <QtQuickTemplates/private/qquicktoolbar_p.h>
 #include <QtQuickTemplates/private/qquicktoolbutton_p.h>
+#include <QtQuickTemplates/private/qquicktooltip_p.h>
 #include <QtQuickTemplates/private/qquicktumbler_p.h>
 
 static inline void initResources()
@@ -145,6 +146,8 @@ void QtQuickTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTextField>(uri, 1, 0, "TextField");
     qmlRegisterType<QQuickToolBar>(uri, 1, 0, "ToolBar");
     qmlRegisterType<QQuickToolButton>(uri, 1, 0, "ToolButton");
+    qmlRegisterType<QQuickToolTipAttached>();
+    qmlRegisterType<QQuickToolTip>(uri, 1, 0, "ToolTip");
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 1, 0, "Tumbler");
 

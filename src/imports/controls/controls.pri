@@ -41,6 +41,7 @@ QML_CONTROLS = \
     TextField.qml \
     ToolBar.qml \
     ToolButton.qml \
+    ToolTip.qml \
     Tumbler.qml
 
 !qtquickcompiler: QML_FILES += $$QML_CONTROLS

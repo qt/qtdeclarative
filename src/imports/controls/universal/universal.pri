@@ -31,6 +31,7 @@ QML_FILES += \
     $$PWD/TextField.qml \
     $$PWD/ToolBar.qml \
     $$PWD/ToolButton.qml \
+    $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml
 
 HEADERS += \
