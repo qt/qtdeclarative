@@ -1,4 +1,5 @@
 TARGET = QtQuickParticles
+MODULE = quickparticles
 
 CONFIG += internal_module
 
@@ -13,7 +14,6 @@ exists("qqml_enable_gcov") {
     LIBS_PRIVATE += -lgcov
 }
 
-MODULE = quickparticles
-load(qt_module)
-
 include(particles.pri)
+
+load(qt_module)

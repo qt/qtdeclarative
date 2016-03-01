@@ -42,105 +42,105 @@ import QtQuick 2.0
 
 ListModel {
     id: stocks
-    // Data from : http://en.wikipedia.org/wiki/NASDAQ-100
-    ListElement {name: "Apple Inc."; stockId: "AAPL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    // Uncomment to test invalid entries
+    // ListElement {name: "The Qt Company"; stockId: "TQTC"; value: "999.0"; change: "0.0"; changePercentage: "0.0"}
+
+    // Data from http://www.nasdaq.com/quotes/nasdaq-100-stocks.aspx
+    ListElement {name: "Activision Blizzard Inc."; stockId: "ATVI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Adobe Systems Inc."; stockId: "ADBE"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Analog Devices, Inc."; stockId: "ADI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Automatic Data Processing, Inc."; stockId: "ADP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Autodesk, Inc."; stockId: "ADSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Akamai Technologies, Inc."; stockId: "AKAM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Altera Corp."; stockId: "ALTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Alexion Pharmaceuticals, Inc."; stockId: "ALXN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Applied Materials, Inc."; stockId: "AMAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Amgen Inc."; stockId: "AMGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Akamai Technologies Inc."; stockId: "AKAM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Alexion Pharmaceuticals Inc."; stockId: "ALXN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Alphabet Inc."; stockId: "GOOG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Alphabet Inc."; stockId: "GOOGL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Amazon.com Inc."; stockId: "AMZN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Activision Blizzard, Inc."; stockId: "ATVI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Avago Technologies Limited"; stockId: "AVGO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "American Airlines Group Inc."; stockId: "AAL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Amgen Inc."; stockId: "AMGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Analog Devices Inc."; stockId: "ADI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Apple Inc."; stockId: "AAPL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Applied Materials Inc."; stockId: "AMAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Autodesk Inc."; stockId: "ADSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Automatic Data Processing Inc."; stockId: "ADP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Baidu Inc."; stockId: "BIDU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Bed Bath & Beyond Inc."; stockId: "BBBY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Baidu, Inc."; stockId: "BIDU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Biogen Idec Inc."; stockId: "BIIB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Broadcom Corp."; stockId: "BRCM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "CA Technologies"; stockId: "CA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Celgene Corporation"; stockId: "CELG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Cerner Corporation"; stockId: "CERN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Biogen Inc."; stockId: "BIIB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "BioMarin Pharmaceutical Inc."; stockId: "BMRN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Broadcom Limited"; stockId: "AVGO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "CA Inc."; stockId: "CA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Celgene Corp."; stockId: "CELG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cerner Corp."; stockId: "CERN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Charter Communications Inc."; stockId: "CHTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Check Point Software Technologies Ltd."; stockId: "CHKP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "CH Robinson Worldwide Inc."; stockId: "CHRW"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Charter Communications, Inc."; stockId: "CHTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Comcast Corporation"; stockId: "CMCSA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Costco Wholesale Corporation"; stockId: "COST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Cisco Systems, Inc."; stockId: "CSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Catamaran Corporation"; stockId: "CTRX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Cognizant Technology Solutions Corporation"; stockId: "CTSH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Citrix Systems, Inc."; stockId: "CTXS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Discovery Communications, Inc."; stockId: "DISCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Dish Network Corp."; stockId: "DISH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Dollar Tree, Inc."; stockId: "DLTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "DIRECTV"; stockId: "DTV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cisco Systems Inc."; stockId: "CSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Citrix Systems Inc."; stockId: "CTXS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Cognizant Technology Solutions Corp."; stockId: "CTSH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Comcast Corp."; stockId: "CMCSA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Costco Wholesale Corp."; stockId: "COST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Ctrip.com International Ltd."; stockId: "CTRP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Discovery Communications Inc."; stockId: "DISCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Discovery Communications Inc."; stockId: "DISCK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "DISH Network Corp."; stockId: "DISH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Dollar Tree Inc."; stockId: "DLTR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "eBay Inc."; stockId: "EBAY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Equinix, Inc."; stockId: "EQIX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Express Scripts Holding Company"; stockId: "ESRX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Expeditors International of Washington Inc."; stockId: "EXPD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Expedia Inc."; stockId: "EXPE"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Fastenal Company"; stockId: "FAST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Facebook, Inc."; stockId: "FB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "F5 Networks, Inc."; stockId: "FFIV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Fiserv, Inc."; stockId: "FISV"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Twenty-First Century Fox, Inc."; stockId: "FOXA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Gilead Sciences Inc."; stockId: "GILD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Keurig Green Mountain, Inc."; stockId: "GMCR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Google Inc."; stockId: "GOOG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Google Inc."; stockId: "GOOGL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Garmin Ltd."; stockId: "GRMN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Henry Schein, Inc."; stockId: "HSIC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Illumina Inc."; stockId: "ILMN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Intel Corporation"; stockId: "INTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Electronic Arts Inc."; stockId: "EA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Endo International Plc"; stockId: "ENDP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Intel Corp."; stockId: "INTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Intuit Inc."; stockId: "INTU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Intuitive Surgical, Inc."; stockId: "ISRG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "KLA-Tencor Corporation"; stockId: "KLAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Kraft Foods Group, Inc."; stockId: "KRFT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Liberty Global plc"; stockId: "LBTYA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Liberty Interactive Corporation"; stockId: "LINTA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Linear Technology Corporation"; stockId: "LLTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Liberty Media Corporation"; stockId: "LMCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Marriott International, Inc."; stockId: "MAR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Mattel, Inc"; stockId: "MAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Mondelez International, Inc."; stockId: "MDLZ"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Monster Beverage Corporation"; stockId: "MNST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Microsoft Corporation"; stockId: "MSFT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Intuitive Surgical Inc."; stockId: "ISRG"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "JD.com Inc."; stockId: "JD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "KLA-Tencor Corp."; stockId: "KLAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Lam Research Corp."; stockId: "LRCX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Global Plc"; stockId: "LBTYA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Global Plc"; stockId: "LBTYK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Interactive Corp."; stockId: "LVNTA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Interactive Corp."; stockId: "QVCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Media Corp."; stockId: "LMCA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Liberty Media Corp."; stockId: "LMCK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Linear Technology Corp."; stockId: "LLTC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Marriott International"; stockId: "MAR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mattel Inc."; stockId: "MAT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Maxim Integrated Products Inc."; stockId: "MXIM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Micron Technology Inc."; stockId: "MU"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Maxim Integrated Products, Inc."; stockId: "MXIM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Mylan, Inc."; stockId: "MYL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Netflix, Inc."; stockId: "NFLX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "NetApp, Inc."; stockId: "NTAP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "NVIDIA Corporation"; stockId: "NVDA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "NXP Semiconductors NV"; stockId: "NXPI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Microsoft Corp."; stockId: "MSFT"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mondelez International Inc."; stockId: "MDLZ"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Monster Beverage Corp."; stockId: "MNST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Mylan N.V."; stockId: "MYL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NetApp Inc."; stockId: "NTAP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Netflix Inc."; stockId: "NFLX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Norwegian Cruise Line Holdings Ltd."; stockId: "NCLH"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NVIDIA Corp."; stockId: "NVDA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "NXP Semiconductors N.V."; stockId: "NXPI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "O'Reilly Automotive Inc."; stockId: "ORLY"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Paychex, Inc."; stockId: "PAYX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "PACCAR Inc."; stockId: "PCAR"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "The Priceline Group Inc."; stockId: "PCLN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "QUALCOMM Incorporated"; stockId: "QCOM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Regeneron Pharmaceuticals, Inc."; stockId: "REGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Paychex Inc."; stockId: "PAYX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "PayPal Holdings Inc."; stockId: "PYPL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "QUALCOMM Inc."; stockId: "QCOM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Regeneron Pharmaceuticals Inc."; stockId: "REGN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Ross Stores Inc."; stockId: "ROST"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "SBA Communications Corp."; stockId: "SBAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Starbucks Corporation"; stockId: "SBUX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Sigma-Aldrich Corporation"; stockId: "SIAL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Sirius XM Holdings Inc."; stockId: "SIRI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "SanDisk Corp."; stockId: "SNDK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Staples, Inc."; stockId: "SPLS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Stericycle, Inc."; stockId: "SRCL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Seagate Technology Public Limited Company"; stockId: "STX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Symantec Corporation"; stockId: "SYMC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "TripAdvisor Inc."; stockId: "TRIP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Tractor Supply Company"; stockId: "TSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Tesla Motors, Inc."; stockId: "TSLA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "SBA Communications Corp."; stockId: "SBAC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Seagate Technology PLC"; stockId: "STX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Sirius XM Holdings Inc."; stockId: "SIRI"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Skyworks Solutions Inc."; stockId: "SWKS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Starbucks Corp."; stockId: "SBUX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Stericycle Inc."; stockId: "SRCL"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Symantec Corp."; stockId: "SYMC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "T-Mobile US Inc."; stockId: "TMUS"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Tesla Motors Inc."; stockId: "TSLA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Texas Instruments Inc."; stockId: "TXN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Viacom, Inc."; stockId: "VIAB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "VimpelCom Ltd."; stockId: "VIP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Vodafone Group Public Limited Company"; stockId: "VOD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Verisk Analytics, Inc."; stockId: "VRSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Vertex Pharmaceuticals Incorporated"; stockId: "VRTX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Western Digital Corporation"; stockId: "WDC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Whole Foods Market, Inc."; stockId: "WFM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
-    ListElement {name: "Wynn Resorts Ltd."; stockId: "WYNN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "The Kraft Heinz Company"; stockId: "KHC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "The Priceline Group Inc."; stockId: "PCLN"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Tractor Supply Company"; stockId: "TSCO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "TripAdvisor Inc."; stockId: "TRIP"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Twenty-First Century Fox Inc."; stockId: "FOX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Twenty-First Century Fox Inc."; stockId: "FOXA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Ulta Salon Cosmetics & Fragrance Inc."; stockId: "ULTA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Verisk Analytics Inc."; stockId: "VRSK"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Vertex Pharmaceuticals Inc."; stockId: "VRTX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Viacom Inc."; stockId: "VIAB"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Vodafone Group Plc"; stockId: "VOD"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Walgreens Boots Alliance Inc."; stockId: "WBA"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Western Digital Corp."; stockId: "WDC"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Whole Foods Market Inc."; stockId: "WFM"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
     ListElement {name: "Xilinx Inc."; stockId: "XLNX"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
+    ListElement {name: "Yahoo! Inc."; stockId: "YHOO"; value: "0.0"; change: "0.0"; changePercentage: "0.0"}
 }

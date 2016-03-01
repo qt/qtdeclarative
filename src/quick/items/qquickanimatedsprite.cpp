@@ -544,6 +544,7 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
     m_node->setGeometry(g);
     m_node->setMaterial(m_material);
     m_node->setFlag(QSGGeometryNode::OwnsMaterial);
+    m_node->setFlag(QSGGeometryNode::OwnsGeometry);
     sizeVertices();
     return m_node;
 }
