@@ -62,6 +62,7 @@ public:
     QSGD3D12RectangleNode();
 
 private:
+    bool supportsAntialiasing() const;
     void updateMaterialAntialiasing() override;
     void updateMaterialBlending(QSGNode::DirtyState *state) override;
 

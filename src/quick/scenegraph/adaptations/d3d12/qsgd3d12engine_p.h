@@ -130,15 +130,26 @@ struct QSGD3D12PipelineState
         CullBack
     };
 
-    enum DepthFunc {
-        DepthNever = 1,
-        DepthLess,
-        DepthEqual,
-        DepthLessEqual,
-        DepthGreater,
-        DepthNotEqual,
-        DepthGreaterEqual,
-        DepthAlways
+    enum CompareFunc {
+        CompareNever = 1,
+        CompareLess,
+        CompareEqual,
+        CompareLessEqual,
+        CompareGreater,
+        CompareNotEqual,
+        CompareGreaterEqual,
+        CompareAlways
+    };
+
+    enum StencilOp {
+        StencilKeep = 1,
+        StencilZero,
+        StencilReplace,
+        StencilIncrSat,
+        StencilDecrSat,
+        StencilInvert,
+        StencilIncr,
+        StencilDescr
     };
 
     enum TopologyType {
@@ -153,12 +164,16 @@ struct QSGD3D12PipelineState
 
     CullMode cullMode = CullNone;
     bool frontCCW = true;
+    bool colorWrite = true;
     bool premulBlend = false; // == GL_ONE, GL_ONE_MINUS_SRC_ALPHA
     bool depthEnable = true;
-    DepthFunc depthFunc = DepthLess;
+    CompareFunc depthFunc = CompareLess;
     bool depthWrite = true;
     bool stencilEnable = false;
-    // ### stencil stuff
+    CompareFunc stencilFunc = CompareEqual;
+    StencilOp stencilFailOp = StencilKeep;
+    StencilOp stencilDepthFailOp = StencilKeep;
+    StencilOp stencilPassOp = StencilKeep;
     TopologyType topologyType = TopologyTypeTriangle;
 
     bool operator==(const QSGD3D12PipelineState &other) const {
@@ -166,11 +181,16 @@ struct QSGD3D12PipelineState
                 && inputElements == other.inputElements
                 && cullMode == other.cullMode
                 && frontCCW == other.frontCCW
+                && colorWrite == other.colorWrite
                 && premulBlend == other.premulBlend
                 && depthEnable == other.depthEnable
                 && depthFunc == other.depthFunc
                 && depthWrite == other.depthWrite
                 && stencilEnable == other.stencilEnable
+                && stencilFunc == other.stencilFunc
+                && stencilFailOp == other.stencilFailOp
+                && stencilDepthFailOp == other.stencilDepthFailOp
+                && stencilPassOp == other.stencilPassOp
                 && topologyType == other.topologyType;
     }
 };
@@ -178,8 +198,10 @@ struct QSGD3D12PipelineState
 inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
 {
     return qHash(key.shaders, seed) + qHash(key.inputElements, seed)
-            + key.cullMode + key.frontCCW + key.premulBlend + key.depthEnable
-            + key.depthFunc + key.depthWrite + key.stencilEnable + key.topologyType;
+            + key.cullMode + key.frontCCW + key.colorWrite + key.premulBlend + key.depthEnable
+            + key.depthFunc + key.depthWrite + key.stencilEnable + key.stencilFunc
+            + key.stencilFailOp + key.stencilDepthFailOp + key.stencilPassOp
+            + key.topologyType;
 }
 
 class QSGD3D12Engine
@@ -202,11 +224,18 @@ public:
     void setConstantBuffer(const quint8 *data, int size);
     void markConstantBufferDirty(int offset, int size);
 
+    enum ClearFlag {
+        ClearDepth = 0x1,
+        ClearStencil = 0x2
+    };
+    Q_DECLARE_FLAGS(ClearFlags, ClearFlag)
+
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
     void queueSetRenderTarget();
     void queueClearRenderTarget(const QColor &color);
-    void queueClearDepthStencil(float depthValue, quint8 stencilValue);
+    void queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which);
+    void queueSetStencilRef(quint32 ref);
 
     void queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
                    int cboOffset,
@@ -222,6 +251,8 @@ private:
     QSGD3D12EnginePrivate *d;
     Q_DISABLE_COPY(QSGD3D12Engine)
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::ClearFlags)
 
 QT_END_NAMESPACE
 

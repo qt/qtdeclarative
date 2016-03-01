@@ -4,4 +4,4 @@ SOURCES += nodetypes.cpp
 
 RESOURCES += nodetypes.qrc
 
-OTHER_FILES += main.qml
+OTHER_FILES += main.qml Rects.qml

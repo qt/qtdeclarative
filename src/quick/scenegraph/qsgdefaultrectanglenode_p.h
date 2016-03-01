@@ -88,6 +88,7 @@ public:
     void update() override;
 
 protected:
+    virtual bool supportsAntialiasing() const { return true; }
     virtual void updateMaterialAntialiasing() = 0;
     virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
 

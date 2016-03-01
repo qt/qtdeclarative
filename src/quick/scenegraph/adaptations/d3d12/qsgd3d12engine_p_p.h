@@ -156,7 +156,8 @@ public:
     void queueScissor(const QRect &rect);
     void queueSetRenderTarget();
     void queueClearRenderTarget(const QColor &color);
-    void queueClearDepthStencil(float depthValue, quint8 stencilValue);
+    void queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which);
+    void queueSetStencilRef(quint32 ref);
 
     void queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
                    int cboOffset,
@@ -223,6 +224,9 @@ private:
     QHash<QSGD3D12PipelineState, ComPtr<ID3D12PipelineState> > m_psoCache;
 
     ComPtr<ID3D12RootSignature> m_rootSig;
+
+    QSGGeometry::DrawingMode m_drawingMode;
+    bool m_indexBufferSet;
 };
 
 QT_END_NAMESPACE

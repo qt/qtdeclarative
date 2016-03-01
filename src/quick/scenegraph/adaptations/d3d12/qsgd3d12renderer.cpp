@@ -41,6 +41,11 @@
 #include "qsgd3d12rendercontext_p.h"
 #include <private/qsgnodeupdater_p.h>
 
+#include "vs_stencilclip.hlslh"
+#include "ps_stencilclip.hlslh"
+
+//#define I_LIKE_STENCIL
+
 QT_BEGIN_NAMESPACE
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
@@ -64,7 +69,7 @@ QSGD3D12Renderer::QSGD3D12Renderer(QSGRenderContext *context)
       m_renderList(16),
       m_vboData(1024),
       m_iboData(256),
-      m_cboData(256)
+      m_cboData(4096)
 {
     setNodeUpdater(new DummyUpdater);
 }
@@ -174,12 +179,15 @@ void QSGD3D12Renderer::buildRenderList(QSGNode *node, QSGClipNode *clip)
             memcpy(m_iboData.data() + e.iboOffset, g->indexData(), indexSize);
         }
 
+        e.cboOffset = m_cboData.size();
         if (node->type() == QSGNode::GeometryNodeType) {
             QSGD3D12Material *m = static_cast<QSGD3D12Material *>(static_cast<QSGGeometryNode *>(node)->activeMaterial());
-            e.cboOffset = m_cboData.size();
             e.cboSize = m->constantBufferSize();
-            m_cboData.resize(m_cboData.size() + e.cboSize);
+        } else {
+            // Stencil-based clipping needs a 4x4 matrix.
+            e.cboSize = QSGD3D12Engine::alignedConstantBufferSize(16 * sizeof(float));
         }
+        m_cboData.resize(m_cboData.size() + e.cboSize);
 
         m_renderList.add(e);
 
@@ -198,6 +206,8 @@ void QSGD3D12Renderer::render()
     m_engine = rc->engine();
     m_engine->beginFrame();
 
+    m_activeScissorRect = QRect();
+
     if (m_rebuild) {
         m_rebuild = false;
 
@@ -211,7 +221,7 @@ void QSGD3D12Renderer::render()
         m_iboData.reset();
         m_cboData.reset();
 
-        buildRenderList(rootNode(), 0);
+        buildRenderList(rootNode(), nullptr);
 
         m_engine->setVertexBuffer(m_vboData.data(), m_vboData.size());
         m_engine->setIndexBuffer(m_iboData.data(), m_iboData.size());
@@ -343,13 +353,10 @@ void QSGD3D12Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGD3D12Renderer::renderElements()
 {
-    QRect r = viewportRect();
-    r.setY(deviceRect().bottom() - r.bottom());
-    m_engine->queueViewport(r);
-    m_engine->queueScissor(r);
+    m_engine->queueViewport(viewportRect());
     m_engine->queueSetRenderTarget();
     m_engine->queueClearRenderTarget(clearColor());
-    m_engine->queueClearDepthStencil(1, 0);
+    m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearDepth | QSGD3D12Engine::ClearStencil);
 
     m_pipelineState.premulBlend = false;
     m_pipelineState.depthEnable = true;
@@ -452,12 +459,26 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     if (updRes.testFlag(QSGD3D12Material::UpdatedConstantBuffer))
         m_engine->markConstantBufferDirty(e.cboOffset, e.cboSize);
 
-    // Input element layout
-    m_pipelineState.inputElements.resize(g->attributeCount());
+    setInputLayout(g, &m_pipelineState);
+
+    m_lastMaterialType = m->type();
+
+    setupClipping(gn, elementIndex);
+
+    // ### line width / point size ??
+
+    m_engine->setPipelineState(m_pipelineState);
+
+    queueDrawCall(g, e);
+}
+
+void QSGD3D12Renderer::setInputLayout(const QSGGeometry *g, QSGD3D12PipelineState *pipelineState)
+{
+    pipelineState->inputElements.resize(g->attributeCount());
     const QSGGeometry::Attribute *attrs = g->attributes();
     quint32 offset = 0;
     for (int i = 0; i < g->attributeCount(); ++i) {
-        QSGD3D12InputElement &ie(m_pipelineState.inputElements[i]);
+        QSGD3D12InputElement &ie(pipelineState->inputElements[i]);
         static const char *semanticNames[] = { "UNKNOWN", "POSITION", "COLOR", "TEXCOORD" };
         Q_ASSERT(attrs[i].semantic >= 1 && attrs[i].semantic < _countof(semanticNames));
         const int tupleSize = attrs[i].tupleSize;
@@ -471,13 +492,10 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
         // There is one buffer with interleaved data so the slot is always 0.
         ie.slot = 0;
     }
+}
 
-    m_lastMaterialType = m->type();
-
-    // ### line width / point size ??
-
-    m_engine->setPipelineState(m_pipelineState);
-
+void QSGD3D12Renderer::queueDrawCall(const QSGGeometry *g, const QSGD3D12Renderer::Element &e)
+{
     if (e.iboOffset >= 0) {
         const QSGGeometry::Type indexType = QSGGeometry::Type(g->indexType());
         const QSGD3D12Format indexFormat = QSGD3D12Engine::toDXGIFormat(indexType);
@@ -490,6 +508,138 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
         m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->vertexCount(), e.vboOffset, g->sizeOfVertex(),
                             e.cboOffset);
     }
+}
+
+void QSGD3D12Renderer::setupClipping(const QSGGeometryNode *gn, int elementIndex)
+{
+    const QSGClipNode *clip = gn->clipList();
+
+    const QRect devRect = deviceRect();
+    QRect scissorRect;
+    enum ClipType {
+        ClipScissor = 0x1,
+        ClipStencil = 0x2
+    };
+    int clipTypes = 0;
+    quint32 stencilValue = 0;
+
+    while (clip) {
+        QMatrix4x4 m = projectionMatrix();
+        if (clip->matrix())
+            m *= *clip->matrix();
+
+#ifndef I_LIKE_STENCIL
+        const bool isRectangleWithNoPerspective = clip->isRectangular()
+                && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
+        const bool noRotate = qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0));
+        const bool isRotate90 = qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1));
+
+        if (isRectangleWithNoPerspective && (noRotate || isRotate90)) {
+            QRectF bbox = clip->clipRect();
+            float invW = 1.0f / m(3, 3);
+            float fx1, fy1, fx2, fy2;
+            if (noRotate) {
+                fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
+                fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
+                fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
+                fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
+            } else {
+                Q_ASSERT(isRotate90);
+                fx1 = (bbox.bottom() * m(0, 1) + m(0, 3)) * invW;
+                fy1 = (bbox.left() * m(1, 0) + m(1, 3)) * invW;
+                fx2 = (bbox.top() * m(0, 1) + m(0, 3)) * invW;
+                fy2 = (bbox.right() * m(1, 0) + m(1, 3)) * invW;
+            }
+
+            if (fx1 > fx2)
+                qSwap(fx1, fx2);
+            if (fy1 > fy2)
+                qSwap(fy1, fy2);
+
+            int ix1 = qRound((fx1 + 1) * devRect.width() * 0.5f);
+            int iy1 = qRound((fy1 + 1) * devRect.height() * 0.5f);
+            int ix2 = qRound((fx2 + 1) * devRect.width() * 0.5f);
+            int iy2 = qRound((fy2 + 1) * devRect.height() * 0.5f);
+
+            if (!(clipTypes & ClipScissor)) {
+                scissorRect = QRect(ix1, devRect.height() - iy2, ix2 - ix1 + 1, iy2 - iy1 + 1);
+                clipTypes |= ClipScissor;
+            } else {
+                scissorRect &= QRect(ix1, devRect.height() - iy2, ix2 - ix1 + 1, iy2 - iy1 + 1);
+            }
+        } else
+#endif
+        {
+            clipTypes |= ClipStencil;
+            renderStencilClip(clip, elementIndex, m, stencilValue);
+        }
+
+        clip = clip->clipList();
+    }
+
+    setScissor((clipTypes & ClipScissor) ? scissorRect : viewportRect());
+
+    if (clipTypes & ClipStencil) {
+        m_pipelineState.stencilEnable = true;
+        m_engine->queueSetStencilRef(stencilValue);
+    } else {
+        m_pipelineState.stencilEnable = false;
+    }
+}
+
+void QSGD3D12Renderer::setScissor(const QRect &r)
+{
+    if (m_activeScissorRect == r)
+        return;
+
+    m_activeScissorRect = r;
+    m_engine->queueScissor(r);
+}
+
+void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementIndex,
+                                         const QMatrix4x4 &m, quint32 &stencilValue)
+{
+    QSGD3D12PipelineState sps;
+    sps.shaders.vs = g_VS_StencilClip;
+    sps.shaders.vsSize = sizeof(g_VS_StencilClip);
+    sps.shaders.ps = g_PS_StencilClip;
+    sps.shaders.psSize = sizeof(g_PS_StencilClip);
+
+    m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearStencil);
+    sps.stencilEnable = true;
+    sps.colorWrite = false;
+    sps.depthWrite = false;
+
+    sps.stencilFunc = QSGD3D12PipelineState::CompareEqual;
+    sps.stencilFailOp = QSGD3D12PipelineState::StencilKeep;
+    sps.stencilDepthFailOp = QSGD3D12PipelineState::StencilKeep;
+    sps.stencilPassOp = QSGD3D12PipelineState::StencilIncr;
+
+    m_engine->queueSetStencilRef(stencilValue);
+
+    int clipIndex = elementIndex;
+    while (m_renderList.at(--clipIndex).node != clip) {
+        Q_ASSERT(clipIndex >= 0);
+    }
+    const Element &ce = m_renderList.at(clipIndex);
+    Q_ASSERT(ce.node == clip);
+
+    const QSGGeometry *g = clip->geometry();
+    Q_ASSERT(g->attributeCount() == 1);
+    Q_ASSERT(g->attributes()[0].tupleSize == 2);
+    Q_ASSERT(g->attributes()[0].type == GL_FLOAT);
+
+    setInputLayout(g, &sps);
+    m_engine->setPipelineState(sps);
+
+    Q_ASSERT(ce.cboSize > 0);
+    quint8 *p = m_cboData.data() + ce.cboOffset;
+    memcpy(p, m.constData(), 16 * sizeof(float));
+    m_engine->markConstantBufferDirty(ce.cboOffset, ce.cboSize);
+
+    queueDrawCall(g, ce);
+
+    ++stencilValue;
 }
 
 QT_END_NAMESPACE

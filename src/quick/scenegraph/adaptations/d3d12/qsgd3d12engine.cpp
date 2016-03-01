@@ -311,9 +311,14 @@ void QSGD3D12Engine::queueClearRenderTarget(const QColor &color)
     d->queueClearRenderTarget(color);
 }
 
-void QSGD3D12Engine::queueClearDepthStencil(float depthValue, quint8 stencilValue)
+void QSGD3D12Engine::queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which)
 {
-    d->queueClearDepthStencil(depthValue, stencilValue);
+    d->queueClearDepthStencil(depthValue, stencilValue, which);
+}
+
+void QSGD3D12Engine::queueSetStencilRef(quint32 ref)
+{
+    d->queueSetStencilRef(ref);
 }
 
 void QSGD3D12Engine::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
@@ -537,7 +542,7 @@ DXGI_SAMPLE_DESC QSGD3D12EnginePrivate::makeSampleDesc(DXGI_FORMAT format, int s
 ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples)
 {
     D3D12_CLEAR_VALUE depthClearValue = {};
-    depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+    depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depthClearValue.DepthStencil.Depth = 1.0f;
     depthClearValue.DepthStencil.Stencil = 0;
 
@@ -550,7 +555,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_H
     bufDesc.Height = size.height();
     bufDesc.DepthOrArraySize = 1;
     bufDesc.MipLevels = 1;
-    bufDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    bufDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     bufDesc.SampleDesc = makeSampleDesc(bufDesc.Format, samples);
     bufDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     bufDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
@@ -563,7 +568,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_H
     }
 
     D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-    depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depthStencilDesc.ViewDimension = bufDesc.SampleDesc.Count <= 1 ? D3D12_DSV_DIMENSION_TEXTURE2D : D3D12_DSV_DIMENSION_TEXTURE2DMS;
 
     device->CreateDepthStencilView(resource, &depthStencilDesc, viewHandle);
@@ -717,6 +722,9 @@ void QSGD3D12EnginePrivate::beginFrame()
     commandList->Reset(commandAllocator.Get(), nullptr);
 
     transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    m_drawingMode = QSGGeometry::DrawingMode(-1);
+    m_indexBufferSet = false;
 }
 
 void QSGD3D12EnginePrivate::updateBuffer(StagingBufferRef *br, ID3D12Resource *r, const char *dbgstr)
@@ -842,12 +850,12 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
                 D3D12_BLEND_SRC_ALPHA, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
                 D3D12_BLEND_INV_DEST_ALPHA, D3D12_BLEND_ONE, D3D12_BLEND_OP_ADD,
                 D3D12_LOGIC_OP_NOOP,
-                D3D12_COLOR_WRITE_ENABLE_ALL
+                UINT8(pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0)
             };
             blendDesc.RenderTarget[0] = premulBlendDesc;
         } else {
             D3D12_RENDER_TARGET_BLEND_DESC noBlendDesc = {};
-            noBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            noBlendDesc.RenderTargetWriteMask = pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0;
             blendDesc.RenderTarget[0] = noBlendDesc;
         }
         psoDesc.BlendState = blendDesc;
@@ -855,13 +863,22 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
         psoDesc.DepthStencilState.DepthEnable = pipelineState.depthEnable;
         psoDesc.DepthStencilState.DepthWriteMask = pipelineState.depthWrite ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC(pipelineState.depthFunc);
+
         psoDesc.DepthStencilState.StencilEnable = pipelineState.stencilEnable;
-        // ### stencil stuff
+        psoDesc.DepthStencilState.StencilReadMask = psoDesc.DepthStencilState.StencilWriteMask = 0xFF;
+        D3D12_DEPTH_STENCILOP_DESC stencilOpDesc = {
+            D3D12_STENCIL_OP(pipelineState.stencilFailOp),
+            D3D12_STENCIL_OP(pipelineState.stencilDepthFailOp),
+            D3D12_STENCIL_OP(pipelineState.stencilPassOp),
+            D3D12_COMPARISON_FUNC(pipelineState.stencilFunc)
+        };
+        psoDesc.DepthStencilState.FrontFace = psoDesc.DepthStencilState.BackFace = stencilOpDesc;
+
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE(pipelineState.topologyType);
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
         psoDesc.SampleDesc.Count = 1;
 
         HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso));
@@ -905,13 +922,13 @@ void QSGD3D12EnginePrivate::markConstantBufferDirty(int offset, int size)
 
 void QSGD3D12EnginePrivate::queueViewport(const QRect &rect)
 {
-    const D3D12_VIEWPORT viewport = { 0, 0, float(rect.width()), float(rect.height()), 0, 1 };
+    const D3D12_VIEWPORT viewport = { float(rect.x()), float(rect.y()), float(rect.width()), float(rect.height()), 0, 1 };
     commandList->RSSetViewports(1, &viewport);
 }
 
 void QSGD3D12EnginePrivate::queueScissor(const QRect &rect)
 {
-    const D3D12_RECT scissorRect = { 0, 0, rect.width() - 1, rect.height() - 1 };
+    const D3D12_RECT scissorRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
     commandList->RSSetScissorRects(1, &scissorRect);
 }
 
@@ -928,9 +945,14 @@ void QSGD3D12EnginePrivate::queueClearRenderTarget(const QColor &color)
     commandList->ClearRenderTargetView(backBufferRTV(), clearColor, 0, nullptr);
 }
 
-void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 stencilValue)
+void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which)
 {
-    commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depthValue, stencilValue, 0, nullptr);
+    commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
+}
+
+void QSGD3D12EnginePrivate::queueSetStencilRef(quint32 ref)
+{
+    commandList->OMSetStencilRef(ref);
 }
 
 void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
@@ -997,33 +1019,37 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
 
     Q_ASSERT(indexBuffer || startIndexIndex < 0);
 
-    D3D_PRIMITIVE_TOPOLOGY topology;
-    switch (mode) {
-    case QSGGeometry::DrawPoints:
-        topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-        break;
-    case QSGGeometry::DrawLines:
-        topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-        break;
-    case QSGGeometry::DrawLineStrip:
-        topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-        break;
-    case QSGGeometry::DrawTriangles:
-        topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        break;
-    case QSGGeometry::DrawTriangleStrip:
-        topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-        break;
-    default:
-        qFatal("Unsupported drawing mode 0x%x", mode);
-        break;
+    if (mode != m_drawingMode) {
+        D3D_PRIMITIVE_TOPOLOGY topology;
+        switch (mode) {
+        case QSGGeometry::DrawPoints:
+            topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+            break;
+        case QSGGeometry::DrawLines:
+            topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+            break;
+        case QSGGeometry::DrawLineStrip:
+            topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+            break;
+        case QSGGeometry::DrawTriangles:
+            topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            break;
+        case QSGGeometry::DrawTriangleStrip:
+            topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+            break;
+        default:
+            qFatal("Unsupported drawing mode 0x%x", mode);
+            break;
+        }
+        commandList->IASetPrimitiveTopology(topology);
+        m_drawingMode = mode;
     }
 
-    commandList->IASetPrimitiveTopology(topology);
-
+    // must be set after the topology
     commandList->IASetVertexBuffers(0, 1, &vbv);
 
-    if (startIndexIndex >= 0) {
+    if (startIndexIndex >= 0 && !m_indexBufferSet) {
+        m_indexBufferSet = true;
         D3D12_INDEX_BUFFER_VIEW ibv;
         ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
         ibv.SizeInBytes = indexData.size;

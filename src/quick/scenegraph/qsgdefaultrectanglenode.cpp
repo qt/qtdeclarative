@@ -258,6 +258,9 @@ void QSGDefaultNoMaterialRectangleNode::setRadius(qreal radius)
 
 void QSGDefaultNoMaterialRectangleNode::setAntialiasing(bool antialiasing)
 {
+    if (!supportsAntialiasing())
+        return;
+
     if (antialiasing == m_antialiasing)
         return;
     m_antialiasing = antialiasing;

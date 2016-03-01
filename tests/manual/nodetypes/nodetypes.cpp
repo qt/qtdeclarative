@@ -47,6 +47,10 @@ int main(int argc, char **argv)
 
     QGuiApplication app(argc, argv);
 
+    qDebug("Available tests:");
+    qDebug("  [R] - Rectangles");
+    qDebug("\nPress S to stop the currently running test\n");
+
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.resize(1024, 768);

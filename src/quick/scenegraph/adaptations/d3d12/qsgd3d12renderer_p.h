@@ -73,6 +73,10 @@ private:
     void buildRenderList(QSGNode *node, QSGClipNode *clip);
     void renderElements();
     void renderElement(int elementIndex);
+    void setInputLayout(const QSGGeometry *g, QSGD3D12PipelineState *pipelineState);
+    void setupClipping(const QSGGeometryNode *gn, int elementIndex);
+    void setScissor(const QRect &r);
+    void renderStencilClip(const QSGClipNode *clip, int elementIndex, const QMatrix4x4 &m, quint32 &stencilValue);
 
     struct Element {
         QSGBasicGeometryNode *node = nullptr;
@@ -83,6 +87,8 @@ private:
         quint32 cboSize = 0;
         bool cboPrepared = false;
     };
+
+    void queueDrawCall(const QSGGeometry *g, const Element &e);
 
     QSet<QSGNode *> m_dirtyTransformNodes;
     QSet<QSGNode *> m_dirtyOpacityNodes;
@@ -100,6 +106,8 @@ private:
 
     typedef QHash<QSGNode *, QSGD3D12Material::RenderState::DirtyStates> NodeDirtyMap;
     NodeDirtyMap m_nodeDirtyMap;
+
+    QRect m_activeScissorRect;
 };
 
 QT_END_NAMESPACE
