@@ -47,7 +47,7 @@ Rectangle {
     width: 1000
     height: 700
 
-    property int listViewActive: 0
+    property alias currentIndex: root.currentIndex
 
     Rectangle {
         id: banner
@@ -66,7 +66,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: listViewActive = 1;
+                onClicked: root.currentIndex = 0;
             }
         }
 
@@ -108,11 +108,6 @@ Rectangle {
         focus: false
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
-        currentIndex: listViewActive == 0 ? 1 : 0
-        onCurrentIndexChanged: {
-            if (currentIndex == 1)
-                listViewActive = 0;
-        }
 
         StockModel {
             id: stock
@@ -120,7 +115,7 @@ Rectangle {
             stockName: listView.currentStockName
             onStockIdChanged: stock.updateStock();
             onDataReady: {
-                root.positionViewAtIndex(1, ListView.SnapPosition)
+                root.currentIndex = 1
                 stockView.update()
             }
         }

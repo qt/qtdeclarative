@@ -75,7 +75,7 @@ public:
 
 void QQmlBindPrivate::validate(QObject *binding) const
 {
-    if (!obj)
+    if (!obj || (when.isValid() && !when))
         return;
 
     if (!prop.isValid()) {
@@ -185,6 +185,8 @@ void QQmlBind::setWhen(bool v)
         return;
 
     d->when = v;
+    if (v && d->componentComplete)
+        d->validate(this);
     eval();
 }
 

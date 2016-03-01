@@ -1396,6 +1396,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->timer.start();
         d->maybeBeginDrag(currentTimestamp, event->posF());
         break;
+    case Qt::NoScrollPhase: // default phase with an ordinary wheel mouse
     case Qt::ScrollUpdate:
         if (d->scrollingPhase) {
             d->pressed = true;

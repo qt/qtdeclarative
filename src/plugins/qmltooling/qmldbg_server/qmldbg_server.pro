@@ -1,10 +1,6 @@
 TARGET = qmldbg_server
 QT = qml-private packetprotocol-private
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QQmlDebugServerFactory
-load(qt_plugin)
-
 SOURCES += \
     $$PWD/qqmldebugserver.cpp
 
@@ -19,3 +15,7 @@ INCLUDEPATH += $$PWD \
 
 OTHER_FILES += \
     qqmldebugserver.json
+
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QQmlDebugServerFactory
+load(qt_plugin)

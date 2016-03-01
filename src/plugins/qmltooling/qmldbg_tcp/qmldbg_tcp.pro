@@ -1,10 +1,6 @@
 TARGET = qmldbg_tcp
 QT = qml-private network
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QTcpServerConnectionFactory
-load(qt_plugin)
-
 SOURCES += \
     $$PWD/qtcpserverconnection.cpp
 
@@ -18,3 +14,7 @@ INCLUDEPATH += $$PWD \
 
 OTHER_FILES += \
     $$PWD/qtcpserverconnection.json
+
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QTcpServerConnectionFactory
+load(qt_plugin)

@@ -24,8 +24,6 @@ ANDROID_BUNDLED_FILES += \
     qml \
     lib/libQt5QuickParticles.so
 
-load(qt_module)
-
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
@@ -43,3 +41,5 @@ SOURCES += qtquick2.cpp
 
 # To make #include "qquickcontext2d_jsclass.cpp" work
 INCLUDEPATH += $$PWD
+
+load(qt_module)
