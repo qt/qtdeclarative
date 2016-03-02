@@ -676,4 +676,14 @@ void QQuickFontValueType::setWordSpacing(qreal size)
     v.setWordSpacing(size);
 }
 
+QQuickFontValueType::HintingPreference QQuickFontValueType::hintingPreference() const
+{
+    return QQuickFontValueType::HintingPreference(v.hintingPreference());
+}
+
+void QQuickFontValueType::setHintingPreference(QQuickFontValueType::HintingPreference hintingPreference)
+{
+    v.setHintingPreference(QFont::HintingPreference(hintingPreference));
+}
+
 QT_END_NAMESPACE

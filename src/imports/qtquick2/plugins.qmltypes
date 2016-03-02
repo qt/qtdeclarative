@@ -1730,6 +1730,15 @@ Module {
                 "Capitalize": 4
             }
         }
+        Enum {
+            name: "HintingPreference"
+            values: {
+                "PreferDefaultHinting": 0,
+                "PreferNoHinting": 1,
+                "PreferVerticalHinting": 2,
+                "PreferFullHinting": 3
+            }
+        }
         Property { name: "family"; type: "string" }
         Property { name: "styleName"; type: "string" }
         Property { name: "bold"; type: "bool" }
@@ -1743,6 +1752,7 @@ Module {
         Property { name: "capitalization"; type: "Capitalization" }
         Property { name: "letterSpacing"; type: "double" }
         Property { name: "wordSpacing"; type: "double" }
+        Property { name: "hintingPreference"; type: "HintingPreference" }
         Method { name: "toString"; type: "string" }
     }
     Component {
