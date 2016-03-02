@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.2
-import QtQuick.Window 2.2
+//import QtQuick.Window 2.2
 import QtTest 1.0
 import Qt.labs.controls 1.0
 
@@ -47,8 +47,8 @@ TestCase {
     id: testCase
     width: 200
     height: 200
-    visible: true
-    when: windowShown
+//    visible: true
+//    when: windowShown
     name: "ComboBox"
 
     ApplicationWindow {
@@ -325,7 +325,7 @@ TestCase {
 
     function test_arrowKeys_data() {
         return [
-            { tag: "Window", window: testCase.Window.window },
+//            { tag: "Window", window: testCase.Window.window },
             { tag: "ApplicationWindow", window: applicationWindow }
         ]
     }
@@ -464,14 +464,14 @@ TestCase {
 
     function test_keys_data() {
         return [
-            { tag: "Window: space-space", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "Window: space-enter", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "Window: space-return", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "Window: space-escape", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
-            { tag: "Window: space-0", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
-            { tag: "Window: enter-enter", window: testCase.Window.window, key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
-            { tag: "Window: return-return", window: testCase.Window.window, key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
-            { tag: "Window: escape-escape", window: testCase.Window.window, key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+//            { tag: "Window: space-space", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-enter", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-return", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-escape", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
+//            { tag: "Window: space-0", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
+//            { tag: "Window: enter-enter", window: testCase.Window.window, key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+//            { tag: "Window: return-return", window: testCase.Window.window, key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+//            { tag: "Window: escape-escape", window: testCase.Window.window, key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
 
             { tag: "ApplicationWindow: space-space", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
             { tag: "ApplicationWindow: space-enter", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
@@ -520,7 +520,7 @@ TestCase {
 
     function test_popup_data() {
         return [
-            { tag: "Window", window: testCase.Window.window },
+//            { tag: "Window", window: testCase.Window.window },
             { tag: "ApplicationWindow", window: applicationWindow }
         ]
     }
@@ -558,7 +558,7 @@ TestCase {
 
     function test_mouse_data() {
         return [
-            { tag: "Window", window: testCase.Window.window },
+//            { tag: "Window", window: testCase.Window.window },
             { tag: "ApplicationWindow", window: applicationWindow }
         ]
     }
@@ -611,7 +611,7 @@ TestCase {
 
     function test_focus_data() {
         return [
-            { tag: "Window", window: testCase.Window.window },
+//            { tag: "Window", window: testCase.Window.window },
             { tag: "ApplicationWindow", window: applicationWindow }
         ]
     }
@@ -720,7 +720,7 @@ TestCase {
     }
 
     function test_font() { // QTBUG_50984
-        var control = component.createObject(testCase)
+        var control = component.createObject(applicationWindow.contentItem)
         verify(control)
         verify(control.button)
         verify(control.combobox)
