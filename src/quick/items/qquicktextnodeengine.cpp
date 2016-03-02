@@ -731,10 +731,13 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
             QVector<QPointF> glyphPositions = glyphRun.positions();
             glyphPositions.reserve(count);
 
+            QRectF glyphBoundingRect = glyphRun.boundingRect();
+
             for (int j = 1; j < nodes.size(); ++j) {
                 BinaryTreeNode *otherNode = nodes.at(j);
                 glyphIndexes += otherNode->glyphRun.glyphIndexes();
                 primaryNode->ranges += otherNode->ranges;
+                glyphBoundingRect = glyphBoundingRect.united(otherNode->glyphRun.boundingRect());
 
                 QVector<QPointF> otherPositions = otherNode->glyphRun.positions();
                 for (int k = 0; k < otherPositions.size(); ++k)
@@ -746,6 +749,7 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
 
             glyphRun.setGlyphIndexes(glyphIndexes);
             glyphRun.setPositions(glyphPositions);
+            glyphRun.setBoundingRect(glyphBoundingRect);
         }
     }
 }
