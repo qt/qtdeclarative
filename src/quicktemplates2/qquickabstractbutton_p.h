@@ -63,7 +63,6 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickAbstractButton : public QQuickControl
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
-    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
@@ -114,7 +113,6 @@ Q_SIGNALS:
     void checkedChanged();
     void highlightedChanged();
     void autoExclusiveChanged();
-    void autoRepeatChanged();
     void indicatorChanged();
 
 protected:
@@ -134,6 +132,7 @@ protected:
     virtual void nextCheckState();
 
     virtual void checkableChange();
+    virtual void autoRepeatChange();
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;

@@ -56,15 +56,18 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
+    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
 
 public:
     explicit QQuickButton(QQuickItem *parent = nullptr);
 
 Q_SIGNALS:
     void checkableChanged();
+    void autoRepeatChanged();
 
 protected:
     void checkableChange() override;
+    void autoRepeatChange() override;
 
     QFont defaultFont() const override;
 };

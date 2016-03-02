@@ -427,14 +427,6 @@ void QQuickAbstractButton::setAutoExclusive(bool exclusive)
     emit autoExclusiveChanged();
 }
 
-/*!
-    \qmlproperty bool QtQuick.Controls::AbstractButton::autoRepeat
-
-    This property holds whether the button repeats pressed(), released()
-    and clicked() signals while the button is pressed and held down.
-
-    The default value is \c false.
-*/
 bool QQuickAbstractButton::autoRepeat() const
 {
     Q_D(const QQuickAbstractButton);
@@ -449,7 +441,7 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 
     d->stopPressRepeat();
     d->autoRepeat = repeat;
-    emit autoRepeatChanged();
+    autoRepeatChange();
 }
 
 /*!
@@ -641,6 +633,10 @@ void QQuickAbstractButton::nextCheckState()
 }
 
 void QQuickAbstractButton::checkableChange()
+{
+}
+
+void QQuickAbstractButton::autoRepeatChange()
 {
 }
 

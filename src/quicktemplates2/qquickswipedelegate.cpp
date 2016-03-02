@@ -562,9 +562,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
 {
     Q_Q(QQuickSwipeDelegate);
 
-    if (autoRepeat) {
-        stopPressRepeat();
-    } else if (holdTimer > 0) {
+    if (holdTimer > 0) {
         if (QLineF(pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance())
             stopPressAndHold();
     }

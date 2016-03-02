@@ -105,6 +105,20 @@ void QQuickButton::checkableChange()
     emit checkableChanged();
 }
 
+/*!
+    \qmlproperty bool QtQuick.Controls::Button::autoRepeat
+
+    This property holds whether the button repeats pressed(), released()
+    and clicked() signals while the button is pressed and held down.
+
+    The default value is \c false.
+*/
+
+void QQuickButton::autoRepeatChange()
+{
+    emit autoRepeatChanged();
+}
+
 QFont QQuickButton::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
