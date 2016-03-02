@@ -179,6 +179,7 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
     qmlRegisterType<QQmlBind>(uri, versionMajor, versionMinor,"Binding");
+    qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
     qmlRegisterType<QQmlConnections,1>(uri, versionMajor, (versionMinor < 3 ? 3 : versionMinor), "Connections"); //Only available in >=2.3
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");

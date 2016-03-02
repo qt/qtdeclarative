@@ -68,6 +68,7 @@ class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSourc
     Q_PROPERTY(QString property READ property WRITE setProperty)
     Q_PROPERTY(QVariant value READ value WRITE setValue)
     Q_PROPERTY(bool when READ when WRITE setWhen)
+    Q_PROPERTY(bool delayed READ delayed WRITE setDelayed REVISION 8)
 
 public:
     QQmlBind(QObject *parent=0);
@@ -85,12 +86,16 @@ public:
     QVariant value() const;
     void setValue(const QVariant &);
 
+    bool delayed() const;
+    void setDelayed(bool);
+
 protected:
     virtual void setTarget(const QQmlProperty &);
     virtual void classBegin();
     virtual void componentComplete();
 
 private:
+    void prepareEval();
     void eval();
 };
 

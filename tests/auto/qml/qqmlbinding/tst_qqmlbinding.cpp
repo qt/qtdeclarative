@@ -49,6 +49,7 @@ private slots:
     void warningOnReadOnlyProperty();
     void disabledOnUnknownProperty();
     void disabledOnReadonlyProperty();
+    void delayed();
 
 private:
     QQmlEngine engine;
@@ -279,6 +280,27 @@ void tst_qqmlbinding::disabledOnReadonlyProperty()
     delete item;
 
     QCOMPARE(messageHandler.messages().count(), 0);
+}
+
+void tst_qqmlbinding::delayed()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("delayed.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+
+    QVERIFY(item != 0);
+    // update on creation
+    QCOMPARE(item->property("changeCount").toInt(), 1);
+
+    QMetaObject::invokeMethod(item, "updateText");
+    // doesn't update immediately
+    QCOMPARE(item->property("changeCount").toInt(), 1);
+
+    QCoreApplication::processEvents();
+    // only updates once (non-delayed would update twice)
+    QCOMPARE(item->property("changeCount").toInt(), 2);
+
+    delete item;
 }
 
 QTEST_MAIN(tst_qqmlbinding)
