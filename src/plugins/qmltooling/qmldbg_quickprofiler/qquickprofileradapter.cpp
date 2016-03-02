@@ -153,7 +153,7 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
 qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     while (next < m_data.size()) {
-        if (m_data[next].time <= until)
+        if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
             qQuickProfilerDataToByteArrays(m_data[next++], messages);
         else
             return m_data[next].time;

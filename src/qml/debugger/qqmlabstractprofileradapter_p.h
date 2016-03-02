@@ -64,6 +64,8 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public 
     Q_OBJECT
 
 public:
+    static const int s_numMessagesPerBatch = 1000;
+
     QQmlAbstractProfilerAdapter(QObject *parent = 0) :
         QObject(parent), service(0), waiting(true), featuresEnabled(0) {}
     virtual ~QQmlAbstractProfilerAdapter() {}

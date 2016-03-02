@@ -105,7 +105,7 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
         while (!m_stack.isEmpty() &&
                (m_functionCallPos == m_functionCallData.length() ||
                 m_stack.top() <= m_functionCallData[m_functionCallPos].start)) {
-            if (m_stack.top() > until)
+            if (m_stack.top() > until || messages.length() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, m_stack.top());
 
             appendMemoryEvents(m_stack.top(), messages);
@@ -117,7 +117,7 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
                (m_stack.empty() || m_functionCallData[m_functionCallPos].start < m_stack.top())) {
             const QV4::Profiling::FunctionCallProperties &props =
                     m_functionCallData[m_functionCallPos];
-            if (props.start > until)
+            if (props.start > until || messages.length() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, props.start);
 
             appendMemoryEvents(props.start, messages);

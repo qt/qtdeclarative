@@ -107,7 +107,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
 qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     while (next != data.length()) {
-        if (data[next].time > until)
+        if (data[next].time > until || messages.length() > s_numMessagesPerBatch)
             return data[next].time;
         qQmlProfilerDataToByteArrays(&(data[next++]), messages);
     }
