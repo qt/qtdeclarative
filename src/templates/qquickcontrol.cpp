@@ -65,8 +65,11 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \brief The base type of user interface controls.
 
-    Control is the base type of user interface controls.
+    Control is the base type of user interface controls.  It receives input
+    events from the window system, and paints a representation of itself on
+    the screen.
 
+    \image qtlabscontrols-control.png
     \labs
 */
 
@@ -626,6 +629,14 @@ void QQuickControl::resetSpacing()
     \qmlproperty Locale Qt.labs.controls::Control::locale
 
     This property holds the locale of the control.
+    It contains locale specific properties for formatting data and numbers.
+    Unless a special locale has been set, this is either the parent's locale
+    or the default locale.
+
+    Control propagates explicit locale properties from parent to children.
+    If you change a specific property on a control's locale, that property
+    propagates to all of the control's children, overriding any system defaults
+    for that property.
 
     \sa mirrored, {LayoutMirroring}{LayoutMirroring}
 */
