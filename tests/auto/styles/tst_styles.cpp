@@ -62,6 +62,8 @@ int main(int argc, char *argv[])
 
         process.start(argv[0], app.arguments().mid(1));
         process.waitForFinished();
+        if (process.exitStatus() != QProcess::NormalExit)
+            return -1;
 
         failures += process.exitCode();
     }
