@@ -375,7 +375,7 @@ void ImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
 
 void ImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
-    bool smooth = (filtering == QSGTexture::Nearest);
+    bool smooth = (filtering == QSGTexture::Linear);
     if (smooth == m_smooth)
         return;
 
