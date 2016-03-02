@@ -5,6 +5,11 @@
 /lib
 /mkspecs
 
+/examples/controls/chattutorial/chapter1-settingup/chapter1-settingup
+/examples/controls/chattutorial/chapter2-lists/chapter2-lists
+/examples/controls/chattutorial/chapter3-navigation/chapter3-navigation
+/examples/controls/chattutorial/chapter4-models/chapter4-models
+/examples/controls/chattutorial/chapter5-styling/chapter5-styling
 /examples/controls/gallery/gallery
 
 /tests/auto/accessibility/tst_accessibility
