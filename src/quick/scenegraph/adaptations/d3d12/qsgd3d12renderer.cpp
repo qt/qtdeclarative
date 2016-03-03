@@ -439,8 +439,10 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     const QSGGeometry *g = gn->geometry();
     QSGD3D12Material *m = static_cast<QSGD3D12Material *>(gn->activeMaterial());
 
-    if (m->type() != m_lastMaterialType)
+    if (m->type() != m_lastMaterialType) {
+        m_pipelineState.shaders.rootSig.textureViews.clear();
         m->preparePipeline(&m_pipelineState.shaders);
+    }
 
     QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
 
@@ -466,9 +468,6 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     QSGD3D12Material::UpdateResults updRes = m->updatePipeline(QSGD3D12Material::makeRenderState(this, dirtyState),
                                                                &m_pipelineState.shaders,
                                                                cboPtr);
-    // For now there is no way to have extra SRVs and such. Once texturing is
-    // introduced, the above update call will have to be able to affect the
-    // root signature and communicate the need for SRVs or UAVs to the engine.
 
     if (updRes.testFlag(QSGD3D12Material::UpdatedConstantBuffer))
         m_engine->markConstantBufferDirty(e.cboOffset, e.cboSize);
@@ -500,10 +499,12 @@ void QSGD3D12Renderer::setInputLayout(const QSGGeometry *g, QSGD3D12PipelineStat
     quint32 offset = 0;
     for (int i = 0; i < g->attributeCount(); ++i) {
         QSGD3D12InputElement &ie(pipelineState->inputElements[i]);
-        static const char *semanticNames[] = { "UNKNOWN", "POSITION", "COLOR", "TEXCOORD" };
+        static const char *semanticNames[] = { "UNKNOWN", "POSITION", "COLOR", "TEXCOORD", "TEXCOORD", "TEXCOORD" };
+        static const int semanticIndices[] = { 0, 0, 0, 0, 1, 2 };
         Q_ASSERT(attrs[i].semantic >= 1 && attrs[i].semantic < _countof(semanticNames));
         const int tupleSize = attrs[i].tupleSize;
-        ie.name = semanticNames[attrs[i].semantic];
+        ie.semanticName = semanticNames[attrs[i].semantic];
+        ie.semanticIndex = semanticIndices[attrs[i].semantic];
         ie.offset = offset;
         int bytesPerTuple = 0;
         ie.format = QSGD3D12Engine::toDXGIFormat(QSGGeometry::Type(attrs[i].type), tupleSize, &bytesPerTuple);
@@ -522,11 +523,13 @@ void QSGD3D12Renderer::queueDrawCall(const QSGGeometry *g, const QSGD3D12Rendere
         const QSGD3D12Format indexFormat = QSGD3D12Engine::toDXGIFormat(indexType);
         if (indexFormat == FmtUnknown)
             qFatal("QSGD3D12Renderer: unsupported index type 0x%x", indexType);
-        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->indexCount(), e.vboOffset, g->sizeOfVertex(),
+        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->indexCount(),
+                            e.vboOffset, g->vertexCount() * g->sizeOfVertex(), g->sizeOfVertex(),
                             e.cboOffset,
                             e.iboOffset / e.iboStride, indexFormat);
     } else {
-        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->vertexCount(), e.vboOffset, g->sizeOfVertex(),
+        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->vertexCount(),
+                            e.vboOffset, g->vertexCount() * g->sizeOfVertex(), g->sizeOfVertex(),
                             e.cboOffset);
     }
 }

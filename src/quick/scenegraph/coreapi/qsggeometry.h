@@ -58,7 +58,9 @@ public:
             UNKNOWN,
             POSITION,
             COLOR,
-            TEXCOORD
+            TEXCOORD,
+            TEXCOORD1,
+            TEXCOORD2
         };
 
         int position;

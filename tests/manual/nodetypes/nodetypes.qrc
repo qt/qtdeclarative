@@ -3,5 +3,8 @@
         <file>main.qml</file>
         <file>Rects.qml</file>
         <file>LotsOfRects.qml</file>
+        <file>Images.qml</file>
+        <file>qt.png</file>
+        <file>face-smile.png</file>
     </qresource>
 </RCC>

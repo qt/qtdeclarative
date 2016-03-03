@@ -37,38 +37,52 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12renderer_p.h"
-#include "qsgd3d12texture_p.h"
+#ifndef QSGD3D12TEXTURE_P_H
+#define QSGD3D12TEXTURE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <qsgtexture.h>
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
-    : QSGRenderContext(ctx)
-{
-}
+class QSGD3D12Engine;
 
-void QSGD3D12RenderContext::initialize(QOpenGLContext *)
+class QSGD3D12Texture : public QSGTexture
 {
-    Q_UNREACHABLE();
-}
+public:
+    QSGD3D12Texture(QSGD3D12Engine *engine) : m_engine(engine) { }
+    ~QSGD3D12Texture();
 
-QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags) const
-{
-    Q_ASSERT(m_engine);
-    QSGD3D12Texture *t = new QSGD3D12Texture(m_engine);
-    t->setImage(image, flags);
-    return t;
-}
+    void setImage(const QImage &image, uint flags);
 
-QSGRenderer *QSGD3D12RenderContext::createRenderer()
-{
-    return new QSGD3D12Renderer(this);
-}
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    QRectF normalizedTextureSubRect() const override;
+    bool isAtlasTexture() const override;
+    QSGTexture *removedFromAtlas() const override;
+    void bind() override;
 
-void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
-{
-    QSGRenderContext::renderNextFrame(renderer, fbo);
-}
+    SIZE_T srv() const;
+
+private:
+    QSGD3D12Engine *m_engine;
+    uint m_id = 0;
+    bool m_alphaWanted = false;
+    QSize m_size;
+};
 
 QT_END_NAMESPACE
+
+#endif

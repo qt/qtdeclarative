@@ -40,6 +40,7 @@
 #include "qsgd3d12context_p.h"
 #include "qsgd3d12rendercontext_p.h"
 #include "qsgd3d12rectanglenode_p.h"
+#include "qsgd3d12imagenode_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -55,8 +56,7 @@ QSGRectangleNode *QSGD3D12Context::createRectangleNode()
 
 QSGImageNode *QSGD3D12Context::createImageNode()
 {
-    Q_UNREACHABLE();
-    return nullptr;
+    return new QSGD3D12ImageNode;
 }
 
 QSGPainterNode *QSGD3D12Context::createPainterNode(QQuickPaintedItem *item)

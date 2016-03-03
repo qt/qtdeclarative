@@ -37,38 +37,88 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12renderer_p.h"
 #include "qsgd3d12texture_p.h"
+#include "qsgd3d12engine_p.h"
+#include <private/qsgcontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
-    : QSGRenderContext(ctx)
+void QSGD3D12Texture::setImage(const QImage &image, uint flags)
 {
+    // ### mipmap, atlas
+
+    const bool alphaRequest = flags & QSGRenderContext::CreateTexture_Alpha;
+    m_alphaWanted = alphaRequest && image.hasAlphaChannel();
+
+    m_size = image.size();
+
+    QSGD3D12Engine::TextureCreateFlags createFlags = 0;
+    if (m_alphaWanted)
+        createFlags |= QSGD3D12Engine::CreateWithAlpha;
+
+    m_id = m_engine->createTexture(image.format(), image.size(), createFlags);
+    if (!m_id) {
+        qWarning("Failed to allocate texture of size %dx%d", image.width(), image.height());
+        return;
+    }
+
+    QSGD3D12Engine::TextureUploadFlags uploadFlags = 0;
+    m_engine->queueTextureUpload(m_id, image, uploadFlags);
 }
 
-void QSGD3D12RenderContext::initialize(QOpenGLContext *)
+QSGD3D12Texture::~QSGD3D12Texture()
 {
-    Q_UNREACHABLE();
+    if (m_id)
+        m_engine->releaseTexture(m_id);
 }
 
-QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags) const
+int QSGD3D12Texture::textureId() const
 {
-    Q_ASSERT(m_engine);
-    QSGD3D12Texture *t = new QSGD3D12Texture(m_engine);
-    t->setImage(image, flags);
-    return t;
+    return m_id;
 }
 
-QSGRenderer *QSGD3D12RenderContext::createRenderer()
+QSize QSGD3D12Texture::textureSize() const
 {
-    return new QSGD3D12Renderer(this);
+    return m_size;
 }
 
-void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
+bool QSGD3D12Texture::hasAlphaChannel() const
 {
-    QSGRenderContext::renderNextFrame(renderer, fbo);
+    return m_alphaWanted;
+}
+
+bool QSGD3D12Texture::hasMipmaps() const
+{
+    return false; // ###
+}
+
+QRectF QSGD3D12Texture::normalizedTextureSubRect() const
+{
+    return QRectF(0, 0, 1, 1);
+}
+
+bool QSGD3D12Texture::isAtlasTexture() const
+{
+    return false; // ###
+}
+
+QSGTexture *QSGD3D12Texture::removedFromAtlas() const
+{
+    return nullptr; // ###
+}
+
+void QSGD3D12Texture::bind()
+{
+    // Called when the texture material updates the pipeline state. Here we
+    // know that the texture is going to be used in the current frame. Notify
+    // the engine so that it can wait for possible pending uploads in endFrame().
+    m_engine->addFrameTextureDep(m_id);
+}
+
+SIZE_T QSGD3D12Texture::srv() const
+{
+    Q_ASSERT(m_id);
+    return m_engine->textureSRV(m_id);
 }
 
 QT_END_NAMESPACE

@@ -28,9 +28,20 @@ smoothcolor_pshader.header = ps_smoothcolor.hlslh
 smoothcolor_pshader.entry = PS_SmoothColor
 smoothcolor_pshader.type = ps_5_0
 
+texture_VSPS = $$PWD/texture.hlsl
+texture_vshader.input = texture_VSPS
+texture_vshader.header = vs_texture.hlslh
+texture_vshader.entry = VS_Texture
+texture_vshader.type = vs_5_0
+texture_pshader.input = texture_VSPS
+texture_pshader.header = ps_texture.hlslh
+texture_pshader.entry = PS_Texture
+texture_pshader.type = ps_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
-    smoothcolor_vshader smoothcolor_pshader
+    smoothcolor_vshader smoothcolor_pshader \
+    texture_vshader texture_pshader
 
 load(hlsl_bytecode_header)

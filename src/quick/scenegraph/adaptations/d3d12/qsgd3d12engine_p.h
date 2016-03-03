@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 class QSGD3D12EnginePrivate;
 
 // Shader bytecode and other strings are expected to be static so that a
-// different pointer == different shader.
+// different pointer means a different shader.
 
 enum QSGD3D12Format {
     FmtUnknown = 0,
@@ -84,26 +84,69 @@ enum QSGD3D12Format {
 
 struct QSGD3D12InputElement
 {
-    QSGD3D12InputElement() { }
-    QSGD3D12InputElement(const char *name, QSGD3D12Format format, quint32 slot, quint32 offset)
-        : name(name), format(format), slot(slot), offset(offset) { }
-
-    const char *name = nullptr;
+    const char *semanticName = nullptr;
+    int semanticIndex = 0;
     QSGD3D12Format format = FmtFloat4;
     quint32 slot = 0;
     quint32 offset = 0;
 
     bool operator==(const QSGD3D12InputElement &other) const {
-        return name == other.name && format == other.format
-                && slot == other.slot && offset == other.offset;
+        return semanticName == other.semanticName && semanticIndex == other.semanticIndex
+                && format == other.format && slot == other.slot && offset == other.offset;
     }
 };
 
 inline uint qHash(const QSGD3D12InputElement &key, uint seed = 0)
 {
-    return qHash(key.name, seed) + key.format + key.offset;
+    return qHash(key.semanticName, seed) + key.semanticIndex + key.format + key.offset;
 }
 
+struct QSGD3D12TextureView
+{
+    enum Filter {
+        FilterNearest = 0,
+        FilterLinear = 0x15,
+        FilterMinMagNearestMipLinear = 0x1,
+        FilterMinMagLinearMipNearest = 0x14
+    };
+
+    enum AddressMode {
+        AddressWrap = 1,
+        AddressClamp = 3
+    };
+
+    Filter filter = FilterLinear;
+    AddressMode addressModeHoriz = AddressClamp;
+    AddressMode addressModeVert = AddressClamp;
+
+    bool operator==(const QSGD3D12TextureView &other) const {
+        return filter == other.filter
+                && addressModeHoriz == other.addressModeHoriz
+                && addressModeVert == other.addressModeVert;
+    }
+};
+
+inline uint qHash(const QSGD3D12TextureView &key, uint seed = 0)
+{
+    Q_UNUSED(seed);
+    return key.filter + key.addressModeHoriz + key.addressModeVert;
+}
+
+struct QSGD3D12RootSignature
+{
+    QVector<QSGD3D12TextureView> textureViews;
+
+    bool operator==(const QSGD3D12RootSignature &other) const {
+        return textureViews == other.textureViews;
+    }
+};
+
+inline uint qHash(const QSGD3D12RootSignature &key, uint seed = 0)
+{
+    return qHash(key.textureViews, seed);
+}
+
+// Shader bytecode blobs and root signature-related data.
 struct QSGD3D12ShaderState
 {
     const quint8 *vs = nullptr;
@@ -111,15 +154,18 @@ struct QSGD3D12ShaderState
     const quint8 *ps = nullptr;
     quint32 psSize = 0;
 
+    QSGD3D12RootSignature rootSig;
+
     bool operator==(const QSGD3D12ShaderState &other) const {
         return vs == other.vs && vsSize == other.vsSize
-                && ps == other.ps && psSize == other.psSize;
+                && ps == other.ps && psSize == other.psSize
+                && rootSig == other.rootSig;
     }
 };
 
 inline uint qHash(const QSGD3D12ShaderState &key, uint seed = 0)
 {
-    return qHash(key.vs, seed) + key.vsSize + qHash(key.ps, seed) + key.psSize;
+    return qHash(key.vs, seed) + key.vsSize + qHash(key.ps, seed) + key.psSize + qHash(key.rootSig, seed);
 }
 
 struct QSGD3D12PipelineState
@@ -237,7 +283,8 @@ public:
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which);
     void queueSetStencilRef(quint32 ref);
 
-    void queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
+    void queueDraw(QSGGeometry::DrawingMode mode, int count,
+                   int vboOffset, int vboSize, int vboStride,
                    int cboOffset,
                    int startIndexIndex = -1, QSGD3D12Format indexFormat = FmtUnsignedShort);
 
@@ -247,12 +294,31 @@ public:
     static quint32 alignedConstantBufferSize(quint32 size);
     static QSGD3D12Format toDXGIFormat(QSGGeometry::Type sgtype, int tupleSize = 1, int *size = nullptr);
 
+    enum TextureCreateFlag {
+        CreateWithAlpha = 0x1,
+        CreateWithMipMaps = 0x2
+    };
+    Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
+
+    enum TextureUploadFlag {
+        UploadWithMipMaps = 0x1
+    };
+    Q_DECLARE_FLAGS(TextureUploadFlags, TextureUploadFlag)
+
+    uint createTexture(QImage::Format format, const QSize &size, TextureCreateFlags flags);
+    void releaseTexture(uint id);
+    SIZE_T textureSRV(uint id) const;
+    void queueTextureUpload(uint id, const QImage &image, TextureUploadFlags flags);
+    void addFrameTextureDep(uint id);
+
 private:
     QSGD3D12EnginePrivate *d;
     Q_DISABLE_COPY(QSGD3D12Engine)
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::ClearFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureCreateFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureUploadFlags)
 
 QT_END_NAMESPACE
 

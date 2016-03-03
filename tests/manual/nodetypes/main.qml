@@ -56,5 +56,8 @@ Item {
             loader.source = "qrc:/Rects.qml";
         if (event.key === Qt.Key_4)
             loader.source = "qrc:/LotsOfRects.qml";
+
+        if (event.key === Qt.Key_I)
+            loader.source = "qrc:/Images.qml";
     }
 }

@@ -61,10 +61,10 @@ namespace
     const QSGGeometry::AttributeSet &smoothAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
-            QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
-            QSGGeometry::Attribute::create(1, 2, GL_FLOAT, false),
-            QSGGeometry::Attribute::create(2, 2, GL_FLOAT, false),
-            QSGGeometry::Attribute::create(3, 2, GL_FLOAT, false)
+            QSGGeometry::Attribute::createWithSemantic(0, 2, GL_FLOAT, QSGGeometry::Attribute::POSITION),
+            QSGGeometry::Attribute::createWithSemantic(1, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD),
+            QSGGeometry::Attribute::createWithSemantic(2, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD1),
+            QSGGeometry::Attribute::createWithSemantic(3, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD2)
         };
         static QSGGeometry::AttributeSet attrs = { 4, sizeof(SmoothVertex), data };
         return attrs;
@@ -143,7 +143,7 @@ void SmoothTextureMaterialShader::initialize()
     QSGTextureMaterialShader::initialize();
 }
 
-QSGDefaultImageNode::QSGDefaultImageNode()
+QSGDefaultNoMaterialImageNode::QSGDefaultNoMaterialImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
     , m_antialiasing(false)
@@ -151,8 +151,6 @@ QSGDefaultImageNode::QSGDefaultImageNode()
     , m_dirtyGeometry(false)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
 {
-    setMaterial(&m_materialO);
-    setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
 
 #ifdef QSG_RUNTIME_DESCRIPTION
@@ -160,7 +158,7 @@ QSGDefaultImageNode::QSGDefaultImageNode()
 #endif
 }
 
-void QSGDefaultImageNode::setTargetRect(const QRectF &rect)
+void QSGDefaultNoMaterialImageNode::setTargetRect(const QRectF &rect)
 {
     if (rect == m_targetRect)
         return;
@@ -168,7 +166,7 @@ void QSGDefaultImageNode::setTargetRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setInnerTargetRect(const QRectF &rect)
+void QSGDefaultNoMaterialImageNode::setInnerTargetRect(const QRectF &rect)
 {
     if (rect == m_innerTargetRect)
         return;
@@ -176,7 +174,7 @@ void QSGDefaultImageNode::setInnerTargetRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setInnerSourceRect(const QRectF &rect)
+void QSGDefaultNoMaterialImageNode::setInnerSourceRect(const QRectF &rect)
 {
     if (rect == m_innerSourceRect)
         return;
@@ -184,7 +182,7 @@ void QSGDefaultImageNode::setInnerSourceRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setSubSourceRect(const QRectF &rect)
+void QSGDefaultNoMaterialImageNode::setSubSourceRect(const QRectF &rect)
 {
     if (rect == m_subSourceRect)
         return;
@@ -192,60 +190,12 @@ void QSGDefaultImageNode::setSubSourceRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setFiltering(QSGTexture::Filtering filtering)
-{
-    if (m_material.filtering() == filtering)
-        return;
-
-    m_material.setFiltering(filtering);
-    m_materialO.setFiltering(filtering);
-    m_smoothMaterial.setFiltering(filtering);
-    markDirty(DirtyMaterial);
-}
-
-
-void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
-{
-    if (m_material.mipmapFiltering() == filtering)
-        return;
-
-    m_material.setMipmapFiltering(filtering);
-    m_materialO.setMipmapFiltering(filtering);
-    m_smoothMaterial.setMipmapFiltering(filtering);
-    markDirty(DirtyMaterial);
-}
-
-void QSGDefaultImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
-{
-    if (m_material.verticalWrapMode() == wrapMode)
-        return;
-
-    m_material.setVerticalWrapMode(wrapMode);
-    m_materialO.setVerticalWrapMode(wrapMode);
-    m_smoothMaterial.setVerticalWrapMode(wrapMode);
-    markDirty(DirtyMaterial);
-}
-
-void QSGDefaultImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
-{
-    if (m_material.horizontalWrapMode() == wrapMode)
-        return;
-
-    m_material.setHorizontalWrapMode(wrapMode);
-    m_materialO.setHorizontalWrapMode(wrapMode);
-    m_smoothMaterial.setHorizontalWrapMode(wrapMode);
-    markDirty(DirtyMaterial);
-}
-
-
-void QSGDefaultImageNode::setTexture(QSGTexture *texture)
+void QSGDefaultNoMaterialImageNode::setTexture(QSGTexture *texture)
 {
     Q_ASSERT(texture);
 
-    m_material.setTexture(texture);
-    m_materialO.setTexture(texture);
-    m_smoothMaterial.setTexture(texture);
-    m_material.setFlag(QSGMaterial::Blending, texture->hasAlphaChannel());
+    setMaterialTexture(texture);
+    updateMaterialBlending();
 
     markDirty(DirtyMaterial);
 
@@ -253,26 +203,23 @@ void QSGDefaultImageNode::setTexture(QSGTexture *texture)
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setAntialiasing(bool antialiasing)
+void QSGDefaultNoMaterialImageNode::setAntialiasing(bool antialiasing)
 {
     if (antialiasing == m_antialiasing)
         return;
     m_antialiasing = antialiasing;
     if (m_antialiasing) {
-        setMaterial(&m_smoothMaterial);
-        setOpaqueMaterial(0);
         setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
         setFlag(OwnsGeometry, true);
     } else {
-        setMaterial(&m_materialO);
-        setOpaqueMaterial(&m_material);
         setGeometry(&m_geometry);
         setFlag(OwnsGeometry, false);
     }
+    updateMaterialAntialiasing();
     m_dirtyGeometry = true;
 }
 
-void QSGDefaultImageNode::setMirror(bool mirror)
+void QSGDefaultNoMaterialImageNode::setMirror(bool mirror)
 {
     if (mirror == m_mirror)
         return;
@@ -281,26 +228,24 @@ void QSGDefaultImageNode::setMirror(bool mirror)
 }
 
 
-void QSGDefaultImageNode::update()
+void QSGDefaultNoMaterialImageNode::update()
 {
     if (m_dirtyGeometry)
         updateGeometry();
 }
 
-void QSGDefaultImageNode::preprocess()
+void QSGDefaultNoMaterialImageNode::preprocess()
 {
     bool doDirty = false;
-    QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
+    QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(materialTexture());
     if (t) {
         doDirty = t->updateTexture();
         if (doDirty)
             updateGeometry();
     }
-    bool alpha = m_material.flags() & QSGMaterial::Blending;
-    if (m_material.texture() && alpha != m_material.texture()->hasAlphaChannel()) {
-        m_material.setFlag(QSGMaterial::Blending, !alpha);
+
+    if (updateMaterialBlending())
         doDirty = true;
-    }
 
     if (doDirty)
         markDirty(DirtyMaterial);
@@ -328,10 +273,10 @@ static inline void appendQuad(quint16 **indices, quint16 topLeft, quint16 topRig
     *(*indices)++ = topLeft;
 }
 
-void QSGDefaultImageNode::updateGeometry()
+void QSGDefaultNoMaterialImageNode::updateGeometry()
 {
     Q_ASSERT(!m_targetRect.isEmpty());
-    const QSGTexture *t = m_material.texture();
+    const QSGTexture *t = materialTexture();
     if (!t) {
         QSGGeometry *g = geometry();
         g->allocate(4);
@@ -357,25 +302,12 @@ void QSGDefaultImageNode::updateGeometry()
         bool hasTiles = hTiles != 1 || vTiles != 1;
         bool fullTexture = innerSourceRect == QRectF(0, 0, 1, 1);
 
-        bool wrapSupported = true;
-
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-#ifndef QT_OPENGL_ES_2
-        if (ctx->isOpenGLES())
-#endif
-        {
-            bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
-            QSize size = t->textureSize();
-            const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-            wrapSupported = npotSupported || !isNpot;
-        }
-
         // An image can be rendered as a single quad if:
         // - There are no margins, and either:
         //   - the image isn't repeated
         //   - the source rectangle fills the entire texture so that texture wrapping can be used,
         //     and NPOT is supported
-        if (!hasMargins && (!hasTiles || (fullTexture && wrapSupported))) {
+        if (!hasMargins && (!hasTiles || (fullTexture && supportsWrap(t->textureSize())))) {
             QRectF sr;
             if (!fullTexture) {
                 sr = QRectF(innerSourceRect.x() + (m_subSourceRect.left() - floorLeft) * innerSourceRect.width(),
@@ -666,6 +598,106 @@ void QSGDefaultImageNode::updateGeometry()
     }
     markDirty(DirtyGeometry);
     m_dirtyGeometry = false;
+}
+
+QSGDefaultImageNode::QSGDefaultImageNode()
+{
+    setMaterial(&m_materialO);
+    setOpaqueMaterial(&m_material);
+}
+
+void QSGDefaultImageNode::setFiltering(QSGTexture::Filtering filtering)
+{
+    if (m_material.filtering() == filtering)
+        return;
+
+    m_material.setFiltering(filtering);
+    m_materialO.setFiltering(filtering);
+    m_smoothMaterial.setFiltering(filtering);
+    markDirty(DirtyMaterial);
+}
+
+void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+{
+    if (m_material.mipmapFiltering() == filtering)
+        return;
+
+    m_material.setMipmapFiltering(filtering);
+    m_materialO.setMipmapFiltering(filtering);
+    m_smoothMaterial.setMipmapFiltering(filtering);
+    markDirty(DirtyMaterial);
+}
+
+void QSGDefaultImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
+{
+    if (m_material.verticalWrapMode() == wrapMode)
+        return;
+
+    m_material.setVerticalWrapMode(wrapMode);
+    m_materialO.setVerticalWrapMode(wrapMode);
+    m_smoothMaterial.setVerticalWrapMode(wrapMode);
+    markDirty(DirtyMaterial);
+}
+
+void QSGDefaultImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
+{
+    if (m_material.horizontalWrapMode() == wrapMode)
+        return;
+
+    m_material.setHorizontalWrapMode(wrapMode);
+    m_materialO.setHorizontalWrapMode(wrapMode);
+    m_smoothMaterial.setHorizontalWrapMode(wrapMode);
+    markDirty(DirtyMaterial);
+}
+
+void QSGDefaultImageNode::updateMaterialAntialiasing()
+{
+    if (m_antialiasing) {
+        setMaterial(&m_smoothMaterial);
+        setOpaqueMaterial(0);
+    } else {
+        setMaterial(&m_materialO);
+        setOpaqueMaterial(&m_material);
+    }
+}
+
+void QSGDefaultImageNode::setMaterialTexture(QSGTexture *texture)
+{
+    m_material.setTexture(texture);
+    m_materialO.setTexture(texture);
+    m_smoothMaterial.setTexture(texture);
+}
+
+QSGTexture *QSGDefaultImageNode::materialTexture() const
+{
+    return m_material.texture();
+}
+
+bool QSGDefaultImageNode::updateMaterialBlending()
+{
+    const bool alpha = m_material.flags() & QSGMaterial::Blending;
+    if (materialTexture() && alpha != materialTexture()->hasAlphaChannel()) {
+        m_material.setFlag(QSGMaterial::Blending, !alpha);
+        return true;
+    }
+    return false;
+}
+
+bool QSGDefaultImageNode::supportsWrap(const QSize &size) const
+{
+    bool wrapSupported = true;
+
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+#ifndef QT_OPENGL_ES_2
+    if (ctx->isOpenGLES())
+#endif
+    {
+        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
+        const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+        wrapSupported = npotSupported || !isNpot;
+    }
+
+    return wrapSupported;
 }
 
 QT_END_NAMESPACE

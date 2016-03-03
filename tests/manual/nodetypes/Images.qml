@@ -38,26 +38,23 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQuickView>
+import QtQuick 2.0
 
-int main(int argc, char **argv)
-{
-    qputenv("QT_QUICK_BACKEND", "d3d12");
+Item {
+    Rectangle {
+        width: 100
+        height: 100
+        anchors.centerIn: parent
+        color: "red"
+        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+    }
 
-    QGuiApplication app(argc, argv);
+    Image {
+        source: "qrc:/qt.png"
 
-    qDebug("Available tests:");
-    qDebug("  [R] - Rectangles");
-    qDebug("  [4] - A lot of rectangles (perf)");
-    qDebug("  [I] - Images");
-    qDebug("\nPress S to stop the currently running test\n");
-
-    QQuickView view;
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.resize(1024, 768);
-    view.setSource(QUrl("qrc:/main.qml"));
-    view.show();
-
-    return app.exec();
+        Image {
+            anchors.centerIn: parent
+            source: "qrc:/face-smile.png"
+        }
+    }
 }

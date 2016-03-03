@@ -52,6 +52,7 @@
 //
 
 #include "qsgd3d12engine_p.h"
+#include <QCache>
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -62,28 +63,22 @@ using namespace Microsoft::WRL;
 // No moc-related features (Q_OBJECT, signals, etc.) can be used here to due
 // moc-generated code failing to compile when combined with COM stuff.
 
+// Recommended reading before moving further: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
+// Note esp. operator= vs. Attach and operator& vs. GetAddressOf
+
+// ID3D12* is never passed to Qt containers directly. Always use ComPtr and put it into a struct.
+
 QT_BEGIN_NAMESPACE
 
-struct QSGD3D12DescriptorHandle
-{
-    QSGD3D12DescriptorHandle() { cpu.ptr = 0; gpu.ptr = 0; }
-    D3D12_CPU_DESCRIPTOR_HANDLE cpu;
-    D3D12_GPU_DESCRIPTOR_HANDLE gpu;
-};
-
-class QSGD3D12DescriptorHeapManager
+class QSGD3D12CPUDescriptorHeapManager
 {
 public:
     void initialize(ID3D12Device *device);
 
     void releaseResources();
 
-    enum Flag {
-        ShaderVisible = 0x01
-    };
-    Q_DECLARE_FLAGS(Flags, Flag)
-
-    QSGD3D12DescriptorHandle allocate(D3D12_DESCRIPTOR_HEAP_TYPE type, Flags flags = 0);
+    D3D12_CPU_DESCRIPTOR_HANDLE allocate(D3D12_DESCRIPTOR_HEAP_TYPE type);
+    void release(D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_DESCRIPTOR_HEAP_TYPE type);
     quint32 handleSize(D3D12_DESCRIPTOR_HEAP_TYPE type) const { return m_handleSizes[type]; }
 
 private:
@@ -91,9 +86,9 @@ private:
     struct Heap {
         D3D12_DESCRIPTOR_HEAP_TYPE type;
         ComPtr<ID3D12DescriptorHeap> heap;
-        int count = 0;
-        QSGD3D12DescriptorHandle start;
+        D3D12_CPU_DESCRIPTOR_HANDLE start;
         quint32 handleSize;
+        quint32 freeMap[8];
     };
     QVector<Heap> m_heaps;
     quint32 m_handleSizes[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
@@ -121,11 +116,9 @@ private:
     QVector<DeviceLossObserver *> m_observers;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12DescriptorHeapManager::Flags)
-
-struct QSGD3D12Fence
+struct QSGD3D12CPUWaitableFence
 {
-    ~QSGD3D12Fence() {
+    ~QSGD3D12CPUWaitableFence() {
         if (event)
             CloseHandle(event);
     }
@@ -159,12 +152,19 @@ public:
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which);
     void queueSetStencilRef(quint32 ref);
 
-    void queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
+    void queueDraw(QSGGeometry::DrawingMode mode, int count,
+                   int vboOffset, int vboSize, int vboStride,
                    int cboOffset,
                    int startIndexIndex, QSGD3D12Format indexFormat);
 
     void present();
     void waitGPU();
+
+    uint createTexture(QImage::Format format, const QSize &size, QSGD3D12Engine::TextureCreateFlags flags);
+    void releaseTexture(uint id);
+    SIZE_T textureSRV(uint id) const;
+    void queueTextureUpload(uint id, const QImage &image, QSGD3D12Engine::TextureUploadFlags flags);
+    void addFrameTextureDep(uint id);
 
     // the device is intentionally hidden here. all resources have to go
     // through the engine and, unlike with GL, cannot just be created in random
@@ -176,8 +176,8 @@ private:
     DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
     ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
 
-    QSGD3D12Fence *createFence() const;
-    void waitForGPU(QSGD3D12Fence *f) const;
+    QSGD3D12CPUWaitableFence *createCPUWaitableFence() const;
+    void waitForGPU(QSGD3D12CPUWaitableFence *f) const;
 
     void transitionResource(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList,
                             D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after) const;
@@ -187,46 +187,70 @@ private:
     ID3D12Resource *backBufferRT() const;
     D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTV() const;
 
-    struct StagingBufferRef {
+    struct VICBufferRef {
         const quint8 *p = nullptr;
         int size = 0;
         bool fullChange = true;
         QVector<QPair<int, int> > dirty;
-        StagingBufferRef() { dirty.reserve(256); }
+        VICBufferRef() { dirty.reserve(256); }
     };
 
-    void updateBuffer(StagingBufferRef *br, ID3D12Resource *r, const char *dbgstr);
+    void updateBuffer(VICBufferRef *br, ID3D12Resource *r, const char *dbgstr);
 
     bool initialized = false;
+    bool inFrame = false;
     QWindow *window = nullptr;
     int swapChainBufferCount = 2;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
+    ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
     ComPtr<ID3D12Resource> renderTargets[2];
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv0;
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv[2];
     D3D12_CPU_DESCRIPTOR_HANDLE dsv;
     ComPtr<ID3D12Resource> depthStencil;
     ComPtr<ID3D12CommandAllocator> commandAllocator;
-    ComPtr<ID3D12CommandAllocator> bundleAllocator;
+    ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
     ComPtr<ID3D12GraphicsCommandList> commandList;
-    QSGD3D12DescriptorHeapManager descHeapManager;
-    QSGD3D12Fence *presentFence = nullptr;
+    ComPtr<ID3D12GraphicsCommandList> copyCommandList;
+    QSGD3D12CPUDescriptorHeapManager cpuDescHeapManager;
+    QSGD3D12CPUWaitableFence *presentFence = nullptr;
 
-    StagingBufferRef vertexData;
-    StagingBufferRef indexData;
-    StagingBufferRef constantData;
+    VICBufferRef vertexData;
+    VICBufferRef indexData;
+    VICBufferRef constantData;
 
     ComPtr<ID3D12Resource> vertexBuffer;
     ComPtr<ID3D12Resource> indexBuffer;
     ComPtr<ID3D12Resource> constantBuffer;
 
-    QHash<QSGD3D12PipelineState, ComPtr<ID3D12PipelineState> > m_psoCache;
+    struct PSOCacheEntry {
+        ComPtr<ID3D12PipelineState> pso;
+    };
+    QCache<QSGD3D12PipelineState, PSOCacheEntry> psoCache;
+    struct RootSigCacheEntry {
+        ComPtr<ID3D12RootSignature> rootSig;
+    };
+    QCache<QSGD3D12RootSignature, RootSigCacheEntry> rootSigCache;
 
-    ComPtr<ID3D12RootSignature> m_rootSig;
+    QSGGeometry::DrawingMode drawingMode;
+    bool indexBufferSet;
 
-    QSGGeometry::DrawingMode m_drawingMode;
-    bool m_indexBufferSet;
+    struct Texture {
+        ComPtr<ID3D12Resource> texture;
+        D3D12_CPU_DESCRIPTOR_HANDLE srv;
+        quint64 fenceValue = 0;
+        ComPtr<ID3D12Resource> stagingBuffer;
+    };
+
+    QVector<Texture> textures;
+    ComPtr<ID3D12Fence> textureUploadFence;
+    QAtomicInt nextTextureUploadFenceValue;
+    QSet<uint> currentFrameTextures;
+    QVector<uint> currentDrawTextures;
+
+    ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
+    int cbvSrvUavNextFreeDescriptorIndex;
 };
 
 QT_END_NAMESPACE

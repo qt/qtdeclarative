@@ -37,38 +37,84 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12renderer_p.h"
-#include "qsgd3d12texture_p.h"
+#include "qsgd3d12imagenode_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
-    : QSGRenderContext(ctx)
+QSGD3D12ImageNode::QSGD3D12ImageNode()
 {
+    setMaterial(&m_material);
 }
 
-void QSGD3D12RenderContext::initialize(QOpenGLContext *)
+void QSGD3D12ImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
-    Q_UNREACHABLE();
+    if (m_material.filtering() == filtering)
+        return;
+
+    m_material.setFiltering(filtering);
+    //m_smoothMaterial.setFiltering(filtering);
+    markDirty(DirtyMaterial);
 }
 
-QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags) const
+void QSGD3D12ImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
 {
-    Q_ASSERT(m_engine);
-    QSGD3D12Texture *t = new QSGD3D12Texture(m_engine);
-    t->setImage(image, flags);
-    return t;
+    if (m_material.mipmapFiltering() == filtering)
+        return;
+
+    m_material.setMipmapFiltering(filtering);
+    //m_smoothMaterial.setMipmapFiltering(filtering);
+    markDirty(DirtyMaterial);
 }
 
-QSGRenderer *QSGD3D12RenderContext::createRenderer()
+void QSGD3D12ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
-    return new QSGD3D12Renderer(this);
+    if (m_material.verticalWrapMode() == wrapMode)
+        return;
+
+    m_material.setVerticalWrapMode(wrapMode);
+    //m_smoothMaterial.setVerticalWrapMode(wrapMode);
+    markDirty(DirtyMaterial);
 }
 
-void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
+void QSGD3D12ImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 {
-    QSGRenderContext::renderNextFrame(renderer, fbo);
+    if (m_material.horizontalWrapMode() == wrapMode)
+        return;
+
+    m_material.setHorizontalWrapMode(wrapMode);
+    //m_smoothMaterial.setHorizontalWrapMode(wrapMode);
+    markDirty(DirtyMaterial);
+}
+
+void QSGD3D12ImageNode::updateMaterialAntialiasing()
+{
+    //setMaterial(m_antialiasing ? &m_smoothMaterial : &m_material);
+}
+
+void QSGD3D12ImageNode::setMaterialTexture(QSGTexture *texture)
+{
+    m_material.setTexture(texture);
+//    m_smoothMaterial.setTexture(texture);
+}
+
+QSGTexture *QSGD3D12ImageNode::materialTexture() const
+{
+    return m_material.texture();
+}
+
+bool QSGD3D12ImageNode::updateMaterialBlending()
+{
+    const bool alpha = m_material.flags() & QSGMaterial::Blending;
+    if (materialTexture() && alpha != materialTexture()->hasAlphaChannel()) {
+        m_material.setFlag(QSGMaterial::Blending, !alpha);
+        return true;
+    }
+    return false;
+}
+
+bool QSGD3D12ImageNode::supportsWrap(const QSize &) const
+{
+    return true;
 }
 
 QT_END_NAMESPACE

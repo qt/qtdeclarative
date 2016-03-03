@@ -41,6 +41,7 @@
 #include "qsgd3d12engine_p_p.h"
 #include <QString>
 #include <QColor>
+#include <QtCore/private/qsimd_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,22 +53,31 @@ QT_BEGIN_NAMESPACE
 
 DECLARE_DEBUG_VAR(render)
 
-// Recommended reading before moving further: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
-// Note esp. operator= vs. Attach and operator& vs. GetAddressOf
+static const int MAX_CACHED_ROOTSIG = 16;
+static const int MAX_CACHED_PSO = 64;
 
-static const int MAX_DESCRIPTORS_PER_HEAP = 256;
+static const int MAX_GPU_CBVSRVUAV_DESCRIPTORS = 256;
 
-QSGD3D12DescriptorHandle QSGD3D12DescriptorHeapManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE type, Flags flags)
+static const int BUCKETS_PER_HEAP = 8; // must match freeMap
+static const int DESCRIPTORS_PER_BUCKET = 32; // the bit map (freeMap) is quint32
+static const int MAX_DESCRIPTORS_PER_HEAP = BUCKETS_PER_HEAP * DESCRIPTORS_PER_BUCKET;
+
+D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
-    QSGD3D12DescriptorHandle h;
+    D3D12_CPU_DESCRIPTOR_HANDLE h = {};
     for (Heap &heap : m_heaps) {
-        if (heap.type == type && heap.count < MAX_DESCRIPTORS_PER_HEAP) {
-            h = heap.start;
-            h.cpu.ptr += heap.count * heap.handleSize;
-            if (h.gpu.ptr)
-                h.gpu.ptr += heap.count * heap.handleSize;
-            ++heap.count;
-            return h;
+        if (heap.type == type) {
+            for (int bucket = 0; bucket < _countof(heap.freeMap); ++bucket)
+                if (heap.freeMap[bucket]) {
+                    unsigned long freePos = _bit_scan_forward(heap.freeMap[bucket]);
+                    heap.freeMap[bucket] &= ~(1UL << freePos);
+                    if (Q_UNLIKELY(debug_render()))
+                        qDebug("descriptor handle type %x reserve in bucket %d index %d", type, bucket, freePos);
+                    freePos += bucket * DESCRIPTORS_PER_BUCKET;
+                    h = heap.start;
+                    h.ptr += freePos * heap.handleSize;
+                    return h;
+                }
         }
     }
 
@@ -78,8 +88,7 @@ QSGD3D12DescriptorHandle QSGD3D12DescriptorHeapManager::allocate(D3D12_DESCRIPTO
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
     heapDesc.NumDescriptors = MAX_DESCRIPTORS_PER_HEAP;
     heapDesc.Type = type;
-    if (flags & ShaderVisible)
-        heapDesc.Flags |= D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    // The heaps created here are _never_ shader-visible.
 
     HRESULT hr = m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap.heap));
     if (FAILED(hr)) {
@@ -87,20 +96,41 @@ QSGD3D12DescriptorHandle QSGD3D12DescriptorHeapManager::allocate(D3D12_DESCRIPTO
         return h;
     }
 
-    heap.start.cpu = heap.heap->GetCPUDescriptorHandleForHeapStart();
-    if (Q_UNLIKELY(debug_render()))
-        qDebug("type %x start is %llu", type, heap.start.cpu.ptr);
-    if (flags & ShaderVisible)
-        heap.start.gpu = heap.heap->GetGPUDescriptorHandleForHeapStart();
+    heap.start = heap.heap->GetCPUDescriptorHandleForHeapStart();
 
-    heap.count = 1;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("new descriptor heap, type %x, start %llu", type, heap.start.ptr);
+
+    heap.freeMap[0] = 0xFFFFFFFE;
+    for (int i = 1; i < _countof(heap.freeMap); ++i)
+        heap.freeMap[i] = 0xFFFFFFFF;
+
     h = heap.start;
+
     m_heaps.append(heap);
 
     return h;
 }
 
-void QSGD3D12DescriptorHeapManager::initialize(ID3D12Device *device)
+void QSGD3D12CPUDescriptorHeapManager::release(D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_DESCRIPTOR_HEAP_TYPE type)
+{
+    for (Heap &heap : m_heaps) {
+        if (heap.type == type
+                && handle.ptr >= heap.start.ptr
+                && handle.ptr < heap.start.ptr + heap.handleSize * MAX_DESCRIPTORS_PER_HEAP) {
+            unsigned long pos = (handle.ptr - heap.start.ptr) / heap.handleSize;
+            const int bucket = pos / DESCRIPTORS_PER_BUCKET;
+            const int indexInBucket = pos - bucket * DESCRIPTORS_PER_BUCKET;
+            heap.freeMap[bucket] |= 1UL << indexInBucket;
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("free descriptor handle type %x bucket %d index %d", type, bucket, indexInBucket);
+            return;
+        }
+    }
+    qWarning("QSGD3D12CPUDescriptorHeapManager: Attempted to release untracked descriptor handle %llu of type %d", handle.ptr, type);
+}
+
+void QSGD3D12CPUDescriptorHeapManager::initialize(ID3D12Device *device)
 {
     m_device = device;
 
@@ -108,7 +138,7 @@ void QSGD3D12DescriptorHeapManager::initialize(ID3D12Device *device)
         m_handleSizes[i] = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE(i));
 }
 
-void QSGD3D12DescriptorHeapManager::releaseResources()
+void QSGD3D12CPUDescriptorHeapManager::releaseResources()
 {
     for (Heap &heap : m_heaps)
         heap.heap = nullptr;
@@ -331,11 +361,11 @@ void QSGD3D12Engine::queueSetStencilRef(quint32 ref)
     d->queueSetStencilRef(ref);
 }
 
-void QSGD3D12Engine::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
+void QSGD3D12Engine::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboSize, int vboStride,
                                int cboOffset,
                                int startIndexIndex, QSGD3D12Format indexFormat)
 {
-    d->queueDraw(mode, count, vboOffset, vboStride, cboOffset, startIndexIndex, indexFormat);
+    d->queueDraw(mode, count, vboOffset, vboSize, vboStride, cboOffset, startIndexIndex, indexFormat);
 }
 
 void QSGD3D12Engine::present()
@@ -346,6 +376,31 @@ void QSGD3D12Engine::present()
 void QSGD3D12Engine::waitGPU()
 {
     d->waitGPU();
+}
+
+uint QSGD3D12Engine::createTexture(QImage::Format format, const QSize &size, TextureCreateFlags flags)
+{
+    return d->createTexture(format, size, flags);
+}
+
+void QSGD3D12Engine::releaseTexture(uint id)
+{
+    d->releaseTexture(id);
+}
+
+SIZE_T QSGD3D12Engine::textureSRV(uint id) const
+{
+    return d->textureSRV(id);
+}
+
+void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, TextureUploadFlags flags)
+{
+    return d->queueTextureUpload(id, image, flags);
+}
+
+void QSGD3D12Engine::addFrameTextureDep(uint id)
+{
+    d->addFrameTextureDep(id);
 }
 
 quint32 QSGD3D12Engine::alignedConstantBufferSize(quint32 size)
@@ -411,8 +466,11 @@ void QSGD3D12EnginePrivate::releaseResources()
     if (!initialized)
         return;
 
-    bundleAllocator = nullptr;
     commandAllocator = nullptr;
+    copyCommandAllocator = nullptr;
+
+    commandList = nullptr;
+    copyCommandList = nullptr;
 
     depthStencil = nullptr;
     for (int i = 0; i < swapChainBufferCount; ++i)
@@ -422,17 +480,19 @@ void QSGD3D12EnginePrivate::releaseResources()
     indexBuffer = nullptr;
     constantBuffer = nullptr;
 
-    for (ComPtr<ID3D12PipelineState> &ps : m_psoCache)
-        ps = nullptr;
-    m_psoCache.clear();
-    m_rootSig = nullptr;
+    psoCache.clear();
+    rootSigCache.clear();
+    textures.clear();
 
-    descHeapManager.releaseResources();
+    gpuCbvSrvUavHeap = nullptr;
+    cpuDescHeapManager.releaseResources();
 
     commandQueue = nullptr;
+    copyCommandQueue = nullptr;
     swapChain = nullptr;
 
     delete presentFence;
+    textureUploadFence = nullptr;
 
     deviceManager()->unref();
 
@@ -463,9 +523,14 @@ void QSGD3D12EnginePrivate::initialize(QWindow *w)
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
     if (FAILED(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)))) {
         qWarning("Failed to create command queue");
+        return;
+    }
+
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+    if (FAILED(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&copyCommandQueue)))) {
+        qWarning("Failed to create copy command queue");
         return;
     }
 
@@ -498,12 +563,22 @@ void QSGD3D12EnginePrivate::initialize(QWindow *w)
         return;
     }
 
-    if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(&bundleAllocator)))) {
-        qWarning("Failed to create command bundle allocator");
+    if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&copyCommandAllocator)))) {
+        qWarning("Failed to create copy command allocator");
         return;
     }
 
-    descHeapManager.initialize(device);
+    D3D12_DESCRIPTOR_HEAP_DESC gpuDescHeapDesc = {};
+    gpuDescHeapDesc.NumDescriptors = MAX_GPU_CBVSRVUAV_DESCRIPTORS;
+    gpuDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    gpuDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    if (FAILED(device->CreateDescriptorHeap(&gpuDescHeapDesc, IID_PPV_ARGS(&gpuCbvSrvUavHeap)))) {
+        qWarning("Failed to create shader-visible CBV-SRV-UAV heap");
+        return;
+    }
+
+    cpuDescHeapManager.initialize(device);
 
     setupRenderTargets();
 
@@ -515,11 +590,26 @@ void QSGD3D12EnginePrivate::initialize(QWindow *w)
     // created in recording state, close it for now
     commandList->Close();
 
-    presentFence = createFence();
+    if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator.Get(),
+                                         nullptr, IID_PPV_ARGS(&copyCommandList)))) {
+        qWarning("Failed to create copy command list");
+        return;
+    }
+    copyCommandList->Close();
 
-    vertexData = StagingBufferRef();
-    indexData = StagingBufferRef();
-    constantData = StagingBufferRef();
+    presentFence = createCPUWaitableFence();
+
+    if (FAILED(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&textureUploadFence)))) {
+        qWarning("Failed to create fence");
+        return;
+    }
+
+    vertexData = VICBufferRef();
+    indexData = VICBufferRef();
+    constantData = VICBufferRef();
+
+    psoCache.setMaxCost(MAX_CACHED_PSO);
+    rootSigCache.setMaxCost(MAX_CACHED_ROOTSIG);
 
     initialized = true;
 }
@@ -593,13 +683,11 @@ void QSGD3D12EnginePrivate::setupRenderTargets()
             qWarning("Failed to get buffer %d from swap chain", i);
             return;
         }
-        D3D12_CPU_DESCRIPTOR_HANDLE h = descHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV).cpu;
-        if (i == 0)
-            rtv0 = h;
-        device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, h);
+        rtv[i] = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, rtv[i]);
     }
 
-    dsv = descHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV).cpu;
+    dsv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     ID3D12Resource *ds = createDepthStencil(dsv, window->size(), 0);
     if (ds)
         depthStencil.Attach(ds);
@@ -615,8 +703,11 @@ void QSGD3D12EnginePrivate::resize()
 
     // Clear these, otherwise resizing will fail.
     depthStencil = nullptr;
-    for (int i = 0; i < swapChainBufferCount; ++i)
+    cpuDescHeapManager.release(dsv, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    for (int i = 0; i < swapChainBufferCount; ++i) {
         renderTargets[i] = nullptr;
+        cpuDescHeapManager.release(rtv[i], D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    }
 
     HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, window->width(), window->height(), DXGI_FORMAT_R8G8B8A8_UNORM, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
@@ -641,9 +732,9 @@ void QSGD3D12EnginePrivate::deviceLost()
     // all the resources on the next beginFrame().
 }
 
-QSGD3D12Fence *QSGD3D12EnginePrivate::createFence() const
+QSGD3D12CPUWaitableFence *QSGD3D12EnginePrivate::createCPUWaitableFence() const
 {
-    QSGD3D12Fence *f = new QSGD3D12Fence;
+    QSGD3D12CPUWaitableFence *f = new QSGD3D12CPUWaitableFence;
     HRESULT hr = device->CreateFence(f->value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f->fence));
     if (FAILED(hr)) {
         qWarning("Failed to create fence: 0x%x", hr);
@@ -653,7 +744,7 @@ QSGD3D12Fence *QSGD3D12EnginePrivate::createFence() const
     return f;
 }
 
-void QSGD3D12EnginePrivate::waitForGPU(QSGD3D12Fence *f) const
+void QSGD3D12EnginePrivate::waitForGPU(QSGD3D12CPUWaitableFence *f) const
 {
     const UINT64 newValue = f->value.fetchAndAddAcquire(1) + 1;
     commandQueue->Signal(f->fence.Get(), newValue);
@@ -699,7 +790,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createBuffer(int size)
     bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
     HRESULT hr = device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufDesc,
-                                                 D3D12_RESOURCE_STATE_GENERIC_READ, Q_NULLPTR, IID_PPV_ARGS(&buf));
+                                                 D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buf));
     if (FAILED(hr))
         qWarning("Failed to create buffer resource: 0x%x", hr);
 
@@ -714,13 +805,18 @@ ID3D12Resource *QSGD3D12EnginePrivate::backBufferRT() const
 D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12EnginePrivate::backBufferRTV() const
 {
     const int frameIndex = swapChain->GetCurrentBackBufferIndex();
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv0;
-    rtvHandle.ptr += frameIndex * descHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv[0];
+    rtvHandle.ptr += frameIndex * cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     return rtvHandle;
 }
 
 void QSGD3D12EnginePrivate::beginFrame()
 {
+    if (inFrame)
+        qWarning("beginFrame called again without an endFrame");
+
+    inFrame = true;
+
     if (Q_UNLIKELY(debug_render())) {
         static int cnt = 0;
         qDebug() << "***** begin frame" << cnt;
@@ -736,11 +832,12 @@ void QSGD3D12EnginePrivate::beginFrame()
 
     transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    m_drawingMode = QSGGeometry::DrawingMode(-1);
-    m_indexBufferSet = false;
+    drawingMode = QSGGeometry::DrawingMode(-1);
+    indexBufferSet = false;
+    cbvSrvUavNextFreeDescriptorIndex = 0;
 }
 
-void QSGD3D12EnginePrivate::updateBuffer(StagingBufferRef *br, ID3D12Resource *r, const char *dbgstr)
+void QSGD3D12EnginePrivate::updateBuffer(VICBufferRef *br, ID3D12Resource *r, const char *dbgstr)
 {
     quint8 *p = nullptr;
     const D3D12_RANGE readRange = { 0, 0 };
@@ -769,6 +866,41 @@ void QSGD3D12EnginePrivate::endFrame()
     updateBuffer(&indexData, indexBuffer.Get(), "index");
     updateBuffer(&constantData, constantBuffer.Get(), "constant");
 
+    // Wait for texture uploads (the ones that are needed by this frame) to finish.
+    quint64 topFenceValue = 0;
+    for (uint id : qAsConst(currentFrameTextures)) {
+        const int idx = id - 1;
+        Q_ASSERT(idx < textures.count());
+        const Texture &t(textures[idx]);
+        if (t.fenceValue)
+            topFenceValue = qMax(topFenceValue, t.fenceValue);
+    }
+    if (topFenceValue) {
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("wait for texture fence %llu", topFenceValue);
+        commandQueue->Wait(textureUploadFence.Get(), topFenceValue);
+    }
+    for (uint id : qAsConst(currentFrameTextures)) {
+        const int idx = id - 1;
+        Texture &t(textures[idx]);
+        if (t.fenceValue) {
+            t.fenceValue = 0;
+            t.stagingBuffer = nullptr;
+        }
+    }
+    if (topFenceValue) {
+        bool hasActiveTextureUpload = false;
+        for (const Texture &t : qAsConst(textures)) {
+            if (t.fenceValue) {
+                hasActiveTextureUpload = true;
+                break;
+            }
+        }
+        if (!hasActiveTextureUpload)
+            copyCommandAllocator->Reset();
+    }
+    currentFrameTextures.clear();
+
     transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
     HRESULT hr = commandList->Close();
@@ -780,23 +912,72 @@ void QSGD3D12EnginePrivate::endFrame()
 
     ID3D12CommandList *commandLists[] = { commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    inFrame = false;
 }
+
+// Root signature:
+// [0] CBV - always present
+// [1] table with 1 SRV per texture (optional)
+// one constant sampler per texture (optional)
+//
+// SRVs can be created freely via QSGD3D12CPUDescriptorHeapManager and stored
+// in QSGD3D12TextureView. The engine will copy them onto a dedicated,
+// shader-visible CBV-SRV-UAV heap.
 
 void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipelineState)
 {
-    // One single root signature for now. This will obviously need some improvements later on...
-    if (!m_rootSig) {
-        D3D12_ROOT_PARAMETER rootParameter;
-        rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-        rootParameter.Descriptor.ShaderRegister = 0; // b0
-        rootParameter.Descriptor.RegisterSpace = 0;
+    RootSigCacheEntry *cachedRootSig = rootSigCache[pipelineState.shaders.rootSig];
+    if (!cachedRootSig) {
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("NEW ROOTSIG");
 
+        cachedRootSig = new RootSigCacheEntry;
+
+        D3D12_ROOT_PARAMETER rootParams[4];
+        int rootParamCount = 0;
+
+        rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        rootParams[0].Descriptor.ShaderRegister = 0; // b0
+        rootParams[0].Descriptor.RegisterSpace = 0;
+        ++rootParamCount;
+
+        if (!pipelineState.shaders.rootSig.textureViews.isEmpty()) {
+            rootParams[rootParamCount].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+            rootParams[rootParamCount].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+            rootParams[rootParamCount].DescriptorTable.NumDescriptorRanges = 1;
+            D3D12_DESCRIPTOR_RANGE descRange;
+            descRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+            descRange.NumDescriptors = pipelineState.shaders.rootSig.textureViews.count();
+            descRange.BaseShaderRegister = 0; // t0, t1, ...
+            descRange.RegisterSpace = 0;
+            descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+            rootParams[rootParamCount].DescriptorTable.pDescriptorRanges = &descRange;
+            ++rootParamCount;
+        }
+
+        Q_ASSERT(rootParamCount <= _countof(rootParams));
         D3D12_ROOT_SIGNATURE_DESC desc;
-        desc.NumParameters = 1;
-        desc.pParameters = &rootParameter;
-        desc.NumStaticSamplers = 0;
-        desc.pStaticSamplers = nullptr;
+        desc.NumParameters = rootParamCount;
+        desc.pParameters = rootParams;
+        desc.NumStaticSamplers = pipelineState.shaders.rootSig.textureViews.count();
+        D3D12_STATIC_SAMPLER_DESC staticSamplers[8];
+        int sdIdx = 0;
+        Q_ASSERT(pipelineState.shaders.rootSig.textureViews.count() <= _countof(staticSamplers));
+        for (const QSGD3D12TextureView &tv : qAsConst(pipelineState.shaders.rootSig.textureViews)) {
+            D3D12_STATIC_SAMPLER_DESC sd = {};
+            sd.Filter = D3D12_FILTER(tv.filter);
+            sd.AddressU = D3D12_TEXTURE_ADDRESS_MODE(tv.addressModeHoriz);
+            sd.AddressV = D3D12_TEXTURE_ADDRESS_MODE(tv.addressModeVert);
+            sd.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+            sd.MinLOD = 0.0f;
+            sd.MaxLOD = D3D12_FLOAT32_MAX;
+            sd.ShaderRegister = sdIdx; // t0, t1, ...
+            sd.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+            staticSamplers[sdIdx++] = sd;
+        }
+        desc.pStaticSamplers = staticSamplers;
         desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
         ComPtr<ID3DBlob> signature;
@@ -806,39 +987,42 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
             return;
         }
         if (FAILED(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
-                                               IID_PPV_ARGS(&m_rootSig)))) {
+                                               IID_PPV_ARGS(&cachedRootSig->rootSig)))) {
             qWarning("Failed to create root signature");
             return;
         }
+
+        rootSigCache.insert(pipelineState.shaders.rootSig, cachedRootSig);
     }
 
-    // Unlimited number of cached PSOs for now, may want to change this later.
-    ComPtr<ID3D12PipelineState> pso = m_psoCache[pipelineState];
-
-    if (!pso) {
+    PSOCacheEntry *cachedPso = psoCache[pipelineState];
+    if (!cachedPso) {
         if (Q_UNLIKELY(debug_render()))
             qDebug("NEW PSO");
+
+        cachedPso = new PSOCacheEntry;
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
         D3D12_INPUT_ELEMENT_DESC inputElements[8];
         Q_ASSERT(pipelineState.inputElements.count() <= _countof(inputElements));
-        UINT ieIdx = 0;
+        int ieIdx = 0;
         for (const QSGD3D12InputElement &ie : pipelineState.inputElements) {
             D3D12_INPUT_ELEMENT_DESC ieDesc = {};
-            ieDesc.SemanticName = ie.name;
+            ieDesc.SemanticName = ie.semanticName;
+            ieDesc.SemanticIndex = ie.semanticIndex;
             ieDesc.Format = DXGI_FORMAT(ie.format);
             ieDesc.InputSlot = ie.slot;
             ieDesc.AlignedByteOffset = ie.offset;
             ieDesc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
             if (Q_UNLIKELY(debug_render()))
-                qDebug("input [%d]: %s %d 0x%x %d", ieIdx, ie.name, ie.offset, ie.format, ie.slot);
+                qDebug("input [%d]: %s %d 0x%x %d", ieIdx, ie.semanticName, ie.offset, ie.format, ie.slot);
             inputElements[ieIdx++] = ieDesc;
         }
 
-        psoDesc.InputLayout = { inputElements, ieIdx };
+        psoDesc.InputLayout = { inputElements, UINT(ieIdx) };
 
-        psoDesc.pRootSignature = m_rootSig.Get();
+        psoDesc.pRootSignature = cachedRootSig->rootSig.Get();
 
         D3D12_SHADER_BYTECODE vshader;
         vshader.pShaderBytecode = pipelineState.shaders.vs;
@@ -899,17 +1083,43 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
         psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
         psoDesc.SampleDesc.Count = 1;
 
-        HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso));
+        HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&cachedPso->pso));
         if (FAILED(hr)) {
             qWarning("Failed to create graphics pipeline state");
             return;
         }
-        m_psoCache[pipelineState] = pso;
+
+        psoCache.insert(pipelineState, cachedPso);
     }
 
-    commandList->SetPipelineState(pso.Get());
+    commandList->SetPipelineState(cachedPso->pso.Get());
 
-    commandList->SetGraphicsRootSignature(m_rootSig.Get()); // invalidates bindings
+    commandList->SetGraphicsRootSignature(cachedRootSig->rootSig.Get()); // invalidates bindings
+
+    if (!pipelineState.shaders.rootSig.textureViews.isEmpty()) {
+        Q_ASSERT(currentDrawTextures.count() == pipelineState.shaders.rootSig.textureViews.count());
+
+        ID3D12DescriptorHeap *heaps[] = { gpuCbvSrvUavHeap.Get() };
+        commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+        // Copy the SRVs to a drawcall-dedicated area of the shader-visible descriptor heap.
+        const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        D3D12_CPU_DESCRIPTOR_HANDLE dst = gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
+        Q_ASSERT(cbvSrvUavNextFreeDescriptorIndex + currentDrawTextures.count() <= MAX_GPU_CBVSRVUAV_DESCRIPTORS);
+        dst.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
+        for (uint id : qAsConst(currentDrawTextures)) {
+            const int idx = id - 1;
+            device->CopyDescriptorsSimple(1, dst, textures[idx].srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            dst.ptr += stride;
+        }
+
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuAddr = gpuCbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
+        gpuAddr.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
+        commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
+
+        cbvSrvUavNextFreeDescriptorIndex += currentDrawTextures.count();
+        currentDrawTextures.clear();
+    }
 }
 
 void QSGD3D12EnginePrivate::setVertexBuffer(const quint8 *data, int size)
@@ -976,7 +1186,7 @@ void QSGD3D12EnginePrivate::queueSetStencilRef(quint32 ref)
     commandList->OMSetStencilRef(ref);
 }
 
-void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboStride,
+void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboSize, int vboStride,
                                       int cboOffset,
                                       int startIndexIndex, QSGD3D12Format indexFormat)
 {
@@ -1035,15 +1245,9 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress() + cboOffset);
 
     Q_ASSERT(vertexBuffer);
-
-    D3D12_VERTEX_BUFFER_VIEW vbv;
-    vbv.BufferLocation = vertexBuffer->GetGPUVirtualAddress() + vboOffset;
-    vbv.SizeInBytes = vboStride * count;
-    vbv.StrideInBytes = vboStride;
-
     Q_ASSERT(indexBuffer || startIndexIndex < 0);
 
-    if (mode != m_drawingMode) {
+    if (mode != drawingMode) {
         D3D_PRIMITIVE_TOPOLOGY topology;
         switch (mode) {
         case QSGGeometry::DrawPoints:
@@ -1066,14 +1270,19 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
             break;
         }
         commandList->IASetPrimitiveTopology(topology);
-        m_drawingMode = mode;
+        drawingMode = mode;
     }
+
+    D3D12_VERTEX_BUFFER_VIEW vbv;
+    vbv.BufferLocation = vertexBuffer->GetGPUVirtualAddress() + vboOffset;
+    vbv.SizeInBytes = vboSize;
+    vbv.StrideInBytes = vboStride;
 
     // must be set after the topology
     commandList->IASetVertexBuffers(0, 1, &vbv);
 
-    if (startIndexIndex >= 0 && !m_indexBufferSet) {
-        m_indexBufferSet = true;
+    if (startIndexIndex >= 0 && !indexBufferSet) {
+        indexBufferSet = true;
         D3D12_INDEX_BUFFER_VIEW ibv;
         ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
         ibv.SizeInBytes = indexData.size;
@@ -1114,6 +1323,169 @@ void QSGD3D12EnginePrivate::waitGPU()
         qDebug("--- blocking wait for GPU ---");
 
     waitForGPU(presentFence);
+}
+
+uint QSGD3D12EnginePrivate::createTexture(QImage::Format format, const QSize &size, QSGD3D12Engine::TextureCreateFlags flags)
+{
+    int id = 0;
+    for (int i = 0; i < textures.count(); ++i) {
+        if (!textures[i].texture) {
+            id = i + 1;
+            break;
+        }
+    }
+    if (!id) {
+        textures.resize(textures.size() + 1);
+        id = textures.count();
+    }
+
+    const int idx = id - 1;
+    Texture &t(textures[idx]);
+
+    D3D12_HEAP_PROPERTIES defaultHeapProp = {};
+    defaultHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureDesc.Width = size.width();
+    textureDesc.Height = size.height();
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.MipLevels = 1; // ###
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // ### use format
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+    HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
+                                                 D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&t.texture));
+    if (FAILED(hr)) {
+        qWarning("Failed to create texture resource: 0x%x", hr);
+        return 0;
+    }
+
+    t.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1; // ###
+
+    device->CreateShaderResourceView(t.texture.Get(), &srvDesc, t.srv);
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("allocated texture %d", id);
+
+    return id;
+}
+
+void QSGD3D12EnginePrivate::releaseTexture(uint id)
+{
+    if (!id)
+        return;
+
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count());
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("releasing texture %d", id);
+
+    textures[idx].texture = nullptr;
+    cpuDescHeapManager.release(textures[idx].srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+}
+
+SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
+{
+    Q_ASSERT(id);
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count());
+    return textures[idx].srv.ptr;
+}
+
+void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QImage &image, QSGD3D12Engine::TextureUploadFlags flags)
+{
+    Q_ASSERT(id);
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count());
+
+    Texture &t(textures[idx]);
+    if (t.fenceValue) {
+        qWarning("queueTextureUpload: An upload is still active for texture %d", id);
+        return;
+    }
+    if (!t.texture) {
+        qWarning("queueTextureUpload: Attempted to upload for non-created texture %d", id);
+        return;
+    }
+
+    t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
+
+    D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
+    UINT64 bufferSize;
+    const int TEXTURE_MIP_LEVELS = 1; // ###
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT textureLayout[TEXTURE_MIP_LEVELS];
+    device->GetCopyableFootprints(&textureDesc, 0, TEXTURE_MIP_LEVELS, 0, textureLayout, nullptr, nullptr, &bufferSize);
+
+    D3D12_RESOURCE_DESC bufDesc = {};
+    bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufDesc.Width = bufferSize;
+    bufDesc.Height = 1;
+    bufDesc.DepthOrArraySize = 1;
+    bufDesc.MipLevels = 1;
+    bufDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufDesc.SampleDesc.Count = 1;
+    bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    D3D12_HEAP_PROPERTIES uploadHeapProp = {};
+    uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    if (FAILED(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufDesc,
+                                               D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&t.stagingBuffer)))) {
+        qWarning("Failed to create texture upload buffer");
+        return;
+    }
+
+    QImage convImage = image.convertToFormat(QImage::Format_RGBA8888); // ###
+
+    quint8 *p = nullptr;
+    const D3D12_RANGE readRange = { 0, 0 };
+    if (FAILED(t.stagingBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+        qWarning("Map failed (texture upload buffer)");
+        return;
+    }
+    quint8 *lp = p + textureLayout[0].Offset;
+    for (uint y = 0; y < textureDesc.Height; ++y) {
+        memcpy(lp, convImage.scanLine(y), convImage.width() * 4);
+        lp += textureLayout[0].Footprint.RowPitch;
+    }
+    t.stagingBuffer->Unmap(0, nullptr);
+
+    copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
+
+    D3D12_TEXTURE_COPY_LOCATION dstLoc;
+    dstLoc.pResource = t.texture.Get();
+    dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dstLoc.SubresourceIndex = 0;
+    D3D12_TEXTURE_COPY_LOCATION srcLoc;
+    srcLoc.pResource = t.stagingBuffer.Get();
+    srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    srcLoc.PlacedFootprint = textureLayout[0];
+    copyCommandList->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+
+    copyCommandList->Close();
+    ID3D12CommandList *commandLists[] = { copyCommandList.Get() };
+    copyCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+    copyCommandQueue->Signal(textureUploadFence.Get(), t.fenceValue);
+}
+
+void QSGD3D12EnginePrivate::addFrameTextureDep(uint id)
+{
+    if (!inFrame) {
+        qWarning("addFrameTextureDep cannot be called outside begin/endFrame");
+        return;
+    }
+
+    currentFrameTextures.insert(id);
+    currentDrawTextures.append(id);
 }
 
 QT_END_NAMESPACE

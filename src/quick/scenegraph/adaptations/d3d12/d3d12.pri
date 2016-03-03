@@ -5,7 +5,9 @@ SOURCES += \
     $$PWD/qsgd3d12context.cpp \
     $$PWD/qsgd3d12rendercontext.cpp \
     $$PWD/qsgd3d12rectanglenode.cpp \
-    $$PWD/qsgd3d12material.cpp
+    $$PWD/qsgd3d12material.cpp \
+    $$PWD/qsgd3d12texture.cpp \
+    $$PWD/qsgd3d12imagenode.cpp
 
 NO_PCH_SOURCES += \
     $$PWD/qsgd3d12engine.cpp
@@ -19,7 +21,9 @@ HEADERS += \
     $$PWD/qsgd3d12engine_p.h \
     $$PWD/qsgd3d12engine_p_p.h \
     $$PWD/qsgd3d12rectanglenode_p.h \
-    $$PWD/qsgd3d12material_p.h
+    $$PWD/qsgd3d12material_p.h \
+    $$PWD/qsgd3d12texture_p.h \
+    $$PWD/qsgd3d12imagenode_p.h
 
 LIBS += -ldxgi -ld3d12
 

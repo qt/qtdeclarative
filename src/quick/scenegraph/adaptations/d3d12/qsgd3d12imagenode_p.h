@@ -37,38 +37,46 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12renderer_p.h"
-#include "qsgd3d12texture_p.h"
+#ifndef QSGD3D12IMAGENODE_P_H
+#define QSGD3D12IMAGENODE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qsgdefaultimagenode_p.h>
+#include "qsgd3d12material_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
-    : QSGRenderContext(ctx)
+class QSGD3D12ImageNode : public QSGDefaultNoMaterialImageNode
 {
-}
+public:
+    QSGD3D12ImageNode();
 
-void QSGD3D12RenderContext::initialize(QOpenGLContext *)
-{
-    Q_UNREACHABLE();
-}
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
 
-QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags) const
-{
-    Q_ASSERT(m_engine);
-    QSGD3D12Texture *t = new QSGD3D12Texture(m_engine);
-    t->setImage(image, flags);
-    return t;
-}
+    void updateMaterialAntialiasing() override;
+    void setMaterialTexture(QSGTexture *texture) override;
+    QSGTexture *materialTexture() const override;
+    bool updateMaterialBlending() override;
+    bool supportsWrap(const QSize &size) const override;
 
-QSGRenderer *QSGD3D12RenderContext::createRenderer()
-{
-    return new QSGD3D12Renderer(this);
-}
-
-void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
-{
-    QSGRenderContext::renderNextFrame(renderer, fbo);
-}
+private:
+    QSGD3D12TextureMaterial m_material;
+//    QSGSmoothTextureMaterial m_smoothMaterial;
+};
 
 QT_END_NAMESPACE
+
+#endif // QSGD3D12IMAGENODE_P_H

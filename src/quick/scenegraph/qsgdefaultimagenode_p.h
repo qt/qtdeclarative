@@ -65,31 +65,31 @@ public:
     void setTexture(QSGTexture *texture);
 
 protected:
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGImageNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultNoMaterialImageNode : public QSGImageNode
 {
 public:
-    QSGDefaultImageNode();
-    virtual void setTargetRect(const QRectF &rect);
-    virtual void setInnerTargetRect(const QRectF &rect);
-    virtual void setInnerSourceRect(const QRectF &rect);
-    virtual void setSubSourceRect(const QRectF &rect);
-    virtual void setTexture(QSGTexture *t);
-    virtual void setAntialiasing(bool antialiasing);
-    virtual void setMirror(bool mirror);
-    virtual void update();
+    QSGDefaultNoMaterialImageNode();
+    void setTargetRect(const QRectF &rect) override;
+    void setInnerTargetRect(const QRectF &rect) override;
+    void setInnerSourceRect(const QRectF &rect) override;
+    void setSubSourceRect(const QRectF &rect) override;
+    void setTexture(QSGTexture *texture) override;
+    void setAntialiasing(bool antialiasing) override;
+    void setMirror(bool mirror) override;
+    void update() override;
+    void preprocess() override;
 
-    virtual void setMipmapFiltering(QSGTexture::Filtering filtering);
-    virtual void setFiltering(QSGTexture::Filtering filtering);
-    virtual void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode);
-    virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode);
+protected:
+    virtual void updateMaterialAntialiasing() = 0;
+    virtual void setMaterialTexture(QSGTexture *texture) = 0;
+    virtual QSGTexture *materialTexture() const = 0;
+    virtual bool updateMaterialBlending() = 0;
+    virtual bool supportsWrap(const QSize &size) const = 0;
 
-    virtual void preprocess();
-
-private:
     void updateGeometry();
 
     QRectF m_targetRect;
@@ -97,15 +97,33 @@ private:
     QRectF m_innerSourceRect;
     QRectF m_subSourceRect;
 
-    QSGOpaqueTextureMaterial m_material;
-    QSGTextureMaterial m_materialO;
-    QSGSmoothTextureMaterial m_smoothMaterial;
-
     uint m_antialiasing : 1;
     uint m_mirror : 1;
     uint m_dirtyGeometry : 1;
 
     QSGGeometry m_geometry;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGDefaultNoMaterialImageNode
+{
+public:
+    QSGDefaultImageNode();
+
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
+
+    void updateMaterialAntialiasing() override;
+    void setMaterialTexture(QSGTexture *texture) override;
+    QSGTexture *materialTexture() const override;
+    bool updateMaterialBlending() override;
+    bool supportsWrap(const QSize &size) const override;
+
+private:
+    QSGOpaqueTextureMaterial m_material;
+    QSGTextureMaterial m_materialO;
+    QSGSmoothTextureMaterial m_smoothMaterial;
 };
 
 QT_END_NAMESPACE
