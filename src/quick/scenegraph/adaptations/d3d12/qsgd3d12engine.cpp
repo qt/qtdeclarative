@@ -917,7 +917,10 @@ void QSGD3D12EnginePrivate::setConstantBuffer(const quint8 *data, int size)
 
 void QSGD3D12EnginePrivate::markConstantBufferDirty(int offset, int size)
 {
-    constantData.dirty.append(qMakePair(offset, size));
+    const QPair<int, int> range = qMakePair(offset, size);
+    // don't bother checking for overlapping dirty ranges, it won't happen with the current renderer
+    if (!constantData.dirty.contains(range))
+        constantData.dirty.append(range);
 }
 
 void QSGD3D12EnginePrivate::queueViewport(const QRect &rect)

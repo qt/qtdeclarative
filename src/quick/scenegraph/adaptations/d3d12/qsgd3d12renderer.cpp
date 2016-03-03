@@ -236,6 +236,11 @@ void QSGD3D12Renderer::render()
         }
     }
 
+    const QRect devRect = deviceRect();
+    m_projectionChangedDueToDeviceSize = devRect != m_lastDeviceRect;
+    if (m_projectionChangedDueToDeviceSize)
+        m_lastDeviceRect = devRect;
+
     if (m_dirtyTransformNodes.size()) {
         const QSet<QSGNode *> subTreeRoots = qsg_removeDescendants(m_dirtyTransformNodes, rootNode());
         for (QSGNode *node : subTreeRoots) {
@@ -362,8 +367,6 @@ void QSGD3D12Renderer::renderElements()
     m_pipelineState.depthEnable = true;
     m_pipelineState.depthWrite = true;
 
-    m_current_projection_matrix = projectionMatrix();
-
     // First do opaque...
     // The algorithm is quite simple. We traverse the list back-to-front, and
     // for every item we start a second traversal and draw all elements which
@@ -431,18 +434,25 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     m_current_determinant = m_current_model_view_matrix.determinant();
     m_current_opacity = gn->inheritedOpacity();
 
-    QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
-
     const QSGGeometry *g = gn->geometry();
     QSGD3D12Material *m = static_cast<QSGD3D12Material *>(gn->activeMaterial());
 
     if (m->type() != m_lastMaterialType)
         m->preparePipeline(&m_pipelineState.shaders);
 
+    QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
+
+    // After a rebuild everything in the cbuffer has to be updated.
     if (!e.cboPrepared) {
         e.cboPrepared = true;
         dirtyState = QSGD3D12Material::RenderState::DirtyAll;
     }
+
+    // DirtyMatrix does not include projection matrix changes that can arise
+    // due to changing the render target's size (and there is no rebuild).
+    // Accommodate for this.
+    if (m_projectionChangedDueToDeviceSize)
+        dirtyState |= QSGD3D12Material::RenderState::DirtyMatrix;
 
     quint8 *cboPtr = nullptr;
     if (e.cboSize > 0)

@@ -108,6 +108,8 @@ private:
     NodeDirtyMap m_nodeDirtyMap;
 
     QRect m_activeScissorRect;
+    QRect m_lastDeviceRect;
+    bool m_projectionChangedDueToDeviceSize;
 };
 
 QT_END_NAMESPACE
