@@ -493,9 +493,10 @@ private:
 inline void QQuickParticleData::setInstantaneousAX(float ax, QQuickParticleSystem* particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float t_sq = t * t;
     float vx = (this->vx + t * this->ax) - t * ax;
-    float ex = this->x + this->vx * t + 0.5f * this->ax * t * t;
-    float x = ex - t * vx - 0.5f * t * t * ax;
+    float ex = this->x + this->vx * t + 0.5f * this->ax * t_sq;
+    float x = ex - t * vx - 0.5f * t_sq * ax;
 
     this->ax = ax;
     this->vx = vx;
@@ -505,9 +506,10 @@ inline void QQuickParticleData::setInstantaneousAX(float ax, QQuickParticleSyste
 inline void QQuickParticleData::setInstantaneousVX(float vx, QQuickParticleSystem* particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float t_sq = t * t;
     float evx = vx - t * this->ax;
-    float ex = this->x + this->vx * t + 0.5f * this->ax * t * t;
-    float x = ex - t * evx - 0.5f * t * t * this->ax;
+    float ex = this->x + this->vx * t + 0.5f * this->ax * t_sq;
+    float x = ex - t * evx - 0.5f * t_sq * this->ax;
 
     this->vx = evx;
     this->x = x;
@@ -516,15 +518,17 @@ inline void QQuickParticleData::setInstantaneousVX(float vx, QQuickParticleSyste
 inline void QQuickParticleData::setInstantaneousX(float x, QQuickParticleSystem* particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
-    this->x = x - t * this->vx - 0.5f * t * t * this->ax;
+    float t_sq = t * t;
+    this->x = x - t * this->vx - 0.5f * t_sq * this->ax;
 }
 
 inline void QQuickParticleData::setInstantaneousAY(float ay, QQuickParticleSystem* particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float t_sq = t * t;
     float vy = (this->vy + t * this->ay) - t * ay;
-    float ey = this->y + this->vy * t + 0.5f * this->ay * t * t;
-    float y = ey - t * vy - 0.5f * t * t * ay;
+    float ey = this->y + this->vy * t + 0.5f * this->ay * t_sq;
+    float y = ey - t * vy - 0.5f * t_sq * ay;
 
     this->ay = ay;
     this->vy = vy;
@@ -534,9 +538,10 @@ inline void QQuickParticleData::setInstantaneousAY(float ay, QQuickParticleSyste
 inline void QQuickParticleData::setInstantaneousVY(float vy, QQuickParticleSystem* particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float t_sq = t * t;
     float evy = vy - t * this->ay;
-    float ey = this->y + this->vy * t + 0.5f * this->ay * t * t;
-    float y = ey - t*evy - 0.5f * t * t * this->ay;
+    float ey = this->y + this->vy * t + 0.5f * this->ay * t_sq;
+    float y = ey - t*evy - 0.5f * t_sq * this->ay;
 
     this->vy = evy;
     this->y = y;
@@ -545,13 +550,15 @@ inline void QQuickParticleData::setInstantaneousVY(float vy, QQuickParticleSyste
 inline void QQuickParticleData::setInstantaneousY(float y, QQuickParticleSystem *particleSystem)
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
-    this->y = y - t * this->vy - 0.5f * t * t * this->ay;
+    float t_sq = t * t;
+    this->y = y - t * this->vy - 0.5f * t_sq * this->ay;
 }
 
 inline float QQuickParticleData::curX(QQuickParticleSystem *particleSystem) const
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
-    return this->x + this->vx * t + 0.5f * this->ax * t * t;
+    float t_sq = t * t;
+    return this->x + this->vx * t + 0.5f * this->ax * t_sq;
 }
 
 inline float QQuickParticleData::curVX(QQuickParticleSystem *particleSystem) const
@@ -563,7 +570,8 @@ inline float QQuickParticleData::curVX(QQuickParticleSystem *particleSystem) con
 inline float QQuickParticleData::curY(QQuickParticleSystem *particleSystem) const
 {
     float t = (particleSystem->timeInt / 1000.0f) - this->t;
-    return y + vy * t + 0.5f * ay * t * t;
+    float t_sq = t * t;
+    return y + vy * t + 0.5f * ay * t_sq;
 }
 
 inline float QQuickParticleData::curVY(QQuickParticleSystem *particleSystem) const
