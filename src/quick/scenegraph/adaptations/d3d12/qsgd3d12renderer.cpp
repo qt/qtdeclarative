@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
 
+// NOTE: Avoid categorized logging. It is slow.
+
 #define DECLARE_DEBUG_VAR(variable) \
     static bool debug_ ## variable() \
     { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
@@ -458,7 +460,9 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     if (e.cboSize > 0)
         cboPtr = m_cboData.data() + e.cboOffset;
 
-    qDebug() << "dirtystate for" << e.node << "is" << dirtyState;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "dirty state for" << e.node << "is" << dirtyState;
+
     QSGD3D12Material::UpdateResults updRes = m->updatePipeline(QSGD3D12Material::makeRenderState(this, dirtyState),
                                                                &m_pipelineState.shaders,
                                                                cboPtr);

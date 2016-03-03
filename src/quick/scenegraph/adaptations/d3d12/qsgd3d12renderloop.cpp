@@ -47,9 +47,19 @@
 
 QT_BEGIN_NAMESPACE
 
+// NOTE: Avoid categorized logging. It is slow.
+
+#define DECLARE_DEBUG_VAR(variable) \
+    static bool debug_ ## variable() \
+    { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
+
+DECLARE_DEBUG_VAR(render)
+
 QSGD3D12RenderLoop::QSGD3D12RenderLoop()
 {
-    qDebug("new d3d12 render loop");
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("new d3d12 render loop");
+
     sg = new QSGD3D12Context;
     rc = new QSGD3D12RenderContext(sg);
 }
@@ -62,7 +72,8 @@ QSGD3D12RenderLoop::~QSGD3D12RenderLoop()
 
 void QSGD3D12RenderLoop::show(QQuickWindow *window)
 {
-    qDebug() << "show" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "show" << window;
 
     WindowData data;
     data.engine = new QSGD3D12Engine;
@@ -75,7 +86,8 @@ void QSGD3D12RenderLoop::show(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::hide(QQuickWindow *window)
 {
-    qDebug() << "hide" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "hide" << window;
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->fireAboutToStop();
@@ -86,7 +98,8 @@ void QSGD3D12RenderLoop::resize(QQuickWindow *window)
     if (!window->isExposed() || window->size().isEmpty())
         return;
 
-    qDebug() << "resize" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "resize" << window;
 
     WindowData &data(m_windows[window]);
     if (data.engine)
@@ -95,7 +108,8 @@ void QSGD3D12RenderLoop::resize(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
 {
-    qDebug() << "window destroyed" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "window destroyed" << window;
 
     WindowData &data(m_windows[window]);
     delete data.engine;
@@ -114,7 +128,8 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::exposureChanged(QQuickWindow *window)
 {
-    qDebug() << "exposure changed" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "exposure changed" << window;
 
     if (window->isExposed()) {
         m_windows[window].updatePending = true;
@@ -131,8 +146,6 @@ QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::update(QQuickWindow *window)
 {
-    //qDebug() << "update" << window;
-
     if (!m_windows.contains(window))
         return;
 
@@ -142,15 +155,14 @@ void QSGD3D12RenderLoop::update(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::maybeUpdate(QQuickWindow *window)
 {
-    //qDebug() << "maybeUpdate" << window;
-
     update(window);
 }
 
 // called in response to window->requestUpdate()
 void QSGD3D12RenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
-    qDebug() << "handleUpdateRequest" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "handleUpdateRequest" << window;
 
     renderWindow(window);
 }
@@ -172,7 +184,8 @@ QSGRenderContext *QSGD3D12RenderLoop::createRenderContext(QSGContext *) const
 
 void QSGD3D12RenderLoop::releaseResources(QQuickWindow *window)
 {
-    qDebug() << "releaseResources" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "releaseResources" << window;
 }
 
 void QSGD3D12RenderLoop::postJob(QQuickWindow *window, QRunnable *job)
@@ -189,7 +202,8 @@ QSurface::SurfaceType QSGD3D12RenderLoop::windowSurfaceType() const
 
 void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
 {
-    qDebug() << "renderWindow" << window;
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "renderWindow" << window;
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     if (!wd->isRenderable() || !m_windows.contains(window))

@@ -44,6 +44,14 @@
 
 QT_BEGIN_NAMESPACE
 
+// NOTE: Avoid categorized logging. It is slow.
+
+#define DECLARE_DEBUG_VAR(variable) \
+    static bool debug_ ## variable() \
+    { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
+
+DECLARE_DEBUG_VAR(render)
+
 // Recommended reading before moving further: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 // Note esp. operator= vs. Attach and operator& vs. GetAddressOf
 
@@ -80,7 +88,8 @@ QSGD3D12DescriptorHandle QSGD3D12DescriptorHeapManager::allocate(D3D12_DESCRIPTO
     }
 
     heap.start.cpu = heap.heap->GetCPUDescriptorHandleForHeapStart();
-    qDebug("type %x start is %llu", type, heap.start.cpu.ptr);
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("type %x start is %llu", type, heap.start.cpu.ptr);
     if (flags & ShaderVisible)
         heap.start.gpu = heap.heap->GetGPUDescriptorHandleForHeapStart();
 
@@ -162,7 +171,8 @@ ID3D12Device *QSGD3D12DeviceManager::ref()
 void QSGD3D12DeviceManager::unref()
 {
     if (!m_ref.deref()) {
-        qDebug("destroying d3d device");
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("destroying d3d device");
         m_device = nullptr;
         m_factory = nullptr;
     }
@@ -600,7 +610,8 @@ void QSGD3D12EnginePrivate::resize()
     if (!initialized)
         return;
 
-    qDebug() << window->size();
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << window->size();
 
     // Clear these, otherwise resizing will fail.
     depthStencil = nullptr;
@@ -710,9 +721,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12EnginePrivate::backBufferRTV() const
 
 void QSGD3D12EnginePrivate::beginFrame()
 {
-    static int cnt = 0;
-    qDebug() << "***** begin frame" << cnt;
-    ++cnt;
+    if (Q_UNLIKELY(debug_render())) {
+        static int cnt = 0;
+        qDebug() << "***** begin frame" << cnt;
+        ++cnt;
+    }
 
     // The device may have been lost. This is the point to attempt to start again from scratch.
     if (!initialized && window)
@@ -737,7 +750,8 @@ void QSGD3D12EnginePrivate::updateBuffer(StagingBufferRef *br, ID3D12Resource *r
             return;
         }
         for (const auto &r : qAsConst(br->dirty)) {
-            qDebug("%s o %d s %d", dbgstr, r.first, r.second);
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("%s o %d s %d", dbgstr, r.first, r.second);
             memcpy(p + r.first, br->p + r.first, r.second);
         }
         r->Unmap(0, nullptr);
@@ -747,7 +761,8 @@ void QSGD3D12EnginePrivate::updateBuffer(StagingBufferRef *br, ID3D12Resource *r
 
 void QSGD3D12EnginePrivate::endFrame()
 {
-    qDebug() << "***** end frame";
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "***** end frame";
 
     // Now is the time to sync all the changed areas in the buffers.
     updateBuffer(&vertexData, vertexBuffer.Get(), "vertex");
@@ -801,7 +816,9 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
     ComPtr<ID3D12PipelineState> pso = m_psoCache[pipelineState];
 
     if (!pso) {
-        qDebug("NEW PSO");
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("NEW PSO");
+
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
         D3D12_INPUT_ELEMENT_DESC inputElements[8];
@@ -814,7 +831,8 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
             ieDesc.InputSlot = ie.slot;
             ieDesc.AlignedByteOffset = ie.offset;
             ieDesc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-            qDebug("input [%d]: %s %d 0x%x %d", ieIdx, ie.name, ie.offset, ie.format, ie.slot);
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("input [%d]: %s %d 0x%x %d", ieIdx, ie.name, ie.offset, ie.format, ie.slot);
             inputElements[ieIdx++] = ieDesc;
         }
 
@@ -968,7 +986,8 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         // Only enlarge, never shrink
         const bool newBufferNeeded = vertexBuffer ? (vertexData.size > vertexBuffer->GetDesc().Width) : true;
         if (newBufferNeeded) {
-            qDebug("new vertex buffer of size %d", vertexData.size);
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("new vertex buffer of size %d", vertexData.size);
             vertexBuffer.Attach(createBuffer(vertexData.size));
         }
         vertexData.dirty.clear();
@@ -983,7 +1002,8 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         if (indexData.size > 0) {
             const bool newBufferNeeded = indexBuffer ? (indexData.size > indexBuffer->GetDesc().Width) : true;
             if (newBufferNeeded) {
-                qDebug("new index buffer of size %d", indexData.size);
+                if (Q_UNLIKELY(debug_render()))
+                    qDebug("new index buffer of size %d", indexData.size);
                 indexBuffer.Attach(createBuffer(indexData.size));
             }
             indexData.dirty.clear();
@@ -1000,7 +1020,8 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         constantData.fullChange = false;
         const bool newBufferNeeded = constantBuffer ? (constantData.size > constantBuffer->GetDesc().Width) : true;
         if (newBufferNeeded) {
-            qDebug("new constant buffer of size %d", constantData.size);
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("new constant buffer of size %d", constantData.size);
             constantBuffer.Attach(createBuffer(constantData.size));
         }
         constantData.dirty.clear();
@@ -1071,7 +1092,8 @@ void QSGD3D12EnginePrivate::present()
     if (!initialized)
         return;
 
-    qDebug("--- present with vsync ---");
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("--- present with vsync ---");
 
     HRESULT hr = swapChain->Present(1, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
@@ -1088,7 +1110,9 @@ void QSGD3D12EnginePrivate::waitGPU()
     if (!initialized)
         return;
 
-    qDebug("--- blocking wait for GPU ---");
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("--- blocking wait for GPU ---");
+
     waitForGPU(presentFence);
 }
 

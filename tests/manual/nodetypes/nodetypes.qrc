@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>Rects.qml</file>
+        <file>LotsOfRects.qml</file>
     </qresource>
 </RCC>

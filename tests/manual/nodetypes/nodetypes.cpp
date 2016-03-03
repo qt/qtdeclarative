@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 
     qDebug("Available tests:");
     qDebug("  [R] - Rectangles");
+    qDebug("  [4] - A lot of rectangles (perf)");
     qDebug("\nPress S to stop the currently running test\n");
 
     QQuickView view;

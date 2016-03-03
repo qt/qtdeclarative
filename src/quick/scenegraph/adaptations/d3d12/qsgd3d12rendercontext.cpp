@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
 {
-    qDebug("new d3d12 render context");
 }
 
 void QSGD3D12RenderContext::initialize(QOpenGLContext *)
