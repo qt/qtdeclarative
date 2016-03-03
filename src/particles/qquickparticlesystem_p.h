@@ -330,11 +330,12 @@ public:
     // 4 bytes wasted
 
 
-    void debugDump(QQuickParticleSystem *particleSystem);
-    bool stillAlive(QQuickParticleSystem *particleSystem);//Only checks end, because usually that's all you need and it's a little faster.
-    bool alive(QQuickParticleSystem *particleSystem);
-    float lifeLeft(QQuickParticleSystem *particleSystem);
-    float curSize(QQuickParticleSystem *particleSystem);
+    void debugDump(QQuickParticleSystem *particleSystem) const;
+    bool stillAlive(QQuickParticleSystem *particleSystem) const; //Only checks end, because usually that's all you need and it's a little faster.
+    bool alive(QQuickParticleSystem *particleSystem) const;
+    float lifeLeft(QQuickParticleSystem *particleSystem) const;
+
+    float curSize(QQuickParticleSystem *particleSystem) const;
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
     QQmlV4Handle v4Value(QQuickParticleSystem *particleSystem);
     void extendLife(float time, QQuickParticleSystem *particleSystem);
@@ -489,19 +490,115 @@ private:
     QQuickParticleSystem* m_system;
 };
 
-inline bool QQuickParticleData::stillAlive(QQuickParticleSystem* system)
+inline void QQuickParticleData::setInstantaneousAX(qreal ax, QQuickParticleSystem* particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    qreal vx = (this->vx + t*this->ax) - t*ax;
+    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
+    qreal x = ex - t*vx - 0.5 * t*t*ax;
+
+    this->ax = ax;
+    this->vx = vx;
+    this->x = x;
+}
+
+inline void QQuickParticleData::setInstantaneousVX(qreal vx, QQuickParticleSystem* particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    qreal evx = vx - t*this->ax;
+    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
+    qreal x = ex - t*evx - 0.5 * t*t*this->ax;
+
+    this->vx = evx;
+    this->x = x;
+}
+
+inline void QQuickParticleData::setInstantaneousX(qreal x, QQuickParticleSystem* particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    this->x = x - t*this->vx - 0.5 * t*t*this->ax;
+}
+
+inline void QQuickParticleData::setInstantaneousAY(qreal ay, QQuickParticleSystem* particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    qreal vy = (this->vy + t*this->ay) - t*ay;
+    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
+    qreal y = ey - t*vy - 0.5 * t*t*ay;
+
+    this->ay = ay;
+    this->vy = vy;
+    this->y = y;
+}
+
+inline void QQuickParticleData::setInstantaneousVY(qreal vy, QQuickParticleSystem* particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    qreal evy = vy - t*this->ay;
+    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
+    qreal y = ey - t*evy - 0.5 * t*t*this->ay;
+
+    this->vy = evy;
+    this->y = y;
+}
+
+inline void QQuickParticleData::setInstantaneousY(qreal y, QQuickParticleSystem *particleSystem)
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    this->y = y - t * this->vy - 0.5 * t*t*this->ay;
+}
+
+inline qreal QQuickParticleData::curX(QQuickParticleSystem *particleSystem) const
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    return this->x + this->vx * t + 0.5 * this->ax * t * t;
+}
+
+inline qreal QQuickParticleData::curVX(QQuickParticleSystem *particleSystem) const
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    return this->vx + t*this->ax;
+}
+
+inline qreal QQuickParticleData::curY(QQuickParticleSystem *particleSystem) const
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    return y + vy * t + 0.5 * ay * t * t;
+}
+
+inline qreal QQuickParticleData::curVY(QQuickParticleSystem *particleSystem) const
+{
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    return vy + t*ay;
+}
+
+inline bool QQuickParticleData::stillAlive(QQuickParticleSystem* system) const
 {
     if (!system)
         return false;
     return (t + lifeSpan - EPSILON()) > ((qreal)system->timeInt/1000.0);
 }
 
-inline bool QQuickParticleData::alive(QQuickParticleSystem* system)
+inline bool QQuickParticleData::alive(QQuickParticleSystem* system) const
 {
     if (!system)
         return false;
     qreal st = ((qreal)system->timeInt/1000.0);
     return (t + EPSILON()) < st && (t + lifeSpan - EPSILON()) > st;
+}
+
+inline float QQuickParticleData::lifeLeft(QQuickParticleSystem *particleSystem) const
+{
+    if (!particleSystem)
+        return 0.0f;
+    return (t + lifeSpan) - (particleSystem->timeInt/1000.0);
+}
+
+inline float QQuickParticleData::curSize(QQuickParticleSystem *particleSystem) const
+{
+    if (!particleSystem || !lifeSpan)
+        return 0.0f;
+    return size + (endSize - size) * (1 - (lifeLeft(particleSystem) / lifeSpan));
 }
 
 QT_END_NAMESPACE

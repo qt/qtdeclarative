@@ -529,95 +529,8 @@ QQmlV4Handle QQuickParticleData::v4Value(QQuickParticleSystem* particleSystem)
         v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(particleSystem)), this, particleSystem);
     return v8Datum->v4Value();
 }
-//sets the x accleration without affecting the instantaneous x velocity or position
-void QQuickParticleData::setInstantaneousAX(qreal ax, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal vx = (this->vx + t*this->ax) - t*ax;
-    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*vx - 0.5 * t*t*ax;
 
-    this->ax = ax;
-    this->vx = vx;
-    this->x = x;
-}
-
-//sets the x velocity without affecting the instantaneous x postion
-void QQuickParticleData::setInstantaneousVX(qreal vx, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal evx = vx - t*this->ax;
-    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*evx - 0.5 * t*t*this->ax;
-
-    this->vx = evx;
-    this->x = x;
-}
-
-//sets the instantaneous x postion
-void QQuickParticleData::setInstantaneousX(qreal x, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    this->x = x - t*this->vx - 0.5 * t*t*this->ax;
-}
-
-//sets the y accleration without affecting the instantaneous y velocity or position
-void QQuickParticleData::setInstantaneousAY(qreal ay, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal vy = (this->vy + t*this->ay) - t*ay;
-    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*vy - 0.5 * t*t*ay;
-
-    this->ay = ay;
-    this->vy = vy;
-    this->y = y;
-}
-
-//sets the y velocity without affecting the instantaneous y position
-void QQuickParticleData::setInstantaneousVY(qreal vy, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal evy = vy - t*this->ay;
-    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*evy - 0.5 * t*t*this->ay;
-
-    this->vy = evy;
-    this->y = y;
-}
-
-//sets the instantaneous Y position
-void QQuickParticleData::setInstantaneousY(qreal y, QQuickParticleSystem* particleSystem)
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    this->y = y - t*this->vy - 0.5 * t*t*this->ay;
-}
-
-qreal QQuickParticleData::curX(QQuickParticleSystem* particleSystem) const
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return this->x + this->vx * t + 0.5 * this->ax * t * t;
-}
-
-qreal QQuickParticleData::curVX(QQuickParticleSystem* particleSystem) const
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return this->vx + t*this->ax;
-}
-
-qreal QQuickParticleData::curY(QQuickParticleSystem* particleSystem) const
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return y + vy * t + 0.5 * ay * t * t;
-}
-
-qreal QQuickParticleData::curVY(QQuickParticleSystem* particleSystem) const
-{
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return vy + t*ay;
-}
-
-void QQuickParticleData::debugDump(QQuickParticleSystem* particleSystem)
+void QQuickParticleData::debugDump(QQuickParticleSystem* particleSystem) const
 {
     qDebug() << "Particle" << systemIndex << groupId << "/" << index << stillAlive(particleSystem)
              << "Pos: " << x << "," << y
@@ -625,20 +538,6 @@ void QQuickParticleData::debugDump(QQuickParticleSystem* particleSystem)
              << "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
              << "Time: " << t << "," <<lifeSpan << ";" << (particleSystem->timeInt / 1000.0) ;
-}
-
-float QQuickParticleData::curSize(QQuickParticleSystem* particleSystem)
-{
-    if (!particleSystem || !lifeSpan)
-        return 0.0f;
-    return size + (endSize - size) * (1 - (lifeLeft(particleSystem) / lifeSpan));
-}
-
-float QQuickParticleData::lifeLeft(QQuickParticleSystem* particleSystem)
-{
-    if (!particleSystem)
-        return 0.0f;
-    return (t + lifeSpan) - (particleSystem->timeInt/1000.0);
 }
 
 void QQuickParticleData::extendLife(float time, QQuickParticleSystem* particleSystem)
