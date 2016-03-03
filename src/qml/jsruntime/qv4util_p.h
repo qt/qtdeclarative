@@ -102,6 +102,9 @@ public:
     void resize(int newSize)
     { bits.resize(newSize); }
 
+    void resize(int newSize, bool newValue)
+    { bits.resize(newSize, newValue); }
+
     void assign(int newSize, bool value)
     { bits.assign(newSize, value); }
 
@@ -158,6 +161,13 @@ public:
 
     void resize(int newSize)
     { bits.resize(newSize); }
+
+    void resize(int newSize, bool newValue)
+    {
+        int oldSize = bits.size();
+        bits.resize(newSize);
+        bits.fill(newValue, oldSize, bits.size());
+    }
 
     void assign(int newSize, bool value)
     {

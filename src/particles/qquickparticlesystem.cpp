@@ -339,11 +339,11 @@ void QQuickParticleGroupData::setSize(int newSize)
         return;
     Q_ASSERT(newSize > m_size);//XXX allow shrinking
     data.resize(newSize);
+    freeList.resize(newSize);
     for (int i=m_size; i<newSize; i++) {
         data[i] = new QQuickParticleData;
         data[i]->groupId = index;
         data[i]->index = i;
-        reusableIndexes << i;
     }
     int delta = newSize - m_size;
     m_size = newSize;
@@ -362,16 +362,15 @@ void QQuickParticleGroupData::kill(QQuickParticleData* d)
     d->lifeSpan = 0;//Kill off
     foreach (QQuickParticlePainter* p, painters)
         p->reload(d);
-    reusableIndexes << d->index;
+    freeList.free(d->index);
 }
 
 QQuickParticleData* QQuickParticleGroupData::newDatum(bool respectsLimits)
 {
     //recycle();//Extra recycler round to be sure?
 
-    while (!reusableIndexes.empty()) {
-        int idx = *(reusableIndexes.begin());
-        reusableIndexes.remove(idx);
+    while (freeList.hasUnusedEntries()) {
+        int idx = freeList.alloc();
         if (data[idx]->stillAlive(m_system)) {// ### This means resurrection of 'dead' particles. Is that allowed?
             prepareRecycler(data[idx]);
             continue;
@@ -383,8 +382,9 @@ QQuickParticleData* QQuickParticleGroupData::newDatum(bool respectsLimits)
 
     int oldSize = m_size;
     setSize(oldSize + 10);//###+1,10%,+10? Choose something non-arbitrarily
-    reusableIndexes.remove(oldSize);
-    return data[oldSize];
+    int idx = freeList.alloc();
+    Q_ASSERT(idx == oldSize);
+    return data[idx];
 }
 
 bool QQuickParticleGroupData::recycle()
@@ -392,7 +392,7 @@ bool QQuickParticleGroupData::recycle()
     while (dataHeap.top() <= m_system->timeInt) {
         foreach (QQuickParticleData* datum, dataHeap.pop()) {
             if (!datum->stillAlive(m_system)) {
-                reusableIndexes << datum->index;
+                freeList.free(datum->index);
             } else {
                 prepareRecycler(datum); //ttl has been altered mid-way, put it back
             }
@@ -400,7 +400,7 @@ bool QQuickParticleGroupData::recycle()
     }
 
     //TODO: If the data is clear, gc (consider shrinking stack size)?
-    return reusableIndexes.count() == m_size;
+    return freeList.count() == 0;
 }
 
 void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)

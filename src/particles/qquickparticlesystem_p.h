@@ -61,6 +61,7 @@
 #include <QAbstractAnimation>
 #include <QtQml/qqml.h>
 #include <private/qv8engine_p.h> //For QQmlV4Handle
+#include <private/qv4util_p.h>
 #include "qtquickparticlesglobal_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -134,6 +135,65 @@ private:
 };
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
+    class FreeList
+    {
+    public:
+        FreeList()
+            : firstUnused(UINT_MAX)
+            , allocated(0)
+        {}
+
+        void resize(int newSize)
+        {
+            Q_ASSERT(newSize >= 0);
+            int oldSize = isUnused.size();
+            isUnused.resize(newSize, true);
+            if (newSize > oldSize) {
+                if (firstUnused == UINT_MAX) {
+                    firstUnused = oldSize;
+                } else {
+                    firstUnused = std::min(firstUnused, unsigned(oldSize));
+                }
+            } else if (firstUnused >= unsigned(newSize)) {
+                firstUnused = UINT_MAX;
+            }
+        }
+
+        void free(int index)
+        {
+            isUnused.setBit(index);
+            firstUnused = std::min(firstUnused, unsigned(index));
+            --allocated;
+        }
+
+        int count() const
+        { return allocated; }
+
+        bool hasUnusedEntries() const
+        { return firstUnused != UINT_MAX; }
+
+        int alloc()
+        {
+            if (hasUnusedEntries()) {
+                int nextFree = firstUnused;
+                isUnused.clearBit(firstUnused);
+                firstUnused = isUnused.findNext(firstUnused, true, false);
+                if (firstUnused >= unsigned(isUnused.size())) {
+                    firstUnused = UINT_MAX;
+                }
+                ++allocated;
+                return nextFree;
+            } else {
+                return -1;
+            }
+        }
+
+    private:
+        QV4::BitVector isUnused;
+        unsigned firstUnused;
+        int allocated;
+    };
+
 public: // types
     typedef int ID;
     enum { InvalidID = -1, DefaultGroupID = 0 };
@@ -154,7 +214,7 @@ public:
 
     //TODO: Refactor particle data list out into a separate class
     QVector<QQuickParticleData*> data;
-    QSet<int> reusableIndexes;
+    FreeList freeList;
     QQuickParticleDataHeap dataHeap;
     bool recycle(); //Force recycling round, returns true if all indexes are now reusable
 
