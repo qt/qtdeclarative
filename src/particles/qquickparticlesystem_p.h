@@ -65,6 +65,30 @@
 
 QT_BEGIN_NAMESPACE
 
+template<class T, int Prealloc>
+class QQuickParticleVarLengthArray: public QVarLengthArray<T, Prealloc>
+{
+public:
+    void insert(const T &element)
+    {
+        if (!this->contains(element)) {
+            this->append(element);
+        }
+    }
+
+    bool removeOne(const T &element)
+    {
+        for (int i = 0; i < this->size(); ++i) {
+            if (this->at(i) == element) {
+                this->remove(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
+
 class QQuickParticleSystem;
 class QQuickParticleAffector;
 class QQuickParticleEmitter;
@@ -110,6 +134,10 @@ private:
 };
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
+public: // types
+    typedef int ID;
+    enum { InvalidID = -1, DefaultGroupID = 0 };
+
 public:
     QQuickParticleGroupData(const QString &name, QQuickParticleSystem* sys);
     ~QQuickParticleGroupData();
@@ -121,8 +149,8 @@ public:
 
     void setSize(int newSize);
 
-    const int index;
-    QSet<QQuickParticlePainter*> painters;//TODO: What if they are dynamically removed?
+    const ID index;
+    QQuickParticleVarLengthArray<QQuickParticlePainter*, 4> painters;//TODO: What if they are dynamically removed?
 
     //TODO: Refactor particle data list out into a separate class
     QVector<QQuickParticleData*> data;

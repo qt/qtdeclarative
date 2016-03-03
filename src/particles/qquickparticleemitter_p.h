@@ -119,6 +119,13 @@ public:
         return m_group;
     }
 
+    QQuickParticleGroupData::ID groupId() const
+    {
+        if (m_groupIdNeedRecalculation)
+            reclaculateGroupId();
+        return m_groupId;
+    }
+
     int particleDurationVariation() const
     {
         return m_particleDurationVariation;
@@ -185,6 +192,7 @@ public Q_SLOTS:
     {
         if (m_system != arg) {
             m_system = arg;
+            m_groupIdNeedRecalculation = true;
             if (m_system)
                 m_system->registerParticleEmitter(this);
             Q_EMIT systemChanged(arg);
@@ -195,6 +203,7 @@ public Q_SLOTS:
     {
         if (m_group != arg) {
             m_group = arg;
+            m_groupIdNeedRecalculation = true;
             Q_EMIT groupChanged(arg);
         }
     }
@@ -319,7 +328,6 @@ protected:
        int m_particleDurationVariation;
        bool m_enabled;
        QQuickParticleSystem* m_system;
-       QString m_group;
        QQuickParticleExtruder* m_extruder;
        QQuickParticleExtruder* m_defaultExtruder;
        QQuickParticleExtruder* effectiveExtruder();
@@ -350,7 +358,14 @@ protected:
        QPointF m_last_last_last_emitter;
 
        bool isEmitConnected();
-private:
+
+private: // methods
+       void reclaculateGroupId() const;
+
+private: // data
+       QString m_group;
+       mutable bool m_groupIdNeedRecalculation;
+       mutable QQuickParticleGroupData::ID m_groupId;
        QQuickDirection m_nullVector;
 
 };

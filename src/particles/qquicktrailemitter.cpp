@@ -179,7 +179,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
 
     int gId = m_system->groupIds[m_follow];
-    int gId2 = m_system->groupIds[m_group];
+    int gId2 = groupId();
     for (int i=0; i<m_system->groupData[gId]->data.count(); i++) {
         QQuickParticleData *d = m_system->groupData[gId]->data[i];
         if (!d->stillAlive()){

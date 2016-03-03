@@ -902,22 +902,21 @@ void QQuickParticleSystem::loadPainter(QObject *p)
 
     QQuickParticlePainter* painter = qobject_cast<QQuickParticlePainter*>(p);
     Q_ASSERT(painter);//XXX
-    foreach (QQuickParticleGroupData* sg, groupData)
-        sg->painters.remove(painter);
+    for (QQuickParticleGroupData* sg : groupData) {
+        sg->painters.removeOne(painter);
+    }
+
     int particleCount = 0;
     if (painter->groups().isEmpty()) {//Uses default particle
-        QStringList def;
-        def << QString();
+        static QStringList def = QStringList() << QString();
         painter->setGroups(def);
         particleCount += groupData[0]->size();
         groupData[0]->painters << painter;
     } else {
-        foreach (const QString &group, painter->groups()) {
-            if (!group.isEmpty() && !groupIds.contains(group)) {//new group
-                new QQuickParticleGroupData(group, this);
-            }
-            particleCount += groupData[groupIds[group]]->size();
-            groupData[groupIds[group]]->painters << painter;
+        for (auto groupId : painter->groupIds()) {
+            QQuickParticleGroupData *gd = groupData[groupId];
+            particleCount += gd->size();
+            gd->painters << painter;
         }
     }
     painter->setCount(particleCount);
@@ -940,22 +939,23 @@ void QQuickParticleSystem::emittersChanged()
     }
 
     // Populate groups and set sizes.
-    for (int i = 0; i < m_emitters.count(); ++i) {
+    for (int i = 0; i < m_emitters.count(); ) {
         QQuickParticleEmitter *e = m_emitters.at(i);
         if (!e) {
             m_emitters.removeAt(i);
-            i--;
             continue;
         }
 
-        if (!e->group().isEmpty() &&
-            !groupIds.contains(e->group())) {
-            new QQuickParticleGroupData(e->group(), this);
+        int groupId = e->groupId();
+        if (groupId == QQuickParticleGroupData::InvalidID) {
+            groupId = (new QQuickParticleGroupData(e->group(), this))->index;
             previousSizes << 0;
             newSizes << 0;
         }
-        newSizes[groupIds[e->group()]] += e->particleCount();
+        newSizes[groupId] += e->particleCount();
         //###: Cull emptied groups?
+
+        ++i;
     }
 
     //TODO: Garbage collection?

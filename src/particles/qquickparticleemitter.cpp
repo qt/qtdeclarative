@@ -237,6 +237,8 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
+  , m_groupIdNeedRecalculation(false)
+  , m_groupId(QQuickParticleGroupData::DefaultGroupID)
 
 {
     //TODO: Reset velocity/acc back to null vector? Or allow null pointer?
@@ -255,6 +257,16 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 bool QQuickParticleEmitter::isEmitConnected()
 {
     IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV4Handle));
+}
+
+void QQuickParticleEmitter::reclaculateGroupId() const
+{
+    if (!m_system) {
+        m_groupId = QQuickParticleGroupData::InvalidID;
+        return;
+    }
+    m_groupId = m_system->groupIds.value(group(), QQuickParticleGroupData::InvalidID);
+    m_groupIdNeedRecalculation = m_groupId == QQuickParticleGroupData::InvalidID;
 }
 
 void QQuickParticleEmitter::componentComplete()
