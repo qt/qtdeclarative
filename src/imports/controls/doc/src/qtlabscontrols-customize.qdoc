@@ -528,12 +528,6 @@
 
             \snippet ToolBar.qml background
 
-        \section3 Frame
-
-            \image qtlabscontrols-toolbar-frame.png
-
-            ToolBar has no frame item by default.
-
 
     \section1 Customizing ToolButton
 
