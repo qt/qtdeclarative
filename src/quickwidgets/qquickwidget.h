@@ -60,7 +60,7 @@ class Q_QUICKWIDGETS_EXPORT QQuickWidget : public QWidget
 public:
     explicit QQuickWidget(QWidget *parent = Q_NULLPTR);
     QQuickWidget(QQmlEngine* engine, QWidget *parent);
-    QQuickWidget(const QUrl &source, QWidget *parent = Q_NULLPTR);
+    explicit QQuickWidget(const QUrl &source, QWidget *parent = Q_NULLPTR);
     virtual ~QQuickWidget();
 
     QUrl source() const;

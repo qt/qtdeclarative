@@ -57,7 +57,7 @@ public:
     };
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 
-    QSGEngine(QObject *parent = Q_NULLPTR);
+    explicit QSGEngine(QObject *parent = Q_NULLPTR);
     ~QSGEngine();
 
     void initialize(QOpenGLContext *context);

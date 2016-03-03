@@ -88,7 +88,7 @@ class Q_QML_EXPORT QQmlEngine : public QJSEngine
     Q_PROPERTY(QString offlineStoragePath READ offlineStoragePath WRITE setOfflineStoragePath)
     Q_OBJECT
 public:
-    QQmlEngine(QObject *p = Q_NULLPTR);
+    explicit QQmlEngine(QObject *p = Q_NULLPTR);
     virtual ~QQmlEngine();
 
     QQmlContext *rootContext() const;

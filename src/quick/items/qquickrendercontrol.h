@@ -49,7 +49,7 @@ class Q_QUICK_EXPORT QQuickRenderControl : public QObject
     Q_OBJECT
 
 public:
-    QQuickRenderControl(QObject *parent = Q_NULLPTR);
+    explicit QQuickRenderControl(QObject *parent = Q_NULLPTR);
     ~QQuickRenderControl();
 
     void prepareThread(QThread *targetThread);

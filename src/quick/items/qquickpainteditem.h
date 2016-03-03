@@ -51,7 +51,7 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
     Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
 
 public:
-    QQuickPaintedItem(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickPaintedItem(QQuickItem *parent = Q_NULLPTR);
     virtual ~QQuickPaintedItem();
 
     enum RenderTarget {

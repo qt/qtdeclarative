@@ -89,7 +89,7 @@ public:
     };
     Q_ENUM(SceneGraphError)
 
-    QQuickWindow(QWindow *parent = Q_NULLPTR);
+    explicit QQuickWindow(QWindow *parent = Q_NULLPTR);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
     virtual ~QQuickWindow();

@@ -56,7 +56,7 @@ class Q_QUICK_EXPORT QQuickView : public QQuickWindow
 public:
     explicit QQuickView(QWindow *parent = Q_NULLPTR);
     QQuickView(QQmlEngine* engine, QWindow *parent);
-    QQuickView(const QUrl &source, QWindow *parent = Q_NULLPTR);
+    explicit QQuickView(const QUrl &source, QWindow *parent = Q_NULLPTR);
     virtual ~QQuickView();
 
     QUrl source() const;
