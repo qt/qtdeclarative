@@ -89,7 +89,7 @@ QQmlContextPrivate::QQmlContextPrivate()
     by name in the context, as though they were all individually added through calls
     to QQmlContext::setContextProperty().  Changes to the property's values are
     detected through the property's notify signal.  Setting a context object is both
-    faster and easier than manually adding and maintaing context property values.
+    faster and easier than manually adding and maintaining context property values.
 
     The following example has the same effect as the previous one, but it uses a context
     object.
