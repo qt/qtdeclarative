@@ -39,41 +39,41 @@ import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.StackView {
-    id: root
+    id: control
 
     //! [popEnter]
     popEnter: Transition {
-        XAnimator { from: (root.mirrored ? -1 : 1) * -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (control.mirrored ? -1 : 1) * -control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popEnter]
 
     //! [popExit]
     popExit: Transition {
-        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (control.mirrored ? -1 : 1) * control.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popExit]
 
     //! [pushEnter]
     pushEnter: Transition {
-        XAnimator { from: (root.mirrored ? -1 : 1) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (control.mirrored ? -1 : 1) * control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushEnter]
 
     //! [pushExit]
     pushExit: Transition {
-        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * -root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (control.mirrored ? -1 : 1) * -control.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushExit]
 
     //! [replaceEnter]
     replaceEnter: Transition {
-        XAnimator { from: (root.mirrored ? -1 : 1) * root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: (control.mirrored ? -1 : 1) * control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [replaceEnter]
 
     //! [replaceExit]
     replaceExit: Transition {
-        XAnimator { from: 0; to: (root.mirrored ? -1 : 1) * -root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: (control.mirrored ? -1 : 1) * -control.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [replaceExit]
 }
