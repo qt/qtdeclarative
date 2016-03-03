@@ -83,7 +83,7 @@ GifRecorder::GifRecorder() :
 void GifRecorder::setRecordingDuration(int duration)
 {
     QVERIFY2(duration >= 1, qPrintable(QString::fromLatin1("Recording duration %1 must be larger than 1 second").arg(duration)));
-    QVERIFY2(duration < 10, qPrintable(QString::fromLatin1("Recording duration %1 must be less than 10 seconds").arg(duration)));
+    QVERIFY2(duration < 20, qPrintable(QString::fromLatin1("Recording duration %1 must be less than 20 seconds").arg(duration)));
 
     mRecordingDuration = duration;
 }
