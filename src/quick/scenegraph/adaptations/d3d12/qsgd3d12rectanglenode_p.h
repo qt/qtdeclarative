@@ -62,12 +62,11 @@ public:
     QSGD3D12RectangleNode();
 
 private:
-    bool supportsAntialiasing() const;
     void updateMaterialAntialiasing() override;
     void updateMaterialBlending(QSGNode::DirtyState *state) override;
 
     QSGD3D12VertexColorMaterial m_material;
-    //QSGD3D12Material m_smoothMaterial;
+    QSGD3D12SmoothColorMaterial m_smoothMaterial;
 };
 
 QT_END_NAMESPACE

@@ -475,7 +475,14 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
 
     setupClipping(gn, elementIndex);
 
-    // ### line width / point size ??
+    // ### Lines and points with sizes other than 1 have to be implemented in some other way. Just ignore for now.
+    if (g->drawingMode() == QSGGeometry::DrawLineStrip || g->drawingMode() == QSGGeometry::DrawLines) {
+        if (g->lineWidth() != 1.0f)
+            qWarning("QSGD3D12Renderer: Line widths other than 1 are not supported by this renderer");
+    } else if (g->drawingMode() == QSGGeometry::DrawPoints) {
+        if (g->lineWidth() != 1.0f)
+            qWarning("QSGD3D12Renderer: Point sprites are not supported by this renderer");
+    }
 
     m_engine->setPipelineState(m_pipelineState);
 

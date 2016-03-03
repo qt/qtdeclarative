@@ -42,6 +42,8 @@
 
 #include "vs_vertexcolor.hlslh"
 #include "ps_vertexcolor.hlslh"
+#include "vs_smoothcolor.hlslh"
+#include "ps_smoothcolor.hlslh"
 
 QT_BEGIN_NAMESPACE
 
@@ -154,6 +156,73 @@ QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(cons
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
         memcpy(p, &opacity, VERTEX_COLOR_CB_SIZE_1);
+        r |= UpdatedConstantBuffer;
+    }
+
+    return r;
+}
+
+QSGD3D12SmoothColorMaterial::QSGD3D12SmoothColorMaterial()
+{
+    setFlag(RequiresFullMatrixExceptTranslate, true);
+    setFlag(Blending, true);
+}
+
+QSGMaterialType QSGD3D12SmoothColorMaterial::mtype;
+
+QSGMaterialType *QSGD3D12SmoothColorMaterial::type() const
+{
+    return &QSGD3D12SmoothColorMaterial::mtype;
+}
+
+int QSGD3D12SmoothColorMaterial::compare(const QSGMaterial *other) const
+{
+    Q_ASSERT(other && type() == other->type());
+    return 0;
+}
+
+static const int SMOOTH_COLOR_CB_SIZE_0 = 16 * sizeof(float); // float4x4
+static const int SMOOTH_COLOR_CB_SIZE_1 = sizeof(float); // float
+static const int SMOOTH_COLOR_CB_SIZE_2 = 2 * sizeof(float); // float2
+static const int SMOOTH_COLOR_CB_SIZE = SMOOTH_COLOR_CB_SIZE_0 + SMOOTH_COLOR_CB_SIZE_1 + SMOOTH_COLOR_CB_SIZE_2;
+
+int QSGD3D12SmoothColorMaterial::constantBufferSize() const
+{
+    return QSGD3D12Engine::alignedConstantBufferSize(SMOOTH_COLOR_CB_SIZE);
+}
+
+void QSGD3D12SmoothColorMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+{
+    shaders->vs = g_VS_SmoothColor;
+    shaders->vsSize = sizeof(g_VS_SmoothColor);
+    shaders->ps = g_PS_SmoothColor;
+    shaders->psSize = sizeof(g_PS_SmoothColor);
+}
+
+QSGD3D12Material::UpdateResults QSGD3D12SmoothColorMaterial::updatePipeline(const RenderState &state,
+                                                                            QSGD3D12ShaderState *,
+                                                                            quint8 *constantBuffer)
+{
+    QSGD3D12Material::UpdateResults r = 0;
+    quint8 *p = constantBuffer;
+
+    if (state.isMatrixDirty()) {
+        memcpy(p, state.combinedMatrix().constData(), SMOOTH_COLOR_CB_SIZE_0);
+        r |= UpdatedConstantBuffer;
+    }
+    p += SMOOTH_COLOR_CB_SIZE_0;
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(p, &opacity, SMOOTH_COLOR_CB_SIZE_1);
+        r |= UpdatedConstantBuffer;
+    }
+    p += SMOOTH_COLOR_CB_SIZE_1;
+
+    if (state.isMatrixDirty()) {
+        const QRect viewport = state.viewportRect();
+        const float v[] = { 2.0f / viewport.width(), 2.0f / viewport.height() };
+        memcpy(p, v, SMOOTH_COLOR_CB_SIZE_2);
         r |= UpdatedConstantBuffer;
     }
 

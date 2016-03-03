@@ -128,6 +128,23 @@ private:
     static QSGMaterialType mtype;
 };
 
+class QSGD3D12SmoothColorMaterial : public QSGD3D12Material
+{
+public:
+    QSGD3D12SmoothColorMaterial();
+    QSGMaterialType *type() const override;
+    int compare(const QSGMaterial *other) const override;
+
+    virtual int constantBufferSize() const override;
+    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    UpdateResults updatePipeline(const RenderState &state,
+                                 QSGD3D12ShaderState *shaders,
+                                 quint8 *constantBuffer) override;
+
+private:
+    static QSGMaterialType mtype;
+};
+
 QT_END_NAMESPACE
 
 #endif // QSGD3D12MATERIAL_P_H

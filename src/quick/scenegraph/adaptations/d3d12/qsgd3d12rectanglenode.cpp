@@ -46,16 +46,11 @@ QSGD3D12RectangleNode::QSGD3D12RectangleNode()
     setMaterial(&m_material);
 }
 
-bool QSGD3D12RectangleNode::supportsAntialiasing() const
-{
-    return false; // ###
-}
-
 void QSGD3D12RectangleNode::updateMaterialAntialiasing()
 {
-    //if (m_antialiasing)
-    //    setMaterial(&m_smoothMaterial);
-    //else
+    if (m_antialiasing)
+        setMaterial(&m_smoothMaterial);
+    else
         setMaterial(&m_material);
 }
 

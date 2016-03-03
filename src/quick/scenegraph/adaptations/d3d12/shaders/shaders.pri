@@ -18,8 +18,19 @@ stencilclip_pshader.header = ps_stencilclip.hlslh
 stencilclip_pshader.entry = PS_StencilClip
 stencilclip_pshader.type = ps_5_0
 
+smoothcolor_VSPS = $$PWD/smoothcolor.hlsl
+smoothcolor_vshader.input = smoothcolor_VSPS
+smoothcolor_vshader.header = vs_smoothcolor.hlslh
+smoothcolor_vshader.entry = VS_SmoothColor
+smoothcolor_vshader.type = vs_5_0
+smoothcolor_pshader.input = smoothcolor_VSPS
+smoothcolor_pshader.header = ps_smoothcolor.hlslh
+smoothcolor_pshader.entry = PS_SmoothColor
+smoothcolor_pshader.type = ps_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
-    stencilclip_vshader stencilclip_pshader
+    stencilclip_vshader stencilclip_pshader \
+    smoothcolor_vshader smoothcolor_pshader
 
 load(hlsl_bytecode_header)
