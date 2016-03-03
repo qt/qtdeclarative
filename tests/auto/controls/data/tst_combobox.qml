@@ -763,4 +763,27 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_wheel(data) {
+        var control = comboBox.createObject(applicationWindow.contentItem, {model: 2, wheelEnabled: true})
+        verify(control)
+
+        var delta = 120
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.currentIndex, 1)
+
+        // reached bounds -> no change
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.currentIndex, 1)
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.currentIndex, 0)
+
+        // reached bounds -> no change
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.currentIndex, 0)
+
+        control.destroy()
+    }
 }
