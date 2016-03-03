@@ -67,7 +67,7 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
 //     (see tst_qqmldebugtrace::trace() benchmark)
 static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteArray> &messages)
 {
-    QByteArray data;
+    QQmlDebugPacket ds;
     Q_ASSERT_X(((d->messageType | d->detailType) & (1 << 31)) == 0, Q_FUNC_INFO,
                "You can use at most 31 message types and 31 detail types.");
     for (uint decodedMessageType = 0; (d->messageType >> decodedMessageType) != 0;
@@ -81,7 +81,6 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                 continue;
 
             //### using QDataStream is relatively expensive
-            QQmlDebugPacket ds;
             ds << d->time << decodedMessageType << decodedDetailType;
 
             switch (decodedMessageType) {
@@ -99,7 +98,8 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                 Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
                 break;
             }
-            messages << ds.data();
+            messages.append(ds.squeezedData());
+            ds.clear();
         }
     }
 }
