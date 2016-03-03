@@ -200,7 +200,7 @@ void QQuickParticleAffector::affectSystem(qreal dt)
     if (m_onceOff)
         dt = 1.0;
     foreach (QQuickParticleGroupData* gd, m_system->groupData) {
-        if (activeGroup(m_system->groupData.key(gd))) {
+        if (activeGroup(gd->index)) {
             foreach (QQuickParticleData* d, gd->data) {
                 if (shouldAffect(d)) {
                     bool affected = false;

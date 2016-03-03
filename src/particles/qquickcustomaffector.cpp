@@ -122,11 +122,15 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     updateOffsets();
 
     QList<QQuickParticleData*> toAffect;
-    foreach (QQuickParticleGroupData* gd, m_system->groupData)
-        if (activeGroup(m_system->groupData.key(gd)))
-            foreach (QQuickParticleData* d, gd->data)
-                if (shouldAffect(d))
+    foreach (QQuickParticleGroupData* gd, m_system->groupData) {
+        if (activeGroup(gd->index)) {
+            foreach (QQuickParticleData* d, gd->data) {
+                if (shouldAffect(d)) {
                     toAffect << d;
+                }
+            }
+        }
+    }
 
     if (toAffect.isEmpty())
         return;

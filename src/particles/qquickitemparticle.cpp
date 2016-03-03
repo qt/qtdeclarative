@@ -278,7 +278,7 @@ void QQuickItemParticle::prepareNextFrame()
     //TODO: Size, better fade?
     foreach (const QString &str, m_groups){
         const int gIdx = m_system->groupIds[str];
-        const QVector<QQuickParticleData*> dataVector = m_system->groupData.value(gIdx)->data;
+        const QVector<QQuickParticleData*> dataVector = m_system->groupData[gIdx]->data;
         const int count = dataVector.size();
 
         for (int i=0; i<count; i++){

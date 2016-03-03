@@ -181,7 +181,7 @@ void QQuickTurbulenceAffector::affectSystem(qreal dt)
 
     QRect boundsRect(0,0,m_gridSize,m_gridSize);
     foreach (QQuickParticleGroupData *gd, m_system->groupData){
-        if (!activeGroup(m_system->groupData.key(gd)))
+        if (!activeGroup(gd->index))
             continue;
         foreach (QQuickParticleData *d, gd->data){
             if (!shouldAffect(d))

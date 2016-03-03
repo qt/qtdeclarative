@@ -330,7 +330,10 @@ void QQuickParticleDataHeap::bubbleDown(int idx)//tends to be called log n times
     }
 }
 
-QQuickParticleGroupData::QQuickParticleGroupData(int id, QQuickParticleSystem* sys):index(id),m_size(0),m_system(sys)
+QQuickParticleGroupData::QQuickParticleGroupData(const QString &name, QQuickParticleSystem* sys)
+    : index(sys->registerParticleGroupData(name, this))
+    , m_size(0)
+    , m_system(sys)
 {
     initList();
 }
@@ -703,6 +706,7 @@ void QQuickParticleData::extendLife(float time)
 QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     QQuickItem(parent),
     stateEngine(0),
+    nextFreeGroupId(0),
     m_animation(0),
     m_running(true),
     initialized(0),
@@ -732,11 +736,11 @@ void QQuickParticleSystem::initGroups()
     qDeleteAll(groupData);
     groupData.clear();
     groupIds.clear();
+    nextFreeGroupId = 0;
 
-    QQuickParticleGroupData* gd = new QQuickParticleGroupData(0, this);//Default group
-    groupData.insert(0,gd);
-    groupIds.insert(QString(), 0);
-    m_nextGroupId = 1;
+    QQuickParticleGroupData *pd = new QQuickParticleGroupData(QString(), this); // Default group
+    Q_ASSERT(pd->index == 0);
+    Q_UNUSED(pd);
 }
 
 void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
@@ -848,6 +852,34 @@ void QQuickParticleSystem::stateRedirect(QQuickParticleGroup* group, QQuickParti
     qWarning() << value << " was placed inside a particle system state but cannot be taken into the particle system. It will be lost.";
 }
 
+
+int QQuickParticleSystem::registerParticleGroupData(const QString &name, QQuickParticleGroupData *pgd)
+{
+    Q_ASSERT(!groupIds.contains(name));
+    int id;
+    if (nextFreeGroupId >= groupData.size()) {
+        groupData.push_back(pgd);
+        nextFreeGroupId = groupData.size();
+        id = nextFreeGroupId - 1;
+    } else {
+        id = nextFreeGroupId;
+        groupData[id] = pgd;
+        searchNextFreeGroupId();
+    }
+    groupIds.insert(name, id);
+    return id;
+}
+
+void QQuickParticleSystem::searchNextFreeGroupId()
+{
+    ++nextFreeGroupId;
+    for (int ei = groupData.size(); nextFreeGroupId != ei; ++nextFreeGroupId) {
+        if (groupData[nextFreeGroupId] == nullptr) {
+            return;
+        }
+    }
+}
+
 void QQuickParticleSystem::componentComplete()
 
 {
@@ -917,11 +949,8 @@ void QQuickParticleSystem::loadPainter(QObject *p)
         groupData[0]->painters << painter;
     } else {
         foreach (const QString &group, painter->groups()) {
-            if (group != QLatin1String("") && !groupIds[group]) {//new group
-                int id = m_nextGroupId++;
-                QQuickParticleGroupData* gd = new QQuickParticleGroupData(id, this);
-                groupIds.insert(group, id);
-                groupData.insert(id, gd);
+            if (!group.isEmpty() && !groupIds.contains(group)) {//new group
+                new QQuickParticleGroupData(group, this);
             }
             particleCount += groupData[groupIds[group]]->size();
             groupData[groupIds[group]]->painters << painter;
@@ -939,9 +968,9 @@ void QQuickParticleSystem::emittersChanged()
 
     QVector<int> previousSizes;
     QVector<int> newSizes;
-    previousSizes.reserve(m_nextGroupId);
-    newSizes.reserve(m_nextGroupId);
-    for (int i=0; i<m_nextGroupId; i++) {
+    previousSizes.reserve(groupData.size());
+    newSizes.reserve(groupData.size());
+    for (int i = 0, ei = groupData.size(); i != ei; ++i) {
         previousSizes << groupData[i]->size();
         newSizes << 0;
     }
@@ -957,10 +986,7 @@ void QQuickParticleSystem::emittersChanged()
 
         if (!e->group().isEmpty() &&
             !groupIds.contains(e->group())) {
-            int id = m_nextGroupId++;
-            QQuickParticleGroupData* gd = new QQuickParticleGroupData(id, this);
-            groupIds.insert(e->group(), id);
-            groupData.insert(id, gd);
+            new QQuickParticleGroupData(e->group(), this);
             previousSizes << 0;
             newSizes << 0;
         }
@@ -970,13 +996,13 @@ void QQuickParticleSystem::emittersChanged()
 
     //TODO: Garbage collection?
     particleCount = 0;
-    for (int i=0; i<m_nextGroupId; i++) {
+    for (int i = 0, ei = groupData.size(); i != ei; ++i) {
         groupData[i]->setSize(qMax(newSizes[i], previousSizes[i]));
         particleCount += groupData[i]->size();
     }
 
     if (m_debugMode)
-        qDebug() << "Particle system emitters changed. New particle count: " << particleCount;
+        qDebug() << "Particle system emitters changed. New particle count: " << particleCount << "in" << groupData.size() << "groups.";
 
     if (particleCount > bySysIdx.size())//New datum requests haven't updated it
         bySysIdx.resize(particleCount);
@@ -1008,17 +1034,15 @@ void QQuickParticleSystem::createEngine()
             }
         }
         if (!exists) {
-            int id = m_nextGroupId++;
-            QQuickParticleGroupData* gd = new QQuickParticleGroupData(id, this);
-            groupIds.insert(group->name(), id);
-            groupData.insert(id, gd);
+            new QQuickParticleGroupData(group->name(), this);
         }
     }
 
     if (m_groups.count()) {
         //Reorder groups List so as to have the same order as groupData
+        // TODO: can't we just merge the two lists?
         QList<QQuickParticleGroup*> newList;
-        for (int i=0; i<m_nextGroupId; i++) {
+        for (int i = 0, ei = groupData.size(); i != ei; ++i) {
             bool exists = false;
             QString name = groupData[i]->name();
             foreach (QQuickParticleGroup* existing, m_groups) {

@@ -111,7 +111,7 @@ private:
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
 public:
-    QQuickParticleGroupData(int id, QQuickParticleSystem* sys);
+    QQuickParticleGroupData(const QString &name, QQuickParticleSystem* sys);
     ~QQuickParticleGroupData();
 
     int size();
@@ -119,7 +119,7 @@ public:
 
     void setSize(int newSize);
 
-    int index;
+    const int index;
     QSet<QQuickParticlePainter*> painters;//TODO: What if they are dynamically removed?
 
     //TODO: Refactor particle data list out into a separate class
@@ -317,9 +317,12 @@ public:
     //Data members here for ease of related class and auto-test usage. Not "public" API. TODO: d_ptrize
     QSet<QQuickParticleData*> needsReset;
     QVector<QQuickParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
-    QHash<QString, int> groupIds;
-    QHash<int, QQuickParticleGroupData*> groupData;
     QQuickStochasticEngine* stateEngine;
+
+    QHash<QString, int> groupIds;
+    QVarLengthArray<QQuickParticleGroupData*, 32> groupData;
+    int nextFreeGroupId;
+    int registerParticleGroupData(const QString &name, QQuickParticleGroupData *pgd);
 
     //Also only here for auto-test usage
     void updateCurrentTime( int currentTime );
@@ -349,6 +352,9 @@ public:
     }
 
 private:
+    void searchNextFreeGroupId();
+
+private:
     void initializeSystem();
     void initGroups();
     QList<QPointer<QQuickParticleEmitter> > m_emitters;
@@ -356,7 +362,6 @@ private:
     QList<QPointer<QQuickParticlePainter> > m_painters;
     QList<QPointer<QQuickParticlePainter> > m_syncList;
     QList<QQuickParticleGroup*> m_groups;
-    int m_nextGroupId;
     int m_nextIndex;
     QSet<int> m_reusableIndexes;
     bool m_componentComplete;
