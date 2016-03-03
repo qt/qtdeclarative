@@ -186,6 +186,7 @@ private:
     QStringList m_clientPlugins;
     bool m_gotHello;
     bool m_blockingMode;
+    bool m_clientSupportsMultiPackets;
 
     QHash<QJSEngine *, EngineCondition> m_engineConditions;
 
@@ -274,7 +275,8 @@ static void cleanupOnShutdown()
 QQmlDebugServerImpl::QQmlDebugServerImpl() :
     m_connection(0),
     m_gotHello(false),
-    m_blockingMode(false)
+    m_blockingMode(false),
+    m_clientSupportsMultiPackets(false)
 {
     static bool postRoutineAdded = false;
     if (!postRoutineAdded) {
@@ -456,6 +458,11 @@ void QQmlDebugServerImpl::receiveMessage()
                     s_dataStreamVersion = QDataStream::Qt_DefaultCompiledVersion;
             }
 
+            if (!in.atEnd())
+                in >> m_clientSupportsMultiPackets;
+            else
+                m_clientSupportsMultiPackets = false;
+
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
 
@@ -516,14 +523,16 @@ void QQmlDebugServerImpl::receiveMessage()
 
     } else {
         if (m_gotHello) {
-            QByteArray message;
-            in >> message;
-
             QHash<QString, QQmlDebugService *>::Iterator iter = m_plugins.find(name);
             if (iter == m_plugins.end()) {
                 qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
             } else {
-                (*iter)->messageReceived(message);
+                QQmlDebugService *service = *iter;
+                QByteArray message;
+                while (!in.atEnd()) {
+                    in >> message;
+                    service->messageReceived(message);
+                }
             }
         } else {
             qWarning("QML Debugger: Invalid hello message.");
@@ -686,8 +695,16 @@ void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &mes
 void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArray> &messages)
 {
     if (canSendMessage(name)) {
-        foreach (const QByteArray &message, messages)
-            doSendMessage(name, message);
+        if (m_clientSupportsMultiPackets) {
+            QQmlDebugPacket out;
+            out << name;
+            foreach (const QByteArray &message, messages)
+                out << message;
+            m_protocol->send(out.data());
+        } else {
+            foreach (const QByteArray &message, messages)
+                doSendMessage(name, message);
+        }
         m_connection->flush();
     }
 }
