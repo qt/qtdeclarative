@@ -66,12 +66,12 @@ public:
     enum CompilationMode { PreferSynchronous, Asynchronous };
     Q_ENUM(CompilationMode)
 
-    QQmlComponent(QObject *parent = 0);
-    QQmlComponent(QQmlEngine *, QObject *parent=0);
-    QQmlComponent(QQmlEngine *, const QString &fileName, QObject *parent = 0);
-    QQmlComponent(QQmlEngine *, const QString &fileName, CompilationMode mode, QObject *parent = 0);
-    QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = 0);
-    QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = 0);
+    QQmlComponent(QObject *parent = Q_NULLPTR);
+    QQmlComponent(QQmlEngine *, QObject *parent = Q_NULLPTR);
+    QQmlComponent(QQmlEngine *, const QString &fileName, QObject *parent = Q_NULLPTR);
+    QQmlComponent(QQmlEngine *, const QString &fileName, CompilationMode mode, QObject *parent = Q_NULLPTR);
+    QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = Q_NULLPTR);
+    QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = Q_NULLPTR);
     virtual ~QQmlComponent();
 
     enum Status { Null, Ready, Loading, Error };
@@ -90,12 +90,12 @@ public:
 
     QUrl url() const;
 
-    virtual QObject *create(QQmlContext *context = 0);
+    virtual QObject *create(QQmlContext *context = Q_NULLPTR);
     virtual QObject *beginCreate(QQmlContext *);
     virtual void completeCreate();
 
-    void create(QQmlIncubator &, QQmlContext *context = 0,
-                QQmlContext *forContext = 0);
+    void create(QQmlIncubator &, QQmlContext *context = Q_NULLPTR,
+                QQmlContext *forContext = Q_NULLPTR);
 
     QQmlContext *creationContext() const;
 

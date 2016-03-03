@@ -55,15 +55,41 @@ public:
     typedef void (*ClearFunction)(QQmlListProperty<T> *);
 
     QQmlListProperty()
-        : object(0), data(0), append(0), count(0), at(0), clear(0), dummy1(0), dummy2(0) {}
+        : object(Q_NULLPTR),
+          data(Q_NULLPTR),
+          append(Q_NULLPTR),
+          count(Q_NULLPTR),
+          at(Q_NULLPTR),
+          clear(Q_NULLPTR),
+          dummy1(Q_NULLPTR),
+          dummy2(Q_NULLPTR)
+    {}
     QQmlListProperty(QObject *o, QList<T *> &list)
         : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
-          clear(qlist_clear), dummy1(0), dummy2(0) {}
+          clear(qlist_clear),
+          dummy1(Q_NULLPTR),
+          dummy2(Q_NULLPTR)
+    {}
     QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c, AtFunction t,
                     ClearFunction r )
-        : object(o), data(d), append(a), count(c), at(t), clear(r), dummy1(0), dummy2(0) {}
+        : object(o),
+          data(d),
+          append(a),
+          count(c),
+          at(t),
+          clear(r),
+          dummy1(Q_NULLPTR),
+          dummy2(Q_NULLPTR)
+    {}
     QQmlListProperty(QObject *o, void *d, CountFunction c, AtFunction t)
-        : object(o), data(d), append(0), count(c), at(t), clear(0), dummy1(0), dummy2(0) {}
+        : object(o),
+          data(d),
+          append(Q_NULLPTR),
+          count(c), at(t),
+          clear(Q_NULLPTR),
+          dummy1(Q_NULLPTR),
+          dummy2(Q_NULLPTR)
+    {}
     bool operator==(const QQmlListProperty &o) const {
         return object == o.object &&
                data == o.data &&
@@ -108,7 +134,7 @@ class Q_QML_EXPORT QQmlListReference
 {
 public:
     QQmlListReference();
-    QQmlListReference(QObject *, const char *property, QQmlEngine * = 0);
+    QQmlListReference(QObject *, const char *property, QQmlEngine * = Q_NULLPTR);
     QQmlListReference(const QQmlListReference &);
     QQmlListReference &operator=(const QQmlListReference &);
     ~QQmlListReference();

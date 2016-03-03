@@ -56,8 +56,8 @@ class Q_QML_EXPORT QQmlContext : public QObject
     Q_DECLARE_PRIVATE(QQmlContext)
 
 public:
-    QQmlContext(QQmlEngine *parent, QObject *objParent=0);
-    QQmlContext(QQmlContext *parent, QObject *objParent=0);
+    QQmlContext(QQmlEngine *parent, QObject *objParent = Q_NULLPTR);
+    QQmlContext(QQmlContext *parent, QObject *objParent = Q_NULLPTR);
     virtual ~QQmlContext();
 
     bool isValid() const;

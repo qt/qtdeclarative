@@ -80,7 +80,7 @@ Q_SIGNALS:
     void sceneGraphChanged();
 
 protected:
-    QSGAbstractRenderer(QObject *parent = 0);
+    QSGAbstractRenderer(QObject *parent = Q_NULLPTR);
     virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state) = 0;
 
 private:

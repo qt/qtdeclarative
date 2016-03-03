@@ -49,7 +49,7 @@ class Q_QML_EXPORT QQmlPropertyMap : public QObject
 {
     Q_OBJECT
 public:
-    explicit QQmlPropertyMap(QObject *parent = 0);
+    explicit QQmlPropertyMap(QObject *parent = Q_NULLPTR);
     virtual ~QQmlPropertyMap();
 
     QVariant value(const QString &key) const;

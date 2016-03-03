@@ -52,7 +52,7 @@ class Q_QML_EXPORT QQmlExtensionPlugin
     Q_INTERFACES(QQmlExtensionInterface)
     Q_INTERFACES(QQmlTypesExtensionInterface)
 public:
-    explicit QQmlExtensionPlugin(QObject *parent = 0);
+    explicit QQmlExtensionPlugin(QObject *parent = Q_NULLPTR);
     ~QQmlExtensionPlugin();
 
     QUrl baseUrl() const;

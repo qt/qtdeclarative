@@ -105,10 +105,11 @@ int qmlRegisterType()
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
-        0, 0,
+        0,
+        Q_NULLPTR,
         QString(),
 
-        0, 0, 0, 0, &T::staticMetaObject,
+        Q_NULLPTR, 0, 0, Q_NULLPTR, &T::staticMetaObject,
 
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
@@ -117,9 +118,9 @@ int qmlRegisterType()
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -138,7 +139,8 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
-        0, 0,
+        0,
+        Q_NULLPTR,
         reason,
 
         uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
@@ -150,9 +152,9 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -169,7 +171,8 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
-        0, 0,
+        0,
+        Q_NULLPTR,
         reason,
 
         uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
@@ -181,9 +184,9 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         metaObjectRevision
     };
 
@@ -207,7 +210,8 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
-        0, 0,
+        0,
+        Q_NULLPTR,
         reason,
 
         uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
@@ -221,7 +225,7 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
 
         QQmlPrivate::createParent<E>, &E::staticMetaObject,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -250,9 +254,9 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -281,9 +285,9 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         metaObjectRevision
     };
 
@@ -312,9 +316,9 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
-        0,
+        Q_NULLPTR,
         metaObjectRevision
     };
 
@@ -332,10 +336,11 @@ int qmlRegisterExtendedType()
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
-        0, 0,
+        0,
+        Q_NULLPTR,
         QString(),
 
-        0, 0, 0, 0, &T::staticMetaObject,
+        Q_NULLPTR, 0, 0, Q_NULLPTR, &T::staticMetaObject,
 
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
@@ -346,7 +351,7 @@ int qmlRegisterExtendedType()
 
         QQmlPrivate::createParent<E>, &E::staticMetaObject,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -385,7 +390,7 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
 
         QQmlPrivate::createParent<E>, &E::staticMetaObject,
 
-        0,
+        Q_NULLPTR,
         0
     };
 
@@ -435,7 +440,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
         QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
 
-        0, 0,
+        Q_NULLPTR, Q_NULLPTR,
 
         parser,
         0
@@ -530,7 +535,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        callback, 0, 0, 0, 0
+        callback, Q_NULLPTR, Q_NULLPTR, 0, 0
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
@@ -548,7 +553,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        0, callback, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0
+        Q_NULLPTR, callback, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);

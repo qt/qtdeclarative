@@ -81,7 +81,7 @@ Q_SIGNALS:
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
 public:
-    QQuickImageProvider(ImageType type, Flags flags = 0);
+    QQuickImageProvider(ImageType type, Flags flags = Flags());
     virtual ~QQuickImageProvider();
 
     ImageType imageType() const;
