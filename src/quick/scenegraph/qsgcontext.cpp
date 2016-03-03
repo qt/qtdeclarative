@@ -136,9 +136,9 @@ public:
     bool distanceFieldAntialiasingDecided;
 };
 
-static bool qsg_useConsistentTiming()
+bool qsg_useConsistentTiming()
 {
-    static int use = -1;
+    int use = -1;
     if (use < 0) {
         use = !qEnvironmentVariableIsEmpty("QSG_FIXED_ANIMATION_STEP") && qgetenv("QSG_FIXED_ANIMATION_STEP") != "no"
             ? 1 : 0;
