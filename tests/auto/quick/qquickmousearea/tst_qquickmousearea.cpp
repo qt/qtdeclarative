@@ -36,9 +36,11 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
 #include <QtGui/qstylehints.h>
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
+#include <qpa/qwindowsysteminterface.h>
 
 // Initialize view, set Url, center in available geometry, move mouse away if desired
 static bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage)
@@ -68,7 +70,13 @@ static bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArr
 class tst_QQuickMouseArea: public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_QQuickMouseArea()
+        : device(nullptr)
+    {}
+
 private slots:
+    void initTestCase() Q_DECL_OVERRIDE;
     void dragProperties();
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }
@@ -113,14 +121,26 @@ private slots:
     void nestedStopAtBounds_data();
     void containsPress_data();
     void containsPress();
+    void ignoreBySource();
 
 private:
     void acceptedButton_data();
     void rejectedButton_data();
+    QTouchDevice *device;
 };
 
 Q_DECLARE_METATYPE(Qt::MouseButton)
 Q_DECLARE_METATYPE(Qt::MouseButtons)
+
+void tst_QQuickMouseArea::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    if (!device) {
+        device = new QTouchDevice;
+        device->setType(QTouchDevice::TouchScreen);
+        QWindowSystemInterface::registerTouchDevice(device);
+    }
+}
 
 void tst_QQuickMouseArea::acceptedButton_data()
 {
@@ -1788,6 +1808,100 @@ void tst_QQuickMouseArea::containsPress()
     QCOMPARE(mouseArea->pressed(), false);
     QCOMPARE(mouseArea->containsPress(), false);
     QCOMPARE(containsPressSpy.count(), 4);
+}
+
+void tst_QQuickMouseArea::ignoreBySource()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("ignoreBySource.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea*>("mousearea");
+    QVERIFY(mouseArea);
+
+    QQuickFlickable *flickable = root->findChild<QQuickFlickable*>("flickable");
+    QVERIFY(flickable);
+
+    // MouseArea should grab the press because it's interested in non-synthesized mouse events
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    QVERIFY(window.mouseGrabberItem() == mouseArea);
+    // That was a real mouse event
+    QVERIFY(root->property("lastEventSource").toInt() == Qt::MouseEventNotSynthesized);
+
+    // Flickable content should not move
+    QTest::mouseMove(&window,QPoint(69,69));
+    QTest::mouseMove(&window,QPoint(58,58));
+    QTest::mouseMove(&window,QPoint(47,47));
+    QCOMPARE(flickable->contentX(), 0.);
+    QCOMPARE(flickable->contentY(), 0.);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(47, 47));
+
+    // Now try touch events and confirm that MouseArea ignores them, while Flickable does its thing
+
+    QTest::touchEvent(&window, device).press(0, QPoint(80, 80), &window);
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(window.mouseGrabberItem() != mouseArea);
+    // That was a fake mouse event
+    QCOMPARE(root->property("lastEventSource").toInt(), int(Qt::MouseEventSynthesizedByQt));
+    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
+    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
+    QTest::touchEvent(&window, device).move(0, QPoint(47,47), &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.mouseGrabberItem(), flickable);
+    QTest::touchEvent(&window, device).release(0, QPoint(47,47), &window);
+    QQuickTouchUtils::flush(&window);
+
+    // Flickable content should have moved
+    QTRY_VERIFY(flickable->contentX() > 1);
+    QVERIFY(flickable->contentY() > 1);
+
+
+    // Now tell the MouseArea to accept only synthesized events, and repeat the tests
+    root->setProperty("allowedSource", Qt::MouseEventSynthesizedByQt);
+    flickable->setContentX(0);
+    flickable->setContentY(0);
+
+
+    // MouseArea should ignore the press because it's interested in synthesized mouse events
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    QVERIFY(window.mouseGrabberItem() != mouseArea);
+    // That was a real mouse event
+    QVERIFY(root->property("lastEventSource").toInt() == Qt::MouseEventNotSynthesized);
+
+    // Flickable content should move
+    QTest::mouseMove(&window,QPoint(69,69));
+    QTest::mouseMove(&window,QPoint(58,58));
+    QTest::mouseMove(&window,QPoint(47,47));
+    QTRY_VERIFY(flickable->contentX() > 1);
+    QVERIFY(flickable->contentY() > 1);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(47, 47));
+    flickable->setContentX(0);
+    flickable->setContentY(0);
+
+    // Now try touch events and confirm that MouseArea gets them, while Flickable doesn't
+
+    QTest::touchEvent(&window, device).press(0, QPoint(80, 80), &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.mouseGrabberItem(), mouseArea);
+    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
+    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
+    QTest::touchEvent(&window, device).move(0, QPoint(47,47), &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(window.mouseGrabberItem(), mouseArea);
+    QTest::touchEvent(&window, device).release(0, QPoint(47,47), &window);
+    QQuickTouchUtils::flush(&window);
+
+    // Flickable content should not have moved
+    QCOMPARE(flickable->contentX(), 0.);
+    QCOMPARE(flickable->contentY(), 0.);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
