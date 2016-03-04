@@ -32,6 +32,8 @@
 
 #include <private/qsgadaptationlayer_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class GlyphNode : public QSGGlyphNode
 {
 public:
@@ -55,5 +57,7 @@ private:
     QQuickText::TextStyle m_style;
     QColor m_styleColor;
 };
+
+QT_END_NAMESPACE
 
 #endif // GLYPHNODE_H

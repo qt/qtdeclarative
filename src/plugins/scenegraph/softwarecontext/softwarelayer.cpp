@@ -32,6 +32,8 @@
 #include "context.h"
 #include "pixmaprenderer.h"
 
+QT_BEGIN_NAMESPACE
+
 SoftwareLayer::SoftwareLayer(QSGRenderContext *renderContext)
     : m_item(0)
     , m_context(renderContext)
@@ -245,3 +247,5 @@ void SoftwareLayer::grab()
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
 }
+
+QT_END_NAMESPACE

@@ -33,6 +33,8 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgcontext_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 class PixmapRenderer;
 }
@@ -94,5 +96,7 @@ private:
     bool m_recursive;
     bool m_dirtyTexture;
 };
+
+QT_END_NAMESPACE
 
 #endif // SOFTWARELAYER_H

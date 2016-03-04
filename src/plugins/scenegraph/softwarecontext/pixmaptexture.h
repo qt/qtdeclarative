@@ -32,6 +32,8 @@
 
 #include <private/qsgtexture_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class PixmapTexture : public QSGTexture
 {
     Q_OBJECT
@@ -50,5 +52,7 @@ public:
 private:
     QPixmap m_pixmap;
 };
+
+QT_END_NAMESPACE
 
 #endif // PIXMAPTEXTURE_H

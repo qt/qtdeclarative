@@ -36,6 +36,8 @@
 #include <QBrush>
 #include <QPixmap>
 
+QT_BEGIN_NAMESPACE
+
 class RectangleNode : public QSGRectangleNode
 {
 public:
@@ -74,5 +76,7 @@ private:
 
     int m_devicePixelRatio;
 };
+
+QT_END_NAMESPACE
 
 #endif // RECTANGLENODE_H

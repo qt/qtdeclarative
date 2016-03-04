@@ -40,6 +40,8 @@
 #include <QtQuick/QSGSimpleRectNode>
 #include <QtQuick/qsgsimpletexturenode.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 RenderableNodeUpdater::RenderableNodeUpdater(AbstractSoftwareRenderer *renderer)
@@ -263,3 +265,5 @@ RenderableNodeUpdater::NodeState RenderableNodeUpdater::currentState(QSGNode *no
 }
 
 } // namespace
+
+QT_END_NAMESPACE

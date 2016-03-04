@@ -35,6 +35,8 @@
 
 Q_LOGGING_CATEGORY(lcPixmapRenderer, "qt.scenegraph.softwarecontext.pixmapRenderer")
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 PixmapRenderer::PixmapRenderer(QSGRenderContext *context)
@@ -99,3 +101,5 @@ void PixmapRenderer::setProjectionRect(const QRect &projectionRect)
 }
 
 } // namespace
+
+QT_END_NAMESPACE

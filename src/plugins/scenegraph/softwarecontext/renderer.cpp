@@ -41,6 +41,8 @@
 
 Q_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 Renderer::Renderer(QSGRenderContext *context)
@@ -146,3 +148,5 @@ void Renderer::render()
 }
 
 } // namespace
+
+QT_END_NAMESPACE

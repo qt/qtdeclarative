@@ -32,6 +32,8 @@
 
 #include "abstractsoftwarerenderer.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 class PixmapRenderer : public AbstractSoftwareRenderer
@@ -50,7 +52,8 @@ private:
     QRect m_projectionRect;
 };
 
-
 } // namespace
+
+QT_END_NAMESPACE
 
 #endif // PIXMAPRENDERER_H

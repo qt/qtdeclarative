@@ -35,6 +35,8 @@
 
 #include <QtGui/QPixmap>
 
+QT_BEGIN_NAMESPACE
+
 class PainterNode : public QSGPainterNode
 {
 public:
@@ -106,5 +108,7 @@ private:
 
     bool m_dirtyGeometry;
 };
+
+QT_END_NAMESPACE
 
 #endif // PAINTERNODE_H

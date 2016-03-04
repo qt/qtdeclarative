@@ -33,6 +33,8 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgtexturematerial_p.h>
 
+QT_BEGIN_NAMESPACE
+
 typedef QVarLengthArray<QPainter::PixmapFragment, 16> QPixmapFragmentsArray;
 
 struct QTileRules
@@ -118,5 +120,7 @@ private:
     bool m_tileVertical;
     bool m_cachedMirroredPixmapIsDirty;
 };
+
+QT_END_NAMESPACE
 
 #endif // IMAGENODE_H

@@ -79,6 +79,8 @@ Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph
 // Timing inside the renderer base class
 Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext
 {
 
@@ -172,3 +174,5 @@ void RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
 }
 
 } // namespace
+
+QT_END_NAMESPACE

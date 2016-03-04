@@ -31,6 +31,8 @@
 #include "pixmaptexture.h"
 #include <qmath.h>
 
+QT_BEGIN_NAMESPACE
+
 PainterNode::PainterNode(QQuickPaintedItem *item)
     : QSGPainterNode()
     , m_preferredRenderTarget(QQuickPaintedItem::Image)
@@ -218,3 +220,5 @@ void PainterNode::setTextureSize(const QSize &size)
     m_textureSize = size;
     m_dirtyGeometry = true;
 }
+
+QT_END_NAMESPACE

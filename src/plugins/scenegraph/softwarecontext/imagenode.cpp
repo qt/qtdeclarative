@@ -34,6 +34,8 @@
 #include <QPainter>
 #include <qmath.h>
 
+QT_BEGIN_NAMESPACE
+
 // Helper from widgets/styles/qdrawutil.cpp
 
 namespace SoftwareContext {
@@ -489,3 +491,5 @@ const QPixmap &ImageNode::pixmap() const
         qFatal("Image used with invalid texture format.");
     }
 }
+
+QT_END_NAMESPACE

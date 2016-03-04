@@ -38,6 +38,8 @@
 #include <QtGui/QImage>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 class QSGSimpleRectNode;
 
 namespace SoftwareContext{
@@ -64,5 +66,7 @@ private:
 };
 
 } // namespace
+
+QT_END_NAMESPACE
 
 #endif // RENDERER_H

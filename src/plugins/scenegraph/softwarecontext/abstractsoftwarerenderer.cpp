@@ -40,6 +40,8 @@
 
 Q_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext{
 
 AbstractSoftwareRenderer::AbstractSoftwareRenderer(QSGRenderContext *context)
@@ -309,3 +311,5 @@ void AbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 }
 
 }
+
+QT_END_NAMESPACE

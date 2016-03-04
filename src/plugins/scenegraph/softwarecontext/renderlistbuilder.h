@@ -32,6 +32,8 @@
 
 #include <private/qsgadaptationlayer_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 class AbstractSoftwareRenderer;
@@ -69,5 +71,7 @@ private:
 };
 
 }
+
+QT_END_NAMESPACE
 
 #endif // RENDERLISTBUILDER_H

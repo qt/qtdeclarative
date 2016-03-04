@@ -41,6 +41,8 @@
 #include <QtQuick/QSGSimpleRectNode>
 #include <QtQuick/qsgsimpletexturenode.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 
@@ -152,3 +154,5 @@ bool RenderListBuilder::addRenderableNode(QSGNode *node)
 }
 
 } // namespace
+
+QT_END_NAMESPACE

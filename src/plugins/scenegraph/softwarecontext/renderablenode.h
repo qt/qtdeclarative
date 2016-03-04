@@ -34,6 +34,8 @@
 #include <QtCore/QRect>
 #include <QtGui/QTransform>
 
+QT_BEGIN_NAMESPACE
+
 class QSGNode;
 class QSGSimpleRectNode;
 class QSGSimpleTextureNode;
@@ -115,5 +117,7 @@ private:
 };
 
 } // namespace
+
+QT_END_NAMESPACE
 
 #endif // RENDERABLENODE_H

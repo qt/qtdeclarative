@@ -32,6 +32,8 @@
 
 #include <private/qsgadaptationlayer_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class NinePatchNode : public QSGNinePatchNode
 {
 public:    
@@ -53,5 +55,7 @@ private:
     qreal m_pixelRatio;
     QMargins m_margins;
 };
+
+QT_END_NAMESPACE
 
 #endif // NINEPATCHNODE_H

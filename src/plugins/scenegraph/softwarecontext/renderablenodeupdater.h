@@ -39,6 +39,8 @@
 #include <QStack>
 #include <QRectF>
 
+QT_BEGIN_NAMESPACE
+
 namespace SoftwareContext {
 
 class RenderableNodeUpdater : public QSGNodeVisitorEx
@@ -112,5 +114,7 @@ bool RenderableNodeUpdater::updateRenderableNode(RenderableNode::NodeType type, 
 }
 
 } // namespace
+
+QT_END_NAMESPACE
 
 #endif // RENDERABLENODEUPDATER_H

@@ -35,6 +35,8 @@
 #include <QtCore/QHash>
 #include <QtCore/QLinkedList>
 
+QT_BEGIN_NAMESPACE
+
 class QSGSimpleRectNode;
 
 namespace SoftwareContext{
@@ -84,5 +86,7 @@ private:
 };
 
 } // namespace
+
+QT_END_NAMESPACE
 
 #endif // ABSTRACTSOFTWARERENDERER_H
