@@ -717,4 +717,39 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_activation_data() {
+        return [
+            { tag: "open:enter", key: Qt.Key_Enter, open: true },
+            { tag: "open:return", key: Qt.Key_Return, open: true },
+            { tag: "closed:enter", key: Qt.Key_Enter, open: false },
+            { tag: "closed:return", key: Qt.Key_Return, open: false }
+        ]
+    }
+
+    // QTBUG-51645
+    function test_activation(data) {
+        var control = comboBox.createObject(window.contentItem, {currentIndex: 1, model: ["Apple", "Orange", "Banana"]})
+        verify(control)
+
+        waitForRendering(control)
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        if (data.open)
+            keyClick(Qt.Key_Space)
+        compare(control.popup.visible, data.open)
+
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Orange")
+        compare(control.displayText, "Orange")
+
+        keyClick(data.key)
+
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Orange")
+        compare(control.displayText, "Orange")
+
+        control.destroy()
+    }
 }
