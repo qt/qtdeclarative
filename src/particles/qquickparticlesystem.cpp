@@ -618,11 +618,16 @@ void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
     if (m_debugMode)
         qDebug() << "Registering Emitter" << e << "to" << this;
     m_emitters << QPointer<QQuickParticleEmitter>(e);//###How to get them out?
+}
+
+void QQuickParticleSystem::finishRegisteringParticleEmitter(QQuickParticleEmitter* e)
+{
     connect(e, SIGNAL(particleCountChanged()),
             this, SLOT(emittersChanged()));
     connect(e, SIGNAL(groupChanged(QString)),
             this, SLOT(emittersChanged()));
-    emittersChanged();
+    if (m_componentComplete)
+        emittersChanged();
     e->reset();//Start, so that starttime factors appropriately
 }
 

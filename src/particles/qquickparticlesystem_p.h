@@ -430,6 +430,7 @@ public:
 
     void registerParticlePainter(QQuickParticlePainter* p);
     void registerParticleEmitter(QQuickParticleEmitter* e);
+    void finishRegisteringParticleEmitter(QQuickParticleEmitter *e);
     void registerParticleAffector(QQuickParticleAffector* a);
     void registerParticleGroup(QQuickParticleGroup* g);
 

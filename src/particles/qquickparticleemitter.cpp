@@ -273,6 +273,8 @@ void QQuickParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QQuickParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QQuickParticleSystem*>(parentItem()));
+    if (m_system)
+        m_system->finishRegisteringParticleEmitter(this);
     QQuickItem::componentComplete();
 }
 
