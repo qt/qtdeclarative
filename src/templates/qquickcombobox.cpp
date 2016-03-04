@@ -705,6 +705,28 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
     return -1;
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::ComboBox::increase()
+
+    Select next value.
+*/
+void QQuickComboBox::increase()
+{
+    Q_D(QQuickComboBox);
+    d->increase();
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::ComboBox::decrease()
+
+    Select previous value.
+*/
+void QQuickComboBox::decrease()
+{
+    Q_D(QQuickComboBox);
+    d->decrease();
+}
+
 void QQuickComboBox::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
