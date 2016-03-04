@@ -85,7 +85,7 @@ public:
     void setBottomPadding(qreal value, bool reset = false);
 
     void resizeBackground();
-    void resizeContent();
+    virtual void resizeContent();
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
