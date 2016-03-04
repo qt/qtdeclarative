@@ -111,10 +111,8 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 
     q->itemAdded(index, item);
 
-    if (contentModel->count() == 1 && currentIndex == -1) {
-        Q_Q(QQuickContainer);
+    if (contentModel->count() == 1 && currentIndex == -1)
         q->setCurrentIndex(index);
-    }
 
     updatingCurrent = false;
 }
