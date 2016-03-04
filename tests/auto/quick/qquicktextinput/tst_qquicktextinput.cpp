@@ -215,6 +215,7 @@ private slots:
     void clearInputMask();
     void keypress_inputMask_data();
     void keypress_inputMask();
+    void keypress_inputMethod_inputMask();
     void hasAcceptableInputMask_data();
     void hasAcceptableInputMask();
     void maskCharacter_data();
@@ -2291,8 +2292,9 @@ void tst_qquicktextinput::inputMethods()
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->displayText(), QString("Our Goodbye world!"));
-    QCOMPARE(input->cursorPosition(), 7);
+    QCOMPARE(input->cursorPosition(), 3);
 
+    input->setCursorPosition(7);
     QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
     QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
@@ -6481,6 +6483,48 @@ void tst_qquicktextinput::keypress_inputMask()
     QCOMPARE(textInput->displayText(), expectedDisplayText);
 }
 
+void tst_qquicktextinput::keypress_inputMethod_inputMask()
+{
+    // Similar to the keypress_inputMask test, but this is done solely via
+    // input methods
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"AA.AA.AA\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(textInput->hasActiveFocus());
+
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 3);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.."));
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 6);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.EE."));
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 8);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.EE.EE"));
+}
 
 void tst_qquicktextinput::hasAcceptableInputMask_data()
 {
