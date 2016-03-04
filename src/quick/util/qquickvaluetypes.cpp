@@ -634,14 +634,14 @@ void QQuickFontValueType::setBold(bool b)
     v.setBold(b);
 }
 
-QQuickFontValueType::FontWeight QQuickFontValueType::weight() const
+int QQuickFontValueType::weight() const
 {
-    return (QQuickFontValueType::FontWeight)v.weight();
+    return v.weight();
 }
 
-void QQuickFontValueType::setWeight(QQuickFontValueType::FontWeight w)
+void QQuickFontValueType::setWeight(int w)
 {
-    v.setWeight((QFont::Weight)w);
+    v.setWeight(qBound(0, w, 99));
 }
 
 bool QQuickFontValueType::italic() const

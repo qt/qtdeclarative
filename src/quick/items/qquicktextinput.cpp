@@ -255,11 +255,10 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::TextInput::font.weight
+    \qmlproperty int QtQuick::TextInput::font.weight
 
-    Sets the font's weight.
-
-    The weight can be one of:
+    The requested weight of the font. The weight requested must be an integer
+    between 0 and 99, or one of the predefined values:
     \list
     \li Font.Thin
     \li Font.Light

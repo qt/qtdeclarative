@@ -346,7 +346,7 @@ public:
             if (ok) *ok = true;
         }
         if (vweight->isInt32()) {
-            retn.setWeight(static_cast<QFont::Weight>(vweight->integerValue()));
+            retn.setWeight(vweight->integerValue());
             if (ok) *ok = true;
         }
         if (vwspac->isNumber()) {

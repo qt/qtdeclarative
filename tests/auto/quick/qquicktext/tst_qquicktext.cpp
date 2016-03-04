@@ -1506,7 +1506,7 @@ void tst_qquicktext::weight()
         delete textObject;
     }
     {
-        QString componentStr = "import QtQuick 2.0\nText { font.weight: \"Bold\"; text: \"Hello world!\" }";
+        QString componentStr = "import QtQuick 2.0\nText { font.weight: Font.Bold; text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
