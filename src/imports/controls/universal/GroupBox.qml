@@ -68,7 +68,6 @@ T.GroupBox {
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
     }
     //! [label]
 

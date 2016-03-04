@@ -145,6 +145,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 1, 0, "Tumbler");
 
+    qmlRegisterRevision<QQuickItem, 2>(uri, 1, 0);
     qmlRegisterRevision<QQuickWindow, 2>(uri, 1, 0);
     qmlRegisterRevision<QQuickText, 6>(uri, 1, 0);
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 1, 0);

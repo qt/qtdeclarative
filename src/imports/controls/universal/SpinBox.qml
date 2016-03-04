@@ -78,7 +78,6 @@ T.SpinBox {
         selectedTextColor: control.Universal.chromeWhiteColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: TextInput.AlignVCenter
-        renderType: Text.NativeRendering
 
         readOnly: !control.editable
         validator: control.validator

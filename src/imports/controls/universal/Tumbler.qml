@@ -53,7 +53,6 @@ T.Tumbler {
         opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
     }
     //! [delegate]
 

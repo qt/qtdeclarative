@@ -59,7 +59,6 @@ T.ToolButton {
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
     }
     //! [contentItem]
 
