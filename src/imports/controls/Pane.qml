@@ -37,7 +37,7 @@
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
 
-T.Frame {
+T.Pane {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
