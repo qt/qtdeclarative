@@ -91,7 +91,8 @@ public:
 
         VariantRef &operator=(const VariantRef &o) {
             if (o.a) o.a->addref();
-            if (a) a->release(); a = o.a;
+            if (a) a->release();
+            a = o.a;
             return *this;
         }
 
