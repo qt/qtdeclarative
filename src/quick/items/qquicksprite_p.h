@@ -55,7 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSprite : public QQuickStochasticState
+// exported, since it's used in QtQuickParticles
+class Q_QUICK_EXPORT QQuickSprite : public QQuickStochasticState
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
@@ -78,6 +79,7 @@ class QQuickSprite : public QQuickStochasticState
 
 public:
     explicit QQuickSprite(QObject *parent = 0);
+    ~QQuickSprite();
 
     QUrl source() const
     {

@@ -218,6 +218,11 @@ QQuickSprite::QQuickSprite(QObject *parent)
 {
 }
 
+/*! \internal */
+QQuickSprite::~QQuickSprite()
+{
+}
+
 int QQuickSprite::variedDuration() const //Deals with precedence when multiple durations are set
 {
     if (m_frameSync)

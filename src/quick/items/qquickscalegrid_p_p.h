@@ -55,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickScaleGrid : public QObject
+class Q_AUTOTEST_EXPORT QQuickScaleGrid : public QObject
 {
     Q_OBJECT
 
