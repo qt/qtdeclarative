@@ -25,7 +25,7 @@ RESOURCES += \
     $$PWD/qtlabscontrolsplugin.qrc
 
 include(controls.pri)
-!ios: include(designer/designer.pri)
+!static: include(designer/designer.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)
