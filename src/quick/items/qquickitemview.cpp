@@ -1052,7 +1052,8 @@ QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
 void QQuickItemView::forceLayout()
 {
     Q_D(QQuickItemView);
-    d->applyPendingChanges();
+    if (isComponentComplete() && (d->currentChanges.hasPendingChanges() || d->forceLayout))
+        d->layout();
 }
 
 void QQuickItemViewPrivate::applyPendingChanges()
