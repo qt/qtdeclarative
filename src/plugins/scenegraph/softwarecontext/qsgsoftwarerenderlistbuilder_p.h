@@ -44,8 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 class QSGAbstractSoftwareRenderer;
 
 class QSGSoftwareRenderListBuilder : public QSGNodeVisitorEx
@@ -79,8 +77,6 @@ private:
 
     QSGAbstractSoftwareRenderer *m_renderer;
 };
-
-}
 
 QT_END_NAMESPACE
 

@@ -55,8 +55,6 @@ Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext{
-
 QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *node)
     : m_nodeType(type)
     , m_isOpaque(true)
@@ -320,7 +318,5 @@ QRegion QSGSoftwareRenderableNode::dirtyRegion() const
 {
     return m_dirtyRegion;
 }
-
-} // namespace
 
 QT_END_NAMESPACE

@@ -45,6 +45,8 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QSGSoftwareHelpers {
+
 typedef QVarLengthArray<QPainter::PixmapFragment, 16> QPixmapFragmentsArray;
 
 struct QTileRules
@@ -82,13 +84,11 @@ namespace QDrawBorderPixmap
 }
 #endif
 
-namespace SoftwareContext {
-
 void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMargins,
                        const QPixmap &pixmap, const QRect &sourceRect,const QMargins &sourceMargins,
                        const QTileRules &rules, QDrawBorderPixmap::DrawingHints hints);
 
-}
+} // QSGSoftwareHelpers namespace
 
 class QSGSoftwareImageNode : public QSGImageNode
 {

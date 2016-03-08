@@ -55,8 +55,6 @@ class QSGSoftwareRectangleNode;
 class QSGSoftwareGlyphNode;
 class QSGSoftwareNinePatchNode;
 
-namespace SoftwareContext{
-
 class QSGSoftwareRenderableNode
 {
 public:
@@ -125,8 +123,6 @@ private:
 
     QRect m_boundingRect;
 };
-
-} // namespace
 
 QT_END_NAMESPACE
 

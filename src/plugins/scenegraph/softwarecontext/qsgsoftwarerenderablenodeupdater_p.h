@@ -51,8 +51,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 class QSGSoftwareRenderableNodeUpdater : public QSGNodeVisitorEx
 {
 public:
@@ -122,8 +120,6 @@ bool QSGSoftwareRenderableNodeUpdater::updateRenderableNode(QSGSoftwareRenderabl
 
     return true;
 }
-
-} // namespace
 
 QT_END_NAMESPACE
 

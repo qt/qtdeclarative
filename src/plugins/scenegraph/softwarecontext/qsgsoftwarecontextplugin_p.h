@@ -62,7 +62,7 @@ public:
     QSGContext *create(const QString &key) const override;
     QSGRenderLoop *createWindowManager() override;
 
-    static SoftwareContext::QSGSoftwareContext *instance;
+    static QSGSoftwareContext *instance;
 };
 
 QT_END_NAMESPACE

@@ -44,8 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 class QSGSoftwarePixmapRenderer : public QSGAbstractSoftwareRenderer
 {
 public:
@@ -61,8 +59,6 @@ public:
 private:
     QRect m_projectionRect;
 };
-
-} // namespace
 
 QT_END_NAMESPACE
 

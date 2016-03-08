@@ -53,9 +53,6 @@ Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_RENDERLOOP)
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext
-{
-
 class QSGSoftwareRenderContext : public QSGRenderContext
 {
 public:
@@ -86,8 +83,6 @@ public:
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
 };
-
-} // namespace
 
 QT_END_NAMESPACE
 

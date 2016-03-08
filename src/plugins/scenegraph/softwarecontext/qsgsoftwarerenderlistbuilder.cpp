@@ -53,9 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
-
 QSGSoftwareRenderListBuilder::QSGSoftwareRenderListBuilder(QSGAbstractSoftwareRenderer *renderer)
     : m_renderer(renderer)
 {
@@ -162,7 +159,5 @@ bool QSGSoftwareRenderListBuilder::addRenderableNode(QSGNode *node)
     m_renderer->appendRenderableNode(renderableNode);
     return true;
 }
-
-} // namespace
 
 QT_END_NAMESPACE

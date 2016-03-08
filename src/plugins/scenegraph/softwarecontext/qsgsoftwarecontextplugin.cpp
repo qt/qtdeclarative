@@ -59,7 +59,7 @@ QStringList QSGSoftwareContextPlugin::keys() const
 QSGContext *QSGSoftwareContextPlugin::create(const QString &) const
 {
     if (!instance)
-        instance = new SoftwareContext::QSGSoftwareContext();
+        instance = new QSGSoftwareContext();
     return instance;
 }
 
@@ -68,6 +68,6 @@ QSGRenderLoop *QSGSoftwareContextPlugin::createWindowManager()
     return new QSGSoftwareRenderLoop();
 }
 
-SoftwareContext::QSGSoftwareContext *QSGSoftwareContextPlugin::instance = 0;
+QSGSoftwareContext *QSGSoftwareContextPlugin::instance = 0;
 
 QT_END_NAMESPACE

@@ -53,8 +53,6 @@ Q_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 QSGSoftwareRenderer::QSGSoftwareRenderer(QSGRenderContext *context)
     : QSGAbstractSoftwareRenderer(context)
 {
@@ -156,7 +154,5 @@ void QSGSoftwareRenderer::render()
     m_backingStore->flush(dirtyRegion);
 #endif
 }
-
-} // namespace
 
 QT_END_NAMESPACE

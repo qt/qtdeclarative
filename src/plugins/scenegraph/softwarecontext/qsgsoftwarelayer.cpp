@@ -220,7 +220,7 @@ void QSGSoftwareLayer::grab()
         return;
 
     if (!m_renderer) {
-        m_renderer = new SoftwareContext::QSGSoftwarePixmapRenderer(m_context);
+        m_renderer = new QSGSoftwarePixmapRenderer(m_context);
         connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);

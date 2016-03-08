@@ -52,8 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 QSGSoftwareRenderableNodeUpdater::QSGSoftwareRenderableNodeUpdater(QSGAbstractSoftwareRenderer *renderer)
     : m_renderer(renderer)
 {
@@ -273,7 +271,5 @@ QSGSoftwareRenderableNodeUpdater::NodeState QSGSoftwareRenderableNodeUpdater::cu
     state.parent = node->parent();
     return state;
 }
-
-} // namespace
 
 QT_END_NAMESPACE

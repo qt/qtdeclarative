@@ -100,7 +100,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
 
     // ### create QPainter and set up pointer to current window/painter
-    SoftwareContext::QSGSoftwareRenderContext *ctx = static_cast<SoftwareContext::QSGSoftwareRenderContext*>(cd->context);
+    QSGSoftwareRenderContext *ctx = static_cast<QSGSoftwareRenderContext*>(cd->context);
     ctx->currentWindow = window;
     ctx->initializeIfNeeded();
 

@@ -52,8 +52,6 @@ Q_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext{
-
 QSGAbstractSoftwareRenderer::QSGAbstractSoftwareRenderer(QSGRenderContext *context)
     : QSGRenderer(context)
     , m_background(new QSGSimpleRectNode)
@@ -318,8 +316,6 @@ void QSGAbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 
     // Update children nodes
     m_nodeUpdater->updateNodes(node);
-}
-
 }
 
 QT_END_NAMESPACE

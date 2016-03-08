@@ -52,8 +52,6 @@ QT_BEGIN_NAMESPACE
 
 class QSGSimpleRectNode;
 
-namespace SoftwareContext{
-
 class QSGSoftwareRenderer : public QSGAbstractSoftwareRenderer
 {
 public:
@@ -74,8 +72,6 @@ private:
     QImage m_outputBuffer;
 #endif
 };
-
-} // namespace
 
 QT_END_NAMESPACE
 

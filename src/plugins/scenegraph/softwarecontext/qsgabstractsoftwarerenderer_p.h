@@ -49,8 +49,6 @@ QT_BEGIN_NAMESPACE
 
 class QSGSimpleRectNode;
 
-namespace SoftwareContext{
-
 class QSGSoftwareRenderableNode;
 class QSGSoftwareRenderableNodeUpdater;
 
@@ -94,8 +92,6 @@ private:
 
     QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
 };
-
-} // namespace
 
 QT_END_NAMESPACE
 

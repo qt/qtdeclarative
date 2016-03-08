@@ -46,9 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QSGSoftwareHelpers {
 // Helper from widgets/styles/qdrawutil.cpp
-
-namespace SoftwareContext {
 
 static inline QMargins normalizedMargins(const QMargins &m)
 {
@@ -314,7 +313,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
         painter->setRenderHint(QPainter::Antialiasing, true);
 }
 
-}
+} // QSGSoftwareHelpers namespace
 
 QSGSoftwareImageNode::QSGSoftwareImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
@@ -463,9 +462,9 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
         // border image
         QMargins margins(m_innerTargetRect.left() - m_targetRect.left(), m_innerTargetRect.top() - m_targetRect.top(),
                          m_targetRect.right() - m_innerTargetRect.right(), m_targetRect.bottom() - m_innerTargetRect.bottom());
-        QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
-        SoftwareContext::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, pm, QRect(0, 0, pm.width(), pm.height()),
-                                           margins, tilerules, QDrawBorderPixmap::DrawingHints(0));
+        QSGSoftwareHelpers::QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
+        QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, pm, QRect(0, 0, pm.width(), pm.height()),
+                                              margins, tilerules, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(0));
         return;
     }
 

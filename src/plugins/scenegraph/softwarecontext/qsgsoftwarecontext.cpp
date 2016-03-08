@@ -91,9 +91,6 @@ Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERER,       "qt.scenegraph.time.rende
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext
-{
-
 QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
     , currentWindow(0)
@@ -182,7 +179,5 @@ void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo
 {
     QSGRenderContext::renderNextFrame(renderer, fbo);
 }
-
-} // namespace
 
 QT_END_NAMESPACE

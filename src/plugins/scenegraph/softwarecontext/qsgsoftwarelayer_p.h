@@ -45,9 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
 class QSGSoftwarePixmapRenderer;
-}
 
 class QSGSoftwareLayer : public QSGLayer
 {
@@ -94,7 +92,7 @@ private:
 
     QSGNode *m_item;
     QSGRenderContext *m_context;
-    SoftwareContext::QSGSoftwarePixmapRenderer *m_renderer;
+    QSGSoftwarePixmapRenderer *m_renderer;
     QRectF m_rect;
     QSize m_size;
     QPixmap m_pixmap;

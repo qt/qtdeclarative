@@ -47,8 +47,6 @@ Q_LOGGING_CATEGORY(lcPixmapRenderer, "qt.scenegraph.softwarecontext.pixmapRender
 
 QT_BEGIN_NAMESPACE
 
-namespace SoftwareContext {
-
 QSGSoftwarePixmapRenderer::QSGSoftwarePixmapRenderer(QSGRenderContext *context)
     : QSGAbstractSoftwareRenderer(context)
 {
@@ -109,7 +107,5 @@ void QSGSoftwarePixmapRenderer::setProjectionRect(const QRect &projectionRect)
 {
     m_projectionRect = projectionRect;
 }
-
-} // namespace
 
 QT_END_NAMESPACE
