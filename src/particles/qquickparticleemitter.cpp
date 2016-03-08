@@ -407,7 +407,6 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         //int pos = m_last_particle % m_particle_count;
         QQuickParticleData* datum = m_system->newDatum(m_system->groupIds[m_group], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
-            datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;
             qreal vx =
               - 2 * ax * (1 - t)
@@ -480,7 +479,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
     }
 
     foreach (QQuickParticleData* d, toEmit)
-            m_system->emitParticle(d);
+            m_system->emitParticle(d, this);
 
     if (isEmitConnected()) {
         QQmlEngine *qmlEngine = ::qmlEngine(this);
@@ -492,7 +491,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
         QV4::ScopedValue v(scope);
         for (int i=0; i<toEmit.size(); i++)
-            array->putIndexed(i, (v = toEmit[i]->v4Value()));
+            array->putIndexed(i, (v = toEmit[i]->v4Value(m_system)));
 
         emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
     }

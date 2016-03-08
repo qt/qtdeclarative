@@ -154,8 +154,8 @@ public:
 
     //TODO: Refactor particle data list out into a separate class
     QVector<QQuickParticleData*> data;
-    QQuickParticleDataHeap dataHeap;
     QSet<int> reusableIndexes;
+    QQuickParticleDataHeap dataHeap;
     bool recycle(); //Force recycling round, returns true if all indexes are now reusable
 
     void initList();
@@ -182,7 +182,7 @@ struct Color4ub {
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
-    QQuickParticleData(QQuickParticleSystem* sys);
+    QQuickParticleData();
     ~QQuickParticleData();
 
     QQuickParticleData(const QQuickParticleData &other);
@@ -192,28 +192,28 @@ public:
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
 
     //sets the x accleration without affecting the instantaneous x velocity or position
-    void setInstantaneousAX(qreal ax);
+    void setInstantaneousAX(qreal ax, QQuickParticleSystem *particleSystem);
     //sets the x velocity without affecting the instantaneous x postion
-    void setInstantaneousVX(qreal vx);
+    void setInstantaneousVX(qreal vx, QQuickParticleSystem *particleSystem);
     //sets the instantaneous x postion
-    void setInstantaneousX(qreal x);
+    void setInstantaneousX(qreal x, QQuickParticleSystem *particleSystem);
     //sets the y accleration without affecting the instantaneous y velocity or position
-    void setInstantaneousAY(qreal ay);
+    void setInstantaneousAY(qreal ay, QQuickParticleSystem *particleSystem);
     //sets the y velocity without affecting the instantaneous y postion
-    void setInstantaneousVY(qreal vy);
+    void setInstantaneousVY(qreal vy, QQuickParticleSystem *particleSystem);
     //sets the instantaneous Y postion
-    void setInstantaneousY(qreal y);
+    void setInstantaneousY(qreal y, QQuickParticleSystem *particleSystem);
 
     //TODO: Slight caching?
-    qreal curX() const;
-    qreal curVX() const;
+    qreal curX(QQuickParticleSystem *particleSystem) const;
+    qreal curVX(QQuickParticleSystem *particleSystem) const;
     qreal curAX() const { return ax; }
-    qreal curY() const;
-    qreal curVY() const;
+    qreal curAX(QQuickParticleSystem *) const { return ax; } // used by the macros in qquickv4particledata.cpp
+    qreal curY(QQuickParticleSystem *particleSystem) const;
+    qreal curVY(QQuickParticleSystem *particleSystem) const;
     qreal curAY() const { return ay; }
+    qreal curAY(QQuickParticleSystem *) const { return ay; } // used by the macros in qquickv4particledata.cpp
 
-    QQuickParticleEmitter* e;//### Needed?
-    QQuickParticleSystem* system;
     int index;
     int systemIndex;
 
@@ -251,7 +251,7 @@ public:
     float animWidth;
     float animHeight;
 
-    int group;
+    QQuickParticleGroupData::ID groupId;
 
     //Used by ImageParticle data shadowing
     QQuickImageParticle* colorOwner;
@@ -270,14 +270,14 @@ public:
     // 4 bytes wasted
 
 
-    void debugDump();
-    bool stillAlive();//Only checks end, because usually that's all you need and it's a little faster.
-    bool alive();
-    float lifeLeft();
-    float curSize();
+    void debugDump(QQuickParticleSystem *particleSystem);
+    bool stillAlive(QQuickParticleSystem *particleSystem);//Only checks end, because usually that's all you need and it's a little faster.
+    bool alive(QQuickParticleSystem *particleSystem);
+    float lifeLeft(QQuickParticleSystem *particleSystem);
+    float curSize(QQuickParticleSystem *particleSystem);
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
-    QQmlV4Handle v4Value();
-    void extendLife(float time);
+    QQmlV4Handle v4Value(QQuickParticleSystem *particleSystem);
+    void extendLife(float time, QQuickParticleSystem *particleSystem);
 
     static inline Q_DECL_CONSTEXPR qreal EPSILON() Q_DECL_NOTHROW { return 0.001; }
 
@@ -338,7 +338,7 @@ private Q_SLOTS:
 
 public:
     //These can be called multiple times per frame, performance critical
-    void emitParticle(QQuickParticleData* p);
+    void emitParticle(QQuickParticleData* p, QQuickParticleEmitter *particleEmitter);
     QQuickParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);
     void finishNewDatum(QQuickParticleData*);
     void moveGroups(QQuickParticleData *d, int newGIdx);
@@ -429,14 +429,14 @@ private:
     QQuickParticleSystem* m_system;
 };
 
-inline bool QQuickParticleData::stillAlive()
+inline bool QQuickParticleData::stillAlive(QQuickParticleSystem* system)
 {
     if (!system)
         return false;
     return (t + lifeSpan - EPSILON()) > ((qreal)system->timeInt/1000.0);
 }
 
-inline bool QQuickParticleData::alive()
+inline bool QQuickParticleData::alive(QQuickParticleSystem* system)
 {
     if (!system)
         return false;

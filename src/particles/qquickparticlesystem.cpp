@@ -340,8 +340,8 @@ void QQuickParticleGroupData::setSize(int newSize)
     Q_ASSERT(newSize > m_size);//XXX allow shrinking
     data.resize(newSize);
     for (int i=m_size; i<newSize; i++) {
-        data[i] = new QQuickParticleData(m_system);
-        data[i]->group = index;
+        data[i] = new QQuickParticleData;
+        data[i]->groupId = index;
         data[i]->index = i;
         reusableIndexes << i;
     }
@@ -358,7 +358,7 @@ void QQuickParticleGroupData::initList()
 
 void QQuickParticleGroupData::kill(QQuickParticleData* d)
 {
-    Q_ASSERT(d->group == index);
+    Q_ASSERT(d->groupId == index);
     d->lifeSpan = 0;//Kill off
     foreach (QQuickParticlePainter* p, painters)
         p->reload(d);
@@ -372,7 +372,7 @@ QQuickParticleData* QQuickParticleGroupData::newDatum(bool respectsLimits)
     while (!reusableIndexes.empty()) {
         int idx = *(reusableIndexes.begin());
         reusableIndexes.remove(idx);
-        if (data[idx]->stillAlive()) {// ### This means resurrection of 'dead' particles. Is that allowed?
+        if (data[idx]->stillAlive(m_system)) {// ### This means resurrection of 'dead' particles. Is that allowed?
             prepareRecycler(data[idx]);
             continue;
         }
@@ -391,7 +391,7 @@ bool QQuickParticleGroupData::recycle()
 {
     while (dataHeap.top() <= m_system->timeInt) {
         foreach (QQuickParticleData* datum, dataHeap.pop()) {
-            if (!datum->stillAlive()) {
+            if (!datum->stillAlive(m_system)) {
                 reusableIndexes << datum->index;
             } else {
                 prepareRecycler(datum); //ttl has been altered mid-way, put it back
@@ -409,17 +409,15 @@ void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)
         dataHeap.insert(d);
     } else {
         while ((roundedTime(d->t) + 2*m_system->maxLife/3) <= m_system->timeInt)
-            d->extendLife(m_system->maxLife/3000.0);
+            d->extendLife(m_system->maxLife / 3000.0, m_system);
         dataHeap.insertTimed(d, roundedTime(d->t) + 2*m_system->maxLife/3);
     }
 }
 
-QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
-    : e(0)
-    , system(sys)
-    , index(0)
+QQuickParticleData::QQuickParticleData()
+    : index(0)
     , systemIndex(-1)
-    , group(0)
+    , groupId(0)
     , colorOwner(0)
     , rotationOwner(0)
     , deformationOwner(0)
@@ -475,9 +473,7 @@ QQuickParticleData &QQuickParticleData::operator=(const QQuickParticleData &othe
 {
     clone(other);
 
-    group = other.group;
-    e = other.e;
-    system = other.system;
+    groupId = other.groupId;
     index = other.index;
     systemIndex = other.systemIndex;
     // Lazily initialized
@@ -527,16 +523,16 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     animationOwner = other.animationOwner;
 }
 
-QQmlV4Handle QQuickParticleData::v4Value()
+QQmlV4Handle QQuickParticleData::v4Value(QQuickParticleSystem* particleSystem)
 {
     if (!v8Datum)
-        v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);
+        v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(particleSystem)), this, particleSystem);
     return v8Datum->v4Value();
 }
 //sets the x accleration without affecting the instantaneous x velocity or position
-void QQuickParticleData::setInstantaneousAX(qreal ax)
+void QQuickParticleData::setInstantaneousAX(qreal ax, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     qreal vx = (this->vx + t*this->ax) - t*ax;
     qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
     qreal x = ex - t*vx - 0.5 * t*t*ax;
@@ -547,9 +543,9 @@ void QQuickParticleData::setInstantaneousAX(qreal ax)
 }
 
 //sets the x velocity without affecting the instantaneous x postion
-void QQuickParticleData::setInstantaneousVX(qreal vx)
+void QQuickParticleData::setInstantaneousVX(qreal vx, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     qreal evx = vx - t*this->ax;
     qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
     qreal x = ex - t*evx - 0.5 * t*t*this->ax;
@@ -559,16 +555,16 @@ void QQuickParticleData::setInstantaneousVX(qreal vx)
 }
 
 //sets the instantaneous x postion
-void QQuickParticleData::setInstantaneousX(qreal x)
+void QQuickParticleData::setInstantaneousX(qreal x, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     this->x = x - t*this->vx - 0.5 * t*t*this->ax;
 }
 
 //sets the y accleration without affecting the instantaneous y velocity or position
-void QQuickParticleData::setInstantaneousAY(qreal ay)
+void QQuickParticleData::setInstantaneousAY(qreal ay, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     qreal vy = (this->vy + t*this->ay) - t*ay;
     qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*vy - 0.5 * t*t*ay;
@@ -579,9 +575,9 @@ void QQuickParticleData::setInstantaneousAY(qreal ay)
 }
 
 //sets the y velocity without affecting the instantaneous y position
-void QQuickParticleData::setInstantaneousVY(qreal vy)
+void QQuickParticleData::setInstantaneousVY(qreal vy, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     qreal evy = vy - t*this->ay;
     qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*evy - 0.5 * t*t*this->ay;
@@ -591,71 +587,71 @@ void QQuickParticleData::setInstantaneousVY(qreal vy)
 }
 
 //sets the instantaneous Y position
-void QQuickParticleData::setInstantaneousY(qreal y)
+void QQuickParticleData::setInstantaneousY(qreal y, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     this->y = y - t*this->vy - 0.5 * t*t*this->ay;
 }
 
-qreal QQuickParticleData::curX() const
+qreal QQuickParticleData::curX(QQuickParticleSystem* particleSystem) const
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     return this->x + this->vx * t + 0.5 * this->ax * t * t;
 }
 
-qreal QQuickParticleData::curVX() const
+qreal QQuickParticleData::curVX(QQuickParticleSystem* particleSystem) const
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     return this->vx + t*this->ax;
 }
 
-qreal QQuickParticleData::curY() const
+qreal QQuickParticleData::curY(QQuickParticleSystem* particleSystem) const
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     return y + vy * t + 0.5 * ay * t * t;
 }
 
-qreal QQuickParticleData::curVY() const
+qreal QQuickParticleData::curVY(QQuickParticleSystem* particleSystem) const
 {
-    qreal t = (system->timeInt / 1000.0) - this->t;
+    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
     return vy + t*ay;
 }
 
-void QQuickParticleData::debugDump()
+void QQuickParticleData::debugDump(QQuickParticleSystem* particleSystem)
 {
-    qDebug() << "Particle" << systemIndex << group << "/" << index << stillAlive()
+    qDebug() << "Particle" << systemIndex << groupId << "/" << index << stillAlive(particleSystem)
              << "Pos: " << x << "," << y
              << "Vel: " << vx << "," << vy
              << "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
-             << "Time: " << t << "," <<lifeSpan << ";" << (system->timeInt / 1000.0) ;
+             << "Time: " << t << "," <<lifeSpan << ";" << (particleSystem->timeInt / 1000.0) ;
 }
 
-float QQuickParticleData::curSize()
+float QQuickParticleData::curSize(QQuickParticleSystem* particleSystem)
 {
-    if (!system || !lifeSpan)
+    if (!particleSystem || !lifeSpan)
         return 0.0f;
-    return size + (endSize - size) * (1 - (lifeLeft() / lifeSpan));
+    return size + (endSize - size) * (1 - (lifeLeft(particleSystem) / lifeSpan));
 }
 
-float QQuickParticleData::lifeLeft()
+float QQuickParticleData::lifeLeft(QQuickParticleSystem* particleSystem)
 {
-    if (!system)
+    if (!particleSystem)
         return 0.0f;
-    return (t + lifeSpan) - (system->timeInt/1000.0);
+    return (t + lifeSpan) - (particleSystem->timeInt/1000.0);
 }
 
-void QQuickParticleData::extendLife(float time)
+void QQuickParticleData::extendLife(float time, QQuickParticleSystem* particleSystem)
 {
-    qreal newX = curX();
-    qreal newY = curY();
-    qreal newVX = curVX();
-    qreal newVY = curVY();
+    qreal newX = curX(particleSystem);
+    qreal newY = curY(particleSystem);
+    qreal newVX = curVX(particleSystem);
+    qreal newVY = curVY(particleSystem);
 
     t += time;
     animT += time;
 
-    qreal elapsed = (system->timeInt / 1000.0) - t;
+    qreal elapsed = (particleSystem->timeInt / 1000.0) - t;
     qreal evy = newVY - elapsed*ay;
     qreal ey = newY - elapsed*evy - 0.5 * elapsed*elapsed*ay;
     qreal evx = newVX - elapsed*ax;
@@ -1049,7 +1045,7 @@ void QQuickParticleSystem::particleStateChange(int idx)
 
 void QQuickParticleSystem::moveGroups(QQuickParticleData *d, int newGIdx)
 {
-    if (!d || newGIdx == d->group)
+    if (!d || newGIdx == d->groupId)
         return;
 
     QQuickParticleData* pd = newDatum(newGIdx, false, d->systemIndex);
@@ -1060,7 +1056,7 @@ void QQuickParticleSystem::moveGroups(QQuickParticleData *d, int newGIdx)
     finishNewDatum(pd);
 
     d->systemIndex = -1;
-    groupData[d->group]->kill(d);
+    groupData[d->groupId]->kill(d);
 }
 
 int QQuickParticleSystem::nextSystemIndex()
@@ -1102,17 +1098,17 @@ QQuickParticleData* QQuickParticleSystem::newDatum(int groupId, bool respectLimi
     bySysIdx[ret->systemIndex] = ret;
 
     if (stateEngine)
-        stateEngine->start(ret->systemIndex, ret->group);
+        stateEngine->start(ret->systemIndex, ret->groupId);
 
     m_empty = false;
     return ret;
 }
 
-void QQuickParticleSystem::emitParticle(QQuickParticleData* pd)
+void QQuickParticleSystem::emitParticle(QQuickParticleData* pd, QQuickParticleEmitter* particleEmitter)
 {// called from prepareNextFrame()->emitWindow - enforce?
     //Account for relative emitter position
     bool okay = false;
-    QTransform t = pd->e->itemTransform(this, &okay);
+    QTransform t = particleEmitter->itemTransform(this, &okay);
     if (okay) {
         qreal tx,ty;
         t.map(pd->x, pd->y, &tx, &ty);
@@ -1126,12 +1122,12 @@ void QQuickParticleSystem::emitParticle(QQuickParticleData* pd)
 void QQuickParticleSystem::finishNewDatum(QQuickParticleData *pd)
 {
     Q_ASSERT(pd);
-    groupData[pd->group]->prepareRecycler(pd);
+    groupData[pd->groupId]->prepareRecycler(pd);
 
     foreach (QQuickParticleAffector *a, m_affectors)
         if (a && a->m_needsReset)
             a->reset(pd);
-    foreach (QQuickParticlePainter* p, groupData[pd->group]->painters)
+    foreach (QQuickParticlePainter* p, groupData[pd->groupId]->painters)
         if (p)
             p->load(pd);
 }
@@ -1165,7 +1161,7 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
     foreach (QQuickParticleAffector* a, m_affectors)
         a->affectSystem(dt);
     foreach (QQuickParticleData* d, needsReset)
-        foreach (QQuickParticlePainter* p, groupData[d->group]->painters)
+        foreach (QQuickParticlePainter* p, groupData[d->groupId]->painters)
             p->reload(d);
 
     if (oldClear != m_empty)

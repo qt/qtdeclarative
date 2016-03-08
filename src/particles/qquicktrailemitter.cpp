@@ -182,7 +182,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
     int gId2 = groupId();
     for (int i=0; i<m_system->groupData[gId]->data.count(); i++) {
         QQuickParticleData *d = m_system->groupData[gId]->data[i];
-        if (!d->stillAlive()){
+        if (!d->stillAlive(m_system)){
             m_lastEmission[i] = time; //Should only start emitting when it returns to life
             continue;
         }
@@ -192,7 +192,8 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
         if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now
             pt = time - maxLife;
 
-        if ((width() || height()) && !effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
+        if ((width() || height()) && !effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),
+                                                                    QPointF(d->curX(m_system), d->curY(m_system)))) {
             m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
             continue;
         }
@@ -202,8 +203,6 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
         while (pt < time || !m_burstQueue.isEmpty()){
             QQuickParticleData* datum = m_system->newDatum(gId2, !m_overwrite);
             if (datum){//else, skip this emission
-                datum->e = this;//###useful?
-
                 // Particle timestamp
                 datum->t = pt;
                 datum->lifeSpan =
@@ -215,8 +214,8 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
                 // Note that burst location doesn't get used for follow emitter
                 qreal followT =  pt - d->t;
                 qreal followT2 = followT * followT * 0.5;
-                qreal eW = m_emitterXVariation < 0 ? d->curSize() : m_emitterXVariation;
-                qreal eH = m_emitterYVariation < 0 ? d->curSize() : m_emitterYVariation;
+                qreal eW = m_emitterXVariation < 0 ? d->curSize(m_system) : m_emitterXVariation;
+                qreal eH = m_emitterYVariation < 0 ? d->curSize(m_system) : m_emitterYVariation;
                 //Subtract offset, because PS expects this in emitter coordinates
                 QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - eW/2,
                                   d->y - offset.y() + d->vy * followT + d->ay * followT2 - eH/2,
@@ -251,7 +250,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
                 toEmit << datum;
 
-                m_system->emitParticle(datum);
+                m_system->emitParticle(datum, this);
             }
             if (!m_burstQueue.isEmpty()){
                 m_burstQueue.first().first--;
@@ -263,7 +262,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
         }
 
         foreach (QQuickParticleData* d, toEmit)
-            m_system->emitParticle(d);
+            m_system->emitParticle(d, this);
 
         if (isEmitConnected() || isEmitFollowConnected()) {
             QQmlEngine *qmlEngine = ::qmlEngine(this);
@@ -273,10 +272,10 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
             QV4::ScopedValue v(scope);
             for (int i=0; i<toEmit.size(); i++)
-                array->putIndexed(i, (v = toEmit[i]->v4Value()));
+                array->putIndexed(i, (v = toEmit[i]->v4Value(m_system)));
 
             if (isEmitFollowConnected())
-                emitFollowParticles(QQmlV4Handle(array), d->v4Value());//A chance for many arbitrary JS changes
+                emitFollowParticles(QQmlV4Handle(array), d->v4Value(m_system));//A chance for many arbitrary JS changes
             else if (isEmitConnected())
                 emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
         }

@@ -206,8 +206,8 @@ void QQuickItemParticle::tick(int time)
                 m_managed << d->delegate;
         }
         if (d && d->delegate){//###Data can be zero if creating an item leads to a reset - this screws things up.
-            d->delegate->setX(d->curX() - d->delegate->width()/2);//TODO: adjust for system?
-            d->delegate->setY(d->curY() - d->delegate->height()/2);
+            d->delegate->setX(d->curX(m_system) - d->delegate->width() / 2); //TODO: adjust for system?
+            d->delegate->setY(d->curY(m_system) - d->delegate->height() / 2);
             QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
             if (mpa){
                 mpa->m_mp = this;
@@ -251,7 +251,7 @@ QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
         //### Constant resetting might lead to m_loadables never being populated when tick() occurs
         for (auto groupId : groupIds()) {
             for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
-                if (!d->delegate && d->t != -1  && d->stillAlive()) {
+                if (!d->delegate && d->t != -1  && d->stillAlive(m_system)) {
                     m_loadables << d;
                 }
             }
@@ -301,8 +301,8 @@ void QQuickItemParticle::prepareNextFrame()
                     item->setOpacity(o);
                 }
             }
-            item->setX(data->curX() - item->width()/2 - m_systemOffset.x());
-            item->setY(data->curY() - item->height()/2 - m_systemOffset.y());
+            item->setX(data->curX(m_system) - item->width() / 2 - m_systemOffset.x());
+            item->setY(data->curY(m_system) - item->height() / 2 - m_systemOffset.y());
         }
     }
 }

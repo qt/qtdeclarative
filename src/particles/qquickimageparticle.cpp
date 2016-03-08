@@ -1168,21 +1168,21 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     //Will return datum if the datum is a sentinel or uninitialized, to centralize that one check
     if (datum->systemIndex == -1)
         return datum;
-    QQuickParticleGroupData* gd = m_system->groupData[datum->group];
-    if (!m_shadowData.contains(datum->group)) {
+    QQuickParticleGroupData* gd = m_system->groupData[datum->groupId];
+    if (!m_shadowData.contains(datum->groupId)) {
         QVector<QQuickParticleData*> data;
         const int gdSize = gd->size();
         data.reserve(gdSize);
         for (int i = 0; i < gdSize; i++) {
-            QQuickParticleData* datum = new QQuickParticleData(m_system);
+            QQuickParticleData* datum = new QQuickParticleData;
             *datum = *(gd->data[i]);
             data << datum;
         }
-        m_shadowData.insert(datum->group, data);
+        m_shadowData.insert(datum->groupId, data);
     }
     //### If dynamic resize is added, remember to potentially resize the shadow data on out-of-bounds access request
 
-    return m_shadowData[datum->group][datum->index];
+    return m_shadowData[datum->groupId][datum->index];
 }
 
 bool QQuickImageParticle::loadingSomething()

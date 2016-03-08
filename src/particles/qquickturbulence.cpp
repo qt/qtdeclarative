@@ -186,7 +186,7 @@ void QQuickTurbulenceAffector::affectSystem(qreal dt)
         foreach (QQuickParticleData *d, gd->data){
             if (!shouldAffect(d))
                 continue;
-            QPoint pos = (QPointF(d->curX(), d->curY()) - m_offset).toPoint();
+            QPoint pos = (QPointF(d->curX(m_system), d->curY(m_system)) - m_offset).toPoint();
             if (!boundsRect.contains(pos,true))//Need to redo bounds checking due to quantization.
                 continue;
             qreal fx = 0.0;
@@ -194,8 +194,8 @@ void QQuickTurbulenceAffector::affectSystem(qreal dt)
             fx += m_vectorField[pos.x()][pos.y()].x() * m_strength;
             fy += m_vectorField[pos.x()][pos.y()].y() * m_strength;
             if (fx || fy){
-                d->setInstantaneousVX(d->curVX()+ fx * dt);
-                d->setInstantaneousVY(d->curVY()+ fy * dt);
+                d->setInstantaneousVX(d->curVX(m_system)+ fx * dt, m_system);
+                d->setInstantaneousVY(d->curVY(m_system)+ fy * dt, m_system);
                 postAffect(d);
             }
         }

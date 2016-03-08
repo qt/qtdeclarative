@@ -162,13 +162,13 @@ bool QQuickParticleAffector::shouldAffect(QQuickParticleData* d)
 {
     if (!d)
         return false;
-    if (activeGroup(d->group)){
-        if ((m_onceOff && m_onceOffed.contains(qMakePair(d->group, d->index)))
-                || !d->stillAlive())
+    if (activeGroup(d->groupId)){
+        if ((m_onceOff && m_onceOffed.contains(qMakePair(d->groupId, d->index)))
+                || !d->stillAlive(m_system))
             return false;
         //Need to have previous location for affected anyways
         if (width() == 0 || height() == 0
-                || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()), QPointF(d->curX(), d->curY()))){
+                || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()), QPointF(d->curX(m_system), d->curY(m_system)))){
             if (m_whenCollidingWith.isEmpty() || isColliding(d)){
                 return true;
             }
@@ -182,9 +182,9 @@ void QQuickParticleAffector::postAffect(QQuickParticleData* d)
 {
     m_system->needsReset << d;
     if (m_onceOff)
-        m_onceOffed << qMakePair(d->group, d->index);
+        m_onceOffed << qMakePair(d->groupId, d->index);
     if (isAffectedConnected())
-        emit affected(d->curX(), d->curY());
+        emit affected(d->curX(m_system), d->curY(m_system));
 }
 
 const qreal QQuickParticleAffector::simulationDelta = 0.020;
@@ -210,7 +210,7 @@ void QQuickParticleAffector::affectSystem(qreal dt)
                         m_system->timeInt -= myDt * 1000.0;
                         while (myDt > simulationDelta) {
                             m_system->timeInt += simulationDelta * 1000.0;
-                            if (d->alive())//Only affect during the parts it was alive for
+                            if (d->alive(m_system))//Only affect during the parts it was alive for
                                 affected = affectParticle(d, simulationDelta) || affected;
                             myDt -= simulationDelta;
                         }
@@ -234,8 +234,8 @@ bool QQuickParticleAffector::affectParticle(QQuickParticleData *, qreal )
 void QQuickParticleAffector::reset(QQuickParticleData* pd)
 {//TODO: This, among other ones, should be restructured so they don't all need to remember to call the superclass
     if (m_onceOff)
-        if (activeGroup(pd->group))
-            m_onceOffed.remove(qMakePair(pd->group, pd->index));
+        if (activeGroup(pd->groupId))
+            m_onceOffed.remove(qMakePair(pd->groupId, pd->index));
 }
 
 void QQuickParticleAffector::updateOffsets()
@@ -246,16 +246,16 @@ void QQuickParticleAffector::updateOffsets()
 
 bool QQuickParticleAffector::isColliding(QQuickParticleData *d)
 {
-    qreal myCurX = d->curX();
-    qreal myCurY = d->curY();
-    qreal myCurSize = d->curSize()/2;
+    qreal myCurX = d->curX(m_system);
+    qreal myCurY = d->curY(m_system);
+    qreal myCurSize = d->curSize(m_system) / 2;
     foreach (const QString &group, m_whenCollidingWith){
         foreach (QQuickParticleData* other, m_system->groupData[m_system->groupIds[group]]->data){
-            if (!other->stillAlive())
+            if (!other->stillAlive(m_system))
                 continue;
-            qreal otherCurX = other->curX();
-            qreal otherCurY = other->curY();
-            qreal otherCurSize = other->curSize()/2;
+            qreal otherCurX = other->curX(m_system);
+            qreal otherCurY = other->curY(m_system);
+            qreal otherCurSize = other->curSize(m_system) / 2;
             if ((myCurX + myCurSize > otherCurX - otherCurSize
                  && myCurX - myCurSize < otherCurX + otherCurSize)
                  && (myCurY + myCurSize > otherCurY - otherCurSize

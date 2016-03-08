@@ -80,8 +80,8 @@ bool QQuickFrictionAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     if (!m_factor)
         return false;
-    qreal curVX = d->curVX();
-    qreal curVY = d->curVY();
+    qreal curVX = d->curVX(m_system);
+    qreal curVY = d->curVY(m_system);
     if (!curVX && !curVY)
         return false;
     qreal newVX = curVX + (curVX * m_factor * -1 * dt);
@@ -106,8 +106,8 @@ bool QQuickFrictionAffector::affectParticle(QQuickParticleData *d, qreal dt)
         }
     }
 
-    d->setInstantaneousVX(newVX);
-    d->setInstantaneousVY(newVY);
+    d->setInstantaneousVX(newVX, m_system);
+    d->setInstantaneousVY(newVY, m_system);
     return true;
 }
 QT_END_NAMESPACE

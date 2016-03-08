@@ -139,17 +139,17 @@ void QQuickParticlePainter::setGroups(const QStringList &arg)
 
 void QQuickParticlePainter::load(QQuickParticleData* d)
 {
-    initialize(d->group, d->index);
+    initialize(d->groupId, d->index);
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reload(QQuickParticleData* d)
 {
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reset()
