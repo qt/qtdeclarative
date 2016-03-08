@@ -148,6 +148,7 @@ public:
 
 Q_SIGNALS:
     void logAndStatusChanged(const QString &, int status);
+    void dirtyTexture();
 
 private Q_SLOTS:
     void markDirtyTexture();

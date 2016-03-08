@@ -316,8 +316,6 @@ struct AnimatedSpriteVertices {
 //TODO: Implicitly size element to size of sprite
 QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(parent)
-    , m_node(0)
-    , m_material(0)
     , m_sprite(new QQuickSprite(this))
     , m_spriteEngine(0)
     , m_curFrame(0)
@@ -331,9 +329,9 @@ QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
 {
     setFlag(ItemHasContents);
     connect(this, SIGNAL(widthChanged()),
-            this, SLOT(sizeVertices()));
+            this, SLOT(reset()));
     connect(this, SIGNAL(heightChanged()),
-            this, SLOT(sizeVertices()));
+            this, SLOT(reset()));
 }
 
 bool QQuickAnimatedSprite::isCurrentFrameChangedConnected()
@@ -461,12 +459,9 @@ static QSGGeometry::AttributeSet AnimatedSprite_AttributeSet =
     AnimatedSprite_Attributes
 };
 
-void QQuickAnimatedSprite::sizeVertices()
+void QQuickAnimatedSprite::sizeVertices(QSGGeometryNode *node)
 {
-    if (!m_node)
-        return;
-
-    AnimatedSpriteVertices *p = (AnimatedSpriteVertices *) m_node->geometry()->vertexData();
+    AnimatedSpriteVertices *p = (AnimatedSpriteVertices *) node->geometry()->vertexData();
     p->v1.x = 0;
     p->v1.y = 0;
 
@@ -494,21 +489,21 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
         return 0;
     }
 
-    m_material = new QQuickAnimatedSpriteMaterial();
+    QQuickAnimatedSpriteMaterial *material = new QQuickAnimatedSpriteMaterial();
 
     QImage image = m_spriteEngine->assembledImage(); //Engine prints errors if there are any
     if (image.isNull())
         return 0;
     m_sheetSize = QSizeF(image.size());
-    m_material->texture = window()->createTextureFromImage(image);
+    material->texture = window()->createTextureFromImage(image);
     m_spriteEngine->start(0);
-    m_material->animT = 0;
-    m_material->animX1 = m_spriteEngine->spriteX() / m_sheetSize.width();
-    m_material->animY1 = m_spriteEngine->spriteY() / m_sheetSize.height();
-    m_material->animX2 = m_material->animX1;
-    m_material->animY2 = m_material->animY1;
-    m_material->animW = m_spriteEngine->spriteWidth() / m_sheetSize.width();
-    m_material->animH = m_spriteEngine->spriteHeight() / m_sheetSize.height();
+    material->animT = 0;
+    material->animX1 = m_spriteEngine->spriteX() / m_sheetSize.width();
+    material->animY1 = m_spriteEngine->spriteY() / m_sheetSize.height();
+    material->animX2 = material->animX1;
+    material->animY2 = material->animY1;
+    material->animW = m_spriteEngine->spriteWidth() / m_sheetSize.width();
+    material->animH = m_spriteEngine->spriteHeight() / m_sheetSize.height();
 
     int vCount = 4;
     int iCount = 6;
@@ -517,7 +512,7 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
 
     AnimatedSpriteVertices *p = (AnimatedSpriteVertices *) g->vertexData();
 
-    QRectF texRect = m_material->texture->normalizedTextureSubRect();
+    QRectF texRect = material->texture->normalizedTextureSubRect();
 
     p->v1.tx = texRect.topLeft().x();
     p->v1.ty = texRect.topLeft().y();
@@ -540,51 +535,51 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
     indices[5] = 2;
 
 
-    m_node = new QSGGeometryNode();
-    m_node->setGeometry(g);
-    m_node->setMaterial(m_material);
-    m_node->setFlag(QSGGeometryNode::OwnsMaterial);
-    m_node->setFlag(QSGGeometryNode::OwnsGeometry);
-    sizeVertices();
-    return m_node;
+    QSGGeometryNode *node = new QSGGeometryNode();
+    node->setGeometry(g);
+    node->setMaterial(material);
+    node->setFlag(QSGGeometryNode::OwnsMaterial);
+    node->setFlag(QSGGeometryNode::OwnsGeometry);
+    sizeVertices(node);
+    return node;
 }
 
 void QQuickAnimatedSprite::reset()
 {
     m_pleaseReset = true;
+    update();
 }
 
-QSGNode *QQuickAnimatedSprite::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
+QSGNode *QQuickAnimatedSprite::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (m_pleaseReset) {
-        delete m_node;
+        delete oldNode;
 
-        m_node = 0;
-        m_material = 0;
+        oldNode = 0;
         m_pleaseReset = false;
     }
 
-    prepareNextFrame();
+    QSGGeometryNode *node = static_cast<QSGGeometryNode *>(oldNode);
+    if (!node)
+        node = buildNode();
+
+    if (node)
+        prepareNextFrame(node);
 
     if (m_running) {
         if (!m_paused)
             update();
 
-        if (m_node) {
-            m_node->markDirty(QSGNode::DirtyMaterial);
+        if (node) {
+            node->markDirty(QSGNode::DirtyMaterial);
         }
     }
 
-    return m_node;
+    return node;
 }
 
-void QQuickAnimatedSprite::prepareNextFrame()
+void QQuickAnimatedSprite::prepareNextFrame(QSGGeometryNode *node)
 {
-    if (m_node == 0)
-        m_node = buildNode();
-    if (m_node == 0) //error creating node
-        return;
-
     int timeInt = m_timestamp.elapsed() + m_pauseOffset;
     qreal time =  timeInt / 1000.;
 
@@ -700,14 +695,15 @@ void QQuickAnimatedSprite::prepareNextFrame()
         }
     }
 
-    m_material->animX1 = x1;
-    m_material->animY1 = y1;
-    m_material->animX2 = x2;
-    m_material->animY2 = y2;
-    m_material->animW = w;
-    m_material->animH = h;
-    m_material->animT = m_interpolate ? progress : 0.0;
-    m_material->texture->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
+    QQuickAnimatedSpriteMaterial *material = static_cast<QQuickAnimatedSpriteMaterial *>(node->material());
+    material->animX1 = x1;
+    material->animY1 = y1;
+    material->animX2 = x2;
+    material->animY2 = y2;
+    material->animW = w;
+    material->animH = h;
+    material->animT = m_interpolate ? progress : 0.0;
+    material->texture->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 }
 
 QT_END_NAMESPACE

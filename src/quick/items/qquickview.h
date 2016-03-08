@@ -60,9 +60,9 @@ class Q_QUICK_EXPORT QQuickView : public QQuickWindow
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
 public:
-    explicit QQuickView(QWindow *parent = 0);
+    explicit QQuickView(QWindow *parent = Q_NULLPTR);
     QQuickView(QQmlEngine* engine, QWindow *parent);
-    QQuickView(const QUrl &source, QWindow *parent = 0);
+    explicit QQuickView(const QUrl &source, QWindow *parent = Q_NULLPTR);
     virtual ~QQuickView();
 
     QUrl source() const;
