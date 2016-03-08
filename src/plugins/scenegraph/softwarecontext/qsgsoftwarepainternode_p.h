@@ -95,7 +95,6 @@ public:
 private:
 
     QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
-    QQuickPaintedItem::RenderTarget m_actualRenderTarget;
 
     QQuickPaintedItem *m_item;
 
@@ -109,8 +108,6 @@ private:
     bool m_linear_filtering;
     bool m_mipmapping;
     bool m_smoothPainting;
-    bool m_extensionsChecked;
-    bool m_multisamplingSupported;
     bool m_fastFBOResizing;
     QColor m_fillColor;
     qreal m_contentsScale;
