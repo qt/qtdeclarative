@@ -13,40 +13,40 @@ QMAKE_TARGET_DESCRIPTION = "Quick 2D Renderer for Qt."
 #DEFINES += QTQUICK2D_DEBUG_FLUSH
 
 SOURCES += \
-    context.cpp \
-    pluginmain.cpp \
-    renderloop.cpp \
-    rectanglenode.cpp \
-    imagenode.cpp \
-    pixmaptexture.cpp \
-    glyphnode.cpp \
-    ninepatchnode.cpp \
-    softwarelayer.cpp \
-    painternode.cpp \
-    renderablenode.cpp \
-    renderer.cpp \
-    pixmaprenderer.cpp \
-    renderablenodeupdater.cpp \
-    renderlistbuilder.cpp \
-    abstractsoftwarerenderer.cpp
+    qsgsoftwarecontext.cpp \
+    qsgabstractsoftwarerenderer.cpp \
+    qsgsoftwareglyphnode.cpp \
+    qsgsoftwareimagenode.cpp \
+    qsgsoftwareninepatchnode.cpp \
+    qsgsoftwarepainternode.cpp \
+    qsgsoftwarerectanglenode.cpp \
+    qsgsoftwarepixmaprenderer.cpp \
+    qsgsoftwarepixmaptexture.cpp \
+    qsgsoftwarerenderablenode.cpp \
+    qsgsoftwarerenderablenodeupdater.cpp \
+    qsgsoftwarerenderer.cpp \
+    qsgsoftwarerenderlistbuilder.cpp \
+    qsgsoftwarerenderloop.cpp \
+    qsgsoftwarelayer.cpp \
+    qsgsoftwarecontextplugin.cpp
 
 HEADERS += \
-    context.h \
-    pluginmain.h \
-    renderloop.h \
-    rectanglenode.h \
-    imagenode.h \
-    pixmaptexture.h \
-    glyphnode.h \
-    ninepatchnode.h \
-    softwarelayer.h \
-    painternode.h \
-    renderablenode.h \
-    renderer.h \
-    pixmaprenderer.h \
-    renderablenodeupdater.h \
-    renderlistbuilder.h \
-    abstractsoftwarerenderer.h
+    qsgsoftwarecontext_p.h \
+    qsgabstractsoftwarerenderer_p.h \
+    qsgsoftwareglyphnode_p.h \
+    qsgsoftwareimagenode_p.h \
+    qsgsoftwareninepatchnode_p.h \
+    qsgsoftwarepainternode_p.h \
+    qsgsoftwarepixmaprenderer_p.h \
+    qsgsoftwarepixmaptexture_p.h \
+    qsgsoftwarerectanglenode_p.h \
+    qsgsoftwarerenderablenode_p.h \
+    qsgsoftwarerenderablenodeupdater_p.h \
+    qsgsoftwarerenderer_p.h \
+    qsgsoftwarerenderlistbuilder_p.h \
+    qsgsoftwarerenderloop_p.h \
+    qsgsoftwarelayer_p.h \
+    qsgsoftwarecontextplugin_p.h
 
 OTHER_FILES += softwarecontext.json
 
