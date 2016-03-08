@@ -252,27 +252,27 @@ public:
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
 
     //sets the x accleration without affecting the instantaneous x velocity or position
-    void setInstantaneousAX(qreal ax, QQuickParticleSystem *particleSystem);
+    void setInstantaneousAX(float ax, QQuickParticleSystem *particleSystem);
     //sets the x velocity without affecting the instantaneous x postion
-    void setInstantaneousVX(qreal vx, QQuickParticleSystem *particleSystem);
+    void setInstantaneousVX(float vx, QQuickParticleSystem *particleSystem);
     //sets the instantaneous x postion
-    void setInstantaneousX(qreal x, QQuickParticleSystem *particleSystem);
+    void setInstantaneousX(float x, QQuickParticleSystem *particleSystem);
     //sets the y accleration without affecting the instantaneous y velocity or position
-    void setInstantaneousAY(qreal ay, QQuickParticleSystem *particleSystem);
+    void setInstantaneousAY(float ay, QQuickParticleSystem *particleSystem);
     //sets the y velocity without affecting the instantaneous y postion
-    void setInstantaneousVY(qreal vy, QQuickParticleSystem *particleSystem);
+    void setInstantaneousVY(float vy, QQuickParticleSystem *particleSystem);
     //sets the instantaneous Y postion
-    void setInstantaneousY(qreal y, QQuickParticleSystem *particleSystem);
+    void setInstantaneousY(float y, QQuickParticleSystem *particleSystem);
 
     //TODO: Slight caching?
-    qreal curX(QQuickParticleSystem *particleSystem) const;
-    qreal curVX(QQuickParticleSystem *particleSystem) const;
-    qreal curAX() const { return ax; }
-    qreal curAX(QQuickParticleSystem *) const { return ax; } // used by the macros in qquickv4particledata.cpp
-    qreal curY(QQuickParticleSystem *particleSystem) const;
-    qreal curVY(QQuickParticleSystem *particleSystem) const;
-    qreal curAY() const { return ay; }
-    qreal curAY(QQuickParticleSystem *) const { return ay; } // used by the macros in qquickv4particledata.cpp
+    float curX(QQuickParticleSystem *particleSystem) const;
+    float curVX(QQuickParticleSystem *particleSystem) const;
+    float curAX() const { return ax; }
+    float curAX(QQuickParticleSystem *) const { return ax; } // used by the macros in qquickv4particledata.cpp
+    float curY(QQuickParticleSystem *particleSystem) const;
+    float curVY(QQuickParticleSystem *particleSystem) const;
+    float curAY() const { return ay; }
+    float curAY(QQuickParticleSystem *) const { return ay; } // used by the macros in qquickv4particledata.cpp
 
     int index;
     int systemIndex;
@@ -340,7 +340,7 @@ public:
     QQmlV4Handle v4Value(QQuickParticleSystem *particleSystem);
     void extendLife(float time, QQuickParticleSystem *particleSystem);
 
-    static inline Q_DECL_CONSTEXPR qreal EPSILON() Q_DECL_NOTHROW { return 0.001; }
+    static inline Q_DECL_CONSTEXPR float EPSILON() Q_DECL_NOTHROW { return 0.001f; }
 
 private:
     QQuickV4ParticleData* v8Datum;
@@ -490,85 +490,85 @@ private:
     QQuickParticleSystem* m_system;
 };
 
-inline void QQuickParticleData::setInstantaneousAX(qreal ax, QQuickParticleSystem* particleSystem)
+inline void QQuickParticleData::setInstantaneousAX(float ax, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal vx = (this->vx + t*this->ax) - t*ax;
-    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*vx - 0.5 * t*t*ax;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float vx = (this->vx + t * this->ax) - t * ax;
+    float ex = this->x + this->vx * t + 0.5f * this->ax * t * t;
+    float x = ex - t * vx - 0.5f * t * t * ax;
 
     this->ax = ax;
     this->vx = vx;
     this->x = x;
 }
 
-inline void QQuickParticleData::setInstantaneousVX(qreal vx, QQuickParticleSystem* particleSystem)
+inline void QQuickParticleData::setInstantaneousVX(float vx, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal evx = vx - t*this->ax;
-    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*evx - 0.5 * t*t*this->ax;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float evx = vx - t * this->ax;
+    float ex = this->x + this->vx * t + 0.5f * this->ax * t * t;
+    float x = ex - t * evx - 0.5f * t * t * this->ax;
 
     this->vx = evx;
     this->x = x;
 }
 
-inline void QQuickParticleData::setInstantaneousX(qreal x, QQuickParticleSystem* particleSystem)
+inline void QQuickParticleData::setInstantaneousX(float x, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    this->x = x - t*this->vx - 0.5 * t*t*this->ax;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    this->x = x - t * this->vx - 0.5f * t * t * this->ax;
 }
 
-inline void QQuickParticleData::setInstantaneousAY(qreal ay, QQuickParticleSystem* particleSystem)
+inline void QQuickParticleData::setInstantaneousAY(float ay, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal vy = (this->vy + t*this->ay) - t*ay;
-    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*vy - 0.5 * t*t*ay;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float vy = (this->vy + t * this->ay) - t * ay;
+    float ey = this->y + this->vy * t + 0.5f * this->ay * t * t;
+    float y = ey - t * vy - 0.5f * t * t * ay;
 
     this->ay = ay;
     this->vy = vy;
     this->y = y;
 }
 
-inline void QQuickParticleData::setInstantaneousVY(qreal vy, QQuickParticleSystem* particleSystem)
+inline void QQuickParticleData::setInstantaneousVY(float vy, QQuickParticleSystem* particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    qreal evy = vy - t*this->ay;
-    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*evy - 0.5 * t*t*this->ay;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    float evy = vy - t * this->ay;
+    float ey = this->y + this->vy * t + 0.5f * this->ay * t * t;
+    float y = ey - t*evy - 0.5f * t * t * this->ay;
 
     this->vy = evy;
     this->y = y;
 }
 
-inline void QQuickParticleData::setInstantaneousY(qreal y, QQuickParticleSystem *particleSystem)
+inline void QQuickParticleData::setInstantaneousY(float y, QQuickParticleSystem *particleSystem)
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    this->y = y - t * this->vy - 0.5 * t*t*this->ay;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    this->y = y - t * this->vy - 0.5f * t * t * this->ay;
 }
 
-inline qreal QQuickParticleData::curX(QQuickParticleSystem *particleSystem) const
+inline float QQuickParticleData::curX(QQuickParticleSystem *particleSystem) const
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return this->x + this->vx * t + 0.5 * this->ax * t * t;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    return this->x + this->vx * t + 0.5f * this->ax * t * t;
 }
 
-inline qreal QQuickParticleData::curVX(QQuickParticleSystem *particleSystem) const
+inline float QQuickParticleData::curVX(QQuickParticleSystem *particleSystem) const
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return this->vx + t*this->ax;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    return this->vx + t * this->ax;
 }
 
-inline qreal QQuickParticleData::curY(QQuickParticleSystem *particleSystem) const
+inline float QQuickParticleData::curY(QQuickParticleSystem *particleSystem) const
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
-    return y + vy * t + 0.5 * ay * t * t;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
+    return y + vy * t + 0.5f * ay * t * t;
 }
 
-inline qreal QQuickParticleData::curVY(QQuickParticleSystem *particleSystem) const
+inline float QQuickParticleData::curVY(QQuickParticleSystem *particleSystem) const
 {
-    qreal t = (particleSystem->timeInt / 1000.0) - this->t;
+    float t = (particleSystem->timeInt / 1000.0f) - this->t;
     return vy + t*ay;
 }
 
@@ -576,14 +576,14 @@ inline bool QQuickParticleData::stillAlive(QQuickParticleSystem* system) const
 {
     if (!system)
         return false;
-    return (t + lifeSpan - EPSILON()) > ((qreal)system->timeInt/1000.0);
+    return (t + lifeSpan - EPSILON()) > (system->timeInt / 1000.0f);
 }
 
 inline bool QQuickParticleData::alive(QQuickParticleSystem* system) const
 {
     if (!system)
         return false;
-    qreal st = ((qreal)system->timeInt/1000.0);
+    float st = (system->timeInt / 1000.0f);
     return (t + EPSILON()) < st && (t + lifeSpan - EPSILON()) > st;
 }
 
@@ -591,12 +591,12 @@ inline float QQuickParticleData::lifeLeft(QQuickParticleSystem *particleSystem) 
 {
     if (!particleSystem)
         return 0.0f;
-    return (t + lifeSpan) - (particleSystem->timeInt/1000.0);
+    return (t + lifeSpan) - (particleSystem->timeInt / 1000.0f);
 }
 
 inline float QQuickParticleData::curSize(QQuickParticleSystem *particleSystem) const
 {
-    if (!particleSystem || !lifeSpan)
+    if (!particleSystem || lifeSpan == 0.0f)
         return 0.0f;
     return size + (endSize - size) * (1 - (lifeLeft(particleSystem) / lifeSpan));
 }
