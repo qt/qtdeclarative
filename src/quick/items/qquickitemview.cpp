@@ -2484,8 +2484,10 @@ void QQuickItemViewPrivate::updateUnrequestedIndexes()
 
 void QQuickItemViewPrivate::updateUnrequestedPositions()
 {
-    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.cbegin(), cend = unrequestedItems.cend(); it != cend; ++it)
-        repositionPackageItemAt(it.key(), it.value());
+    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.cbegin(), cend = unrequestedItems.cend(); it != cend; ++it) {
+        if (it.value() >= 0)
+            repositionPackageItemAt(it.key(), it.value());
+    }
 }
 
 void QQuickItemViewPrivate::updateVisibleIndex()

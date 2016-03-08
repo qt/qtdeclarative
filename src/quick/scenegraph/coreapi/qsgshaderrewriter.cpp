@@ -274,7 +274,7 @@ int main(int argc, char **argv)
 
     for (int i=0; i<args.length(); ++i) {
         const QString &a = args.at(i);
-        if (a == QStringLiteral("--file") && i < args.length() - 1) {
+        if (a == QLatin1String("--file") && i < args.length() - 1) {
             qDebug() << "Reading file: " << args.at(i);
             QFile file(args.at(++i));
             if (!file.open(QFile::ReadOnly)) {
@@ -282,10 +282,10 @@ int main(int argc, char **argv)
                 return 1;
             }
             content = file.readAll();
-        } else if (a == QStringLiteral("--selftest")) {
+        } else if (a == QLatin1String("--selftest")) {
             qDebug() << "doing a selftest";
             content = QByteArray(selftest);
-        } else if (a == QStringLiteral("--help") || a == QStringLiteral("-h")) {
+        } else if (a == QLatin1String("--help") || a == QLatin1String("-h")) {
             qDebug() << "usage:" << endl
                      << "  --file [name]        A vertex shader file to rewrite" << endl;
         }

@@ -226,7 +226,7 @@ void QQuickImageBase::load()
         // will be used, as usual.
         bool setDevicePixelRatio = false;
         if (!d->sourcesize.isValid()) {
-            if (loadUrl.scheme() == QStringLiteral("image")) {
+            if (loadUrl.scheme() == QLatin1String("image")) {
                 setDevicePixelRatio = true;
             } else {
                 QString stringUrl = loadUrl.path(QUrl::PrettyDecoded);

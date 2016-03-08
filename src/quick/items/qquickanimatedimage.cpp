@@ -47,8 +47,10 @@
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlengine.h>
 #include <QtGui/qmovie.h>
+#ifndef QT_NO_NETWORK
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -144,8 +146,10 @@ QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
 QQuickAnimatedImage::~QQuickAnimatedImage()
 {
     Q_D(QQuickAnimatedImage);
+#ifndef QT_NO_NETWORK
     if (d->reply)
         d->reply->deleteLater();
+#endif
     delete d->_movie;
     qDeleteAll(d->frameMap);
     d->frameMap.clear();
@@ -264,10 +268,12 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
     if (url == d->url)
         return;
 
+#ifndef QT_NO_NETWORK
     if (d->reply) {
         d->reply->deleteLater();
         d->reply = 0;
     }
+#endif
 
     d->setImage(QImage());
     qDeleteAll(d->frameMap);
@@ -318,6 +324,7 @@ void QQuickAnimatedImage::load()
             d->_movie = new QMovie(lf);
             movieRequestFinished();
         } else {
+#ifndef QT_NO_NETWORK
             if (d->status != Loading) {
                 d->status = Loading;
                 emit statusChanged(d->status);
@@ -334,6 +341,7 @@ void QQuickAnimatedImage::load()
                             this, SLOT(movieRequestFinished()));
             QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)),
                             this, SLOT(requestProgress(qint64,qint64)));
+#endif
         }
     }
 }
@@ -342,8 +350,10 @@ void QQuickAnimatedImage::load()
 
 void QQuickAnimatedImage::movieRequestFinished()
 {
+
     Q_D(QQuickAnimatedImage);
 
+#ifndef QT_NO_NETWORK
     if (d->reply) {
         d->redirectCount++;
         if (d->redirectCount < ANIMATEDIMAGE_MAXIMUM_REDIRECT_RECURSION) {
@@ -359,6 +369,7 @@ void QQuickAnimatedImage::movieRequestFinished()
         d->redirectCount=0;
         d->_movie = new QMovie(d->reply);
     }
+#endif
 
     if (!d->_movie->isValid()) {
         qmlInfo(this) << "Error Reading Animated Image File " << d->url.toString();

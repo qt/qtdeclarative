@@ -294,10 +294,43 @@ void QQuickWindow::update()
         QQuickRenderControlPrivate::get(d->renderControl)->update();
 }
 
+static void updatePixelRatioHelper(QQuickItem *item, float pixelRatio)
+{
+    if (item->flags() & QQuickItem::ItemHasContents) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        itemPrivate->itemChange(QQuickItem::ItemDevicePixelRatioHasChanged, pixelRatio);
+    }
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i = 0; i < items.size(); ++i)
+        updatePixelRatioHelper(items.at(i), pixelRatio);
+}
+
+void QQuickWindow::physicalDpiChanged()
+{
+    Q_D(QQuickWindow);
+    const qreal newPixelRatio = screen()->devicePixelRatio();
+    if (qFuzzyCompare(newPixelRatio, d->devicePixelRatio))
+        return;
+    d->devicePixelRatio = newPixelRatio;
+    if (d->contentItem)
+        updatePixelRatioHelper(d->contentItem, newPixelRatio);
+}
+
 void QQuickWindow::handleScreenChanged(QScreen *screen)
 {
     Q_D(QQuickWindow);
-    Q_UNUSED(screen)
+    if (screen) {
+        physicalDpiChanged();
+        // When physical DPI changes on the same screen, either the resolution or the device pixel
+        // ratio changed. We must check what it is. Device pixel ratio does not have its own
+        // ...Changed() signal.
+        d->physicalDpiChangedConnection = connect(screen, SIGNAL(physicalDotsPerInchChanged(qreal)),
+                                                  this, SLOT(physicalDpiChanged()));
+    } else {
+        disconnect(d->physicalDpiChangedConnection);
+    }
+
     d->forcePolish();
 }
 
@@ -416,6 +449,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
     , dirtyItemList(0)
+    , devicePixelRatio(0)
     , context(0)
     , renderer(0)
     , windowManager(0)
@@ -469,6 +503,9 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         windowManager = QSGRenderLoop::instance();
 
     Q_ASSERT(windowManager || renderControl);
+
+    if (QScreen *screen = q->screen())
+       devicePixelRatio = screen->devicePixelRatio();
 
     QSGContext *sg;
     if (renderControl) {
@@ -2114,7 +2151,7 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     return (acceptedNewPoints->count() == newPoints.count() && updatedPoints->isEmpty());
 }
 
-// touchEventForItemBounds has no means to generate a touch event that contains
+// touchEventForItem has no means to generate a touch event that contains
 // only the points that are relevant for this item.  Thus the need for
 // matchingPoints to already be that set of interesting points.
 // They are all pre-transformed, too.
@@ -2176,7 +2213,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     return touchEventAccepted;
 }
 
-QTouchEvent *QQuickWindowPrivate::touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent)
+QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds)
 {
     const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
     QList<QTouchEvent::TouchPoint> pointsInBounds;
@@ -2184,7 +2221,10 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItemBounds(QQuickItem *target, co
     if (originalEvent.touchPointStates() != Qt::TouchPointStationary) {
         for (int i = 0; i < touchPoints.count(); ++i) {
             const QTouchEvent::TouchPoint &tp = touchPoints.at(i);
-            if (tp.state() == Qt::TouchPointPressed) {
+            // Touch presses are relevant to the target item only if they occur inside its bounds.
+            // Touch updates and releases are relevant if they occur inside, or if we want to
+            // finish the sequence because the press occurred inside.
+            if (tp.state() == Qt::TouchPointPressed || alwaysCheckBounds) {
                 QPointF p = target->mapFromScene(tp.scenePos());
                 if (target->contains(p))
                     pointsInBounds.append(tp);
@@ -2413,7 +2453,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
     if (targetPrivate->filtersChildMouseEvents && !hasFiltered->contains(target)) {
         hasFiltered->insert(target);
-        QScopedPointer<QTouchEvent> targetEvent(touchEventForItemBounds(target, *event));
+        QScopedPointer<QTouchEvent> targetEvent(touchEventForItem(target, *event));
         if (!targetEvent->touchPoints().isEmpty()) {
             if (target->childMouseEventFilter(item, targetEvent.data())) {
                 qCDebug(DBG_TOUCH) << " - first chance intercepted on childMouseEventFilter by " << target;
@@ -2510,6 +2550,15 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
+    return overThreshold;
+}
+
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold)
+{
+    QStyleHints *styleHints = qApp->styleHints();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+    qreal velocity = axis == Qt::XAxis ? tp->velocity().x() : tp->velocity().y();
+    overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     return overThreshold;
 }
 
@@ -3870,6 +3919,14 @@ void QQuickWindow::resetOpenGLState()
     The flags which you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
  */
+
+/*!
+    \qmlattachedproperty Window Window::window
+    \since 5.7
+
+    This attached property holds the item's window.
+    The Window attached property can be attached to any Item.
+*/
 
 /*!
     \qmlattachedproperty int Window::width

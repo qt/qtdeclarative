@@ -198,6 +198,10 @@ private slots:
     void crash2();
 
     void globalEnums();
+    void lowercaseEnumRuntime_data();
+    void lowercaseEnumRuntime();
+    void lowercaseEnumCompileTime_data();
+    void lowercaseEnumCompileTime();
     void literals_data();
     void literals();
 
@@ -245,6 +249,9 @@ private slots:
     void dataAlignment();
 
     void deleteSingletons();
+
+    void arrayBuffer_data();
+    void arrayBuffer();
 
 private:
     QQmlEngine engine;
@@ -3495,6 +3502,45 @@ void tst_qqmllanguage::globalEnums()
     delete o;
 }
 
+void tst_qqmllanguage::lowercaseEnumRuntime_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorMessage");
+
+    QTest::newRow("enum from normal type") << "lowercaseEnumRuntime.1.qml" << ":8: TypeError: Cannot access enum value 'lowercaseEnumVal' of 'MyTypeObject', enum values need to start with an uppercase letter.";
+    QTest::newRow("enum from singleton type") << "lowercaseEnumRuntime.2.qml" << ":8: TypeError: Cannot access enum value 'lowercaseEnumVal' of 'MyTypeObjectSingleton', enum values need to start with an uppercase letter.";
+}
+
+void tst_qqmllanguage::lowercaseEnumRuntime()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorMessage);
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    VERIFY_ERRORS(0);
+    QString warning = component.url().toString() + errorMessage;
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    delete component.create();
+}
+
+void tst_qqmllanguage::lowercaseEnumCompileTime_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
+
+    QTest::newRow("assignment to int property") << "lowercaseEnumCompileTime.1.qml" << "lowercaseEnumCompileTime.1.errors.txt";
+    QTest::newRow("assignment to enum property") << "lowercaseEnumCompileTime.2.qml" << "lowercaseEnumCompileTime.2.errors.txt";
+}
+
+void tst_qqmllanguage::lowercaseEnumCompileTime()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    VERIFY_ERRORS(qPrintable(errorFile));
+}
+
 void tst_qqmllanguage::literals_data()
 {
     QTest::addColumn<QString>("property");
@@ -4100,6 +4146,27 @@ void tst_qqmllanguage::deleteSingletons()
         QVERIFY(singleton.data() != 0);
     }
     QVERIFY(singleton.data() == 0);
+}
+
+void tst_qqmllanguage::arrayBuffer_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::newRow("arraybuffer_property_get") << "arraybuffer_property_get.qml";
+    QTest::newRow("arraybuffer_property_set") << "arraybuffer_property_set.qml";
+    QTest::newRow("arraybuffer_signal_arg") << "arraybuffer_signal_arg.qml";
+    QTest::newRow("arraybuffer_method_arg") << "arraybuffer_method_arg.qml";
+    QTest::newRow("arraybuffer_method_return") << "arraybuffer_method_return.qml";
+    QTest::newRow("arraybuffer_method_overload") << "arraybuffer_method_overload.qml";
+}
+
+void tst_qqmllanguage::arrayBuffer()
+{
+    QFETCH(QString, file);
+    QQmlComponent component(&engine, testFile(file));
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("ok").toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

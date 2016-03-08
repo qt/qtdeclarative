@@ -411,7 +411,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 bool IRBuilder::isSignalPropertyName(const QString &name)
 {
     if (name.length() < 3) return false;
-    if (!name.startsWith(QStringLiteral("on"))) return false;
+    if (!name.startsWith(QLatin1String("on"))) return false;
     int ns = name.length();
     for (int i = 2; i < ns; ++i) {
         const QChar curr = name.at(i);
@@ -1061,7 +1061,7 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Sta
     Object *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
-    if (_object == object && name->name == QStringLiteral("id")) {
+    if (_object == object && name->name == QLatin1String("id")) {
         setId(name->identifierToken, value);
         return;
     }
@@ -1097,7 +1097,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 
 void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
-    if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
+    if (stringAt(propertyNameIndex) == QLatin1String("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
         return;
     }
@@ -1192,7 +1192,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
 {
     QQmlJS::AST::UiQualifiedId *qualifiedIdElement = *nameToResolve;
 
-    if (qualifiedIdElement->name == QStringLiteral("id") && qualifiedIdElement->next)
+    if (qualifiedIdElement->name == QLatin1String("id") && qualifiedIdElement->next)
         COMPILE_EXCEPTION(qualifiedIdElement->identifierToken, tr( "Invalid use of id property"));
 
     // If it's a namespace, prepend the qualifier and we'll resolve it later to the correct type.
@@ -1918,7 +1918,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
         return d;
     }
 
-    if (name.endsWith(QStringLiteral("Changed"))) {
+    if (name.endsWith(QLatin1String("Changed"))) {
         QString propName = name.mid(0, name.length() - static_cast<int>(strlen("Changed")));
 
         d = property(propName, notInRevision);

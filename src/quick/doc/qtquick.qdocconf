@@ -33,7 +33,7 @@ qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
-depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtquicklayouts qtdoc qtquickdialogs qtsensors qtwidgets qmake qtmultimedia qtgraphicaleffects
+depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtdoc qtquickdialogs qtsensors qtwidgets qmake qtmultimedia qtgraphicaleffects
 
 headerdirs  += ..\
                ../../quickwidgets

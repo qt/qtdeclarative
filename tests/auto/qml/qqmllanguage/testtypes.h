@@ -292,7 +292,7 @@ public:
         emit flagPropertyChanged();
     }
 
-    enum MyEnum { EnumVal1, EnumVal2 };
+    enum MyEnum { EnumVal1, EnumVal2, lowercaseEnumVal };
     MyEnum enumPropertyValue;
     MyEnum enumProperty() const {
         return enumPropertyValue;
@@ -592,6 +592,12 @@ signals:
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(MyTypeObject::MyFlags)
 
+// FIXME: If no subclass is used for the singleton registration with qmlRegisterSingletonType(),
+//        the valueTypes() test will fail.
+class MyTypeObjectSingleton : public MyTypeObject
+{
+    Q_OBJECT
+};
 
 class MyContainer : public QObject
 {
@@ -1082,6 +1088,58 @@ class MyCompositeBaseType : public QObject
 public:
     enum CompositeEnum { EnumValue0, EnumValue42 = 42 };
     static QObject *qmlAttachedProperties(QObject *parent) { return new QObject(parent); }
+};
+
+class MyArrayBufferTestClass : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray byteArrayProperty READ byteArrayProperty WRITE setByteArrayProperty NOTIFY byteArrayPropertyChanged)
+
+signals:
+    void byteArrayPropertyChanged();
+    void byteArraySignal(QByteArray arg);
+
+public:
+    QByteArray byteArrayPropertyValue;
+    QByteArray byteArrayProperty() const {
+        return byteArrayPropertyValue;
+    }
+    void setByteArrayProperty(const QByteArray &v) {
+        byteArrayPropertyValue = v;
+        emit byteArrayPropertyChanged();
+    }
+    Q_INVOKABLE void emitByteArraySignal(char begin, char num) {
+        byteArraySignal(byteArrayMethod_CountUp(begin, num));
+    }
+    Q_INVOKABLE int byteArrayMethod_Sum(QByteArray arg) {
+        int sum = 0;
+        for (int i = 0; i < arg.size(); ++i) {
+            sum += arg[i];
+        }
+        return sum;
+    }
+    Q_INVOKABLE QByteArray byteArrayMethod_CountUp(char begin, int num) {
+        QByteArray ret;
+        for (int i = 0; i < num; ++i) {
+            ret.push_back(begin++);
+        }
+        return ret;
+    }
+    Q_INVOKABLE bool byteArrayMethod_Overloaded(QByteArray) {
+        return true;
+    }
+    Q_INVOKABLE bool byteArrayMethod_Overloaded(int) {
+        return false;
+    }
+    Q_INVOKABLE bool byteArrayMethod_Overloaded(QString) {
+        return false;
+    }
+    Q_INVOKABLE bool byteArrayMethod_Overloaded(QJSValue) {
+        return false;
+    }
+    Q_INVOKABLE bool byteArrayMethod_Overloaded(QVariant) {
+        return false;
+    }
 };
 
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)

@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qquickpixmapcache_p.h"
-#include <qqmlnetworkaccessmanagerfactory.h>
 #include <qquickimageprovider.h>
 
 #include <qqmlengine.h>
@@ -55,7 +54,6 @@
 #include <QCoreApplication>
 #include <QImageReader>
 #include <QHash>
-#include <QNetworkReply>
 #include <QPixmapCache>
 #include <QFile>
 #include <QThread>
@@ -66,9 +64,14 @@
 #include <QWaitCondition>
 #include <QtCore/qdebug.h>
 #include <private/qobject_p.h>
-#include <QSslError>
 #include <QQmlFile>
 #include <QMetaMethod>
+
+#ifndef QT_NO_NETWORK
+#include <qqmlnetworkaccessmanagerfactory.h>
+#include <QNetworkReply>
+#include <QSslError>
+#endif
 
 #include <private/qquickprofiler_p.h>
 
@@ -203,7 +206,9 @@ private:
     friend class QQuickPixmapReaderThreadObject;
     void processJobs();
     void processJob(QQuickPixmapReply *, const QUrl &, const QString &, AutoTransform, QQuickImageProvider::ImageType, QQuickImageProvider *);
+#ifndef QT_NO_NETWORK
     void networkRequestDone(QNetworkReply *);
+#endif
     void asyncResponseFinished(QQuickImageResponse *);
 
     QList<QQuickPixmapReply*> jobs;
@@ -215,10 +220,11 @@ private:
     QQuickPixmapReaderThreadObject *threadObject;
     QWaitCondition waitCondition;
 
+#ifndef QT_NO_NETWORK
     QNetworkAccessManager *networkAccessManager();
     QNetworkAccessManager *accessManager;
-
     QHash<QNetworkReply*,QQuickPixmapReply*> networkJobs;
+#endif
     QHash<QQuickImageResponse*,QQuickPixmapReply*> asyncResponses;
 
     static int replyDownloadProgress;
@@ -343,6 +349,7 @@ QQuickPixmapReply::Event::~Event()
     delete textureFactory;
 }
 
+#ifndef QT_NO_NETWORK
 QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
 {
     if (!accessManager) {
@@ -351,6 +358,7 @@ QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
     }
     return accessManager;
 }
+#endif
 
 static void maybeRemoveAlpha(QImage *image)
 {
@@ -421,7 +429,10 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
 }
 
 QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
-: QThread(eng), engine(eng), threadObject(0), accessManager(0)
+: QThread(eng), engine(eng), threadObject(0)
+#ifndef QT_NO_NETWORK
+, accessManager(0)
+#endif
 {
     eventLoopQuitHack = new QObject;
     eventLoopQuitHack->moveToThread(this);
@@ -443,6 +454,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
         delete reply;
     }
     jobs.clear();
+#ifndef QT_NO_NETWORK
     QList<QQuickPixmapReply*> activeJobs = networkJobs.values() + asyncResponses.values();
     foreach (QQuickPixmapReply *reply, activeJobs ) {
         if (reply->loading) {
@@ -450,6 +462,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
             reply->data = 0;
         }
     }
+#endif
     if (threadObject) threadObject->processJobs();
     mutex.unlock();
 
@@ -457,6 +470,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     wait();
 }
 
+#ifndef QT_NO_NETWORK
 void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
 {
     QQuickPixmapReply *job = networkJobs.take(reply);
@@ -506,6 +520,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
     // kick off event loop again incase we have dropped below max request count
     threadObject->processJobs();
 }
+#endif // QT_NO_NETWORK
 
 void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
 {
@@ -557,8 +572,10 @@ bool QQuickPixmapReaderThreadObject::event(QEvent *e)
 
 void QQuickPixmapReaderThreadObject::networkRequestDone()
 {
+#ifndef QT_NO_NETWORK
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     reader->networkRequestDone(reply);
+#endif
 }
 
 void QQuickPixmapReaderThreadObject::asyncResponseFinished()
@@ -577,6 +594,7 @@ void QQuickPixmapReader::processJobs()
 
         // Clean cancelled jobs
         if (!cancelled.isEmpty()) {
+#ifndef QT_NO_NETWORK
             for (int i = 0; i < cancelled.count(); ++i) {
                 QQuickPixmapReply *job = cancelled.at(i);
                 QNetworkReply *reply = networkJobs.key(job, 0);
@@ -599,6 +617,7 @@ void QQuickPixmapReader::processJobs()
                 job->deleteLater();
             }
             cancelled.clear();
+#endif
         }
 
         if (!jobs.isEmpty()) {
@@ -619,7 +638,11 @@ void QQuickPixmapReader::processJobs()
                     usableJob = true;
                 } else {
                     localFile = QQmlFile::urlToLocalFileOrQrc(url);
-                    usableJob = !localFile.isEmpty() || networkJobs.count() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT;
+                    usableJob = !localFile.isEmpty()
+#ifndef QT_NO_NETWORK
+                            || networkJobs.count() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT
+#endif
+                            ;
                 }
 
 
@@ -744,6 +767,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 runningJob->postReply(errorCode, errorStr, readSize, QQuickTextureFactory::textureFactoryForImage(image));
             mutex.unlock();
         } else {
+#ifndef QT_NO_NETWORK
             // Network resource
             QNetworkRequest req(url);
             req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
@@ -753,6 +777,9 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QMetaObject::connect(reply, replyFinished, threadObject, threadNetworkRequestDone);
 
             networkJobs.insert(reply, runningJob);
+#else
+// Silently fail if compiled with no_network
+#endif
         }
     }
 }
@@ -809,11 +836,13 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 void QQuickPixmapReader::run()
 {
     if (replyDownloadProgress == -1) {
+#ifndef QT_NO_NETWORK
         replyDownloadProgress = QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
         replyFinished = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
-        downloadProgress = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
         const QMetaObject *ir = &QQuickPixmapReaderThreadObject::staticMetaObject;
         threadNetworkRequestDone = ir->indexOfSlot("networkRequestDone()");
+#endif
+        downloadProgress = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
     }
 
     mutex.lock();
@@ -1194,8 +1223,6 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             *ok = true;
             return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestSize, autoTransform, appliedTransform);
         }
-        errorString = QQuickPixmap::tr("Invalid image data: %1").arg(url.toString());
-
     } else {
         errorString = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
     }

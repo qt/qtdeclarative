@@ -194,10 +194,12 @@ public:
 
     void freezeObject(const QV4::Value &value);
 
+#ifndef QT_NO_NETWORK
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).
     virtual QNetworkAccessManager *networkAccessManager();
+#endif
 
     // Return the list of illegal id names (the names of the properties on the global object)
     const QSet<QString> &illegalNames() const;

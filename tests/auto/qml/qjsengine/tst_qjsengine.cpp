@@ -185,6 +185,8 @@ private slots:
 
     void argumentEvaluationOrder();
 
+    void v4FunctionWithoutQML();
+
 signals:
     void testSignal();
 };
@@ -3792,6 +3794,30 @@ void tst_QJSEngine::argumentEvaluationOrder()
     QVERIFY(ok.isBool());
     QVERIFY(ok.toBool());
 
+}
+
+class TestObject : public QObject
+{
+    Q_OBJECT
+public:
+    TestObject() : called(false) {}
+
+    bool called;
+
+    Q_INVOKABLE void callMe(QQmlV4Function *) {
+        called = true;
+    }
+};
+
+void tst_QJSEngine::v4FunctionWithoutQML()
+{
+    TestObject obj;
+    QJSEngine engine;
+    QJSValue wrapper = engine.newQObject(&obj);
+    QQmlEngine::setObjectOwnership(&obj, QQmlEngine::CppOwnership);
+    QVERIFY(!obj.called);
+    wrapper.property("callMe").call();
+    QVERIFY(obj.called);
 }
 
 QTEST_MAIN(tst_QJSEngine)

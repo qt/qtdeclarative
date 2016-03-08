@@ -2074,6 +2074,10 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \value ItemRotationHasChanged The item's rotation has changed.
     ItemChangeData::realValue contains the new rotation.
+
+    \value ItemDevicePixelRatioHasChanged The device pixel ratio of the screen
+    the item is on has changed. ItemChangedData::realValue contains the new
+    device pixel ratio.
 */
 
 /*!
@@ -2477,6 +2481,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
 {
     Q_ASSERT(item);
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: item:" << item << ", forward:" << forward;
 
     if (!item->window())
         return item;
@@ -2487,19 +2492,25 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     bool all = QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
 
     QQuickItem *from = 0;
+    bool isTabFence = item->d_func()->isTabFence;
     if (forward) {
-       from = item->parentItem();
+        if (!isTabFence)
+            from = item->parentItem();
     } else {
         if (!item->childItems().isEmpty())
             from = item->d_func()->childItems.constFirst();
-        else
+        else if (!isTabFence)
             from = item->parentItem();
     }
     bool skip = false;
     QQuickItem * startItem = item;
     QQuickItem * firstFromItem = from;
     QQuickItem *current = item;
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
+    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
     do {
+        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: current:" << current;
+        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: from:" << from;
         skip = false;
         QQuickItem *last = current;
 
@@ -2513,7 +2524,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             else
                 lastChild = prevTabChildItem(current, -1);
         }
-        bool isTabFence = current->d_func()->isTabFence;
+        isTabFence = current->d_func()->isTabFence;
         if (isTabFence && !hasChildren)
             return current;
 
@@ -2568,9 +2579,14 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
                 return startItem;
             }
         }
-        if (!firstFromItem) { //start from root
-            startItem = current;
-            firstFromItem = from;
+        if (!firstFromItem) {
+            if (startItem->d_func()->isTabFence) {
+                if (current == startItem)
+                    firstFromItem = from;
+            } else { //start from root
+                startItem = current;
+                firstFromItem = from;
+            }
         }
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
                   || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
@@ -4563,9 +4579,9 @@ QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
         // Map coordinates to the child element's coordinate space
         QPointF point = mapToItem(child, QPointF(x, y));
         if (child->isVisible() && point.x() >= 0
-                && child->width() >= point.x()
+                && child->width() > point.x()
                 && point.y() >= 0
-                && child->height() >= point.y())
+                && child->height() > point.y())
             return child;
     }
     return 0;
@@ -5968,6 +5984,8 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         }
         break;
     case QQuickItem::ItemAntialiasingHasChanged:
+        // fall through
+    case QQuickItem::ItemDevicePixelRatioHasChanged:
         q->itemChange(change, data);
         break;
     }
@@ -6906,7 +6924,7 @@ void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 }
 
 /*!
-    Returns whether mouse events of this item's children should be filtered
+    Returns whether mouse and touch events of this item's children should be filtered
     through this item.
 
     \sa setFiltersChildMouseEvents(), childMouseEventFilter()
@@ -6918,7 +6936,7 @@ bool QQuickItem::filtersChildMouseEvents() const
 }
 
 /*!
-    Sets whether mouse events of this item's children should be filtered
+    Sets whether mouse and touch events of this item's children should be filtered
     through this item.
 
     If \a filter is true, childMouseEventFilter() will be called when
@@ -7256,7 +7274,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 }
 
 /*!
-  \qmlmethod object QtQuick::Item::contains(point point)
+  \qmlmethod bool QtQuick::Item::contains(point point)
 
   Returns true if this item contains \a point, which is in local coordinates;
   returns false otherwise.

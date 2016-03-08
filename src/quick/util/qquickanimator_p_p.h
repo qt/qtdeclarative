@@ -82,7 +82,7 @@ public:
     uint isFromDefined : 1;
     uint isToDefined : 1;
 
-    void apply(QQuickAnimatorJob *job, const QString &propertyName, QQuickStateActions &actions, QQmlProperties &modified);
+    void apply(QQuickAnimatorJob *job, const QString &propertyName, QQuickStateActions &actions, QQmlProperties &modified, QObject *defaultTarget);
 };
 
 class QQuickRotationAnimatorPrivate : public QQuickAnimatorPrivate

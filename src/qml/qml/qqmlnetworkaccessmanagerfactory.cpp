@@ -41,6 +41,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_NETWORK
+
 /*!
     \class QQmlNetworkAccessManagerFactory
     \since 5.0
@@ -100,5 +102,7 @@ QQmlNetworkAccessManagerFactory::~QQmlNetworkAccessManagerFactory()
     Note: this method may be called by multiple threads, so ensure the
     implementation of this method is reentrant.
 */
+
+#endif //QT_NO_NETWORK
 
 QT_END_NAMESPACE

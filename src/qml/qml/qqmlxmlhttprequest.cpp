@@ -70,7 +70,7 @@
 
 using namespace QV4;
 
-#ifndef QT_NO_XMLSTREAMREADER
+#if !defined(QT_NO_XMLSTREAMREADER) && !defined(QT_NO_NETWORK)
 
 #define V4THROW_REFERENCE(string) { \
         ScopedObject error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
@@ -2040,6 +2040,6 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_XMLSTREAMREADER
+#endif // QT_NO_XMLSTREAMREADER && QT_NO_NETWORK
 
 #include <qqmlxmlhttprequest.moc>

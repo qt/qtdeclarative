@@ -53,7 +53,6 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlcomponent_p.h"
-#include "qqmlnetworkaccessmanagerfactory.h"
 #include "qqmldirparser_p.h"
 #include "qqmlextensioninterface.h"
 #include "qqmllist_p.h"
@@ -63,25 +62,25 @@
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
 #include <private/qqmlboundsignal_p.h>
-
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qsettings.h>
-
 #include <QtCore/qmetaobject.h>
-#include <QNetworkAccessManager>
 #include <QDebug>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qthread.h>
 #include <private/qthread_p.h>
+
+#ifndef QT_NO_NETWORK
+#include "qqmlnetworkaccessmanagerfactory.h"
+#include <QNetworkAccessManager>
 #include <QtNetwork/qnetworkconfigmanager.h>
+#endif
 
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
-
 #include <private/qqmllocale_p.h>
-
 #include <private/qqmlbind_p.h>
 #include <private/qqmlconnections_p.h>
 #include <private/qqmltimer_p.h>
@@ -493,6 +492,10 @@ The following functions are also on the Qt object.
                         from right to left.
     \endlist
     \row
+    \li \c application.font
+    \li This read-only property holds the default application font as
+        returned by \l QGuiApplication::font().
+    \row
     \li \c application.arguments
     \li This is a string list of the arguments the executable was invoked with.
     \row
@@ -531,6 +534,7 @@ The following functions are also on the Qt object.
     \li application.active
     \li application.state
     \li application.layoutDirection
+    \li application.font
     \endlist
 */
 
@@ -605,9 +609,11 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0),
   activeObjectCreator(0),
-  networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
-  scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  incubatorCount(0), incubationController(0)
+#ifndef QT_NO_NETWORK
+  networkAccessManager(0), networkAccessManagerFactory(0),
+#endif
+  urlInterceptor(0), scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
+  uniqueId(1), incubatorCount(0), incubationController(0)
 {
 }
 
@@ -1066,7 +1072,17 @@ QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
     return d->urlInterceptor;
 }
 
+void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
+{
+    if (activeObjectCreator) {
+        activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
+    } else {
+        void *args[] = { 0 };
+        QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
+    }
+}
 
+#ifndef QT_NO_NETWORK
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
 
@@ -1093,16 +1109,6 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
 {
     Q_D(const QQmlEngine);
     return d->networkAccessManagerFactory;
-}
-
-void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
-{
-    if (activeObjectCreator) {
-        activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
-    } else {
-        void *args[] = { 0 };
-        QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
-    }
 }
 
 QNetworkAccessManager *QQmlEnginePrivate::createNetworkAccessManager(QObject *parent) const
@@ -1143,6 +1149,7 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
     Q_D(const QQmlEngine);
     return d->getNetworkAccessManager();
 }
+#endif // QT_NO_NETWORK
 
 /*!
 

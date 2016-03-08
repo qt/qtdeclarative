@@ -1,10 +1,6 @@
 TARGET = qmldbg_local
 QT = qml-private
 
-PLUGIN_TYPE = qmltooling
-PLUGIN_CLASS_NAME = QLocalClientConnectionFactory
-load(qt_plugin)
-
 SOURCES += \
     $$PWD/qlocalclientconnection.cpp
 
@@ -18,3 +14,7 @@ INCLUDEPATH += $$PWD \
 
 OTHER_FILES += \
     $$PWD/qlocalclientconnection.json
+
+PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QLocalClientConnectionFactory
+load(qt_plugin)

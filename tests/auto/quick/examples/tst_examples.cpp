@@ -291,7 +291,6 @@ void tst_examples::sgsnippets_data()
 
 void tst_examples::sgsnippets()
 {
-    QQuickWindow window;
 
     QFETCH(QString, file);
 
@@ -301,19 +300,26 @@ void tst_examples::sgsnippets()
     QCOMPARE(component.status(), QQmlComponent::Ready);
 
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(object.data());
     QQuickItem *root = qobject_cast<QQuickItem *>(object.data());
-    if (!root)
+    if (!root && !window) {
         component.completeCreate();
-    QVERIFY(root);
+        QVERIFY(false);
+    }
+    if (!window)
+        window = new QQuickWindow;
 
-    window.resize(240, 320);
-    window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window->resize(240, 320);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    root->setParentItem(window.contentItem());
+    if (root)
+        root->setParentItem(window->contentItem());
     component.completeCreate();
 
     qApp->processEvents();
+    if (root)
+        delete window;
 }
 
 QTEST_MAIN(tst_examples)

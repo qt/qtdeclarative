@@ -175,19 +175,19 @@ static QQmlType *getQmlType(const QString &typeName, int majorNumber, int minorN
 static bool isCrashingType(QQmlType *type)
 {
     if (type) {
-        if (type->qmlTypeName() == QStringLiteral("QtMultimedia/MediaPlayer"))
+        if (type->qmlTypeName() == QLatin1String("QtMultimedia/MediaPlayer"))
             return true;
 
-        if (type->qmlTypeName() == QStringLiteral("QtMultimedia/Audio"))
+        if (type->qmlTypeName() == QLatin1String("QtMultimedia/Audio"))
             return true;
 
-        if (type->qmlTypeName() == QStringLiteral("QtQuick.Controls/MenuItem"))
+        if (type->qmlTypeName() == QLatin1String("QtQuick.Controls/MenuItem"))
             return true;
 
-        if (type->qmlTypeName() == QStringLiteral("QtQuick.Controls/Menu"))
+        if (type->qmlTypeName() == QLatin1String("QtQuick.Controls/Menu"))
             return true;
 
-        if (type->qmlTypeName() == QStringLiteral("QtQuick/Timer"))
+        if (type->qmlTypeName() == QLatin1String("QtQuick/Timer"))
             return true;
     }
 

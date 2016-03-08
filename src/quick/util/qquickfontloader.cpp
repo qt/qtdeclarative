@@ -45,13 +45,17 @@
 #include <QStringList>
 #include <QUrl>
 #include <QDebug>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+
 #include <QFontDatabase>
 
 #include <private/qobject_p.h>
 #include <qqmlinfo.h>
 #include <qqmlfile.h>
+
+#ifndef QT_NO_NETWORK
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#endif
 
 #include <QtCore/QCoreApplication>
 
@@ -66,28 +70,37 @@ Q_OBJECT
 public:
     explicit QQuickFontObject(int _id = -1);
 
+#ifndef QT_NO_NETWORK
     void download(const QUrl &url, QNetworkAccessManager *manager);
 
 Q_SIGNALS:
     void fontDownloaded(const QString&, QQuickFontLoader::Status);
 
+private:
+    int redirectCount;
+    QNetworkReply *reply;
+
 private Q_SLOTS:
     void replyFinished();
+#endif // QT_NO_NETWORK
 
 public:
     int id;
-
-private:
-    QNetworkReply *reply;
-    int redirectCount;
 
     Q_DISABLE_COPY(QQuickFontObject)
 };
 
 QQuickFontObject::QQuickFontObject(int _id)
-    : QObject(0), id(_id), reply(0), redirectCount(0) {}
+    : QObject(0)
+#ifndef QT_NO_NETWORK
+    ,redirectCount(0), reply(0)
+#endif
+    ,id(_id)
+{
 
+}
 
+#ifndef QT_NO_NETWORK
 void QQuickFontObject::download(const QUrl &url, QNetworkAccessManager *manager)
 {
     QNetworkRequest req(url);
@@ -128,7 +141,7 @@ void QQuickFontObject::replyFinished()
         reply = 0;
     }
 }
-
+#endif  // QT_NO_NETWORK
 
 class QQuickFontLoaderPrivate : public QObjectPrivate
 {
@@ -255,6 +268,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
         }
     } else {
         if (!fontLoaderFonts()->map.contains(d->url)) {
+#ifndef QT_NO_NETWORK
             QQuickFontObject *fo = new QQuickFontObject;
             fontLoaderFonts()->map[d->url] = fo;
             fo->download(d->url, qmlEngine(this)->networkAccessManager());
@@ -262,13 +276,20 @@ void QQuickFontLoader::setSource(const QUrl &url)
             emit statusChanged();
             QObject::connect(fo, SIGNAL(fontDownloaded(QString,QQuickFontLoader::Status)),
                 this, SLOT(updateFontInfo(QString,QQuickFontLoader::Status)));
+#else
+// Silently fail if compiled with no_network
+#endif
         } else {
             QQuickFontObject *fo = fontLoaderFonts()->map[d->url];
             if (fo->id == -1) {
+#ifndef QT_NO_NETWORK
                 d->status = Loading;
                 emit statusChanged();
                 QObject::connect(fo, SIGNAL(fontDownloaded(QString,QQuickFontLoader::Status)),
                     this, SLOT(updateFontInfo(QString,QQuickFontLoader::Status)));
+#else
+// Silently fail if compiled with no_network
+#endif
             }
             else
                 updateFontInfo(QFontDatabase::applicationFontFamilies(fo->id).at(0), Ready);

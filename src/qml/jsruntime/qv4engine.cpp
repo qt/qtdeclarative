@@ -1250,7 +1250,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return ld->d()->locale;
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
-    if (const QV4::ArrayBuffer *d = value.as<ArrayBuffer>())
+    if (const ArrayBuffer *d = value.as<ArrayBuffer>())
         return d->asByteArray();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
@@ -1378,6 +1378,8 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::Encode(*reinterpret_cast<const double*>(ptr));
             case QMetaType::QString:
                 return newString(*reinterpret_cast<const QString*>(ptr))->asReturnedValue();
+            case QMetaType::QByteArray:
+                return newArrayBuffer(*reinterpret_cast<const QByteArray*>(ptr))->asReturnedValue();
             case QMetaType::Float:
                 return QV4::Encode(*reinterpret_cast<const float*>(ptr));
             case QMetaType::Short:
@@ -1554,6 +1556,8 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
         return QV4::Encode(*reinterpret_cast<const double*>(data));
     case QMetaType::QString:
         return newString(*reinterpret_cast<const QString*>(data))->asReturnedValue();
+    case QMetaType::QByteArray:
+        return newArrayBuffer(*reinterpret_cast<const QByteArray*>(data))->asReturnedValue();
     case QMetaType::Float:
         return QV4::Encode(*reinterpret_cast<const float*>(data));
     case QMetaType::Short:
@@ -1645,6 +1649,12 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             *reinterpret_cast<QString*>(data) = QString();
         else
             *reinterpret_cast<QString*>(data) = value->toQString();
+        return true;
+    case QMetaType::QByteArray:
+        if (const ArrayBuffer *ab = value->as<ArrayBuffer>())
+            *reinterpret_cast<QByteArray*>(data) = ab->asByteArray();
+        else
+            *reinterpret_cast<QByteArray*>(data) = QByteArray();
         return true;
     case QMetaType::Float:
         *reinterpret_cast<float*>(data) = value->toNumber();

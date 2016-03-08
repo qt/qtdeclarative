@@ -2033,6 +2033,7 @@ void tst_qquickwindow::attachedProperty()
     QCOMPARE(view.rootObject()->property("contentItem").value<QQuickItem*>(), view.contentItem());
     QCOMPARE(view.rootObject()->property("windowWidth").toInt(), view.width());
     QCOMPARE(view.rootObject()->property("windowHeight").toInt(), view.height());
+    QCOMPARE(view.rootObject()->property("window").value<QQuickView*>(), &view);
 
     QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
     QVERIFY(innerWindow);
@@ -2045,6 +2046,13 @@ void tst_qquickwindow::attachedProperty()
     QCOMPARE(text->property("contentItem").value<QQuickItem*>(), innerWindow->contentItem());
     QCOMPARE(text->property("windowWidth").toInt(), innerWindow->width());
     QCOMPARE(text->property("windowHeight").toInt(), innerWindow->height());
+    QCOMPARE(text->property("window").value<QQuickWindow*>(), innerWindow);
+
+    text->setParentItem(0);
+    QVERIFY(!text->property("contentItem").value<QQuickItem*>());
+    QCOMPARE(text->property("windowWidth").toInt(), 0);
+    QCOMPARE(text->property("windowHeight").toInt(), 0);
+    QVERIFY(!text->property("window").value<QQuickWindow*>());
 }
 
 class RenderJob : public QRunnable

@@ -73,7 +73,7 @@ Rectangle {
                 font.family: Settings.fontFamily
                 font.pointSize: 28
                 font.weight: Font.DemiBold
-                text: parseFloat(Math.round(root.stock.stockPrice * 100) / 100).toFixed(2);
+                text: parseFloat(root.stock.stockPrice).toFixed(2);
             }
         }
 
@@ -99,7 +99,7 @@ Rectangle {
                 color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
                 font.family: Settings.fontFamily
                 font.pointSize: 18
-                text: parseFloat(Math.round(root.stock.stockPriceChanged * 100) / 100).toFixed(2);
+                text: parseFloat(root.stock.stockPriceChanged).toFixed(2);
             }
 
             Text {
@@ -110,9 +110,8 @@ Rectangle {
                 font.pointSize: 18
                 font.weight: Font.DemiBold
                 text: "(" +
-                      Math.abs(Math.round(
-                          root.stock.stockPriceChanged /
-                          (root.stock.stockPrice - root.stock.stockPriceChanged) * 100)) / 100 +
+                      parseFloat(root.stock.stockPriceChanged /
+                          (root.stock.stockPrice - root.stock.stockPriceChanged) * 100.0).toFixed(2) +
                       "%)"
             }
         }

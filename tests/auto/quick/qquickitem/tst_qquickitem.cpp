@@ -167,6 +167,8 @@ private slots:
     void contains_data();
     void contains();
 
+    void childAt();
+
 private:
 
     enum PaintOrderOp {
@@ -1966,6 +1968,46 @@ void tst_qquickitem::contains()
     QCOMPARE(result.toBool(), contains);
 }
 
+void tst_qquickitem::childAt()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("childAtRectangle.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+
+    int found = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        if (root->childAt(i, 0))
+            found++;
+    }
+    QCOMPARE(found, 16);
+
+    found = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        if (root->childAt(0, i))
+            found++;
+    }
+    QCOMPARE(found, 16);
+
+    found = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        if (root->childAt(18 + i, 0))
+            found++;
+    }
+    QCOMPARE(found, 1);
+
+    found = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        if (root->childAt(18, i))
+            found++;
+    }
+    QCOMPARE(found, 1);
+
+    QVERIFY(!root->childAt(19,19));
+}
 
 QTEST_MAIN(tst_qquickitem)
 

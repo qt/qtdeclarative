@@ -972,7 +972,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QmlIR::PropertyResolver resolver(propertyCache);
 
-        Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
+        Q_ASSERT(propertyName.startsWith(QLatin1String("on")));
         propertyName.remove(0, 2);
 
         // Note that the property name could start with any alpha or '_' or '$' character,
@@ -1039,7 +1039,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             }
 
             QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(propertyName);
-            if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
+            if (entry == customSignals.constEnd() && propertyName.endsWith(QLatin1String("Changed"))) {
                 QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
                 entry = customSignals.constFind(alternateName);
             }
@@ -1163,6 +1163,17 @@ struct StaticQtMetaObject : public QObject
         { return &staticQtMetaObject; }
 };
 
+bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
+{
+    if (enumName.length() > 0 && enumName[0].isLower() && !isQtObject) {
+        COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName));
+    }
+    binding->type = QV4::CompiledData::Binding::Type_Number;
+    binding->value.d = (double)enumValue;
+    binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
+    return true;
+}
+
 bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache, const QQmlPropertyData *prop, QmlIR::Binding *binding)
 {
     bool isIntProp = (prop->propType == QMetaType::Int) && !prop->isEnum();
@@ -1185,6 +1196,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         return true;
 
     QHashedStringRef typeName(string.constData(), dot);
+    const bool isQtObject = (typeName == QLatin1String("Qt"));
     QString enumValue = string.mid(dot+1);
 
     if (isIntProp) {
@@ -1192,16 +1204,15 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         bool ok;
         int enumval = evaluateEnum(typeName.toString(), enumValue.toUtf8(), &ok);
         if (ok) {
-            binding->type = QV4::CompiledData::Binding::Type_Number;
-            binding->value.d = (double)enumval;
-            binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
+            if (!assignEnumToBinding(binding, enumValue, enumval, isQtObject))
+                return false;
         }
         return true;
     }
     QQmlType *type = 0;
     imports->resolveType(typeName, &type, 0, 0, 0);
 
-    if (!type && typeName != QLatin1String("Qt"))
+    if (!type && !isQtObject)
         return true;
 
     int value = 0;
@@ -1234,10 +1245,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     if (!ok)
         return true;
 
-    binding->type = QV4::CompiledData::Binding::Type_Number;
-    binding->value.d = (double)value;
-    binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
-    return true;
+    return assignEnumToBinding(binding, enumValue, value, isQtObject);
 }
 
 int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const
@@ -2749,7 +2757,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
 
 bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAndConvertBinding(QmlIR::Binding *binding)
 {
-    if (*_nameOfFunctionCalled == QStringLiteral("qsTr")) {
+    if (*_nameOfFunctionCalled == QLatin1String("qsTr")) {
         QString translation;
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
@@ -2791,7 +2799,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->stringIndex = compiler->registerString(translation);
         binding->value.translationData = translationData;
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("qsTrId")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("qsTrId")) {
         QString id;
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
@@ -2825,7 +2833,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->stringIndex = compiler->registerString(id);
         binding->value.translationData = translationData;
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TR_NOOP") || *_nameOfFunctionCalled == QStringLiteral("QT_TRID_NOOP")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("QT_TR_NOOP") || *_nameOfFunctionCalled == QLatin1String("QT_TRID_NOOP")) {
         QVector<int>::ConstIterator param = _functionParameters.constBegin();
         QVector<int>::ConstIterator end = _functionParameters.constEnd();
         if (param == end)
@@ -2842,7 +2850,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::detectTranslationCallAnd
         binding->type = QV4::CompiledData::Binding::Type_String;
         binding->stringIndex = compiler->registerString(*stringParam->value);
         return true;
-    } else if (*_nameOfFunctionCalled == QStringLiteral("QT_TRANSLATE_NOOP")) {
+    } else if (*_nameOfFunctionCalled == QLatin1String("QT_TRANSLATE_NOOP")) {
         QVector<int>::ConstIterator param = _functionParameters.constBegin();
         QVector<int>::ConstIterator end = _functionParameters.constEnd();
         if (param == end)

@@ -67,7 +67,7 @@
 
 QT_BEGIN_NAMESPACE
 
-
+extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 /*!
@@ -267,6 +267,10 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
 {
+    if (qsg_useConsistentTiming()) {
+        QUnifiedTimer::instance(true)->setConsistentTiming(true);
+        qCDebug(QSG_LOG_INFO, "using fixed animation steps");
+    }
     sg = QSGContext::createDefaultContext();
     rc = sg->createRenderContext();
 }

@@ -115,7 +115,7 @@ void Codegen::ScanFunctions::checkDirectivePrologue(SourceElements *ast)
                     if (strLit->literalToken.length < 2)
                         continue;
                     QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
-                    if (str == QStringLiteral("use strict")) {
+                    if (str == QLatin1String("use strict")) {
                         _env->isStrict = true;
                     } else {
                         // TODO: give a warning.
@@ -148,7 +148,7 @@ void Codegen::ScanFunctions::checkName(const QStringRef &name, const SourceLocat
 void Codegen::ScanFunctions::checkForArguments(AST::FormalParameterList *parameters)
 {
     while (parameters) {
-        if (parameters->name == QStringLiteral("arguments"))
+        if (parameters->name == QLatin1String("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         parameters = parameters->next;
     }
@@ -170,7 +170,7 @@ bool Codegen::ScanFunctions::visit(CallExpression *ast)
 {
     if (! _env->hasDirectEval) {
         if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
-            if (id->name == QStringLiteral("eval")) {
+            if (id->name == QLatin1String("eval")) {
                 if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown)
                     _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
                 _env->hasDirectEval = true;
@@ -241,7 +241,7 @@ bool Codegen::ScanFunctions::visit(ExpressionStatement *ast)
         return false;
     } else {
         SourceLocation firstToken = ast->firstSourceLocation();
-        if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QStringLiteral("function")) {
+        if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QLatin1String("function")) {
             _cg->throwSyntaxError(firstToken, QStringLiteral("unexpected token"));
         }
     }
@@ -1441,7 +1441,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
             IR::ArgLocal *al = _block->LOCAL(index, scope);
-            if (name == QStringLiteral("arguments") || name == QStringLiteral("eval"))
+            if (name == QLatin1String("arguments") || name == QLatin1String("eval"))
                 al->isArgumentsOrEval = true;
             return al;
         }

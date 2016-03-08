@@ -217,7 +217,8 @@ qreal QQuickAnimator::from() const
 void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
                                      const QString &propertyName,
                                      QQuickStateActions &actions,
-                                     QQmlProperties &modified)
+                                     QQmlProperties &modified,
+                                     QObject *defaultTarget)
 {
 
     if (actions.size()) {
@@ -249,14 +250,20 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
             // the item when a transition is cancelled.
             action.fromValue = action.toValue;
        }
-    } else {
+    }
+
+    if (modified.isEmpty()) {
         job->setTarget(target);
         job->setFrom(from);
         job->setTo(to);
     }
 
-    if (!job->target() && defaultProperty.object())
-        job->setTarget(qobject_cast<QQuickItem *>(defaultProperty.object()));
+    if (!job->target()) {
+        if (defaultProperty.object())
+            job->setTarget(qobject_cast<QQuickItem *>(defaultProperty.object()));
+        else
+            job->setTarget(qobject_cast<QQuickItem *>(defaultTarget));
+    }
 
     job->setDuration(duration);
     job->setLoopCount(loopCount);
@@ -266,7 +273,7 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
 QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
                                                   QQmlProperties &modified,
                                                   TransitionDirection direction,
-                                                  QObject *)
+                                                  QObject *defaultTarget)
 {
     Q_D(QQuickAnimator);
 
@@ -283,7 +290,7 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
     if (!job)
         return 0;
 
-    d->apply(job, propertyName(), actions, modified);
+    d->apply(job, propertyName(), actions, modified, defaultTarget);
 
     if (!job->target()) {
         delete job;

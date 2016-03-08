@@ -51,9 +51,9 @@ QQuickWindowAttached::QQuickWindowAttached(QObject* attachee)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
     if (m_attachee && m_attachee->window()) // It might not be in a window yet
-        windowChanged(m_attachee->window());
+        windowChange(m_attachee->window());
     if (m_attachee)
-        connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChanged);
+        connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChange);
 }
 
 QWindow::Visibility QQuickWindowAttached::visibility() const
@@ -86,7 +86,12 @@ int QQuickWindowAttached::height() const
     return (m_window ? m_window->height() : 0);
 }
 
-void QQuickWindowAttached::windowChanged(QQuickWindow *window)
+QQuickWindow *QQuickWindowAttached::window() const
+{
+    return m_window;
+}
+
+void QQuickWindowAttached::windowChange(QQuickWindow *window)
 {
     if (window != m_window) {
         QQuickWindow* oldWindow = m_window;
@@ -95,20 +100,22 @@ void QQuickWindowAttached::windowChanged(QQuickWindow *window)
         if (oldWindow)
             oldWindow->disconnect(this);
 
-        if (!window)
-            return; // No values to get, therefore nothing to emit
+        emit windowChanged();
 
-        if (!oldWindow || window->visibility() != oldWindow->visibility())
+        if (!oldWindow || !window || window->visibility() != oldWindow->visibility())
             emit visibilityChanged();
-        if (!oldWindow || window->isActive() != oldWindow->isActive())
+        if (!oldWindow || !window || window->isActive() != oldWindow->isActive())
             emit activeChanged();
-        if (!oldWindow || window->activeFocusItem() != oldWindow->activeFocusItem())
+        if (!oldWindow || !window || window->activeFocusItem() != oldWindow->activeFocusItem())
             emit activeFocusItemChanged();
         emit contentItemChanged();
-        if (!oldWindow || window->width() != oldWindow->width())
+        if (!oldWindow || !window || window->width() != oldWindow->width())
             emit widthChanged();
-        if (!oldWindow || window->height() != oldWindow->height())
+        if (!oldWindow || !window || window->height() != oldWindow->height())
             emit heightChanged();
+
+        if (!window)
+            return;
 
         // QQuickWindowQmlImpl::visibilityChanged also exists, and window might even
         // be QQuickWindowQmlImpl, but that's not what we are connecting to.

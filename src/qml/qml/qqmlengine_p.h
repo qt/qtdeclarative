@@ -158,12 +158,12 @@ public:
     void registerFinalizeCallback(QObject *obj, int index);
 
     QQmlObjectCreator *activeObjectCreator;
-
+#ifndef QT_NO_NETWORK
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;
     QNetworkAccessManager *getNetworkAccessManager() const;
     mutable QNetworkAccessManager *networkAccessManager;
     mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory;
-
+#endif
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
 
     QQmlAbstractUrlInterceptor* urlInterceptor;
@@ -172,9 +172,8 @@ public:
     void referenceScarceResources();
     void dereferenceScarceResources();
 
-    QQmlTypeLoader typeLoader;
     QQmlImportDatabase importDatabase;
-
+    QQmlTypeLoader typeLoader;
 
     QString offlineStoragePath;
 

@@ -1145,7 +1145,7 @@ void IRPrinter::visitRegExp(RegExp *e)
 void IRPrinter::visitName(Name *e)
 {
     if (e->id) {
-        if (*e->id != QStringLiteral("this"))
+        if (*e->id != QLatin1String("this"))
             *out << '.';
         *out << *e->id;
     } else {

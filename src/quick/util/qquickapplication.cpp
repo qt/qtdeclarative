@@ -90,4 +90,9 @@ Qt::ApplicationState QQuickApplication::state() const
     return QGuiApplication::applicationState();
 }
 
+QFont QQuickApplication::font() const
+{
+    return QGuiApplication::font();
+}
+
 QT_END_NAMESPACE

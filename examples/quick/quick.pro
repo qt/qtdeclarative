@@ -6,6 +6,7 @@ SUBDIRS =   quick-accessibility \
             canvas \
             imageelements \
             keyinteraction \
+            layouts \
             localstorage \
             models \
             views \

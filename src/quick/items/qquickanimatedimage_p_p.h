@@ -58,7 +58,9 @@
 QT_BEGIN_NAMESPACE
 
 class QMovie;
+#ifndef QT_NO_NETWORK
 class QNetworkReply;
+#endif
 
 class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 {
@@ -66,7 +68,10 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), preset_currentframe(0), _movie(0), reply(0), redirectCount(0), oldPlaying(false)
+      : playing(true), paused(false), preset_currentframe(0), _movie(0), oldPlaying(false)
+#ifndef QT_NO_NETWORK
+        , reply(0), redirectCount(0)
+#endif
     {
     }
 
@@ -76,9 +81,11 @@ public:
     bool paused;
     int preset_currentframe;
     QMovie *_movie;
+    bool oldPlaying;
+#ifndef QT_NO_NETWORK
     QNetworkReply *reply;
     int redirectCount;
-    bool oldPlaying;
+#endif
     QMap<int, QQuickPixmap *> frameMap;
 };
 

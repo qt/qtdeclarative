@@ -65,6 +65,8 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
+static const int MovementEndingTimerInterval = 100;
+
 static qreal EaseOvershoot(qreal t) {
     return qAtan(t);
 }
@@ -244,6 +246,8 @@ void QQuickFlickablePrivate::init()
     contentItem->setParentItem(q);
     qmlobject_connect(&timeline, QQuickTimeLine, SIGNAL(completed()),
                       q, QQuickFlickable, SLOT(timelineCompleted()))
+    qmlobject_connect(&velocityTimeline, QQuickTimeLine, SIGNAL(completed()),
+                      q, QQuickFlickable, SLOT(velocityTimelineCompleted()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
@@ -1202,6 +1206,8 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
         hData.velocity = 0;
     }
 
+    if (momentum && !hData.flicking && !vData.flicking)
+        flickingStarted(hData.velocity != 0, vData.velocity != 0);
     draggingStarting();
 
     if ((hMoved && !prevHMoved) || (vMoved && !prevVMoved))
@@ -1390,10 +1396,17 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->timer.start();
         d->maybeBeginDrag(currentTimestamp, event->posF());
         break;
+    case Qt::NoScrollPhase: // default phase with an ordinary wheel mouse
     case Qt::ScrollUpdate:
+        if (d->scrollingPhase) {
+            d->pressed = true;
+            d->movementEndingTimer.start(MovementEndingTimerInterval, this);
+        }
         break;
     case Qt::ScrollEnd:
+        d->pressed = false;
         d->scrollingPhase = false;
+        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
         d->draggingEnding();
         event->accept();
         returnToBounds();
@@ -1415,7 +1428,6 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 valid = true;
             }
             if (valid) {
-                d->vData.flicking = false;
                 d->flickY(d->vData.velocity);
                 d->flickingStarted(false, true);
                 if (d->vData.flicking) {
@@ -1435,7 +1447,6 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 valid = true;
             }
             if (valid) {
-                d->hData.flicking = false;
                 d->flickX(d->hData.velocity);
                 d->flickingStarted(true, false);
                 if (d->hData.flicking) {
@@ -1548,6 +1559,12 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         if (d->delayedPressEvent) {
             d->replayDelayedPress();
         }
+    } else if (event->timerId() == d->movementEndingTimer.timerId()) {
+        d->movementEndingTimer.stop();
+        d->pressed = false;
+        d->stealMouse = false;
+        if (!d->velocityTimeline.isActive())
+            movementEnding(true, true);
     }
 }
 
@@ -2473,6 +2490,22 @@ bool QQuickFlickable::isMovingVertically() const
 {
     Q_D(const QQuickFlickable);
     return d->vData.moving;
+}
+
+void QQuickFlickable::velocityTimelineCompleted()
+{
+    Q_D(QQuickFlickable);
+    if ( (d->hData.transitionToBounds && d->hData.transitionToBounds->isActive())
+         || (d->vData.transitionToBounds && d->vData.transitionToBounds->isActive()) ) {
+        return;
+    }
+    // With subclasses such as GridView, velocityTimeline.completed is emitted repeatedly:
+    // for example setting currentIndex results in a visual "flick" which the user
+    // didn't initiate directly. We don't want to end movement repeatedly, and in
+    // that case movementEnding will happen after the sequence of movements ends.
+    if (d->vData.flicking)
+        movementEnding();
+    d->updateBeginningEnd();
 }
 
 void QQuickFlickable::timelineCompleted()

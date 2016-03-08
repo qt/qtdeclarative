@@ -52,6 +52,9 @@ ListModel {
     signal dataReady
 
     function indexOf(date) {
+        if (model.count == 0)
+            return -1;
+
         var newest = new Date(model.get(0).date);
         var oldest = new Date(model.get(model.count - 1).date);
         if (newest <= date)
@@ -148,8 +151,11 @@ ListModel {
                         model.ready = true;
                         model.stockPrice = model.get(0).adjusted;
                         model.stockPriceChanged = model.count > 1 ? (Math.round((model.stockPrice - model.get(1).close) * 100) / 100) : 0;
-                        model.dataReady(); //emit signal
+                    } else {
+                        model.stockPrice = 0;
+                        model.stockPriceChanged = 0;
                     }
+                    model.dataReady(); // emit signal - model.ready indicates whether the data is valid
                 }
             }
         }

@@ -54,6 +54,7 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qv8engine_p.h>
 
+#include <private/qv4arraybuffer_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4variantobject_p.h>
@@ -336,6 +337,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
         } else if (property->isV4Function()) {
             Scope scope(engine);
             ScopedContext global(scope, engine->qmlContext());
+            if (!global)
+                global = engine->rootContext();
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
         } else if (property->isSignalHandler()) {
             QmlSignalHandler::initProto(engine);
@@ -1099,6 +1102,7 @@ private:
     // Pointers to allocData
     union {
         QString *qstringPtr;
+        QByteArray *qbyteArrayPtr;
         QVariant *qvariantPtr;
         QList<QObject *> *qlistPtr;
         QJSValue *qjsValuePtr;
@@ -1216,6 +1220,13 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
     } else if (actual.as<QV4::RegExpObject>()) {
         switch (conversionType) {
         case QMetaType::QRegExp:
+            return 0;
+        default:
+            return 10;
+        }
+    } else if (actual.as<ArrayBuffer>()) {
+        switch (conversionType) {
+        case QMetaType::QByteArray:
             return 0;
         default:
             return 10;
@@ -1476,6 +1487,8 @@ void CallArgument::cleanup()
 {
     if (type == QMetaType::QString) {
         qstringPtr->~QString();
+    } else if (type == QMetaType::QByteArray) {
+        qbyteArrayPtr->~QByteArray();
     } else if (type == -1 || type == QMetaType::QVariant) {
         qvariantPtr->~QVariant();
     } else if (type == qMetaTypeId<QJSValue>()) {
@@ -1578,6 +1591,12 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         else
             qstringPtr = new (&allocData) QString(value.toQStringNoThrow());
         type = callType;
+    } else if (callType == QMetaType::QByteArray) {
+        if (const ArrayBuffer *ab = value.as<ArrayBuffer>())
+            qbyteArrayPtr = new (&allocData) QByteArray(ab->asByteArray());
+        else
+            qbyteArrayPtr = new (&allocData) QByteArray();
+        type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = 0;
         if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
@@ -1675,6 +1694,8 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
         return QV4::Encode(floatValue);
     } else if (type == QMetaType::QString) {
         return QV4::Encode(engine->newString(*qstringPtr));
+    } else if (type == QMetaType::QByteArray) {
+        return QV4::Encode(engine->newArrayBuffer(*qbyteArrayPtr));
     } else if (type == QMetaType::QObjectStar) {
         QObject *object = qobjectPtr;
         if (object)

@@ -43,7 +43,9 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlengine.h>
+#ifndef QT_NO_NETWORK
 #include <QtNetwork/qnetworkreply.h>
+#endif
 #include <QtCore/qfile.h>
 #include <QtCore/qmath.h>
 #include <QtGui/qguiapplication.h>
@@ -169,9 +171,11 @@ QQuickBorderImage::QQuickBorderImage(QQuickItem *parent)
 
 QQuickBorderImage::~QQuickBorderImage()
 {
+#ifndef QT_NO_NETWORK
     Q_D(QQuickBorderImage);
     if (d->sciReply)
         d->sciReply->deleteLater();
+#endif
 }
 
 /*!
@@ -270,10 +274,12 @@ void QQuickBorderImage::setSource(const QUrl &url)
     if (url == d->url)
         return;
 
+#ifndef QT_NO_NETWORK
     if (d->sciReply) {
         d->sciReply->deleteLater();
         d->sciReply = 0;
     }
+#endif
 
     d->url = url;
     d->sciurl = QUrl();
@@ -311,6 +317,7 @@ void QQuickBorderImage::load()
                 setGridScaledImage(QQuickGridScaledImage(&file));
                 return;
             } else {
+#ifndef QT_NO_NETWORK
                 if (d->progress != 0.0) {
                     d->progress = 0.0;
                     emit progressChanged(d->progress);
@@ -320,6 +327,7 @@ void QQuickBorderImage::load()
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
                 qmlobject_connect(d->sciReply, QNetworkReply, SIGNAL(finished()),
                                   this, QQuickBorderImage, SLOT(sciRequestFinished()))
+#endif
             }
         } else {
             QQuickPixmap::Options options;
@@ -529,6 +537,7 @@ void QQuickBorderImage::requestFinished()
     pixmapChange();
 }
 
+#ifndef QT_NO_NETWORK
 #define BORDERIMAGE_MAX_REDIRECT 16
 
 void QQuickBorderImage::sciRequestFinished()
@@ -558,6 +567,7 @@ void QQuickBorderImage::sciRequestFinished()
         setGridScaledImage(sci);
     }
 }
+#endif // QT_NO_NETWORK
 
 void QQuickBorderImage::doUpdate()
 {

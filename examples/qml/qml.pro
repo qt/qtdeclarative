@@ -1,9 +1,13 @@
 TEMPLATE = subdirs
 
-qtHaveModule(quick): SUBDIRS += \
-    networkaccessmanagerfactory \
-    qmlextensionplugins \
-    xmlhttprequest
+qtHaveModule(quick) {
+    SUBDIRS += \
+        qmlextensionplugins \
+        xmlhttprequest
+
+    !no_network: SUBDIRS += \
+            networkaccessmanagerfactory
+}
 
 SUBDIRS += \
           referenceexamples \

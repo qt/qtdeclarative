@@ -44,6 +44,7 @@
 
 #include <qcoreapplication.h>
 #include <qfont.h>
+#include <qfontmetrics.h>
 #include <qevent.h>
 #include <qdebug.h>
 #include <qdrag.h>
@@ -965,6 +966,14 @@ process:
     {
         QString text = e->text();
         if (!text.isEmpty() && (text.at(0).isPrint() || text.at(0) == QLatin1Char('\t'))) {
+            if (overwriteMode
+                // no need to call deleteChar() if we have a selection, insertText
+                // does it already
+                && !cursor.hasSelection()
+                && !cursor.atBlockEnd()) {
+                cursor.deleteChar();
+            }
+
             cursor.insertText(text);
             selectionChanged();
         } else {
@@ -1007,6 +1016,12 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
     if (line.isValid()) {
         qreal x = line.cursorToX(relativePos);
         qreal w = 0;
+        if (overwriteMode) {
+            if (relativePos < line.textLength() - line.textStart())
+                w = line.cursorToX(relativePos + 1) - x;
+            else
+                w = QFontMetrics(block.layout()->font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+        }
         r = QRectF(layoutPos.x() + x, layoutPos.y() + line.y(), textCursorWidth + w, line.height());
     } else {
         r = QRectF(layoutPos.x(), layoutPos.y(), textCursorWidth, 10); // #### correct height
@@ -1481,6 +1496,21 @@ bool QQuickTextControl::hasImState() const
 {
     Q_D(const QQuickTextControl);
     return d->hasImState;
+}
+
+bool QQuickTextControl::overwriteMode() const
+{
+    Q_D(const QQuickTextControl);
+    return d->overwriteMode;
+}
+
+void QQuickTextControl::setOverwriteMode(bool overwrite)
+{
+    Q_D(QQuickTextControl);
+    if (d->overwriteMode == overwrite)
+        return;
+    d->overwriteMode = overwrite;
+    emit overwriteModeChanged(overwrite);
 }
 
 bool QQuickTextControl::cursorVisible() const

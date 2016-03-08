@@ -223,13 +223,13 @@ static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
     const QString value = trimmedToken.left(trimmedToken.size() - 2);
     bool ok = false;
     int size = 0;
-    if (unitStr == QStringLiteral("px")) {
+    if (unitStr == QLatin1String("px")) {
         size = qParseFontSizeFromToken(value, ok);
         if (ok) {
             font.setPixelSize(size);
             return true;
         }
-    } else if (unitStr == QStringLiteral("pt")) {
+    } else if (unitStr == QLatin1String("pt")) {
         size = qParseFontSizeFromToken(value, ok);
         if (ok) {
             font.setPointSize(size);
@@ -368,9 +368,9 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
 
     // We know that font-size must be specified and it must be before font-family
     // (which could potentially have "px" or "pt" in its name), so extract it now.
-    int fontSizeEnd = fontString.indexOf(QStringLiteral("px"));
+    int fontSizeEnd = fontString.indexOf(QLatin1String("px"));
     if (fontSizeEnd == -1)
-        fontSizeEnd = fontString.indexOf(QStringLiteral("pt"));
+        fontSizeEnd = fontString.indexOf(QLatin1String("pt"));
     if (fontSizeEnd == -1) {
         qWarning().nospace() << "Context2D: Invalid font size unit in font string.";
         return currentFont;
@@ -769,53 +769,53 @@ void qt_image_boxblur(QImage& image, int radius, bool quality)
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
 {
-    if (compositeOperator == QStringLiteral("source-over")) {
+    if (compositeOperator == QLatin1String("source-over")) {
         return QPainter::CompositionMode_SourceOver;
-    } else if (compositeOperator == QStringLiteral("source-out")) {
+    } else if (compositeOperator == QLatin1String("source-out")) {
         return QPainter::CompositionMode_SourceOut;
-    } else if (compositeOperator == QStringLiteral("source-in")) {
+    } else if (compositeOperator == QLatin1String("source-in")) {
         return QPainter::CompositionMode_SourceIn;
-    } else if (compositeOperator == QStringLiteral("source-atop")) {
+    } else if (compositeOperator == QLatin1String("source-atop")) {
         return QPainter::CompositionMode_SourceAtop;
-    } else if (compositeOperator == QStringLiteral("destination-atop")) {
+    } else if (compositeOperator == QLatin1String("destination-atop")) {
         return QPainter::CompositionMode_DestinationAtop;
-    } else if (compositeOperator == QStringLiteral("destination-in")) {
+    } else if (compositeOperator == QLatin1String("destination-in")) {
         return QPainter::CompositionMode_DestinationIn;
-    } else if (compositeOperator == QStringLiteral("destination-out")) {
+    } else if (compositeOperator == QLatin1String("destination-out")) {
         return QPainter::CompositionMode_DestinationOut;
-    } else if (compositeOperator == QStringLiteral("destination-over")) {
+    } else if (compositeOperator == QLatin1String("destination-over")) {
         return QPainter::CompositionMode_DestinationOver;
-    } else if (compositeOperator == QStringLiteral("lighter")) {
+    } else if (compositeOperator == QLatin1String("lighter")) {
         return QPainter::CompositionMode_Lighten;
-    } else if (compositeOperator == QStringLiteral("copy")) {
+    } else if (compositeOperator == QLatin1String("copy")) {
         return QPainter::CompositionMode_Source;
-    } else if (compositeOperator == QStringLiteral("xor")) {
+    } else if (compositeOperator == QLatin1String("xor")) {
         return QPainter::CompositionMode_Xor;
-    } else if (compositeOperator == QStringLiteral("qt-clear")) {
+    } else if (compositeOperator == QLatin1String("qt-clear")) {
         return QPainter::CompositionMode_Clear;
-    } else if (compositeOperator == QStringLiteral("qt-destination")) {
+    } else if (compositeOperator == QLatin1String("qt-destination")) {
         return QPainter::CompositionMode_Destination;
-    } else if (compositeOperator == QStringLiteral("qt-multiply")) {
+    } else if (compositeOperator == QLatin1String("qt-multiply")) {
         return QPainter::CompositionMode_Multiply;
-    } else if (compositeOperator == QStringLiteral("qt-screen")) {
+    } else if (compositeOperator == QLatin1String("qt-screen")) {
         return QPainter::CompositionMode_Screen;
-    } else if (compositeOperator == QStringLiteral("qt-overlay")) {
+    } else if (compositeOperator == QLatin1String("qt-overlay")) {
         return QPainter::CompositionMode_Overlay;
-    } else if (compositeOperator == QStringLiteral("qt-darken")) {
+    } else if (compositeOperator == QLatin1String("qt-darken")) {
         return QPainter::CompositionMode_Darken;
-    } else if (compositeOperator == QStringLiteral("qt-lighten")) {
+    } else if (compositeOperator == QLatin1String("qt-lighten")) {
         return QPainter::CompositionMode_Lighten;
-    } else if (compositeOperator == QStringLiteral("qt-color-dodge")) {
+    } else if (compositeOperator == QLatin1String("qt-color-dodge")) {
         return QPainter::CompositionMode_ColorDodge;
-    } else if (compositeOperator == QStringLiteral("qt-color-burn")) {
+    } else if (compositeOperator == QLatin1String("qt-color-burn")) {
         return QPainter::CompositionMode_ColorBurn;
-    } else if (compositeOperator == QStringLiteral("qt-hard-light")) {
+    } else if (compositeOperator == QLatin1String("qt-hard-light")) {
         return QPainter::CompositionMode_HardLight;
-    } else if (compositeOperator == QStringLiteral("qt-soft-light")) {
+    } else if (compositeOperator == QLatin1String("qt-soft-light")) {
         return QPainter::CompositionMode_SoftLight;
-    } else if (compositeOperator == QStringLiteral("qt-difference")) {
+    } else if (compositeOperator == QLatin1String("qt-difference")) {
         return QPainter::CompositionMode_Difference;
-    } else if (compositeOperator == QStringLiteral("qt-exclusion")) {
+    } else if (compositeOperator == QLatin1String("qt-exclusion")) {
         return QPainter::CompositionMode_Exclusion;
     }
     return QPainter::CompositionMode_SourceOver;
@@ -1314,7 +1314,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalCompositeOperation(QV4::C
 
     QString mode = ctx->args()[0].toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
-    if (cm == QPainter::CompositionMode_SourceOver && mode != QStringLiteral("source-over"))
+    if (cm == QPainter::CompositionMode_SourceOver && mode != QLatin1String("source-over"))
         return QV4::Encode::undefined();
 
     if (cm != r->d()->context->state.globalCompositeOperation) {
@@ -1431,10 +1431,10 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillRule(QV4::CallContext *ctx)
 
     QV4::ScopedValue value(scope, ctx->argument(0));
 
-    if ((value->isString() && value->toQString() == QStringLiteral("WindingFill"))
+    if ((value->isString() && value->toQString() == QLatin1String("WindingFill"))
         || (value->isInt32() && value->integerValue() == Qt::WindingFill)) {
         r->d()->context->state.fillRule = Qt::WindingFill;
-    } else if ((value->isString() && value->toQStringNoThrow() == QStringLiteral("OddEvenFill"))
+    } else if ((value->isString() && value->toQStringNoThrow() == QLatin1String("OddEvenFill"))
                || (value->isInt32() && value->integerValue() == Qt::OddEvenFill)) {
         r->d()->context->state.fillRule = Qt::OddEvenFill;
     } else {
@@ -1730,16 +1730,16 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
                 pattern->d()->brush.setTextureImage(patternTexture);
 
                 QString repetition = ctx->args()[1].toQStringNoThrow();
-                if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
+                if (repetition == QLatin1String("repeat") || repetition.isEmpty()) {
                     pattern->d()->patternRepeatX = true;
                     pattern->d()->patternRepeatY = true;
-                } else if (repetition == QStringLiteral("repeat-x")) {
+                } else if (repetition == QLatin1String("repeat-x")) {
                     pattern->d()->patternRepeatX = true;
                     pattern->d()->patternRepeatY = false;
-                } else if (repetition == QStringLiteral("repeat-y")) {
+                } else if (repetition == QLatin1String("repeat-y")) {
                     pattern->d()->patternRepeatX = false;
                     pattern->d()->patternRepeatY = true;
-                } else if (repetition == QStringLiteral("no-repeat")) {
+                } else if (repetition == QLatin1String("no-repeat")) {
                     pattern->d()->patternRepeatX = false;
                     pattern->d()->patternRepeatY = false;
                 } else {
@@ -1793,11 +1793,11 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineCap(QV4::CallContext *ctx)
 
     QString lineCap = ctx->args()[0].toQString();
     Qt::PenCapStyle cap;
-    if (lineCap == QStringLiteral("round"))
+    if (lineCap == QLatin1String("round"))
         cap = Qt::RoundCap;
-    else if (lineCap == QStringLiteral("butt"))
+    else if (lineCap == QLatin1String("butt"))
         cap = Qt::FlatCap;
-    else if (lineCap == QStringLiteral("square"))
+    else if (lineCap == QLatin1String("square"))
         cap = Qt::SquareCap;
     else
         return QV4::Encode::undefined();
@@ -1852,11 +1852,11 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineJoin(QV4::CallContext *ctx)
 
     QString lineJoin = ctx->args()[0].toQString();
     Qt::PenJoinStyle join;
-    if (lineJoin == QStringLiteral("round"))
+    if (lineJoin == QLatin1String("round"))
         join = Qt::RoundJoin;
-    else if (lineJoin == QStringLiteral("bevel"))
+    else if (lineJoin == QLatin1String("bevel"))
         join = Qt::BevelJoin;
-    else if (lineJoin == QStringLiteral("miter"))
+    else if (lineJoin == QLatin1String("miter"))
         join = Qt::SvgMiterJoin;
     else
         return QV4::Encode::undefined();
@@ -2733,15 +2733,15 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(QV4::CallContext *
     QString textBaseline = s->toQString();
 
     QQuickContext2D::TextBaseLineType tb;
-    if (textBaseline == QStringLiteral("alphabetic"))
+    if (textBaseline == QLatin1String("alphabetic"))
         tb = QQuickContext2D::Alphabetic;
-    else if (textBaseline == QStringLiteral("hanging"))
+    else if (textBaseline == QLatin1String("hanging"))
         tb = QQuickContext2D::Hanging;
-    else if (textBaseline == QStringLiteral("top"))
+    else if (textBaseline == QLatin1String("top"))
         tb = QQuickContext2D::Top;
-    else if (textBaseline == QStringLiteral("bottom"))
+    else if (textBaseline == QLatin1String("bottom"))
         tb = QQuickContext2D::Bottom;
-    else if (textBaseline == QStringLiteral("middle"))
+    else if (textBaseline == QLatin1String("middle"))
         tb = QQuickContext2D::Middle;
     else
         return QV4::Encode::undefined();
