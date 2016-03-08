@@ -53,10 +53,12 @@ QT_BEGIN_NAMESPACE
 
 DECLARE_DEBUG_VAR(render)
 
+static const int MAX_DRAW_CALLS_PER_LIST = 128;
+
 static const int MAX_CACHED_ROOTSIG = 16;
 static const int MAX_CACHED_PSO = 64;
 
-static const int MAX_GPU_CBVSRVUAV_DESCRIPTORS = 256;
+static const int MAX_GPU_CBVSRVUAV_DESCRIPTORS = 1024;
 
 static const int BUCKETS_PER_HEAP = 8; // must match freeMap
 static const int DESCRIPTORS_PER_BUCKET = 32; // the bit map (freeMap) is quint32
@@ -306,9 +308,9 @@ void QSGD3D12Engine::endFrame()
     d->endFrame();
 }
 
-void QSGD3D12Engine::setPipelineState(const QSGD3D12PipelineState &pipelineState)
+void QSGD3D12Engine::finalizePipeline(const QSGD3D12PipelineState &pipelineState)
 {
-    d->setPipelineState(pipelineState);
+    d->finalizePipeline(pipelineState);
 }
 
 void QSGD3D12Engine::setVertexBuffer(const quint8 *data, int size)
@@ -398,9 +400,9 @@ void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, TextureUpl
     return d->queueTextureUpload(id, image, flags);
 }
 
-void QSGD3D12Engine::addFrameTextureDep(uint id)
+void QSGD3D12Engine::activateTexture(uint id)
 {
-    d->addFrameTextureDep(id);
+    d->activateTexture(id);
 }
 
 quint32 QSGD3D12Engine::alignedConstantBufferSize(quint32 size)
@@ -828,13 +830,22 @@ void QSGD3D12EnginePrivate::beginFrame()
         initialize(window);
 
     commandAllocator->Reset();
+
+    cbvSrvUavNextFreeDescriptorIndex = 0;
+
+    beginDrawCalls(true);
+}
+
+void QSGD3D12EnginePrivate::beginDrawCalls(bool needsBackbufferTransition)
+{
     commandList->Reset(commandAllocator.Get(), nullptr);
 
-    transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    frameData.drawingMode = QSGGeometry::DrawingMode(-1);
+    frameData.indexBufferSet = false;
+    frameData.drawCount = 0;
 
-    drawingMode = QSGGeometry::DrawingMode(-1);
-    indexBufferSet = false;
-    cbvSrvUavNextFreeDescriptorIndex = 0;
+    if (needsBackbufferTransition)
+        transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void QSGD3D12EnginePrivate::updateBuffer(VICBufferRef *br, ID3D12Resource *r, const char *dbgstr)
@@ -861,14 +872,21 @@ void QSGD3D12EnginePrivate::endFrame()
     if (Q_UNLIKELY(debug_render()))
         qDebug() << "***** end frame";
 
+    endDrawCalls(true);
+
+    inFrame = false;
+}
+
+void QSGD3D12EnginePrivate::endDrawCalls(bool needsBackbufferTransition)
+{
     // Now is the time to sync all the changed areas in the buffers.
     updateBuffer(&vertexData, vertexBuffer.Get(), "vertex");
     updateBuffer(&indexData, indexBuffer.Get(), "index");
     updateBuffer(&constantData, constantBuffer.Get(), "constant");
 
-    // Wait for texture uploads (the ones that are needed by this frame) to finish.
+    // Wait for texture uploads to finish.
     quint64 topFenceValue = 0;
-    for (uint id : qAsConst(currentFrameTextures)) {
+    for (uint id : qAsConst(frameData.pendingTextures)) {
         const int idx = id - 1;
         Q_ASSERT(idx < textures.count());
         const Texture &t(textures[idx]);
@@ -880,7 +898,7 @@ void QSGD3D12EnginePrivate::endFrame()
             qDebug("wait for texture fence %llu", topFenceValue);
         commandQueue->Wait(textureUploadFence.Get(), topFenceValue);
     }
-    for (uint id : qAsConst(currentFrameTextures)) {
+    for (uint id : qAsConst(frameData.pendingTextures)) {
         const int idx = id - 1;
         Texture &t(textures[idx]);
         if (t.fenceValue) {
@@ -899,9 +917,10 @@ void QSGD3D12EnginePrivate::endFrame()
         if (!hasActiveTextureUpload)
             copyCommandAllocator->Reset();
     }
-    currentFrameTextures.clear();
+    frameData.pendingTextures.clear();
 
-    transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    if (needsBackbufferTransition)
+        transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
     HRESULT hr = commandList->Close();
     if (FAILED(hr)) {
@@ -912,8 +931,6 @@ void QSGD3D12EnginePrivate::endFrame()
 
     ID3D12CommandList *commandLists[] = { commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-
-    inFrame = false;
 }
 
 // Root signature:
@@ -925,8 +942,10 @@ void QSGD3D12EnginePrivate::endFrame()
 // in QSGD3D12TextureView. The engine will copy them onto a dedicated,
 // shader-visible CBV-SRV-UAV heap.
 
-void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipelineState)
+void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipelineState)
 {
+    frameData.pipelineState = pipelineState;
+
     RootSigCacheEntry *cachedRootSig = rootSigCache[pipelineState.shaders.rootSig];
     if (!cachedRootSig) {
         if (Q_UNLIKELY(debug_render()))
@@ -1097,28 +1116,8 @@ void QSGD3D12EnginePrivate::setPipelineState(const QSGD3D12PipelineState &pipeli
     commandList->SetGraphicsRootSignature(cachedRootSig->rootSig.Get()); // invalidates bindings
 
     if (!pipelineState.shaders.rootSig.textureViews.isEmpty()) {
-        Q_ASSERT(currentDrawTextures.count() == pipelineState.shaders.rootSig.textureViews.count());
-
         ID3D12DescriptorHeap *heaps[] = { gpuCbvSrvUavHeap.Get() };
         commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-        // Copy the SRVs to a drawcall-dedicated area of the shader-visible descriptor heap.
-        const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        D3D12_CPU_DESCRIPTOR_HANDLE dst = gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
-        Q_ASSERT(cbvSrvUavNextFreeDescriptorIndex + currentDrawTextures.count() <= MAX_GPU_CBVSRVUAV_DESCRIPTORS);
-        dst.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
-        for (uint id : qAsConst(currentDrawTextures)) {
-            const int idx = id - 1;
-            device->CopyDescriptorsSimple(1, dst, textures[idx].srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            dst.ptr += stride;
-        }
-
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuAddr = gpuCbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
-        gpuAddr.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
-        commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
-
-        cbvSrvUavNextFreeDescriptorIndex += currentDrawTextures.count();
-        currentDrawTextures.clear();
     }
 }
 
@@ -1153,12 +1152,14 @@ void QSGD3D12EnginePrivate::markConstantBufferDirty(int offset, int size)
 
 void QSGD3D12EnginePrivate::queueViewport(const QRect &rect)
 {
+    frameData.viewport = rect;
     const D3D12_VIEWPORT viewport = { float(rect.x()), float(rect.y()), float(rect.width()), float(rect.height()), 0, 1 };
     commandList->RSSetViewports(1, &viewport);
 }
 
 void QSGD3D12EnginePrivate::queueScissor(const QRect &rect)
 {
+    frameData.scissor = rect;
     const D3D12_RECT scissorRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
     commandList->RSSetScissorRects(1, &scissorRect);
 }
@@ -1183,6 +1184,7 @@ void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 sten
 
 void QSGD3D12EnginePrivate::queueSetStencilRef(quint32 ref)
 {
+    frameData.stencilRef = ref;
     commandList->OMSetStencilRef(ref);
 }
 
@@ -1190,7 +1192,7 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
                                       int cboOffset,
                                       int startIndexIndex, QSGD3D12Format indexFormat)
 {
-    // Ensure buffers are created but do not copy the data here, leave that to endFrame().
+    // Ensure buffers are created but do not copy the data here, leave that to endDrawCalls().
     if (vertexData.fullChange) {
         vertexData.fullChange = false;
         // Only enlarge, never shrink
@@ -1241,13 +1243,15 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
             return;
     }
 
+    // Set the CBV.
     if (cboOffset >= 0 && constantBuffer)
         commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress() + cboOffset);
 
+    // Set up vertex and index buffers.
     Q_ASSERT(vertexBuffer);
     Q_ASSERT(indexBuffer || startIndexIndex < 0);
 
-    if (mode != drawingMode) {
+    if (mode != frameData.drawingMode) {
         D3D_PRIMITIVE_TOPOLOGY topology;
         switch (mode) {
         case QSGGeometry::DrawPoints:
@@ -1270,7 +1274,7 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
             break;
         }
         commandList->IASetPrimitiveTopology(topology);
-        drawingMode = mode;
+        frameData.drawingMode = mode;
     }
 
     D3D12_VERTEX_BUFFER_VIEW vbv;
@@ -1281,8 +1285,8 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
     // must be set after the topology
     commandList->IASetVertexBuffers(0, 1, &vbv);
 
-    if (startIndexIndex >= 0 && !indexBufferSet) {
-        indexBufferSet = true;
+    if (startIndexIndex >= 0 && !frameData.indexBufferSet) {
+        frameData.indexBufferSet = true;
         D3D12_INDEX_BUFFER_VIEW ibv;
         ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
         ibv.SizeInBytes = indexData.size;
@@ -1290,10 +1294,52 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         commandList->IASetIndexBuffer(&ibv);
     }
 
+    // Copy the SRVs to a drawcall-dedicated area of the shader-visible descriptor heap.
+    Q_ASSERT(frameData.activeTextures.count() == frameData.pipelineState.shaders.rootSig.textureViews.count());
+    if (!frameData.activeTextures.isEmpty()) {
+        const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        D3D12_CPU_DESCRIPTOR_HANDLE dst = gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
+        if (cbvSrvUavNextFreeDescriptorIndex + frameData.activeTextures.count() > MAX_GPU_CBVSRVUAV_DESCRIPTORS) {
+            // oops.
+            // ### figure out something
+            qFatal("Out of space for shader-visible SRVs");
+        }
+        dst.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
+        for (uint id : qAsConst(frameData.activeTextures)) {
+            const int idx = id - 1;
+            device->CopyDescriptorsSimple(1, dst, textures[idx].srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            dst.ptr += stride;
+        }
+
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuAddr = gpuCbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
+        gpuAddr.ptr += cbvSrvUavNextFreeDescriptorIndex * stride;
+        commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
+
+        cbvSrvUavNextFreeDescriptorIndex += frameData.activeTextures.count();
+        frameData.activeTextures.clear();
+    }
+
+    // Add the draw call.
     if (startIndexIndex >= 0)
         commandList->DrawIndexedInstanced(count, 1, startIndexIndex, 0, 0);
     else
         commandList->DrawInstanced(count, 1, 0, 0);
+
+    ++frameData.drawCount;
+    if (frameData.drawCount == MAX_DRAW_CALLS_PER_LIST) {
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("Limit of %d draw calls reached, executing command list", MAX_DRAW_CALLS_PER_LIST);
+        // submit the command list
+        endDrawCalls();
+        // start a new one
+        beginDrawCalls();
+        // prepare for the upcoming drawcalls
+        queueSetRenderTarget();
+        queueViewport(frameData.viewport);
+        queueScissor(frameData.scissor);
+        queueSetStencilRef(frameData.stencilRef);
+        finalizePipeline(frameData.pipelineState);
+    }
 }
 
 void QSGD3D12EnginePrivate::present()
@@ -1477,15 +1523,15 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QImage &image, QSG
     copyCommandQueue->Signal(textureUploadFence.Get(), t.fenceValue);
 }
 
-void QSGD3D12EnginePrivate::addFrameTextureDep(uint id)
+void QSGD3D12EnginePrivate::activateTexture(uint id)
 {
     if (!inFrame) {
-        qWarning("addFrameTextureDep cannot be called outside begin/endFrame");
+        qWarning("activateTexture cannot be called outside begin/endFrame");
         return;
     }
 
-    currentFrameTextures.insert(id);
-    currentDrawTextures.append(id);
+    frameData.pendingTextures.insert(id);
+    frameData.activeTextures.append(id);
 }
 
 QT_END_NAMESPACE

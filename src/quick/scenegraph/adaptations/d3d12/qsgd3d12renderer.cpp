@@ -360,8 +360,8 @@ void QSGD3D12Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGD3D12Renderer::renderElements()
 {
-    m_engine->queueViewport(viewportRect());
     m_engine->queueSetRenderTarget();
+    m_engine->queueViewport(viewportRect());
     m_engine->queueClearRenderTarget(clearColor());
     m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearDepth | QSGD3D12Engine::ClearStencil);
 
@@ -487,7 +487,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
             qWarning("QSGD3D12Renderer: Point sprites are not supported by this renderer");
     }
 
-    m_engine->setPipelineState(m_pipelineState);
+    m_engine->finalizePipeline(m_pipelineState);
 
     queueDrawCall(g, e);
 }
@@ -654,7 +654,7 @@ void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementInd
     Q_ASSERT(g->attributes()[0].type == GL_FLOAT);
 
     setInputLayout(g, &sps);
-    m_engine->setPipelineState(sps);
+    m_engine->finalizePipeline(sps);
 
     Q_ASSERT(ce.cboSize > 0);
     quint8 *p = m_cboData.data() + ce.cboOffset;

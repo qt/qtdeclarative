@@ -110,9 +110,10 @@ QSGTexture *QSGD3D12Texture::removedFromAtlas() const
 void QSGD3D12Texture::bind()
 {
     // Called when the texture material updates the pipeline state. Here we
-    // know that the texture is going to be used in the current frame. Notify
-    // the engine so that it can wait for possible pending uploads in endFrame().
-    m_engine->addFrameTextureDep(m_id);
+    // know that the texture is going to be used in the current frame by the
+    // next draw call. Notify the engine so that it can wait for possible
+    // pending uploads in endFrame() and set up the pipeline accordingly.
+    m_engine->activateTexture(m_id);
 }
 
 SIZE_T QSGD3D12Texture::srv() const

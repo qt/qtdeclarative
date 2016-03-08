@@ -263,8 +263,6 @@ public:
     void beginFrame();
     void endFrame();
 
-    void setPipelineState(const QSGD3D12PipelineState &pipelineState);
-
     void setVertexBuffer(const quint8 *data, int size);
     void setIndexBuffer(const quint8 *data, int size);
     void setConstantBuffer(const quint8 *data, int size);
@@ -282,6 +280,8 @@ public:
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which);
     void queueSetStencilRef(quint32 ref);
+
+    void finalizePipeline(const QSGD3D12PipelineState &pipelineState);
 
     void queueDraw(QSGGeometry::DrawingMode mode, int count,
                    int vboOffset, int vboSize, int vboStride,
@@ -309,7 +309,7 @@ public:
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
     void queueTextureUpload(uint id, const QImage &image, TextureUploadFlags flags);
-    void addFrameTextureDep(uint id);
+    void activateTexture(uint id);
 
 private:
     QSGD3D12EnginePrivate *d;

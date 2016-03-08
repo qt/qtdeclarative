@@ -138,8 +138,6 @@ public:
     void beginFrame();
     void endFrame();
 
-    void setPipelineState(const QSGD3D12PipelineState &pipelineState);
-
     void setVertexBuffer(const quint8 *data, int size);
     void setIndexBuffer(const quint8 *data, int size);
     void setConstantBuffer(const quint8 *data, int size);
@@ -151,6 +149,8 @@ public:
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which);
     void queueSetStencilRef(quint32 ref);
+
+    void finalizePipeline(const QSGD3D12PipelineState &pipelineState);
 
     void queueDraw(QSGGeometry::DrawingMode mode, int count,
                    int vboOffset, int vboSize, int vboStride,
@@ -164,7 +164,7 @@ public:
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
     void queueTextureUpload(uint id, const QImage &image, QSGD3D12Engine::TextureUploadFlags flags);
-    void addFrameTextureDep(uint id);
+    void activateTexture(uint id);
 
     // the device is intentionally hidden here. all resources have to go
     // through the engine and, unlike with GL, cannot just be created in random
@@ -196,6 +196,9 @@ private:
     };
 
     void updateBuffer(VICBufferRef *br, ID3D12Resource *r, const char *dbgstr);
+
+    void beginDrawCalls(bool needsBackbufferTransition = false);
+    void endDrawCalls(bool needsBackbufferTransition = false);
 
     bool initialized = false;
     bool inFrame = false;
@@ -233,9 +236,6 @@ private:
     };
     QCache<QSGD3D12RootSignature, RootSigCacheEntry> rootSigCache;
 
-    QSGGeometry::DrawingMode drawingMode;
-    bool indexBufferSet;
-
     struct Texture {
         ComPtr<ID3D12Resource> texture;
         D3D12_CPU_DESCRIPTOR_HANDLE srv;
@@ -246,11 +246,23 @@ private:
     QVector<Texture> textures;
     ComPtr<ID3D12Fence> textureUploadFence;
     QAtomicInt nextTextureUploadFenceValue;
-    QSet<uint> currentFrameTextures;
-    QVector<uint> currentDrawTextures;
 
     ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
     int cbvSrvUavNextFreeDescriptorIndex;
+
+    struct FrameData {
+        QSGGeometry::DrawingMode drawingMode;
+        bool indexBufferSet;
+        QSet<uint> pendingTextures;
+        QVector<uint> activeTextures;
+        int drawCount;
+
+        QRect viewport;
+        QRect scissor;
+        quint32 stencilRef;
+        QSGD3D12PipelineState pipelineState;
+    };
+    FrameData frameData;
 };
 
 QT_END_NAMESPACE
