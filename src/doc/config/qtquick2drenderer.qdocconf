@@ -1,0 +1,35 @@
+include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-cpp-defines.qdocconf)
+include($QT_INSTALL_DOCS/global/fileextensions.qdocconf)
+
+naturallanguate             = en_US
+outputencoding              = UTF-8
+sourceencoding              = UTF-8
+
+projects                    = QtQuick2dRenderer
+url                         = http://doc.qt.io/QtQuick2DRenderer
+description                 = Qt Quick 2D Renderer Documentation
+version                     = $QT_VERSION
+
+sourcedirs                  += ../src
+imagedirs                   += ../images
+
+qhp.projects            = QtQuick2dRenderer
+
+qhp.QtQuick2dRenderer.file                  = qtquick2drenderer.qhp
+qhp.QtQuick2dRenderer.namespace             = com.digia.qtquick2drenderer.$QT_VERSION_TAG
+qhp.QtQuick2dRenderer.virtualFolder         = qtquick2drenderer
+qhp.QtQuick2dRenderer.indexTitle            = Qt Quick 2D Renderer
+qhp.QtQuick2dRenderer.indexRoot             =
+
+qhp.QtQuick2dRenderer.subprojects           = manual
+qhp.QtQuick2dRenderer.manual.index          = Qt Quick 2D Renderer
+qhp.QtQuick2dRenderer.manual.indexTitle     = Qt Quick 2D Renderer
+qhp.QtQuick2dRenderer.manual.type           = manual
+
+macro.RENDERER                    = "Qt Quick 2D Renderer"
+
+navigation.landingpage = "Qt Quick 2D Renderer"
+indexes = $QT_INSTALL_DOCS/qtgui/qtgui.index \
+          $QT_INSTALL_DOCS/qtquick/qtquick.index \
+          $QT_INSTALL_DOCS/qtgraphicaleffects/qtgraphicaleffects.index
