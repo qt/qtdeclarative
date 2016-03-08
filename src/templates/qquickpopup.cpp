@@ -398,16 +398,7 @@ void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
     Q_D(QQuickPopupItem);
     QQuickControl::itemChange(change, data);
-    switch (change) {
-    case ItemActiveFocusHasChanged:
-        emit d->popup->activeFocusChanged();
-        break;
-    case ItemOpacityHasChanged:
-        emit d->popup->opacityChanged();
-        break;
-    default:
-        break;
-    }
+    d->popup->itemChange(change, data);
 }
 
 void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
@@ -1655,6 +1646,22 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
     if (!qFuzzyCompare(newGeometry.height(), oldGeometry.height())) {
         emit heightChanged();
         emit availableHeightChanged();
+    }
+}
+
+void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+{
+    Q_UNUSED(data);
+
+    switch (change) {
+    case QQuickItem::ItemActiveFocusHasChanged:
+        emit activeFocusChanged();
+        break;
+    case QQuickItem::ItemOpacityHasChanged:
+        emit opacityChanged();
+        break;
+    default:
+        break;
     }
 }
 

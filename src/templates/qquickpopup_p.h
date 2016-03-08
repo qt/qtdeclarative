@@ -55,6 +55,7 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQuick/qquickitem.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtGui/qaccessible.h>
@@ -62,11 +63,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QQuickWindow;
 class QQuickPopupPrivate;
 class QQuickTransition;
-class QQuickTransform;
 
 class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
@@ -323,6 +322,7 @@ protected:
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
 
