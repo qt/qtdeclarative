@@ -138,9 +138,9 @@ public:
     void beginFrame();
     void endFrame();
 
-    void setVertexBuffer(const quint8 *data, int size);
-    void setIndexBuffer(const quint8 *data, int size);
-    void setConstantBuffer(const quint8 *data, int size);
+    void resetVertexBuffer(const quint8 *data, int size);
+    void resetIndexBuffer(const quint8 *data, int size);
+    void resetConstantBuffer(const quint8 *data, int size);
     void markConstantBufferDirty(int offset, int size);
 
     void queueViewport(const QRect &rect);
@@ -187,45 +187,62 @@ private:
     ID3D12Resource *backBufferRT() const;
     D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTV() const;
 
-    struct VICBufferRef {
+    struct CPUBufferRef {
         const quint8 *p = nullptr;
         int size = 0;
-        bool fullChange = true;
+        bool gpuResourceInvalid = true;
         QVector<QPair<int, int> > dirty;
-        VICBufferRef() { dirty.reserve(256); }
+        CPUBufferRef() { dirty.reserve(64); }
     };
 
-    void updateBuffer(VICBufferRef *br, ID3D12Resource *r, const char *dbgstr);
+    struct PersistentFrameData {
+        struct ChangeTrackedBuffer {
+            ComPtr<ID3D12Resource> buffer;
+            QVector<QPair<int, int> > totalDirtyInFrame;
+        };
+        ChangeTrackedBuffer vertex;
+        ChangeTrackedBuffer index;
+        ChangeTrackedBuffer constant;
+        ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
+        int cbvSrvUavNextFreeDescriptorIndex;
+    };
+
+    void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
+    void updateBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
 
     void beginDrawCalls(bool needsBackbufferTransition = false);
     void endDrawCalls(bool needsBackbufferTransition = false);
 
+    static const int SWAP_CHAIN_BUFFER_COUNT = 2;
+    static const int MAX_FRAMES_IN_FLIGHT = 2;
+
     bool initialized = false;
     bool inFrame = false;
     QWindow *window = nullptr;
-    int swapChainBufferCount = 2;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
-    ComPtr<ID3D12Resource> renderTargets[2];
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv[2];
+    ComPtr<ID3D12Resource> renderTargets[SWAP_CHAIN_BUFFER_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv[SWAP_CHAIN_BUFFER_COUNT];
     D3D12_CPU_DESCRIPTOR_HANDLE dsv;
     ComPtr<ID3D12Resource> depthStencil;
-    ComPtr<ID3D12CommandAllocator> commandAllocator;
+    ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAMES_IN_FLIGHT];
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
     ComPtr<ID3D12GraphicsCommandList> commandList;
     ComPtr<ID3D12GraphicsCommandList> copyCommandList;
     QSGD3D12CPUDescriptorHeapManager cpuDescHeapManager;
+    quint64 presentFrameIndex;
+    quint64 frameIndex;
     QSGD3D12CPUWaitableFence *presentFence = nullptr;
+    QSGD3D12CPUWaitableFence *frameFence[MAX_FRAMES_IN_FLIGHT];
 
-    VICBufferRef vertexData;
-    VICBufferRef indexData;
-    VICBufferRef constantData;
+    CPUBufferRef vertexData;
+    CPUBufferRef indexData;
+    CPUBufferRef constantData;
 
-    ComPtr<ID3D12Resource> vertexBuffer;
-    ComPtr<ID3D12Resource> indexBuffer;
-    ComPtr<ID3D12Resource> constantBuffer;
+    PersistentFrameData pframeData[MAX_FRAMES_IN_FLIGHT];
+    int currentPFrameIndex;
 
     struct PSOCacheEntry {
         ComPtr<ID3D12PipelineState> pso;
@@ -247,22 +264,22 @@ private:
     ComPtr<ID3D12Fence> textureUploadFence;
     QAtomicInt nextTextureUploadFenceValue;
 
-    ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
-    int cbvSrvUavNextFreeDescriptorIndex;
-
-    struct FrameData {
+    struct TransientFrameData {
         QSGGeometry::DrawingMode drawingMode;
         bool indexBufferSet;
         QSet<uint> pendingTextures;
         QVector<uint> activeTextures;
         int drawCount;
+        ID3D12PipelineState *lastPso;
+        ID3D12RootSignature *lastRootSig;
+        bool descHeapSet;
 
         QRect viewport;
         QRect scissor;
         quint32 stencilRef;
         QSGD3D12PipelineState pipelineState;
     };
-    FrameData frameData;
+    TransientFrameData tframeData;
 };
 
 QT_END_NAMESPACE

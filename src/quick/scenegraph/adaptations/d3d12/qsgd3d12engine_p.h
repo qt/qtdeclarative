@@ -263,9 +263,9 @@ public:
     void beginFrame();
     void endFrame();
 
-    void setVertexBuffer(const quint8 *data, int size);
-    void setIndexBuffer(const quint8 *data, int size);
-    void setConstantBuffer(const quint8 *data, int size);
+    void resetVertexBuffer(const quint8 *data, int size);
+    void resetIndexBuffer(const quint8 *data, int size);
+    void resetConstantBuffer(const quint8 *data, int size);
     void markConstantBufferDirty(int offset, int size);
 
     enum ClearFlag {

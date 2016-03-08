@@ -225,9 +225,9 @@ void QSGD3D12Renderer::render()
 
         buildRenderList(rootNode(), nullptr);
 
-        m_engine->setVertexBuffer(m_vboData.data(), m_vboData.size());
-        m_engine->setIndexBuffer(m_iboData.data(), m_iboData.size());
-        m_engine->setConstantBuffer(m_cboData.data(), m_cboData.size());
+        m_engine->resetVertexBuffer(m_vboData.data(), m_vboData.size());
+        m_engine->resetIndexBuffer(m_iboData.data(), m_iboData.size());
+        m_engine->resetConstantBuffer(m_cboData.data(), m_cboData.size());
 
         if (Q_UNLIKELY(debug_build())) {
             qDebug("renderList: %d elements in total", m_renderList.size());

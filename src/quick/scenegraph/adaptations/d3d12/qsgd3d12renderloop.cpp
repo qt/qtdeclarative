@@ -255,12 +255,19 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         data.grabOnly = false;
     }
 
+    // The engine is able to have multiple frames in flight. This in effect is
+    // similar to BufferQueueingOpenGL. Provide an env var to force the
+    // traditional blocking swap behavior, just in case.
+    static bool blockOnEachFrame = qEnvironmentVariableIntValue("QT_D3D_BLOCKING_PRESENT") != 0;
+
     if (needsSwap && window->isVisible()) {
         data.engine->present();
-        data.engine->waitGPU();
+        if (blockOnEachFrame)
+            data.engine->waitGPU();
         wd->fireFrameSwapped();
     } else {
-        data.engine->waitGPU();
+        if (blockOnEachFrame)
+            data.engine->waitGPU();
     }
 
     qint64 swapTime = 0;
