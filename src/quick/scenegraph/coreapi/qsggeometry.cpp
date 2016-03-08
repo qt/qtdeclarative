@@ -59,7 +59,13 @@ QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tu
 
 QSGGeometry::Attribute QSGGeometry::Attribute::createWithSemantic(int pos, int tupleSize, int type, Semantic semantic)
 {
-    Attribute a = { pos, tupleSize, type, semantic == POSITION, semantic, 0 };
+    Attribute a;
+    a.position = pos;
+    a.tupleSize = tupleSize;
+    a.type = type;
+    a.isVertexCoordinate = semantic == POSITION;
+    a.semantic = semantic;
+    a.reserved = 0;
     return a;
 }
 
