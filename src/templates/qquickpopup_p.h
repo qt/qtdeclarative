@@ -120,6 +120,9 @@ public:
     qreal y() const;
     void setY(qreal y);
 
+    QPointF position() const;
+    void setPosition(const QPointF &pos);
+
     qreal z() const;
     void setZ(qreal z);
 

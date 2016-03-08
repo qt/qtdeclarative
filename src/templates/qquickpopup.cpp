@@ -702,6 +702,30 @@ void QQuickPopup::setY(qreal y)
     emit yChanged();
 }
 
+QPointF QQuickPopup::position() const
+{
+    Q_D(const QQuickPopup);
+    return QPointF(d->x, d->y);
+}
+
+void QQuickPopup::setPosition(const QPointF &pos)
+{
+    Q_D(QQuickPopup);
+    const bool xChange = !qFuzzyCompare(d->x, pos.x());
+    const bool yChange = !qFuzzyCompare(d->y, pos.y());
+    if (!xChange && !yChange)
+        return;
+
+    d->x = pos.x();
+    d->y = pos.y();
+    if (d->popupItem->isVisible())
+        d->reposition();
+    if (xChange)
+        emit xChanged();
+    if (yChange)
+        emit yChanged();
+}
+
 /*!
     \qmlproperty real Qt.labs.controls::Popup::z
 
