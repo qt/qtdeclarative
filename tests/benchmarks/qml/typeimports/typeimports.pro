@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 TEMPLATE = app
 TARGET = tst_typeimports
 QT += qml testlib

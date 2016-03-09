@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 TARGET = tst_qquickwindow
 SOURCES += tst_qquickwindow.cpp
 macx:CONFIG -= app_bundle

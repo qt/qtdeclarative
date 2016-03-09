@@ -1,7 +1,6 @@
-CONFIG += testcase
 TEMPLATE = app
 TARGET = qmltime
-QT += qml testlib quick
+QT += qml quick
 QT += quick-private
 macx:CONFIG -= app_bundle
 

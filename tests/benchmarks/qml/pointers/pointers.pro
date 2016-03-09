@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 QT += core-private qml-private testlib
 TEMPLATE = app
 TARGET = tst_pointers

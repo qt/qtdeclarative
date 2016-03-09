@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 TEMPLATE = app
 TARGET = tst_holistic
 QT += qml network testlib
