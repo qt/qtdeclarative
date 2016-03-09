@@ -196,10 +196,7 @@ void QQuickMenuPrivate::onItemPressed()
     int itemIndex = contentModel->indexOf(item, nullptr);
     Q_ASSERT(itemIndex != -1);
 
-    if (!contentItem->property("currentIndex").isValid())
-        return;
-
-    contentItem->setProperty("currentIndex", itemIndex);
+    setCurrentIndex(itemIndex);
 }
 
 void QQuickMenuPrivate::onItemActiveFocusChanged()
@@ -212,11 +209,8 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     if (!item->hasActiveFocus())
         return;
 
-    if (!contentItem->property("currentIndex").isValid())
-        return;
-
     int indexOfItem = contentModel->indexOf(item, nullptr);
-    contentItem->setProperty("currentIndex", indexOfItem);
+    setCurrentIndex(indexOfItem);
 }
 
 void QQuickMenuPrivate::maybeUnsetDummyFocusOnTab()
@@ -225,6 +219,19 @@ void QQuickMenuPrivate::maybeUnsetDummyFocusOnTab()
         // Only unset the flag once the dummy item no longer has focus, otherwise we get warnings.
         dummyFocusItem->setActiveFocusOnTab(false);
     }
+}
+
+int QQuickMenuPrivate::currentIndex() const
+{
+    QVariant index = contentItem->property("currentIndex");
+    if (!index.isValid())
+        return -1;
+    return index.toInt();
+}
+
+void QQuickMenuPrivate::setCurrentIndex(int index)
+{
+    contentItem->setProperty("currentIndex", index);
 }
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -474,8 +481,7 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
         } else {
             // Ensure that when the menu isn't visible, there's no current item
             // the next time it's opened.
-            if (d->contentItem->property("currentIndex").isValid())
-                d->contentItem->setProperty("currentIndex", -1);
+            d->setCurrentIndex(-1);
 
             // The menu items are sneaky and will steal the focus if they can.
             for (int i = 0; i < d->contentModel->count(); ++i) {
