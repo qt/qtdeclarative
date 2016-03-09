@@ -81,7 +81,6 @@ public:
 
     void onItemPressed();
     void onItemActiveFocusChanged();
-    void maybeUnsetDummyFocusOnTab();
 
     int currentIndex() const;
     void setCurrentIndex(int index);
@@ -94,8 +93,6 @@ public:
     QQuickItem *contentItem; // TODO: cleanup
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;
-    QPointer<QQuickItem> dummyFocusItem;
-    bool ignoreActiveFocusChanges;
     QString title;
 };
 
