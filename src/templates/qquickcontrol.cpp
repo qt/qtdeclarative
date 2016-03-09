@@ -620,7 +620,7 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.calendar::Control::locale
+    \qmlproperty Locale Qt.labs.controls::Control::locale
 
     This property holds the locale of the control.
 
