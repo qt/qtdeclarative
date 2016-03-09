@@ -494,10 +494,9 @@ const QPixmap &QSGSoftwareImageNode::pixmap() const
 {
     if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture)) {
         return pt->pixmap();
-    } else if (QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture)) {
-        return layer->pixmap();
     } else {
-        qFatal("Image used with invalid texture format.");
+        QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture);
+        return layer->pixmap();
     }
 }
 
