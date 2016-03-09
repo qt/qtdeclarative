@@ -129,6 +129,8 @@ Item {
         RangeSlider {
             id: rangeslider
             objectName: "rangeslider"
+            first.handle.objectName: "rangeslider.first"
+            second.handle.objectName: "rangeslider.second"
         }
         // ScrollBar
         ScrollIndicator {

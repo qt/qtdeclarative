@@ -51,440 +51,58 @@ using namespace QQuickVisualTestUtil;
 class tst_activeFocusOnTab : public QQmlDataTest
 {
     Q_OBJECT
-public:
-    tst_activeFocusOnTab();
 
 private slots:
     void initTestCase();
-    void cleanup();
 
-    void allControls();
-    void textControls();
-
-private:
-    QQmlEngine engine;
+    void tabNavigation_data();
+    void tabNavigation();
 };
-
-tst_activeFocusOnTab::tst_activeFocusOnTab()
-{
-}
 
 void tst_activeFocusOnTab::initTestCase()
 {
     QQmlDataTest::initTestCase();
 }
 
-void tst_activeFocusOnTab::cleanup()
+void tst_activeFocusOnTab::tabNavigation_data()
 {
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<Qt::TabFocusBehavior>("behavior");
+    QTest::addColumn<QStringList>("order");
+
+    QTest::newRow("tab-all-controls") << Qt::Key_Tab << Qt::TabFocusAllControls << (QStringList() << "button2" << "checkbox" << "checkbox1" << "checkbox2" << "radiobutton" << "radiobutton1" << "radiobutton2" << "rangeslider.first" << "rangeslider.second" << "slider" << "spinbox" << "switch" << "tabbutton1" << "tabbutton2" << "textfield" << "toolbutton" << "textarea" << "button1");
+    QTest::newRow("backtab-all-controls") << Qt::Key_Backtab << Qt::TabFocusAllControls << (QStringList() << "textarea" << "toolbutton" << "textfield" << "tabbutton2" << "tabbutton1" << "switch" << "spinbox" << "slider" << "rangeslider.second" << "rangeslider.first" << "radiobutton2" << "radiobutton1" << "radiobutton" << "checkbox2" << "checkbox1" << "checkbox" << "button2" << "button1");
+
+    QTest::newRow("tab-text-controls") << Qt::Key_Tab << Qt::TabFocusTextControls << (QStringList() << "spinbox" << "textfield" << "textarea");
+    QTest::newRow("backtab-text-controls") << Qt::Key_Backtab << Qt::TabFocusTextControls << (QStringList() << "textarea" << "textfield" << "spinbox");
 }
 
-void tst_activeFocusOnTab::allControls()
+void tst_activeFocusOnTab::tabNavigation()
 {
-    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
-
-    QQuickView *window = new QQuickView(0);
-    window->setBaseSize(QSize(800,600));
-
-    window->setSource(testFileUrl("activeFocusOnTab.qml"));
-    window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
-    QVERIFY(QGuiApplication::focusWindow() == window);
-
-    // original: button1
-    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "button1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: button1->button2
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "button2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: button2->checkbox
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: checkbox->checkbox1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: checkbox1->checkbox2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: checkbox2->radiobutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: radiobutton->radiobutton1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: radiobutton1->radiobutton2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: radiobutton2->rangeslider.first.handle
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
-    QVERIFY(item);
-    item = item->property("first").value<QObject*>()->property("handle").value<QQuickItem*>();
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: rangeslider.first.handle->rangeslider.second.handle
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
-    QVERIFY(item);
-    item = item->property("second").value<QObject*>()->property("handle").value<QQuickItem*>();
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: rangeslider.second.handle->slider
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "slider");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: slider->spinbox
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: spinbox->switch
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "switch");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: switch->tabbutton1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "tabbutton1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: tabbutton1->tabbutton2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "tabbutton2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: tabbutton2->textfield
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textfield");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: textfield->toolbutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "toolbutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: toolbutton->textarea
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textarea");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: textarea->toolbutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "toolbutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: toolbutton->textfield
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textfield");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: textfield->tabbutton2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "tabbutton2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: tabbutton2->tabbutton2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "tabbutton1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: tabbutton1->switch
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "switch");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: switch->spinbox
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: spinbox->slider
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "slider");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: slider->rangeslider.second.handle
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
-    QVERIFY(item);
-    item = item->property("second").value<QObject*>()->property("handle").value<QQuickItem*>();
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: rangeslider.second.handle->rangeslider.first.handle
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
-    QVERIFY(item);
-    item = item->property("first").value<QObject*>()->property("handle").value<QQuickItem*>();
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: rangeslider.first.handle->radiobutton2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: radiobutton2->radiobutton1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: radiobutton1->radiobutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "radiobutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: radiobutton->checkbox2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: checkbox2->checkbox1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: checkbox1->checkbox
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "checkbox");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: checkbox->button2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "button2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: button2->button1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "button1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: button1->textarea
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textarea");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: textarea->toolbutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "toolbutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    delete window;
-
-    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
-}
-
-void tst_activeFocusOnTab::textControls()
-{
-    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusTextControls);
-
-    QQuickView *window = new QQuickView(0);
-    window->setBaseSize(QSize(800,600));
-
-    window->setSource(testFileUrl("activeFocusOnTab.qml"));
-    window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
-    QVERIFY(QGuiApplication::focusWindow() == window);
-
-    // original: textfield
-    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "textfield");
-    QVERIFY(item);
-    item->forceActiveFocus();
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: textfield->textarea
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textarea");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: textarea->textfield
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textfield");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: textfield->spinbox
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: spinbox->textarea
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "textarea");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    delete window;
+    QFETCH(Qt::Key, key);
+    QFETCH(Qt::TabFocusBehavior, behavior);
+    QFETCH(QStringList, order);
+
+    QGuiApplication::styleHints()->setTabFocusBehavior(behavior);
+
+    QQuickView view;
+    view.contentItem()->setObjectName("contentItem");
+
+    view.setSource(testFileUrl("activeFocusOnTab.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(QGuiApplication::focusWindow() == &view);
+
+    foreach (const QString &name, order) {
+        QKeyEvent event(QEvent::KeyPress, key, Qt::NoModifier);
+        QGuiApplication::sendEvent(&view, &event);
+        QVERIFY(event.isAccepted());
+
+        QQuickItem *item = findItem<QQuickItem>(view.rootObject(), name);
+        QVERIFY2(item, qPrintable(name));
+        QVERIFY2(item->hasActiveFocus(), qPrintable(QString("expected: '%1', actual: '%2'").arg(name).arg(view.activeFocusItem() ? view.activeFocusItem()->objectName() : "null")));
+    }
 
     QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
 }
