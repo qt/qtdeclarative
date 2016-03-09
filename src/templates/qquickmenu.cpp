@@ -426,13 +426,11 @@ void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     Q_D(QQuickMenu);
     QQuickPopup::contentItemChange(newItem, oldItem);
     if (oldItem) {
-        oldItem->removeEventFilter(this);
         if (d->dummyFocusItem)
             QObjectPrivate::disconnect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
     }
 
     if (newItem) {
-        newItem->installEventFilter(this);
         newItem->setFlag(QQuickItem::ItemIsFocusScope);
         newItem->setActiveFocusOnTab(true);
 
@@ -488,11 +486,12 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
     }
 }
 
-bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
+void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickMenu);
-    if (object != d->contentItem || event->type() != QEvent::KeyRelease || d->contentModel->count() == 0)
-        return QQuickPopup::eventFilter(object, event);
+    QQuickPopup::keyReleaseEvent(event);
+    if (d->contentModel->count() == 0)
+        return;
 
     // QTBUG-17051
     // Work around the fact that ListView has no way of distinguishing between
@@ -500,23 +499,20 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     // What we actually want is to have a way to always allow keyboard interaction but
     // only allow flicking with the mouse when there are too many menu items to be
     // shown at once.
-    QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-    switch (keyEvent->key()) {
+    switch (event->key()) {
     case Qt::Key_Up:
         if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
-        return true;
+        break;
 
     case Qt::Key_Down:
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
-        return true;
+        break;
 
     default:
         break;
     }
-
-    return QQuickPopup::eventFilter(object, event);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

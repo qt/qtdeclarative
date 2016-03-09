@@ -85,7 +85,7 @@ protected:
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
-    bool eventFilter(QObject *object, QEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 Q_SIGNALS:
     void titleChanged();
