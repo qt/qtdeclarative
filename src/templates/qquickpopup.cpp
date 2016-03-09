@@ -1587,6 +1587,9 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickPopup);
     event->accept();
 
+    if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab))
+        QQuickItemPrivate::focusNextPrev(d->popupItem, event->key() == Qt::Key_Tab);
+
     if (event->key() != Qt::Key_Escape)
         return;
 
