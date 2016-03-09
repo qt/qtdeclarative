@@ -1,0 +1,63 @@
+/******************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the Qt Quick 2d Renderer module.
+**
+** $QT_BEGIN_LICENSE:COMM$
+**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** $QT_END_LICENSE$
+**
+******************************************************************************/
+
+/*!
+    \page qtquick2drenderer-limitations.html
+    \previouspage qtquick2drenderer-installation-guide.html
+    \nextpage qtquick2drenderer-performance.html
+
+    \title Limitations
+
+    \l {Qt Quick} 2 was designed to take full advantage of OpenGL to make the most
+    out of available graphics hardware.  By not relying on OpenGL, \RENDERER
+    presents certain limitations regarding the available features.
+
+    Since \RENDERER does not use OpenGL, there are some features that cannot be
+    supported.  The following are known limitations:
+
+    \section1 Shader Effects
+    ShaderEffect components in QtQuick 2 can not be rendered with \RENDERER.
+
+    \section1 Qt Graphical Effects Module
+    \l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use
+    graphical effects from this module, then you should not hide the source
+    item so that the original item can still be rendered.
+
+    \section1 Particle Effects
+    It is not possible to render particle effects with \RENDERER. Whenever
+    possible, remove particles completely from the scene. Otherwise they will still
+    require some processing, even though they are not visible with \RENDERER.
+
+    \section1 Sprites
+    The Sprite item depends on inaccessible OpenGL functions and will
+    not be visible.
+
+    \section1 Rendering Text
+    The text rendering with \RENDERER is based on software rasterization and does
+    not respond as well to transformations such as scaling as when using OpenGL.
+    The quality is similar to choosing \l [QML] {Text::renderType}
+    {Text.NativeRendering} with \l [QML] {Text} items.
+
+    \section1 Render Control
+    QQuickRenderControl depends on OpenGL to function and will not function
+    with \RENDERER.  Using QQuickRenderControl can lead to unexpected behavior
+    and crashes.
+*/
