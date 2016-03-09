@@ -312,7 +312,8 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
             QQuickControlPrivate::updateFontRecur(child, f);
     }
 
-    foreach (QObject *child, item->children()) {
+    const auto children = item->children();
+    for (QObject *child : children) {
         if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
             if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
                 QQuickControlPrivate::updateFontRecur(qpi, f);
@@ -721,7 +722,8 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
             updateLocaleRecur(child, l);
     }
 
-    foreach (QObject *child, item->children()) {
+    const auto children = item->children();
+    for (QObject *child : children) {
         if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
             if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
                 updateLocaleRecur(qpi, l);
