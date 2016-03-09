@@ -84,6 +84,7 @@ public:
 protected:
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
     bool eventFilter(QObject *object, QEvent *event) override;
 
 Q_SIGNALS:

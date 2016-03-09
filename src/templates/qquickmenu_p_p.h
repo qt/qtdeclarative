@@ -81,7 +81,6 @@ public:
 
     void onItemPressed();
     void onItemActiveFocusChanged();
-    void onMenuVisibleChanged();
     void maybeUnsetDummyFocusOnTab();
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);

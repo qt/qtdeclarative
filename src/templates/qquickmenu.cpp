@@ -219,35 +219,6 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     contentItem->setProperty("currentIndex", indexOfItem);
 }
 
-void QQuickMenuPrivate::onMenuVisibleChanged()
-{
-    Q_Q(QQuickMenu);
-    if (q->isVisible()) {
-        // Don't react to active focus changes here, as we're causing them.
-        ignoreActiveFocusChanges = true;
-        for (int i = 0; i < contentModel->count(); ++i) {
-            QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->get(i));
-            item->setFocus(true);
-        }
-        ignoreActiveFocusChanges = false;
-
-        // We must do this last so that none of the menu items have focus.
-        dummyFocusItem->forceActiveFocus();
-    } else {
-        // Ensure that when the menu isn't visible, there's no current item
-        // the next time it's opened.
-        if (contentItem->property("currentIndex").isValid())
-            contentItem->setProperty("currentIndex", -1);
-
-        // The menu items are sneaky and will steal the focus if they can.
-        for (int i = 0; i < contentModel->count(); ++i) {
-            QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->get(i));
-            item->setFocus(false);
-        }
-    }
-
-}
-
 void QQuickMenuPrivate::maybeUnsetDummyFocusOnTab()
 {
     if (!dummyFocusItem->hasActiveFocus()) {
@@ -301,9 +272,7 @@ void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 QQuickMenu::QQuickMenu(QObject *parent) :
     QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
-    Q_D(QQuickMenu);
     setClosePolicy(OnEscape | OnPressOutside | OnReleaseOutside);
-    QObjectPrivate::connect(this, &QQuickMenu::visibleChanged, d, &QQuickMenuPrivate::onMenuVisibleChanged);
 }
 
 /*!
@@ -485,6 +454,38 @@ void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
         QObjectPrivate::connect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
     }
     d->contentItem = newItem;
+}
+
+void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::itemChange(change, data);
+
+    if (change == QQuickItem::ItemVisibleHasChanged) {
+        if (data.boolValue) {
+            // Don't react to active focus changes here, as we're causing them.
+            d->ignoreActiveFocusChanges = true;
+            for (int i = 0; i < d->contentModel->count(); ++i) {
+                QQuickItem *item = qobject_cast<QQuickItem*>(d->contentModel->get(i));
+                item->setFocus(true);
+            }
+            d->ignoreActiveFocusChanges = false;
+
+            // We must do this last so that none of the menu items have focus.
+            d->dummyFocusItem->forceActiveFocus();
+        } else {
+            // Ensure that when the menu isn't visible, there's no current item
+            // the next time it's opened.
+            if (d->contentItem->property("currentIndex").isValid())
+                d->contentItem->setProperty("currentIndex", -1);
+
+            // The menu items are sneaky and will steal the focus if they can.
+            for (int i = 0; i < d->contentModel->count(); ++i) {
+                QQuickItem *item = qobject_cast<QQuickItem*>(d->contentModel->get(i));
+                item->setFocus(false);
+            }
+        }
+    }
 }
 
 bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
