@@ -49,8 +49,8 @@ T.GroupBox {
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     spacing: 6
-    padding: 6
-    topPadding: 6 + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
+    padding: 12
+    topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
     //! [contentItem]
     contentItem: Item { }
