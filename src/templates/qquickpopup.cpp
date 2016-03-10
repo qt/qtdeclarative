@@ -469,6 +469,7 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
     Q_ASSERT(m_parentItem == item);
 
     m_parentItem = Q_NULLPTR;
+    m_popup->parentItem = Q_NULLPTR;
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, ItemChangeTypes);
     removeAncestorListeners(item->parentItem());
 }
