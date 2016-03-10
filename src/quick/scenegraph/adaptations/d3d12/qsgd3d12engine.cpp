@@ -897,8 +897,8 @@ void QSGD3D12EnginePrivate::beginFrame()
     pfd.index.totalDirtyInFrame.clear();
     pfd.constant.totalDirtyInFrame.clear();
 
-    // Now sync the buffer changes from the previous, potentially still-active-on-GPU, frame.
     if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
+        // Now sync the buffer changes from the previous, potentially still-active-on-GPU, frame.
         PersistentFrameData &prevFrameData(pframeData[(frameIndex - 1) % MAX_FRAMES_IN_FLIGHT]);
         if (pfd.vertex.buffer && pfd.vertex.buffer->GetDesc().Width == vertexData.size)
             vertexData.dirty = prevFrameData.vertex.totalDirtyInFrame;
@@ -912,6 +912,30 @@ void QSGD3D12EnginePrivate::beginFrame()
             constantData.dirty = prevFrameData.constant.totalDirtyInFrame;
         else
             constantData.gpuResourceInvalid = true;
+
+        // Do some texture upload bookkeeping.
+        const quint64 finishedFrameIndex = frameIndex - MAX_FRAMES_IN_FLIGHT; // we know since we just blocked for this
+        // pfd conveniently refers to the same slot that was used by that frame
+        if (!pfd.pendingTextures.isEmpty()) {
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("Removing texture upload data for frame %d", finishedFrameIndex);
+            for (uint id : qAsConst(pfd.pendingTextures)) {
+                const int idx = id - 1;
+                Texture &t(textures[idx]);
+                if (t.fenceValue) { // may have been cleared by the previous frame
+                    t.fenceValue = 0;
+                    t.stagingBuffer = nullptr;
+                    if (Q_UNLIKELY(debug_render()))
+                        qDebug("Cleaned staging data for texture %u", id);
+                }
+            }
+            pfd.pendingTextures.clear();
+            if (prevFrameData.pendingTextures.isEmpty()) {
+                if (Q_UNLIKELY(debug_render()))
+                    qDebug("no more pending textures");
+                copyCommandAllocator->Reset();
+            }
+        }
     }
 
     beginDrawCalls(true);
@@ -954,44 +978,26 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool needsBackbufferTransition)
     updateBuffer(&indexData, &pfd.index, "index");
     updateBuffer(&constantData, &pfd.constant, "constant");
 
-    // Wait for texture uploads to finish.
-    quint64 topFenceValue = 0;
-    for (uint id : qAsConst(tframeData.pendingTextures)) {
-        const int idx = id - 1;
-        Q_ASSERT(idx < textures.count());
-        const Texture &t(textures[idx]);
-        if (t.fenceValue)
-            topFenceValue = qMax(topFenceValue, t.fenceValue);
-    }
-    if (topFenceValue) {
+    // Add a wait on the 3D queue for the relevant texture uploads on the copy queue.
+    if (!pfd.pendingTextures.isEmpty()) {
+        quint64 topFenceValue = 0;
+        for (uint id : qAsConst(pfd.pendingTextures)) {
+            const int idx = id - 1;
+            Texture &t(textures[idx]);
+            Q_ASSERT(t.fenceValue);
+            if (t.fenceValue > topFenceValue)
+                topFenceValue = t.fenceValue;
+        }
         if (Q_UNLIKELY(debug_render()))
-            qDebug("wait for texture fence %llu", topFenceValue);
+            qDebug("added wait for texture fence %llu", topFenceValue);
         commandQueue->Wait(textureUploadFence.Get(), topFenceValue);
     }
-    for (uint id : qAsConst(tframeData.pendingTextures)) {
-        const int idx = id - 1;
-        Texture &t(textures[idx]);
-        if (t.fenceValue) {
-            t.fenceValue = 0;
-            t.stagingBuffer = nullptr;
-        }
-    }
-    if (topFenceValue) {
-        bool hasActiveTextureUpload = false;
-        for (const Texture &t : qAsConst(textures)) {
-            if (t.fenceValue) {
-                hasActiveTextureUpload = true;
-                break;
-            }
-        }
-        if (!hasActiveTextureUpload)
-            copyCommandAllocator->Reset();
-    }
-    tframeData.pendingTextures.clear();
 
+    // Transition the backbuffer for present, if needed.
     if (needsBackbufferTransition)
         transitionResource(backBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
+    // Go!
     HRESULT hr = commandList->Close();
     if (FAILED(hr)) {
         qWarning("Failed to close command list: 0x%x", hr);
@@ -1484,8 +1490,14 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
     if (Q_UNLIKELY(debug_render()))
         qDebug("releasing texture %d", id);
 
-    textures[idx].texture = nullptr;
-    cpuDescHeapManager.release(textures[idx].srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        pframeData[i].pendingTextures.remove(id);
+
+    Texture &t(textures[idx]);
+    t.texture = nullptr;
+    t.stagingBuffer = nullptr;
+    t.fenceValue = 0;
+    cpuDescHeapManager.release(t.srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
@@ -1579,8 +1591,13 @@ void QSGD3D12EnginePrivate::activateTexture(uint id)
         return;
     }
 
-    tframeData.pendingTextures.insert(id);
     tframeData.activeTextures.append(id);
+
+    PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count());
+    if (textures[idx].fenceValue)
+        pfd.pendingTextures.insert(id);
 }
 
 QT_END_NAMESPACE

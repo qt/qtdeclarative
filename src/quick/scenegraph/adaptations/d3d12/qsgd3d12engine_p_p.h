@@ -205,6 +205,7 @@ private:
         ChangeTrackedBuffer constant;
         ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
         int cbvSrvUavNextFreeDescriptorIndex;
+        QSet<uint> pendingTextures;
     };
 
     void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
@@ -267,7 +268,6 @@ private:
     struct TransientFrameData {
         QSGGeometry::DrawingMode drawingMode;
         bool indexBufferSet;
-        QSet<uint> pendingTextures;
         QVector<uint> activeTextures;
         int drawCount;
         ID3D12PipelineState *lastPso;
