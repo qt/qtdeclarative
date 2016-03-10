@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_activeFocusOnTab
+TARGET = tst_focus
 osx:CONFIG -= app_bundle
 
-SOURCES += tst_activeFocusOnTab.cpp
+SOURCES += tst_focus.cpp
 
 include (../shared/util.pri)
 

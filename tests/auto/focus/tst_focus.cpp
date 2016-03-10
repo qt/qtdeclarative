@@ -48,38 +48,45 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_activeFocusOnTab : public QQmlDataTest
+class tst_focus : public QQmlDataTest
 {
     Q_OBJECT
 
 private slots:
     void initTestCase();
 
-    void tabNavigation_data();
-    void tabNavigation();
+    void navigation_data();
+    void navigation();
 };
 
-void tst_activeFocusOnTab::initTestCase()
+void tst_focus::initTestCase()
 {
     QQmlDataTest::initTestCase();
 }
 
-void tst_activeFocusOnTab::tabNavigation_data()
+void tst_focus::navigation_data()
 {
     QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<QString>("testFile");
     QTest::addColumn<Qt::TabFocusBehavior>("behavior");
     QTest::addColumn<QStringList>("order");
 
-    QTest::newRow("tab-all-controls") << Qt::Key_Tab << Qt::TabFocusAllControls << (QStringList() << "button2" << "checkbox" << "checkbox1" << "checkbox2" << "radiobutton" << "radiobutton1" << "radiobutton2" << "rangeslider.first" << "rangeslider.second" << "slider" << "spinbox" << "switch" << "tabbutton1" << "tabbutton2" << "textfield" << "toolbutton" << "textarea" << "button1");
-    QTest::newRow("backtab-all-controls") << Qt::Key_Backtab << Qt::TabFocusAllControls << (QStringList() << "textarea" << "toolbutton" << "textfield" << "tabbutton2" << "tabbutton1" << "switch" << "spinbox" << "slider" << "rangeslider.second" << "rangeslider.first" << "radiobutton2" << "radiobutton1" << "radiobutton" << "checkbox2" << "checkbox1" << "checkbox" << "button2" << "button1");
+    QTest::newRow("tab-all-controls") << Qt::Key_Tab << QString("activeFocusOnTab.qml") << Qt::TabFocusAllControls << (QStringList() << "button2" << "checkbox" << "checkbox1" << "checkbox2" << "radiobutton" << "radiobutton1" << "radiobutton2" << "rangeslider.first" << "rangeslider.second" << "slider" << "spinbox" << "switch" << "tabbutton1" << "tabbutton2" << "textfield" << "toolbutton" << "textarea" << "button1");
+    QTest::newRow("backtab-all-controls") << Qt::Key_Backtab << QString("activeFocusOnTab.qml") << Qt::TabFocusAllControls << (QStringList() << "textarea" << "toolbutton" << "textfield" << "tabbutton2" << "tabbutton1" << "switch" << "spinbox" << "slider" << "rangeslider.second" << "rangeslider.first" << "radiobutton2" << "radiobutton1" << "radiobutton" << "checkbox2" << "checkbox1" << "checkbox" << "button2" << "button1");
 
-    QTest::newRow("tab-text-controls") << Qt::Key_Tab << Qt::TabFocusTextControls << (QStringList() << "spinbox" << "textfield" << "textarea");
-    QTest::newRow("backtab-text-controls") << Qt::Key_Backtab << Qt::TabFocusTextControls << (QStringList() << "textarea" << "textfield" << "spinbox");
+    QTest::newRow("tab-text-controls") << Qt::Key_Tab << QString("activeFocusOnTab.qml") << Qt::TabFocusTextControls << (QStringList() << "spinbox" << "textfield" << "textarea");
+    QTest::newRow("backtab-text-controls") << Qt::Key_Backtab << QString("activeFocusOnTab.qml") << Qt::TabFocusTextControls << (QStringList() << "textarea" << "textfield" << "spinbox");
+
+    QTest::newRow("key-up") << Qt::Key_Up << QString("keyNavigation.qml") << Qt::TabFocusAllControls << (QStringList() << "textarea" << "toolbutton" << "textfield" << "tabbutton2" << "tabbutton1" << "switch" << "slider" << "rangeslider.first" << "radiobutton2" << "radiobutton1" << "radiobutton" << "checkbox2" << "checkbox1" << "checkbox" << "button2" << "button1");
+    QTest::newRow("key-down") << Qt::Key_Down << QString("keyNavigation.qml") << Qt::TabFocusAllControls << (QStringList() << "button2" << "checkbox" << "checkbox1" << "checkbox2" << "radiobutton" << "radiobutton1" << "radiobutton2" << "rangeslider.first" << "slider" << "switch" << "tabbutton1" << "tabbutton2" << "textfield" << "toolbutton" << "textarea" << "button1");
+    QTest::newRow("key-left") << Qt::Key_Left << QString("keyNavigation.qml") << Qt::TabFocusAllControls << (QStringList() << "toolbutton" << "tabbutton2" << "tabbutton1" << "switch" << "spinbox" << "radiobutton2" << "radiobutton1" << "radiobutton" << "checkbox2" << "checkbox1" << "checkbox" << "button2" << "button1");
+    QTest::newRow("key-right") << Qt::Key_Right << QString("keyNavigation.qml") << Qt::TabFocusAllControls << (QStringList() << "button2" << "checkbox" << "checkbox1" << "checkbox2" << "radiobutton" << "radiobutton1" << "radiobutton2" << "spinbox" << "switch" << "tabbutton1" << "tabbutton2" << "toolbutton" << "button1");
 }
 
-void tst_activeFocusOnTab::tabNavigation()
+void tst_focus::navigation()
 {
     QFETCH(Qt::Key, key);
+    QFETCH(QString, testFile);
     QFETCH(Qt::TabFocusBehavior, behavior);
     QFETCH(QStringList, order);
 
@@ -88,7 +95,7 @@ void tst_activeFocusOnTab::tabNavigation()
     QQuickView view;
     view.contentItem()->setObjectName("contentItem");
 
-    view.setSource(testFileUrl("activeFocusOnTab.qml"));
+    view.setSource(testFileUrl(testFile));
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
@@ -107,6 +114,6 @@ void tst_activeFocusOnTab::tabNavigation()
     QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
 }
 
-QTEST_MAIN(tst_activeFocusOnTab)
+QTEST_MAIN(tst_focus)
 
-#include "tst_activeFocusOnTab.moc"
+#include "tst_focus.moc"

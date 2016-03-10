@@ -15,4 +15,4 @@ SUBDIRS += \
 
 # QTBUG-50295
 !linux: SUBDIRS += \
-    activeFocusOnTab
+    focus
