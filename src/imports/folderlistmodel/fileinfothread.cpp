@@ -59,7 +59,6 @@ FileInfoThread::FileInfoThread(QObject *parent)
     connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(dirChanged(QString)));
     connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(updateFile(QString)));
 #endif // !QT_NO_FILESYSTEMWATCHER
-    start(LowPriority);
 }
 
 FileInfoThread::~FileInfoThread()
