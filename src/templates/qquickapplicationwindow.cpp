@@ -420,7 +420,7 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
     const bool changed = font != f;
     font = f;
 
-    QQuickControlPrivate::updateFontRecur(q->contentItem(), f);
+    QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
 
     if (changed)
         emit q->fontChanged();

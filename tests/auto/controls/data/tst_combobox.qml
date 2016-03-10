@@ -53,6 +53,7 @@ TestCase {
         visible: true
         width: 400
         height: 400
+        font.pixelSize: 25
     }
 
     SignalSpy {
@@ -670,9 +671,7 @@ TestCase {
         return index
     }
 
-    function test_font() { // QTBUG_50984
-        skip("Temporarily skipped due to QTBUG-51696")
-
+    function test_font() { // QTBUG_50984, QTBUG-51696
         var control = component.createObject(window.contentItem)
         verify(control)
         verify(control.button)
@@ -698,24 +697,27 @@ TestCase {
         waitForRendering(listview)
 
         var idx1 = getChild(listview.contentItem, "delegate", -1)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 30)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
         var idx2 = getChild(listview.contentItem, "delegate", idx1)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 30)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
+
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
 
         control.font.pixelSize = control.font.pixelSize + 10
         compare(control.combobox.font.pixelSize, 40)
         waitForRendering(listview)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
 
         control.combobox.font.pixelSize = control.combobox.font.pixelSize + 5
         compare(control.combobox.font.pixelSize, 45)
         waitForRendering(listview)
 
         idx1 = getChild(listview.contentItem, "delegate", -1)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 45)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
         idx2 = getChild(listview.contentItem, "delegate", idx1)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 45)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
 
         control.destroy()
     }

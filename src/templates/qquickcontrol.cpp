@@ -230,12 +230,7 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
     QQuickItem *p = q->parentItem();
     bool found = false;
     while (p) {
-        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
-            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
-                p = qp->parentItem();
-                continue;
-            }
-        } else if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
+        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
             naturalFont = qc->font();
             found = true;
             break;
@@ -310,13 +305,6 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
         else
             QQuickControlPrivate::updateFontRecur(child, f);
     }
-
-    foreach (QObject *child, item->children()) {
-        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
-            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
-                QQuickControlPrivate::updateFontRecur(qpi, f);
-        }
-    }
 }
 
 QString QQuickControl::accessibleName() const
@@ -377,7 +365,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete()) {
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
         if (!d->hasLocale)
             d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
