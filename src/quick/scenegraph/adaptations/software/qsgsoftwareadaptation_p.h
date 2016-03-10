@@ -37,37 +37,29 @@
 **
 ****************************************************************************/
 
-#include "qsgsoftwarecontextplugin_p.h"
-#include "qsgsoftwarecontext_p.h"
-#include "qsgsoftwarerenderloop_p.h"
+#ifndef PLUGINMAIN_H
+#define PLUGINMAIN_H
 
-#include <private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
+#include <private/qsgcontextplugin_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QSGSoftwareContextPlugin::QSGSoftwareContextPlugin(QObject *parent)
-    : QSGContextPlugin(parent)
-{
-}
+class QSGContext;
+class QSGRenderLoop;
+class QSGSoftwareContext;
 
-QStringList QSGSoftwareContextPlugin::keys() const
+class QSGSoftwareAdaptation : public QSGContextPlugin
 {
-    return QStringList() << QLatin1String("softwarecontext");
-}
+public:
+    QSGSoftwareAdaptation(QObject *parent = 0);
 
-QSGContext *QSGSoftwareContextPlugin::create(const QString &) const
-{
-    if (!instance)
-        instance = new QSGSoftwareContext();
-    return instance;
-}
-
-QSGRenderLoop *QSGSoftwareContextPlugin::createWindowManager()
-{
-    return new QSGSoftwareRenderLoop();
-}
-
-QSGSoftwareContext *QSGSoftwareContextPlugin::instance = 0;
+    QStringList keys() const override;
+    QSGContext *create(const QString &key) const override;
+    QSGRenderLoop *createWindowManager() override;
+private:
+    static QSGSoftwareContext *instance;
+};
 
 QT_END_NAMESPACE
+
+#endif // PLUGINMAIN_H

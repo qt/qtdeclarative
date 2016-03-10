@@ -45,6 +45,7 @@
 
 // Built-in adaptations
 #include <QtQuick/private/qsgdummyadaptation_p.h>
+#include <QtQuick/private/qsgsoftwareadaptation_p.h>
 #ifdef QSG_D3D12
 #include <QtQuick/private/qsgd3d12adaptation_p.h>
 #endif
@@ -84,6 +85,7 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGDummyAdaptation);
+    builtIns.append(new QSGSoftwareAdaptation);
 #ifdef QSG_D3D12
     builtIns.append(new QSGD3D12Adaptation);
 #endif

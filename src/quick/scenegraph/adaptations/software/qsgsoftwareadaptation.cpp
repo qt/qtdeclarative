@@ -37,34 +37,37 @@
 **
 ****************************************************************************/
 
-#ifndef PLUGINMAIN_H
-#define PLUGINMAIN_H
-
-#include <private/qsgcontext_p.h>
-#include <private/qsgcontextplugin_p.h>
-
-#include <qplugin.h>
-
+#include "qsgsoftwareadaptation_p.h"
 #include "qsgsoftwarecontext_p.h"
+#include "qsgsoftwarerenderloop_p.h"
+
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGSoftwareContextPlugin : public QSGContextPlugin
+QSGSoftwareAdaptation::QSGSoftwareAdaptation(QObject *parent)
+    : QSGContextPlugin(parent)
 {
-    Q_OBJECT
+}
 
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QSGContextFactoryInterface" FILE "softwarecontext.json")
+QStringList QSGSoftwareAdaptation::keys() const
+{
+    return QStringList() << QLatin1String("software");
+}
 
-public:
-    QSGSoftwareContextPlugin(QObject *parent = 0);
+QSGContext *QSGSoftwareAdaptation::create(const QString &) const
+{
+    if (!instance)
+        instance = new QSGSoftwareContext();
+    return instance;
+}
 
-    QStringList keys() const override;
-    QSGContext *create(const QString &key) const override;
-    QSGRenderLoop *createWindowManager() override;
+QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
+{
+    return new QSGSoftwareRenderLoop();
+}
 
-    static QSGSoftwareContext *instance;
-};
+QSGSoftwareContext *QSGSoftwareAdaptation::instance = 0;
 
 QT_END_NAMESPACE
-
-#endif // PLUGINMAIN_H
