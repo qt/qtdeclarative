@@ -250,7 +250,7 @@ QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup
 void QQuickPopupItemPrivate::implicitWidthChanged()
 {
     QQuickControlPrivate::implicitWidthChanged();
-    emit popup->implicitHeightChanged();
+    emit popup->implicitWidthChanged();
 }
 
 void QQuickPopupItemPrivate::implicitHeightChanged()
