@@ -41,6 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
 #include "../shared/util.h"
@@ -57,6 +58,11 @@ private slots:
 
     void navigation_data();
     void navigation();
+
+    void policy();
+
+    void reason_data();
+    void reason();
 };
 
 void tst_focus::initTestCase()
@@ -112,6 +118,96 @@ void tst_focus::navigation()
     }
 
     QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
+}
+
+void tst_focus::policy()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import Qt.labs.controls 1.0; ApplicationWindow { width: 100; height: 100; Button { anchors.fill: parent } }", QUrl());
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
+    QVERIFY(window);
+
+    QQuickControl *control = qobject_cast<QQuickControl *>(window->contentItem()->childItems().first());
+    QVERIFY(control);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    // Qt::TabFocus vs. QQuickItem::activeFocusOnTab
+    control->setActiveFocusOnTab(true);
+    QCOMPARE(control->focusPolicy(), Qt::TabFocus);
+    control->setActiveFocusOnTab(false);
+    QCOMPARE(control->focusPolicy(), Qt::NoFocus);
+
+    control->setFocusPolicy(Qt::TabFocus);
+    QCOMPARE(control->focusPolicy(), Qt::TabFocus);
+    QCOMPARE(control->activeFocusOnTab(), true);
+
+    // Qt::ClickFocus
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(!control->hasActiveFocus());
+
+    control->setFocusPolicy(Qt::ClickFocus);
+    QCOMPARE(control->focusPolicy(), Qt::ClickFocus);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(control->hasActiveFocus());
+
+    // reset
+    control->setFocus(false);
+    QVERIFY(!control->hasActiveFocus());
+
+    // Qt::WheelFocus
+    QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
+    QGuiApplication::sendEvent(control, &wheelEvent);
+    QVERIFY(!control->hasActiveFocus());
+
+    control->setFocusPolicy(Qt::WheelFocus);
+    QCOMPARE(control->focusPolicy(), Qt::WheelFocus);
+
+    QGuiApplication::sendEvent(control, &wheelEvent);
+    QVERIFY(control->hasActiveFocus());
+}
+
+void tst_focus::reason_data()
+{
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("Control") << "Control";
+    QTest::newRow("TextField") << "TextField";
+    QTest::newRow("TextArea") << "TextArea";
+    QTest::newRow("SpinBox") << "SpinBox";
+    QTest::newRow("ComboBox") << "ComboBox";
+}
+
+void tst_focus::reason()
+{
+    QFETCH(QString, name);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString("import Qt.labs.controls 1.0; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
+    QVERIFY(window.data());
+
+    QQuickItem *control = window->contentItem()->childItems().first();
+    QVERIFY(control);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QCOMPARE(control->property("focusReason").toInt(), int(Qt::OtherFocusReason));
+    control->forceActiveFocus(Qt::MouseFocusReason);
+    QVERIFY(control->hasActiveFocus());
+    QCOMPARE(control->property("focusReason").toInt(), int(Qt::MouseFocusReason));
+
+    window->contentItem()->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY(!control->hasActiveFocus());
+    QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
 }
 
 QTEST_MAIN(tst_focus)
