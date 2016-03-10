@@ -65,7 +65,7 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     QRawFontPrivate *fontD = QRawFontPrivate::get(font);
     m_glyphCount = fontD->fontEngine->glyphCount();
 
-    m_doubleGlyphResolution = qt_fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
+    m_doubleGlyphResolution = qt_fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT();
 
     m_referenceFont = font;
     // we set the same pixel size as used by the distance field internally.
