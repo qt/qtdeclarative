@@ -192,7 +192,7 @@ enum AluOp {
 AluOp binaryOperator(int op);
 const char *opname(IR::AluOp op);
 
-enum Type {
+enum Type : quint16 {
     UnknownType   = 0,
 
     MissingType   = 1 << 0,
@@ -288,27 +288,130 @@ struct MemberExpressionResolver
 };
 
 struct Q_AUTOTEST_EXPORT Expr {
-    Type type;
+    enum ExprKind : quint8 {
+        NameExpr,
+        TempExpr,
+        ArgLocalExpr,
+        SubscriptExpr,
+        MemberExpr,
 
-    Expr(): type(UnknownType) {}
+        LastLValue = MemberExpr,
+
+        ConstExpr,
+        StringExpr,
+        RegExpExpr,
+        ClosureExpr,
+        ConvertExpr,
+        UnopExpr,
+        BinopExpr,
+        CallExpr,
+        NewExpr
+    };
+
+    Type type;
+    const ExprKind exprKind;
+
+    Expr &operator=(const Expr &other) {
+        Q_ASSERT(exprKind == other.exprKind);
+        type = other.type;
+        return *this;
+    }
+
+    template <typename To>
+    inline bool isa() const {
+        return To::classof(this);
+    }
+
+    template <typename To>
+    inline To *as() {
+        if (isa<To>()) {
+            return static_cast<To *>(this);
+        } else {
+            return nullptr;
+        }
+    }
+
+    template <typename To>
+    inline const To *as() const {
+        if (isa<To>()) {
+            return static_cast<const To *>(this);
+        } else {
+            return nullptr;
+        }
+    }
+
+    Expr(ExprKind exprKind): type(UnknownType), exprKind(exprKind) {}
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
-    virtual bool isLValue() { return false; }
-    virtual Const *asConst() { return 0; }
-    virtual String *asString() { return 0; }
-    virtual RegExp *asRegExp() { return 0; }
-    virtual Name *asName() { return 0; }
-    virtual Temp *asTemp() { return 0; }
-    virtual ArgLocal *asArgLocal() { return 0; }
-    virtual Closure *asClosure() { return 0; }
-    virtual Convert *asConvert() { return 0; }
-    virtual Unop *asUnop() { return 0; }
-    virtual Binop *asBinop() { return 0; }
-    virtual Call *asCall() { return 0; }
-    virtual New *asNew() { return 0; }
-    virtual Subscript *asSubscript() { return 0; }
-    virtual Member *asMember() { return 0; }
+    bool isLValue() const;
+
+    Const *asConst() { return as<Const>(); }
+    String *asString() { return as<String>(); }
+    RegExp *asRegExp() { return as<RegExp>(); }
+    Name *asName() { return as<Name>(); }
+    Temp *asTemp() { return as<Temp>(); }
+    ArgLocal *asArgLocal() { return as<ArgLocal>(); }
+    Closure *asClosure() { return as<Closure>(); }
+    Convert *asConvert() { return as<Convert>(); }
+    Unop *asUnop() { return as<Unop>(); }
+    Binop *asBinop() { return as<Binop>(); }
+    Call *asCall() { return as<Call>(); }
+    New *asNew() { return as<New>(); }
+    Subscript *asSubscript() { return as<Subscript>(); }
+    Member *asMember() { return as<Member>(); }
 };
+
+#define EXPR_VISIT_ALL_KINDS(e) \
+    switch (e->exprKind) { \
+    case QV4::IR::Expr::ConstExpr: \
+        break; \
+    case QV4::IR::Expr::StringExpr: \
+        break; \
+    case QV4::IR::Expr::RegExpExpr: \
+        break; \
+    case QV4::IR::Expr::NameExpr: \
+        break; \
+    case QV4::IR::Expr::TempExpr: \
+        break; \
+    case QV4::IR::Expr::ArgLocalExpr: \
+        break; \
+    case QV4::IR::Expr::ClosureExpr: \
+        break; \
+    case QV4::IR::Expr::ConvertExpr: { \
+        auto casted = e->asConvert(); \
+        visit(casted->expr); \
+    } break; \
+    case QV4::IR::Expr::UnopExpr: { \
+        auto casted = e->asUnop(); \
+        visit(casted->expr); \
+    } break; \
+    case QV4::IR::Expr::BinopExpr: { \
+        auto casted = e->asBinop(); \
+        visit(casted->left); \
+        visit(casted->right); \
+    } break; \
+    case QV4::IR::Expr::CallExpr: { \
+        auto casted = e->asCall(); \
+        visit(casted->base); \
+        for (QV4::IR::ExprList *it = casted->args; it; it = it->next) \
+            visit(it->expr); \
+    } break; \
+    case QV4::IR::Expr::NewExpr: { \
+        auto casted = e->asNew(); \
+        visit(casted->base); \
+        for (QV4::IR::ExprList *it = casted->args; it; it = it->next) \
+            visit(it->expr); \
+    } break; \
+    case QV4::IR::Expr::SubscriptExpr: { \
+        auto casted = e->asSubscript(); \
+        visit(casted->base); \
+        visit(casted->index); \
+    } break; \
+    case QV4::IR::Expr::MemberExpr: { \
+        auto casted = e->asMember(); \
+        visit(casted->base); \
+    } break; \
+    }
 
 struct ExprList {
     Expr *expr;
@@ -326,6 +429,8 @@ struct ExprList {
 struct Const: Expr {
     double value;
 
+    Const(): Expr(ConstExpr) {}
+
     void init(Type type, double value)
     {
         this->type = type;
@@ -333,11 +438,14 @@ struct Const: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitConst(this); }
-    virtual Const *asConst() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == ConstExpr; }
 };
 
 struct String: Expr {
     const QString *value;
+
+    String(): Expr(StringExpr) {}
 
     void init(const QString *value)
     {
@@ -345,7 +453,8 @@ struct String: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
-    virtual String *asString() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == StringExpr; }
 };
 
 struct RegExp: Expr {
@@ -359,6 +468,8 @@ struct RegExp: Expr {
     const QString *value;
     int flags;
 
+    RegExp(): Expr(RegExpExpr) {}
+
     void init(const QString *value, int flags)
     {
         this->value = value;
@@ -366,7 +477,8 @@ struct RegExp: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitRegExp(this); }
-    virtual RegExp *asRegExp() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == RegExpExpr; }
 };
 
 struct Name: Expr {
@@ -399,13 +511,15 @@ struct Name: Expr {
     quint32 line;
     quint32 column;
 
+    Name(): Expr(NameExpr) {}
+
     void initGlobal(const QString *id, quint32 line, quint32 column);
     void init(const QString *id, quint32 line, quint32 column);
     void init(Builtin builtin, quint32 line, quint32 column);
 
     virtual void accept(ExprVisitor *v) { v->visitName(this); }
-    virtual bool isLValue() { return true; }
-    virtual Name *asName() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == NameExpr; }
 };
 
 struct Q_AUTOTEST_EXPORT Temp: Expr {
@@ -424,7 +538,8 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
     MemberExpressionResolver *memberResolver;
 
     Temp()
-        : index((1 << 28) - 1)
+        : Expr(TempExpr)
+        , index((1 << 28) - 1)
         , isReadOnly(0)
         , kind(Invalid)
         , memberResolver(0)
@@ -439,8 +554,9 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
 
     bool isInvalid() const { return kind == Invalid; }
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
-    virtual bool isLValue() { return !isReadOnly; }
     virtual Temp *asTemp() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == TempExpr; }
 };
 
 inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
@@ -479,17 +595,21 @@ struct Q_AUTOTEST_EXPORT ArgLocal: Expr {
         this->isArgumentsOrEval = false;
     }
 
+    ArgLocal(): Expr(ArgLocalExpr) {}
+
     virtual void accept(ExprVisitor *v) { v->visitArgLocal(this); }
-    virtual bool isLValue() { return true; }
-    virtual ArgLocal *asArgLocal() { return this; }
 
     bool operator==(const ArgLocal &other) const
     { return index == other.index && scope == other.scope && kind == other.kind; }
+
+    static bool classof(const Expr *c) { return c->exprKind == ArgLocalExpr; }
 };
 
 struct Closure: Expr {
     int value; // index in _module->functions
     const QString *functionName;
+
+    Closure(): Expr(ClosureExpr) {}
 
     void init(int functionInModule, const QString *functionName)
     {
@@ -498,11 +618,14 @@ struct Closure: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitClosure(this); }
-    virtual Closure *asClosure() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == ClosureExpr; }
 };
 
 struct Convert: Expr {
     Expr *expr;
+
+    Convert(): Expr(ConvertExpr) {}
 
     void init(Expr *expr, Type type)
     {
@@ -511,12 +634,15 @@ struct Convert: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitConvert(this); }
-    virtual Convert *asConvert() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == ConvertExpr; }
 };
 
 struct Unop: Expr {
-    AluOp op;
     Expr *expr;
+    AluOp op;
+
+    Unop(): Expr(UnopExpr) {}
 
     void init(AluOp op, Expr *expr)
     {
@@ -525,13 +651,16 @@ struct Unop: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitUnop(this); }
-    virtual Unop *asUnop() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == UnopExpr; }
 };
 
 struct Binop: Expr {
-    AluOp op;
     Expr *left; // Temp or Const
     Expr *right; // Temp or Const
+    AluOp op;
+
+    Binop(): Expr(BinopExpr) {}
 
     void init(AluOp op, Expr *left, Expr *right)
     {
@@ -541,12 +670,15 @@ struct Binop: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitBinop(this); }
-    virtual Binop *asBinop() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == BinopExpr; }
 };
 
 struct Call: Expr {
     Expr *base; // Name, Member, Temp
     ExprList *args; // List of Temps
+
+    Call(): Expr(CallExpr) {}
 
     void init(Expr *base, ExprList *args)
     {
@@ -561,12 +693,15 @@ struct Call: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitCall(this); }
-    virtual Call *asCall() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == CallExpr; }
 };
 
 struct New: Expr {
     Expr *base; // Name, Member, Temp
     ExprList *args; // List of Temps
+
+    New(): Expr(NewExpr) {}
 
     void init(Expr *base, ExprList *args)
     {
@@ -581,12 +716,15 @@ struct New: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitNew(this); }
-    virtual New *asNew() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == NewExpr; }
 };
 
 struct Subscript: Expr {
     Expr *base;
     Expr *index;
+
+    Subscript(): Expr(SubscriptExpr) {}
 
     void init(Expr *base, Expr *index)
     {
@@ -595,8 +733,8 @@ struct Subscript: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitSubscript(this); }
-    virtual bool isLValue() { return true; }
-    virtual Subscript *asSubscript() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == SubscriptExpr; }
 };
 
 struct Member: Expr {
@@ -628,6 +766,8 @@ struct Member: Expr {
 
     uchar kind: 3; // MemberKind
 
+    Member(): Expr(MemberExpr) {}
+
     void setEnumValue(int value) {
         kind = MemberOfEnum;
         enumValue = value;
@@ -650,16 +790,44 @@ struct Member: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
-    virtual bool isLValue() { return true; }
-    virtual Member *asMember() { return this; }
+
+    static bool classof(const Expr *c) { return c->exprKind == MemberExpr; }
 };
 
+inline bool Expr::isLValue() const {
+    if (auto t = as<Temp>())
+        return !t->isReadOnly;
+    return exprKind <= LastLValue;
+}
+
 struct Stmt {
+    enum StmtKind: quint8 {
+        MoveStmt,
+        ExpStmt,
+        JumpStmt,
+        CJumpStmt,
+        RetStmt,
+        PhiStmt
+    };
+
+    template <typename To>
+    inline bool isa() const {
+        return To::classof(this);
+    }
+
+    template <typename To>
+    inline To *as() {
+        if (isa<To>())
+            return static_cast<To *>(this);
+        else
+            return nullptr;
+    }
+
     enum { InvalidId = -1 };
 
     QQmlJS::AST::SourceLocation location;
 
-    explicit Stmt(int id): _id(id) {}
+    explicit Stmt(int id, StmtKind stmtKind): _id(id), stmtKind(stmtKind) {}
 
     virtual ~Stmt()
     {
@@ -672,12 +840,12 @@ struct Stmt {
     virtual Stmt *asTerminator() { return 0; }
 
     virtual void accept(StmtVisitor *) = 0;
-    virtual Exp *asExp() { return 0; }
-    virtual Move *asMove() { return 0; }
-    virtual Jump *asJump() { return 0; }
-    virtual CJump *asCJump() { return 0; }
-    virtual Ret *asRet() { return 0; }
-    virtual Phi *asPhi() { return 0; }
+    Exp *asExp() { return as<Exp>(); }
+    Move *asMove() { return as<Move>(); }
+    Jump *asJump() { return as<Jump>(); }
+    CJump *asCJump() { return as<CJump>(); }
+    Ret *asRet() { return as<Ret>(); }
+    Phi *asPhi() { return as<Phi>(); }
 
     int id() const { return _id; }
 
@@ -687,12 +855,45 @@ private: // For memory management in BasicBlock
 private:
     friend struct Function;
     int _id;
+
+public:
+    const StmtKind stmtKind;
 };
+
+#define STMT_VISIT_ALL_KINDS(s) \
+    switch (s->stmtKind) { \
+    case QV4::IR::Stmt::MoveStmt: { \
+        auto casted = s->asMove(); \
+        visit(casted->target); \
+        visit(casted->source); \
+    } break; \
+    case QV4::IR::Stmt::ExpStmt: { \
+        auto casted = s->asExp(); \
+        visit(casted->expr); \
+    } break; \
+    case QV4::IR::Stmt::JumpStmt: \
+        break; \
+    case QV4::IR::Stmt::CJumpStmt: { \
+        auto casted = s->asCJump(); \
+        visit(casted->cond); \
+    } break; \
+    case QV4::IR::Stmt::RetStmt: { \
+        auto casted = s->asRet(); \
+        visit(casted->expr); \
+    } break; \
+    case QV4::IR::Stmt::PhiStmt: { \
+        auto casted = s->asPhi(); \
+        visit(casted->targetTemp); \
+        for (auto *e : casted->incoming) { \
+            visit(e); \
+        } \
+    } break; \
+    }
 
 struct Exp: Stmt {
     Expr *expr;
 
-    Exp(int id): Stmt(id) {}
+    Exp(int id): Stmt(id, ExpStmt) {}
 
     void init(Expr *expr)
     {
@@ -700,8 +901,8 @@ struct Exp: Stmt {
     }
 
     virtual void accept(StmtVisitor *v) { v->visitExp(this); }
-    virtual Exp *asExp() { return this; }
 
+    static bool classof(const Stmt *c) { return c->stmtKind == ExpStmt; }
 };
 
 struct Move: Stmt {
@@ -709,7 +910,7 @@ struct Move: Stmt {
     Expr *source;
     bool swap;
 
-    Move(int id): Stmt(id) {}
+    Move(int id): Stmt(id, MoveStmt) {}
 
     void init(Expr *target, Expr *source)
     {
@@ -719,14 +920,14 @@ struct Move: Stmt {
     }
 
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
-    virtual Move *asMove() { return this; }
 
+    static bool classof(const Stmt *c) { return c->stmtKind == MoveStmt; }
 };
 
 struct Jump: Stmt {
     BasicBlock *target;
 
-    Jump(int id): Stmt(id) {}
+    Jump(int id): Stmt(id, JumpStmt) {}
 
     void init(BasicBlock *target)
     {
@@ -736,7 +937,8 @@ struct Jump: Stmt {
     virtual Stmt *asTerminator() { return this; }
 
     virtual void accept(StmtVisitor *v) { v->visitJump(this); }
-    virtual Jump *asJump() { return this; }
+
+    static bool classof(const Stmt *c) { return c->stmtKind == JumpStmt; }
 };
 
 struct CJump: Stmt {
@@ -745,7 +947,7 @@ struct CJump: Stmt {
     BasicBlock *iffalse;
     BasicBlock *parent;
 
-    CJump(int id): Stmt(id) {}
+    CJump(int id): Stmt(id, CJumpStmt) {}
 
     void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse, BasicBlock *parent)
     {
@@ -758,13 +960,14 @@ struct CJump: Stmt {
     virtual Stmt *asTerminator() { return this; }
 
     virtual void accept(StmtVisitor *v) { v->visitCJump(this); }
-    virtual CJump *asCJump() { return this; }
+
+    static bool classof(const Stmt *c) { return c->stmtKind == CJumpStmt; }
 };
 
 struct Ret: Stmt {
     Expr *expr;
 
-    Ret(int id): Stmt(id) {}
+    Ret(int id): Stmt(id, RetStmt) {}
 
     void init(Expr *expr)
     {
@@ -774,7 +977,8 @@ struct Ret: Stmt {
     virtual Stmt *asTerminator() { return this; }
 
     virtual void accept(StmtVisitor *v) { v->visitRet(this); }
-    virtual Ret *asRet() { return this; }
+
+    static bool classof(const Stmt *c) { return c->stmtKind == RetStmt; }
 };
 
 // Phi nodes can only occur at the start of a basic block. If there are any, they need to be
@@ -785,10 +989,11 @@ struct Phi: Stmt {
     Temp *targetTemp;
     VarLengthArray<Expr *, 4> incoming;
 
-    Phi(int id): Stmt(id) {}
+    Phi(int id): Stmt(id, PhiStmt) {}
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
-    virtual Phi *asPhi() { return this; }
+
+    static bool classof(const Stmt *c) { return c->stmtKind == PhiStmt; }
 
     void destroyData()
     { incoming.~VarLengthArray(); }
