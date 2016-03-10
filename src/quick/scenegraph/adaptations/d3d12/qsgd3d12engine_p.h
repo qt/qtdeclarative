@@ -264,7 +264,9 @@ public:
     void endFrame();
 
     void resetVertexBuffer(const quint8 *data, int size);
+    void markVertexBufferDirty(int offset, int size);
     void resetIndexBuffer(const quint8 *data, int size);
+    void markIndexBufferDirty(int offset, int size);
     void resetConstantBuffer(const quint8 *data, int size);
     void markConstantBufferDirty(int offset, int size);
 

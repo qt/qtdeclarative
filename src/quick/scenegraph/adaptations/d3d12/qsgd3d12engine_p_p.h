@@ -139,7 +139,9 @@ public:
     void endFrame();
 
     void resetVertexBuffer(const quint8 *data, int size);
+    void markVertexBufferDirty(int offset, int size);
     void resetIndexBuffer(const quint8 *data, int size);
+    void markIndexBufferDirty(int offset, int size);
     void resetConstantBuffer(const quint8 *data, int size);
     void markConstantBufferDirty(int offset, int size);
 
@@ -173,6 +175,9 @@ private:
     void setupRenderTargets();
     void deviceLost() override;
 
+    bool createCbvSrvUavHeap(int pframeIndex, int descriptorCount);
+    void setDescriptorHeaps(bool force = false);
+
     DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
     ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
 
@@ -189,8 +194,8 @@ private:
 
     struct CPUBufferRef {
         const quint8 *p = nullptr;
-        int size = 0;
-        bool gpuResourceInvalid = true;
+        quint32 size = 0;
+        bool allDirty = true;
         QVector<QPair<int, int> > dirty;
         CPUBufferRef() { dirty.reserve(64); }
     };
@@ -199,15 +204,25 @@ private:
         struct ChangeTrackedBuffer {
             ComPtr<ID3D12Resource> buffer;
             QVector<QPair<int, int> > totalDirtyInFrame;
+            quint32 dataSize = 0;
         };
         ChangeTrackedBuffer vertex;
         ChangeTrackedBuffer index;
         ChangeTrackedBuffer constant;
         ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
+        int gpuCbvSrvUavHeapSize;
         int cbvSrvUavNextFreeDescriptorIndex;
         QSet<uint> pendingTextures;
+        struct DeleteQueueEntry {
+            ComPtr<ID3D12Resource> res;
+            ComPtr<ID3D12DescriptorHeap> dh;
+        };
+        QVector<DeleteQueueEntry> deleteQueue;
+        void deferredDelete(ComPtr<ID3D12Resource> res) { DeleteQueueEntry e; e.res = res; deleteQueue << e; }
+        void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh) { DeleteQueueEntry e; e.dh = dh; deleteQueue << e; }
     };
 
+    void markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size);
     void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
     void updateBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
 
