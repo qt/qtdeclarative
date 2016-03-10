@@ -33,6 +33,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
+#include <private/qquickmousearea_p.h>
 #include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <math.h>
@@ -486,7 +487,19 @@ void tst_qquickflickable::nestedPressDelay()
     // QTRY_VERIFY() has 5sec timeout, so will timeout well within 10sec.
     QTRY_VERIFY(outer->property("pressed").toBool());
 
+    QTest::mouseMove(window.data(), QPoint(130, 150));
+    QTest::mouseMove(window.data(), QPoint(110, 150));
+    QTest::mouseMove(window.data(), QPoint(90, 150));
+
+    QVERIFY(!outer->property("moving").toBool());
+    QVERIFY(!outer->property("dragging").toBool());
+    QVERIFY(inner->property("moving").toBool());
+    QVERIFY(inner->property("dragging").toBool());
+
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+
+    QVERIFY(!inner->property("dragging").toBool());
+    QTRY_VERIFY(!inner->property("moving").toBool());
 
     // Dragging inner Flickable should work
     moveAndPress(window.data(), QPoint(80, 150));
@@ -499,9 +512,14 @@ void tst_qquickflickable::nestedPressDelay()
     QTest::mouseMove(window.data(), QPoint(20, 150));
 
     QVERIFY(inner->property("moving").toBool());
+    QVERIFY(inner->property("dragging").toBool());
     QVERIFY(!outer->property("moving").toBool());
+    QVERIFY(!outer->property("dragging").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(20, 150));
+
+    QVERIFY(!inner->property("dragging").toBool());
+    QTRY_VERIFY(!inner->property("moving").toBool());
 
     // Dragging the MouseArea in the inner Flickable should move the inner Flickable
     moveAndPress(window.data(), QPoint(150, 150));
@@ -512,11 +530,15 @@ void tst_qquickflickable::nestedPressDelay()
     QTest::mouseMove(window.data(), QPoint(110, 150));
     QTest::mouseMove(window.data(), QPoint(90, 150));
 
-
     QVERIFY(!outer->property("moving").toBool());
+    QVERIFY(!outer->property("dragging").toBool());
     QVERIFY(inner->property("moving").toBool());
+    QVERIFY(inner->property("dragging").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(90, 150));
+
+    QVERIFY(!inner->property("dragging").toBool());
+    QTRY_VERIFY(!inner->property("moving").toBool());
 }
 
 void tst_qquickflickable::filterReplayedPress()
@@ -1472,20 +1494,26 @@ void tst_qquickflickable::nestedStopAtBounds_data()
     QTest::addColumn<bool>("invert");
     QTest::addColumn<int>("boundsBehavior");
     QTest::addColumn<qreal>("margin");
+    QTest::addColumn<bool>("innerFiltering");
+    QTest::addColumn<int>("pressDelay");
+    QTest::addColumn<bool>("waitForPressDelay");
 
-    QTest::newRow("left,stop") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(0);
-    QTest::newRow("right,stop") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(0);
-    QTest::newRow("top,stop") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(0);
-    QTest::newRow("bottom,stop") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(0);
-    QTest::newRow("left,over") << false << false << int(QQuickFlickable::DragOverBounds) << qreal(0);
-    QTest::newRow("right,over") << false << true << int(QQuickFlickable::DragOverBounds) << qreal(0);
-    QTest::newRow("top,over") << true << false << int(QQuickFlickable::DragOverBounds) << qreal(0);
-    QTest::newRow("bottom,over") << true << true << int(QQuickFlickable::DragOverBounds) << qreal(0);
+    QTest::newRow("left,stop") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("right,stop") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("top,stop") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("bottom,stop") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("left,over") << false << false << int(QQuickFlickable::DragOverBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("right,over") << false << true << int(QQuickFlickable::DragOverBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("top,over") << true << false << int(QQuickFlickable::DragOverBounds) << qreal(0) << false << 0 << false;
+    QTest::newRow("bottom,over") << true << true << int(QQuickFlickable::DragOverBounds) << qreal(0) << false << 0 << false;
 
-    QTest::newRow("left,stop,margin") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(20);
-    QTest::newRow("right,stop,margin") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(20);
-    QTest::newRow("top,stop,margin") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(20);
-    QTest::newRow("bottom,stop,margin") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(20);
+    QTest::newRow("left,stop,margin") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(20) << false << 0 << false;
+    QTest::newRow("right,stop,margin") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(20) << false << 0 << false;
+    QTest::newRow("top,stop,margin") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(20) << false << 0 << false;
+    QTest::newRow("bottom,stop,margin") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(20) << false << 0 << false;
+
+    QTest::newRow("left,stop,after press delay") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(0) << true << 50 << true;
+    QTest::newRow("left,stop,before press delay") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(0) << true << 50 << false;
 }
 
 void tst_qquickflickable::nestedStopAtBounds()
@@ -1494,6 +1522,9 @@ void tst_qquickflickable::nestedStopAtBounds()
     QFETCH(bool, invert);
     QFETCH(int, boundsBehavior);
     QFETCH(qreal, margin);
+    QFETCH(bool, innerFiltering);
+    QFETCH(int, pressDelay);
+    QFETCH(bool, waitForPressDelay);
 
     QQuickView view;
     view.setSource(testFileUrl("nestedStopAtBounds.qml"));
@@ -1526,6 +1557,12 @@ void tst_qquickflickable::nestedStopAtBounds()
     QCOMPARE(inner->isAtYBeginning(), invert);
     QCOMPARE(inner->isAtYEnd(), !invert);
 
+    inner->setPressDelay(pressDelay);
+
+    QQuickMouseArea *mouseArea = inner->findChild<QQuickMouseArea *>("mouseArea");
+    QVERIFY(mouseArea);
+    mouseArea->setEnabled(innerFiltering);
+
     const int threshold = qApp->styleHints()->startDragDistance();
 
     QPoint position(200, 200);
@@ -1533,17 +1570,25 @@ void tst_qquickflickable::nestedStopAtBounds()
 
     // drag toward the aligned boundary.  Outer flickable dragged.
     moveAndPress(&view, position);
-    QTest::qWait(10);
+    if (waitForPressDelay) {
+        QVERIFY(innerFiltering);    // isPressed will never be true if the mouse area isn't enabled.
+        QTRY_VERIFY(mouseArea->pressed());
+    }
+
     axis += invert ? threshold * 2 : -threshold * 2;
     QTest::mouseMove(&view, position);
     axis += invert ? threshold : -threshold;
     QTest::mouseMove(&view, position);
     QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(outer->isMoving(), true);
     QCOMPARE(inner->isDragging(), false);
+    QCOMPARE(inner->isMoving(), false);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 
     QVERIFY(!outer->isDragging());
     QTRY_VERIFY(!outer->isMoving());
+    QVERIFY(!inner->isDragging());
+    QVERIFY(!inner->isMoving());
 
     axis = 200;
     outer->setContentX(50);
@@ -1557,10 +1602,15 @@ void tst_qquickflickable::nestedStopAtBounds()
     axis += invert ? -threshold : threshold;
     QTest::mouseMove(&view, position);
     QCOMPARE(outer->isDragging(), false);
+    QCOMPARE(outer->isMoving(), false);
     QCOMPARE(inner->isDragging(), true);
+    QCOMPARE(inner->isMoving(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 
-    QTRY_VERIFY(!outer->isMoving());
+    QVERIFY(!inner->isDragging());
+    QTRY_VERIFY(!inner->isMoving());
+    QVERIFY(!outer->isDragging());
+    QVERIFY(!outer->isMoving());
 
     axis = 200;
     inner->setContentX(-margin);
@@ -1576,8 +1626,15 @@ void tst_qquickflickable::nestedStopAtBounds()
     axis += invert ? -threshold : threshold;
     QTest::mouseMove(&view, position);
     QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(outer->isMoving(), true);
     QCOMPARE(inner->isDragging(), false);
+    QCOMPARE(inner->isMoving(), false);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QVERIFY(!outer->isDragging());
+    QTRY_VERIFY(!outer->isMoving());
+    QVERIFY(!inner->isDragging());
+    QVERIFY(!inner->isMoving());
 
     axis = 200;
     inner->setContentX(-margin);
@@ -1593,8 +1650,15 @@ void tst_qquickflickable::nestedStopAtBounds()
     axis += invert ? -threshold : threshold;
     QTest::mouseMove(&view, position);
     QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(outer->isMoving(), true);
     QCOMPARE(inner->isDragging(), false);
+    QCOMPARE(inner->isMoving(), false);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QVERIFY(!outer->isDragging());
+    QTRY_VERIFY(!outer->isMoving());
+    QVERIFY(!inner->isDragging());
+    QVERIFY(!inner->isMoving());
 }
 
 void tst_qquickflickable::stopAtBounds_data()
