@@ -55,7 +55,7 @@
     is reflected in the structure of the controls project: all visual
     implementations sit in the \e imports folder, so that users who want to
     create their own complete style can copy the folder and start tweaking.
-    Read more about implementing a style plugin \l {TODO}{here}.
+    Read more about implementing a style plugin {TODO}{here}.
 
     In Qt Labs Controls, styles no longer provide components that are
     dynamically instantiated by controls, but controls themselves consist of

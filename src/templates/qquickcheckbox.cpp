@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     off (unchecked). Check boxes are typically used to select one or more
     options from a set of options.
 
-    The state of the checkbox can be set with the \l checked property.
+    The state of the checkbox can be set with the \l {AbstractButton::}{checked} property.
 
     In addition to the checked and unchecked states, there is a third state:
     partially checked. The partially checked state can be enabled using the

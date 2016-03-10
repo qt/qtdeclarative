@@ -23,7 +23,7 @@ qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.indexTitle = Qt Labs Contr
 qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.selectors  = qmlclass
 qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.sortPages  = true
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols
+depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qmake qtsql qtwidgets
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.

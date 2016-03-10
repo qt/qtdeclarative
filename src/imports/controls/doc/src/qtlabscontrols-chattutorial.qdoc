@@ -39,7 +39,7 @@ application.
 
 When setting up a new project, it's easiest to use
 \l {Qt Creator Manual}{Qt Creator}. For this project, we chose the
-\l {Creating Qt Quick Projects}{Qt Quick application} template, which creates a
+\l {Qt Creator: Creating Qt Quick Projects}{Qt Quick application} template, which creates a
 basic "Hello World" application with all of the necessary files.
 
 \section2 main.cpp
@@ -65,7 +65,7 @@ Within \c main(), we set up the application object and QML engine:
 \skipto main
 \printuntil }
 
-To enable Qt's support for \l {High DPI Support in Qt}{high DPI scaling}, it
+To enable Qt's support for \l {High DPI Displays}{high DPI scaling}, it
 is necessary to set an attribute before the application object is constructed.
 
 After that's done, we construct the application object, passing any application
@@ -180,11 +180,6 @@ The next line tells \c qmake that we have a collection of
 \l {The Qt Resource System}{resources} that should be built into the
 executable.
 
-\printline QML_IMPORT_PATH
-
-\c QML_IMPORT_PATH is added by Qt Creator in case you have a custom module that
-you'd like to be made available to Creator's code model.
-
 \printline include
 
 This line includes a generated \c .pri file that handles deployment of our
@@ -200,7 +195,7 @@ In this chapter, we'll explain how to create a list of interactive items using
 \l ListView and \l ItemDelegate.
 
 ListView comes from the Qt Quick module, and displays a list of items
-populated from a \l {Model/View Programming}{model}. ItemDelegate comes from
+populated from a \l {Models and Views in Qt Quick}{model}. ItemDelegate comes from
 the Qt Labs Controls module, and provides a standard view item for use in views
 and controls such as ListView and \l ComboBox. For example, each ItemDelegate
 can display text, be checked on and off, and react to mouse clicks.
@@ -244,12 +239,12 @@ number from \c 0 to \c 9.
 
 However, once the application gets past the prototype stage, it quickly becomes
 necessary to use some real data. For this, it's best to use a proper C++ model
-by \l {QAbstractItemModel subclass}{subclassing QAbstractItemModel}.
+by \l {QAbstractItemModel}{subclassing QAbstractItemModel}.
 
 \section2 Delegate
 
 On to the \l {ListView::}{delegate}. We assign the corresponding text from the
-model to the \l {ItemDelegate::}{text} property of ItemDelegate. The exact
+model to the \l {AbstractButton::text}{text} property of ItemDelegate. The exact
 manner in which the data from the model is made available to each delegate
 depends on the type of model used. See \l {Models and Views in Qt Quick} for
 more information.
@@ -296,13 +291,12 @@ idea of which screens your application will contain. Doing so not only makes
 your code easier to read, but ensures that items are only instantiated from
 a given component when completely necessary, reducing memory usage.
 
-\note Qt Creator provides several convenient
-\l {Refactoring QML Code}{refactoring options for QML}, one of which allows you
-to move a block of code into a separate file (\c {Alt + Enter > Move Component
-into Separate File}).
+\note Qt Creator provides several convenient \l {http://doc.qt.io/qtcreator/creator-editor-refactoring.html#refactoring-qml-code}{refactoring options for QML},
+one of which allows you to move a block of code into a separate file
+ (\c {Alt + Enter > Move Component into Separate File}).
 
 Another thing to consider when using ListView is whether to refer to it by
-\l {Item::}{id}, or use the attached \l {ListView::view}{ListView.view}
+\c id, or use the attached \l {ListView::view}{ListView.view}
 property. The best approach depends on a few different factors. Giving the
 view an id will result in shorter and more efficient binding expressions, as
 the attached property has a very small amount of overhead. However, if you plan
@@ -351,7 +345,7 @@ page onto the stackview:
 
 When pushing a \l Component or \l [QML] url onto StackView, it's often
 necessary to initialize the (eventually) instantiated item with some variables.
-StackView's \l push() function accounts for this, by taking a JavaScript object
+StackView's \l {StackView::push}{push()} function accounts for this, by taking a JavaScript object
 as the second argument. We use this to provide the next page with a contact's
 name, which it then uses to display the relevant conversation. Note the
 \c {root.StackView.view.push} syntax; this is necessary because of how
@@ -555,7 +549,7 @@ The \c recipient property will be set from QML to let the model know which
 conversation it should retrieve messages for.
 
 We override the \l {QSqlTableModel::data}{data()} and
-\l {QSqlTableModel::roleNames}{roleNames()} functions so that we can use our
+\l {QAbstractItemModel::}{roleNames()} functions so that we can use our
 custom roles in QML.
 
 We also define the \c sendMessage() function that we want to call from
@@ -638,8 +632,8 @@ changes to be done to \c ContactPage.qml. To be able to use the types,
 we must first import them using the URI we set in \c main.cpp:
 
 \quotefromfile chattutorial/chapter4-models/ContactPage.qml
-\skipto import org.qtproject.examples.chattutorial 1.0
-\printline import org.qtproject.examples.chattutorial 1.0
+\skipto import io.qt.examples.chattutorial 1.0
+\printline import io.qt.examples.chattutorial 1.0
 
 We then replace the dummy model with the proper one:
 
@@ -720,8 +714,8 @@ looks good when run with the \l {Default Style}{Default},
 \l {Material Style}{Material}, and \l {Universal Style}{Universal} styles.
 
 So far, we've just been testing the application with the Default style. If we
-\l {Selecting and Configuring Styles}{run it with the Material style}, for
-example, we'll immediately see some issues. Here is the Contacts page:
+run it with the \l {Material Style}, for example, we'll immediately see some issues.
+Here is the Contacts page:
 
 \image qtlabscontrols-chattutorial-chapter5-contacts-material-test.png
 
