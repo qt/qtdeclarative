@@ -396,7 +396,7 @@ QFont QQuickApplicationWindow::font() const
 void QQuickApplicationWindow::setFont(const QFont &f)
 {
     Q_D(QQuickApplicationWindow);
-    if (d->font == f)
+    if (d->font.resolve() == f.resolve() && d->font == f)
         return;
 
     QFont resolvedFont = f.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
@@ -417,11 +417,13 @@ void QQuickApplicationWindowPrivate::resolveFont()
 void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickApplicationWindow);
+    const bool changed = font != f;
     font = f;
 
     QQuickControlPrivate::updateFontRecur(q->contentItem(), f);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 QLocale QQuickApplicationWindow::locale() const

@@ -113,9 +113,12 @@ void QQuickLabelPrivate::resolveFont()
     if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
         return;
 
+    const bool changed = sourceFont != resolvedFont;
+
     q->QQuickText::setFont(resolvedFont);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 void QQuickLabelPrivate::_q_textChanged(const QString &text)
@@ -158,7 +161,7 @@ QFont QQuickLabel::font() const
 void QQuickLabel::setFont(const QFont &font)
 {
     Q_D(QQuickLabel);
-    if (d->sourceFont == font)
+    if (d->sourceFont.resolve() == font.resolve() && d->sourceFont == font)
         return;
 
     // Determine which font is inherited from this control's ancestors and
@@ -170,9 +173,12 @@ void QQuickLabel::setFont(const QFont &font)
     if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
         return;
 
+    const bool changed = d->sourceFont != resolvedFont;
+
     QQuickText::setFont(font);
 
-    emit fontChanged();
+    if (changed)
+        emit fontChanged();
 }
 
 /*!

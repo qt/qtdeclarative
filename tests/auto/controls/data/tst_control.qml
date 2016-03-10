@@ -56,6 +56,11 @@ TestCase {
         T.Control { }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
@@ -624,6 +629,49 @@ TestCase {
         compare(control4.item4_4.font.pixelSize, control4.font.pixelSize + 15)
 
         control4.destroy()
+    }
+
+    function test_font_explicit_attributes_data() {
+        return [
+            {tag: "bold", value: true},
+            {tag: "capitalization", value: Font.Capitalize},
+            {tag: "family", value: "Courier"},
+            {tag: "italic", value: true},
+            {tag: "strikeout", value: true},
+            {tag: "underline", value: true},
+            {tag: "weight", value: Font.Black},
+            {tag: "wordSpacing", value: 55}
+        ]
+    }
+
+    function test_font_explicit_attributes(data) {
+        var control = component.createObject(testCase)
+        verify(control)
+
+        var child = component.createObject(control)
+        verify(child)
+
+        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        verify(controlSpy.valid)
+
+        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        verify(childSpy.valid)
+
+        var defaultValue = control.font[data.tag]
+        child.font[data.tag] = defaultValue
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
+
+        control.font[data.tag] = data.value
+
+        compare(control.font[data.tag], data.value)
+        compare(controlSpy.count, 1)
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
+
+        control.destroy()
     }
 
     function test_locale() {

@@ -287,11 +287,13 @@ void QQuickControlPrivate::resolveFont()
 void QQuickControlPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickControl);
+    const bool changed = font != f;
     font = f;
 
     QQuickControlPrivate::updateFontRecur(q, f);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
@@ -411,7 +413,7 @@ QFont QQuickControl::font() const
 void QQuickControl::setFont(const QFont &f)
 {
     Q_D(QQuickControl);
-    if (d->font == f)
+    if (d->font.resolve() == f.resolve() && d->font == f)
         return;
 
     // Determine which font is inherited from this control's ancestors and

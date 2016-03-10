@@ -180,9 +180,12 @@ void QQuickTextFieldPrivate::resolveFont()
     if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
         return;
 
+    const bool changed = sourceFont != resolvedFont;
+
     q->QQuickTextInput::setFont(resolvedFont);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
@@ -237,7 +240,7 @@ QFont QQuickTextField::font() const
 void QQuickTextField::setFont(const QFont &font)
 {
     Q_D(QQuickTextField);
-    if (d->sourceFont == font)
+    if (d->sourceFont.resolve() == font.resolve() && d->sourceFont == font)
         return;
 
     // Determine which font is inherited from this control's ancestors and
@@ -249,9 +252,12 @@ void QQuickTextField::setFont(const QFont &font)
     if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
         return;
 
+    const bool changed = d->sourceFont != resolvedFont;
+
     QQuickTextInput::setFont(font);
 
-    emit fontChanged();
+    if (changed)
+        emit fontChanged();
 }
 
 /*!
