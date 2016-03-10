@@ -671,6 +671,8 @@ TestCase {
     }
 
     function test_font() { // QTBUG_50984
+        skip("Temporarily skipped due to QTBUG-51696")
+
         var control = component.createObject(window.contentItem)
         verify(control)
         verify(control.button)

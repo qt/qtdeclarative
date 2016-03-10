@@ -841,11 +841,17 @@ void QQuickControl::setContentItem(QQuickItem *item)
     }
 }
 
+void QQuickControl::classBegin()
+{
+    Q_D(QQuickControl);
+    QQuickItem::classBegin();
+    d->resolveFont();
+}
+
 void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
     QQuickItem::componentComplete();
-    d->resolveFont();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
 #ifndef QT_NO_ACCESSIBILITY
