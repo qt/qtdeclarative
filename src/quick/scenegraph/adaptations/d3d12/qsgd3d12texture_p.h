@@ -78,6 +78,9 @@ public:
 
 private:
     QSGD3D12Engine *m_engine;
+    QImage m_image;
+    bool m_createPending = false;
+    bool m_createdWithMipMaps = false;
     uint m_id = 0;
     bool m_alphaWanted = false;
     QSize m_size;

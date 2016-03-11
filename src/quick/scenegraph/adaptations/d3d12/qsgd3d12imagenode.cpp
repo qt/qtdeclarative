@@ -52,7 +52,7 @@ void QSGD3D12ImageNode::setFiltering(QSGTexture::Filtering filtering)
         return;
 
     m_material.setFiltering(filtering);
-    //m_smoothMaterial.setFiltering(filtering);
+    m_smoothMaterial.setFiltering(filtering);
     markDirty(DirtyMaterial);
 }
 
@@ -62,7 +62,7 @@ void QSGD3D12ImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
         return;
 
     m_material.setMipmapFiltering(filtering);
-    //m_smoothMaterial.setMipmapFiltering(filtering);
+    m_smoothMaterial.setMipmapFiltering(filtering);
     markDirty(DirtyMaterial);
 }
 
@@ -72,7 +72,7 @@ void QSGD3D12ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
         return;
 
     m_material.setVerticalWrapMode(wrapMode);
-    //m_smoothMaterial.setVerticalWrapMode(wrapMode);
+    m_smoothMaterial.setVerticalWrapMode(wrapMode);
     markDirty(DirtyMaterial);
 }
 
@@ -82,19 +82,22 @@ void QSGD3D12ImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
         return;
 
     m_material.setHorizontalWrapMode(wrapMode);
-    //m_smoothMaterial.setHorizontalWrapMode(wrapMode);
+    m_smoothMaterial.setHorizontalWrapMode(wrapMode);
     markDirty(DirtyMaterial);
 }
 
 void QSGD3D12ImageNode::updateMaterialAntialiasing()
 {
-    //setMaterial(m_antialiasing ? &m_smoothMaterial : &m_material);
+    if (m_antialiasing)
+        setMaterial(&m_smoothMaterial);
+    else
+        setMaterial(&m_material);
 }
 
 void QSGD3D12ImageNode::setMaterialTexture(QSGTexture *texture)
 {
     m_material.setTexture(texture);
-//    m_smoothMaterial.setTexture(texture);
+    m_smoothMaterial.setTexture(texture);
 }
 
 QSGTexture *QSGD3D12ImageNode::materialTexture() const

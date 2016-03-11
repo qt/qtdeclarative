@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.3
 
 Item {
     Rectangle {
@@ -50,11 +50,28 @@ Item {
     }
 
     Image {
+        id: im
         source: "qrc:/qt.png"
+        mipmap: true
+
+        // changing the mipmap property results in the creation of a brand new
+        // texture resource. enable the following to test.
+//        Timer {
+//            interval: 5000
+//            onTriggered: im.mipmap = false
+//            running: true
+//        }
 
         Image {
             anchors.centerIn: parent
             source: "qrc:/face-smile.png"
         }
+    }
+
+    Image {
+        source: "qrc:/face-smile.png"
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        antialiasing: true
     }
 }

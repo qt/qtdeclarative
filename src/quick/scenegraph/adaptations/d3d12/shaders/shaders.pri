@@ -38,10 +38,28 @@ texture_pshader.header = ps_texture.hlslh
 texture_pshader.entry = PS_Texture
 texture_pshader.type = ps_5_0
 
+smoothtexture_VSPS = $$PWD/smoothtexture.hlsl
+smoothtexture_vshader.input = smoothtexture_VSPS
+smoothtexture_vshader.header = vs_smoothtexture.hlslh
+smoothtexture_vshader.entry = VS_SmoothTexture
+smoothtexture_vshader.type = vs_5_0
+smoothtexture_pshader.input = smoothtexture_VSPS
+smoothtexture_pshader.header = ps_smoothtexture.hlslh
+smoothtexture_pshader.entry = PS_SmoothTexture
+smoothtexture_pshader.type = ps_5_0
+
+mipmapgen_CS = $$PWD/mipmapgen.hlsl
+mipmapgen_cshader.input = mipmapgen_CS
+mipmapgen_cshader.header = cs_mipmapgen.hlslh
+mipmapgen_cshader.entry = CS_Generate4MipMaps
+mipmapgen_cshader.type = cs_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
     smoothcolor_vshader smoothcolor_pshader \
-    texture_vshader texture_pshader
+    texture_vshader texture_pshader \
+    smoothtexture_vshader smoothtexture_pshader \
+    mipmapgen_cshader
 
 load(hlsl_bytecode_header)

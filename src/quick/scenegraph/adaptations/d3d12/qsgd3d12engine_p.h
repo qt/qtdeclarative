@@ -52,6 +52,7 @@
 //
 
 #include <QWindow>
+#include <QImage>
 #include <qsggeometry.h>
 
 QT_BEGIN_NAMESPACE
@@ -295,6 +296,8 @@ public:
 
     static quint32 alignedConstantBufferSize(quint32 size);
     static QSGD3D12Format toDXGIFormat(QSGGeometry::Type sgtype, int tupleSize = 1, int *size = nullptr);
+    static int mipMapLevels(const QSize &size);
+    static QSize mipMapAdjustedSourceSize(const QSize &size);
 
     enum TextureCreateFlag {
         CreateWithAlpha = 0x1,
@@ -302,15 +305,10 @@ public:
     };
     Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
 
-    enum TextureUploadFlag {
-        UploadWithMipMaps = 0x1
-    };
-    Q_DECLARE_FLAGS(TextureUploadFlags, TextureUploadFlag)
-
-    uint createTexture(QImage::Format format, const QSize &size, TextureCreateFlags flags);
+    uint genTexture();
+    void createTextureAsync(uint id, const QImage &image, TextureCreateFlags flags);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
-    void queueTextureUpload(uint id, const QImage &image, TextureUploadFlags flags);
     void activateTexture(uint id);
 
 private:
@@ -320,7 +318,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::ClearFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureCreateFlags)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureUploadFlags)
 
 QT_END_NAMESPACE
 

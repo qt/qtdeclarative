@@ -74,7 +74,7 @@ public:
 
 private:
     QSGD3D12TextureMaterial m_material;
-//    QSGSmoothTextureMaterial m_smoothMaterial;
+    QSGD3D12SmoothTextureMaterial m_smoothMaterial;
 };
 
 QT_END_NAMESPACE

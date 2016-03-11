@@ -162,10 +162,10 @@ public:
     void present();
     void waitGPU();
 
-    uint createTexture(QImage::Format format, const QSize &size, QSGD3D12Engine::TextureCreateFlags flags);
+    uint genTexture();
+    void createTextureAsync(uint id, const QImage &image, QSGD3D12Engine::TextureCreateFlags flags);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
-    void queueTextureUpload(uint id, const QImage &image, QSGD3D12Engine::TextureUploadFlags flags);
     void activateTexture(uint id);
 
     // the device is intentionally hidden here. all resources have to go
@@ -177,6 +177,7 @@ private:
 
     bool createCbvSrvUavHeap(int pframeIndex, int descriptorCount);
     void setDescriptorHeaps(bool force = false);
+    void ensureGPUDescriptorHeap(int cbvSrvUavDescriptorCount);
 
     DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
     ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
@@ -186,6 +187,8 @@ private:
 
     void transitionResource(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList,
                             D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after) const;
+
+    void uavBarrier(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList) const;
 
     ID3D12Resource *createBuffer(int size);
 
@@ -212,14 +215,18 @@ private:
         ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
         int gpuCbvSrvUavHeapSize;
         int cbvSrvUavNextFreeDescriptorIndex;
-        QSet<uint> pendingTextures;
+        QSet<uint> pendingTextureUploads;
+        QSet<uint> pendingTextureMipMap;
+        QSet<uint> pendingTextureReleases;
         struct DeleteQueueEntry {
             ComPtr<ID3D12Resource> res;
-            ComPtr<ID3D12DescriptorHeap> dh;
+            ComPtr<ID3D12DescriptorHeap> descHeap;
+            SIZE_T cpuDescriptorPtr = 0;
         };
         QVector<DeleteQueueEntry> deleteQueue;
         void deferredDelete(ComPtr<ID3D12Resource> res) { DeleteQueueEntry e; e.res = res; deleteQueue << e; }
-        void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh) { DeleteQueueEntry e; e.dh = dh; deleteQueue << e; }
+        void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh) { DeleteQueueEntry e; e.descHeap = dh; deleteQueue << e; }
+        void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h) { DeleteQueueEntry e; e.cpuDescriptorPtr = h.ptr; deleteQueue << e; }
     };
 
     void markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size);
@@ -270,10 +277,14 @@ private:
     QCache<QSGD3D12RootSignature, RootSigCacheEntry> rootSigCache;
 
     struct Texture {
+        bool entryInUse = false;
         ComPtr<ID3D12Resource> texture;
         D3D12_CPU_DESCRIPTOR_HANDLE srv;
         quint64 fenceValue = 0;
+        bool waitAdded = false;
         ComPtr<ID3D12Resource> stagingBuffer;
+        QVector<D3D12_CPU_DESCRIPTOR_HANDLE> mipUAVs;
+        bool mipmap = false;
     };
 
     QVector<Texture> textures;
@@ -295,6 +306,18 @@ private:
         QSGD3D12PipelineState pipelineState;
     };
     TransientFrameData tframeData;
+
+    struct MipMapGen {
+        bool initialize(QSGD3D12EnginePrivate *enginePriv);
+        void releaseResources();
+        void queueGenerate(const Texture &t);
+
+        QSGD3D12EnginePrivate *engine;
+        ComPtr<ID3D12RootSignature> rootSig;
+        ComPtr<ID3D12PipelineState> pipelineState;
+    };
+
+    MipMapGen mipmapper;
 };
 
 QT_END_NAMESPACE

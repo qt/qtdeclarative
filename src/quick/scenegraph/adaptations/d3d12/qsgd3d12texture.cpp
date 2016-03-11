@@ -45,25 +45,21 @@ QT_BEGIN_NAMESPACE
 
 void QSGD3D12Texture::setImage(const QImage &image, uint flags)
 {
-    // ### mipmap, atlas
+    // ### atlas
 
     const bool alphaRequest = flags & QSGRenderContext::CreateTexture_Alpha;
     m_alphaWanted = alphaRequest && image.hasAlphaChannel();
 
+    m_image = image;
     m_size = image.size();
 
-    QSGD3D12Engine::TextureCreateFlags createFlags = 0;
-    if (m_alphaWanted)
-        createFlags |= QSGD3D12Engine::CreateWithAlpha;
+    m_id = m_engine->genTexture();
+    Q_ASSERT(m_id);
 
-    m_id = m_engine->createTexture(image.format(), image.size(), createFlags);
-    if (!m_id) {
-        qWarning("Failed to allocate texture of size %dx%d", image.width(), image.height());
-        return;
-    }
-
-    QSGD3D12Engine::TextureUploadFlags uploadFlags = 0;
-    m_engine->queueTextureUpload(m_id, image, uploadFlags);
+    // We could kick off the texture creation and the async upload right here.
+    // Unfortunately we cannot tell at this stage if mipmaps will be enabled
+    // via an Image element's mipmap property...so defer to bind().
+    m_createPending = true;
 }
 
 QSGD3D12Texture::~QSGD3D12Texture()
@@ -89,7 +85,7 @@ bool QSGD3D12Texture::hasAlphaChannel() const
 
 bool QSGD3D12Texture::hasMipmaps() const
 {
-    return false; // ###
+    return mipmapFiltering() != QSGTexture::None;
 }
 
 QRectF QSGD3D12Texture::normalizedTextureSubRect() const
@@ -109,10 +105,32 @@ QSGTexture *QSGD3D12Texture::removedFromAtlas() const
 
 void QSGD3D12Texture::bind()
 {
-    // Called when the texture material updates the pipeline state. Here we
-    // know that the texture is going to be used in the current frame by the
-    // next draw call. Notify the engine so that it can wait for possible
-    // pending uploads in endFrame() and set up the pipeline accordingly.
+    // Called when the texture material updates the pipeline state.
+
+    if (!m_createPending && hasMipmaps() != m_createdWithMipMaps) {
+        m_engine->releaseTexture(m_id);
+        m_id = m_engine->genTexture();
+        Q_ASSERT(m_id);
+        m_createPending = true;
+    }
+
+    if (m_createPending) {
+        m_createPending = false;
+
+        QSGD3D12Engine::TextureCreateFlags createFlags = 0;
+        if (m_alphaWanted)
+            createFlags |= QSGD3D12Engine::CreateWithAlpha;
+
+        m_createdWithMipMaps = hasMipmaps();
+        if (m_createdWithMipMaps)
+            createFlags |= QSGD3D12Engine::CreateWithMipMaps;
+
+        m_engine->createTextureAsync(m_id, m_image, createFlags);
+    }
+
+    // Here we know that the texture is going to be used in the current frame
+    // by the next draw call. Notify the engine so that it can wait for
+    // possible pending uploads and set up the pipeline accordingly.
     m_engine->activateTexture(m_id);
 }
 
