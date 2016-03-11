@@ -811,7 +811,17 @@ public:
         , _groupStart(false)
         , _isRemoved(false)
     {}
-    ~BasicBlock();
+
+    ~BasicBlock()
+    {
+        for (Stmt *s : qAsConst(_statements)) {
+            if (Phi *p = s->asPhi()) {
+                p->destroyData();
+            } else {
+                break;
+            }
+        }
+    }
 
     const QVector<Stmt *> &statements() const
     {
@@ -834,15 +844,73 @@ public:
         return i;
     }
 
-    void appendStatement(Stmt *statement);
-    void prependStatement(Stmt *stmt);
-    void prependStatements(const QVector<Stmt *> &stmts);
-    void insertStatementBefore(Stmt *before, Stmt *newStmt);
-    void insertStatementBefore(int index, Stmt *newStmt);
-    void insertStatementBeforeTerminator(Stmt *stmt);
-    void replaceStatement(int index, Stmt *newStmt);
-    void removeStatement(Stmt *stmt);
-    void removeStatement(int idx);
+    void appendStatement(Stmt *statement)
+    {
+        Q_ASSERT(!isRemoved());
+        if (nextLocation.startLine)
+            statement->location = nextLocation;
+        _statements.append(statement);
+    }
+
+    void prependStatement(Stmt *stmt)
+    {
+        Q_ASSERT(!isRemoved());
+        _statements.prepend(stmt);
+    }
+
+    void prependStatements(const QVector<Stmt *> &stmts)
+    {
+        Q_ASSERT(!isRemoved());
+        QVector<Stmt *> newStmts = stmts;
+        newStmts += _statements;
+        _statements = newStmts;
+    }
+
+    void insertStatementBefore(Stmt *before, Stmt *newStmt)
+    {
+        int idx = _statements.indexOf(before);
+        Q_ASSERT(idx >= 0);
+        _statements.insert(idx, newStmt);
+    }
+
+    void insertStatementBefore(int index, Stmt *newStmt)
+    {
+        Q_ASSERT(index >= 0);
+        _statements.insert(index, newStmt);
+    }
+
+    void insertStatementBeforeTerminator(Stmt *stmt)
+    {
+        Q_ASSERT(!isRemoved());
+        _statements.insert(_statements.size() - 1, stmt);
+    }
+
+    void replaceStatement(int index, Stmt *newStmt)
+    {
+        Q_ASSERT(!isRemoved());
+        if (Phi *p = _statements[index]->asPhi()) {
+            p->destroyData();
+        }
+        _statements[index] = newStmt;
+    }
+
+    void removeStatement(Stmt *stmt)
+    {
+        Q_ASSERT(!isRemoved());
+        if (Phi *p = stmt->asPhi()) {
+            p->destroyData();
+        }
+        _statements.remove(_statements.indexOf(stmt));
+    }
+
+    void removeStatement(int idx)
+    {
+        Q_ASSERT(!isRemoved());
+        if (Phi *p = _statements[idx]->asPhi()) {
+            p->destroyData();
+        }
+        _statements.remove(idx);
+    }
 
     inline bool isEmpty() const {
         Q_ASSERT(!isRemoved());
@@ -1206,6 +1274,251 @@ protected:
     int positionSize;
     BasicBlock *currentBB;
 };
+
+inline unsigned BasicBlock::newTemp()
+{
+    Q_ASSERT(!isRemoved());
+    return function->tempCount++;
+}
+
+inline Temp *BasicBlock::TEMP(unsigned index)
+{
+    Q_ASSERT(!isRemoved());
+    Temp *e = function->New<Temp>();
+    e->init(Temp::VirtualRegister, index);
+    return e;
+}
+
+inline ArgLocal *BasicBlock::ARG(unsigned index, unsigned scope)
+{
+    Q_ASSERT(!isRemoved());
+    ArgLocal *e = function->New<ArgLocal>();
+    e->init(scope ? ArgLocal::ScopedFormal : ArgLocal::Formal, index, scope);
+    return e;
+}
+
+inline ArgLocal *BasicBlock::LOCAL(unsigned index, unsigned scope)
+{
+    Q_ASSERT(!isRemoved());
+    ArgLocal *e = function->New<ArgLocal>();
+    e->init(scope ? ArgLocal::ScopedLocal : ArgLocal::Local, index, scope);
+    return e;
+}
+
+inline Expr *BasicBlock::CONST(Type type, double value)
+{
+    Q_ASSERT(!isRemoved());
+    Const *e = function->New<Const>();
+    if (type == NumberType) {
+        int ival = (int)value;
+        // +0 != -0, so we need to convert to double when negating 0
+        if (ival == value && !(value == 0 && isNegative(value)))
+            type = SInt32Type;
+        else
+            type = DoubleType;
+    } else if (type == NullType) {
+        value = 0;
+    } else if (type == UndefinedType) {
+        value = qQNaN();
+    }
+
+    e->init(type, value);
+    return e;
+}
+
+inline Expr *BasicBlock::STRING(const QString *value)
+{
+    Q_ASSERT(!isRemoved());
+    String *e = function->New<String>();
+    e->init(value);
+    return e;
+}
+
+inline Expr *BasicBlock::REGEXP(const QString *value, int flags)
+{
+    Q_ASSERT(!isRemoved());
+    RegExp *e = function->New<RegExp>();
+    e->init(value, flags);
+    return e;
+}
+
+inline Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
+{
+    Q_ASSERT(!isRemoved());
+    Name *e = function->New<Name>();
+    e->init(function->newString(id), line, column);
+    return e;
+}
+
+inline Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column)
+{
+    Q_ASSERT(!isRemoved());
+    Name *e = function->New<Name>();
+    e->initGlobal(function->newString(id), line, column);
+    return e;
+}
+
+
+inline Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
+{
+    Q_ASSERT(!isRemoved());
+    Name *e = function->New<Name>();
+    e->init(builtin, line, column);
+    return e;
+}
+
+inline Closure *BasicBlock::CLOSURE(int functionInModule)
+{
+    Q_ASSERT(!isRemoved());
+    Closure *clos = function->New<Closure>();
+    clos->init(functionInModule, function->module->functions.at(functionInModule)->name);
+    return clos;
+}
+
+inline Expr *BasicBlock::CONVERT(Expr *expr, Type type)
+{
+    Q_ASSERT(!isRemoved());
+    Convert *e = function->New<Convert>();
+    e->init(expr, type);
+    return e;
+}
+
+inline Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
+{
+    Q_ASSERT(!isRemoved());
+    Unop *e = function->New<Unop>();
+    e->init(op, expr);
+    return e;
+}
+
+inline Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
+{
+    Q_ASSERT(!isRemoved());
+    Binop *e = function->New<Binop>();
+    e->init(op, left, right);
+    return e;
+}
+
+inline Expr *BasicBlock::CALL(Expr *base, ExprList *args)
+{
+    Q_ASSERT(!isRemoved());
+    Call *e = function->New<Call>();
+    e->init(base, args);
+    int argc = 0;
+    for (ExprList *it = args; it; it = it->next)
+        ++argc;
+    function->maxNumberOfArguments = qMax(function->maxNumberOfArguments, argc);
+    return e;
+}
+
+inline Expr *BasicBlock::NEW(Expr *base, ExprList *args)
+{
+    Q_ASSERT(!isRemoved());
+    New *e = function->New<New>();
+    e->init(base, args);
+    return e;
+}
+
+inline Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
+{
+    Q_ASSERT(!isRemoved());
+    Subscript *e = function->New<Subscript>();
+    e->init(base, index);
+    return e;
+}
+
+inline Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property, uchar kind, int attachedPropertiesIdOrEnumValue)
+{
+    Q_ASSERT(!isRemoved());
+    Member*e = function->New<Member>();
+    e->init(base, name, property, kind, attachedPropertiesIdOrEnumValue);
+    return e;
+}
+
+inline Stmt *BasicBlock::EXP(Expr *expr)
+{
+    Q_ASSERT(!isRemoved());
+    if (isTerminated())
+        return 0;
+
+    Exp *s = function->NewStmt<Exp>();
+    s->init(expr);
+    appendStatement(s);
+    return s;
+}
+
+inline Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
+{
+    Q_ASSERT(!isRemoved());
+    if (isTerminated())
+        return 0;
+
+    Move *s = function->NewStmt<Move>();
+    s->init(target, source);
+    appendStatement(s);
+    return s;
+}
+
+inline Stmt *BasicBlock::JUMP(BasicBlock *target)
+{
+    Q_ASSERT(!isRemoved());
+    if (isTerminated())
+        return 0;
+
+    Jump *s = function->NewStmt<Jump>();
+    s->init(target);
+    appendStatement(s);
+
+    Q_ASSERT(! out.contains(target));
+    out.append(target);
+
+    Q_ASSERT(! target->in.contains(this));
+    target->in.append(this);
+
+    return s;
+}
+
+inline Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
+{
+    Q_ASSERT(!isRemoved());
+    if (isTerminated())
+        return 0;
+
+    if (iftrue == iffalse) {
+        MOVE(TEMP(newTemp()), cond);
+        return JUMP(iftrue);
+    }
+
+    CJump *s = function->NewStmt<CJump>();
+    s->init(cond, iftrue, iffalse, this);
+    appendStatement(s);
+
+    Q_ASSERT(! out.contains(iftrue));
+    out.append(iftrue);
+
+    Q_ASSERT(! iftrue->in.contains(this));
+    iftrue->in.append(this);
+
+    Q_ASSERT(! out.contains(iffalse));
+    out.append(iffalse);
+
+    Q_ASSERT(! iffalse->in.contains(this));
+    iffalse->in.append(this);
+
+    return s;
+}
+
+inline Stmt *BasicBlock::RET(Expr *expr)
+{
+    Q_ASSERT(!isRemoved());
+    if (isTerminated())
+        return 0;
+
+    Ret *s = function->NewStmt<Ret>();
+    s->init(expr);
+    appendStatement(s);
+    return s;
+}
 
 } // end of namespace IR
 
