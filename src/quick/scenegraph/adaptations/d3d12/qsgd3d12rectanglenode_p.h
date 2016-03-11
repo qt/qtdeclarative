@@ -52,7 +52,7 @@
 //
 
 #include <private/qsgdefaultrectanglenode_p.h>
-#include "qsgd3d12material_p.h"
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
