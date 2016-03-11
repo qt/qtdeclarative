@@ -331,4 +331,25 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_font_data() {
+        return [
+            {tag: "Control:pixelSize", type: "Control", attribute: "pixelSize", value: 15},
+
+            {tag: "GroupBox:pixelSize", type: "GroupBox", attribute: "pixelSize", value: 15},
+            {tag: "GroupBox:weight", type: "GroupBox", attribute: "weight", value: Font.DemiBold},
+
+            {tag: "TabButton:pixelSize", type: "TabButton", attribute: "pixelSize", value: 24},
+            {tag: "TabButton:weight", type: "TabButton", attribute: "weight", value: Font.Light},
+        ]
+    }
+
+    function test_font(data) {
+        var control = Qt.createQmlObject("import Qt.labs.controls 1.0; " + data.type + " { }", testCase)
+        verify(control)
+
+        compare(control.font[data.attribute], data.value)
+
+        control.destroy()
+    }
 }
