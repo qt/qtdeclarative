@@ -121,6 +121,10 @@ T.ComboBox {
         topMargin: 12
         bottomMargin: 12
 
+        Material.theme: control.Material.theme
+        Material.accent: control.Material.accent
+        Material.primary: control.Material.primary
+
         enter: Transition {
             // grow_fade_in
             NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }

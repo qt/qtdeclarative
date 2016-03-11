@@ -98,7 +98,7 @@ TestCase {
 
     Component {
         id: menu
-        Item {
+        ApplicationWindow {
             Material.primary: Material.Blue
             Material.accent: Material.Red
             property alias menu: popup
@@ -281,6 +281,8 @@ TestCase {
         var container = menu.createObject(testCase)
         verify(container)
         verify(container.menu)
+        container.menu.open()
+        verify(container.menu.visible)
         var child = container.menu.itemAt(0)
         verify(child)
         compare(container.Material.theme, Material.Light)

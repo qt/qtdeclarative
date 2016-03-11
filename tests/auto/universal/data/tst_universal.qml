@@ -96,7 +96,7 @@ TestCase {
 
     Component {
         id: menu
-        Item {
+        ApplicationWindow {
             Universal.accent: Universal.Red
             property alias menu: popup
             Menu {
@@ -256,6 +256,8 @@ TestCase {
         var container = menu.createObject(testCase)
         verify(container)
         verify(container.menu)
+        container.menu.open()
+        verify(container.menu.visible)
         var child = container.menu.itemAt(0)
         verify(child)
         compare(container.Universal.theme, Universal.Light)
