@@ -195,8 +195,6 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
     return 0;
 }
 
-class QQmlVMEVariant;
-class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
@@ -222,10 +220,6 @@ protected:
     virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
 
 public:
-    friend class QQmlVMEMetaObjectEndpoint;
-    friend class QQmlVMEVariantQObjectPtr;
-    friend class QQmlPropertyCache;
-
     QQmlGuardedContextData ctxt;
 
     const QQmlVMEMetaData *metaData;
