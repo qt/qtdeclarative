@@ -251,11 +251,15 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
 QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
 {
     if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
-        if (const QFont *font = theme->font(type))
-            return *font;
+        if (const QFont *font = theme->font(type)) {
+            QFont f = *font;
+            if (type == QPlatformTheme::SystemFont)
+                f.resolve(0);
+            return f;
+        }
     }
 
-    return QGuiApplication::font();
+    return QFont();
 }
 
 /*!
