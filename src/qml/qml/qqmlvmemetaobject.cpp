@@ -1013,11 +1013,6 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
     }
 }
 
-void QQmlVMEMetaObject::listChanged(int id)
-{
-    activate(object, methodOffset() + id, 0);
-}
-
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
