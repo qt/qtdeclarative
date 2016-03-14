@@ -165,7 +165,7 @@ public:
 
     static QQmlInterceptorMetaObject *get(QObject *obj);
 
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o) Q_DECL_OVERRIDE;
 
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache; }
@@ -217,7 +217,7 @@ public:
     static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
 
 protected:
-    virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
+    int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) Q_DECL_OVERRIDE;
 
 public:
     QQmlGuardedContextData ctxt;
