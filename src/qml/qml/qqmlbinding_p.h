@@ -86,12 +86,10 @@ public:
 
     void setNotifyOnValueChanged(bool);
 
-    // Inherited from QQmlJavaScriptExpression
-    virtual void refresh();
+    void refresh() Q_DECL_OVERRIDE;
 
-    // Inherited from QQmlAbstractBinding
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
-    virtual QString expression() const;
+    void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding) Q_DECL_OVERRIDE;
+    QString expression() const Q_DECL_OVERRIDE;
     void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
     typedef int Identifier;
@@ -101,8 +99,8 @@ public:
 
     QVariant evaluate();
 
-    virtual QString expressionIdentifier();
-    virtual void expressionChanged();
+    QString expressionIdentifier() Q_DECL_OVERRIDE;
+    void expressionChanged() Q_DECL_OVERRIDE;
 
 private:
     inline bool updatingFlag() const;
