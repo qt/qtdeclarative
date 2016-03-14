@@ -377,6 +377,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlickable, 9>(uri, 2, 9, "Flickable");
     qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
     qmlRegisterType<QQuickTextInput, 9>(uri, 2, 9, "TextInput");
+    qmlRegisterType<QQuickTouchPoint>(uri, 2, 9, "TouchPoint");
+    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
+    qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, 2, 9, "PointingDeviceUniqueId", QQuickTouchPoint::tr("PointingDeviceUniqueId is only available via read-only properties"));
 }
 
 static void initResources()

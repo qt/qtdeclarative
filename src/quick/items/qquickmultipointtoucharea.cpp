@@ -60,6 +60,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
     The TouchPoint type contains information about a touch point, such as the current
     position, pressure, and area.
+
+    \image touchpoint-metrics.png
 */
 
 /*!
@@ -101,16 +103,29 @@ void QQuickTouchPoint::setY(qreal y)
 }
 
 /*!
+    \qmlproperty size QtQuick::TouchPoint::ellipseDiameters
+    \since 5.9
+
+    This property holds the major and minor axes of the ellipse representing
+    the covered area of the touch point.
+*/
+void QQuickTouchPoint::setEllipseDiameters(const QSizeF &d)
+{
+    if (_ellipseDiameters == d)
+        return;
+    _ellipseDiameters = d;
+    emit ellipseDiametersChanged();
+}
+
+/*!
     \qmlproperty real QtQuick::TouchPoint::pressure
     \qmlproperty vector2d QtQuick::TouchPoint::velocity
-    \qmlproperty rectangle QtQuick::TouchPoint::area
 
     These properties hold additional information about the current state of the touch point.
 
     \list
     \li \c pressure is a value in the range of 0.0 to 1.0.
     \li \c velocity is a vector with magnitude reported in pixels per second.
-    \li \c area is a rectangle covering the area of the touch point, centered on the current position of the touch point.
     \endlist
 
     Not all touch devices support velocity. If velocity is not supported, it will be reported
@@ -124,6 +139,26 @@ void QQuickTouchPoint::setPressure(qreal pressure)
     emit pressureChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::TouchPoint::rotation
+    \since 5.9
+
+    This property holds the angular orientation of this touch point. The return
+    value is in degrees, where zero (the default) indicates the finger or token
+    is pointing upwards, a negative angle means it's rotated to the left, and a
+    positive angle means it's rotated to the right. Most touchscreens do not
+    detect rotation, so zero is the most common value.
+
+    \sa QTouchEvent::TouchPoint::rotation()
+*/
+void QQuickTouchPoint::setRotation(qreal r)
+{
+    if (_rotation == r)
+        return;
+    _rotation = r;
+    emit rotationChanged();
+}
+
 void QQuickTouchPoint::setVelocity(const QVector2D &velocity)
 {
     if (_velocity == velocity)
@@ -132,6 +167,18 @@ void QQuickTouchPoint::setVelocity(const QVector2D &velocity)
     emit velocityChanged();
 }
 
+/*!
+    \deprecated
+    \qmlproperty rectangle QtQuick::TouchPoint::area
+
+    A rectangle covering the area of the touch point, centered on the current
+    position of the touch point.
+
+    It is deprecated because a touch point is more correctly modeled as an ellipse,
+    whereas this rectangle represents the outer bounds of the ellipse after \l rotation.
+
+    \sa horizontalDiameter, verticalDiameter
+*/
 void QQuickTouchPoint::setArea(const QRectF &area)
 {
     if (_area == area)
@@ -219,6 +266,25 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
         return;
     _sceneY = sceneY;
     emit sceneYChanged();
+}
+
+/*!
+    \qmlproperty PointingDeviceUniqueId QtQuick::TouchPoint::uniqueId
+    \since 5.9
+
+    This property holds the unique ID of the touch point or token.
+
+    It is normally empty, because touchscreens cannot uniquely identify fingers.
+    But when it is set, it is expected to uniquely identify a specific token
+    (fiducial object).
+
+    Interpreting the contents of this ID requires knowledge of the hardware and
+    drivers in use (e.g. various TUIO-based touch surfaces).
+*/
+void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
+{
+    _uniqueId = id;
+    emit uniqueIdChanged();
 }
 
 /*!
@@ -691,9 +757,12 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
 {
     //TODO: if !qmlDefined, could bypass setters.
     //      also, should only emit signals after all values have been set
+    dtp->setUniqueId(p->uniqueId());
     dtp->setX(p->pos().x());
     dtp->setY(p->pos().y());
+    dtp->setEllipseDiameters(p->ellipseDiameters());
     dtp->setPressure(p->pressure());
+    dtp->setRotation(p->rotation());
     dtp->setVelocity(p->velocity());
     dtp->setArea(p->rect());
     dtp->setStartX(p->startPos().x());
