@@ -1133,8 +1133,7 @@ void QQmlVMEMetaObject::allocateProperties()
     QV4::ExecutionEngine *v4 = cache->engine;
     QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, metaData->propertyCount);
     properties.set(v4, data);
-    for (uint i = 0; i < data->size; ++i)
-        data->data[i] = QV4::Encode::undefined();
+    std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
