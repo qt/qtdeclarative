@@ -123,6 +123,17 @@ TestCase {
         }
     }
 
+    Component {
+        id: windowPane
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            property alias pane: pane
+            Pane { id: pane }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -336,22 +347,41 @@ TestCase {
 
     function test_font_data() {
         return [
-            {tag: "Control:pixelSize", type: "Control", attribute: "pixelSize", value: 15},
+            {tag: "Control:pixelSize", type: "Control", attribute: "pixelSize", value: 15, window: 20, pane: 10},
 
-            {tag: "GroupBox:pixelSize", type: "GroupBox", attribute: "pixelSize", value: 15},
-            {tag: "GroupBox:weight", type: "GroupBox", attribute: "weight", value: Font.DemiBold},
+            {tag: "GroupBox:pixelSize", type: "GroupBox", attribute: "pixelSize", value: 15, window: 20, pane: 10},
+            {tag: "GroupBox:weight", type: "GroupBox", attribute: "weight", value: Font.DemiBold, window: Font.Light, pane: Font.Medium},
 
-            {tag: "TabButton:pixelSize", type: "TabButton", attribute: "pixelSize", value: 24},
-            {tag: "TabButton:weight", type: "TabButton", attribute: "weight", value: Font.Light},
+            {tag: "TabButton:pixelSize", type: "TabButton", attribute: "pixelSize", value: 24, window: 20, pane: 10},
+            {tag: "TabButton:weight", type: "TabButton", attribute: "weight", value: Font.Light, window: Font.Black, pane: Font.Bold}
         ]
     }
 
     function test_font(data) {
-        var control = Qt.createQmlObject("import Qt.labs.controls 1.0; " + data.type + " { }", testCase)
+        var window = windowPane.createObject(testCase)
+        verify(window)
+        verify(window.pane)
+
+        var control = Qt.createQmlObject("import Qt.labs.controls 1.0; " + data.type + " { }", window.pane)
         verify(control)
 
         compare(control.font[data.attribute], data.value)
 
-        control.destroy()
+        window.font[data.attribute] = data.window
+        compare(window.font[data.attribute], data.window)
+        compare(window.pane.font[data.attribute], data.window)
+        compare(control.font[data.attribute], data.window)
+
+        window.pane.font[data.attribute] = data.pane
+        compare(window.font[data.attribute], data.window)
+        compare(window.pane.font[data.attribute], data.pane)
+        compare(control.font[data.attribute], data.pane)
+
+        window.pane.font = undefined
+        compare(window.font[data.attribute], data.window)
+        compare(window.pane.font[data.attribute], data.window)
+        compare(control.font[data.attribute], data.window)
+
+        window.destroy()
     }
 }

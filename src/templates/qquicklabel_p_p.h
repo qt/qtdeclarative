@@ -74,6 +74,7 @@ public:
 
     void resizeBackground();
     void resolveFont();
+    void inheritFont(const QFont &f);
 
     void _q_textChanged(const QString &text);
 
@@ -82,6 +83,7 @@ public:
     QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif
 
+    QFont font;
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
 };

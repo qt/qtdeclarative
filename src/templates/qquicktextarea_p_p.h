@@ -77,6 +77,7 @@ public:
 
     void resizeBackground();
     void resolveFont();
+    void inheritFont(const QFont &f);
 
     qreal getImplicitWidth() const Q_DECL_OVERRIDE;
     qreal getImplicitHeight() const Q_DECL_OVERRIDE;
@@ -91,6 +92,7 @@ public:
     QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif
 
+    QFont font;
     QQuickItem *background;
     QString placeholder;
     Qt::FocusReason focusReason;

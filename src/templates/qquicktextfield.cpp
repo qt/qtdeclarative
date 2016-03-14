@@ -175,15 +175,20 @@ QQuickTextField::~QQuickTextField()
 void QQuickTextFieldPrivate::resolveFont()
 {
     Q_Q(QQuickTextField);
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
-    QFont resolvedFont = sourceFont.resolve(naturalFont);
-    if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
-        return;
+    inheritFont(QQuickControlPrivate::naturalControlFont(q));
+}
 
-    const bool changed = sourceFont != resolvedFont;
+void QQuickTextFieldPrivate::inheritFont(const QFont &f)
+{
+    Q_Q(QQuickTextField);
+    QFont parentFont = font.resolve(f);
+    parentFont.resolve(font.resolve() | f.resolve());
 
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    const QFont resolvedFont = parentFont.resolve(defaultFont);
+
+    const bool changed = resolvedFont != sourceFont;
     q->QQuickTextInput::setFont(resolvedFont);
-
     if (changed)
         emit q->fontChanged();
 }
@@ -240,24 +245,11 @@ QFont QQuickTextField::font() const
 void QQuickTextField::setFont(const QFont &font)
 {
     Q_D(QQuickTextField);
-    if (d->sourceFont.resolve() == font.resolve() && d->sourceFont == font)
+    if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    // Determine which font is inherited from this control's ancestors and
-    // QGuiApplication::font, resolve this against \a font (attributes from the
-    // inherited font are copied over). Then propagate this font to this
-    // control's children.
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
-    QFont resolvedFont = font.resolve(naturalFont);
-    if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
-        return;
-
-    const bool changed = d->sourceFont != resolvedFont;
-
-    QQuickTextInput::setFont(font);
-
-    if (changed)
-        emit fontChanged();
+    d->font = font;
+    d->resolveFont();
 }
 
 /*!
@@ -363,7 +355,7 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
 {
     Q_D(QQuickTextField);
     QQuickTextInput::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete())
+    if (change == ItemParentHasChanged && value.item)
         d->resolveFont();
 }
 

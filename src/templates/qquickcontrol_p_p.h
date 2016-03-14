@@ -95,18 +95,22 @@ public:
     void updateFont(const QFont &);
     static void updateFontRecur(QQuickItem *item, const QFont &);
     inline void setFont_helper(const QFont &f) {
-        if (font.resolve() == f.resolve() && font == f)
+        if (resolvedFont.resolve() == f.resolve() && resolvedFont == f)
             return;
         updateFont(f);
     }
     void resolveFont();
+    void inheritFont(const QFont &f);
     static QFont naturalControlFont(const QQuickItem *);
     static QFont themeFont(QPlatformTheme::Font type);
+
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(QQuickItem *);
 
+    // TODO: QLazilyAllocated<ExtraData>
     QFont font;
+    QFont resolvedFont;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
