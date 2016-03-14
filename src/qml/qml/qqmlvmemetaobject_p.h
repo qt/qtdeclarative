@@ -275,11 +275,6 @@ public:
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
-    static void list_append(QQmlListProperty<QObject> *, QObject *);
-    static int list_count(QQmlListProperty<QObject> *);
-    static QObject *list_at(QQmlListProperty<QObject> *, int);
-    static void list_clear(QQmlListProperty<QObject> *);
-
     void activate(QObject *, int, void **);
 
     QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
