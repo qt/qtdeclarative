@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = gallery
-QT += quick
+QT += quick labscontrols
 
 SOURCES += \
     gallery.cpp

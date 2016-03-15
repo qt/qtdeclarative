@@ -241,7 +241,7 @@ ApplicationWindow {
                     property int styleIndex: -1
                     model: ["Default", "Material", "Universal"]
                     Component.onCompleted: {
-                        styleIndex = find(settings.style)
+                        styleIndex = find(settings.style, Qt.MatchFixedString)
                         if (styleIndex !== -1)
                             currentIndex = styleIndex
                     }
