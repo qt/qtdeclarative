@@ -44,14 +44,15 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include "qquickcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
-
+#ifndef QT_NO_OPENGL
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
+#endif
 #include <QtCore/QThread>
 #include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
-
+#ifndef QT_NO_OPENGL
 #define QT_MINIMUM_FBO_SIZE 64
 
 static inline int qt_next_power_of_two(int v)
@@ -85,10 +86,12 @@ struct GLAcquireContext {
     }
     QOpenGLContext *ctx;
 };
-
+#endif
 QQuickContext2DTexture::QQuickContext2DTexture()
     : m_context(0)
+#ifndef QT_NO_OPENGL
     , m_gl(0)
+#endif
     , m_surface(0)
     , m_item(0)
     , m_canvasWindowChanged(false)
@@ -250,9 +253,9 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
         return;
     }
     QQuickContext2D::mutex.unlock();
-
+#ifndef QT_NO_OPENGL
     GLAcquireContext currentContext(m_gl, m_surface);
-
+#endif
     if (!m_tiledCanvas) {
         paintWithoutTiles(ccb);
         delete ccb;
@@ -379,7 +382,7 @@ bool QQuickContext2DTexture::event(QEvent *e)
     }
     return QObject::event(e);
 }
-
+#ifndef QT_NO_OPENGL
 static inline QSize npotAdjustedSize(const QSize &size)
 {
     static bool checked = false;
@@ -646,6 +649,7 @@ void QQuickContext2DFBOTexture::endPainting()
 
     m_fbo->bindDefault();
 }
+#endif
 
 QQuickContext2DImageTexture::QQuickContext2DImageTexture()
     : QQuickContext2DTexture()

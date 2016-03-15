@@ -144,9 +144,14 @@ public:
                 int indexType = TypeUnsignedShort);
     virtual ~QSGGeometry();
 
+#ifndef QT_NO_OPENGL
     // ### Qt 6: GL types to be removed from the public API
     void setDrawingMode(GLenum mode);
     inline GLenum drawingMode() const { return m_drawing_mode; }
+#else
+    void setDrawingMode(int mode);
+    inline int drawingMode() const { return m_drawing_mode; }
+#endif
 
     void allocate(int vertexCount, int indexCount = 0);
 

@@ -47,7 +47,6 @@
 #include <QtCore/QLibraryInfo>
 #include <QtCore/private/qabstractanimation_p.h>
 
-#include <QtGui/QOpenGLContext>
 #include <QtGui/QOffscreenSurface>
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -59,7 +58,11 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickprofiler_p.h>
 
-#include <private/qquickshadereffectnode_p.h>
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+# include <private/qsgdefaultrendercontext_p.h>
+# include <private/qquickshadereffectnode_p.h>
+#endif
 
 #ifdef Q_OS_WIN
 #  include <QtCore/qt_windows.h>
@@ -69,7 +72,7 @@ QT_BEGIN_NAMESPACE
 
 extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-
+#ifndef QT_NO_OPENGL
 /*!
     expectations for this manager to work:
      - one opengl context to render multiple windows
@@ -81,7 +84,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
-
+#endif
 QSGRenderLoop *QSGRenderLoop::s_instance = 0;
 
 QSGRenderLoop::~QSGRenderLoop()
@@ -113,17 +116,20 @@ void QSGRenderLoop::cleanup()
  */
 void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 {
-    Q_ASSERT(window);
     Q_ASSERT(job);
-
+#ifndef QT_NO_OPENGL
+    Q_ASSERT(window);
     if (window->openglContext()) {
         window->openglContext()->makeCurrent(window);
         job->run();
     }
-
+#else
+    Q_UNUSED(window)
+    job->run();
+#endif
     delete job;
 }
-
+#ifndef QT_NO_OPENGL
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
@@ -164,7 +170,7 @@ public:
 
     QImage grabContent;
 };
-
+#endif
 QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
@@ -174,7 +180,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
             const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 
         s_instance = QSGContext::createWindowManager();
-
+#ifndef QT_NO_OPENGL
         if (!s_instance) {
 
             enum RenderLoopType {
@@ -226,9 +232,10 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 break;
             }
         }
-
+#endif
         qAddPostRoutine(QSGRenderLoop::cleanup);
     }
+
     return s_instance;
 }
 
@@ -263,7 +270,7 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
 }
-
+#ifndef QT_NO_OPENGL
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
 {
@@ -358,8 +365,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             cd->fireOpenGLContextCreated(gl);
             current = gl->makeCurrent(window);
         }
-        if (current)
-            cd->context->initialize(gl);
+        if (current) {
+            auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(cd->context);
+            openglRenderContext->initialize(gl);
+        }
     } else {
         current = gl->makeCurrent(window);
     }
@@ -479,6 +488,8 @@ void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
     renderWindow(window);
 }
+
+#endif
 
 #include "qsgrenderloop.moc"
 

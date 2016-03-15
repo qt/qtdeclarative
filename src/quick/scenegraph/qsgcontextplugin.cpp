@@ -44,10 +44,12 @@
 #include <QtCore/qlibraryinfo.h>
 
 // Built-in adaptations
-#include <QtQuick/private/qsgdummyadaptation_p.h>
 #include <QtQuick/private/qsgsoftwareadaptation_p.h>
 #ifdef QSG_D3D12
 #include <QtQuick/private/qsgd3d12adaptation_p.h>
+#endif
+#ifndef QT_NO_OPENGL
+#include <QtQuick/private/qsgdefaultcontext_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -84,7 +86,6 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
     , factory(0)
 {
     // Fill in the table with the built-in adaptations.
-    builtIns.append(new QSGDummyAdaptation);
     builtIns.append(new QSGSoftwareAdaptation);
 #ifdef QSG_D3D12
     builtIns.append(new QSGD3D12Adaptation);
@@ -102,6 +103,7 @@ QSGAdaptionBackendData *contextFactory()
 
         const QStringList args = QGuiApplication::arguments();
         QString requestedBackend;
+
         for (int index = 0; index < args.count(); ++index) {
             if (args.at(index).startsWith(QLatin1String("--device="))) {
                 requestedBackend = args.at(index).mid(9);
@@ -117,6 +119,13 @@ QSGAdaptionBackendData *contextFactory()
         // some device or platform.
         if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QT_QUICK_BACKEND"))
             requestedBackend = QString::fromLocal8Bit(qgetenv("QT_QUICK_BACKEND"));
+
+#ifdef QT_NO_OPENGL
+        // If this is a build without OpenGL, and no backend has been set
+        // default to the software renderer
+        if (requestedBackend.isEmpty())
+            requestedBackend = QString::fromLocal8Bit("software");
+#endif
 
         if (!requestedBackend.isEmpty()) {
 #ifndef QT_NO_DEBUG
@@ -167,7 +176,11 @@ QSGContext *QSGContext::createDefaultContext()
     QSGAdaptionBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->create(backendData->name);
-    return new QSGContext();
+#ifndef QT_NO_OPENGL
+    return new QSGDefaultContext();
+#else
+    return nullptr;
+#endif
 }
 
 

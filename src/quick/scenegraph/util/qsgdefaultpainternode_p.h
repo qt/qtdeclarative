@@ -63,6 +63,7 @@ QT_BEGIN_NAMESPACE
 
 class QOpenGLFramebufferObject;
 class QOpenGLPaintDevice;
+class QSGDefaultRenderContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
@@ -127,7 +128,7 @@ private:
     void updateRenderTarget();
     void updateFBOSize();
 
-    QSGRenderContext *m_context;
+    QSGDefaultRenderContext *m_context;
 
     QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
     QQuickPaintedItem::RenderTarget m_actualRenderTarget;

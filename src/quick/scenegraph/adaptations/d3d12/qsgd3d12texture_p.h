@@ -52,6 +52,7 @@
 //
 
 #include <qsgtexture.h>
+#include <basetsd.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -48,6 +48,7 @@
 #include <private/qquickpixmapcache_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgcontext_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -239,7 +240,7 @@ void QQuickItemGrabResult::render()
         return;
 
     d->texture->setRect(QRectF(0, d->itemSize.height(), d->itemSize.width(), -d->itemSize.height()));
-    QSGContext *sg = QSGRenderContext::from(QOpenGLContext::currentContext())->sceneGraphContext();
+    QSGContext *sg = QSGDefaultRenderContext::from(QOpenGLContext::currentContext())->sceneGraphContext();
     const QSize minSize = sg->minimumFBOSize();
     d->texture->setSize(QSize(qMax(minSize.width(), d->textureSize.width()),
                               qMax(minSize.height(), d->textureSize.height())));

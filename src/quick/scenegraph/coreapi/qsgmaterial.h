@@ -41,7 +41,11 @@
 #define QSGMATERIAL_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtGui/qopenglshaderprogram.h>
+#ifndef QT_NO_OPENGL
+# include <QtGui/qopenglshaderprogram.h>
+#endif
+#include <QtGui/QMatrix4x4>
+#include <QtCore/QRect>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,9 +81,9 @@ public:
         QRect deviceRect() const;
         float determinant() const;
         float devicePixelRatio() const;
-
+#ifndef QT_NO_OPENGL
         QOpenGLContext *context() const;
-
+#endif
     private:
         friend class QSGRenderer;
         DirtyStates m_dirty;
@@ -94,27 +98,30 @@ public:
     // First time a material is used, oldMaterial is null.
     virtual void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
     virtual char const *const *attributeNames() const = 0; // Array must end with null.
-
+#ifndef QT_NO_OPENGL
     inline QOpenGLShaderProgram *program() { return &m_program; }
-
+#endif
 protected:
     Q_DECLARE_PRIVATE(QSGMaterialShader)
     QSGMaterialShader(QSGMaterialShaderPrivate &dd);
 
-    friend class QSGRenderContext;
+    friend class QSGDefaultRenderContext;
     friend class QSGBatchRenderer::ShaderManager;
-
+#ifndef QT_NO_OPENGL
     void setShaderSourceFile(QOpenGLShader::ShaderType type, const QString &sourceFile);
     void setShaderSourceFiles(QOpenGLShader::ShaderType type, const QStringList &sourceFiles);
 
     virtual void compile();
+#endif
     virtual void initialize() { }
-
+#ifndef QT_NO_OPENGL
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
-
+#endif
 private:
+#ifndef QT_NO_OPENGL
     QOpenGLShaderProgram m_program;
+#endif
     QScopedPointer<QSGMaterialShaderPrivate> d_ptr;
 };
 

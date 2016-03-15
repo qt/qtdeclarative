@@ -110,16 +110,16 @@ public:
     bool sendEvent(QQuickItem *, QEvent *);
 
     QImage grabWindow();
-
+#ifndef QT_NO_OPENGL
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
-
+#endif
     void setRenderTarget(uint fboId, const QSize &size);
     uint renderTargetId() const;
     QSize renderTargetSize() const;
-
+#ifndef QT_NO_OPENGL
     void resetOpenGLState();
-
+#endif
     QQmlIncubationController *incubationController() const;
 
 #ifndef QT_NO_ACCESSIBILITY

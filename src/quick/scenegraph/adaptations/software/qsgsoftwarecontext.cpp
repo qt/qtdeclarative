@@ -57,10 +57,6 @@
 #include <QtQuick/QSGVertexColorMaterial>
 #include <QtQuick/QSGOpaqueTextureMaterial>
 #include <QtQuick/QSGTextureMaterial>
-#include <private/qsgdefaultimagenode_p.h>
-#include <private/qsgdefaultrectanglenode_p.h>
-#include <private/qsgdistancefieldglyphnode_p_p.h>
-#include <private/qsgdefaultglyphnode_p.h>
 
 #ifndef QSG_NO_RENDERER_TIMING
 static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
@@ -100,7 +96,6 @@ QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
 QSGSoftwareContext::QSGSoftwareContext(QObject *parent)
     : QSGContext(parent)
 {
-    setDistanceFieldEnabled(false);
 }
 
 QSGRectangleNode *QSGSoftwareContext::createRectangleNode()
@@ -144,12 +139,6 @@ QSurfaceFormat QSGSoftwareContext::defaultSurfaceFormat() const
     return format;
 }
 
-void QSGSoftwareRenderContext::initialize(QOpenGLContext *context)
-{
-    Q_UNUSED(context)
-    Q_UNREACHABLE();
-}
-
 void QSGSoftwareRenderContext::initializeIfNeeded()
 {
     if (m_initialized)
@@ -175,9 +164,9 @@ QSGRenderer *QSGSoftwareRenderContext::createRenderer()
 }
 
 
-void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
+void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
 {
-    QSGRenderContext::renderNextFrame(renderer, fbo);
+    renderer->renderScene(fbo);
 }
 
 QT_END_NAMESPACE

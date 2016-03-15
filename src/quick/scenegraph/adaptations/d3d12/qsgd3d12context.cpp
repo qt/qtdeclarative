@@ -95,7 +95,7 @@ QSize QSGD3D12Context::minimumFBOSize() const
 
 QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
 {
-    return QSGContext::defaultSurfaceFormat();
+    return QSurfaceFormat::defaultFormat();
 }
 
 QT_END_NAMESPACE

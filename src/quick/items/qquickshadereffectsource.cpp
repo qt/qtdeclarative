@@ -45,7 +45,6 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <qsgsimplerectnode.h>
 
-#include "qopenglframebufferobject.h"
 #include "qmath.h"
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtCore/QRunnable>
@@ -678,7 +677,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     m_texture->setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
     m_texture->setSize(textureSize);
     m_texture->setRecursive(m_recursive);
-    m_texture->setFormat(GLenum(m_format));
+    m_texture->setFormat(m_format);
     m_texture->setHasMipmaps(m_mipmap);
     m_texture->setMirrorHorizontal(m_textureMirroring & MirrorHorizontally);
     m_texture->setMirrorVertical(m_textureMirroring & MirrorVertically);

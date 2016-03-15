@@ -41,7 +41,6 @@
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
-#include "qquickitemgrabresult.h"
 #include "qquickevents_p_p.h"
 #include "qquickrectangle_p.h"
 #include "qquickfocusscope_p.h"
@@ -70,18 +69,21 @@
 #include "qquicktranslate_p.h"
 #include "qquickstateoperations_p.h"
 #include "qquickitemanimation_p.h"
-#include <private/qquickshadereffect_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 //#include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickcanvasitem_p.h>
 #include <QtQuick/private/qquickcontext2d_p.h>
-#include "qquicksprite_p.h"
-#include "qquickspritesequence_p.h"
-#include "qquickanimatedsprite_p.h"
+#ifndef QT_NO_OPENGL
+# include "qquickitemgrabresult.h"
+# include <private/qquickshadereffect_p.h>
+# include "qquicksprite_p.h"
+# include "qquickspritesequence_p.h"
+# include "qquickanimatedsprite_p.h"
+# include "qquickopenglinfo_p.h"
+#endif
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
-#include "qquickopenglinfo_p.h"
 #include <private/qqmlmetatype_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
@@ -178,8 +180,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickTextInput,3>(uri,2,4,"TextInput");
     qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
-
+#ifndef QT_NO_OPENGL
     qmlRegisterType<QQuickItemGrabResult>();
+#endif
     qmlRegisterType<QQuickItemLayer>();
     qmlRegisterType<QQuickAnchors>();
     qmlRegisterType<QQuickKeyEvent>();
@@ -207,19 +210,20 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
     qmlRegisterType<QQuickPinchEvent>();
 
-    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
+#ifndef QT_NO_OPENGL
+    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
     qmlRegisterType<QQuickGridMesh>("QtQuick", 2, 0, "GridMesh");
-
+#endif
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
-
+#ifndef QT_NO_OPENGL
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
     qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
-
+#endif
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");
     qmlRegisterType<QQuickAnchorSet>();
@@ -261,9 +265,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickItem, 2>(uri, 2, 4, "Item");
     qmlRegisterType<QQuickListView, 2>(uri, 2, 4, "ListView");
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
+#ifndef QT_NO_OPENGL
     qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
-
+#endif
     qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");
     qmlRegisterType<QQuickImage, 2>(uri, 2, 5,"Image");
     qmlRegisterType<QQuickMouseArea, 2>(uri, 2, 5, "MouseArea");

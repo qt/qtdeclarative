@@ -311,10 +311,11 @@ public:
     bool keepTouchGrab() const;
     void setKeepTouchGrab(bool);
 
+#ifndef QT_NO_OPENGL
     // implemented in qquickitemgrabresult.cpp
     Q_REVISION(2) Q_INVOKABLE bool grabToImage(const QJSValue &callback, const QSize &targetSize = QSize());
     QSharedPointer<QQuickItemGrabResult> grabToImage(const QSize &targetSize = QSize());
-
+#endif
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
 
     QTransform itemTransform(QQuickItem *, bool *) const;

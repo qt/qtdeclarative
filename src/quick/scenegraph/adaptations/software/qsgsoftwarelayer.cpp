@@ -163,7 +163,7 @@ void QSGSoftwareLayer::setRecursive(bool recursive)
     m_recursive = recursive;
 }
 
-void QSGSoftwareLayer::setFormat(GLenum)
+void QSGSoftwareLayer::setFormat(uint)
 {
 }
 

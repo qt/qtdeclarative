@@ -55,12 +55,12 @@ QT_BEGIN_NAMESPACE
 
 class QSGSoftwareRenderContext : public QSGRenderContext
 {
+    Q_OBJECT
 public:
     QSGSoftwareRenderContext(QSGContext *ctx);
-    void initialize(QOpenGLContext *context) override;
     void initializeIfNeeded();
     void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, GLuint fbo) override;
+    void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
     QSGRenderer *createRenderer() override;
 

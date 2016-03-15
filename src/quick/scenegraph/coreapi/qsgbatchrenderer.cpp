@@ -154,8 +154,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
             p->bindAttributeLocation(attr[i], i);
     }
     p->bindAttributeLocation("_qt_order", i);
-    context->compile(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
-    context->initialize(s);
+    context->compileShader(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
+    context->initializeShader(s);
     if (!p->isLinked())
         return 0;
 
@@ -188,8 +188,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
-    context->compile(s, material);
-    context->initialize(s);
+    context->compileShader(s, material);
+    context->initializeShader(s);
 
     shader = new Shader();
     shader->program = s;
@@ -751,8 +751,9 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGRenderContext *ctx)
+Renderer::Renderer(QSGDefaultRenderContext *ctx)
     : QSGRenderer(ctx)
+    , m_context(ctx)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)
     , m_nextRenderOrder(0)
@@ -812,7 +813,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
 
     // If rendering with an OpenGL Core profile context, we need to create a VAO
     // to hold our vertex specification state.
-    if (context()->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+    if (m_context->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
         m_vao = new QOpenGLVertexArrayObject(this);
         m_vao->create();
     }
@@ -1106,7 +1107,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
             if (m_renderNodeElements.isEmpty()) {
                 static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-                m_useDepthBuffer = useDepth && context()->openglContext()->format().depthBufferSize() > 0;
+                m_useDepthBuffer = useDepth && m_context->openglContext()->format().depthBufferSize() > 0;
             }
         }
     }

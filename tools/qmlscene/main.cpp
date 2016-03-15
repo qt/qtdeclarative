@@ -361,7 +361,7 @@ static void usage()
     puts(" ");
     exit(1);
 }
-
+#ifndef QT_NO_OPENGL
 // Listen on GL context creation of the QQuickWindow in order to print diagnostic output.
 class DiagnosticGlContextCreationListener : public QObject {
     Q_OBJECT
@@ -389,7 +389,9 @@ private slots:
         context->doneCurrent();
         deleteLater();
     }
+
 };
+#endif
 
 static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *window)
 {
@@ -403,8 +405,10 @@ static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *windo
     if (verbose) {
         newTitle += QLatin1String(" [Qt ") + QLatin1String(QT_VERSION_STR) + QLatin1Char(' ')
             + QGuiApplication::platformName() + QLatin1Char(' ');
+#ifndef QT_NO_OPENGL
         newTitle += QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
             ? QLatin1String("GL") : QLatin1String("GLES");
+#endif
         newTitle += QLatin1Char(']');
     }
     if (oldTitle != newTitle)
@@ -592,8 +596,10 @@ int main(int argc, char ** argv)
 
             if (window) {
                 setWindowTitle(options.verbose, topLevel, window.data());
+#ifndef QT_NO_OPENGL
                 if (options.verbose)
                     new DiagnosticGlContextCreationListener(window.data());
+#endif
                 QSurfaceFormat surfaceFormat = window->requestedFormat();
                 if (options.multisample)
                     surfaceFormat.setSamples(16);

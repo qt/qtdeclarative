@@ -62,7 +62,7 @@ QSGSoftwareRenderer::~QSGSoftwareRenderer()
 {
 }
 
-void QSGSoftwareRenderer::renderScene(GLuint)
+void QSGSoftwareRenderer::renderScene(uint)
 {
     class B : public QSGBindable
     {

@@ -57,6 +57,10 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOpenGLFunctions>
+#include <QtGui/private/qopenglextensions_p.h>
+
 #ifdef Q_OS_WIN
 #  include <QtWidgets/QMessageBox>
 #  include <QtCore/QLibraryInfo>

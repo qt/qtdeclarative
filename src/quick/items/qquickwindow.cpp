@@ -74,8 +74,10 @@
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
-
-#include <private/qopenglvertexarrayobject_p.h>
+#ifndef QT_NO_OPENGL
+# include <private/qopenglvertexarrayobject_p.h>
+# include <private/qsgdefaultrendercontext_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -3133,10 +3135,10 @@ void QQuickWindow::maybeUpdate()
 void QQuickWindow::cleanupSceneGraph()
 {
     Q_D(QQuickWindow);
-
+#ifndef QT_NO_OPENGL
     delete d->vaoHelper;
     d->vaoHelper = 0;
-
+#endif
     if (!d->renderer)
         return;
 
@@ -3168,8 +3170,19 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 
 QOpenGLContext *QQuickWindow::openglContext() const
 {
+#ifndef QT_NO_OPENGL
     Q_D(const QQuickWindow);
-    return d->context ? d->context->openglContext() : 0;
+    if (d->context) {
+        auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
+        return openglRenderContext->openglContext();
+    } else {
+        return nullptr;
+    }
+
+    //return d->context ? d->context->openglContext() : 0;
+#else
+    return nullptr;
+#endif
 }
 
 /*!
@@ -3285,7 +3298,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     The corresponding handler is \c onClosing.
  */
 
-
+#ifndef QT_NO_OPENGL
 /*!
     Sets the render target for this window to be \a fbo.
 
@@ -3314,7 +3327,7 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
         d->renderTargetSize = QSize();
     }
 }
-
+#endif
 /*!
     \overload
 
@@ -3365,7 +3378,7 @@ QSize QQuickWindow::renderTargetSize() const
 
 
 
-
+#ifndef QT_NO_OPENGL
 /*!
     Returns the render target for this window.
 
@@ -3377,7 +3390,7 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
     Q_D(const QQuickWindow);
     return d->renderTarget;
 }
-
+#endif
 
 /*!
     Grabs the contents of the window and returns it as an image.
@@ -3394,7 +3407,9 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 QImage QQuickWindow::grabWindow()
 {
     Q_D(QQuickWindow);
-    if (!isVisible() && !d->context->openglContext()) {
+#ifndef QT_NO_OPENGL
+    auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
+    if (!isVisible() && !openglRenderContext->openglContext()) {
 
         if (!handle() || !size().isValid()) {
             qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");
@@ -3420,7 +3435,7 @@ QImage QQuickWindow::grabWindow()
 
         return image;
     }
-
+#endif
     if (d->renderControl)
         return d->renderControl->grab();
     else if (d->windowManager)
@@ -3740,8 +3755,10 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {
+#ifndef QT_NO_OPENGL
     Q_D(const QQuickWindow);
-    if (d->context && d->context->openglContext()) {
+    auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
+    if (openglRenderContext && openglRenderContext->openglContext()) {
         QSGPlainTexture *texture = new QSGPlainTexture();
         texture->setTextureId(id);
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
@@ -3749,6 +3766,11 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
         texture->setTextureSize(size);
         return texture;
     }
+#else
+    Q_UNUSED(id)
+    Q_UNUSED(size)
+    Q_UNUSED(options)
+#endif
     return 0;
 }
 
@@ -3818,7 +3840,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 {
     QQuickWindowPrivate::defaultAlphaBuffer = useAlpha;
 }
-
+#ifndef QT_NO_OPENGL
 /*!
     \since 5.2
 
@@ -3890,7 +3912,7 @@ void QQuickWindow::resetOpenGLState()
 
     QOpenGLFramebufferObject::bindDefault();
 }
-
+#endif
 /*!
     \qmlproperty string Window::title
 

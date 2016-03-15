@@ -56,11 +56,6 @@ QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
 {
 }
 
-void QSGD3D12RenderContext::initialize(QOpenGLContext *)
-{
-    Q_UNREACHABLE();
-}
-
 void QSGD3D12RenderContext::invalidate()
 {
     if (Q_UNLIKELY(debug_render()))
@@ -98,9 +93,9 @@ QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags
     return new QSGD3D12Renderer(this);
 }
 
-void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, GLuint fbo)
+void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
 {
-    QSGRenderContext::renderNextFrame(renderer, fbo);
+    static_cast<QSGD3D12Renderer *>(renderer)->renderScene(fbo);
 }
 
 QT_END_NAMESPACE

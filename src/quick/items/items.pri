@@ -63,10 +63,6 @@ HEADERS += \
     $$PWD/qquickstateoperations_p.h \
     $$PWD/qquickimplicitsizeitem_p.h \
     $$PWD/qquickimplicitsizeitem_p_p.h \
-    $$PWD/qquickspriteengine_p.h \
-    $$PWD/qquicksprite_p.h \
-    $$PWD/qquickspritesequence_p.h \
-    $$PWD/qquickanimatedsprite_p.h \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
@@ -76,11 +72,9 @@ HEADERS += \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
-    $$PWD/qquickframebufferobject.h \
-    $$PWD/qquickitemgrabresult.h \
+    $$PWD/qquickshadereffectsource_p.h \
     $$PWD/qquickrendercontrol.h \
-    $$PWD/qquickrendercontrol_p.h \
-    $$PWD/qquickopenglinfo_p.h
+    $$PWD/qquickrendercontrol_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -120,10 +114,6 @@ SOURCES += \
     $$PWD/qquickitemanimation.cpp \
     $$PWD/qquickstateoperations.cpp \
     $$PWD/qquickimplicitsizeitem.cpp \
-    $$PWD/qquickspriteengine.cpp \
-    $$PWD/qquicksprite.cpp \
-    $$PWD/qquickspritesequence.cpp \
-    $$PWD/qquickanimatedsprite.cpp \
     $$PWD/qquickaccessibleattached.cpp \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
@@ -133,36 +123,49 @@ SOURCES += \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowattached.cpp \
-    $$PWD/qquickframebufferobject.cpp \
-    $$PWD/qquickitemgrabresult.cpp \
-    $$PWD/qquickrendercontrol.cpp \
-    $$PWD/qquickopenglinfo.cpp
-
-SOURCES += \
-    $$PWD/qquickshadereffect.cpp \
-    $$PWD/qquickshadereffectmesh.cpp \
-    $$PWD/qquickshadereffectnode.cpp \
     $$PWD/qquickshadereffectsource.cpp \
+    $$PWD/qquickrendercontrol.cpp
 
-HEADERS += \
-    $$PWD/qquickshadereffect_p.h \
-    $$PWD/qquickshadereffectmesh_p.h \
-    $$PWD/qquickshadereffectnode_p.h \
-    $$PWD/qquickshadereffectsource_p.h \
+# Items that depend on OpenGL Renderer
+contains(QT_CONFIG, opengl(es1|es2)?) {
+    SOURCES += \
+        $$PWD/qquickopenglinfo.cpp \
+        $$PWD/qquickshadereffect.cpp \
+        $$PWD/qquickshadereffectmesh.cpp \
+        $$PWD/qquickshadereffectnode.cpp \
+        $$PWD/qquickframebufferobject.cpp \
+        $$PWD/qquickspriteengine.cpp \
+        $$PWD/qquicksprite.cpp \
+        $$PWD/qquickspritesequence.cpp \
+        $$PWD/qquickanimatedsprite.cpp \
+        $$PWD/qquickitemgrabresult.cpp
 
-OTHER_FILES += \
-    $$PWD/shaders/sprite.vert \
-    $$PWD/shaders/sprite.frag \
-    $$PWD/shaders/shadereffect.vert \
-    $$PWD/shaders/shadereffect.frag \
-    $$PWD/shaders/shadereffectfallback.vert \
-    $$PWD/shaders/shadereffectfallback.frag \
-    $$PWD/shaders/sprite_core.vert \
-    $$PWD/shaders/sprite_core.frag \
-    $$PWD/shaders/shadereffect_core.vert \
-    $$PWD/shaders/shadereffect_core.frag \
-    $$PWD/shaders/shadereffectfallback_core.vert \
-    $$PWD/shaders/shadereffectfallback_core.frag
+    HEADERS += \
+        $$PWD/qquickopenglinfo_p.h \
+        $$PWD/qquickspriteengine_p.h \
+        $$PWD/qquicksprite_p.h \
+        $$PWD/qquickspritesequence_p.h \
+        $$PWD/qquickanimatedsprite_p.h \
+        $$PWD/qquickshadereffect_p.h \
+        $$PWD/qquickshadereffectmesh_p.h \
+        $$PWD/qquickshadereffectnode_p.h \
+        $$PWD/qquickframebufferobject.h \
+        $$PWD/qquickitemgrabresult.h
+
+    OTHER_FILES += \
+        $$PWD/shaders/sprite.vert \
+        $$PWD/shaders/sprite.frag \
+        $$PWD/shaders/shadereffect.vert \
+        $$PWD/shaders/shadereffect.frag \
+        $$PWD/shaders/shadereffectfallback.vert \
+        $$PWD/shaders/shadereffectfallback.frag \
+        $$PWD/shaders/sprite_core.vert \
+        $$PWD/shaders/sprite_core.frag \
+        $$PWD/shaders/shadereffect_core.vert \
+        $$PWD/shaders/shadereffect_core.frag \
+        $$PWD/shaders/shadereffectfallback_core.vert \
+        $$PWD/shaders/shadereffectfallback_core.frag
+}
 
 RESOURCES += \
     $$PWD/items.qrc

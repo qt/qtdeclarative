@@ -795,11 +795,13 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
         return QQuickItem::textureProvider();
 
     Q_D(const QQuickCanvasItem);
+#ifndef QT_NO_OPENGL
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
         qWarning("QQuickCanvasItem::textureProvider: can only be queried on the rendering thread of an exposed window");
         return 0;
     }
+#endif
     if (!d->textureProvider)
         d->textureProvider = new QQuickCanvasTextureProvider;
     d->textureProvider->node = d->node;

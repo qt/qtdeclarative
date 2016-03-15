@@ -72,8 +72,11 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     // this allows us to call pathForGlyph once and reuse the result.
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
-
+#ifndef QT_NO_OPENGL
     m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
+#else
+    Q_UNUSED(c)
+#endif
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
@@ -291,7 +294,7 @@ void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QVector<glyph_t> &glyp
         m_pendingGlyphs.add(glyphs.at(i));
 }
 
-void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize)
+void QSGDistanceFieldGlyphCache::updateTexture(uint oldTex, uint newTex, const QSize &newTexSize)
 {
     int count = m_textures.count();
     for (int i = 0; i < count; ++i) {

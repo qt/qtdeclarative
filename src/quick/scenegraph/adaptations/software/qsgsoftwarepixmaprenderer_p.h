@@ -50,7 +50,7 @@ public:
     QSGSoftwarePixmapRenderer(QSGRenderContext *context);
     virtual ~QSGSoftwarePixmapRenderer();
 
-    void renderScene(GLuint fboId = 0) final;
+    void renderScene(uint fboId = 0) final;
     void render() final;
 
     void render(QPixmap *target);

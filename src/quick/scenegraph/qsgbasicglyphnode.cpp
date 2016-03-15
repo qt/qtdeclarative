@@ -47,7 +47,7 @@ QSGBasicGlyphNode::QSGBasicGlyphNode()
     , m_material(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
 {
-    m_geometry.setDrawingMode(GL_TRIANGLES);
+    m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
     setGeometry(&m_geometry);
 }
 

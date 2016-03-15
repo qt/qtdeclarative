@@ -49,6 +49,7 @@
 
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgdefaultrendercontext_p.h>
 
 #include <private/qrawfont_p.h>
 #include <QtCore/qmath.h>
@@ -427,7 +428,7 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
             m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
             fontEngine->setGlyphCache(ctx, m_glyphCache.data());
-            QSGRenderContext *sg = QSGRenderContext::from(ctx);
+            auto sg = QSGDefaultRenderContext::from(ctx);
             Q_ASSERT(sg);
             sg->registerFontengineForCleanup(fontEngine);
         }

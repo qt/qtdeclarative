@@ -48,6 +48,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgdefaultrendercontext_p.h>
 
 #include <QtQuick/QQuickWindow>
 
@@ -78,7 +79,7 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
     , m_updateTimer(0)
     , m_animationTimer(0)
 {
-    m_rc = m_sg->createRenderContext();
+    m_rc = static_cast<QSGDefaultRenderContext *>(m_sg->createRenderContext());
 
     m_animationDriver = m_sg->createAnimationDriver(m_sg);
     m_animationDriver->install();
@@ -339,6 +340,11 @@ void QSGWindowsRenderLoop::maybeUpdate(QQuickWindow *window)
 
     wd->pendingUpdate = true;
     maybePostUpdateTimer();
+}
+
+QSGRenderContext *QSGWindowsRenderLoop::createRenderContext(QSGContext *) const
+{
+    return m_rc;
 }
 
 bool QSGWindowsRenderLoop::event(QEvent *event)

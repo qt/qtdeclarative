@@ -52,8 +52,9 @@
 //
 
 #include "qquickcontext2d_p.h"
-#include <QOpenGLFramebufferObject>
-
+#ifndef QT_NO_OPENGL
+# include <QOpenGLFramebufferObject>
+#endif
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DTexture;
@@ -82,7 +83,7 @@ protected:
     QPainter m_painter;
 };
 
-
+#ifndef QT_NO_OPENGL
 class QQuickContext2DFBOTile : public QQuickContext2DTile
 {
 public:
@@ -99,7 +100,7 @@ private:
 
     QOpenGLFramebufferObject *m_fbo;
 };
-
+#endif
 class QQuickContext2DImageTile : public QQuickContext2DTile
 {
 public:

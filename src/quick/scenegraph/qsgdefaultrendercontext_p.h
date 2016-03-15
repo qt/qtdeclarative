@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDUMMYADAPTATION_P_H
-#define QSGDUMMYADAPTATION_P_H
+#ifndef QSGDEFAULTRENDERCONTEXT_H
+#define QSGDEFAULTRENDERCONTEXT_H
 
 //
 //  W A R N I N G
@@ -51,26 +51,62 @@
 // We mean it.
 //
 
-#include <private/qsgcontext_p.h>
-#include <private/qsgcontextplugin_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDummyContext;
+class QOpenGLContext;
+class QSGMaterialShader;
+class QOpenGLFramebufferObject;
 
-class QSGDummyAdaptation : public QSGContextPlugin
+namespace QSGAtlasTexture {
+    class Manager;
+}
+
+class QSGDefaultRenderContext : public QSGRenderContext
 {
+    Q_OBJECT
 public:
-    QSGDummyAdaptation(QObject *parent = 0);
+    QSGDefaultRenderContext(QSGContext *context);
 
-    QStringList keys() const override;
-    QSGContext *create(const QString &key) const override;
-    QSGRenderLoop *createWindowManager() override;
+    QOpenGLContext *openglContext() const { return m_gl; }
+    bool isValid() const override { return m_gl; }
 
-private:
-    static QSGDummyContext *contextInstance;
+    void initialize(void *context) override;
+    void invalidate() override;
+    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+
+    QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
+
+    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
+    QSGDepthStencilBufferManager *depthStencilBufferManager();
+
+    QSGTexture *createTexture(const QImage &image, uint flags) const override;
+    QSGRenderer *createRenderer() override;
+
+    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
+    virtual void initializeShader(QSGMaterialShader *shader);
+
+    void setAttachToGLContext(bool attach);
+
+    static QSGDefaultRenderContext *from(QOpenGLContext *context);
+
+    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
+    int maxTextureSize() const { return m_maxTextureSize; }
+
+protected:
+    QOpenGLContext *m_gl;
+    QSGDepthStencilBufferManager *m_depthStencilManager;
+    int m_maxTextureSize;
+    bool m_brokenIBOs;
+    bool m_serializedRender;
+    bool m_attachToGLContext;
+    QSGAtlasTexture::Manager *m_atlasManager;
+
+
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGDUMMYADAPTATION_P_H
+#endif // QSGDEFAULTRENDERCONTEXT_H

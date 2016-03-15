@@ -41,6 +41,7 @@
 
 #include <QtQuick/private/qquickpainteditem_p.h>
 
+#include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qopenglextensions_p.h>
 #include <qopenglframebufferobject.h>
@@ -96,7 +97,7 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
 {
-    m_context = static_cast<QQuickPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphRenderContext();
+    m_context = static_cast<QSGDefaultRenderContext *>(static_cast<QQuickPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphRenderContext());
 
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);

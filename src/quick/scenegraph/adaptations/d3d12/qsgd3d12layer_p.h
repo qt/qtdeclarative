@@ -79,7 +79,7 @@ public:
     QImage toImage() const override;
     void setLive(bool live) override;
     void setRecursive(bool recursive) override;
-    void setFormat(GLenum format) override;
+    void setFormat(uint format) override;
     void setHasMipmaps(bool mipmap) override;
     void setDevicePixelRatio(qreal ratio) override;
     void setMirrorHorizontal(bool mirror) override;

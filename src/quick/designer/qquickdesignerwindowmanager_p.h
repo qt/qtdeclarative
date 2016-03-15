@@ -57,6 +57,10 @@
 #include <private/qtquickglobal_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+#endif
+
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +68,6 @@ class QQuickWindow;
 class QSGContext;
 class QSGRenderContext;
 class QAnimationDriver;
-class QOpenGLContext;
 
 class QQuickDesignerWindowManager : public QSGRenderLoop
 {
@@ -94,7 +97,9 @@ public:
     static void createOpenGLContext(QQuickWindow *window);
 
 private:
+#ifndef QT_NO_OPENGL
     QScopedPointer<QOpenGLContext> m_openGlContext;
+#endif
     QScopedPointer<QSGContext> m_sgContext;
     QScopedPointer<QSGRenderContext> m_renderContext;
 };

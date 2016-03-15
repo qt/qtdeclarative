@@ -61,7 +61,7 @@ public:
     QBackingStore *backingStore() const { return m_backingStore.data(); }
 
 protected:
-    void renderScene(GLuint fboId = 0) final;
+    void renderScene(uint fboId = 0) final;
     void render() final;
 
 private:

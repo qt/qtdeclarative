@@ -55,6 +55,7 @@
 #include <QImage>
 #include <QVector4D>
 #include <qsggeometry.h>
+#include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
 

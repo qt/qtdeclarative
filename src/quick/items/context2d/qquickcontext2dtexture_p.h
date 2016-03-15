@@ -54,10 +54,10 @@
 #include <QtQuick/qsgtexture.h>
 #include "qquickcanvasitem_p.h"
 #include "qquickcontext2d_p.h"
-
-#include <QOpenGLContext>
-#include <QOpenGLFramebufferObject>
-
+#ifndef QT_NO_OPENGL
+# include <QOpenGLContext>
+# include <QOpenGLFramebufferObject>
+#endif
 #include <QtCore/QMutex>
 #include <QtCore/QWaitCondition>
 #include <QtCore/QThread>
@@ -121,11 +121,12 @@ public:
     // Called during sync() on the scene graph thread while GUI is blocked.
     virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) = 0;
     bool event(QEvent *e);
-
+#ifndef QT_NO_OPENGL
     void initializeOpenGL(QOpenGLContext *gl, QOffscreenSurface *s) {
         m_gl = gl;
         m_surface = s;
     }
+#endif
 
 Q_SIGNALS:
     void textureChanged();
@@ -152,8 +153,9 @@ protected:
 
     QList<QQuickContext2DTile*> m_tiles;
     QQuickContext2D *m_context;
-
+#ifndef QT_NO_OPENGL
     QOpenGLContext *m_gl;
+#endif
     QSurface *m_surface;
 
     QQuickContext2D::State m_state;
@@ -174,7 +176,7 @@ protected:
     uint m_painting : 1;
     uint m_onCustomThread : 1; // Not GUI and not SGRender
 };
-
+#ifndef QT_NO_OPENGL
 class QQuickContext2DFBOTexture : public QQuickContext2DTexture
 {
     Q_OBJECT
@@ -209,7 +211,7 @@ private:
     GLuint m_displayTextures[2];
     int m_displayTexture;
 };
-
+#endif
 class QSGPlainTexture;
 class QQuickContext2DImageTexture : public QQuickContext2DTexture
 {

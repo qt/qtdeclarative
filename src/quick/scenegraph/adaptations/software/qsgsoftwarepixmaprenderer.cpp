@@ -58,7 +58,7 @@ QSGSoftwarePixmapRenderer::~QSGSoftwarePixmapRenderer()
 
 }
 
-void QSGSoftwarePixmapRenderer::renderScene(GLuint)
+void QSGSoftwarePixmapRenderer::renderScene(uint)
 {
     class B : public QSGBindable
     {

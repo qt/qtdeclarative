@@ -210,7 +210,7 @@ public:
     virtual QImage toImage() const = 0;
     virtual void setLive(bool live) = 0;
     virtual void setRecursive(bool recursive) = 0;
-    virtual void setFormat(GLenum format) = 0;
+    virtual void setFormat(uint format) = 0;
     virtual void setHasMipmaps(bool mipmap) = 0;
     virtual void setDevicePixelRatio(qreal ratio) = 0;
     virtual void setMirrorHorizontal(bool mirror) = 0;
@@ -295,7 +295,7 @@ public:
     };
 
     struct Texture {
-        GLuint textureId;
+        uint textureId;
         QSize size;
 
         Texture() : textureId(0), size(QSize()) { }
@@ -359,10 +359,10 @@ protected:
     void markGlyphsToRender(const QVector<glyph_t> &glyphs);
     inline void removeGlyph(glyph_t glyph);
 
-    void updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize);
+    void updateTexture(uint oldTex, uint newTex, const QSize &newTexSize);
 
     inline bool containsGlyph(glyph_t glyph);
-    GLuint textureIdForGlyph(glyph_t glyph) const;
+    uint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
 

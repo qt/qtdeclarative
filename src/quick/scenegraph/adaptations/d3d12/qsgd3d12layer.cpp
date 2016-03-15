@@ -123,7 +123,7 @@ void QSGD3D12Layer::setRecursive(bool recursive)
 
 }
 
-void QSGD3D12Layer::setFormat(GLenum format)
+void QSGD3D12Layer::setFormat(uint format)
 {
 
 }

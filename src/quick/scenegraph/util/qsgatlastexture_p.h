@@ -104,17 +104,17 @@ public:
 
     QSize size() const { return m_size; }
 
-    GLuint internalFormat() const { return m_internalFormat; }
-    GLuint externalFormat() const { return m_externalFormat; }
+    uint internalFormat() const { return m_internalFormat; }
+    uint externalFormat() const { return m_externalFormat; }
 
 private:
     QSGAreaAllocator m_allocator;
-    GLuint m_texture_id;
+    unsigned int m_texture_id;
     QSize m_size;
     QList<Texture *> m_pending_uploads;
 
-    GLuint m_internalFormat;
-    GLuint m_externalFormat;
+    uint m_internalFormat;
+    uint m_externalFormat;
 
     uint m_allocated : 1;
     uint m_use_bgra_fallback: 1;

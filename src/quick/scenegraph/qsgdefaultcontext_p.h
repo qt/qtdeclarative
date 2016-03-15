@@ -37,54 +37,53 @@
 **
 ****************************************************************************/
 
-#include "qsgdummyadaptation_p.h"
+#ifndef QSGDEFAULTCONTEXT_H
+#define QSGDEFAULTCONTEXT_H
 
-#include <private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDummyContext : public QSGContext
+class QSGDefaultContext : public QSGContext
 {
 public:
-    QSGDummyContext(QObject *parent = 0) : QSGContext(parent) { }
+    QSGDefaultContext(QObject *parent = 0);
+    ~QSGDefaultContext();
 
-    QSGRenderContext *createRenderContext() override { return QSGContext::createRenderContext(); }
-    QSGRectangleNode *createRectangleNode() override { return QSGContext::createRectangleNode(); }
-    QSGImageNode *createImageNode() override { return QSGContext::createImageNode(); }
-    QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override { return QSGContext::createPainterNode(item); }
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override  { return QSGContext::createGlyphNode(rc, preferNativeGlyphNode); }
-    QSGNinePatchNode *createNinePatchNode() override { return QSGContext::createNinePatchNode(); }
-    QSGLayer *createLayer(QSGRenderContext *rc) override { return QSGContext::createLayer(rc); }
-    QSurfaceFormat defaultSurfaceFormat() const override { return QSGContext::defaultSurfaceFormat(); }
+    void renderContextInitialized(QSGRenderContext *renderContext) override;
+    void renderContextInvalidated(QSGRenderContext *) override;
+    QSGRenderContext *createRenderContext() override;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
+    QSGNinePatchNode *createNinePatchNode() override;
+    QSGLayer *createLayer(QSGRenderContext *renderContext) override;
+    QSurfaceFormat defaultSurfaceFormat() const override;
+
+    void setDistanceFieldEnabled(bool enabled);
+    bool isDistanceFieldEnabled() const;
+
+private:
+    QMutex m_mutex;
+    QSGContext::AntialiasingMethod m_antialiasingMethod;
+    bool m_distanceFieldDisabled;
+    QSGDistanceFieldGlyphNode::AntialiasingMode m_distanceFieldAntialiasing;
+    bool m_distanceFieldAntialiasingDecided;
 };
 
-QSGDummyAdaptation::QSGDummyAdaptation(QObject *parent)
-    : QSGContextPlugin(parent)
-{
-}
-
-QStringList QSGDummyAdaptation::keys() const
-{
-    return QStringList() << QLatin1String("dummy");
-}
-
-QSGContext *QSGDummyAdaptation::create(const QString &) const
-{
-    if (!contextInstance) {
-        qDebug("Creating OpenGL SG context via dummy");
-        contextInstance = new QSGDummyContext;
-    }
-
-    return contextInstance;
-}
-
-QSGRenderLoop *QSGDummyAdaptation::createWindowManager()
-{
-    qDebug("Creating default OpenGL render loop via dummy");
-    return nullptr;
-}
-
-QSGDummyContext *QSGDummyAdaptation::contextInstance = nullptr;
-
 QT_END_NAMESPACE
+
+#endif // QSGDEFAULTCONTEXT_H

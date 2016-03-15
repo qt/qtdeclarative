@@ -275,7 +275,7 @@ public:
 private:
     QSGOpacityNode *m_opacityNode;
 };
-
+#ifndef QT_NO_OPENGL
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 {
 public:
@@ -299,6 +299,7 @@ private:
     int m_uniformIndex : 8;
     int m_uniformType : 8;
 };
+#endif
 
 QT_END_NAMESPACE
 

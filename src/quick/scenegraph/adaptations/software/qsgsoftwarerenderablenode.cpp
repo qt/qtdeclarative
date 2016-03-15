@@ -49,7 +49,6 @@
 #include <QtQuick/QSGSimpleRectNode>
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <private/qsgtexture_p.h>
-#include <private/qquickshadereffectnode_p.h>
 
 Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
 

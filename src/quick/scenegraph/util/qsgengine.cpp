@@ -44,6 +44,11 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgtexture_p.h>
 
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+# include <private/qsgdefaultrendercontext_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 
@@ -83,7 +88,7 @@ QT_BEGIN_NAMESPACE
 
 QSGEnginePrivate::QSGEnginePrivate()
     : sgContext(QSGContext::createDefaultContext())
-    , sgRenderContext(new QSGRenderContext(sgContext.data()))
+    , sgRenderContext(sgContext.data()->createRenderContext())
 {
 }
 
@@ -110,17 +115,23 @@ QSGEngine::~QSGEngine()
  */
 void QSGEngine::initialize(QOpenGLContext *context)
 {
+#ifndef QT_NO_OPENGL
     Q_D(QSGEngine);
     if (QOpenGLContext::currentContext() != context) {
         qWarning("WARNING: The context must be current before calling QSGEngine::initialize.");
         return;
     }
 
-    if (!d->sgRenderContext->isValid()) {
-        d->sgRenderContext->setAttachToGLContext(false);
-        d->sgRenderContext->initialize(context);
+    auto openGLRenderContext = static_cast<QSGDefaultRenderContext *>(d->sgRenderContext.data());
+
+    if (openGLRenderContext != nullptr && !openGLRenderContext->isValid()) {
+        openGLRenderContext->setAttachToGLContext(false);
+        openGLRenderContext->initialize(context);
         connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
     }
+#else
+    Q_UNUSED(context)
+#endif
 }
 
 /*!

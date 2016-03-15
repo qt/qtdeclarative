@@ -1472,15 +1472,15 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
     } else {
 
         switch (g->drawingMode()) {
-        case GL_TRIANGLE_STRIP: d << "strip"; break;
-        case GL_TRIANGLE_FAN: d << "fan"; break;
-        case GL_TRIANGLES: d << "triangles"; break;
+        case QSGGeometry::DrawTriangleStrip: d << "strip"; break;
+        case QSGGeometry::DrawTriangleFan: d << "fan"; break;
+        case QSGGeometry::DrawTriangles: d << "triangles"; break;
         default: break;
         }
 
         d << "#V:" << g->vertexCount() << "#I:" << g->indexCount();
 
-        if (g->attributeCount() > 0 && g->attributes()->type == GL_FLOAT) {
+        if (g->attributeCount() > 0 && g->attributes()->type == QSGGeometry::TypeFloat) {
             float x1 = 1e10, x2 = -1e10, y1=1e10, y2=-1e10;
             int stride = g->sizeOfVertex();
             for (int i = 0; i < g->vertexCount(); ++i) {

@@ -39,10 +39,11 @@
 
 #include "qsggeometry.h"
 #include "qsggeometry_p.h"
-
-#include <qopenglcontext.h>
-#include <qopenglfunctions.h>
-#include <private/qopenglextensions_p.h>
+#ifndef QT_NO_OPENGL
+# include <qopenglcontext.h>
+# include <qopenglfunctions.h>
+# include <private/qopenglextensions_p.h>
+#endif
 
 #ifdef Q_OS_QNX
 #include <malloc.h>
@@ -77,7 +78,7 @@ QSGGeometry::Attribute QSGGeometry::Attribute::createWithSemantic(int pos, int t
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION)
+        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION)
     };
     static AttributeSet attrs = { 1, sizeof(float) * 2, data };
     return attrs;
@@ -90,8 +91,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION),
-        Attribute::createWithSemantic(1, 2, GL_FLOAT, Attribute::TEXCOORD)
+        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION),
+        Attribute::createWithSemantic(1, 2, TypeFloat, Attribute::TEXCOORD)
     };
     static AttributeSet attrs = { 2, sizeof(float) * 4, data };
     return attrs;
@@ -104,8 +105,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D(
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, GL_FLOAT, Attribute::POSITION),
-        Attribute::createWithSemantic(1, 4, GL_UNSIGNED_BYTE, Attribute::COLOR)
+        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION),
+        Attribute::createWithSemantic(1, 4, TypeUnsignedByte, Attribute::COLOR)
     };
     static AttributeSet attrs = { 2, 2 * sizeof(float) + 4 * sizeof(char), data };
     return attrs;
@@ -405,7 +406,7 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
                          int vertexCount,
                          int indexCount,
                          int indexType)
-    : m_drawing_mode(GL_TRIANGLE_STRIP)
+    : m_drawing_mode(DrawTriangleStrip)
     , m_vertex_count(0)
     , m_index_count(0)
     , m_index_type(indexType)
@@ -421,20 +422,19 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     Q_UNUSED(m_reserved_bits);
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
-
+#ifndef QT_NO_OPENGL
     Q_ASSERT_X(indexType != GL_UNSIGNED_INT
                || static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions())
                   ->hasOpenGLExtension(QOpenGLExtensions::ElementIndexUint),
                "QSGGeometry::QSGGeometry",
                "GL_UNSIGNED_INT is not supported, geometry will not render"
                );
-
-    if (indexType != GL_UNSIGNED_BYTE
-        && indexType != GL_UNSIGNED_SHORT
-        && indexType != GL_UNSIGNED_INT) {
+#endif
+    if (indexType != TypeUnsignedByte
+        && indexType != TypeUnsignedShort
+        && indexType != TypeUnsignedInt) {
         qFatal("QSGGeometry: Unsupported index type, %x.\n", indexType);
     }
-
 
     // Because allocate reads m_vertex_count, m_index_count and m_owns_data, these
     // need to be set before calling allocate...
@@ -531,11 +531,17 @@ const void *QSGGeometry::indexData() const
 
     The default value is \c GL_TRIANGLE_STRIP.
  */
+#ifndef QT_NO_OPENGL
 void QSGGeometry::setDrawingMode(GLenum mode)
 {
     m_drawing_mode = mode;
 }
-
+#else
+void QSGGeometry::setDrawingMode(int mode)
+{
+    m_drawing_mode = mode;
+}
+#endif
 /*!
     Gets the current line or point width or to be used for this geometry. This property
     only applies to line width when the drawingMode is \c GL_LINES, \c GL_LINE_STRIP, or
@@ -612,8 +618,8 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
         m_index_data_offset = -1;
         m_owns_data = false;
     } else {
-        Q_ASSERT(m_index_type == GL_UNSIGNED_INT || m_index_type == GL_UNSIGNED_SHORT);
-        int indexByteSize = indexCount * (m_index_type == GL_UNSIGNED_SHORT ? sizeof(quint16) : sizeof(quint32));
+        Q_ASSERT(m_index_type == TypeUnsignedInt || m_index_type == TypeUnsignedShort);
+        int indexByteSize = indexCount * (m_index_type == TypeUnsignedShort ? sizeof(quint16) : sizeof(quint32));
         m_data = (void *) malloc(vertexByteSize + indexByteSize);
         m_index_data_offset = vertexByteSize;
         m_owns_data = true;

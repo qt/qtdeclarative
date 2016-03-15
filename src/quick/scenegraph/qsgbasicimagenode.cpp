@@ -55,10 +55,10 @@ namespace
     const QSGGeometry::AttributeSet &smoothAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
-            QSGGeometry::Attribute::createWithSemantic(0, 2, GL_FLOAT, QSGGeometry::Attribute::POSITION),
-            QSGGeometry::Attribute::createWithSemantic(1, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD),
-            QSGGeometry::Attribute::createWithSemantic(2, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD1),
-            QSGGeometry::Attribute::createWithSemantic(3, 2, GL_FLOAT, QSGGeometry::Attribute::TEXCOORD2)
+            QSGGeometry::Attribute::createWithSemantic(0, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::POSITION),
+            QSGGeometry::Attribute::createWithSemantic(1, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD),
+            QSGGeometry::Attribute::createWithSemantic(2, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD1),
+            QSGGeometry::Attribute::createWithSemantic(3, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD2)
         };
         static QSGGeometry::AttributeSet attrs = { 4, sizeof(SmoothVertex), data };
         return attrs;
@@ -196,7 +196,7 @@ void QSGBasicImageNode::updateGeometry()
     if (!t) {
         QSGGeometry *g = geometry();
         g->allocate(4);
-        g->setDrawingMode(GL_TRIANGLE_STRIP);
+        g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
         memset(g->vertexData(), 0, g->sizeOfVertex() * 4);
     } else {
         QRectF sourceRect = t->normalizedTextureSubRect();
@@ -244,7 +244,7 @@ void QSGBasicImageNode::updateGeometry()
                 QSGGeometry *g = geometry();
                 Q_ASSERT(g != &m_geometry);
                 g->allocate(8, 14);
-                g->setDrawingMode(GL_TRIANGLE_STRIP);
+                g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
                 SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
                 float delta = float(qAbs(m_targetRect.width()) < qAbs(m_targetRect.height())
                         ? m_targetRect.width() : m_targetRect.height()) * 0.5f;
@@ -273,7 +273,7 @@ void QSGBasicImageNode::updateGeometry()
                 memcpy(g->indexDataAsUShort(), indices, sizeof(indices));
             } else {
                 m_geometry.allocate(4);
-                m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
+                m_geometry.setDrawingMode(QSGGeometry::DrawTriangleStrip);
                 QSGGeometry::updateTexturedRectGeometry(&m_geometry, m_targetRect, sr);
             }
         } else {
@@ -375,7 +375,7 @@ void QSGBasicImageNode::updateGeometry()
 
                 g->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
                             hCells * vCells * 6 + (hCells + vCells) * 12);
-                g->setDrawingMode(GL_TRIANGLES);
+                g->setDrawingMode(QSGGeometry::DrawTriangles);
                 SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
                 memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
                 quint16 *indices = g->indexDataAsUShort();
@@ -486,7 +486,7 @@ void QSGBasicImageNode::updateGeometry()
                 Q_ASSERT(indices - g->indexCount() == g->indexData());
             } else {
                 m_geometry.allocate(hCells * vCells * 4, hCells * vCells * 6);
-                m_geometry.setDrawingMode(GL_TRIANGLES);
+                m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
                 QSGGeometry::TexturedPoint2D *vertices = m_geometry.vertexDataAsTexturedPoint2D();
                 ys = yData.data();
                 for (int j = 0; j < vCells; ++j, ys += 2) {
