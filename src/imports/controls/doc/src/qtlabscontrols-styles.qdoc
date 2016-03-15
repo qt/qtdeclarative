@@ -37,9 +37,34 @@
 
     \section1 Usage
 
-    In order to run an application with a specific style, either pass a command
-    line argument, or set an environment variable. Alternatively, the preferred
-    style and style-specific attributes can be specified in a configuration file.
+    In order to run an application with a specific style, either configure the
+    style using \l QQuickStyle in C++, pass a command line argument, or set an
+    environment variable. Alternatively, the preferred style and style-specific
+    attributes can be specified in a configuration file.
+
+    \section2 Using QQuickStyle in C++
+
+    \l QQuickStyle provides API configuring a specific style. The following
+    example runs a Qt Labs Controls application with the Material style:
+
+    \code
+    #include <QGuiApplication>
+    #include <QQmlApplicationEngine>
+    #include <QQuickStyle>
+
+    int main(int argc, char *argv[])
+    {
+        QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        QGuiApplication app(argc, argv);
+
+        QQuickStyle::setStyle("Material");
+
+        QQmlApplicationEngine engine;
+        engine.load(QUrl("qrc:/main.qml"));
+
+        return app.exec();
+    }
+    \endcode
 
     \section2 Command line argument
 

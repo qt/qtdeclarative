@@ -62,9 +62,6 @@ public:
 
     QString select(const QString &fileName) const;
 
-    QString style() const;
-    void setStyle(const QString &s);
-
     void setBaseUrl(const QUrl &base);
     QUrl baseUrl() const;
 

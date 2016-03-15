@@ -42,7 +42,7 @@
 #include "qquickmaterialprogressstrip_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsControls/private/qquickstyleselector_p.h>
+#include <QtLabsControls/qquickstyle.h>
 
 static inline void initResources()
 {
@@ -92,8 +92,7 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 {
     Q_UNUSED(engine);
 
-    QQuickStyleSelector selector;
-    if (selector.style() == QLatin1String("material")) {
+    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0) {
         QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
         if (old) {
             QQuickProxyTheme *theme = new QQuickMaterialTheme(old);

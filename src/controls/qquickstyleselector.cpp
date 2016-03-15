@@ -34,6 +34,7 @@
 
 #include "qquickstyleselector_p.h"
 #include "qquickstyleselector_p_p.h"
+#include "qquickstyle.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QMutex>
@@ -45,7 +46,6 @@
 #include <QtCore/QSettings>
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,15 +58,6 @@ QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
 
 QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
-    Q_D(QQuickStyleSelector);
-    d->style = QGuiApplicationPrivate::styleOverride.toLower();
-    if (d->style.isEmpty())
-        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE")).toLower();
-    if (d->style.isEmpty()) {
-        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
-        if (settings)
-            d->style = settings->value(QStringLiteral("Style")).toString().toLower();
-    }
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
@@ -80,22 +71,6 @@ static bool isLocalScheme(const QString &file)
     local |= file == QLatin1String("assets");
 #endif
     return local;
-}
-
-QString QQuickStyleSelector::select(const QString &fileName) const
-{
-    Q_D(const QQuickStyleSelector);
-    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
-    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
-        if (isLocalScheme(url.scheme())) {
-            QString equivalentPath = QLatin1Char(':') + url.path();
-            QString selectedPath = d->select(equivalentPath);
-            url.setPath(selectedPath.remove(0, 1));
-        } else {
-            url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
-        }
-    }
-    return url.toString();
 }
 
 static QString selectionHelper(const QString &path, const QString &fileName, const QStringList &selectors)
@@ -124,6 +99,35 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     return path + fileName;
 }
 
+QString QQuickStyleSelector::select(const QString &fileName) const
+{
+    Q_D(const QQuickStyleSelector);
+    const QString overridePath = QQuickStyle::path();
+    if (!overridePath.isEmpty()) {
+        const QString stylePath = overridePath + QQuickStyle::name() + QLatin1Char('/');
+        if (QFile::exists(stylePath + fileName)) {
+            // the style name is included to the path, so exclude it from the selectors.
+            // the rest of the selectors (os, locale) are still valid, though.
+            const QString selectedPath = selectionHelper(stylePath, fileName, d->allSelectors(false));
+            if (selectedPath.startsWith(QLatin1Char(':')))
+                return QLatin1String("qrc") + selectedPath;
+            return QUrl::fromLocalFile(selectedPath).toString();
+        }
+    }
+
+    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
+    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
+        if (isLocalScheme(url.scheme())) {
+            QString equivalentPath = QLatin1Char(':') + url.path();
+            QString selectedPath = d->select(equivalentPath);
+            url.setPath(selectedPath.remove(0, 1));
+        } else {
+            url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
+        }
+    }
+    return url.toString();
+}
+
 QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 {
     QFileInfo fi(filePath);
@@ -132,32 +136,23 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
         return filePath;
 
     QString ret = selectionHelper(fi.path().isEmpty() ? QString() : fi.path() + QLatin1Char('/'),
-            fi.fileName(), allSelectors());
+            fi.fileName(), allSelectors(true));
 
     if (!ret.isEmpty())
         return ret;
     return filePath;
 }
 
-QString QQuickStyleSelector::style() const
-{
-    Q_D(const QQuickStyleSelector);
-    return d->style;
-}
-
-void QQuickStyleSelector::setStyle(const QString &s)
-{
-    Q_D(QQuickStyleSelector);
-    d->style = s;
-}
-
-QStringList QQuickStyleSelectorPrivate::allSelectors() const
+QStringList QQuickStyleSelectorPrivate::allSelectors(bool includeStyle) const
 {
     QMutexLocker locker(&sharedDataMutex);
     updateSelectors();
     QStringList selectors = sharedData->staticSelectors;
-    if (!style.isEmpty())
-        selectors.prepend(style);
+    if (includeStyle) {
+        QString style = QQuickStyle::name();
+        if (!style.isEmpty())
+            selectors.prepend(style.toLower());
+    }
     return selectors;
 }
 

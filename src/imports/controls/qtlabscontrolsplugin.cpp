@@ -40,6 +40,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qfileselector_p.h>
 
+#include <QtLabsControls/qquickstyle.h>
 #include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 #include <QtLabsTemplates/private/qquickcontainer_p.h>
@@ -90,7 +91,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     else
         selector.setBaseUrl(baseUrl());
 
-    const QString style = selector.style();
+    const QString style = QQuickStyle::name();
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style);
 

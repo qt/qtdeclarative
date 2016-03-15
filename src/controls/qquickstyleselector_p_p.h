@@ -69,9 +69,8 @@ public:
     static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
     QQuickStyleSelectorPrivate();
     QString select(const QString &filePath) const;
-    QStringList allSelectors() const;
+    QStringList allSelectors(bool includeStyle) const;
 
-    QString style;
     QUrl baseUrl;
 };
 
