@@ -36,18 +36,69 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QSTDINT_WRAPPER_H
-#define QSTDINT_WRAPPER_H
 
-/* Needed for VS 2008 and earlier that don't ship stdint.h */
+#ifndef QQMLDELAYEDCALLQUEUE_P_H
+#define QQMLDELAYEDCALLQUEUE_P_H
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef signed long long int64_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#endif
+#include <QtCore/qglobal.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qmetaobject.h>
+#include <QtCore/qmetatype.h>
+#include <private/qqmlguard_p.h>
+#include <private/qv4context_p.h>
+
+QT_BEGIN_NAMESPACE
+
+class QV8Engine;
+class QQmlDelayedCallQueue : public QObject
+{
+    Q_OBJECT
+public:
+    QQmlDelayedCallQueue();
+    ~QQmlDelayedCallQueue();
+
+    void init(QV4::ExecutionEngine *);
+
+    QV4::ReturnedValue addUniquelyAndExecuteLater(QV4::CallContext *ctx);
+
+public Q_SLOTS:
+    void ticked();
+
+private:
+    struct DelayedFunctionCall
+    {
+        DelayedFunctionCall() {}
+        DelayedFunctionCall(QV4::PersistentValue function)
+            : m_function(function), m_guarded(false) { }
+
+        void execute(QV4::ExecutionEngine *engine) const;
+
+        QV4::PersistentValue m_function;
+        QList<QV4::PersistentValue> m_args;
+        QQmlGuard<QObject> m_objectGuard;
+        bool m_guarded;
+    };
+
+    void storeAnyArguments(DelayedFunctionCall& dfc, const QV4::CallData *callData, int offset, QV4::ExecutionEngine *engine);
+    void executeAllExpired_Later();
+
+    QV4::ExecutionEngine *m_engine;
+    QVector<DelayedFunctionCall> m_delayedFunctionCalls;
+    QMetaMethod m_tickedMethod;
+    bool m_callbackOutstanding;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQMLDELAYEDCALLQUEUE_P_H

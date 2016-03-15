@@ -67,8 +67,6 @@ QString QQmlPlatform::os()
     return QStringLiteral("tvos");
 #elif defined(Q_OS_MAC)
     return QStringLiteral("osx");
-#elif defined(Q_OS_WINCE)
-    return QStringLiteral("wince");
 #elif defined(Q_OS_WINPHONE)
     return QStringLiteral("winphone");
 #elif defined(Q_OS_WINRT)

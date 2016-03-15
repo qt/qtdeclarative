@@ -58,6 +58,32 @@
 
 QT_BEGIN_NAMESPACE
 
+static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
+{
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    list->append(o);
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
+}
+
+static int list_count(QQmlListProperty<QObject> *prop)
+{
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    return list->count();
+}
+
+static QObject *list_at(QQmlListProperty<QObject> *prop, int index)
+{
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    return list->at(index);
+}
+
+static void list_clear(QQmlListProperty<QObject> *prop)
+{
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    list->clear();
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
+}
+
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
     : QQmlGuard<QObject>(0), m_target(0), m_index(-1)
 {
@@ -1013,37 +1039,6 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
     }
 }
 
-void QQmlVMEMetaObject::listChanged(int id)
-{
-    activate(object, methodOffset() + id, 0);
-}
-
-void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
-{
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    list->append(o);
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
-}
-
-int QQmlVMEMetaObject::list_count(QQmlListProperty<QObject> *prop)
-{
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    return list->count();
-}
-
-QObject *QQmlVMEMetaObject::list_at(QQmlListProperty<QObject> *prop, int index)
-{
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    return list->at(index);
-}
-
-void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
-{
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    list->clear();
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
-}
-
 quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 {
     if (index < methodOffset()) {
@@ -1133,8 +1128,7 @@ void QQmlVMEMetaObject::allocateProperties()
     QV4::ExecutionEngine *v4 = cache->engine;
     QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, metaData->propertyCount);
     properties.set(v4, data);
-    for (uint i = 0; i < data->size; ++i)
-        data->data[i] = QV4::Encode::undefined();
+    std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

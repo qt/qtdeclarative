@@ -50,7 +50,8 @@ SOURCES += \
     $$PWD/qqmltypewrapper.cpp \
     $$PWD/qqmlfileselector.cpp \
     $$PWD/qqmlobjectcreator.cpp \
-    $$PWD/qqmldirparser.cpp
+    $$PWD/qqmldirparser.cpp \
+    $$PWD/qqmldelayedcallqueue.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -122,7 +123,8 @@ HEADERS += \
     $$PWD/qqmlfileselector_p.h \
     $$PWD/qqmlfileselector.h \
     $$PWD/qqmlobjectcreator_p.h \
-    $$PWD/qqmldirparser_p.h
+    $$PWD/qqmldirparser_p.h \
+    $$PWD/qqmldelayedcallqueue_p.h
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

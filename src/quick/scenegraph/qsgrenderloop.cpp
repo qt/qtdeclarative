@@ -253,13 +253,13 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
     const bool signalEmitted =
         QQuickWindowPrivate::get(window)->emitError(QQuickWindow::ContextNotAvailable,
                                                     translatedMessage);
-#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
     if (!signalEmitted && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow()) {
         MessageBox(0, (LPCTSTR) translatedMessage.utf16(),
                    (LPCTSTR)(QCoreApplication::applicationName().utf16()),
                    MB_OK | MB_ICONERROR);
     }
-#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+#endif // Q_OS_WIN && !Q_OS_WINRT
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
 }

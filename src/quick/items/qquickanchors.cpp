@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 //TODO: should we cache relationships, so we don't have to check each time (parent-child or sibling)?
 //TODO: support non-parent, non-sibling (need to find lowest common ancestor)
 
-static inline qreal hcenter(QQuickItem *item)
+static inline qreal hcenter(QQuickItem const *item)
 {
     qreal width = item->width();
     if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
@@ -63,7 +63,7 @@ static inline qreal hcenter(QQuickItem *item)
         return width / 2;
 }
 
-static inline qreal vcenter(QQuickItem *item)
+static inline qreal vcenter(QQuickItem const *item)
 {
     qreal height = item->height();
     if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
@@ -77,9 +77,8 @@ static inline qreal vcenter(QQuickItem *item)
         return height / 2;
 }
 
-//### const item?
 //local position
-static qreal position(QQuickItem *item, QQuickAnchorLine::AnchorLine anchorLine)
+static qreal position(QQuickItem const *item, QQuickAnchorLine::AnchorLine anchorLine)
 {
     qreal ret = 0.0;
     switch (anchorLine) {

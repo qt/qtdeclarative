@@ -430,6 +430,7 @@ public:
     bool hasCursor:1;
     // Bit 32
     bool hasCursorInChild:1;
+    bool hasHoverInChild:1;
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
@@ -607,6 +608,7 @@ public:
     virtual void mirrorChange() {}
 
     void setHasCursorInChild(bool hasCursor);
+    void setHasHoverInChild(bool hasHover);
 
     // recursive helper to let a visual parent mark its visual children
     void markObjects(QV4::ExecutionEngine *e);

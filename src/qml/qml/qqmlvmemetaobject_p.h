@@ -165,7 +165,7 @@ public:
 
     static QQmlInterceptorMetaObject *get(QObject *obj);
 
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o) Q_DECL_OVERRIDE;
 
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache; }
@@ -195,8 +195,6 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
     return 0;
 }
 
-class QQmlVMEVariant;
-class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
@@ -219,13 +217,9 @@ public:
     static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
 
 protected:
-    virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
+    int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) Q_DECL_OVERRIDE;
 
 public:
-    friend class QQmlVMEMetaObjectEndpoint;
-    friend class QQmlVMEVariantQObjectPtr;
-    friend class QQmlPropertyCache;
-
     QQmlGuardedContextData ctxt;
 
     const QQmlVMEMetaData *metaData;
@@ -280,13 +274,6 @@ public:
     void writeProperty(int, const QVariant &);
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
-
-    void listChanged(int);
-
-    static void list_append(QQmlListProperty<QObject> *, QObject *);
-    static int list_count(QQmlListProperty<QObject> *);
-    static QObject *list_at(QQmlListProperty<QObject> *, int);
-    static void list_clear(QQmlListProperty<QObject> *);
 
     void activate(QObject *, int, void **);
 

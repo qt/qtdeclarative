@@ -79,11 +79,12 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch");
-Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target");
-Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse");
-Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus");
-Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty");
+Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch")
+Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target")
+Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse")
+Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
+Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
+Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
@@ -715,6 +716,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (mouseGrabberItem == grabber)
         return;
 
+    qCDebug(DBG_MOUSE_TARGET) << "grabber" << mouseGrabberItem << "->" << grabber;
     QQuickItem *oldGrabber = mouseGrabberItem;
     mouseGrabberItem = grabber;
 
@@ -1623,7 +1625,7 @@ void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons();
+    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons() << "grabber:" << d->mouseGrabberItem;
 
     if (!d->mouseGrabberItem) {
         QWindow::mouseReleaseEvent(event);
@@ -1730,13 +1732,15 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             return false;
     }
 
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
-            return true;
+    if (itemPrivate->hasHoverInChild) {
+        QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+        for (int ii = children.count() - 1; ii >= 0; --ii) {
+            QQuickItem *child = children.at(ii);
+            if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
+                continue;
+            if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
+                return true;
+        }
     }
 
     if (itemPrivate->hoverEnabled) {
@@ -2533,6 +2537,7 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
         hasFiltered->insert(target);
         if (target->childMouseEventFilter(item, event))
             filtered = true;
+        qCDebug(DBG_MOUSE_TARGET) << target << "childMouseEventFilter ->" << filtered;
     }
 
     return sendFilteredMouseEvent(target->parentItem(), item, event, hasFiltered) || filtered;

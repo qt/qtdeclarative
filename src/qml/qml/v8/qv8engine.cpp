@@ -149,6 +149,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     m_v4Engine = new QV4::ExecutionEngine;
     m_v4Engine->v8Engine = this;
+    m_delayedCallQueue.init(m_v4Engine);
 
     QV4::QObjectWrapper::initializeBindings(m_v4Engine);
 }

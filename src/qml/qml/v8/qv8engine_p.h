@@ -70,6 +70,7 @@
 #include <private/qv4object_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmldelayedcallqueue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,12 +78,6 @@ namespace QV4 {
     struct ArrayObject;
     struct ExecutionEngine;
 }
-
-// Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
-// handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
-// with qPersistentDispose() are tracked.  If you try and do something illegal, like double disposing
-// a handle, qFatal() is called.
-// #define QML_GLOBAL_HANDLE_DEBUGGING
 
 #define V4THROW_ERROR(string) \
     return ctx->engine()->throwError(QString::fromUtf8(string));
@@ -186,6 +181,7 @@ public:
     QQmlEngine *engine() { return m_engine; }
     QJSEngine *publicEngine() { return q; }
     QV4::ReturnedValue global();
+    QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -221,6 +217,7 @@ public:
 protected:
     QJSEngine* q;
     QQmlEngine *m_engine;
+    QQmlDelayedCallQueue m_delayedCallQueue;
 
     QV4::ExecutionEngine *m_v4Engine;
 

@@ -15,10 +15,3 @@ OTHER_FILES += data/checkbuttons.qml \
     data/pushbutton.qml \
     data/statictext.qml \
     data/ignored.qml \
-
-wince*: {
-    accessneeded.files = $$QT.widgets.plugins/accessible/*.dll
-    accessneeded.path = accessible
-    DEPLOYMENT += accessneeded
-}
-

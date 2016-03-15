@@ -700,10 +700,10 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &for
     if (signalConnected)
         emit q->sceneGraphError(QQuickWindow::ContextNotAvailable, translatedMessage);
 
-#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
     if (!signalConnected && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow())
         QMessageBox::critical(q, QCoreApplication::applicationName(), translatedMessage);
-#endif // Q_OS_WIN && !Q_OS_WINCE && !Q_OS_WINRT
+#endif // Q_OS_WIN && !Q_OS_WINRT
     if (!signalConnected)
         qFatal("%s", qPrintable(untranslatedMessage));
 }

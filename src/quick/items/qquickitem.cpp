@@ -84,6 +84,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
+
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
@@ -2889,6 +2891,8 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
     if (childPrivate->hasCursorInChild && !hasCursorInChild)
         setHasCursorInChild(true);
 #endif
+    if (childPrivate->hasHoverInChild && !hasHoverInChild)
+        setHasHoverInChild(true);
 
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
@@ -2914,6 +2918,8 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     if (childPrivate->hasCursorInChild && hasCursorInChild)
         setHasCursorInChild(false);
 #endif
+    if (childPrivate->hasHoverInChild && hasHoverInChild)
+        setHasHoverInChild(false);
 
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
@@ -3137,6 +3143,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , culled(false)
     , hasCursor(false)
     , hasCursorInChild(false)
+    , hasHoverInChild(false)
     , activeFocusOnTab(false)
     , implicitAntialiasing(false)
     , antialiasingValid(false)
@@ -6987,6 +6994,7 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 {
     Q_D(QQuickItem);
     d->hoverEnabled = enabled;
+    d->setHasHoverInChild(enabled);
 }
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
@@ -7012,6 +7020,29 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
         parentPrivate->setHasCursorInChild(hasCursor);
     }
 #endif
+}
+
+void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
+{
+    Q_Q(QQuickItem);
+
+    // if we're asked to turn it off (because of a setAcceptHoverEvents call, or a node
+    // removal) then we should check our children and make sure it's really ok
+    // to turn it off.
+    if (!hasHover && hasHoverInChild) {
+        foreach (QQuickItem *otherChild, childItems) {
+            QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
+            if (otherChildPrivate->hasHoverInChild)
+                return; // nope! sorry, something else wants it kept on.
+        }
+    }
+
+    hasHoverInChild = hasHover;
+    QQuickItem *parent = q->parentItem();
+    if (parent) {
+        QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
+        parentPrivate->setHasHoverInChild(hasHover);
+    }
 }
 
 void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
@@ -7139,6 +7170,7 @@ void QQuickItem::ungrabMouse()
         return;
     }
 
+    qCDebug(DBG_MOUSE_TARGET) << "ungrabMouse" << windowPriv->mouseGrabberItem << "-> null";
     windowPriv->mouseGrabberItem = 0;
 
     QEvent ev(QEvent::UngrabMouse);
@@ -7208,6 +7240,7 @@ void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 
         QQuickItem *mouseGrabber = windowPriv->mouseGrabberItem;
         if (windowPriv->touchMouseId == ids.at(i) && mouseGrabber && mouseGrabber != this) {
+            qCDebug(DBG_MOUSE_TARGET) << "grabTouchPoints: grabber" << windowPriv->mouseGrabberItem << "-> null";
             windowPriv->mouseGrabberItem = 0;
             QEvent ev(QEvent::UngrabMouse);
             d->window->sendEvent(mouseGrabber, &ev);
