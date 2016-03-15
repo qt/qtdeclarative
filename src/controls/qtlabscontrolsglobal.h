@@ -34,61 +34,23 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEATTACHED_P_H
-#define QQUICKSTYLEATTACHED_P_H
+#ifndef QTLABSCONTROLSSGLOBAL_H
+#define QTLABSCONTROLSSGLOBAL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQml/qqml.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qpointer.h>
-#include <QtCore/qsharedpointer.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSettings;
-
-class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
-{
-    Q_OBJECT
-
-public:
-    explicit QQuickStyleAttached(QObject *parent = nullptr);
-    ~QQuickStyleAttached();
-
-    static QSharedPointer<QSettings> settings(const QString &group = QString());
-
-protected:
-    void init();
-
-    QQuickItem *parentItem() const;
-
-    QList<QQuickStyleAttached *> childStyles() const;
-
-    QQuickStyleAttached *parentStyle() const;
-    void setParentStyle(QQuickStyleAttached *style);
-
-    virtual void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent);
-
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
-
-private:
-    QList<QQuickStyleAttached *> m_childStyles;
-    QPointer<QQuickStyleAttached> m_parentStyle;
-};
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_LABSCONTROLS_LIB)
+#    define Q_LABSCONTROLS_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_LABSCONTROLS_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_LABSCONTROLS_EXPORT
+#endif
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTYLEATTACHED_P_H
+#endif // QTLABSCONTROLSSGLOBAL_H

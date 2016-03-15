@@ -48,11 +48,13 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyleSelectorPrivate;
-class QQuickStyleSelector
+
+class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickStyleSelector
 {
 public:
     explicit QQuickStyleSelector();

@@ -49,10 +49,11 @@
 //
 
 #include <QtGui/qpa/qplatformtheme.h>
+#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickProxyTheme :  public QPlatformTheme
+class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
 {
 public:
     QQuickProxyTheme(QPlatformTheme *theme);

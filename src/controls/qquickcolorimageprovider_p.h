@@ -49,10 +49,11 @@
 //
 
 #include <QtQuick/qquickimageprovider.h>
+#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickColorImageProvider : public QQuickImageProvider
+class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickColorImageProvider : public QQuickImageProvider
 {
 public:
     QQuickColorImageProvider(const QString &path);

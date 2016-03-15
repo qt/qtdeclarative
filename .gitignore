@@ -33,7 +33,6 @@
 
 /tests/auto/snippets/screenshots/*.png
 /tests/manual/gifs/gifs/*.gif
-/src/templates/QtLabsTemplates.version
 
 *.so
 *.so.*
@@ -112,3 +111,5 @@ android-*.so-deployment-settings.json
 *.xcscheme
 *.xcodeproj
 qt.conf
+*.version
+*.version.in
