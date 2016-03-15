@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
+#ifndef QSGBASICGLYPHNODE_P_H
+#define QSGBASICGLYPHNODE_P_H
 
 //
 //  W A R N I N G
@@ -52,15 +52,39 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+class QSGMaterial;
+
+class QSGBasicGlyphNode: public QSGGlyphNode
 {
 public:
-    void setMaterialColor(const QColor &color) override;
-    void update() override;
+    QSGBasicGlyphNode();
+    virtual ~QSGBasicGlyphNode();
+
+    virtual QPointF baseLine() const { return m_baseLine; }
+    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
+    virtual void setColor(const QColor &color);
+
+    virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
+    virtual void setStyle(QQuickText::TextStyle);
+    virtual void setStyleColor(const QColor &);
+
+    virtual void setMaterialColor(const QColor &color) = 0;
+    virtual void update() = 0;
+
+protected:
+    QGlyphRun m_glyphs;
+    QPointF m_position;
+    QColor m_color;
+    QQuickText::TextStyle m_style;
+    QColor m_styleColor;
+
+    QPointF m_baseLine;
+    QSGMaterial *m_material;
+
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE

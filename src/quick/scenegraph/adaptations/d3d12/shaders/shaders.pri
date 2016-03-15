@@ -54,12 +54,23 @@ mipmapgen_cshader.header = cs_mipmapgen.hlslh
 mipmapgen_cshader.entry = CS_Generate4MipMaps
 mipmapgen_cshader.type = cs_5_0
 
+textmask_VSPS = $$PWD/textmask.hlsl
+textmask_vshader.input = textmask_VSPS
+textmask_vshader.header = vs_textmask.hlslh
+textmask_vshader.entry = VS_TextMask
+textmask_vshader.type = vs_5_0
+textmask_pshader24.input = textmask_VSPS
+textmask_pshader24.header = ps_textmask24.hlslh
+textmask_pshader24.entry = PS_TextMask24
+textmask_pshader24.type = ps_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
     smoothcolor_vshader smoothcolor_pshader \
     texture_vshader texture_pshader \
     smoothtexture_vshader smoothtexture_pshader \
-    mipmapgen_cshader
+    mipmapgen_cshader \
+    textmask_vshader textmask_pshader24
 
 load(hlsl_bytecode_header)

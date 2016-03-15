@@ -43,6 +43,14 @@
 
 QT_BEGIN_NAMESPACE
 
+// NOTE: Avoid categorized logging. It is slow.
+
+#define DECLARE_DEBUG_VAR(variable) \
+    static bool debug_ ## variable() \
+    { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
+
+DECLARE_DEBUG_VAR(render)
+
 QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
 {
@@ -53,6 +61,30 @@ void QSGD3D12RenderContext::initialize(QOpenGLContext *)
     Q_UNREACHABLE();
 }
 
+void QSGD3D12RenderContext::invalidate()
+{
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("rendercontext invalidate engine %p, %d/%d/%d", m_engine,
+               m_texturesToDelete.count(), m_textures.count(), m_fontEnginesToClean.count());
+
+    qDeleteAll(m_texturesToDelete);
+    m_texturesToDelete.clear();
+
+    qDeleteAll(m_textures);
+    m_textures.clear();
+
+    for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
+         end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
+        (*it)->clearGlyphCache(m_engine);
+        if (!(*it)->ref.deref())
+            delete *it;
+    }
+    m_fontEnginesToClean.clear();
+
+    m_sg->renderContextInvalidated(this);
+    emit invalidated();
+}
+
 QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags) const
 {
     Q_ASSERT(m_engine);
@@ -61,7 +93,7 @@ QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags
     return t;
 }
 
-QSGRenderer *QSGD3D12RenderContext::createRenderer()
+ QSGRenderer *QSGD3D12RenderContext::createRenderer()
 {
     return new QSGD3D12Renderer(this);
 }

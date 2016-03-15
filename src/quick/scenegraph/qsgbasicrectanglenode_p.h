@@ -37,8 +37,9 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
+
+#ifndef QSGBASICRECTANGLENODE_P_H
+#define QSGBASICRECTANGLENODE_P_H
 
 //
 //  W A R N I N G
@@ -52,15 +53,45 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+class Q_QUICK_PRIVATE_EXPORT QSGBasicRectangleNode : public QSGRectangleNode
 {
 public:
-    void setMaterialColor(const QColor &color) override;
+    QSGBasicRectangleNode();
+
+    void setRect(const QRectF &rect) override;
+    void setColor(const QColor &color) override;
+    void setPenColor(const QColor &color) override;
+    void setPenWidth(qreal width) override;
+    void setGradientStops(const QGradientStops &stops) override;
+    void setRadius(qreal radius) override;
+    void setAntialiasing(bool antialiasing) override;
+    void setAligned(bool aligned) override;
     void update() override;
+
+protected:
+    virtual bool supportsAntialiasing() const { return true; }
+    virtual void updateMaterialAntialiasing() = 0;
+    virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
+
+    void updateGeometry();
+    void updateGradientTexture();
+
+    QRectF m_rect;
+    QGradientStops m_gradient_stops;
+    QColor m_color;
+    QColor m_border_color;
+    qreal m_radius;
+    qreal m_pen_width;
+
+    uint m_aligned : 1;
+    uint m_antialiasing : 1;
+    uint m_gradient_is_opaque : 1;
+    uint m_dirty_geometry : 1;
+
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE

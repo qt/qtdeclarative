@@ -63,6 +63,7 @@ public:
     QSGD3D12RenderContext(QSGContext *ctx);
 
     void initialize(QOpenGLContext *) override; // not in use
+    void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, GLuint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer() override;

@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
+#ifndef QSGBASICIMAGENODE_P_H
+#define QSGBASICIMAGENODE_P_H
 
 //
 //  W A R N I N G
@@ -52,15 +52,43 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+class Q_QUICK_PRIVATE_EXPORT QSGBasicImageNode : public QSGImageNode
 {
 public:
-    void setMaterialColor(const QColor &color) override;
+    QSGBasicImageNode();
+
+    void setTargetRect(const QRectF &rect) override;
+    void setInnerTargetRect(const QRectF &rect) override;
+    void setInnerSourceRect(const QRectF &rect) override;
+    void setSubSourceRect(const QRectF &rect) override;
+    void setTexture(QSGTexture *texture) override;
+    void setAntialiasing(bool antialiasing) override;
+    void setMirror(bool mirror) override;
     void update() override;
+    void preprocess() override;
+
+protected:
+    virtual void updateMaterialAntialiasing() = 0;
+    virtual void setMaterialTexture(QSGTexture *texture) = 0;
+    virtual QSGTexture *materialTexture() const = 0;
+    virtual bool updateMaterialBlending() = 0;
+    virtual bool supportsWrap(const QSize &size) const = 0;
+
+    void updateGeometry();
+
+    QRectF m_targetRect;
+    QRectF m_innerTargetRect;
+    QRectF m_innerSourceRect;
+    QRectF m_subSourceRect;
+
+    uint m_antialiasing : 1;
+    uint m_mirror : 1;
+    uint m_dirtyGeometry : 1;
+
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE

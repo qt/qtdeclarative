@@ -51,12 +51,12 @@
 // We mean it.
 //
 
-#include <private/qsgdefaultrectanglenode_p.h>
+#include <private/qsgbasicrectanglenode_p.h>
 #include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12RectangleNode : public QSGDefaultNoMaterialRectangleNode
+class QSGD3D12RectangleNode : public QSGBasicRectangleNode
 {
 public:
     QSGD3D12RectangleNode();

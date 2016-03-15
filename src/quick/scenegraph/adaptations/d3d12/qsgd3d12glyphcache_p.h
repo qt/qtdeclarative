@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
+#ifndef QSGD3D12GLYPHCACHE_P_H
+#define QSGD3D12GLYPHCACHE_P_H
 
 //
 //  W A R N I N G
@@ -51,18 +51,34 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
+#include <QtGui/private/qtextureglyphcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+class QSGD3D12Engine;
+
+class QSGD3D12GlyphCache : public QTextureGlyphCache
 {
 public:
-    void setMaterialColor(const QColor &color) override;
-    void update() override;
+    QSGD3D12GlyphCache(QSGD3D12Engine *engine, QFontEngine::GlyphFormat format, const QTransform &matrix);
+    ~QSGD3D12GlyphCache();
+
+    void createTextureData(int width, int height) override;
+    void resizeTextureData(int width, int height) override;
+    void beginFillTexture() override;
+    void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition) override;
+    void endFillTexture() override;
+    int glyphPadding() const override;
+    int maxTextureWidth() const override;
+    int maxTextureHeight() const override;
+
+    void activateTexture();
+
+private:
+    QSGD3D12Engine *m_engine;
+    uint m_id = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGD3D12GLYPHCACHE_P_H

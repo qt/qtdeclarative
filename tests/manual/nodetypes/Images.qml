@@ -57,10 +57,29 @@ Item {
         // changing the mipmap property results in the creation of a brand new
         // texture resource. enable the following to test.
 //        Timer {
-//            interval: 5000
+//            interval: 2000
 //            onTriggered: im.mipmap = false
 //            running: true
 //        }
+
+        SequentialAnimation on scale {
+            loops: Animation.Infinite
+            NumberAnimation {
+                from: 1.0
+                to: 4.0
+                duration: 2000
+            }
+            NumberAnimation {
+                from: 4.0
+                to: 0.1
+                duration: 3000
+            }
+            NumberAnimation {
+                from: 0.1
+                to: 1.0
+                duration: 1000
+            }
+        }
 
         Image {
             anchors.centerIn: parent
@@ -73,5 +92,6 @@ Item {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         antialiasing: true
+        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
     }
 }

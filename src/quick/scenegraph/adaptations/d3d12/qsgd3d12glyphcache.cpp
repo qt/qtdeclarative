@@ -37,32 +37,75 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
+#include "qsgd3d12glyphcache_p.h"
+#include "qsgd3d12engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+// Keep it simple: allocate a large texture and never resize.
+static const int TEXTURE_WIDTH = 2048;
+static const int TEXTURE_HEIGHT = 2048;
+
+QSGD3D12GlyphCache::QSGD3D12GlyphCache(QSGD3D12Engine *engine, QFontEngine::GlyphFormat format, const QTransform &matrix)
+    : QTextureGlyphCache(format, matrix),
+      m_engine(engine)
 {
-public:
-    void setMaterialColor(const QColor &color) override;
-    void update() override;
-};
+}
+
+QSGD3D12GlyphCache::~QSGD3D12GlyphCache()
+{
+    if (m_id)
+        m_engine->releaseTexture(m_id);
+}
+
+void QSGD3D12GlyphCache::createTextureData(int, int)
+{
+    qDebug("create");
+    m_id = m_engine->genTexture();
+    Q_ASSERT(m_id);
+    m_engine->createTexture(m_id, QSize(TEXTURE_WIDTH, TEXTURE_HEIGHT),
+                            QImage::Format_ARGB32_Premultiplied, QSGD3D12Engine::CreateWithAlpha);
+}
+
+void QSGD3D12GlyphCache::resizeTextureData(int, int)
+{
+    // nothing to do here
+}
+
+void QSGD3D12GlyphCache::beginFillTexture()
+{
+    qDebug("begin");
+}
+
+void QSGD3D12GlyphCache::fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition)
+{
+    qDebug("fill %x", glyph);
+}
+
+void QSGD3D12GlyphCache::endFillTexture()
+{
+    qDebug("end");
+}
+
+int QSGD3D12GlyphCache::glyphPadding() const
+{
+    return 1;
+}
+
+int QSGD3D12GlyphCache::maxTextureWidth() const
+{
+    return TEXTURE_WIDTH;
+}
+
+int QSGD3D12GlyphCache::maxTextureHeight() const
+{
+    return TEXTURE_HEIGHT;
+}
+
+void QSGD3D12GlyphCache::activateTexture()
+{
+    if (m_id)
+        m_engine->activateTexture(m_id);
+}
 
 QT_END_NAMESPACE
-
-#endif

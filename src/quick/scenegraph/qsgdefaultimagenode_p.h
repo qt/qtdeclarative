@@ -53,6 +53,7 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qsgbasicimagenode_p.h>
 #include <QtQuick/qsgtexturematerial.h>
 
 QT_BEGIN_NAMESPACE
@@ -69,42 +70,7 @@ protected:
     QSGMaterialShader *createShader() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultNoMaterialImageNode : public QSGImageNode
-{
-public:
-    QSGDefaultNoMaterialImageNode();
-    void setTargetRect(const QRectF &rect) override;
-    void setInnerTargetRect(const QRectF &rect) override;
-    void setInnerSourceRect(const QRectF &rect) override;
-    void setSubSourceRect(const QRectF &rect) override;
-    void setTexture(QSGTexture *texture) override;
-    void setAntialiasing(bool antialiasing) override;
-    void setMirror(bool mirror) override;
-    void update() override;
-    void preprocess() override;
-
-protected:
-    virtual void updateMaterialAntialiasing() = 0;
-    virtual void setMaterialTexture(QSGTexture *texture) = 0;
-    virtual QSGTexture *materialTexture() const = 0;
-    virtual bool updateMaterialBlending() = 0;
-    virtual bool supportsWrap(const QSize &size) const = 0;
-
-    void updateGeometry();
-
-    QRectF m_targetRect;
-    QRectF m_innerTargetRect;
-    QRectF m_innerSourceRect;
-    QRectF m_subSourceRect;
-
-    uint m_antialiasing : 1;
-    uint m_mirror : 1;
-    uint m_dirtyGeometry : 1;
-
-    QSGGeometry m_geometry;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGDefaultNoMaterialImageNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGBasicImageNode
 {
 public:
     QSGDefaultImageNode();

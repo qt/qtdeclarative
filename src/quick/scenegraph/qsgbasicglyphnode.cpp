@@ -37,32 +37,59 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
+#include "qsgbasicglyphnode_p.h"
+#include <qsgmaterial.h> // just so that we can safely do delete m_material in the dtor
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+QSGBasicGlyphNode::QSGBasicGlyphNode()
+    : m_style(QQuickText::Normal)
+    , m_material(0)
+    , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
 {
-public:
-    void setMaterialColor(const QColor &color) override;
-    void update() override;
-};
+    m_geometry.setDrawingMode(GL_TRIANGLES);
+    setGeometry(&m_geometry);
+}
+
+QSGBasicGlyphNode::~QSGBasicGlyphNode()
+{
+    delete m_material;
+}
+
+void QSGBasicGlyphNode::setColor(const QColor &color)
+{
+    m_color = color;
+    if (m_material != 0) {
+        setMaterialColor(color);
+        markDirty(DirtyMaterial);
+    }
+}
+
+void QSGBasicGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
+{
+    if (m_material != 0)
+        delete m_material;
+
+    m_position = position;
+    m_glyphs = glyphs;
+
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("glyphs"));
+#endif
+}
+
+void QSGBasicGlyphNode::setStyle(QQuickText::TextStyle style)
+{
+    if (m_style == style)
+        return;
+    m_style = style;
+}
+
+void QSGBasicGlyphNode::setStyleColor(const QColor &color)
+{
+    if (m_styleColor == color)
+        return;
+    m_styleColor = color;
+}
 
 QT_END_NAMESPACE
-
-#endif

@@ -8,7 +8,9 @@ SOURCES += \
     $$PWD/qsgd3d12material.cpp \
     $$PWD/qsgd3d12builtinmaterials.cpp \
     $$PWD/qsgd3d12texture.cpp \
-    $$PWD/qsgd3d12imagenode.cpp
+    $$PWD/qsgd3d12imagenode.cpp \
+    $$PWD/qsgd3d12glyphnode.cpp \
+    $$PWD/qsgd3d12glyphcache.cpp
 
 NO_PCH_SOURCES += \
     $$PWD/qsgd3d12engine.cpp
@@ -25,7 +27,9 @@ HEADERS += \
     $$PWD/qsgd3d12material_p.h \
     $$PWD/qsgd3d12builtinmaterials_p.h \
     $$PWD/qsgd3d12texture_p.h \
-    $$PWD/qsgd3d12imagenode_p.h
+    $$PWD/qsgd3d12imagenode_p.h \
+    $$PWD/qsgd3d12glyphnode_p.h \
+    $$PWD/qsgd3d12glyphcache_p.h
 
 LIBS += -ldxgi -ld3d12
 

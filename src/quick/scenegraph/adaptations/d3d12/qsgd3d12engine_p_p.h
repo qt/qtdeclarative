@@ -134,6 +134,7 @@ public:
     bool isInitialized() const { return initialized; }
     void releaseResources();
     void resize();
+    QWindow *currentWindow() const { return window; }
 
     void beginFrame();
     void endFrame();
@@ -163,7 +164,8 @@ public:
     void waitGPU();
 
     uint genTexture();
-    void createTextureAsync(uint id, const QImage &image, QSGD3D12Engine::TextureCreateFlags flags);
+    void createTexture(uint id, const QSize &size, QImage::Format format, QSGD3D12Engine::TextureCreateFlags flags);
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
     void activateTexture(uint id);
@@ -282,8 +284,13 @@ private:
         D3D12_CPU_DESCRIPTOR_HANDLE srv;
         quint64 fenceValue = 0;
         bool waitAdded = false;
-        ComPtr<ID3D12Resource> stagingBuffer;
+        ComPtr<ID3D12Heap> stagingHeap;
+        struct StagingEntry {
+            ComPtr<ID3D12Resource> buffer;
+        };
+        QVector<StagingEntry> stagingBuffers;
         QVector<D3D12_CPU_DESCRIPTOR_HANDLE> mipUAVs;
+        bool alpha = true;
         bool mipmap = false;
     };
 

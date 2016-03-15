@@ -61,6 +61,9 @@ QSGD3D12RenderLoop::QSGD3D12RenderLoop()
         qDebug("new d3d12 render loop");
 
     sg = new QSGD3D12Context;
+
+    // One global rendercontext, it will be the renderloop's responsibility to
+    // set the correct window-specific engine via setEngine() later on.
     rc = new QSGD3D12RenderContext(sg);
 }
 
@@ -112,7 +115,7 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
         qDebug() << "window destroyed" << window;
 
     WindowData &data(m_windows[window]);
-    delete data.engine;
+    QSGD3D12Engine *engine = data.engine;
     m_windows.remove(window);
 
     hide(window);
@@ -121,9 +124,12 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
     wd->cleanupNodesOnShutdown();
 
     if (m_windows.isEmpty()) {
+        rc->setEngine(engine);
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
+
+    delete engine;
 }
 
 void QSGD3D12RenderLoop::exposureChanged(QQuickWindow *window)
@@ -287,8 +293,6 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
                 int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
-
-    rc->setEngine(nullptr);
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)

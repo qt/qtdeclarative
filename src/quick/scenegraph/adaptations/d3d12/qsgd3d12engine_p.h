@@ -260,6 +260,7 @@ public:
     bool attachToWindow(QWindow *window);
     void releaseResources();
     void resize();
+    QWindow *window() const;
 
     void beginFrame();
     void endFrame();
@@ -306,7 +307,9 @@ public:
     Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
 
     uint genTexture();
-    void createTextureAsync(uint id, const QImage &image, TextureCreateFlags flags);
+    void createTexture(uint id, const QSize &size, QImage::Format format, TextureCreateFlags flags);
+    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint());
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
     void activateTexture(uint id);

@@ -51,12 +51,12 @@
 // We mean it.
 //
 
-#include <private/qsgdefaultimagenode_p.h>
+#include <private/qsgbasicimagenode_p.h>
 #include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12ImageNode : public QSGDefaultNoMaterialImageNode
+class QSGD3D12ImageNode : public QSGBasicImageNode
 {
 public:
     QSGD3D12ImageNode();

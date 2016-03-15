@@ -125,7 +125,8 @@ void QSGD3D12Texture::bind()
         if (m_createdWithMipMaps)
             createFlags |= QSGD3D12Engine::CreateWithMipMaps;
 
-        m_engine->createTextureAsync(m_id, m_image, createFlags);
+        m_engine->createTexture(m_id, m_image.size(), m_image.format(), createFlags);
+        m_engine->queueTextureUpload(m_id, m_image);
     }
 
     // Here we know that the texture is going to be used in the current frame

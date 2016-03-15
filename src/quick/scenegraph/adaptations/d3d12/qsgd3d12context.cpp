@@ -41,6 +41,7 @@
 #include "qsgd3d12rendercontext_p.h"
 #include "qsgd3d12rectanglenode_p.h"
 #include "qsgd3d12imagenode_p.h"
+#include "qsgd3d12glyphnode_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,10 +69,10 @@ QSGPainterNode *QSGD3D12Context::createPainterNode(QQuickPaintedItem *item)
 
 QSGGlyphNode *QSGD3D12Context::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
 {
-    Q_UNUSED(rc);
     Q_UNUSED(preferNativeGlyphNode);
-    Q_UNREACHABLE();
-    return nullptr;
+    // ### distance field text rendering is not supported atm
+
+    return new QSGD3D12GlyphNode(static_cast<QSGD3D12RenderContext *>(rc));
 }
 
 QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()

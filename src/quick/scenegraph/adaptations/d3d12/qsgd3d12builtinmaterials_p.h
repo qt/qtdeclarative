@@ -52,9 +52,13 @@
 //
 
 #include "qsgd3d12material_p.h"
+#include "qsgd3d12glyphcache_p.h"
 #include <private/qsgtexture_p.h>
+#include <QRawFont>
 
 QT_BEGIN_NAMESPACE
+
+class QSGD3D12RenderContext;
 
 class QSGD3D12VertexColorMaterial : public QSGD3D12Material
 {
@@ -163,6 +167,39 @@ private:
     QSGTexture::Filtering m_mipmap_filtering = QSGTexture::None;
     QSGTexture::WrapMode m_horizontal_wrap = QSGTexture::ClampToEdge;
     QSGTexture::WrapMode m_vertical_wrap = QSGTexture::ClampToEdge;
+};
+
+class QSGD3D12TextMaterial : public QSGD3D12Material
+{
+public:
+    QSGD3D12TextMaterial(QSGD3D12RenderContext *rc, const QRawFont &font,
+                         QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
+
+    QSGMaterialType *type() const override;
+    int compare(const QSGMaterial *other) const override;
+
+    virtual int constantBufferSize() const override;
+    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    UpdateResults updatePipeline(const RenderState &state,
+                                 QSGD3D12ShaderState *shaders,
+                                 quint8 *constantBuffer) override;
+
+    void setColor(const QColor &c) { m_color = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void setColor(const QVector4D &color) { m_color = color; }
+    const QVector4D &color() const { return m_color; }
+
+    void populate(const QPointF &position,
+                  const QVector<quint32> &glyphIndexes, const QVector<QPointF> &glyphPositions,
+                  QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine,
+                  const QMargins &margins = QMargins(0, 0, 0, 0));
+
+    QSGD3D12GlyphCache *glyphCache() const { return static_cast<QSGD3D12GlyphCache *>(m_glyphCache.data()); }
+
+private:
+    static QSGMaterialType mtype;
+    QVector4D m_color;
+    QRawFont m_font;
+    QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
 };
 
 QT_END_NAMESPACE

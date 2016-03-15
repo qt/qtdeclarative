@@ -41,26 +41,8 @@
 import QtQuick 2.0
 
 Item {
-    focus: true
-
-    Loader {
-        anchors.fill: parent
-        id: loader
-    }
-
-    Keys.onPressed: {
-        if (event.key === Qt.Key_S)
-            loader.source = "";
-
-        if (event.key === Qt.Key_R)
-            loader.source = "qrc:/Rects.qml";
-        if (event.key === Qt.Key_4)
-            loader.source = "qrc:/LotsOfRects.qml";
-
-        if (event.key === Qt.Key_I)
-            loader.source = "qrc:/Images.qml";
-
-        if (event.key === Qt.Key_T)
-            loader.source = "qrc:/Text.qml";
+    Text {
+        anchors.centerIn: parent
+        text: "árvíztűrő tükörfúrógép\nÁRVÍZTŰRŐ TÜKÖRFÚRÓGÉP"
     }
 }

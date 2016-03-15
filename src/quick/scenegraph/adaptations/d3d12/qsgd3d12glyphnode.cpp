@@ -37,32 +37,54 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTGLYPHNODE_P_H
-#define QSGDEFAULTGLYPHNODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
+#include "qsgd3d12glyphnode_p.h"
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+void QSGD3D12GlyphNode::setMaterialColor(const QColor &color)
 {
-public:
-    void setMaterialColor(const QColor &color) override;
-    void update() override;
-};
+    static_cast<QSGD3D12TextMaterial *>(m_material)->setColor(color);
+}
+
+void QSGD3D12GlyphNode::update()
+{
+    QRawFont font = m_glyphs.rawFont();
+    QMargins margins(0, 0, 0, 0);
+
+    if (m_style == QQuickText::Normal) {
+        // QSGBasicGlyphNode dtor will delete
+        m_material = new QSGD3D12TextMaterial(m_rc, font);
+    } else if (m_style == QQuickText::Outline) {
+        // ### not yet supported
+//        QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(font);
+//        material->setStyleColor(m_styleColor);
+//        m_material = material;
+        margins = QMargins(1, 1, 1, 1);
+    } else {
+        // ### not yet supported
+//        QSGStyledTextMaterial *material = new QSGStyledTextMaterial(font);
+        if (m_style == QQuickText::Sunken) {
+//            material->setStyleShift(QVector2D(0, -1));
+            margins.setTop(1);
+        } else if (m_style == QQuickText::Raised) {
+//            material->setStyleShift(QVector2D(0, 1));
+            margins.setBottom(1);
+        }
+//        material->setStyleColor(m_styleColor);
+//        m_material = material;
+    }
+
+    QSGD3D12TextMaterial *textMaterial = static_cast<QSGD3D12TextMaterial *>(m_material);
+    textMaterial->setColor(m_color);
+
+    QRectF boundingRect;
+    textMaterial->populate(m_position, m_glyphs.glyphIndexes(), m_glyphs.positions(), geometry(),
+                           &boundingRect, &m_baseLine, margins);
+    setBoundingRect(boundingRect);
+
+    setMaterial(m_material);
+    markDirty(DirtyGeometry);
+}
 
 QT_END_NAMESPACE
-
-#endif

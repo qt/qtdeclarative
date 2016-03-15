@@ -252,12 +252,26 @@ void QSGD3D12DeviceManager::ensureCreated()
 
     if (warp) {
         qDebug("Using WARP");
-        ComPtr<IDXGIAdapter> warpAdapter;
-        m_factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
-        HRESULT hr = D3D12CreateDevice(warpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
+        m_factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
+        HRESULT hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
         if (FAILED(hr)) {
             qWarning("Failed to create WARP device: 0x%x", hr);
             return;
+        }
+    }
+
+    ComPtr<IDXGIAdapter3> adapter3;
+    if (SUCCEEDED(adapter.As(&adapter3))) {
+        DXGI_QUERY_VIDEO_MEMORY_INFO vidMemInfo;
+        if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vidMemInfo))) {
+            qDebug("Video memory info: LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
+                   vidMemInfo.Budget / 1024, vidMemInfo.CurrentUsage / 1024,
+                   vidMemInfo.AvailableForReservation / 1024, vidMemInfo.CurrentReservation / 1024);
+        }
+        if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &vidMemInfo))) {
+            qDebug("Video memory info: NON-LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
+                   vidMemInfo.Budget / 1024, vidMemInfo.CurrentUsage / 1024,
+                   vidMemInfo.AvailableForReservation / 1024, vidMemInfo.CurrentReservation / 1024);
         }
     }
 }
@@ -300,6 +314,11 @@ void QSGD3D12Engine::resize()
 {
     d->waitGPU();
     d->resize();
+}
+
+QWindow *QSGD3D12Engine::window() const
+{
+    return d->currentWindow();
 }
 
 void QSGD3D12Engine::beginFrame()
@@ -399,9 +418,19 @@ uint QSGD3D12Engine::genTexture()
     return d->genTexture();
 }
 
-void QSGD3D12Engine::createTextureAsync(uint id, const QImage &image, TextureCreateFlags flags)
+void QSGD3D12Engine::createTexture(uint id, const QSize &size, QImage::Format format, TextureCreateFlags flags)
 {
-    return d->createTextureAsync(id, image, flags);
+    d->createTexture(id, size, format, flags);
+}
+
+void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos)
+{
+    d->queueTextureUpload(id, QVector<QImage>() << image, QVector<QPoint>() << dstPos);
+}
+
+void QSGD3D12Engine::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos)
+{
+    d->queueTextureUpload(id, images, dstPos);
 }
 
 void QSGD3D12Engine::releaseTexture(uint id)
@@ -1028,7 +1057,8 @@ void QSGD3D12EnginePrivate::beginFrame()
                 Texture &t(textures[idx]);
                 if (t.fenceValue) { // may have been cleared by the previous frame
                     t.fenceValue = 0;
-                    t.stagingBuffer = nullptr;
+                    t.stagingBuffers.clear();
+                    t.stagingHeap = nullptr;
                     if (Q_UNLIKELY(debug_render()))
                         qDebug("Cleaned staging data for texture %u", id);
                 }
@@ -1661,23 +1691,64 @@ uint QSGD3D12EnginePrivate::genTexture()
     Texture &t(textures[id - 1]);
     t.entryInUse = true;
     t.fenceValue = 0;
-    t.mipmap = t.waitAdded = false;
 
     return id;
 }
 
-void QSGD3D12EnginePrivate::createTextureAsync(uint id, const QImage &image, QSGD3D12Engine::TextureCreateFlags flags)
+static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, bool mipmap,
+                                        QImage::Format *imageFormat, int *bytesPerPixel)
+{
+    DXGI_FORMAT f = DXGI_FORMAT_R8G8B8A8_UNORM;
+    QImage::Format convFormat = format;
+    int bpp = 4;
+
+    if (!mipmap) {
+        switch (format) {
+        case QImage::Format_Indexed8:
+            f = DXGI_FORMAT_A8_UNORM;
+            bpp = 1;
+            break;
+        case QImage::Format_RGB32:
+            f = DXGI_FORMAT_B8G8R8A8_UNORM;
+            break;
+        case QImage::Format_ARGB32:
+            f = DXGI_FORMAT_B8G8R8A8_UNORM;
+            convFormat = wantsAlpha ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32;
+            break;
+        case QImage::Format_ARGB32_Premultiplied:
+            f = DXGI_FORMAT_B8G8R8A8_UNORM;
+            convFormat = wantsAlpha ? format : QImage::Format_RGB32;
+            break;
+        default:
+            convFormat = wantsAlpha ? QImage::Format_RGBA8888_Premultiplied : QImage::Format_RGBX8888;
+            break;
+        }
+    } else {
+        // Mipmap generation needs unordered access and BGRA is not an option for that. Stick to RGBA.
+        convFormat = wantsAlpha ? QImage::Format_RGBA8888_Premultiplied : QImage::Format_RGBX8888;
+    }
+
+    if (imageFormat)
+        *imageFormat = convFormat;
+
+    if (bytesPerPixel)
+        *bytesPerPixel = bpp;
+
+    return f;
+}
+
+void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Format format,
+                                          QSGD3D12Engine::TextureCreateFlags flags)
 {
     Q_ASSERT(id);
     const int idx = id - 1;
     Q_ASSERT(idx < textures.count() && textures[idx].entryInUse);
     Texture &t(textures[idx]);
 
-    const bool alpha = flags & QSGD3D12Engine::CreateWithAlpha;
+    t.alpha = flags & QSGD3D12Engine::CreateWithAlpha;
     t.mipmap = flags & QSGD3D12Engine::CreateWithMipMaps;
-    t.waitAdded = false;
 
-    const QSize adjustedSize = !t.mipmap ? image.size() : QSGD3D12Engine::mipMapAdjustedSourceSize(image.size());
+    const QSize adjustedSize = !t.mipmap ? size : QSGD3D12Engine::mipMapAdjustedSourceSize(size);
 
     D3D12_HEAP_PROPERTIES defaultHeapProp = {};
     defaultHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -1688,7 +1759,7 @@ void QSGD3D12EnginePrivate::createTextureAsync(uint id, const QImage &image, QSG
     textureDesc.Height = adjustedSize.height();
     textureDesc.DepthOrArraySize = 1;
     textureDesc.MipLevels = !t.mipmap ? 1 : QSGD3D12Engine::mipMapLevels(adjustedSize);
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Format = textureFormat(format, t.alpha, t.mipmap, nullptr, nullptr);
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     if (t.mipmap)
@@ -1726,63 +1797,140 @@ void QSGD3D12EnginePrivate::createTextureAsync(uint id, const QImage &image, QSG
     }
 
     if (Q_UNLIKELY(debug_render()))
-        qDebug("created texture %d, size %dx%d, miplevels %d", id, adjustedSize.width(), adjustedSize.height(), textureDesc.MipLevels);
+        qDebug("created texture %u, size %dx%d, miplevels %d", id, adjustedSize.width(), adjustedSize.height(), textureDesc.MipLevels);
+}
+
+void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos)
+{
+    Q_ASSERT(id);
+    Q_ASSERT(images.count() == dstPos.count());
+    if (images.isEmpty())
+        return;
+
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count() && textures[idx].entryInUse);
+    Texture &t(textures[idx]);
+    Q_ASSERT(t.texture);
+
+    // When mipmapping is not in use, image can be smaller than the size passed
+    // to createTexture() and dstPos can specify a non-zero destination position.
+
+    if (t.mipmap && (images.count() != 1 || dstPos.count() != 1 || !dstPos[0].isNull())) {
+        qWarning("Mipmapped textures (%u) do not support partial uploads", id);
+        return;
+    }
+
+    // This function cannot be called until the previous upload has finished,
+    // but one call can initiate the upload of multiple sub-regions which still
+    // counts as one upload from the viewpoint of the rest of the engine (and
+    // only the completion of the whole set can be waited on).
+
+    if (t.fenceValue) {
+        qWarning("Attempted to queue texture upload (%u) while a previous upload is still in progress", id);
+        return;
+    }
 
     t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
+    t.waitAdded = false;
 
-    UINT64 bufferSize;
-    D3D12_PLACED_SUBRESOURCE_FOOTPRINT textureLayout;
-    device->GetCopyableFootprints(&textureDesc, 0, 1, 0, &textureLayout, nullptr, nullptr, &bufferSize);
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("adding upload for texture %u on the copy queue", id);
 
-    D3D12_RESOURCE_DESC bufDesc = {};
-    bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    bufDesc.Width = bufferSize;
-    bufDesc.Height = 1;
-    bufDesc.DepthOrArraySize = 1;
-    bufDesc.MipLevels = 1;
-    bufDesc.Format = DXGI_FORMAT_UNKNOWN;
-    bufDesc.SampleDesc.Count = 1;
-    bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
+    const QSize adjustedTextureSize(textureDesc.Width, textureDesc.Height);
 
+    int totalSize = 0;
+    for (const QImage &image : images) {
+        int bytesPerPixel;
+        textureFormat(image.format(), t.alpha, t.mipmap, nullptr, &bytesPerPixel);
+        const int w = !t.mipmap ? image.width() : adjustedTextureSize.width();
+        const int h = !t.mipmap ? image.height() : adjustedTextureSize.height();
+        const int stride = alignedSize(w * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+        totalSize += alignedSize(h * stride, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+    }
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("%d sub-uploads, heap size %d bytes", images.count(), totalSize);
+
+    // Instead of individual committed resources for each upload buffer,
+    // allocate only once and use placed resources.
     D3D12_HEAP_PROPERTIES uploadHeapProp = {};
     uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+    D3D12_HEAP_DESC uploadHeapDesc = {};
+    uploadHeapDesc.SizeInBytes = totalSize;
+    uploadHeapDesc.Properties = uploadHeapProp;
+    uploadHeapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
-    if (FAILED(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufDesc,
-                                               D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&t.stagingBuffer)))) {
-        qWarning("Failed to create texture upload buffer");
+    if (FAILED(device->CreateHeap(&uploadHeapDesc, IID_PPV_ARGS(&t.stagingHeap)))) {
+        qWarning("Failed to create texture upload heap of size %d", totalSize);
         return;
     }
 
-    // ### conversion and scaling are slow. the latter goes away once npot
-    // mipmap generation is supported. figure out something for the former.
-    QImage convImage = image.convertToFormat(alpha ? QImage::Format_RGBA8888_Premultiplied : QImage::Format_RGBX8888);
-    if (t.mipmap && adjustedSize != convImage.size())
-        convImage = convImage.scaled(adjustedSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    int placedOffset = 0;
+    for (int i = 0; i < images.count(); ++i) {
+        QImage::Format convFormat;
+        int bytesPerPixel;
+        textureFormat(images[i].format(), t.alpha, t.mipmap, &convFormat, &bytesPerPixel);
 
-    quint8 *p = nullptr;
-    const D3D12_RANGE readRange = { 0, 0 };
-    if (FAILED(t.stagingBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
-        qWarning("Map failed (texture upload buffer)");
-        return;
+        QImage convImage = images[i].format() == convFormat ? images[i] : images[i].convertToFormat(convFormat);
+
+        if (t.mipmap && adjustedTextureSize != convImage.size())
+            convImage = convImage.scaled(adjustedTextureSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+        const int stride = alignedSize(convImage.width() * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+        D3D12_RESOURCE_DESC bufDesc = {};
+        bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        bufDesc.Width = stride * convImage.height();
+        bufDesc.Height = 1;
+        bufDesc.DepthOrArraySize = 1;
+        bufDesc.MipLevels = 1;
+        bufDesc.Format = DXGI_FORMAT_UNKNOWN;
+        bufDesc.SampleDesc.Count = 1;
+        bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+        Texture::StagingEntry sdata;
+        if (FAILED(device->CreatePlacedResource(t.stagingHeap.Get(), placedOffset,
+                                                &bufDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                nullptr, IID_PPV_ARGS(&sdata.buffer)))) {
+            qWarning("Failed to create texture upload buffer");
+            return;
+        }
+
+        quint8 *p = nullptr;
+        const D3D12_RANGE readRange = { 0, 0 };
+        if (FAILED(sdata.buffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+            qWarning("Map failed (texture upload buffer)");
+            return;
+        }
+        for (int y = 0, ye = convImage.height(); y < ye; ++y) {
+            memcpy(p, convImage.scanLine(y), convImage.width() * 4);
+            p += stride;
+        }
+        sdata.buffer->Unmap(0, nullptr);
+
+        copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
+
+        D3D12_TEXTURE_COPY_LOCATION dstLoc;
+        dstLoc.pResource = t.texture.Get();
+        dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLoc.SubresourceIndex = 0;
+
+        D3D12_TEXTURE_COPY_LOCATION srcLoc;
+        srcLoc.pResource = sdata.buffer.Get();
+        srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        srcLoc.PlacedFootprint.Offset = 0;
+        srcLoc.PlacedFootprint.Footprint.Format = textureDesc.Format;
+        srcLoc.PlacedFootprint.Footprint.Width = convImage.width();
+        srcLoc.PlacedFootprint.Footprint.Height = convImage.height();
+        srcLoc.PlacedFootprint.Footprint.Depth = 1;
+        srcLoc.PlacedFootprint.Footprint.RowPitch = stride;
+
+        copyCommandList->CopyTextureRegion(&dstLoc, dstPos[i].x(), dstPos[i].y(), 0, &srcLoc, nullptr);
+
+        t.stagingBuffers.append(sdata);
+        placedOffset += alignedSize(bufDesc.Width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
     }
-    quint8 *lp = p + textureLayout.Offset;
-    for (uint y = 0; y < textureDesc.Height; ++y) {
-        memcpy(lp, convImage.scanLine(y), convImage.width() * 4);
-        lp += textureLayout.Footprint.RowPitch;
-    }
-    t.stagingBuffer->Unmap(0, nullptr);
-
-    copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
-
-    D3D12_TEXTURE_COPY_LOCATION dstLoc;
-    dstLoc.pResource = t.texture.Get();
-    dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    dstLoc.SubresourceIndex = 0;
-    D3D12_TEXTURE_COPY_LOCATION srcLoc;
-    srcLoc.pResource = t.stagingBuffer.Get();
-    srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    srcLoc.PlacedFootprint = textureLayout;
-    copyCommandList->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
 
     copyCommandList->Close();
     ID3D12CommandList *commandLists[] = { copyCommandList.Get() };
