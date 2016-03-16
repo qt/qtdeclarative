@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtLabsControls/private/qquickstyle_p.h>
+#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -413,7 +413,7 @@ static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
-QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
+QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_explicitTheme(false),
     m_explicitPrimary(false),
     m_explicitAccent(false),
@@ -462,7 +462,7 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 void QQuickMaterialStyle::propagateTheme()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritTheme(m_theme);
@@ -535,7 +535,7 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
 void QQuickMaterialStyle::propagatePrimary()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritPrimary(m_primary, m_customPrimary);
@@ -609,7 +609,7 @@ void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
 void QQuickMaterialStyle::propagateAccent()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritAccent(m_accent, m_customAccent);
@@ -927,7 +927,7 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
     }
 }
 
-void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent)
+void QQuickMaterialStyle::parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
@@ -949,7 +949,7 @@ void QQuickMaterialStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Material"));
+        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
         if (!settings.isNull()) {
             bool ok = false;
             QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
@@ -992,7 +992,7 @@ void QQuickMaterialStyle::init()
         defaultsInitialized = true;
     }
 
-    QQuickStyle::init(); // TODO: lazy init?
+    QQuickStyleAttached::init(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE

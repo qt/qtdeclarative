@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLE_P_H
-#define QQUICKSTYLE_P_H
+#ifndef QQUICKSTYLEATTACHED_P_H
+#define QQUICKSTYLEATTACHED_P_H
 
 //
 //  W A R N I N G
@@ -59,13 +59,13 @@ QT_BEGIN_NAMESPACE
 
 class QSettings;
 
-class QQuickStyle : public QObject, public QQuickItemChangeListener
+class QQuickStyleAttached : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
 
 public:
-    explicit QQuickStyle(QObject *parent = nullptr);
-    ~QQuickStyle();
+    explicit QQuickStyleAttached(QObject *parent = nullptr);
+    ~QQuickStyleAttached();
 
     static QSharedPointer<QSettings> settings(const QString &group = QString());
 
@@ -74,20 +74,20 @@ protected:
 
     QQuickItem *parentItem() const;
 
-    QList<QQuickStyle *> childStyles() const;
+    QList<QQuickStyleAttached *> childStyles() const;
 
-    QQuickStyle *parentStyle() const;
-    void setParentStyle(QQuickStyle *style);
+    QQuickStyleAttached *parentStyle() const;
+    void setParentStyle(QQuickStyleAttached *style);
 
-    virtual void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent);
+    virtual void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent);
 
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
 private:
-    QList<QQuickStyle *> m_childStyles;
-    QPointer<QQuickStyle> m_parentStyle;
+    QList<QQuickStyleAttached *> m_childStyles;
+    QPointer<QQuickStyleAttached> m_parentStyle;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTYLE_P_H
+#endif // QQUICKSTYLEATTACHED_P_H

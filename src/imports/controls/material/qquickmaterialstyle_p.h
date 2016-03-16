@@ -49,13 +49,13 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtLabsControls/private/qquickstyle_p.h>
+#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickMaterialStylePrivate;
 
-class QQuickMaterialStyle : public QQuickStyle
+class QQuickMaterialStyle : public QQuickStyleAttached
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -222,7 +222,7 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) override;
+    void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent) override;
 
 private:
     void init();
