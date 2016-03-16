@@ -175,7 +175,7 @@ QQuickTextField::~QQuickTextField()
 void QQuickTextFieldPrivate::resolveFont()
 {
     Q_Q(QQuickTextField);
-    inheritFont(QQuickControlPrivate::naturalControlFont(q));
+    inheritFont(QQuickControlPrivate::parentFont(q));
 }
 
 void QQuickTextFieldPrivate::inheritFont(const QFont &f)

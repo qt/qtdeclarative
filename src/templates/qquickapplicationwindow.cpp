@@ -116,7 +116,7 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    void updateFont(const QFont &);
+    void updateFont(const QFont &f);
     inline void setFont_helper(const QFont &f) {
         if (font.resolve() == f.resolve() && font == f)
             return;
@@ -465,13 +465,13 @@ QFont QQuickApplicationWindow::font() const
     return d->font;
 }
 
-void QQuickApplicationWindow::setFont(const QFont &f)
+void QQuickApplicationWindow::setFont(const QFont &font)
 {
     Q_D(QQuickApplicationWindow);
-    if (d->font.resolve() == f.resolve() && d->font == f)
+    if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    QFont resolvedFont = f.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
     d->setFont_helper(resolvedFont);
 }
 

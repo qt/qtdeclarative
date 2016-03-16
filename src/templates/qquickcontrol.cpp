@@ -219,9 +219,9 @@ void QQuickControl::accessibilityActiveChanged(bool active)
     Returns the font that the control w inherits from its ancestors and
     QGuiApplication::font.
 */
-QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
+QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
 {
-    QQuickItem *p = q->parentItem();
+    QQuickItem *p = item->parentItem();
     while (p) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(p))
             return control->font();
@@ -235,7 +235,7 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
         p = p->parentItem();
     }
 
-    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(q->window()))
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
         return window->font();
 
     return themeFont(QPlatformTheme::SystemFont);
@@ -266,7 +266,7 @@ QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
 void QQuickControlPrivate::resolveFont()
 {
     Q_Q(QQuickControl);
-    inheritFont(naturalControlFont(q));
+    inheritFont(parentFont(q));
 }
 
 void QQuickControlPrivate::inheritFont(const QFont &f)

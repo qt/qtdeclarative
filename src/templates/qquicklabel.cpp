@@ -118,7 +118,7 @@ QQuickLabelPrivate::~QQuickLabelPrivate()
 void QQuickLabelPrivate::resolveFont()
 {
     Q_Q(QQuickLabel);
-    inheritFont(QQuickControlPrivate::naturalControlFont(q));
+    inheritFont(QQuickControlPrivate::parentFont(q));
 }
 
 void QQuickLabelPrivate::inheritFont(const QFont &f)

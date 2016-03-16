@@ -70,7 +70,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
-    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -95,7 +95,7 @@ public:
     QQuickOverlay *overlay() const;
 
     QFont font() const;
-    void setFont(const QFont &);
+    void setFont(const QFont &font);
     void resetFont();
 
     QLocale locale() const;

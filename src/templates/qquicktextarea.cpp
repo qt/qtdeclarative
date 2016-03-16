@@ -161,7 +161,7 @@ QQuickTextArea::~QQuickTextArea()
 void QQuickTextAreaPrivate::resolveFont()
 {
     Q_Q(QQuickTextArea);
-    inheritFont(QQuickControlPrivate::naturalControlFont(q));
+    inheritFont(QQuickControlPrivate::parentFont(q));
 }
 
 void QQuickTextAreaPrivate::inheritFont(const QFont &f)

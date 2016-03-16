@@ -92,8 +92,8 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    void updateFont(const QFont &);
-    static void updateFontRecur(QQuickItem *item, const QFont &);
+    void updateFont(const QFont &f);
+    static void updateFontRecur(QQuickItem *item, const QFont &f);
     inline void setFont_helper(const QFont &f) {
         if (resolvedFont.resolve() == f.resolve() && resolvedFont == f)
             return;
@@ -101,7 +101,7 @@ public:
     }
     void resolveFont();
     void inheritFont(const QFont &f);
-    static QFont naturalControlFont(const QQuickItem *);
+    static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
 
     void updateLocale(const QLocale &l, bool e);

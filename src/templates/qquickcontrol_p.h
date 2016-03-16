@@ -59,7 +59,7 @@ class QQuickControlPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
@@ -82,7 +82,7 @@ public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
 
     QFont font() const;
-    void setFont(const QFont &);
+    void setFont(const QFont &font);
     void resetFont();
 
     qreal availableWidth() const;
