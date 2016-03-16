@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquickwindowmodule_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 #include <QtGui/qfont.h>
 #include <QtCore/qlocale.h>
 
@@ -60,7 +60,7 @@ class QQuickApplicationWindowPrivate;
 class QQuickApplicationWindowAttached;
 class QQuickApplicationWindowAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
+class Q_QUICKTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
@@ -125,7 +125,7 @@ private:
     QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickApplicationWindow *window READ window NOTIFY windowChanged FINAL)

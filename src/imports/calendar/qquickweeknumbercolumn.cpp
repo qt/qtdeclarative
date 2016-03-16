@@ -37,7 +37,7 @@
 #include "qquickweeknumbercolumn_p.h"
 #include "qquickweeknumbermodel_p.h"
 
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 #include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE

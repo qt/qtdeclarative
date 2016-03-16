@@ -41,7 +41,7 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

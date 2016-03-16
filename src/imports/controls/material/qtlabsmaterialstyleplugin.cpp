@@ -42,7 +42,8 @@
 #include "qquickmaterialprogressstrip_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsControls/qquickstyle.h>
+#include <QtQuickControls/qquickstyle.h>
+#include <QtQuickControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
 {

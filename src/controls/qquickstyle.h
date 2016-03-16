@@ -39,11 +39,11 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qstring.h>
-#include <QtLabsControls/qtlabscontrolsglobal.h>
+#include <QtQuickControls/qtquickcontrolsglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSCONTROLS_EXPORT QQuickStyle
+class Q_QUICKCONTROLS_EXPORT QQuickStyle
 {
 public:
     static QString name();

@@ -48,11 +48,11 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSTEMPLATES_EXPORT QQuickButton : public QQuickAbstractButton
+class Q_QUICKTEMPLATES_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
 

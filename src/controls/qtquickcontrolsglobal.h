@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,34 +34,23 @@
 **
 ****************************************************************************/
 
-#ifndef QTLABSTEMPLATESGLOBAL_P_H
-#define QTLABSTEMPLATESGLOBAL_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#ifndef QTQUICKCONTROLSGLOBAL_H
+#define QTQUICKCONTROLSGLOBAL_H
 
 #include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_STATIC
-#  if defined(QT_BUILD_LABSTEMPLATES_LIB)
-#    define Q_LABSTEMPLATES_EXPORT Q_DECL_EXPORT
+#  if defined(QT_BUILD_QUICKCONTROLS_LIB)
+#    define Q_QUICKCONTROLS_EXPORT Q_DECL_EXPORT
 #  else
-#    define Q_LABSTEMPLATES_EXPORT Q_DECL_IMPORT
+#    define Q_QUICKCONTROLS_EXPORT Q_DECL_IMPORT
 #  endif
 #else
-#  define Q_LABSTEMPLATES_EXPORT
+#  define Q_QUICKCONTROLS_EXPORT
 #endif
 
 QT_END_NAMESPACE
 
-#endif // QTLABSTEMPLATESGLOBAL_P_H
+#endif // QTQUICKCONTROLSGLOBAL_H

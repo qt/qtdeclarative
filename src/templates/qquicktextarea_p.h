@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextedit_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +57,7 @@ class QQuickText;
 class QQuickTextAreaPrivate;
 class QQuickMouseEvent;
 
-class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
+class Q_QUICKTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override

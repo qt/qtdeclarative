@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickSwitchPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSwitch : public QQuickAbstractButton
+class Q_QUICKTEMPLATES_EXPORT QQuickSwitch : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)

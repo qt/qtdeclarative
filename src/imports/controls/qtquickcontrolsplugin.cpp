@@ -40,44 +40,44 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qfileselector_p.h>
 
-#include <QtLabsControls/qquickstyle.h>
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
-#include <QtLabsTemplates/private/qquickbuttongroup_p.h>
-#include <QtLabsTemplates/private/qquickcontainer_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
-#include <QtLabsControls/private/qquickstyleselector_p.h>
+#include <QtQuickControls/qquickstyle.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickbuttongroup_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickControls/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
 #include "qquickprogressstrip_p.h"
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtlabscontrolsplugin);
+    Q_INIT_RESOURCE(qtquickcontrolsplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_controls);
+    Q_INIT_RESOURCE(qmake_Qt_quick_controls);
 #endif
 }
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsControlsPlugin: public QQmlExtensionPlugin
+class QtQuickControlsPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsControlsPlugin(QObject *parent = nullptr);
+    QtQuickControlsPlugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
     void initializeEngine(QQmlEngine *engine, const char *uri);
 };
 
-QtLabsControlsPlugin::QtLabsControlsPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickControlsPlugin::QtQuickControlsPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-void QtLabsControlsPlugin::registerTypes(const char *uri)
+void QtQuickControlsPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
@@ -132,7 +132,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 1, 0, "Tumbler");
 }
 
-void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
     Q_UNUSED(uri);
@@ -146,4 +146,4 @@ void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 
 QT_END_NAMESPACE
 
-#include "qtlabscontrolsplugin.moc"
+#include "qtquickcontrolsplugin.moc"

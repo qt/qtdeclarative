@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 

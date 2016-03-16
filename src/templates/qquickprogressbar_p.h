@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickProgressBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)

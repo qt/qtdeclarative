@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractButtonPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)

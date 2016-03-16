@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickframe_p.h>
+#include <QtQuickTemplates/private/qquickframe_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickToolBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickToolBar : public QQuickFrame
+class Q_QUICKTEMPLATES_EXPORT QQuickToolBar : public QQuickFrame
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)

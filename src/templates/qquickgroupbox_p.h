@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickframe_p.h>
+#include <QtQuickTemplates/private/qquickframe_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickGroupBoxPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickGroupBox : public QQuickFrame
+class Q_QUICKTEMPLATES_EXPORT QQuickGroupBox : public QQuickFrame
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)

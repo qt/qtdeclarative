@@ -50,14 +50,14 @@
 
 #include <QtCore/qvariant.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTumblerAttached;
 class QQuickTumblerPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickTumbler : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickTumbler : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
@@ -112,7 +112,7 @@ private:
 
 class QQuickTumblerAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickTumblerAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickTumblerAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT)

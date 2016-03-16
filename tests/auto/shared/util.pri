@@ -1,4 +1,4 @@
-QT += core-private gui-private qml-private quick-private labstemplates-private
+QT += core-private gui-private qml-private quick-private quicktemplates-private
 
 HEADERS += $$PWD/visualtestutil.h \
            $$PWD/util.h

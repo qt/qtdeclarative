@@ -40,7 +40,7 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
 

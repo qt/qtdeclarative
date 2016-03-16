@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontainer_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTabBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickTabBar : public QQuickContainer
+class Q_QUICKTEMPLATES_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)

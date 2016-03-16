@@ -50,13 +50,13 @@
 
 #include <QtCore/qlocale.h>
 #include <QtQuick/qquickitem.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickControlPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
+class Q_QUICKTEMPLATES_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)

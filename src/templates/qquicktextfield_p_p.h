@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextinput_p_p.h>
-#include <QtLabsTemplates/private/qquickpressandholdhelper_p.h>
+#include <QtQuickTemplates/private/qquickpressandholdhelper_p.h>
 
 #include "qquicktextfield_p.h"
 

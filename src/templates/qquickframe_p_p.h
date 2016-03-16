@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickpane_p_p.h>
+#include <QtQuickTemplates/private/qquickpane_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickFrame;
 
-class Q_LABSTEMPLATES_EXPORT QQuickFramePrivate : public QQuickPanePrivate
+class Q_QUICKTEMPLATES_EXPORT QQuickFramePrivate : public QQuickPanePrivate
 {
 };
 

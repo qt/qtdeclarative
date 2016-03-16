@@ -50,7 +50,7 @@
 
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qfont.h>
-#include <QtLabsControls/private/qquickproxytheme_p.h>
+#include <QtQuickControls/private/qquickproxytheme_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,7 +56,7 @@ class QQuickFlickable;
 class QQuickScrollBarAttached;
 class QQuickScrollBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
@@ -117,7 +117,7 @@ private:
 
 class QQuickScrollBarAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollBar *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

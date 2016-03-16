@@ -39,10 +39,10 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
-#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
-#include <QtLabsTemplates/private/qquickoverlay_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
-#include <QtLabsTemplates/private/qquickbutton_p.h>
+#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates/private/qquickoverlay_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates/private/qquickbutton_p.h>
 
 using namespace QQuickVisualTestUtil;
 

@@ -49,13 +49,13 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickOverlayPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickOverlay : public QQuickItem
+class Q_QUICKTEMPLATES_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)

@@ -36,71 +36,71 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
-#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
-#include <QtLabsTemplates/private/qquickbusyindicator_p.h>
-#include <QtLabsTemplates/private/qquickbutton_p.h>
-#include <QtLabsTemplates/private/qquickcheckbox_p.h>
-#include <QtLabsTemplates/private/qquickcombobox_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtLabsTemplates/private/qquickcontainer_p.h>
-#include <QtLabsTemplates/private/qquickdial_p.h>
-#include <QtLabsTemplates/private/qquickdrawer_p.h>
-#include <QtLabsTemplates/private/qquickframe_p.h>
-#include <QtLabsTemplates/private/qquickgroupbox_p.h>
-#include <QtLabsTemplates/private/qquickitemdelegate_p.h>
-#include <QtLabsTemplates/private/qquicklabel_p.h>
-#include <QtLabsTemplates/private/qquickmenu_p.h>
-#include <QtLabsTemplates/private/qquickmenuitem_p.h>
-#include <QtLabsTemplates/private/qquickoverlay_p.h>
-#include <QtLabsTemplates/private/qquickpage_p.h>
-#include <QtLabsTemplates/private/qquickpageindicator_p.h>
-#include <QtLabsTemplates/private/qquickpane_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
-#include <QtLabsTemplates/private/qquickprogressbar_p.h>
-#include <QtLabsTemplates/private/qquickradiobutton_p.h>
-#include <QtLabsTemplates/private/qquickrangeslider_p.h>
-#include <QtLabsTemplates/private/qquickscrollbar_p.h>
-#include <QtLabsTemplates/private/qquickscrollindicator_p.h>
-#include <QtLabsTemplates/private/qquickslider_p.h>
-#include <QtLabsTemplates/private/qquickspinbox_p.h>
-#include <QtLabsTemplates/private/qquickstackview_p.h>
-#include <QtLabsTemplates/private/qquickswipedelegate_p.h>
-#include <QtLabsTemplates/private/qquickswipeview_p.h>
-#include <QtLabsTemplates/private/qquickswitch_p.h>
-#include <QtLabsTemplates/private/qquicktabbar_p.h>
-#include <QtLabsTemplates/private/qquicktabbutton_p.h>
-#include <QtLabsTemplates/private/qquicktextarea_p.h>
-#include <QtLabsTemplates/private/qquicktextfield_p.h>
-#include <QtLabsTemplates/private/qquicktoolbar_p.h>
-#include <QtLabsTemplates/private/qquicktoolbutton_p.h>
-#include <QtLabsTemplates/private/qquicktumbler_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates/private/qquickbusyindicator_p.h>
+#include <QtQuickTemplates/private/qquickbutton_p.h>
+#include <QtQuickTemplates/private/qquickcheckbox_p.h>
+#include <QtQuickTemplates/private/qquickcombobox_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p.h>
+#include <QtQuickTemplates/private/qquickdial_p.h>
+#include <QtQuickTemplates/private/qquickdrawer_p.h>
+#include <QtQuickTemplates/private/qquickframe_p.h>
+#include <QtQuickTemplates/private/qquickgroupbox_p.h>
+#include <QtQuickTemplates/private/qquickitemdelegate_p.h>
+#include <QtQuickTemplates/private/qquicklabel_p.h>
+#include <QtQuickTemplates/private/qquickmenu_p.h>
+#include <QtQuickTemplates/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates/private/qquickoverlay_p.h>
+#include <QtQuickTemplates/private/qquickpage_p.h>
+#include <QtQuickTemplates/private/qquickpageindicator_p.h>
+#include <QtQuickTemplates/private/qquickpane_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates/private/qquickprogressbar_p.h>
+#include <QtQuickTemplates/private/qquickradiobutton_p.h>
+#include <QtQuickTemplates/private/qquickrangeslider_p.h>
+#include <QtQuickTemplates/private/qquickscrollbar_p.h>
+#include <QtQuickTemplates/private/qquickscrollindicator_p.h>
+#include <QtQuickTemplates/private/qquickslider_p.h>
+#include <QtQuickTemplates/private/qquickspinbox_p.h>
+#include <QtQuickTemplates/private/qquickstackview_p.h>
+#include <QtQuickTemplates/private/qquickswipedelegate_p.h>
+#include <QtQuickTemplates/private/qquickswipeview_p.h>
+#include <QtQuickTemplates/private/qquickswitch_p.h>
+#include <QtQuickTemplates/private/qquicktabbar_p.h>
+#include <QtQuickTemplates/private/qquicktabbutton_p.h>
+#include <QtQuickTemplates/private/qquicktextarea_p.h>
+#include <QtQuickTemplates/private/qquicktextfield_p.h>
+#include <QtQuickTemplates/private/qquicktoolbar_p.h>
+#include <QtQuickTemplates/private/qquicktoolbutton_p.h>
+#include <QtQuickTemplates/private/qquicktumbler_p.h>
 
 static inline void initResources()
 {
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_templates);
+    Q_INIT_RESOURCE(qmake_Qt_quick_templates);
 #endif
 }
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsTemplatesPlugin: public QQmlExtensionPlugin
+class QtQuickTemplatesPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsTemplatesPlugin(QObject *parent = nullptr);
+    QtQuickTemplatesPlugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
 };
 
-QtLabsTemplatesPlugin::QtLabsTemplatesPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickTemplatesPlugin::QtQuickTemplatesPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-void QtLabsTemplatesPlugin::registerTypes(const char *uri)
+void QtQuickTemplatesPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
@@ -157,4 +157,4 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
 
 QT_END_NAMESPACE
 
-#include "qtlabstemplatesplugin.moc"
+#include "qtquicktemplatesplugin.moc"

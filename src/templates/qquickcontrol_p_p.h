@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
-class Q_LABSTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
+class Q_QUICKTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 #ifndef QT_NO_ACCESSIBILITY
     , public QAccessible::ActivationObserver
 #endif

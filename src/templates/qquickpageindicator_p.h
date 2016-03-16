@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQuickPageIndicatorPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPageIndicator : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickPageIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)

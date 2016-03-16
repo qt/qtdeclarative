@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,7 +56,7 @@ class QQuickFlickable;
 class QQuickScrollIndicatorAttached;
 class QQuickScrollIndicatorPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicator : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
@@ -105,7 +105,7 @@ private:
 
 class QQuickScrollIndicatorAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollIndicator *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

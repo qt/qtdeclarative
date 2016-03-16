@@ -42,8 +42,8 @@
 #include "qquickuniversaltheme_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsControls/private/qquickcolorimageprovider_p.h>
-#include <QtLabsControls/qquickstyle.h>
+#include <QtQuickControls/private/qquickcolorimageprovider_p.h>
+#include <QtQuickControls/qquickstyle.h>
 
 static inline void initResources()
 {

@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPropertyAnimation;
 class QQuickDrawerPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickDrawer : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)

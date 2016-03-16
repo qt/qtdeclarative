@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTLABSCONTROLSSGLOBAL_P_H
-#define QTLABSCONTROLSSGLOBAL_P_H
+#ifndef QTQUICKCONTROLSGLOBAL_P_H
+#define QTQUICKCONTROLSGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -48,8 +48,8 @@
 // We mean it.
 //
 
-#include <QtLabsControls/qtlabscontrolsglobal.h>
+#include <QtQuickControls/qtquickcontrolsglobal.h>
 
-#define Q_LABSCONTROLS_PRIVATE_EXPORT Q_LABSCONTROLS_EXPORT
+#define Q_QUICKCONTROLS_PRIVATE_EXPORT Q_QUICKCONTROLS_EXPORT
 
-#endif // QTLABSCONTROLSSGLOBAL_P_H
+#endif // QTQUICKCONTROLSGLOBAL_P_H

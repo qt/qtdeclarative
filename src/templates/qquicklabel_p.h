@@ -49,13 +49,13 @@
 //
 
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickLabelPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickLabel : public QQuickText
+class Q_QUICKTEMPLATES_EXPORT QQuickLabel : public QQuickText
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override

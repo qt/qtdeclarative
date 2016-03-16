@@ -51,7 +51,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qmargins.h>
 #include <QtGui/qevent.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlparserstatus.h>
@@ -67,7 +67,7 @@ class QQuickWindow;
 class QQuickPopupPrivate;
 class QQuickTransition;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
+class Q_QUICKTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

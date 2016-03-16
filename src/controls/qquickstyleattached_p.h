@@ -54,13 +54,13 @@
 #include <QtCore/qpointer.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
+#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSettings;
 
-class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
+class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
 

@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPagePrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPage : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickPage : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)

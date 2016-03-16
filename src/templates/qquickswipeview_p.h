@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontainer_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickSwipeViewAttached;
 class QQuickSwipeViewPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
 
@@ -75,7 +75,7 @@ private:
 
 class QQuickSwipeViewAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSwipeViewAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

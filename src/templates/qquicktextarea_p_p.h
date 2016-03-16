@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextedit_p_p.h>
-#include <QtLabsTemplates/private/qquickpressandholdhelper_p.h>
+#include <QtQuickTemplates/private/qquickpressandholdhelper_p.h>
 
 #include "qquicktextarea_p.h"
 

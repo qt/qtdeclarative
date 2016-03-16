@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickBusyIndicatorPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickBusyIndicator : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickBusyIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
