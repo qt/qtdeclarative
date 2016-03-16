@@ -37,6 +37,7 @@
 #include "qquickswipedelegate_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickabstractbutton_p_p.h"
+#include "qquickvelocitycalculator_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -136,6 +137,7 @@ public:
     // before the last press event.
     bool wasActive;
     bool active;
+    QQuickVelocityCalculator velocityCalculator;
     QQmlComponent *left;
     QQmlComponent *behind;
     QQmlComponent *right;
@@ -553,6 +555,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     }
 
     exposurePrivate->positionBeforePress = exposurePrivate->position;
+    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
     pressPoint = item->mapToItem(q, event->pos());
     return false;
 }
@@ -650,17 +653,23 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     return q->keepMouseGrab();
 }
 
-bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *)
+static const qreal exposeVelocityThreshold = 300.0;
+
+bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
-
     QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
+    exposurePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
 
-    if (exposurePrivate->position > 0.5) {
+    // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
+    const qreal swipeVelocity = exposurePrivate->velocityCalculator.velocity().x();
+    if (exposurePrivate->position > 0.5 ||
+        (exposurePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
         exposure.setPosition(1.0);
         exposure.setActive(true);
         exposurePrivate->wasActive = true;
-    } else if (exposurePrivate->position < -0.5) {
+    } else if (exposurePrivate->position < -0.5 ||
+        (exposurePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
         exposure.setPosition(-1.0);
         exposure.setActive(true);
         exposurePrivate->wasActive = true;
@@ -815,6 +824,7 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
     QQuickAbstractButton::mousePressEvent(event);
     QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&d->exposure);
     exposurePrivate->positionBeforePress = exposurePrivate->position;
+    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
 }
 
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)

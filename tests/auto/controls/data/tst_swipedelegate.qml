@@ -339,6 +339,80 @@ TestCase {
         control.destroy();
     }
 
+    function test_swipeVelocity_data() {
+        return [
+            { tag: "positive velocity", direction: 1 },
+            { tag: "negative velocity", direction: -1 }
+        ];
+    }
+
+    function test_swipeVelocity(data) {
+        skip("QTBUG-52003");
+
+        var control = swipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        var distance = dragDistance * 1.1;
+        if (distance >= control.width / 2)
+            skip("This test requires a startDragDistance that is less than half the width of the control");
+
+        distance *= data.direction;
+
+        mouseEventControlSpy.target = control;
+        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mousePress(control, control.width / 2, control.height / 2);
+        verify(control.pressed);
+        compare(control.exposure.position, 0.0);
+        verify(!control.exposure.active);
+        verify(mouseEventControlSpy.success);
+        verify(!control.exposure.leftItem);
+        verify(!control.exposure.rightItem);
+
+        // Swipe quickly to the side over a distance that is longer than the drag threshold,
+        // quicker than the expose velocity threshold, but shorter than the halfway mark.
+        mouseMove(control, control.width / 2 + distance, control.height / 2);
+        verify(control.pressed);
+        compare(control.exposure.position, distance / control.width);
+        verify(control.exposure.position < 0.5);
+        verify(!control.exposure.active);
+
+        var expectedVisibleItem;
+        var expectedVisibleObjectName;
+        var expectedHiddenItem;
+        var expectedContentItemX;
+        if (distance > 0) {
+            expectedVisibleObjectName = "leftItem";
+            expectedVisibleItem = control.exposure.leftItem;
+            expectedHiddenItem = control.exposure.rightItem;
+            expectedContentItemX = control.width + control.leftPadding;
+        } else {
+            expectedVisibleObjectName = "rightItem";
+            expectedVisibleItem = control.exposure.rightItem;
+            expectedHiddenItem = control.exposure.leftItem;
+            expectedContentItemX = -control.width + control.leftPadding;
+        }
+        verify(expectedVisibleItem);
+        verify(expectedVisibleItem.visible);
+        compare(expectedVisibleItem.parent, control);
+        compare(expectedVisibleItem.objectName, expectedVisibleObjectName);
+        verify(!expectedHiddenItem);
+
+        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        // Add a delay to ensure that the release event doesn't happen too quickly,
+        // and hence that the second timestamp isn't zero (can happen with e.g. release builds).
+        mouseRelease(control, control.width / 2 + distance, control.height / 2, Qt.LeftButton, Qt.NoModifier, 30);
+        verify(!control.pressed);
+        compare(control.exposure.position, data.direction);
+        verify(control.exposure.active);
+        verify(mouseEventControlSpy.success);
+        verify(expectedVisibleItem);
+        verify(expectedVisibleItem.visible);
+        verify(!expectedHiddenItem);
+        tryCompare(control.contentItem, "x", expectedContentItemX);
+
+        control.destroy();
+    }
+
     Component {
         id: swipeDelegateWithButtonComponent
         SwipeDelegate {
