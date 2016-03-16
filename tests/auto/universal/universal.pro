@@ -5,6 +5,9 @@ CONFIG += qmltestcase
 SOURCES += \
     $$PWD/tst_universal.cpp
 
+RESOURCES += \
+    $$PWD/universal.qrc
+
 OTHER_FILES += \
     $$PWD/data/*
 

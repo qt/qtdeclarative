@@ -114,6 +114,9 @@ T.ComboBox {
         topMargin: 8
         bottomMargin: 8
 
+        Universal.theme: control.Universal.theme
+        Universal.accent: control.Universal.accent
+
         contentItem: ListView {
             id: listview
             clip: true

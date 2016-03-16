@@ -342,33 +342,40 @@ TestCase {
 
     Component {
         id: component
-        Pane {
-            id: panel
-            property alias button: _button;
-            property alias popup: _popup;
-            property alias listview: _listview
-            font.pixelSize: 30
-            Column {
-                Button {
-                    id: _button
-                    text: "Button"
-                    font.pixelSize: 20
+        ApplicationWindow {
+            width: 400
+            height: 400
+            visible: true
+            font.pixelSize: 40
+            property alias pane: _pane
+            Pane {
+                id: _pane
+                property alias button: _button;
+                property alias popup: _popup;
+                property alias listview: _listview
+                font.pixelSize: 30
+                Column {
+                    Button {
+                        id: _button
+                        text: "Button"
+                        font.pixelSize: 20
 
-                    Popup {
-                        id: _popup
-                        y: button.height
-                        implicitHeight: Math.min(396, _listview.contentHeight)
-                        contentItem: ListView {
-                            id: _listview
-                            height: _button.height * 20
-                            model: 2
-                            delegate: Button {
-                                objectName: "delegate"
-                                width: _button.width
-                                height: _button.height
-                                text: "N: " + index
-                                checkable: true
-                                autoExclusive: true
+                        Popup {
+                            id: _popup
+                            y: _button.height
+                            implicitHeight: Math.min(396, _listview.contentHeight)
+                            contentItem: ListView {
+                                id: _listview
+                                height: _button.height * 20
+                                model: 2
+                                delegate: Button {
+                                    objectName: "delegate"
+                                    width: _button.width
+                                    height: _button.height
+                                    text: "N: " + index
+                                    checkable: true
+                                    autoExclusive: true
+                                }
                             }
                         }
                     }
@@ -377,18 +384,20 @@ TestCase {
         }
     }
 
-    function test_font() { // QTBUG_50984
-        var control = component.createObject(testCase)
-        verify(control)
-        verify(control.button)
-        verify(control.popup)
-        verify(control.listview)
+    function test_font() { // QTBUG_50984, QTBUG-51696
+        var window = component.createObject(testCase)
+        verify(window)
 
+        window.requestActivate()
+        tryCompare(window, "active", true)
+
+        var control = window.pane
         waitForRendering(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
+        compare(window.font.pixelSize, 40)
         compare(control.font.pixelSize, 30)
         compare(control.button.font.pixelSize, 20)
 
@@ -402,17 +411,22 @@ TestCase {
         waitForRendering(listview)
 
         var idx1 = getChild(listview.contentItem, "delegate", -1)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 20)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
         var idx2 = getChild(listview.contentItem, "delegate", idx1)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 20)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
 
-        control.button.font.pixelSize = control.button.font.pixelSize + 10
+        control.button.font.pixelSize = 30
         compare(control.button.font.pixelSize, 30)
         waitForRendering(listview)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 30)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 30)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
 
-        control.destroy()
+        window.font.pixelSize = 50
+        waitForRendering(listview)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 50)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 50)
+
+        window.destroy()
     }
 
     Component {

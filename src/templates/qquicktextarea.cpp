@@ -161,14 +161,22 @@ QQuickTextArea::~QQuickTextArea()
 void QQuickTextAreaPrivate::resolveFont()
 {
     Q_Q(QQuickTextArea);
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
-    QFont resolvedFont = sourceFont.resolve(naturalFont);
-    if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
-        return;
+    inheritFont(QQuickControlPrivate::naturalControlFont(q));
+}
 
+void QQuickTextAreaPrivate::inheritFont(const QFont &f)
+{
+    Q_Q(QQuickTextArea);
+    QFont parentFont = font.resolve(f);
+    parentFont.resolve(font.resolve() | f.resolve());
+
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    const QFont resolvedFont = parentFont.resolve(defaultFont);
+
+    const bool changed = resolvedFont != sourceFont;
     q->QQuickTextEdit::setFont(resolvedFont);
-
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
@@ -212,21 +220,11 @@ QFont QQuickTextArea::font() const
 void QQuickTextArea::setFont(const QFont &font)
 {
     Q_D(QQuickTextArea);
-    if (d->sourceFont == font)
+    if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    // Determine which font is inherited from this control's ancestors and
-    // QGuiApplication::font, resolve this against \a font (attributes from the
-    // inherited font are copied over). Then propagate this font to this
-    // control's children.
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
-    QFont resolvedFont = font.resolve(naturalFont);
-    if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
-        return;
-
-    QQuickTextEdit::setFont(font);
-
-    emit fontChanged();
+    d->font = font;
+    d->resolveFont();
 }
 
 /*!
@@ -336,7 +334,7 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete())
+    if (change == ItemParentHasChanged && value.item)
         d->resolveFont();
 }
 

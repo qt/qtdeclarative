@@ -55,6 +55,11 @@ TestCase {
         TextField { }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_creation() {
         var control = textField.createObject(testCase)
         verify(control)
@@ -87,6 +92,49 @@ TestCase {
             if (control.children[j].hasOwnProperty("verticalAlignment"))
                 compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
         }
+
+        control.destroy()
+    }
+
+    function test_font_explicit_attributes_data() {
+        return [
+            {tag: "bold", value: true},
+            {tag: "capitalization", value: Font.Capitalize},
+            {tag: "family", value: "Courier"},
+            {tag: "italic", value: true},
+            {tag: "strikeout", value: true},
+            {tag: "underline", value: true},
+            {tag: "weight", value: Font.Black},
+            {tag: "wordSpacing", value: 55}
+        ]
+    }
+
+    function test_font_explicit_attributes(data) {
+        var control = textField.createObject(testCase)
+        verify(control)
+
+        var child = textField.createObject(control)
+        verify(child)
+
+        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        verify(controlSpy.valid)
+
+        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        verify(childSpy.valid)
+
+        var defaultValue = control.font[data.tag]
+        child.font[data.tag] = defaultValue
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
+
+        control.font[data.tag] = data.value
+
+        compare(control.font[data.tag], data.value)
+        compare(controlSpy.count, 1)
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
 
         control.destroy()
     }

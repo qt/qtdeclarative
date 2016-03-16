@@ -72,6 +72,8 @@ public:
 protected:
     void init();
 
+    QQuickItem *parentItem() const;
+
     QList<QQuickStyle *> childStyles() const;
 
     QQuickStyle *parentStyle() const;

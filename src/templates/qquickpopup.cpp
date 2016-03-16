@@ -296,7 +296,7 @@ QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup
 void QQuickPopupItemPrivate::implicitWidthChanged()
 {
     QQuickControlPrivate::implicitWidthChanged();
-    emit popup->implicitHeightChanged();
+    emit popup->implicitWidthChanged();
 }
 
 void QQuickPopupItemPrivate::implicitHeightChanged()
@@ -479,6 +479,7 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
     Q_ASSERT(m_parentItem == item);
 
     m_parentItem = nullptr;
+    m_popup->parentItem = nullptr;
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, ItemChangeTypes);
     removeAncestorListeners(item->parentItem());
 }
@@ -1211,10 +1212,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
-    if (parent) {
-        QQuickControlPrivate::updateFontRecur(d->popupItem, QQuickControlPrivate::naturalControlFont(parent));
+    if (parent)
         QQuickControlPrivate::updateLocaleRecur(d->popupItem, QQuickControlPrivate::calcLocale(parent));
-    }
     emit parentChanged();
 }
 
