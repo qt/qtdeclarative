@@ -63,4 +63,39 @@ TestCase {
         verify(control.animation)
         control.destroy()
     }
+
+    Component {
+        id: rectDrawer
+
+        Drawer {
+            Rectangle {
+                width: 200
+                height: 400
+                color: "steelblue"
+            }
+        }
+    }
+
+    function test_swipeVelocity() {
+        skip("QTBUG-52003");
+
+        var control = rectDrawer.createObject(testCase)
+        verify(control.contentItem)
+        compare(control.edge, Qt.LeftEdge)
+        compare(control.position, 0.0)
+
+        var dragDistance = Math.max(20, Qt.styleHints.startDragDistance + 5)
+        var distance = dragDistance * 1.1
+        if (distance >= control.width * 0.7)
+            skip("This test requires a startDragDistance that is less than the opening threshold of the drawer")
+
+        mousePress(control, 0, 0, Qt.LeftButton)
+        mouseMove(control, distance, 0, Qt.LeftButton)
+        verify(control.position > 0)
+        tryCompare(control, "position", distance / control.contentItem.width)
+        mouseRelease(control, distance, 0, Qt.LeftButton)
+        tryCompare(control, "position", 1.0)
+
+        control.destroy()
+    }
 }

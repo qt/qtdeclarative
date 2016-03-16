@@ -42,6 +42,7 @@
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickvelocitycalculator_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -110,6 +111,7 @@ public:
     qreal offset;
     qreal position;
     QPointF pressPoint;
+    QQuickVelocityCalculator velocityCalculator;
     QQuickItem *content;
     QQuickPropertyAnimation *animation;
 };
@@ -167,6 +169,8 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
         event->accept();
     }
 
+    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
+
     return item == q;
 }
 
@@ -204,21 +208,20 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     return q->keepMouseGrab();
 }
 
+static const qreal openCloseVelocityThreshold = 300;
+
 bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
     bool wasGrabbed = q->keepMouseGrab();
     if (wasGrabbed) {
-//        int startDragVelocity = QGuiApplication::styleHints()->startDragVelocity();
-//        if (startDragVelocity && QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
-//            QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
-//            qreal vel = (edge == Qt::LeftEdge || edge == Qt::RightEdge) ? velocity.x() : velocity.y();
-//            qDebug() << vel << "vs." << startDragVelocity;
-//        }
-        if (position < 0.3) {
-            q->close();
-        } else if (position > 0.7) {
+        velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
+        const qreal velocity = velocityCalculator.velocity().x();
+
+        if (position > 0.7 || velocity > openCloseVelocityThreshold) {
             q->open();
+        } else if (position < 0.3 || velocity < -openCloseVelocityThreshold) {
+            q->close();
         } else {
             switch (edge) {
             case Qt::LeftEdge:
@@ -465,6 +468,7 @@ void QQuickDrawer::mouseUngrabEvent()
     Q_D(QQuickDrawer);
     QQuickControl::mouseUngrabEvent();
     d->pressPoint = QPoint();
+    d->velocityCalculator.reset();
 }
 
 void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
