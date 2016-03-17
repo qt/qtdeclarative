@@ -64,7 +64,7 @@ public:
 void QQuickOverlayPrivate::popupAboutToShow()
 {
     Q_Q(QQuickOverlay);
-    if (!background || modalPopups > 1)
+    if (!background)
         return;
 
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());

@@ -708,4 +708,44 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: overlayTest
+        ApplicationWindow {
+            property alias popup1: popup1
+            property alias popup2: popup2
+            visible: true
+            Popup {
+                id: popup1
+                modal: true
+                exit: Transition { PauseAnimation { duration: 200 } }
+            }
+            Popup {
+                id: popup2
+                modal: true
+            }
+        }
+    }
+
+    function test_overlay() {
+        var window = overlayTest.createObject(testCase)
+        verify(window)
+
+        window.requestActivate()
+        tryCompare(window, "active", true)
+        compare(window.overlay.background.opacity, 0.0)
+
+        window.popup1.open()
+        compare(window.popup1.visible, true)
+        compare(window.popup2.visible, false)
+        tryCompare(window.overlay.background, "opacity", 1.0)
+
+        window.popup1.close()
+        window.popup2.open()
+        compare(window.popup2.visible, true)
+        tryCompare(window.popup1, "visible", false)
+        compare(window.overlay.background.opacity, 1.0)
+
+        window.destroy()
+    }
 }
