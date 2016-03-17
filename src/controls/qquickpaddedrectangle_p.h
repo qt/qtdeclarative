@@ -49,10 +49,11 @@
 //
 
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPaddedRectangle : public QQuickRectangle
+class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickPaddedRectangle : public QQuickRectangle
 {
     Q_OBJECT
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)

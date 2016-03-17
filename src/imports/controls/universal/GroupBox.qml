@@ -51,7 +51,7 @@ T.GroupBox {
 
     spacing: 12
     padding: 12
-    topPadding: 12 + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
+    topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
     //! [contentItem]
     contentItem: Item { }
@@ -68,7 +68,6 @@ T.GroupBox {
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
     }
     //! [label]
 

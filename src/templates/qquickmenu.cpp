@@ -44,6 +44,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,9 +93,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMenuPrivate::QQuickMenuPrivate() :
-    contentModel(nullptr),
-    dummyFocusItem(nullptr),
-    ignoreActiveFocusChanges(false)
+    contentModel(nullptr)
 {
     Q_Q(QQuickMenu);
     contentModel = new QQmlObjectModel(q);
@@ -193,67 +192,32 @@ void QQuickMenuPrivate::onItemPressed()
 {
     Q_Q(QQuickMenu);
     QQuickItem *item = qobject_cast<QQuickItem*>(q->sender());
-    int itemIndex = contentModel->indexOf(item, nullptr);
-    Q_ASSERT(itemIndex != -1);
-
-    if (!contentItem->property("currentIndex").isValid())
-        return;
-
-    contentItem->setProperty("currentIndex", itemIndex);
+    if (item)
+        item->forceActiveFocus();
 }
 
 void QQuickMenuPrivate::onItemActiveFocusChanged()
 {
-    if (ignoreActiveFocusChanges)
-        return;
-
     Q_Q(QQuickMenu);
     QQuickItem *item = qobject_cast<QQuickItem*>(q->sender());
     if (!item->hasActiveFocus())
         return;
 
-    if (!contentItem->property("currentIndex").isValid())
-        return;
-
     int indexOfItem = contentModel->indexOf(item, nullptr);
-    contentItem->setProperty("currentIndex", indexOfItem);
+    setCurrentIndex(indexOfItem);
 }
 
-void QQuickMenuPrivate::onMenuVisibleChanged()
+int QQuickMenuPrivate::currentIndex() const
 {
-    Q_Q(QQuickMenu);
-    if (q->isVisible()) {
-        // Don't react to active focus changes here, as we're causing them.
-        ignoreActiveFocusChanges = true;
-        for (int i = 0; i < contentModel->count(); ++i) {
-            QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->get(i));
-            item->setFocus(true);
-        }
-        ignoreActiveFocusChanges = false;
-
-        // We must do this last so that none of the menu items have focus.
-        dummyFocusItem->forceActiveFocus();
-    } else {
-        // Ensure that when the menu isn't visible, there's no current item
-        // the next time it's opened.
-        if (contentItem->property("currentIndex").isValid())
-            contentItem->setProperty("currentIndex", -1);
-
-        // The menu items are sneaky and will steal the focus if they can.
-        for (int i = 0; i < contentModel->count(); ++i) {
-            QQuickItem *item = qobject_cast<QQuickItem*>(contentModel->get(i));
-            item->setFocus(false);
-        }
-    }
-
+    QVariant index = contentItem->property("currentIndex");
+    if (!index.isValid())
+        return -1;
+    return index.toInt();
 }
 
-void QQuickMenuPrivate::maybeUnsetDummyFocusOnTab()
+void QQuickMenuPrivate::setCurrentIndex(int index)
 {
-    if (!dummyFocusItem->hasActiveFocus()) {
-        // Only unset the flag once the dummy item no longer has focus, otherwise we get warnings.
-        dummyFocusItem->setActiveFocusOnTab(false);
-    }
+    contentItem->setProperty("currentIndex", index);
 }
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -301,9 +265,8 @@ void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 QQuickMenu::QQuickMenu(QObject *parent) :
     QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
-    Q_D(QQuickMenu);
+    setFocus(true);
     setClosePolicy(OnEscape | OnPressOutside | OnReleaseOutside);
-    QObjectPrivate::connect(this, &QQuickMenu::visibleChanged, d, &QQuickMenuPrivate::onMenuVisibleChanged);
 }
 
 /*!
@@ -455,42 +418,37 @@ void QQuickMenu::componentComplete()
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickMenu);
+    Q_UNUSED(oldItem);
     QQuickPopup::contentItemChange(newItem, oldItem);
-    if (oldItem) {
-        oldItem->removeEventFilter(this);
-        if (d->dummyFocusItem)
-            QObjectPrivate::disconnect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
-    }
+    d->contentItem = newItem;
+}
 
-    if (newItem) {
-        newItem->installEventFilter(this);
-        newItem->setFlag(QQuickItem::ItemIsFocusScope);
-        newItem->setActiveFocusOnTab(true);
+void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+{
+    Q_D(QQuickMenu);
+    QQuickPopup::itemChange(change, data);
 
-        // Trying to give active focus to the contentItem (ListView, by default)
-        // when the menu first opens, without also giving it to the first delegate item
-        // doesn't seem to be possible, but this is what we need to do. QMenu behaves
-        // similarly to this; it receives focus if a button that has it as a menu is clicked,
-        // and only after pressing tab is the first menu item then given active focus.
-        if (!d->dummyFocusItem) {
-            d->dummyFocusItem = new QQuickItem(newItem);
-            d->dummyFocusItem->setObjectName(QStringLiteral("dummyMenuFocusItem"));
-        } else {
-            d->dummyFocusItem->setParentItem(newItem);
+    if (change == QQuickItem::ItemVisibleHasChanged) {
+        if (!data.boolValue) {
+            // Ensure that when the menu isn't visible, there's no current item
+            // the next time it's opened.
+            QQuickItem *focusItem = QQuickItemPrivate::get(d->contentItem)->subFocusItem;
+            if (focusItem) {
+                QQuickWindow *window = QQuickPopup::window();
+                if (window)
+                    QQuickWindowPrivate::get(window)->clearFocusInScope(d->contentItem, focusItem, Qt::OtherFocusReason);
+            }
+            d->setCurrentIndex(-1);
         }
-
-        d->dummyFocusItem->setActiveFocusOnTab(true);
-        d->dummyFocusItem->stackBefore(newItem->childItems().first());
-
-        QObjectPrivate::connect(d->dummyFocusItem.data(), &QQuickItem::activeFocusChanged, d, &QQuickMenuPrivate::maybeUnsetDummyFocusOnTab);
     }
 }
 
-bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
+void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickMenu);
-    if (object != d->contentItem || event->type() != QEvent::KeyRelease || d->contentModel->count() == 0)
-        return QQuickPopup::eventFilter(object, event);
+    QQuickPopup::keyReleaseEvent(event);
+    if (d->contentModel->count() == 0)
+        return;
 
     // QTBUG-17051
     // Work around the fact that ListView has no way of distinguishing between
@@ -498,24 +456,33 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
     // What we actually want is to have a way to always allow keyboard interaction but
     // only allow flicking with the mouse when there are too many menu items to be
     // shown at once.
-    QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-    switch (keyEvent->key()) {
+    switch (event->key()) {
     case Qt::Key_Up:
         if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
-        return true;
+        break;
 
     case Qt::Key_Down:
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
-        return true;
+        break;
 
     default:
         break;
     }
 
-    return QQuickPopup::eventFilter(object, event);
+    int index = d->currentIndex();
+    QQuickItem *item = itemAt(index);
+    if (item)
+        item->forceActiveFocus();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickMenu::accessibleRole() const
+{
+    return QAccessible::PopupMenu;
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE
 

@@ -56,13 +56,14 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \instantiates QQuickSpinBox
     \inqmlmodule Qt.labs.controls
     \ingroup input
-    \brief A spinbox control that allows the user from a set of preset values.
+    \brief A spinbox control that allows the user to select from a set of preset values.
 
     \image qtlabscontrols-spinbox.png
 
     SpinBox allows the user to choose an integer value by clicking the up
-    or down indicator buttons, by pressing up or down on the keyboard, or
-    by entering a text value in the input field.
+    or down indicator buttons, or by pressing up or down on the keyboard.
+    Optionally, SpinBox can be also made \l editable, so the user can enter
+    a text value in the input field.
 
     By default, SpinBox provides discrete values in the range of \c [0-99]
     with a \l stepSize of \c 1.
@@ -90,7 +91,7 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSpinBox)
 
 public:
-    QQuickSpinBoxPrivate() : from(0), to(99), value(0), stepSize(1),
+    QQuickSpinBoxPrivate() : editable(false), from(0), to(99), value(0), stepSize(1),
         delayTimer(0), repeatTimer(0), up(nullptr), down(nullptr), validator(nullptr) { }
 
     int boundValue(int value) const;
@@ -107,6 +108,7 @@ public:
     bool handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event);
     bool handleMouseUngrabEvent(QQuickItem *child);
 
+    bool editable;
     int from;
     int to;
     int value;
@@ -131,10 +133,13 @@ void QQuickSpinBoxPrivate::updateValue()
     if (contentItem) {
         QVariant text = contentItem->property("text");
         if (text.isValid()) {
-            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(q));
-            QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
-            QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
-            q->setValue(val.toInt());
+            QQmlEngine *engine = qmlEngine(q);
+            if (engine) {
+                QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
+                QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
+                QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
+                q->setValue(val.toInt());
+            }
         }
     }
 }
@@ -342,14 +347,37 @@ void QQuickSpinBox::setStepSize(int step)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::SpinBox::editable
+
+    This property holds whether the spinbox is editable. The default value is \c false.
+
+    \sa validator
+*/
+bool QQuickSpinBox::isEditable() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->editable;
+}
+
+void QQuickSpinBox::setEditable(bool editable)
+{
+    Q_D(QQuickSpinBox);
+    if (d->editable == editable)
+        return;
+
+    d->editable = editable;
+    emit editableChanged();
+}
+
+/*!
     \qmlproperty Validator Qt.labs.controls::SpinBox::validator
 
-    This property holds the input text validator. By default, SpinBox uses
-    \l IntValidator to accept input of integer numbers.
+    This property holds the input text validator for editable spinboxes. By
+    default, SpinBox uses \l IntValidator to accept input of integer numbers.
 
     \snippet SpinBox.qml validator
 
-    \sa textFromValue, valueFromText, {Control::locale}{locale}
+    \sa editable, textFromValue, valueFromText, {Control::locale}{locale}
 */
 QValidator *QQuickSpinBox::validator() const
 {
@@ -599,6 +627,19 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
             increase();
         else if (d->down->isPressed())
             decrease();
+    }
+}
+
+void QQuickSpinBox::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::wheelEvent(event);
+    if (d->wheelEnabled) {
+        const int oldValue = d->value;
+        const QPointF angle = event->angleDelta();
+        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
+        setValue(oldValue + qRound(d->effectiveStepSize() * delta));
+        event->setAccepted(d->value != oldValue);
     }
 }
 

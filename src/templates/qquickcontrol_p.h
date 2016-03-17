@@ -59,7 +59,7 @@ class QQuickControlPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
@@ -70,7 +70,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
+    Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
+    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL)
+    Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
@@ -78,7 +82,7 @@ public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
 
     QFont font() const;
-    void setFont(const QFont &);
+    void setFont(const QFont &font);
     void resetFont();
 
     qreal availableWidth() const;
@@ -114,8 +118,20 @@ public:
 
     bool isMirrored() const;
 
+    Qt::FocusPolicy focusPolicy() const;
+    void setFocusPolicy(Qt::FocusPolicy policy);
+
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
+
+    bool isHovered() const;
+    void setHovered(bool hovered);
+
+    bool isHoverEnabled() const;
+    void setHoverEnabled(bool enabled);
+
+    bool isWheelEnabled() const;
+    void setWheelEnabled(bool enabled);
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
@@ -135,7 +151,11 @@ Q_SIGNALS:
     void spacingChanged();
     void localeChanged();
     void mirroredChanged();
+    void focusPolicyChanged();
     void focusReasonChanged();
+    void hoveredChanged();
+    void hoverEnabledChanged();
+    void wheelEnabledChanged();
     void backgroundChanged();
     void contentItemChanged();
 
@@ -151,10 +171,13 @@ protected:
 
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
-
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     virtual void mirrorChange();

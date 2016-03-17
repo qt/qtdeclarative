@@ -71,7 +71,6 @@ T.ComboBox {
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
         elide: Text.ElideRight
         rightPadding: 12 + control.spacing
     }
@@ -114,6 +113,9 @@ T.ComboBox {
         implicitHeight: Math.min(396, listview.contentHeight)
         topMargin: 8
         bottomMargin: 8
+
+        Universal.theme: control.Universal.theme
+        Universal.accent: control.Universal.accent
 
         contentItem: ListView {
             id: listview

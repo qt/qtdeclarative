@@ -142,6 +142,7 @@ ApplicationWindow {
                     ListElement { title: "CheckBox"; source: "qrc:/pages/CheckBoxPage.qml" }
                     ListElement { title: "ComboBox"; source: "qrc:/pages/ComboBoxPage.qml" }
                     ListElement { title: "Dial"; source: "qrc:/pages/DialPage.qml" }
+                    ListElement { title: "Delegates"; source: "qrc:/pages/DelegatePage.qml" }
                     ListElement { title: "Drawer"; source: "qrc:/pages/DrawerPage.qml" }
                     ListElement { title: "Frame"; source: "qrc:/pages/FramePage.qml" }
                     ListElement { title: "GroupBox"; source: "qrc:/pages/GroupBoxPage.qml" }
@@ -176,7 +177,6 @@ ApplicationWindow {
 
         initialItem: Pane {
             id: pane
-            anchors.fill: parent
 
             Image {
                 id: logo

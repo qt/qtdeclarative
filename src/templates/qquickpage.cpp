@@ -167,8 +167,10 @@ void QQuickPage::setHeader(QQuickItem *header)
     if (d->header == header)
         return;
 
-    if (d->header)
+    if (d->header) {
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        d->header->setParentItem(nullptr);
+    }
     d->header = header;
     if (header) {
         header->setParentItem(this);
@@ -209,8 +211,10 @@ void QQuickPage::setFooter(QQuickItem *footer)
     if (d->footer == footer)
         return;
 
-    if (d->footer)
+    if (d->footer) {
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        d->footer->setParentItem(nullptr);
+    }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(this);

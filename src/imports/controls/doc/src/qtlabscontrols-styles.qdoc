@@ -115,5 +115,6 @@
     \li \l {Default Style}
     \li \l {Material Style}
     \li \l {Universal Style}
+    \li \l{Using File Selectors with Qt Labs Controls}
     \endlist
 */

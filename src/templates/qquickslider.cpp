@@ -565,6 +565,20 @@ void QQuickSlider::mouseUngrabEvent()
     setPressed(false);
 }
 
+void QQuickSlider::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickSlider);
+    QQuickControl::wheelEvent(event);
+    if (d->wheelEnabled) {
+        const qreal oldValue = d->value;
+        const QPointF angle = event->angleDelta();
+        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
+        const qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+        setValue(oldValue + step * delta);
+        event->setAccepted(!qFuzzyCompare(d->value, oldValue));
+    }
+}
+
 void QQuickSlider::mirrorChange()
 {
     QQuickControl::mirrorChange();

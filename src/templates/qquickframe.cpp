@@ -47,10 +47,14 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-containers
     \brief A logical group of controls within a visual frame.
 
-    Frame is used to layout a logical group of controls together, within a
+    Frame is used to layout a logical group of controls together within a
     visual frame. Frame does not provide a layout of its own, but requires
     you to position its contents, for instance by creating a \l RowLayout
     or a \l ColumnLayout.
+
+    Items declared as children of a Frame are automatically parented to the
+    Frame's contentItem. Items created dynamically need to be explicitly
+    parented to the contentItem.
 
     If only a single item is used within a Frame, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable

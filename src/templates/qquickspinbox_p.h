@@ -65,6 +65,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(int to READ to WRITE setTo NOTIFY toChanged FINAL)
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(int stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
+    Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL)
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
     Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
@@ -85,6 +86,9 @@ public:
 
     int stepSize() const;
     void setStepSize(int step);
+
+    bool isEditable() const;
+    void setEditable(bool editable);
 
     QValidator *validator() const;
     void setValidator(QValidator *validator);
@@ -107,6 +111,7 @@ Q_SIGNALS:
     void toChanged();
     void valueChanged();
     void stepSizeChanged();
+    void editableChanged();
     void validatorChanged();
     void textFromValueChanged();
     void valueFromTextChanged();
@@ -120,6 +125,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;

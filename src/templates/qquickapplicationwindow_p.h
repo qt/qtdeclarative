@@ -63,19 +63,23 @@ class QQuickApplicationWindowAttachedPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
-    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = nullptr);
     ~QQuickApplicationWindow();
+
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
 
     QQuickItem *contentItem() const;
     QQmlListProperty<QObject> contentData();
@@ -91,7 +95,7 @@ public:
     QQuickOverlay *overlay() const;
 
     QFont font() const;
-    void setFont(const QFont &);
+    void setFont(const QFont &font);
     void resetFont();
 
     QLocale locale() const;
@@ -101,6 +105,7 @@ public:
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
+    void backgroundChanged();
     void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();

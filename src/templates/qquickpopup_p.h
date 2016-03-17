@@ -55,13 +55,17 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQuick/qquickitem.h>
+
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtGui/qaccessible.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
+class QQuickWindow;
 class QQuickPopupPrivate;
 class QQuickTransition;
-class QQuickTransform;
 
 class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
@@ -115,6 +119,9 @@ public:
 
     qreal y() const;
     void setY(qreal y);
+
+    QPointF position() const;
+    void setPosition(const QPointF &pos);
 
     qreal z() const;
     void setZ(qreal z);
@@ -182,6 +189,7 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    QQuickWindow *window() const;
     QQuickItem *popupItem() const;
 
     QQuickItem *parentItem() const;
@@ -247,6 +255,9 @@ public:
     QQuickTransition *exit() const;
     void setExit(QQuickTransition *transition);
 
+    bool filtersChildMouseEvents() const;
+    void setFiltersChildMouseEvents(bool filter);
+
 public Q_SLOTS:
     void open();
     void close();
@@ -299,6 +310,7 @@ protected:
     bool isComponentComplete() const;
 
     bool eventFilter(QObject *object, QEvent *event) override;
+    virtual bool childMouseEventFilter(QQuickItem *child, QEvent *event);
     virtual void focusInEvent(QFocusEvent *event);
     virtual void focusOutEvent(QFocusEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
@@ -308,17 +320,24 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
+    virtual bool overlayEvent(QQuickItem *item, QEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+
+#ifndef QT_NO_ACCESSIBILITY
+    virtual QAccessible::Role accessibleRole() const;
+#endif
 
 private:
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;
+    friend class QQuickOverlay;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)

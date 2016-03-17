@@ -68,6 +68,7 @@ T.Popup {
         radius: 3
         color: control.Material.dialogColor
 
+        layer.enabled: true
         layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor

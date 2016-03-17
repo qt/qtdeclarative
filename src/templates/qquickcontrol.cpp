@@ -37,6 +37,7 @@
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include "qquicklabel_p.h"
 #include "qquicklabel_p_p.h"
@@ -44,6 +45,8 @@
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
+#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
@@ -68,8 +71,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
+    focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
     background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -197,10 +201,15 @@ void QQuickControl::accessibilityActiveChanged(bool active)
         return;
 
     d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached)
-        d->accessibleAttached->setRole(accessibleRole());
-    else
-        qWarning() << "QQuickControl: " << this << " QQuickAccessibleAttached object creation failed!";
+
+    // QQuickControl relies on the existence of a QQuickAccessibleAttached object.
+    // However, qmlAttachedPropertiesObject(create=true) creates an instance only
+    // for items that have been created by a QML engine. Therefore we create the
+    // object by hand for items created in C++ (QQuickPopupItem, for instance).
+    if (!d->accessibleAttached)
+        d->accessibleAttached = new QQuickAccessibleAttached(this);
+
+    d->accessibleAttached->setRole(accessibleRole());
 }
 #endif
 
@@ -210,45 +219,40 @@ void QQuickControl::accessibilityActiveChanged(bool active)
     Returns the font that the control w inherits from its ancestors and
     QGuiApplication::font.
 */
-QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
+QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
 {
-    QFont naturalFont = themeFont(QPlatformTheme::SystemFont);
-    if (const QQuickControl *qc = qobject_cast<const QQuickControl *>(q)) {
-        naturalFont = qc->defaultFont();
-    } else if (const QQuickLabel *label = qobject_cast<const QQuickLabel *>(q)) {
-        Q_UNUSED(label);
-        naturalFont = themeFont(QPlatformTheme::LabelFont);
-    }
-
-    QQuickItem *p = q->parentItem();
-    bool found = false;
+    QQuickItem *p = item->parentItem();
     while (p) {
-        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
-            naturalFont = qc->font();
-            found = true;
-            break;
-        }
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(p))
+            return control->font();
+        else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(p))
+            return label->font();
+        else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(p))
+            return textField->font();
+        else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(p))
+            return textArea->font();
 
         p = p->parentItem();
     }
 
-    if (!found) {
-        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
-            naturalFont = w->font();
-    }
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
+        return window->font();
 
-    naturalFont.resolve(0);
-    return naturalFont;
+    return themeFont(QPlatformTheme::SystemFont);
 }
 
 QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
 {
     if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
-        if (const QFont *font = theme->font(type))
-            return *font;
+        if (const QFont *font = theme->font(type)) {
+            QFont f = *font;
+            if (type == QPlatformTheme::SystemFont)
+                f.resolve(0);
+            return f;
+        }
     }
 
-    return QGuiApplication::font();
+    return QFont();
 }
 
 /*!
@@ -261,9 +265,19 @@ QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
 */
 void QQuickControlPrivate::resolveFont()
 {
-    Q_Q(const QQuickControl);
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
-    QFont resolvedFont = font.resolve(naturalFont);
+    Q_Q(QQuickControl);
+    inheritFont(parentFont(q));
+}
+
+void QQuickControlPrivate::inheritFont(const QFont &f)
+{
+    Q_Q(QQuickControl);
+    QFont parentFont = font.resolve(f);
+    parentFont.resolve(font.resolve() | f.resolve());
+
+    const QFont defaultFont = q->defaultFont();
+    const QFont resolvedFont = parentFont.resolve(defaultFont);
+
     setFont_helper(resolvedFont);
 }
 
@@ -275,11 +289,13 @@ void QQuickControlPrivate::resolveFont()
 void QQuickControlPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickControl);
-    font = f;
+    const bool changed = resolvedFont != f;
+    resolvedFont = f;
 
     QQuickControlPrivate::updateFontRecur(q, f);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
@@ -287,13 +303,13 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
     const auto childItems = item->childItems();
     for (QQuickItem *child : childItems) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
-            QQuickControlPrivate::get(control)->resolveFont();
+            QQuickControlPrivate::get(control)->inheritFont(f);
         else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(child))
-            QQuickLabelPrivate::get(label)->resolveFont();
+            QQuickLabelPrivate::get(label)->inheritFont(f);
         else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(child))
-            QQuickTextAreaPrivate::get(textArea)->resolveFont();
+            QQuickTextAreaPrivate::get(textArea)->inheritFont(f);
         else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(child))
-            QQuickTextFieldPrivate::get(textField)->resolveFont();
+            QQuickTextFieldPrivate::get(textField)->inheritFont(f);
         else
             QQuickControlPrivate::updateFontRecur(child, f);
     }
@@ -353,21 +369,14 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 {
 }
 
-void QQuickControl::classBegin()
-{
-    Q_D(QQuickControl);
-    QQuickItem::classBegin();
-    d->resolveFont();
-}
-
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete()) {
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
         if (!d->hasLocale)
-            d->locale = d->calcLocale();
+            d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
     }
 }
 
@@ -394,22 +403,17 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 QFont QQuickControl::font() const
 {
     Q_D(const QQuickControl);
-    return d->font;
+    return d->resolvedFont;
 }
 
-void QQuickControl::setFont(const QFont &f)
+void QQuickControl::setFont(const QFont &font)
 {
     Q_D(QQuickControl);
-    if (d->font == f)
+    if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    // Determine which font is inherited from this control's ancestors and
-    // QGuiApplication::font, resolve this against \a font (attributes from the
-    // inherited font are copied over). Then propagate this font to this
-    // control's children.
-    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
-    QFont resolvedFont = f.resolve(naturalFont);
-    d->setFont_helper(resolvedFont);
+    d->font = font;
+    d->resolveFont();
 }
 
 void QQuickControl::resetFont()
@@ -619,7 +623,7 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.calendar::Control::locale
+    \qmlproperty Locale Qt.labs.controls::Control::locale
 
     This property holds the locale of the control.
 
@@ -646,14 +650,20 @@ void QQuickControl::resetLocale()
     if (!d->hasLocale)
         return;
 
-    d->updateLocale(d->calcLocale(), false); // explicit=false
+    d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
 }
 
-QLocale QQuickControlPrivate::calcLocale() const
+QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
 {
-    Q_Q(const QQuickControl);
-    QQuickItem *p = q->parentItem();
+    QQuickItem *p = q;
     while (p) {
+        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
+            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
+                p = qp->parentItem();
+                continue;
+            }
+        }
+
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
             return qc->locale();
 
@@ -664,8 +674,10 @@ QLocale QQuickControlPrivate::calcLocale() const
         p = p->parentItem();
     }
 
-    if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
-        return w->locale();
+    if (q) {
+        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+            return w->locale();
+    }
 
     return QLocale();
 }
@@ -698,6 +710,14 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
         else
             updateLocaleRecur(child, l);
     }
+
+    const auto children = item->children();
+    for (QObject *child : children) {
+        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
+            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
+                updateLocaleRecur(qpi, l);
+        }
+    }
 }
 
 /*!
@@ -715,6 +735,37 @@ bool QQuickControl::isMirrored() const
 {
     Q_D(const QQuickControl);
     return d->isMirrored() || d->locale.textDirection() == Qt::RightToLeft;
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::Control::focusPolicy
+
+    This property determines the way the control accepts focus.
+
+    \value Qt.TabFocus    The control accepts focus by tabbing.
+    \value Qt.ClickFocus  The control accepts focus by clicking.
+    \value Qt.StrongFocus The control accepts focus by both tabbing and clicking.
+    \value Qt.WheelFocus  The control accepts focus by tabbing, clicking, and using the mouse wheel.
+    \value Qt.NoFocus     The control does not accept focus.
+*/
+Qt::FocusPolicy QQuickControl::focusPolicy() const
+{
+    Q_D(const QQuickControl);
+    uint policy = d->focusPolicy;
+    if (activeFocusOnTab())
+        policy |= Qt::TabFocus;
+    return static_cast<Qt::FocusPolicy>(policy);
+}
+
+void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
+{
+    Q_D(QQuickControl);
+    if (d->focusPolicy == policy)
+        return;
+
+    d->focusPolicy = policy;
+    setActiveFocusOnTab(policy & Qt::TabFocus);
+    emit focusPolicyChanged();
 }
 
 /*!
@@ -751,6 +802,74 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
 
     d->focusReason = reason;
     emit focusReasonChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::hovered
+    \readonly
+
+    This property holds whether the control is hovered.
+
+    \sa hoverEnabled
+*/
+bool QQuickControl::isHovered() const
+{
+    Q_D(const QQuickControl);
+    return d->hovered;
+}
+
+void QQuickControl::setHovered(bool hovered)
+{
+    Q_D(QQuickControl);
+    if (hovered == d->hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::hoverEnabled
+
+    This property determines whether the control accepts hover events. The default value is \c false.
+
+    \sa hovered
+*/
+bool QQuickControl::isHoverEnabled() const
+{
+    Q_D(const QQuickControl);
+    return d->hoverEnabled;
+}
+
+void QQuickControl::setHoverEnabled(bool enabled)
+{
+    Q_D(QQuickControl);
+    if (enabled == d->hoverEnabled)
+        return;
+
+    setAcceptHoverEvents(enabled);
+    emit hoverEnabledChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::wheelEnabled
+
+    This property determines whether the control handles wheel events. The default value is \c false.
+*/
+bool QQuickControl::isWheelEnabled() const
+{
+    Q_D(const QQuickControl);
+    return d->wheelEnabled;
+}
+
+void QQuickControl::setWheelEnabled(bool enabled)
+{
+    Q_D(QQuickControl);
+    if (d->wheelEnabled == enabled)
+        return;
+
+    d->wheelEnabled = enabled;
+    emit wheelEnabledChanged();
 }
 
 /*!
@@ -817,10 +936,19 @@ void QQuickControl::setContentItem(QQuickItem *item)
     emit contentItemChanged();
 }
 
+void QQuickControl::classBegin()
+{
+    Q_D(QQuickControl);
+    QQuickItem::classBegin();
+    d->resolveFont();
+}
+
 void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
     QQuickItem::componentComplete();
+    if (!d->hasLocale)
+        d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
@@ -844,8 +972,26 @@ void QQuickControl::focusOutEvent(QFocusEvent *event)
     setFocusReason(event->reason());
 }
 
+void QQuickControl::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickControl);
+    setHovered(d->hoverEnabled);
+    event->setAccepted(d->hoverEnabled);
+}
+
+void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickControl);
+    setHovered(false);
+    event->setAccepted(d->hoverEnabled);
+}
+
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        forceActiveFocus(Qt::MouseFocusReason);
+
     event->accept();
 }
 
@@ -856,7 +1002,20 @@ void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        forceActiveFocus(Qt::MouseFocusReason);
+
     event->accept();
+}
+
+void QQuickControl::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickControl);
+    if ((d->focusPolicy & Qt::WheelFocus) == Qt::WheelFocus)
+        forceActiveFocus(Qt::MouseFocusReason);
+
+    event->setAccepted(d->wheelEnabled);
 }
 
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

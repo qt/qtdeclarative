@@ -109,6 +109,7 @@ Q_SIGNALS:
     void trackChanged();
 
 protected:
+    void focusInEvent(QFocusEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;

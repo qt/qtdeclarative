@@ -25,7 +25,7 @@ RESOURCES += \
     $$PWD/qtlabscontrolsplugin.qrc
 
 include(controls.pri)
-include(designer/designer.pri)
+!static: include(designer/designer.pri)
 
 qtquickcompiler {
     qmlfiles.prefix = /qt-project.org/imports/Qt/labs/controls

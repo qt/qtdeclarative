@@ -236,7 +236,7 @@ QQuickAbstractButton::~QQuickAbstractButton()
     \note The text is used for accessibility purposes, so it makes sense to
           set a textual description even if the content item is an image.
 
-    \sa contentItem
+    \sa {Control::contentItem}{contentItem}
 */
 QString QQuickAbstractButton::text() const
 {

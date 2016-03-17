@@ -87,6 +87,7 @@ TestCase {
         compare(control.to, 99)
         compare(control.value, 0)
         compare(control.stepSize, 1)
+        compare(control.editable, false)
         compare(control.up.pressed, false)
         compare(control.down.pressed, false)
 
@@ -323,6 +324,64 @@ TestCase {
         compare(control.from, 10)
         compare(control.to, 1000)
         compare(control.value, 100)
+
+        control.destroy()
+    }
+
+    function test_editable() {
+        var control = spinBox.createObject(testCase)
+        verify(control)
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+
+        compare(control.editable, false)
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        keyClick(Qt.Key_Return)
+        compare(control.value, 0)
+
+        control.editable = true
+        compare(control.editable, true)
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        keyClick(Qt.Key_Return)
+        compare(control.value, 5)
+
+        control.destroy()
+    }
+
+    function test_wheel(data) {
+        var control = spinBox.createObject(testCase, {wheelEnabled: true})
+        verify(control)
+
+        var delta = 120
+
+        compare(control.value, 0)
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 1)
+
+        control.stepSize = 2
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 3)
+
+        control.stepSize = 10
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.value, 0)
+
+        control.stepSize = 5
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.value, 5)
+
+        mouseWheel(control, control.width / 2, control.height / 2, 0.5 * delta, 0.5 * delta)
+        compare(control.value, 8)
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.value, 3)
 
         control.destroy()
     }

@@ -38,6 +38,7 @@ QML_FILES += \
     $$PWD/SliderHandle.qml \
     $$PWD/SpinBox.qml \
     $$PWD/StackView.qml \
+    $$PWD/SwipeDelegate.qml \
     $$PWD/SwipeView.qml \
     $$PWD/Switch.qml \
     $$PWD/TabBar.qml \

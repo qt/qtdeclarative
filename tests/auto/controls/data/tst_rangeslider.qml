@@ -655,4 +655,38 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_focus() {
+        var control = sliderComponent.createObject(testCase)
+        verify(control)
+
+        waitForRendering(control)
+        compare(control.activeFocus, false)
+
+        // focus is forwarded to the first handle
+        control.forceActiveFocus()
+        compare(control.activeFocus, true)
+        compare(control.first.handle.activeFocus, true)
+        compare(control.second.handle.activeFocus, false)
+
+        // move focus to the second handle
+        control.second.handle.forceActiveFocus()
+        compare(control.activeFocus, true)
+        compare(control.first.handle.activeFocus, false)
+        compare(control.second.handle.activeFocus, true)
+
+        // clear focus
+        control.focus = false
+        compare(control.activeFocus, false)
+        compare(control.first.handle.activeFocus, false)
+        compare(control.second.handle.activeFocus, false)
+
+        // focus is forwarded to the second handle (where it previously was in the focus scope)
+        control.forceActiveFocus()
+        compare(control.activeFocus, true)
+        compare(control.first.handle.activeFocus, false)
+        compare(control.second.handle.activeFocus, true)
+
+        control.destroy()
+    }
 }

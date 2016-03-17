@@ -38,7 +38,7 @@ import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.material 1.0
 
-T.Frame {
+T.Pane {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
@@ -47,7 +47,7 @@ T.Frame {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    padding: 6
+    padding: 12
 
     //! [contentItem]
     contentItem: Item { }

@@ -86,6 +86,14 @@ T.Button {
             }
         }
 
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            radius: parent.radius
+            visible: control.activeFocus
+            color: control.Material.checkBoxUncheckedRippleColor
+        }
+
         layer.enabled: control.enabled
         layer.effect: DropShadow {
             verticalOffset: 1

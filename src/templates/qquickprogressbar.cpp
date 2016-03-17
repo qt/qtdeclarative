@@ -47,7 +47,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-indicators
     \brief Indicates the progress of an operation.
 
-    ProgressBar indicates the progress of an operation.
+    ProgressBar indicates the progress of an operation. The value should be updated
+    regularly. The range is defined by \l from and \l to, which both can contain any value.
 
     \table
     \row \li \image qtlabscontrols-progressbar-normal.png
@@ -211,7 +212,13 @@ qreal QQuickProgressBar::visualPosition() const
 /*!
     \qmlproperty bool Qt.labs.controls::ProgressBar::indeterminate
 
-    This property holds whether the progress bar is in an indeterminate mode.
+    This property holds whether the progress bar is in indeterminate mode.
+    A progress bar in indeterminate mode displays that an operation is in progress, but it
+    doesn't show how much progress has been made.
+
+    See below for an example:
+    \image qtlabscontrols-progressbar-indeterminate.png
+
 */
 bool QQuickProgressBar::isIndeterminate() const
 {
@@ -232,7 +239,7 @@ void QQuickProgressBar::setIndeterminate(bool indeterminate)
 /*!
     \qmlproperty Item Qt.labs.controls::ProgressBar::indicator
 
-    This property holds the indicator item.
+    This property holds the graphical representation of the progress bar.
 
     \sa {Customizing ProgressBar}
 */

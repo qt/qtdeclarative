@@ -54,7 +54,7 @@ T.ComboBox {
     padding: 12
 
     //! [delegate]
-    delegate: ItemDelegate {
+    delegate: MenuItem {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
@@ -102,6 +102,14 @@ T.ComboBox {
             opacity: !control.enabled ? 0.5 : 1.0
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/drop-indicator.png"
         }
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            radius: parent.radius
+            visible: control.activeFocus
+            color: control.Material.checkBoxUncheckedRippleColor
+        }
     }
     //! [background]
 
@@ -109,10 +117,14 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height
         implicitWidth: control.width
-        implicitHeight: Math.min(396, listview.contentHeight)
+        implicitHeight: listview.contentHeight
         transformOrigin: Item.Top
         topMargin: 12
         bottomMargin: 12
+
+        Material.theme: control.Material.theme
+        Material.accent: control.Material.accent
+        Material.primary: control.Material.primary
 
         enter: Transition {
             // grow_fade_in

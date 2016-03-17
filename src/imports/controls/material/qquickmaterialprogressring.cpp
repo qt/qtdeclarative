@@ -134,11 +134,12 @@ QColor QQuickMaterialProgressRing::color() const
 
 void QQuickMaterialProgressRing::setColor(QColor color)
 {
-    if (m_color != color) {
-        m_color = color;
-        update();
-        emit colorChanged();
-    }
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    update();
+    emit colorChanged();
 }
 
 static const int spanAnimationDuration = 700;

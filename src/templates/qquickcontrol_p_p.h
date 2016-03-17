@@ -85,34 +85,39 @@ public:
     void setBottomPadding(qreal value, bool reset = false);
 
     void resizeBackground();
-    void resizeContent();
+    virtual void resizeContent();
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    void updateFont(const QFont &);
-    static void updateFontRecur(QQuickItem *item, const QFont &);
+    void updateFont(const QFont &f);
+    static void updateFontRecur(QQuickItem *item, const QFont &f);
     inline void setFont_helper(const QFont &f) {
-        if (font.resolve() == f.resolve() && font == f)
+        if (resolvedFont.resolve() == f.resolve() && resolvedFont == f)
             return;
         updateFont(f);
     }
     void resolveFont();
-    static QFont naturalControlFont(const QQuickItem *);
+    void inheritFont(const QFont &f);
+    static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
+
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
+    static QLocale calcLocale(QQuickItem *);
 
-    QLocale calcLocale() const;
-
+    // TODO: QLazilyAllocated<ExtraData>
     QFont font;
+    QFont resolvedFont;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
     bool hasBottomPadding;
     bool hasLocale;
+    bool hovered;
+    bool wheelEnabled;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;
@@ -120,6 +125,7 @@ public:
     qreal bottomPadding;
     qreal spacing;
     QLocale locale;
+    Qt::FocusPolicy focusPolicy;
     Qt::FocusReason focusReason;
     QQuickItem *background;
     QQuickItem *contentItem;

@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtLabsControls/private/qquickstyle_p.h>
+#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -395,6 +395,14 @@ static const QRgb flatButtonPressColorLight = 0x66999999;
 static const QRgb flatButtonPressColorDark = 0x3FCCCCCC;
 static const QRgb flatButtonFocusColorLight = 0x33CCCCCC;
 static const QRgb flatButtonFocusColorDark = 0x26CCCCCC;
+static const QRgb swipeDelegateColorLight = 0xFFD6D7D7;
+static const QRgb swipeDelegateColorDark = 0xFF525252;
+static const QRgb swipeDelegateHoverColorLight = 0xFFDFDFDF;
+static const QRgb swipeDelegateHoverColorDark = 0xFF5D5D5D;
+static const QRgb swipeDelegatePressColorLight = 0xFFCFCFCF;
+static const QRgb swipeDelegatePressColorDark = 0xFF484848;
+static const QRgb swipeDelegateDisabledColorLight = 0xFFEFEFEF;
+static const QRgb swipeDelegateDisabledColorDark = 0xFF7C7C7C;
 static const QRgb frameColorLight = hintTextColorLight;
 static const QRgb frameColorDark = hintTextColorDark;
 static const QRgb switchUncheckedTrackColorLight = 0x42000000;
@@ -405,7 +413,7 @@ static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
-QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
+QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_explicitTheme(false),
     m_explicitPrimary(false),
     m_explicitAccent(false),
@@ -431,28 +439,30 @@ QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
     m_explicitTheme = true;
-    if (m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
 {
-    if (!m_explicitTheme && m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_explicitTheme || m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagateTheme()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritTheme(m_theme);
@@ -461,11 +471,12 @@ void QQuickMaterialStyle::propagateTheme()
 
 void QQuickMaterialStyle::resetTheme()
 {
-    if (m_explicitTheme) {
-        m_explicitTheme = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritTheme(material ? material->theme() : defaultTheme);
-    }
+    if (!m_explicitTheme)
+        return;
+
+    m_explicitTheme = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritTheme(material ? material->theme() : defaultTheme);
 }
 
 QVariant QQuickMaterialStyle::primary() const
@@ -500,29 +511,31 @@ void QQuickMaterialStyle::setPrimary(const QVariant &var)
     }
 
     m_explicitPrimary = true;
-    if (m_primary != primary) {
-        m_customPrimary = custom;
-        m_primary = primary;
-        propagatePrimary();
-        emit primaryChanged();
-        emit paletteChanged();
-    }
+    if (m_primary == primary)
+        return;
+
+    m_customPrimary = custom;
+    m_primary = primary;
+    propagatePrimary();
+    emit primaryChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
 {
-    if (!m_explicitPrimary && m_primary != primary) {
-        m_customPrimary = custom;
-        m_primary = primary;
-        propagatePrimary();
-        emit primaryChanged();
-    }
+    if (m_explicitPrimary || m_primary == primary)
+        return;
+
+    m_customPrimary = custom;
+    m_primary = primary;
+    propagatePrimary();
+    emit primaryChanged();
 }
 
 void QQuickMaterialStyle::propagatePrimary()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritPrimary(m_primary, m_customPrimary);
@@ -531,12 +544,13 @@ void QQuickMaterialStyle::propagatePrimary()
 
 void QQuickMaterialStyle::resetPrimary()
 {
-    if (m_explicitPrimary) {
-        m_customPrimary = false;
-        m_explicitPrimary = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritPrimary(material ? material->m_primary : defaultPrimary, true);
-    }
+    if (!m_explicitPrimary)
+        return;
+
+    m_customPrimary = false;
+    m_explicitPrimary = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritPrimary(material ? material->m_primary : defaultPrimary, true);
 }
 
 QVariant QQuickMaterialStyle::accent() const
@@ -571,29 +585,31 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
     }
 
     m_explicitAccent = true;
-    if (m_accent != accent) {
-        m_customAccent = custom;
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-        emit paletteChanged();
-    }
+    if (m_accent == accent)
+        return;
+
+    m_customAccent = custom;
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
 {
-    if (!m_explicitAccent && m_accent != accent) {
-        m_customAccent = custom;
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-    }
+    if (m_explicitAccent || m_accent == accent)
+        return;
+
+    m_customAccent = custom;
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
 }
 
 void QQuickMaterialStyle::propagateAccent()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritAccent(m_accent, m_customAccent);
@@ -602,12 +618,13 @@ void QQuickMaterialStyle::propagateAccent()
 
 void QQuickMaterialStyle::resetAccent()
 {
-    if (m_explicitAccent) {
-        m_customAccent = false;
-        m_explicitAccent = false;
-        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-        inheritAccent(material ? material->m_accent : defaultAccent, true);
-    }
+    if (!m_explicitAccent)
+        return;
+
+    m_customAccent = false;
+    m_explicitAccent = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritAccent(material ? material->m_accent : defaultAccent, true);
 }
 
 QColor QQuickMaterialStyle::primaryColor() const
@@ -625,7 +642,7 @@ QColor QQuickMaterialStyle::accentColor() const
         return QColor::fromRgba(m_accent);
     if (m_accent > BlueGrey)
         return QColor();
-    return colors[m_accent][Shade500];
+    return colors[m_accent][m_theme == Light ? Shade500 : Shade200];
 }
 
 QColor QQuickMaterialStyle::backgroundColor() const
@@ -721,6 +738,26 @@ QColor QQuickMaterialStyle::flatButtonFocusColor() const
     return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark);
 }
 
+QColor QQuickMaterialStyle::swipeDelegateColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateColorLight : swipeDelegateColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegateHoverColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateHoverColorLight : swipeDelegateHoverColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegatePressColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegatePressColorLight : swipeDelegatePressColorDark);
+}
+
+QColor QQuickMaterialStyle::swipeDelegateDisabledColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? swipeDelegateDisabledColorLight : swipeDelegateDisabledColorDark);
+}
+
 QColor QQuickMaterialStyle::frameColor() const
 {
     return QColor::fromRgba(m_theme == Light ? frameColorLight : frameColorDark);
@@ -735,7 +772,7 @@ QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
     QColor pressColor = accentColor();
     // TODO: find out actual value
-    pressColor.setAlpha(30);
+    pressColor.setAlpha(m_theme == Light ? 30 : 50);
     return pressColor;
 }
 
@@ -890,7 +927,7 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
     }
 }
 
-void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent)
+void QQuickMaterialStyle::parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
@@ -912,7 +949,7 @@ void QQuickMaterialStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Material"));
+        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
         if (!settings.isNull()) {
             bool ok = false;
             QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
@@ -955,7 +992,7 @@ void QQuickMaterialStyle::init()
         defaultsInitialized = true;
     }
 
-    QQuickStyle::init(); // TODO: lazy init?
+    QQuickStyleAttached::init(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE

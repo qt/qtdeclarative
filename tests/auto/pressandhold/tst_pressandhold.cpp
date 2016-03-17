@@ -37,13 +37,14 @@
 #include <QtTest>
 #include <QtQuick>
 
-// TODO: add QStyleHints::setMousePressAndHoldInterval() to speedup the test
-
 class tst_PressAndHold : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
     void pressAndHold_data();
     void pressAndHold();
 
@@ -51,12 +52,23 @@ private slots:
     void keepSelection();
 };
 
+void tst_PressAndHold::initTestCase()
+{
+    QGuiApplication::styleHints()->setMousePressAndHoldInterval(100);
+}
+
+void tst_PressAndHold::cleanupTestCase()
+{
+    QGuiApplication::styleHints()->setMousePressAndHoldInterval(-1);
+}
+
 void tst_PressAndHold::pressAndHold_data()
 {
     QTest::addColumn<QByteArray>("data");
     QTest::addColumn<QByteArray>("signal");
 
     QTest::newRow("Button") << QByteArray("import Qt.labs.controls 1.0; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
+    QTest::newRow("SwipeDelegate") << QByteArray("import Qt.labs.controls 1.0; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold()));
     QTest::newRow("TextField") << QByteArray("import Qt.labs.controls 1.0; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
     QTest::newRow("TextArea") << QByteArray("import Qt.labs.controls 1.0; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
 }

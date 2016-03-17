@@ -24,6 +24,7 @@ QML_CONTROLS = \
     Slider.qml \
     SpinBox.qml \
     StackView.qml \
+    SwipeDelegate.qml \
     Switch.qml \
     SwipeView.qml \
     TabBar.qml \

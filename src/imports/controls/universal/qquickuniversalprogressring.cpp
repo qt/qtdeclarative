@@ -121,7 +121,7 @@ void QQuickUniversalProgressRingAnimatorJob::updateCurrentTime(int time)
 
         if (visible) {
             int phaseIndex, remain = time, elapsed = 0;
-            for (phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
+            for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
                 if (remain <= m_phases[phaseIndex].duration + begin)
                     break;
                 remain -= m_phases[phaseIndex].duration;
@@ -191,11 +191,12 @@ int QQuickUniversalProgressRing::count() const
 
 void QQuickUniversalProgressRing::setCount(int count)
 {
-    if (m_count != count) {
-        m_count = count;
-        update();
-        emit countChanged();
-    }
+    if (m_count == count)
+        return;
+
+    m_count = count;
+    update();
+    emit countChanged();
 }
 
 QColor QQuickUniversalProgressRing::color() const
@@ -205,11 +206,12 @@ QColor QQuickUniversalProgressRing::color() const
 
 void QQuickUniversalProgressRing::setColor(const QColor &color)
 {
-    if (m_color != color) {
-        m_color = color;
-        update();
-        emit colorChanged();
-    }
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    update();
+    emit colorChanged();
 }
 
 QSGNode *QQuickUniversalProgressRing::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)

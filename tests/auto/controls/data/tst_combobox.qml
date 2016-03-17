@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.2
+//import QtQuick.Window 2.2
 import QtTest 1.0
 import Qt.labs.controls 1.0
 
@@ -46,13 +47,16 @@ TestCase {
     id: testCase
     width: 200
     height: 200
+//    visible: true
+//    when: windowShown
     name: "ComboBox"
 
     ApplicationWindow {
-        id: window
+        id: applicationWindow
         visible: true
         width: 400
         height: 400
+        font.pixelSize: 25
     }
 
     SignalSpy {
@@ -74,11 +78,6 @@ TestCase {
         }
     }
 
-    function initTestCase() {
-        window.requestActivate()
-        tryCompare(window, "active", true)
-    }
-
     function init() {
         verify(!activatedSpy.target)
         compare(activatedSpy.count, 0)
@@ -96,7 +95,7 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         compare(control.count, 0)
@@ -112,7 +111,7 @@ TestCase {
     }
 
     function test_array() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         var items = [ "Banana", "Apple", "Coconut" ]
@@ -138,7 +137,7 @@ TestCase {
     }
 
     function test_objects() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         var items = [
@@ -168,7 +167,7 @@ TestCase {
     }
 
     function test_number() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         control.model = 10
@@ -201,7 +200,7 @@ TestCase {
     }
 
     function test_listModel() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         control.model = listmodel
@@ -245,7 +244,7 @@ TestCase {
     }
 
     function test_textRole(data) {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         control.model = data.model
@@ -273,7 +272,7 @@ TestCase {
     }
 
     function test_textAt() {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         control.model = ["Apple", "Orange", "Banana"]
@@ -315,7 +314,7 @@ TestCase {
     }
 
     function test_find(data) {
-        var control = comboBox.createObject(window.contentItem)
+        var control = comboBox.createObject(testCase)
         verify(control)
 
         control.model = ["Banana", "banana", "Coconut", "Apple", "Cocomuffin"]
@@ -325,9 +324,19 @@ TestCase {
         control.destroy()
     }
 
-    function test_arrowKeys() {
-        var control = comboBox.createObject(window.contentItem, {model: 3})
+    function test_arrowKeys_data() {
+        return [
+//            { tag: "Window", window: testCase.Window.window },
+            { tag: "ApplicationWindow", window: applicationWindow }
+        ]
+    }
+
+    function test_arrowKeys(data) {
+        var control = comboBox.createObject(data.window.contentItem, {model: 3})
         verify(control)
+
+        data.window.requestActivate()
+        tryCompare(data.window, "active", true)
 
         activatedSpy.target = control
         verify(activatedSpy.valid)
@@ -456,21 +465,34 @@ TestCase {
 
     function test_keys_data() {
         return [
-            { tag: "space-space", key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "space-enter", key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "space-return", key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
-            { tag: "space-escape", key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
-            { tag: "space-0", key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
+//            { tag: "Window: space-space", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-enter", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-return", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+//            { tag: "Window: space-escape", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
+//            { tag: "Window: space-0", window: testCase.Window.window, key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
+//            { tag: "Window: enter-enter", window: testCase.Window.window, key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+//            { tag: "Window: return-return", window: testCase.Window.window, key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+//            { tag: "Window: escape-escape", window: testCase.Window.window, key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
 
-            { tag: "enter-enter", key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
-            { tag: "return-return", key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
-            { tag: "escape-escape", key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+            { tag: "ApplicationWindow: space-space", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "ApplicationWindow: space-enter", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "ApplicationWindow: space-return", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "ApplicationWindow: space-escape", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
+            { tag: "ApplicationWindow: space-0", window: applicationWindow, key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
+            { tag: "ApplicationWindow: enter-enter", window: applicationWindow, key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+            { tag: "ApplicationWindow: return-return", window: applicationWindow, key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+            { tag: "ApplicationWindow: escape-escape", window: applicationWindow, key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
         ]
     }
 
     function test_keys(data) {
-        var control = comboBox.createObject(window.contentItem, {model: 3})
+        var control = comboBox.createObject(data.window.contentItem, {model: 3})
         verify(control)
+
+        data.window.requestActivate()
+        tryCompare(data.window, "active", true)
+
+        waitForRendering(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
@@ -497,8 +519,15 @@ TestCase {
         control.destroy()
     }
 
-    function test_popup() {
-        var control = comboBox.createObject(window.contentItem, {model: 3})
+    function test_popup_data() {
+        return [
+//            { tag: "Window", window: testCase.Window.window },
+            { tag: "ApplicationWindow", window: applicationWindow }
+        ]
+    }
+
+    function test_popup(data) {
+        var control = comboBox.createObject(data.window.contentItem, {model: 3})
         verify(control)
 
         // show below
@@ -516,7 +545,7 @@ TestCase {
         tryCompare(control.popup, "visible", false)
 
         // show above
-        control.y = window.height - control.height
+        control.y = data.window.height - control.height
         mousePress(control)
         compare(control.pressed, true)
         compare(control.popup.visible, false)
@@ -528,9 +557,19 @@ TestCase {
         control.destroy()
     }
 
-    function test_mouse() {
-        var control = comboBox.createObject(window.contentItem, {model: 3})
+    function test_mouse_data() {
+        return [
+//            { tag: "Window", window: testCase.Window.window },
+            { tag: "ApplicationWindow", window: applicationWindow }
+        ]
+    }
+
+    function test_mouse(data) {
+        var control = comboBox.createObject(data.window.contentItem, {model: 3})
         verify(control)
+
+        data.window.requestActivate()
+        tryCompare(data.window, "active", true)
 
         activatedSpy.target = control
         verify(activatedSpy.valid)
@@ -571,9 +610,21 @@ TestCase {
         control.destroy()
     }
 
-    function test_focus() {
-        var control = comboBox.createObject(window.contentItem, {model: 3})
+    function test_focus_data() {
+        return [
+//            { tag: "Window", window: testCase.Window.window },
+            { tag: "ApplicationWindow", window: applicationWindow }
+        ]
+    }
+
+    function test_focus(data) {
+        var control = comboBox.createObject(data.window.contentItem, {model: 3})
         verify(control)
+
+        data.window.requestActivate()
+        tryCompare(data.window, "active", true)
+
+        waitForRendering(control)
 
         // click - gain focus - show popup
         mouseClick(control)
@@ -581,8 +632,7 @@ TestCase {
         compare(control.popup.visible, true)
 
         // lose focus - hide popup
-        window.contentItem.forceActiveFocus()
-        verify(window.contentItem.activeFocus)
+        control.focus = false
         verify(!control.activeFocus)
         tryCompare(control.popup, "visible", false)
 
@@ -623,6 +673,155 @@ TestCase {
         compare(control.displayText, "Display")
         control.displayText = undefined
         compare(control.displayText, "789")
+
+        control.destroy()
+    }
+
+    Component {
+        id: component
+        Pane {
+            id: panel
+            property alias button: _button;
+            property alias combobox: _combobox;
+            font.pixelSize: 30
+            Column {
+                Button {
+                    id: _button
+                    text: "Button"
+                    font.pixelSize: 20
+                }
+                ComboBox {
+                    id: _combobox
+                    model: ["ComboBox", "With"]
+                    delegate: ItemDelegate {
+                        width: _combobox.width
+                        text: _combobox.textRole ? (Array.isArray(_combobox.model) ? modelData[_combobox.textRole] : model[_combobox.textRole]) : modelData
+                        objectName: "delegate"
+                        checkable: true
+                        autoExclusive: true
+                        checked: _combobox.currentIndex === index
+                        highlighted: _combobox.highlightedIndex === index
+                        pressed: highlighted && _combobox.pressed
+                    }
+                }
+            }
+        }
+    }
+
+    function getChild(control, objname, idx) {
+        var index = idx
+        for (var i = index+1; i < control.children.length; i++)
+        {
+            if (control.children[i].objectName === objname) {
+                index = i
+                break
+            }
+        }
+        return index
+    }
+
+    function test_font() { // QTBUG_50984, QTBUG-51696
+        var control = component.createObject(applicationWindow.contentItem)
+        verify(control)
+        verify(control.button)
+        verify(control.combobox)
+
+        waitForRendering(control)
+
+        compare(control.font.pixelSize, 30)
+        compare(control.button.font.pixelSize, 20)
+        compare(control.combobox.font.pixelSize, 30)
+
+        verify(control.combobox.popup)
+        var popup = control.combobox.popup
+        popup.open()
+
+        verify(popup.contentItem)
+
+        var listview = popup.contentItem
+        verify(listview.contentItem)
+        waitForRendering(listview)
+
+        var idx1 = getChild(listview.contentItem, "delegate", -1)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        var idx2 = getChild(listview.contentItem, "delegate", idx1)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
+
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
+
+        control.font.pixelSize = control.font.pixelSize + 10
+        compare(control.combobox.font.pixelSize, 40)
+        waitForRendering(listview)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
+
+        control.combobox.font.pixelSize = control.combobox.font.pixelSize + 5
+        compare(control.combobox.font.pixelSize, 45)
+        waitForRendering(listview)
+
+        idx1 = getChild(listview.contentItem, "delegate", -1)
+        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
+        idx2 = getChild(listview.contentItem, "delegate", idx1)
+        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
+
+        control.destroy()
+    }
+
+    function test_wheel(data) {
+        var control = comboBox.createObject(applicationWindow.contentItem, {model: 2, wheelEnabled: true})
+        verify(control)
+
+        var delta = 120
+
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.currentIndex, 1)
+
+        // reached bounds -> no change
+        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+        compare(control.currentIndex, 1)
+
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.currentIndex, 0)
+
+        // reached bounds -> no change
+        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+        compare(control.currentIndex, 0)
+
+        control.destroy()
+    }
+
+    function test_activation_data() {
+        return [
+            { tag: "open:enter", key: Qt.Key_Enter, open: true },
+            { tag: "open:return", key: Qt.Key_Return, open: true },
+            { tag: "closed:enter", key: Qt.Key_Enter, open: false },
+            { tag: "closed:return", key: Qt.Key_Return, open: false }
+        ]
+    }
+
+    // QTBUG-51645
+    function test_activation(data) {
+        var control = comboBox.createObject(applicationWindow.contentItem, {currentIndex: 1, model: ["Apple", "Orange", "Banana"]})
+        verify(control)
+
+        waitForRendering(control)
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        if (data.open)
+            keyClick(Qt.Key_Space)
+        compare(control.popup.visible, data.open)
+
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Orange")
+        compare(control.displayText, "Orange")
+
+        keyClick(data.key)
+
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Orange")
+        compare(control.displayText, "Orange")
 
         control.destroy()
     }

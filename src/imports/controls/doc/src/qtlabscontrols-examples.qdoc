@@ -61,8 +61,10 @@
     </table></div>
     \endraw
 
-    This example project demonstrates the various UI controls provided by
-    \l {Qt Labs Controls}.
+    The gallery example is a simple application with a drawer menu that contains
+    all the \l {Qt Labs Controls}. Each menu item opens a page that shows the
+    graphical appearance of a control, allows you to interact with the control,
+    and explains in which circumstances it is handy to use this control.
 
     \include examples-run.qdocinc
 */

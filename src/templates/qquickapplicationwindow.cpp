@@ -59,6 +59,10 @@ QT_BEGIN_NAMESPACE
     ApplicationWindow is a \l Window which makes it convenient to add
     a \l header and \l footer item to the window.
 
+    You can declare ApplicationWindow as the root item of your application,
+    and run it by using \l QQmlApplicationEngine.  In this way you can control
+    the window's properties, appearance and layout from QML.
+
     \image qtlabscontrols-applicationwindow-wireframe.png
 
     \qml
@@ -81,6 +85,10 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    ApplicationWindow supports popups via its \l overlay property, which
+    ensures that popups are displayed above other content and that the
+    background is dimmed when a modal popup is visible.
+
     \note By default, an ApplicationWindow is not visible.
 
     \labs
@@ -95,6 +103,7 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 public:
     QQuickApplicationWindowPrivate()
         : complete(false)
+        , background(nullptr)
         , contentItem(nullptr)
         , header(nullptr)
         , footer(nullptr)
@@ -107,7 +116,7 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    void updateFont(const QFont &);
+    void updateFont(const QFont &f);
     inline void setFont_helper(const QFont &f) {
         if (font.resolve() == f.resolve() && font == f)
             return;
@@ -119,6 +128,7 @@ public:
     void setActiveFocusControl(QQuickItem *item);
 
     bool complete;
+    QQuickItem *background;
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
@@ -161,6 +171,18 @@ void QQuickApplicationWindowPrivate::relayout()
         if (!p->widthValid) {
             footer->setWidth(q->width());
             p->widthValid = false;
+        }
+    }
+
+    if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (!p->widthValid && qFuzzyIsNull(background->x())) {
+            background->setWidth(q->width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid && qFuzzyIsNull(background->y())) {
+            background->setHeight(q->height());
+            p->heightValid = false;
         }
     }
 }
@@ -227,6 +249,42 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 }
 
 /*!
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::background
+
+    This property holds the background item.
+
+    The background item is stacked under the \l {contentItem}{content item},
+    but above the \l {Window::color}{background color} of the window.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
+*/
+QQuickItem *QQuickApplicationWindow::background() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->background;
+}
+
+void QQuickApplicationWindow::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->background == background)
+        return;
+
+    delete d->background;
+    d->background = background;
+    if (background) {
+        background->setParentItem(QQuickWindow::contentItem());
+        if (qFuzzyIsNull(background->z()))
+            background->setZ(-1);
+        if (isComponentComplete())
+            d->relayout();
+    }
+    emit backgroundChanged();
+}
+
+/*!
     \qmlproperty Item Qt.labs.controls::ApplicationWindow::header
 
     This property holds the window header item. The header item is positioned to
@@ -249,8 +307,10 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
     if (d->header == header)
         return;
 
-    if (d->header)
+    if (d->header) {
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        d->header->setParentItem(nullptr);
+    }
     d->header = header;
     if (header) {
         header->setParentItem(contentItem());
@@ -291,8 +351,10 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
     if (d->footer == footer)
         return;
 
-    if (d->footer)
+    if (d->footer) {
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        d->footer->setParentItem(nullptr);
+    }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(contentItem());
@@ -403,13 +465,13 @@ QFont QQuickApplicationWindow::font() const
     return d->font;
 }
 
-void QQuickApplicationWindow::setFont(const QFont &f)
+void QQuickApplicationWindow::setFont(const QFont &font)
 {
     Q_D(QQuickApplicationWindow);
-    if (d->font == f)
+    if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    QFont resolvedFont = f.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
     d->setFont_helper(resolvedFont);
 }
 
@@ -427,11 +489,13 @@ void QQuickApplicationWindowPrivate::resolveFont()
 void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickApplicationWindow);
+    const bool changed = font != f;
     font = f;
 
-    QQuickControlPrivate::updateFontRecur(q->contentItem(), f);
+    QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
 
-    emit q->fontChanged();
+    if (changed)
+        emit q->fontChanged();
 }
 
 QLocale QQuickApplicationWindow::locale() const

@@ -41,14 +41,12 @@
 import QtQuick 2.6
 import Qt.labs.controls 1.0
 
-Pane {
-    id: pane
-    padding: 0
+Page {
+    id: page
 
     SwipeView {
         id: swipeView
         anchors.fill: parent
-        anchors.bottomMargin: tabBar.height
         currentIndex: tabBar.currentIndex
 
         Repeater {
@@ -79,10 +77,8 @@ Pane {
         }
     }
 
-    TabBar {
+    footer: TabBar {
         id: tabBar
-        width: parent.width
-        anchors.bottom: parent.bottom
         currentIndex: swipeView.currentIndex
 
         TabButton {

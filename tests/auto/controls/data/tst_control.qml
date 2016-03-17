@@ -56,6 +56,16 @@ TestCase {
         T.Control { }
     }
 
+    Component {
+        id: button
+        T.Button { }
+    }
+
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
@@ -626,6 +636,49 @@ TestCase {
         control4.destroy()
     }
 
+    function test_font_explicit_attributes_data() {
+        return [
+            {tag: "bold", value: true},
+            {tag: "capitalization", value: Font.Capitalize},
+            {tag: "family", value: "Courier"},
+            {tag: "italic", value: true},
+            {tag: "strikeout", value: true},
+            {tag: "underline", value: true},
+            {tag: "weight", value: Font.Black},
+            {tag: "wordSpacing", value: 55}
+        ]
+    }
+
+    function test_font_explicit_attributes(data) {
+        var control = component.createObject(testCase)
+        verify(control)
+
+        var child = component.createObject(control)
+        verify(child)
+
+        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        verify(controlSpy.valid)
+
+        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        verify(childSpy.valid)
+
+        var defaultValue = control.font[data.tag]
+        child.font[data.tag] = defaultValue
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
+
+        control.font[data.tag] = data.value
+
+        compare(control.font[data.tag], data.value)
+        compare(controlSpy.count, 1)
+
+        compare(child.font[data.tag], defaultValue)
+        compare(childSpy.count, 0)
+
+        control.destroy()
+    }
+
     function test_locale() {
         var control = component.createObject(testCase)
         verify(control)
@@ -824,28 +877,23 @@ TestCase {
         compare(control.mirroredspy_5.count, 1)
     }
 
-    function test_focusReason_data() {
-        return [
-            { tag: "Control", qml: "import Qt.labs.controls 1.0; Control { }" },
-            { tag: "TextField", qml: "import Qt.labs.controls 1.0; TextField { }" },
-            { tag: "TextArea", qml: "import Qt.labs.controls 1.0; TextArea { }" },
-            { tag: "SpinBox", qml: "import Qt.labs.controls 1.0; SpinBox { }" },
-            { tag: "ComboBox", qml: "import Qt.labs.controls 1.0; ComboBox { }" }
-        ]
-    }
-
-    function test_focusReason(data) {
-        var control = Qt.createQmlObject(data.qml, testCase)
+    function test_hover() {
+        var control = component.createObject(testCase, {width: 100, height: 100})
         verify(control)
 
-        compare(control.focusReason, Qt.OtherFocusReason)
-        control.forceActiveFocus(Qt.MouseFocusReason)
-        compare(control.activeFocus, true)
-        compare(control.focusReason, Qt.MouseFocusReason)
+        compare(control.hovered, false)
+        compare(control.hoverEnabled, false)
 
-        testCase.forceActiveFocus(Qt.TabFocusReason)
-        compare(control.activeFocus, false)
-        compare(control.focusReason, Qt.TabFocusReason)
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.hovered, false)
+
+        control.hoverEnabled = true
+
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.hovered, true)
+
+        mouseMove(control, -10, -10)
+        compare(control.hovered, false)
 
         control.destroy()
     }

@@ -116,13 +116,20 @@
                 \image qtlabscontrols-material-dark.png
     \endtable
 
-    \note The Material style must be separately imported to gain access to
-    these style-specific attributes. It should be noted that regardless of the
-    references to the Material style, the same application code runs with any
-    other style. The Material style-specific attributes only have an effect
-    when the application is run with the Material style. Furthermore, in case
-    of explicit Material style-specific references, the Material style must
-    be deployed with the application.
+    \section2 Dependency
+
+    The Material style must be separately imported to gain access to the
+    attributes that are specific to the Material style. It should be noted
+    that regardless of the references to the Material style, the same
+    application code runs with any other style. Material-specific attributes
+    only have an effect when the application is run with the Material style.
+
+    If the Material style is imported in a QML file that is always loaded, the
+    Material style must be deployed with the application in order to be able
+    to run the application regardless of which style the application is run with.
+    By using \l {Using File Selectors with Qt Labs Controls}{file selectors},
+    style-specific tweaks can be applied without creating a hard dependency to
+    a style.
 
     \section2 Pre-defined Colors
 

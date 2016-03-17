@@ -21,6 +21,7 @@ QML_FILES += \
     $$PWD/RadioButtonSpecifics.qml \
     $$PWD/SliderSpecifics.qml \
     $$PWD/SpinBoxSpecifics.qml \
+    $$PWD/SwipeDelegateSpecifics.qml \
     $$PWD/SwitchSpecifics.qml \
     $$PWD/TextAreaSpecifics.qml \
     $$PWD/TextFieldSpecifics.qml \
@@ -29,5 +30,4 @@ QML_FILES += \
     $$PWD/TumblerSpecifics.qml
 
 QML_FILES += \
-    $$PWD/images/todo.png \
-    $$PWD/images/todo16.png
+    $$PWD/images/*.png

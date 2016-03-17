@@ -49,6 +49,7 @@
 //
 
 #include "qquickpopup_p.h"
+#include "qquickcontrol_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
@@ -83,7 +84,7 @@ private:
     QQuickPopupPrivate *popup;
 };
 
-class QQuickPopupItem : public QQuickItem
+class QQuickPopupItem : public QQuickControl
 {
     Q_OBJECT
 
@@ -91,6 +92,7 @@ public:
     explicit QQuickPopupItem(QQuickPopup *popup);
 
 protected:
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -102,8 +104,14 @@ protected:
     void mouseUngrabEvent() override;
     void wheelEvent(QWheelEvent *event) override;
 
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
+
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const override;
+#endif
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
@@ -115,16 +123,8 @@ public:
     explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
     ~QQuickPopupPositioner();
 
-    qreal x() const;
-    void setX(qreal x);
-
-    qreal y() const;
-    void setY(qreal y);
-
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
-
-    void repositionPopup();
 
 protected:
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
@@ -138,8 +138,6 @@ private:
 
     bool isAncestor(QQuickItem *item) const;
 
-    qreal m_x;
-    qreal m_y;
     QQuickItem *m_parentItem;
     QQuickPopupPrivate *m_popup;
 };
@@ -158,12 +156,12 @@ public:
 
     void init();
     bool tryClose(QQuickItem *item, QMouseEvent *event);
+    virtual void reposition();
 
-    void finalizeEnterTransition();
-    void finalizeExitTransition();
-
-    void resizeBackground();
-    void resizeContent();
+    virtual void prepareEnterTransition(bool notify = true);
+    virtual void prepareExitTransition();
+    virtual void finalizeEnterTransition();
+    virtual void finalizeExitTransition(bool hide = true);
 
     QMarginsF getMargins() const;
 
@@ -172,43 +170,34 @@ public:
     void setRightMargin(qreal value, bool reset = false);
     void setBottomMargin(qreal value, bool reset = false);
 
-    void setTopPadding(qreal value, bool reset = false);
-    void setLeftPadding(qreal value, bool reset = false);
-    void setRightPadding(qreal value, bool reset = false);
-    void setBottomPadding(qreal value, bool reset = false);
-
     bool focus;
     bool modal;
+    bool visible;
     bool complete;
     bool hasTopMargin;
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
-    bool hasTopPadding;
-    bool hasLeftPadding;
-    bool hasRightPadding;
-    bool hasBottomPadding;
+    qreal x;
+    qreal y;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;
     qreal rightMargin;
     qreal bottomMargin;
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
     qreal contentWidth;
     qreal contentHeight;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
-    QQuickItem *background;
-    QQuickItem *contentItem;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;
     QQuickPopupPositioner positioner;
+    QList<QQuickStateAction> enterActions;
+    QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;
+
+    friend class QQuickPopupTransitionManager;
 };
 
 QT_END_NAMESPACE

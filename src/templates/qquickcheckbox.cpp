@@ -53,6 +53,15 @@ QT_BEGIN_NAMESPACE
     off (unchecked). Check boxes are typically used to select one or more
     options from a set of options.
 
+    The state of the checkbox can be set with the \l {AbstractButton::}{checked} property.
+
+    In addition to the checked and unchecked states, there is a third state:
+    partially checked. The partially checked state can be enabled using the
+    \l tristate property. This state indicates that the regular checked/unchecked
+    state can not be determined; generally because of other states that affect
+    the checkbox. This state is useful when several child nodes are selected
+    in a treeview, for example.
+
     \table
     \row \li \image qtlabscontrols-checkbox-normal.png
          \li A check box in its normal state.

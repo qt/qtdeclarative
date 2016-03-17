@@ -57,7 +57,6 @@ T.TabButton {
         color: control.checked || control.pressed ? control.Universal.baseHighColor : control.Universal.baseLowColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
     }
     //! [contentItem]
 }

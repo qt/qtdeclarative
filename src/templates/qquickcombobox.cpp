@@ -107,6 +107,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void Qt.labs.controls::ComboBox::activated(int index)
 
     This signal is emitted when the item at \a index is activated by the user.
+    \a index is the activated model index. The corresponding handler is \c onActivated.
 
     \sa currentIndex
 */
@@ -349,7 +350,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
 QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
     QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
-    setActiveFocusOnTab(true);
+    setFocusPolicy(Qt::StrongFocus);
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
@@ -705,6 +706,28 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
     return -1;
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::ComboBox::increase()
+
+    Select next value.
+*/
+void QQuickComboBox::increase()
+{
+    Q_D(QQuickComboBox);
+    d->increase();
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::ComboBox::decrease()
+
+    Select previous value.
+*/
+void QQuickComboBox::decrease()
+{
+    Q_D(QQuickComboBox);
+    d->decrease();
+}
+
 void QQuickComboBox::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
@@ -764,7 +787,7 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        d->hidePopup(true);
+        d->hidePopup(d->isPopupVisible());
         setPressed(false);
         event->accept();
         break;
@@ -796,8 +819,6 @@ void QQuickComboBox::mouseReleaseEvent(QMouseEvent *event)
     QQuickControl::mouseReleaseEvent(event);
     if (d->pressed) {
         setPressed(false);
-        if (!d->isPopupVisible())
-            forceActiveFocus(Qt::MouseFocusReason);
         d->togglePopup(false);
     }
 }
@@ -806,6 +827,20 @@ void QQuickComboBox::mouseUngrabEvent()
 {
     QQuickControl::mouseUngrabEvent();
     setPressed(false);
+}
+
+void QQuickComboBox::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::wheelEvent(event);
+    if (d->wheelEnabled && !d->isPopupVisible()) {
+        const int oldIndex = d->currentIndex;
+        if (event->angleDelta().y() > 0)
+            d->decrease();
+        else
+            d->increase();
+        event->setAccepted(d->currentIndex != oldIndex);
+    }
 }
 
 void QQuickComboBox::componentComplete()

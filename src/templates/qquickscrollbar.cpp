@@ -168,7 +168,7 @@ void QQuickScrollBar::setPosition(qreal position)
 /*!
     \qmlproperty bool Qt.labs.controls::ScrollBar::active
 
-    This property holds whether the scroll bar is active ie. when its \l pressed
+    This property holds whether the scroll bar is active, i.e. when it's \l pressed
     or the attached Flickable is \l {Flickable::moving}{moving}.
 */
 bool QQuickScrollBar::isActive() const

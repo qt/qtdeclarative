@@ -57,6 +57,9 @@ private slots:
     void button();
     void tabBar();
     void menu();
+    void swipeDelegate_data();
+    void swipeDelegate();
+    void swipeDelegateBehind();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -368,6 +371,97 @@ void tst_Gifs::menu()
     const QPoint lastItemPos = menuContentItem->mapToScene(QPointF(menuContentItem->width() / 2, menuContentItem->height() - 10)).toPoint();
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 1000);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 300);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::swipeDelegate_data()
+{
+    QTest::addColumn<QString>("qmlFileName");
+    QTest::newRow("qtlabscontrols-swipedelegate.qml") << QString::fromLatin1("qtlabscontrols-swipedelegate.qml");
+    QTest::newRow("qtlabscontrols-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtlabscontrols-swipedelegate-leading-trailing.qml");
+}
+
+void tst_Gifs::swipeDelegate()
+{
+    QFETCH(QString, qmlFileName);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(10);
+    gifRecorder.setQmlFileName(qmlFileName);
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *swipeDelegate = window->property("swipeDelegate").value<QQuickItem*>();
+    QVERIFY(swipeDelegate);
+
+    // Show left item.
+    const QPoint leftTarget = QPoint(swipeDelegate->width() * 0.2, 0);
+    const QPoint rightTarget = QPoint(swipeDelegate->width() * 0.8, 0);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 100);
+    const int movements = rightTarget.x() - leftTarget.x();
+    moveSmoothly(window, leftTarget, rightTarget, movements, QEasingCurve::OutQuint, 5);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 20);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 1000);
+    moveSmoothly(window, rightTarget, leftTarget, movements, QEasingCurve::OutQuint, 5);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 20);
+
+    QTest::qWait(1000);
+
+    // Show right item.
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 1000);
+    moveSmoothly(window, rightTarget, leftTarget, movements, QEasingCurve::OutQuint, 5);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 20);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 1000);
+    moveSmoothly(window, leftTarget, rightTarget, movements, QEasingCurve::OutQuint, 5);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 20);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::swipeDelegateBehind()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(14);
+    gifRecorder.setQmlFileName(QStringLiteral("qtlabscontrols-swipedelegate-behind.qml"));
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *swipeDelegate = window->property("swipeDelegate").value<QQuickItem*>();
+    QVERIFY(swipeDelegate);
+
+    // Show wrapping around left item.
+    const QPoint leftTarget = QPoint(swipeDelegate->width() * 0.2, 0);
+    const QPoint rightTarget = QPoint(swipeDelegate->width() * 0.8, 0);
+    const int movements = rightTarget.x() - leftTarget.x();
+    for (int i = 0; i < 4; ++i) {
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 100);
+        moveSmoothly(window, leftTarget, rightTarget, movements, QEasingCurve::OutQuint, 5);
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 20);
+
+        QTest::qWait(500);
+    }
+
+    QTest::qWait(1000);
+
+    // Show wrapping around right item.
+    for (int i = 0; i < 4; ++i) {
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rightTarget, 100);
+        moveSmoothly(window, rightTarget, leftTarget, movements, QEasingCurve::OutQuint, 5);
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, leftTarget, 20);
+
+        QTest::qWait(500);
+    }
 
     gifRecorder.waitForFinish();
 }

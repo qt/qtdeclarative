@@ -84,10 +84,16 @@ public:
 protected:
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
-    bool eventFilter(QObject *object, QEvent *event) override;
+    void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 Q_SIGNALS:
     void titleChanged();
+
+protected:
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const override;
+#endif // QT_NO_ACCESSIBILITY
 
 private:
     Q_DISABLE_COPY(QQuickMenu)

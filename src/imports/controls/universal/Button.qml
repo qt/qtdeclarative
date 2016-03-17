@@ -61,7 +61,6 @@ T.Button {
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
 
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
     }

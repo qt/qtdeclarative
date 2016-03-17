@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtLabsControls/private/qquickstyle_p.h>
+#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -135,7 +135,7 @@ static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
 static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
 static QRgb DefaultAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 
-QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyle(parent),
+QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_hasTheme(false), m_hasAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
 {
     init();
@@ -154,28 +154,30 @@ QQuickUniversalStyle::Theme QQuickUniversalStyle::theme() const
 void QQuickUniversalStyle::setTheme(Theme theme)
 {
     m_hasTheme = true;
-    if (m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickUniversalStyle::inheritTheme(Theme theme)
 {
-    if (!m_hasTheme && m_theme != theme) {
-        m_theme = theme;
-        propagateTheme();
-        emit themeChanged();
-        emit paletteChanged();
-    }
+    if (m_hasTheme || m_theme == theme)
+        return;
+
+    m_theme = theme;
+    propagateTheme();
+    emit themeChanged();
+    emit paletteChanged();
 }
 
 void QQuickUniversalStyle::propagateTheme()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritTheme(m_theme);
@@ -184,11 +186,12 @@ void QQuickUniversalStyle::propagateTheme()
 
 void QQuickUniversalStyle::resetTheme()
 {
-    if (m_hasTheme) {
-        m_hasTheme = false;
-        QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
-        inheritTheme(universal ? universal->theme() : DefaultTheme);
-    }
+    if (!m_hasTheme)
+        return;
+
+    m_hasTheme = false;
+    QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
+    inheritTheme(universal ? universal->theme() : DefaultTheme);
 }
 
 QVariant QQuickUniversalStyle::accent() const
@@ -221,26 +224,28 @@ void QQuickUniversalStyle::setAccent(const QVariant &var)
     }
 
     m_hasAccent = true;
-    if (m_accent != accent) {
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-    }
+    if (m_accent == accent)
+        return;
+
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
 }
 
 void QQuickUniversalStyle::inheritAccent(QRgb accent)
 {
-    if (!m_hasAccent && m_accent != accent) {
-        m_accent = accent;
-        propagateAccent();
-        emit accentChanged();
-    }
+    if (m_hasAccent || m_accent == accent)
+        return;
+
+    m_accent = accent;
+    propagateAccent();
+    emit accentChanged();
 }
 
 void QQuickUniversalStyle::propagateAccent()
 {
     const auto styles = childStyles();
-    for (QQuickStyle *child : styles) {
+    for (QQuickStyleAttached *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritAccent(m_accent);
@@ -249,11 +254,12 @@ void QQuickUniversalStyle::propagateAccent()
 
 void QQuickUniversalStyle::resetAccent()
 {
-    if (m_hasAccent) {
-        m_hasAccent = false;
-        QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
-        inheritAccent(universal ? universal->m_accent : DefaultAccent);
-    }
+    if (!m_hasAccent)
+        return;
+
+    m_hasAccent = false;
+    QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
+    inheritAccent(universal ? universal->m_accent : DefaultAccent);
 }
 
 QColor QQuickUniversalStyle::altHighColor() const
@@ -381,7 +387,7 @@ QColor QQuickUniversalStyle::getColor(SystemColor role) const
     return m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role);
 }
 
-void QQuickUniversalStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent)
+void QQuickUniversalStyle::parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(newParent);
@@ -402,7 +408,7 @@ void QQuickUniversalStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Universal"));
+        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Universal"));
         if (!settings.isNull()) {
             bool ok = false;
             QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
@@ -427,7 +433,7 @@ void QQuickUniversalStyle::init()
         defaultsInitialized = true;
     }
 
-    QQuickStyle::init(); // TODO: lazy init?
+    QQuickStyleAttached::init(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE

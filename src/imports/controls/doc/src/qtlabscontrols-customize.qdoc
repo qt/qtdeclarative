@@ -244,7 +244,26 @@
 
     \section1 Customizing PageIndicator
 
-        TODO
+        PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtlabscontrols-pageindicator-background.png
+
+        PageIndicator has no background item by default.
+
+        \section3 Content item
+
+            \image qtlabscontrols-pageindicator-contentItem.png
+
+            \snippet PageIndicator.qml contentItem
+
+        \section3 Delegate
+
+            \image qtlabscontrols-pageindicator-delegate.png
+
+            \snippet PageIndicator.qml delegate
+
 
 
     \section1 Customizing Pane
@@ -453,6 +472,28 @@
 
             \snippet StackView.qml replaceExit
 
+    \section1 Customizing SwipeDelegate
+
+        SwipeDelegate consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \c exposure.left, and \c exposure.right.
+
+        \section3 Background
+
+            \image qtlabscontrols-swipedelegate-background.png
+
+            \snippet SwipeDelegate.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-swipedelegate-contentItem.png
+
+            \snippet SwipeDelegate.qml contentItem
+
+        \section3 Left, right, and behind
+
+            \image qtlabscontrols-swipedelegate.gif
+
+            By default, there are no left, right, or behind items defined.
 
     \section1 Customizing SwipeView
 
@@ -527,12 +568,6 @@
             \image qtlabscontrols-toolbar-background.png
 
             \snippet ToolBar.qml background
-
-        \section3 Frame
-
-            \image qtlabscontrols-toolbar-frame.png
-
-            ToolBar has no frame item by default.
 
 
     \section1 Customizing ToolButton

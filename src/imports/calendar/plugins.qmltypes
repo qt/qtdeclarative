@@ -78,6 +78,7 @@ Module {
         Property { name: "spacing"; type: "double" }
         Property { name: "locale"; type: "QLocale" }
         Property { name: "mirrored"; type: "bool"; isReadonly: true }
+        Property { name: "focusPolicy"; type: "Qt::FocusPolicy" }
         Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
