@@ -86,7 +86,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
 
     QQuickStyleSelector selector;
     if (QFile::exists(QLatin1String(":/qt-project.org/imports/Qt/labs/controls/ApplicationWindow.qml")))
-        selector.setBaseUrl(QUrl(QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls")));\
+        selector.setBaseUrl(QUrl(QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls")));
     else
         selector.setBaseUrl(baseUrl());
 
