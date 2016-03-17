@@ -51,6 +51,8 @@
 #include "ps_smoothtexture.hlslh"
 #include "vs_textmask.hlslh"
 #include "ps_textmask24.hlslh"
+#include "ps_textmask32.hlslh"
+#include "ps_textmask8.hlslh"
 
 QT_BEGIN_NAMESPACE
 
@@ -423,7 +425,8 @@ static const int TEXT_CB_SIZE_0 = 16 * sizeof(float); // float4x4
 static const int TEXT_CB_SIZE_1 = 2 * sizeof(float); // float2
 static const int TEXT_CB_SIZE_2 = sizeof(float); // float
 static const int TEXT_CB_SIZE_3 = sizeof(float); // float
-static const int TEXT_CB_SIZE = TEXT_CB_SIZE_0 + TEXT_CB_SIZE_1 + TEXT_CB_SIZE_2 + TEXT_CB_SIZE_3;
+static const int TEXT_CB_SIZE_4 = 4 * sizeof(float); // float4
+static const int TEXT_CB_SIZE = TEXT_CB_SIZE_0 + TEXT_CB_SIZE_1 + TEXT_CB_SIZE_2 + TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
 
 int QSGD3D12TextMaterial::constantBufferSize() const
 {
@@ -434,9 +437,21 @@ void QSGD3D12TextMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
     pipelineState->shaders.vs = g_VS_TextMask;
     pipelineState->shaders.vsSize = sizeof(g_VS_TextMask);
-    // ### 8 and 32 bit variants
-    pipelineState->shaders.ps = g_PS_TextMask24;
-    pipelineState->shaders.psSize = sizeof(g_PS_TextMask24);
+
+    switch (glyphCache()->glyphFormat()) {
+    case QFontEngine::Format_A32:
+        pipelineState->shaders.ps = g_PS_TextMask24;
+        pipelineState->shaders.psSize = sizeof(g_PS_TextMask24);
+        break;
+    case QFontEngine::Format_ARGB:
+        pipelineState->shaders.ps = g_PS_TextMask32;
+        pipelineState->shaders.psSize = sizeof(g_PS_TextMask32);
+        break;
+    default:
+        pipelineState->shaders.ps = g_PS_TextMask8;
+        pipelineState->shaders.psSize = sizeof(g_PS_TextMask8);
+        break;
+    }
 
     pipelineState->shaders.rootSig.textureViews.resize(1);
 }
@@ -449,34 +464,49 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     QSGD3D12Material::UpdateResults r = 0;
     quint8 *p = constantBuffer;
 
+    pipelineState->blend = QSGD3D12PipelineState::BlendColor;
+    extraState->blendFactor = m_color;
+    r |= UpdatedBlendFactor; // must be set always as this affects the command list
+
     if (state.isMatrixDirty()) {
         memcpy(p, state.combinedMatrix().constData(), TEXT_CB_SIZE_0);
         r |= UpdatedConstantBuffer;
     }
     p += TEXT_CB_SIZE_0;
 
-    // ### when?
-    const float textureScale[2] = { 1.0f / glyphCache()->currentWidth(), 1.0f / glyphCache()->currentHeight() };
-    memcpy(p, textureScale, TEXT_CB_SIZE_1);
-    r |= UpdatedConstantBuffer;
+    if (m_lastGlyphCacheSize != glyphCache()->currentSize()) {
+        m_lastGlyphCacheSize = glyphCache()->currentSize();
+        const float textureScale[2] = { 1.0f / m_lastGlyphCacheSize.width(),
+                                        1.0f / m_lastGlyphCacheSize.height() };
+        memcpy(p, textureScale, TEXT_CB_SIZE_1);
+        r |= UpdatedConstantBuffer;
+    }
     p += TEXT_CB_SIZE_1;
 
-    // ### when?
     const float dpr = qsg_device_pixel_ratio(m_rc->engine());
-    memcpy(p, &dpr, TEXT_CB_SIZE_2);
-    r |= UpdatedConstantBuffer;
+    if (m_lastDpr != dpr) {
+        m_lastDpr = dpr;
+        memcpy(p, &dpr, TEXT_CB_SIZE_2);
+        r |= UpdatedConstantBuffer;
+    }
     p += TEXT_CB_SIZE_2;
 
-    pipelineState->blend = QSGD3D12PipelineState::BlendColor;
-    extraState->blendFactor = m_color;
-    r |= UpdatedBlendFactor;
-
-    // ### when?
-    // ### this is for 24 bit only, add the others
-    QVector4D color = qsg_premultiply(m_color, state.opacity());
-    const float alpha = color.w();
-    memcpy(p, &alpha, TEXT_CB_SIZE_3);
-    r |= UpdatedConstantBuffer;
+    if (state.isOpacityDirty() || m_lastColor != m_color) {
+        m_lastColor = m_color;
+        if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
+            const QVector4D color = qsg_premultiply(m_color, state.opacity());
+            const float alpha = color.w();
+            memcpy(p, &alpha, TEXT_CB_SIZE_3);
+        } else if (glyphCache()->glyphFormat() == QFontEngine::Format_ARGB) {
+            const float opacity = m_color.w() * state.opacity();
+            memcpy(p, &opacity, TEXT_CB_SIZE_3);
+        } else {
+            const QVector4D color = qsg_premultiply(m_color, state.opacity());
+            const float f[4] = { color.x(), color.y(), color.z(), color.w() };
+            memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
+        }
+        r |= UpdatedConstantBuffer;
+    }
 
     QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);
     tv.filter = QSGD3D12TextureView::FilterNearest;

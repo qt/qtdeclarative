@@ -206,6 +206,9 @@ private:
     QVector4D m_color;
     QRawFont m_font;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
+    QSize m_lastGlyphCacheSize;
+    float m_lastDpr = 0;
+    QVector4D m_lastColor;
 };
 
 QT_END_NAMESPACE

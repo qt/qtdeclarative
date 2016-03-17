@@ -42,7 +42,20 @@ import QtQuick 2.0
 
 Item {
     Text {
-        anchors.centerIn: parent
+        anchors.top: parent.top
         text: "árvíztűrő tükörfúrógép\nÁRVÍZTŰRŐ TÜKÖRFÚRÓGÉP"
+    }
+    Text {
+        anchors.bottom: parent.bottom
+        text: "the quick brown fox jumps over the lazy dog\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG"
+        color: "red"
+    }
+    Text {
+        anchors.centerIn: parent
+        text: "rotate rotate rotate"
+        font.bold: true
+        font.pointSize: 20
+        color: "green"
+        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
     }
 }

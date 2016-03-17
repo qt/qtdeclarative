@@ -9,7 +9,8 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 mvp;
     float2 textureScale;
     float dpr;
-    float color;
+    float color; // for TextMask24 and 32
+    float4 colorVec; // for TextMask8
 };
 
 struct PSInput
@@ -33,4 +34,14 @@ float4 PS_TextMask24(PSInput input) : SV_TARGET
 {
     float4 glyph = tex.Sample(samp, input.coord);
     return float4(glyph.rgb * color, glyph.a);
+}
+
+float4 PS_TextMask32(PSInput input) : SV_TARGET
+{
+    return tex.Sample(samp, input.coord) * color;
+}
+
+float4 PS_TextMask8(PSInput input) : SV_TARGET
+{
+    return colorVec * tex.Sample(samp, input.coord).a;
 }

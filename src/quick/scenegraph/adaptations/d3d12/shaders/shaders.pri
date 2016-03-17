@@ -63,6 +63,14 @@ textmask_pshader24.input = textmask_VSPS
 textmask_pshader24.header = ps_textmask24.hlslh
 textmask_pshader24.entry = PS_TextMask24
 textmask_pshader24.type = ps_5_0
+textmask_pshader32.input = textmask_VSPS
+textmask_pshader32.header = ps_textmask32.hlslh
+textmask_pshader32.entry = PS_TextMask32
+textmask_pshader32.type = ps_5_0
+textmask_pshader8.input = textmask_VSPS
+textmask_pshader8.header = ps_textmask8.hlslh
+textmask_pshader8.entry = PS_TextMask8
+textmask_pshader8.type = ps_5_0
 
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
@@ -71,6 +79,6 @@ HLSL_SHADERS = \
     texture_vshader texture_pshader \
     smoothtexture_vshader smoothtexture_pshader \
     mipmapgen_cshader \
-    textmask_vshader textmask_pshader24
+    textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8
 
 load(hlsl_bytecode_header)

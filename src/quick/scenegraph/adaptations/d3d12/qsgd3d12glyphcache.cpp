@@ -42,9 +42,13 @@
 
 QT_BEGIN_NAMESPACE
 
-// Keep it simple: allocate a large texture and never resize.
-static const int TEXTURE_WIDTH = 2048;
-static const int TEXTURE_HEIGHT = 2048;
+// NOTE: Avoid categorized logging. It is slow.
+
+#define DECLARE_DEBUG_VAR(variable) \
+    static bool debug_ ## variable() \
+    { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
+
+DECLARE_DEBUG_VAR(render)
 
 QSGD3D12GlyphCache::QSGD3D12GlyphCache(QSGD3D12Engine *engine, QFontEngine::GlyphFormat format, const QTransform &matrix)
     : QTextureGlyphCache(format, matrix),
@@ -58,17 +62,26 @@ QSGD3D12GlyphCache::~QSGD3D12GlyphCache()
         m_engine->releaseTexture(m_id);
 }
 
-void QSGD3D12GlyphCache::createTextureData(int, int)
+void QSGD3D12GlyphCache::createTextureData(int width, int height)
 {
     m_id = m_engine->genTexture();
     Q_ASSERT(m_id);
-    m_engine->createTexture(m_id, QSize(TEXTURE_WIDTH, TEXTURE_HEIGHT),
-                            QImage::Format_ARGB32_Premultiplied, QSGD3D12Engine::CreateWithAlpha);
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("new glyph cache texture %u of size %dx%d", m_id, width, height);
+
+    m_size = QSize(width, height);
+    m_engine->createTexture(m_id, m_size, QImage::Format_ARGB32_Premultiplied, QSGD3D12Engine::CreateWithAlpha);
 }
 
-void QSGD3D12GlyphCache::resizeTextureData(int, int)
+void QSGD3D12GlyphCache::resizeTextureData(int width, int height)
 {
-    // nothing to do here
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("glyph cache texture %u resize to %dx%d", m_id, width, height);
+
+    m_size = QSize(width, height);
+
+    m_engine->queueResizeTexture(m_id, m_size);
 }
 
 void QSGD3D12GlyphCache::beginFillTexture()
@@ -137,12 +150,12 @@ int QSGD3D12GlyphCache::glyphPadding() const
 
 int QSGD3D12GlyphCache::maxTextureWidth() const
 {
-    return TEXTURE_WIDTH;
+    return 16384;
 }
 
 int QSGD3D12GlyphCache::maxTextureHeight() const
 {
-    return TEXTURE_HEIGHT;
+    return 16384;
 }
 
 void QSGD3D12GlyphCache::activateTexture()
@@ -151,14 +164,9 @@ void QSGD3D12GlyphCache::activateTexture()
         m_engine->activateTexture(m_id);
 }
 
-int QSGD3D12GlyphCache::currentWidth() const
+QSize QSGD3D12GlyphCache::currentSize() const
 {
-    return TEXTURE_WIDTH;
-}
-
-int QSGD3D12GlyphCache::currentHeight() const
-{
-    return TEXTURE_HEIGHT;
+    return m_size;
 }
 
 QT_END_NAMESPACE

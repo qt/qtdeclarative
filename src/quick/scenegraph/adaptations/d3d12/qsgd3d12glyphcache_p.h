@@ -73,15 +73,14 @@ public:
     int maxTextureHeight() const override;
 
     void activateTexture();
-
-    int currentWidth() const;
-    int currentHeight() const;
+    QSize currentSize() const;
 
 private:
     QSGD3D12Engine *m_engine;
     uint m_id = 0;
     QVector<QImage> m_glyphImages;
     QVector<QPoint> m_glyphPos;
+    QSize m_size;
 };
 
 QT_END_NAMESPACE

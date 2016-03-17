@@ -166,6 +166,7 @@ public:
 
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, QSGD3D12Engine::TextureCreateFlags flags);
+    void queueResizeTexture(uint id, const QSize &size);
     void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
@@ -284,12 +285,15 @@ private:
         ComPtr<ID3D12Resource> texture;
         D3D12_CPU_DESCRIPTOR_HANDLE srv;
         quint64 fenceValue = 0;
-        bool waitAdded = false;
-        ComPtr<ID3D12Heap> stagingHeap;
-        struct StagingEntry {
+        quint64 lastWaitFenceValue = 0;
+        struct StagingHeap {
+            ComPtr<ID3D12Heap> heap;
+        };
+        QVector<StagingHeap> stagingHeaps;
+        struct StagingBuffer {
             ComPtr<ID3D12Resource> buffer;
         };
-        QVector<StagingEntry> stagingBuffers;
+        QVector<StagingBuffer> stagingBuffers;
         QVector<D3D12_CPU_DESCRIPTOR_HANDLE> mipUAVs;
         bool alpha = true;
         bool mipmap = false;

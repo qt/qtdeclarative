@@ -428,6 +428,11 @@ void QSGD3D12Engine::createTexture(uint id, const QSize &size, QImage::Format fo
     d->createTexture(id, size, format, flags);
 }
 
+void QSGD3D12Engine::queueResizeTexture(uint id, const QSize &size)
+{
+    d->queueResizeTexture(id, size);
+}
+
 void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos)
 {
     d->queueTextureUpload(id, QVector<QImage>() << image, QVector<QPoint>() << dstPos);
@@ -1060,10 +1065,15 @@ void QSGD3D12EnginePrivate::beginFrame()
             for (uint id : qAsConst(pfd.pendingTextureUploads)) {
                 const int idx = id - 1;
                 Texture &t(textures[idx]);
-                if (t.fenceValue) { // may have been cleared by the previous frame
+                // fenceValue is 0 when the previous frame cleared it, skip in
+                // this case. Skip also when fenceValue > the value it was when
+                // adding the last GPU wait - this is the case when more
+                // uploads were queued for the same texture in the meantime.
+                if (t.fenceValue && t.fenceValue == t.lastWaitFenceValue) {
                     t.fenceValue = 0;
+                    t.lastWaitFenceValue = 0;
                     t.stagingBuffers.clear();
-                    t.stagingHeap = nullptr;
+                    t.stagingHeaps.clear();
                     if (Q_UNLIKELY(debug_render()))
                         qDebug("Cleaned staging data for texture %u", id);
                 }
@@ -1159,9 +1169,10 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool needsBackbufferTransition)
             const int idx = id - 1;
             Texture &t(textures[idx]);
             Q_ASSERT(t.fenceValue);
-            if (t.waitAdded)
+            // skip if already added a Wait in the previous frame
+            if (t.lastWaitFenceValue == t.fenceValue)
                 continue;
-            t.waitAdded = true;
+            t.lastWaitFenceValue = t.fenceValue;
             if (t.fenceValue > topFenceValue)
                 topFenceValue = t.fenceValue;
             if (t.mipmap)
@@ -1827,6 +1838,85 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
         qDebug("created texture %u, size %dx%d, miplevels %d", id, adjustedSize.width(), adjustedSize.height(), textureDesc.MipLevels);
 }
 
+void QSGD3D12EnginePrivate::queueResizeTexture(uint id, const QSize &size)
+{
+    // This function can safely be called outside begin-endFrame, even though
+    // it uses currentPFrameIndex.
+
+    Q_ASSERT(id);
+    const int idx = id - 1;
+    Q_ASSERT(idx < textures.count() && textures[idx].entryInUse);
+    Texture &t(textures[idx]);
+
+    if (!t.texture) {
+        qWarning("Cannot resize non-created texture %u", id);
+        return;
+    }
+
+    if (t.mipmap) {
+        qWarning("Cannot resize mipmapped texture %u", id);
+        return;
+    }
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("resizing texture %u, size %dx%d", id, size.width(), size.height());
+
+    PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
+
+    D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
+    textureDesc.Width = size.width();
+    textureDesc.Height = size.height();
+
+    D3D12_HEAP_PROPERTIES defaultHeapProp = {};
+    defaultHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    ComPtr<ID3D12Resource> oldTexture = t.texture;
+    // release the old one only in current_frame + 2
+    pfd.deferredDelete(t.texture);
+
+    HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
+                                                 D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&t.texture));
+    if (FAILED(hr)) {
+        qWarning("Failed to create resized texture resource: 0x%x", hr);
+        return;
+    }
+
+    pfd.deferredDelete(t.srv);
+    t.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+
+    device->CreateShaderResourceView(t.texture.Get(), &srvDesc, t.srv);
+
+    D3D12_TEXTURE_COPY_LOCATION dstLoc;
+    dstLoc.pResource = t.texture.Get();
+    dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dstLoc.SubresourceIndex = 0;
+
+    D3D12_TEXTURE_COPY_LOCATION srcLoc;
+    srcLoc.pResource = oldTexture.Get();
+    srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    srcLoc.SubresourceIndex = 0;
+
+    copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
+
+    copyCommandList->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+
+    copyCommandList->Close();
+    ID3D12CommandList *commandLists[] = { copyCommandList.Get() };
+    copyCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
+    copyCommandQueue->Signal(textureUploadFence.Get(), t.fenceValue);
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("submitted old content copy for texture %u on the copy queue, fence %llu", id, t.fenceValue);
+}
+
 void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos)
 {
     Q_ASSERT(id);
@@ -1847,21 +1937,16 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         return;
     }
 
-    // This function cannot be called until the previous upload has finished,
-    // but one call can initiate the upload of multiple sub-regions which still
-    // counts as one upload from the viewpoint of the rest of the engine (and
-    // only the completion of the whole set can be waited on).
-
-    if (t.fenceValue) {
-        qWarning("Attempted to queue texture upload (%u) while a previous upload is still in progress", id);
+    // Make life simpler by disallowing queuing a new mipmapped upload before the previous one finishes.
+    if (t.mipmap && t.fenceValue) {
+        qWarning("Attempted to queue mipmapped texture upload (%u) while a previous upload is still in progress", id);
         return;
     }
 
     t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
-    t.waitAdded = false;
 
     if (Q_UNLIKELY(debug_render()))
-        qDebug("adding upload for texture %u on the copy queue", id);
+        qDebug("adding upload for texture %u on the copy queue, fence %llu", id, t.fenceValue);
 
     D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
     const QSize adjustedTextureSize(textureDesc.Width, textureDesc.Height);
@@ -1888,10 +1973,12 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
     uploadHeapDesc.Properties = uploadHeapProp;
     uploadHeapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
-    if (FAILED(device->CreateHeap(&uploadHeapDesc, IID_PPV_ARGS(&t.stagingHeap)))) {
+    Texture::StagingHeap sheap;
+    if (FAILED(device->CreateHeap(&uploadHeapDesc, IID_PPV_ARGS(&sheap.heap)))) {
         qWarning("Failed to create texture upload heap of size %d", totalSize);
         return;
     }
+    t.stagingHeaps.append(sheap);
 
     copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
 
@@ -1918,17 +2005,17 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         bufDesc.SampleDesc.Count = 1;
         bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-        Texture::StagingEntry sdata;
-        if (FAILED(device->CreatePlacedResource(t.stagingHeap.Get(), placedOffset,
+        Texture::StagingBuffer sbuf;
+        if (FAILED(device->CreatePlacedResource(sheap.heap.Get(), placedOffset,
                                                 &bufDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                nullptr, IID_PPV_ARGS(&sdata.buffer)))) {
+                                                nullptr, IID_PPV_ARGS(&sbuf.buffer)))) {
             qWarning("Failed to create texture upload buffer");
             return;
         }
 
         quint8 *p = nullptr;
         const D3D12_RANGE readRange = { 0, 0 };
-        if (FAILED(sdata.buffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+        if (FAILED(sbuf.buffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
             qWarning("Map failed (texture upload buffer)");
             return;
         }
@@ -1936,7 +2023,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
             memcpy(p, convImage.scanLine(y), convImage.width() * bytesPerPixel);
             p += stride;
         }
-        sdata.buffer->Unmap(0, nullptr);
+        sbuf.buffer->Unmap(0, nullptr);
 
         D3D12_TEXTURE_COPY_LOCATION dstLoc;
         dstLoc.pResource = t.texture.Get();
@@ -1944,7 +2031,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         dstLoc.SubresourceIndex = 0;
 
         D3D12_TEXTURE_COPY_LOCATION srcLoc;
-        srcLoc.pResource = sdata.buffer.Get();
+        srcLoc.pResource = sbuf.buffer.Get();
         srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
         srcLoc.PlacedFootprint.Offset = 0;
         srcLoc.PlacedFootprint.Footprint.Format = textureDesc.Format;
@@ -1955,7 +2042,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
 
         copyCommandList->CopyTextureRegion(&dstLoc, dstPos[i].x(), dstPos[i].y(), 0, &srcLoc, nullptr);
 
-        t.stagingBuffers.append(sdata);
+        t.stagingBuffers.append(sbuf);
         placedOffset += alignedSize(bufDesc.Width, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 
