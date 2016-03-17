@@ -141,7 +141,7 @@ QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
     if (model.userType() == QMetaType::QVariantList) {
         QVariant object = model.toList().value(index);
         if (object.userType() == QMetaType::QVariantMap) {
-            QVariantMap data = object.toMap();
+            const QVariantMap data = object.toMap();
             if (data.count() == 1 && role == QLatin1String("modelData"))
                 return data.first().toString();
             return data.value(role).toString();
