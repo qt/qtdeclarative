@@ -51,6 +51,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qmargins.h>
 #include <QtGui/qevent.h>
+#include <QtCore/qlocale.h>
 #include <QtGui/qfont.h>
 #include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 #include <QtQml/qqml.h>
@@ -93,6 +94,7 @@ class Q_QUICKTEMPLATES_EXPORT QQuickPopup : public QObject, public QQmlParserSta
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
@@ -190,6 +192,10 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
+
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+    void resetLocale();
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -291,6 +297,7 @@ Q_SIGNALS:
     void rightPaddingChanged();
     void bottomPaddingChanged();
     void fontChanged();
+    void localeChanged();
     void parentChanged();
     void backgroundChanged();
     void contentItemChanged();
@@ -333,6 +340,7 @@ protected:
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void fontChange(const QFont &newFont, const QFont &oldFont);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
     virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);

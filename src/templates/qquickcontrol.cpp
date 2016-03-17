@@ -672,11 +672,6 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 {
     const QQuickItem *p = item;
     while (p) {
-        if (const QQuickPopupItem *popup = qobject_cast<const QQuickPopupItem *>(p)) {
-            item = popup;
-            break;
-        }
-
         if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
             return control->locale();
 

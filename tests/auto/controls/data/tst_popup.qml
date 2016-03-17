@@ -502,16 +502,20 @@ TestCase {
                         property alias button1: _button1
                         property alias button2: _button2
                         y: _button.height
+                        locale: Qt.locale("fi_FI")
                         implicitHeight: Math.min(396, _column.contentHeight)
                         contentItem: Column {
                             id: _column
                             Button {
                                 id: _button1
                                 text: "Button 1"
+                                objectName: "1"
                             }
                             Button {
                                 id: _button2
                                 text: "Button 2"
+                                locale: Qt.locale("nb_NO")
+                                objectName: "2"
                             }
                         }
                     }
@@ -524,26 +528,14 @@ TestCase {
         // test looking up natural locale from ancestors
         var control = localeComponent.createObject(applicationWindow.contentItem)
         verify(control)
-        verify(control.button)
-        verify(control.popup)
-        verify(control.popup.button1)
-        verify(control.popup.button2)
 
-        applicationWindow.visible = true
-        waitForRendering(control)
-
-        control.popup.open()
-        verify(control.popup.visible)
-
-        control.ApplicationWindow.window.locale = Qt.locale("fi_FI")
-        compare(control.ApplicationWindow.window.locale.name, "fi_FI")
         compare(control.locale.name, "en_US")
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
         compare(control.popup.button1.locale.name, "fi_FI")
-        compare(control.popup.button2.locale.name, "fi_FI")
+        compare(control.popup.button2.locale.name, "nb_NO")
 
         control.ApplicationWindow.window.locale = undefined
-        applicationWindow.visible = false
         control.destroy()
     }
 
@@ -579,6 +571,10 @@ TestCase {
                         property alias button2: _button2
                         y: _button.height
                         implicitHeight: Math.min(396, _column.contentHeight)
+                        property SignalSpy localespy: SignalSpy {
+                            target: _popup
+                            signalName: "localeChanged"
+                        }
                         contentItem: Column {
                             id: _column
                             Button {
@@ -616,21 +612,12 @@ TestCase {
         // test default locale and locale inheritance
         var control = localeChangeComponent.createObject(applicationWindow.contentItem)
         verify(control)
-        verify(control.button)
-        verify(control.popup)
-        verify(control.popup.button1)
-        verify(control.popup.button2)
-
-        applicationWindow.visible = true
-        waitForRendering(control)
-
-        control.popup.open()
-        verify(control.popup.visible)
 
         var defaultLocale = Qt.locale()
         compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, defaultLocale.name)
         compare(control.button.locale.name, defaultLocale.name)
+        compare(control.popup.locale.name, defaultLocale.name)
         compare(control.popup.button1.locale.name, defaultLocale.name)
         compare(control.popup.button2.locale.name, defaultLocale.name)
 
@@ -638,10 +625,12 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, "nb_NO")
         compare(control.locale.name, "nb_NO")
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "nb_NO")
         compare(control.popup.button1.locale.name, "nb_NO")
         compare(control.popup.button2.locale.name, "nb_NO")
         compare(control.localespy.count, 1)
         compare(control.button.localespy.count, 1)
+        compare(control.popup.localespy.count, 1)
         compare(control.popup.button1.localespy.count, 1)
         compare(control.popup.button2.localespy.count, 1)
 
@@ -649,10 +638,12 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, defaultLocale.name)
         compare(control.button.locale.name, defaultLocale.name)
+        compare(control.popup.locale.name, defaultLocale.name)
         compare(control.popup.button1.locale.name, defaultLocale.name)
         compare(control.popup.button2.locale.name, defaultLocale.name)
         compare(control.localespy.count, 2)
         compare(control.button.localespy.count, 2)
+        compare(control.popup.localespy.count, 2)
         compare(control.popup.button1.localespy.count, 2)
         compare(control.popup.button2.localespy.count, 2)
 
@@ -660,12 +651,14 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "ar_EG")
+        compare(control.popup.locale.name, defaultLocale.name)
         compare(control.popup.button1.locale.name, defaultLocale.name)
         compare(control.popup.button2.locale.name, defaultLocale.name)
         compare(control.localespy.count, 3)
         compare(control.mirrorspy.count, 1)
         compare(control.button.localespy.count, 3)
         compare(control.button.mirrorspy.count, 1)
+        compare(control.popup.localespy.count, 2)
         compare(control.popup.button1.localespy.count, 2)
         compare(control.popup.button2.localespy.count, 2)
 
@@ -673,12 +666,14 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, "ar_EG")
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "ar_EG")
+        compare(control.popup.locale.name, "ar_EG")
         compare(control.popup.button1.locale.name, "ar_EG")
         compare(control.popup.button2.locale.name, "ar_EG")
         compare(control.localespy.count, 3)
         compare(control.mirrorspy.count, 1)
         compare(control.button.localespy.count, 3)
         compare(control.button.mirrorspy.count, 1)
+        compare(control.popup.localespy.count, 3)
         compare(control.popup.button1.localespy.count, 3)
         compare(control.popup.button1.mirrorspy.count, 1)
         compare(control.popup.button2.localespy.count, 3)
@@ -688,12 +683,14 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, "ar_EG")
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
         compare(control.popup.button1.locale.name, "ar_EG")
         compare(control.popup.button2.locale.name, "ar_EG")
         compare(control.localespy.count, 3)
         compare(control.mirrorspy.count, 1)
         compare(control.button.localespy.count, 4)
         compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
         compare(control.popup.button1.localespy.count, 3)
         compare(control.popup.button2.localespy.count, 3)
 
@@ -701,12 +698,14 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, "ar_EG")
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
         compare(control.popup.button1.locale.name, "ar_EG")
         compare(control.popup.button2.locale.name, "ar_EG")
         compare(control.localespy.count, 3)
         compare(control.mirrorspy.count, 1)
         compare(control.button.localespy.count, 4)
         compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
         compare(control.popup.button1.localespy.count, 3)
         compare(control.popup.button2.localespy.count, 3)
 
@@ -714,33 +713,70 @@ TestCase {
         compare(control.ApplicationWindow.window.locale.name, "ar_EG")
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
         compare(control.popup.button1.locale.name, "nb_NO")
         compare(control.popup.button2.locale.name, "ar_EG")
         compare(control.localespy.count, 3)
         compare(control.mirrorspy.count, 1)
         compare(control.button.localespy.count, 4)
         compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
         compare(control.popup.button1.localespy.count, 4)
         compare(control.popup.button1.mirrorspy.count, 2)
         compare(control.popup.button2.localespy.count, 3)
         compare(control.popup.button2.mirrorspy.count, 1)
 
+        control.popup.locale = Qt.locale("fi_FI")
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "fi_FI")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 4)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 4)
+        compare(control.popup.button2.mirrorspy.count, 2)
+
         control.ApplicationWindow.window.locale = undefined
         compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, defaultLocale.name)
         compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "fi_FI")
+        compare(control.localespy.count, 4)
+        compare(control.mirrorspy.count, 2)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 4)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 4)
+        compare(control.popup.button2.mirrorspy.count, 2)
+
+        control.popup.locale = undefined
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, defaultLocale.name)
         compare(control.popup.button1.locale.name, "nb_NO")
         compare(control.popup.button2.locale.name, defaultLocale.name)
         compare(control.localespy.count, 4)
         compare(control.mirrorspy.count, 2)
         compare(control.button.localespy.count, 4)
         compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 5)
         compare(control.popup.button1.localespy.count, 4)
         compare(control.popup.button1.mirrorspy.count, 2)
-        compare(control.popup.button2.localespy.count, 4)
+        compare(control.popup.button2.localespy.count, 5)
         compare(control.popup.button2.mirrorspy.count, 2)
 
-        applicationWindow.visible = false
         control.destroy()
     }
 

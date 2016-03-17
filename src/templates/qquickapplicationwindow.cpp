@@ -518,6 +518,12 @@ void QQuickApplicationWindow::setLocale(const QLocale &locale)
 
     d->locale = locale;
     QQuickControlPrivate::updateLocaleRecur(QQuickWindow::contentItem(), locale);
+
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = QQuickWindow::contentItem()->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->updateLocale(locale, false); // explicit=false
+
     emit localeChanged();
 }
 

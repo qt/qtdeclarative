@@ -409,6 +409,13 @@ void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
     d->popup->geometryChanged(newGeometry, oldGeometry);
 }
 
+void QQuickPopupItem::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->popup->localeChange(newLocale, oldLocale);
+}
+
 void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
     Q_D(QQuickPopupItem);
@@ -1199,6 +1206,31 @@ void QQuickPopup::resetBottomPadding()
 }
 
 /*!
+    \qmlproperty Locale Qt.labs.controls::Popup::locale
+
+    This property holds the locale of the popup.
+
+    \sa {LayoutMirroring}{LayoutMirroring}
+*/
+QLocale QQuickPopup::locale() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->locale();
+}
+
+void QQuickPopup::setLocale(const QLocale &locale)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setLocale(locale);
+}
+
+void QQuickPopup::resetLocale()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetLocale();
+}
+
+/*!
     \qmlproperty font Qt.labs.controls::Popup::font
 
     This property holds the font currently set for the popup.
@@ -1256,8 +1288,12 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
-    if (parent)
-        QQuickControlPrivate::get(d->popupItem)->resolveFont();
+    if (parent) {
+        QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
+        p->resolveFont();
+        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
+            p->updateLocale(window->locale(), false); // explicit=false
+    }
     emit parentChanged();
 }
 
@@ -1740,6 +1776,13 @@ void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     default:
         break;
     }
+}
+
+void QQuickPopup::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_UNUSED(newLocale);
+    Q_UNUSED(oldLocale);
+    emit localeChanged();
 }
 
 void QQuickPopup::marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins)
