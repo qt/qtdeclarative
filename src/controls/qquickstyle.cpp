@@ -145,14 +145,20 @@ static QList<QQuickStyle *> findChildStyles(const QMetaObject *type, QObject *ob
 
 QQuickStyle::QQuickStyle(QObject *parent) : QObject(parent)
 {
-    QQuickItem *item = parentItem();
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
+    if (!item) {
+        QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent);
+        if (popup)
+            item = popup->popupItem();
+    }
+
     if (item)
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
 }
 
 QQuickStyle::~QQuickStyle()
 {
-    QQuickItem *item = parentItem();
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
 
@@ -172,17 +178,6 @@ QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)
     }
 #endif // QT_NO_SETTINGS
     return QSharedPointer<QSettings>();
-}
-
-QQuickItem *QQuickStyle::parentItem() const
-{
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (!item) {
-        QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent());
-        if (popup)
-            item = popup->popupItem();
-    }
-    return item;
 }
 
 QList<QQuickStyle *> QQuickStyle::childStyles() const
