@@ -211,7 +211,7 @@ bool QQuickOverlay::event(QEvent *event)
         break;
     }
 
-    for (auto it = d->popups.rbegin(), end = d->popups.rend(); it != end; ++it) {
+    for (auto it = d->popups.crbegin(), end = d->popups.crend(); it != end; ++it) {
         if ((*it)->overlayEvent(this, event))
             return true;
     }
