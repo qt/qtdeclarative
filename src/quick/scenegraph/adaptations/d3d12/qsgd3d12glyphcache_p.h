@@ -74,9 +74,14 @@ public:
 
     void activateTexture();
 
+    int currentWidth() const;
+    int currentHeight() const;
+
 private:
     QSGD3D12Engine *m_engine;
     uint m_id = 0;
+    QVector<QImage> m_glyphImages;
+    QVector<QPoint> m_glyphPos;
 };
 
 QT_END_NAMESPACE

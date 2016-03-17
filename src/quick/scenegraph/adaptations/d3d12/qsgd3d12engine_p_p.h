@@ -151,6 +151,7 @@ public:
     void queueSetRenderTarget();
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which);
+    void queueSetBlendFactor(const QVector4D &factor);
     void queueSetStencilRef(quint32 ref);
 
     void finalizePipeline(const QSGD3D12PipelineState &pipelineState);
@@ -309,7 +310,8 @@ private:
 
         QRect viewport;
         QRect scissor;
-        quint32 stencilRef;
+        QVector4D blendFactor = QVector4D(1, 1, 1, 1);
+        quint32 stencilRef = 1;
         QSGD3D12PipelineState pipelineState;
     };
     TransientFrameData tframeData;

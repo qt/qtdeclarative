@@ -53,6 +53,7 @@
 
 #include <QWindow>
 #include <QImage>
+#include <QVector4D>
 #include <qsggeometry.h>
 
 QT_BEGIN_NAMESPACE
@@ -205,6 +206,12 @@ struct QSGD3D12PipelineState
         TopologyTypeTriangle
     };
 
+    enum BlendType {
+        BlendNone,
+        BlendPremul, // == GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+        BlendColor // == GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR
+    };
+
     QSGD3D12ShaderState shaders;
 
     QVector<QSGD3D12InputElement> inputElements;
@@ -212,7 +219,7 @@ struct QSGD3D12PipelineState
     CullMode cullMode = CullNone;
     bool frontCCW = true;
     bool colorWrite = true;
-    bool premulBlend = false; // == GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+    BlendType blend = BlendNone;
     bool depthEnable = true;
     CompareFunc depthFunc = CompareLess;
     bool depthWrite = true;
@@ -229,15 +236,15 @@ struct QSGD3D12PipelineState
                 && cullMode == other.cullMode
                 && frontCCW == other.frontCCW
                 && colorWrite == other.colorWrite
-                && premulBlend == other.premulBlend
+                && blend == other.blend
                 && depthEnable == other.depthEnable
-                && depthFunc == other.depthFunc
+                && (!depthEnable || depthFunc == other.depthFunc)
                 && depthWrite == other.depthWrite
                 && stencilEnable == other.stencilEnable
-                && stencilFunc == other.stencilFunc
-                && stencilFailOp == other.stencilFailOp
-                && stencilDepthFailOp == other.stencilDepthFailOp
-                && stencilPassOp == other.stencilPassOp
+                && (!stencilEnable || stencilFunc == other.stencilFunc)
+                && (!stencilEnable || stencilFailOp == other.stencilFailOp)
+                && (!stencilEnable || stencilDepthFailOp == other.stencilDepthFailOp)
+                && (!stencilEnable || stencilPassOp == other.stencilPassOp)
                 && topologyType == other.topologyType;
     }
 };
@@ -245,9 +252,10 @@ struct QSGD3D12PipelineState
 inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
 {
     return qHash(key.shaders, seed) + qHash(key.inputElements, seed)
-            + key.cullMode + key.frontCCW + key.colorWrite + key.premulBlend + key.depthEnable
-            + key.depthFunc + key.depthWrite + key.stencilEnable + key.stencilFunc
-            + key.stencilFailOp + key.stencilDepthFailOp + key.stencilPassOp
+            + key.cullMode + key.frontCCW
+            + key.colorWrite + key.blend
+            + key.depthEnable + key.depthWrite
+            + key.stencilEnable
             + key.topologyType;
 }
 
@@ -283,6 +291,7 @@ public:
     void queueSetRenderTarget();
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which);
+    void queueSetBlendFactor(const QVector4D &factor);
     void queueSetStencilRef(quint32 ref);
 
     void finalizePipeline(const QSGD3D12PipelineState &pipelineState);

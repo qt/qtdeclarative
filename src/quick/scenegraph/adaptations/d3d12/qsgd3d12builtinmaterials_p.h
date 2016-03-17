@@ -67,9 +67,10 @@ public:
     int compare(const QSGMaterial *other) const override;
 
     virtual int constantBufferSize() const override;
-    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
-                                 QSGD3D12ShaderState *shaders,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
 private:
@@ -84,9 +85,10 @@ public:
     int compare(const QSGMaterial *other) const override;
 
     virtual int constantBufferSize() const override;
-    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
-                                 QSGD3D12ShaderState *shaders,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
 private:
@@ -100,9 +102,10 @@ public:
     int compare(const QSGMaterial *other) const override;
 
     virtual int constantBufferSize() const override;
-    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
-                                 QSGD3D12ShaderState *shaders,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
     void setTexture(QSGTexture *texture) { m_texture = texture; }
@@ -139,9 +142,10 @@ public:
     int compare(const QSGMaterial *other) const override;
 
     virtual int constantBufferSize() const override;
-    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
-                                 QSGD3D12ShaderState *shaders,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
     void setTexture(QSGTexture *texture) { m_texture = texture; }
@@ -179,9 +183,10 @@ public:
     int compare(const QSGMaterial *other) const override;
 
     virtual int constantBufferSize() const override;
-    void preparePipeline(QSGD3D12ShaderState *shaders) override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
-                                 QSGD3D12ShaderState *shaders,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
     void setColor(const QColor &c) { m_color = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
@@ -197,6 +202,7 @@ public:
 
 private:
     static QSGMaterialType mtype;
+    QSGD3D12RenderContext *m_rc;
     QVector4D m_color;
     QRawFont m_font;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;

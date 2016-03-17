@@ -391,6 +391,11 @@ void QSGD3D12Engine::queueClearDepthStencil(float depthValue, quint8 stencilValu
     d->queueClearDepthStencil(depthValue, stencilValue, which);
 }
 
+void QSGD3D12Engine::queueSetBlendFactor(const QVector4D &factor)
+{
+    d->queueSetBlendFactor(factor);
+}
+
 void QSGD3D12Engine::queueSetStencilRef(quint32 ref)
 {
     d->queueSetStencilRef(ref);
@@ -1329,19 +1334,28 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         psoDesc.RasterizerState = rastDesc;
 
         D3D12_BLEND_DESC blendDesc = {};
-        if (pipelineState.premulBlend) {
+        if (pipelineState.blend == QSGD3D12PipelineState::BlendNone) {
+            D3D12_RENDER_TARGET_BLEND_DESC noBlendDesc = {};
+            noBlendDesc.RenderTargetWriteMask = pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0;
+            blendDesc.RenderTarget[0] = noBlendDesc;
+        } else if (pipelineState.blend == QSGD3D12PipelineState::BlendPremul) {
             const D3D12_RENDER_TARGET_BLEND_DESC premulBlendDesc = {
                 TRUE, FALSE,
-                D3D12_BLEND_SRC_ALPHA, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
-                D3D12_BLEND_INV_DEST_ALPHA, D3D12_BLEND_ONE, D3D12_BLEND_OP_ADD,
+                D3D12_BLEND_ONE, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
+                D3D12_BLEND_ONE, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
                 D3D12_LOGIC_OP_NOOP,
                 UINT8(pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0)
             };
             blendDesc.RenderTarget[0] = premulBlendDesc;
-        } else {
-            D3D12_RENDER_TARGET_BLEND_DESC noBlendDesc = {};
-            noBlendDesc.RenderTargetWriteMask = pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0;
-            blendDesc.RenderTarget[0] = noBlendDesc;
+        } else if (pipelineState.blend == QSGD3D12PipelineState::BlendColor) {
+            const D3D12_RENDER_TARGET_BLEND_DESC colorBlendDesc = {
+                TRUE, FALSE,
+                D3D12_BLEND_BLEND_FACTOR, D3D12_BLEND_INV_SRC_COLOR, D3D12_BLEND_OP_ADD,
+                D3D12_BLEND_BLEND_FACTOR, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
+                D3D12_LOGIC_OP_NOOP,
+                UINT8(pipelineState.colorWrite ? D3D12_COLOR_WRITE_ENABLE_ALL : 0)
+            };
+            blendDesc.RenderTarget[0] = colorBlendDesc;
         }
         psoDesc.BlendState = blendDesc;
 
@@ -1491,6 +1505,18 @@ void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 sten
     commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
 }
 
+void QSGD3D12EnginePrivate::queueSetBlendFactor(const QVector4D &factor)
+{
+    if (!inFrame) {
+        qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
+        return;
+    }
+
+    tframeData.blendFactor = factor;
+    const float f[4] = { factor.x(), factor.y(), factor.z(), factor.w() };
+    commandList->OMSetBlendFactor(f);
+}
+
 void QSGD3D12EnginePrivate::queueSetStencilRef(quint32 ref)
 {
     if (!inFrame) {
@@ -1621,6 +1647,7 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
         queueSetRenderTarget();
         queueViewport(tframeData.viewport);
         queueScissor(tframeData.scissor);
+        queueSetBlendFactor(tframeData.blendFactor);
         queueSetStencilRef(tframeData.stencilRef);
         finalizePipeline(tframeData.pipelineState);
     }
@@ -1846,7 +1873,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         const int w = !t.mipmap ? image.width() : adjustedTextureSize.width();
         const int h = !t.mipmap ? image.height() : adjustedTextureSize.height();
         const int stride = alignedSize(w * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-        totalSize += alignedSize(h * stride, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+        totalSize += alignedSize(h * stride, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 
     if (Q_UNLIKELY(debug_render()))
@@ -1865,6 +1892,8 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         qWarning("Failed to create texture upload heap of size %d", totalSize);
         return;
     }
+
+    copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
 
     int placedOffset = 0;
     for (int i = 0; i < images.count(); ++i) {
@@ -1904,12 +1933,10 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
             return;
         }
         for (int y = 0, ye = convImage.height(); y < ye; ++y) {
-            memcpy(p, convImage.scanLine(y), convImage.width() * 4);
+            memcpy(p, convImage.scanLine(y), convImage.width() * bytesPerPixel);
             p += stride;
         }
         sdata.buffer->Unmap(0, nullptr);
-
-        copyCommandList->Reset(copyCommandAllocator.Get(), nullptr);
 
         D3D12_TEXTURE_COPY_LOCATION dstLoc;
         dstLoc.pResource = t.texture.Get();
@@ -1929,7 +1956,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         copyCommandList->CopyTextureRegion(&dstLoc, dstPos[i].x(), dstPos[i].y(), 0, &srcLoc, nullptr);
 
         t.stagingBuffers.append(sdata);
-        placedOffset += alignedSize(bufDesc.Width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+        placedOffset += alignedSize(bufDesc.Width, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 
     copyCommandList->Close();

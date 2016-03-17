@@ -365,7 +365,7 @@ void QSGD3D12Renderer::renderElements()
     m_engine->queueClearRenderTarget(clearColor());
     m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearDepth | QSGD3D12Engine::ClearStencil);
 
-    m_pipelineState.premulBlend = false;
+    m_pipelineState.blend = QSGD3D12PipelineState::BlendNone;
     m_pipelineState.depthEnable = true;
     m_pipelineState.depthWrite = true;
 
@@ -400,7 +400,7 @@ void QSGD3D12Renderer::renderElements()
         }
     }
 
-    m_pipelineState.premulBlend = true;
+    m_pipelineState.blend = QSGD3D12PipelineState::BlendPremul;
     m_pipelineState.depthWrite = false;
 
     // ...then the alpha ones
@@ -441,7 +441,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
 
     if (m->type() != m_lastMaterialType) {
         m_pipelineState.shaders.rootSig.textureViews.clear();
-        m->preparePipeline(&m_pipelineState.shaders);
+        m->preparePipeline(&m_pipelineState);
     }
 
     QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
@@ -465,12 +465,17 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     if (Q_UNLIKELY(debug_render()))
         qDebug() << "dirty state for" << e.node << "is" << dirtyState;
 
+    QSGD3D12Material::ExtraState extraState;
     QSGD3D12Material::UpdateResults updRes = m->updatePipeline(QSGD3D12Material::makeRenderState(this, dirtyState),
-                                                               &m_pipelineState.shaders,
+                                                               &m_pipelineState,
+                                                               &extraState,
                                                                cboPtr);
 
     if (updRes.testFlag(QSGD3D12Material::UpdatedConstantBuffer))
         m_engine->markConstantBufferDirty(e.cboOffset, e.cboSize);
+
+    if (updRes.testFlag(QSGD3D12Material::UpdatedBlendFactor))
+        m_engine->queueSetBlendFactor(extraState.blendFactor);
 
     setInputLayout(g, &m_pipelineState);
 

@@ -78,16 +78,17 @@ int QSGD3D12VertexColorMaterial::constantBufferSize() const
     return QSGD3D12Engine::alignedConstantBufferSize(VERTEX_COLOR_CB_SIZE);
 }
 
-void QSGD3D12VertexColorMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+void QSGD3D12VertexColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    shaders->vs = g_VS_VertexColor;
-    shaders->vsSize = sizeof(g_VS_VertexColor);
-    shaders->ps = g_PS_VertexColor;
-    shaders->psSize = sizeof(g_PS_VertexColor);
+    pipelineState->shaders.vs = g_VS_VertexColor;
+    pipelineState->shaders.vsSize = sizeof(g_VS_VertexColor);
+    pipelineState->shaders.ps = g_PS_VertexColor;
+    pipelineState->shaders.psSize = sizeof(g_PS_VertexColor);
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(const RenderState &state,
-                                                                            QSGD3D12ShaderState *,
+                                                                            QSGD3D12PipelineState *,
+                                                                            ExtraState *,
                                                                             quint8 *constantBuffer)
 {
     QSGD3D12Material::UpdateResults r = 0;
@@ -137,16 +138,17 @@ int QSGD3D12SmoothColorMaterial::constantBufferSize() const
     return QSGD3D12Engine::alignedConstantBufferSize(SMOOTH_COLOR_CB_SIZE);
 }
 
-void QSGD3D12SmoothColorMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+void QSGD3D12SmoothColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    shaders->vs = g_VS_SmoothColor;
-    shaders->vsSize = sizeof(g_VS_SmoothColor);
-    shaders->ps = g_PS_SmoothColor;
-    shaders->psSize = sizeof(g_PS_SmoothColor);
+    pipelineState->shaders.vs = g_VS_SmoothColor;
+    pipelineState->shaders.vsSize = sizeof(g_VS_SmoothColor);
+    pipelineState->shaders.ps = g_PS_SmoothColor;
+    pipelineState->shaders.psSize = sizeof(g_PS_SmoothColor);
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12SmoothColorMaterial::updatePipeline(const RenderState &state,
-                                                                            QSGD3D12ShaderState *,
+                                                                            QSGD3D12PipelineState *,
+                                                                            ExtraState *,
                                                                             quint8 *constantBuffer)
 {
     QSGD3D12Material::UpdateResults r = 0;
@@ -200,18 +202,19 @@ int QSGD3D12TextureMaterial::constantBufferSize() const
     return QSGD3D12Engine::alignedConstantBufferSize(TEXTURE_CB_SIZE);
 }
 
-void QSGD3D12TextureMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+void QSGD3D12TextureMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    shaders->vs = g_VS_Texture;
-    shaders->vsSize = sizeof(g_VS_Texture);
-    shaders->ps = g_PS_Texture;
-    shaders->psSize = sizeof(g_PS_Texture);
+    pipelineState->shaders.vs = g_VS_Texture;
+    pipelineState->shaders.vsSize = sizeof(g_VS_Texture);
+    pipelineState->shaders.ps = g_PS_Texture;
+    pipelineState->shaders.psSize = sizeof(g_PS_Texture);
 
-    shaders->rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViews.resize(1);
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const RenderState &state,
-                                                                        QSGD3D12ShaderState *shaders,
+                                                                        QSGD3D12PipelineState *pipelineState,
+                                                                        ExtraState *,
                                                                         quint8 *constantBuffer)
 {
     QSGD3D12Material::UpdateResults r = 0;
@@ -235,7 +238,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const Re
     m_texture->setHorizontalWrapMode(m_horizontal_wrap);
     m_texture->setVerticalWrapMode(m_vertical_wrap);
 
-    QSGD3D12TextureView &tv(shaders->rootSig.textureViews[0]);
+    QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);
     if (m_filtering == QSGTexture::Linear)
         tv.filter = m_mipmap_filtering == QSGTexture::Linear
                 ? QSGD3D12TextureView::FilterLinear : QSGD3D12TextureView::FilterMinMagLinearMipNearest;
@@ -282,18 +285,19 @@ int QSGD3D12SmoothTextureMaterial::constantBufferSize() const
     return QSGD3D12Engine::alignedConstantBufferSize(SMOOTH_TEXTURE_CB_SIZE);
 }
 
-void QSGD3D12SmoothTextureMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+void QSGD3D12SmoothTextureMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    shaders->vs = g_VS_SmoothTexture;
-    shaders->vsSize = sizeof(g_VS_SmoothTexture);
-    shaders->ps = g_PS_SmoothTexture;
-    shaders->psSize = sizeof(g_PS_SmoothTexture);
+    pipelineState->shaders.vs = g_VS_SmoothTexture;
+    pipelineState->shaders.vsSize = sizeof(g_VS_SmoothTexture);
+    pipelineState->shaders.ps = g_PS_SmoothTexture;
+    pipelineState->shaders.psSize = sizeof(g_PS_SmoothTexture);
 
-    shaders->rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViews.resize(1);
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(const RenderState &state,
-                                                                              QSGD3D12ShaderState *shaders,
+                                                                              QSGD3D12PipelineState *pipelineState,
+                                                                              ExtraState *,
                                                                               quint8 *constantBuffer)
 {
     QSGD3D12Material::UpdateResults r = 0;
@@ -325,7 +329,7 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
     m_texture->setHorizontalWrapMode(m_horizontal_wrap);
     m_texture->setVerticalWrapMode(m_vertical_wrap);
 
-    QSGD3D12TextureView &tv(shaders->rootSig.textureViews[0]);
+    QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);
     if (m_filtering == QSGTexture::Linear)
         tv.filter = m_mipmap_filtering == QSGTexture::Linear
                 ? QSGD3D12TextureView::FilterLinear : QSGD3D12TextureView::FilterMinMagLinearMipNearest;
@@ -353,6 +357,12 @@ static inline float qsg_device_pixel_ratio(QSGD3D12Engine *engine)
     return devicePixelRatio;
 }
 
+static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
+{
+    float o = c.w() * globalOpacity;
+    return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
+}
+
 static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
 {
     if (a.x() != b.x())
@@ -367,7 +377,8 @@ static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
 }
 
 QSGD3D12TextMaterial::QSGD3D12TextMaterial(QSGD3D12RenderContext *rc, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
-    : m_font(font)
+    : m_font(font),
+      m_rc(rc)
 {
     setFlag(Blending, true);
 
@@ -419,22 +430,23 @@ int QSGD3D12TextMaterial::constantBufferSize() const
     return QSGD3D12Engine::alignedConstantBufferSize(TEXT_CB_SIZE);
 }
 
-void QSGD3D12TextMaterial::preparePipeline(QSGD3D12ShaderState *shaders)
+void QSGD3D12TextMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    shaders->vs = g_VS_TextMask;
-    shaders->vsSize = sizeof(g_VS_TextMask);
-    shaders->ps = g_PS_TextMask24;
-    shaders->psSize = sizeof(g_PS_TextMask24);
+    pipelineState->shaders.vs = g_VS_TextMask;
+    pipelineState->shaders.vsSize = sizeof(g_VS_TextMask);
+    // ### 8 and 32 bit variants
+    pipelineState->shaders.ps = g_PS_TextMask24;
+    pipelineState->shaders.psSize = sizeof(g_PS_TextMask24);
 
-    shaders->rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViews.resize(1);
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const RenderState &state,
-                                                                     QSGD3D12ShaderState *shaders,
+                                                                     QSGD3D12PipelineState *pipelineState,
+                                                                     ExtraState *extraState,
                                                                      quint8 *constantBuffer)
 {
     QSGD3D12Material::UpdateResults r = 0;
-#if 0
     quint8 *p = constantBuffer;
 
     if (state.isMatrixDirty()) {
@@ -443,29 +455,30 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     }
     p += TEXT_CB_SIZE_0;
 
-    if (state.isOpacityDirty()) {
-        const float opacity = state.opacity();
-        memcpy(p, &opacity, TEXT_CB_SIZE_1);
-        r |= UpdatedConstantBuffer;
-    }
+    // ### when?
+    const float textureScale[2] = { 1.0f / glyphCache()->currentWidth(), 1.0f / glyphCache()->currentHeight() };
+    memcpy(p, textureScale, TEXT_CB_SIZE_1);
+    r |= UpdatedConstantBuffer;
     p += TEXT_CB_SIZE_1;
 
-    if (state.isOpacityDirty()) {
-        const float opacity = state.opacity();
-        memcpy(p, &opacity, TEXT_CB_SIZE_2);
-        r |= UpdatedConstantBuffer;
-    }
+    // ### when?
+    const float dpr = qsg_device_pixel_ratio(m_rc->engine());
+    memcpy(p, &dpr, TEXT_CB_SIZE_2);
+    r |= UpdatedConstantBuffer;
     p += TEXT_CB_SIZE_2;
 
-    if (state.isOpacityDirty()) {
-        const float opacity = state.opacity();
-        memcpy(p, &opacity, TEXT_CB_SIZE_3);
-        r |= UpdatedConstantBuffer;
-    }
-    p += TEXT_CB_SIZE_3;
-#endif
+    pipelineState->blend = QSGD3D12PipelineState::BlendColor;
+    extraState->blendFactor = m_color;
+    r |= UpdatedBlendFactor;
 
-    QSGD3D12TextureView &tv(shaders->rootSig.textureViews[0]);
+    // ### when?
+    // ### this is for 24 bit only, add the others
+    QVector4D color = qsg_premultiply(m_color, state.opacity());
+    const float alpha = color.w();
+    memcpy(p, &alpha, TEXT_CB_SIZE_3);
+    r |= UpdatedConstantBuffer;
+
+    QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);
     tv.filter = QSGD3D12TextureView::FilterNearest;
     tv.addressModeHoriz = QSGD3D12TextureView::AddressClamp;
     tv.addressModeVert = QSGD3D12TextureView::AddressClamp;

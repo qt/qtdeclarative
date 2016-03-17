@@ -60,7 +60,6 @@ QSGD3D12GlyphCache::~QSGD3D12GlyphCache()
 
 void QSGD3D12GlyphCache::createTextureData(int, int)
 {
-    qDebug("create");
     m_id = m_engine->genTexture();
     Q_ASSERT(m_id);
     m_engine->createTexture(m_id, QSize(TEXTURE_WIDTH, TEXTURE_HEIGHT),
@@ -74,17 +73,61 @@ void QSGD3D12GlyphCache::resizeTextureData(int, int)
 
 void QSGD3D12GlyphCache::beginFillTexture()
 {
-    qDebug("begin");
+    Q_ASSERT(m_glyphImages.isEmpty() && m_glyphPos.isEmpty());
 }
 
 void QSGD3D12GlyphCache::fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition)
 {
-    qDebug("fill %x", glyph);
+    QImage mask = textureMapForGlyph(glyph, subPixelPosition);
+    const int maskWidth = mask.width();
+    const int maskHeight = mask.height();
+
+    if (mask.format() == QImage::Format_Mono) {
+        mask = mask.convertToFormat(QImage::Format_Indexed8);
+        for (int y = 0; y < maskHeight; ++y) {
+            uchar *src = mask.scanLine(y);
+            for (int x = 0; x < maskWidth; ++x)
+                src[x] = -src[x]; // convert 0 and 1 into 0 and 255
+        }
+    } else if (mask.depth() == 32) {
+        if (mask.format() == QImage::Format_RGB32) {
+            // We need to make the alpha component equal to the average of the RGB values.
+            // This is needed when drawing sub-pixel antialiased text on translucent targets.
+            for (int y = 0; y < maskHeight; ++y) {
+                QRgb *src = reinterpret_cast<QRgb *>(mask.scanLine(y));
+                for (int x = 0; x < maskWidth; ++x) {
+                    const int r = qRed(src[x]);
+                    const int g = qGreen(src[x]);
+                    const int b = qBlue(src[x]);
+                    int avg;
+                    if (mask.format() == QImage::Format_RGB32)
+                        avg = (r + g + b + 1) / 3; // "+1" for rounding.
+                    else // Format_ARGB32_Premultiplied
+                        avg = qAlpha(src[x]);
+                    src[x] = qRgba(r, g, b, avg);
+                }
+            }
+        }
+    }
+
+    m_glyphImages.append(mask);
+    m_glyphPos.append(QPoint(c.x, c.y));
 }
 
 void QSGD3D12GlyphCache::endFillTexture()
 {
-    qDebug("end");
+    if (m_glyphImages.isEmpty())
+        return;
+
+    Q_ASSERT(m_id);
+
+    m_engine->queueTextureUpload(m_id, m_glyphImages, m_glyphPos);
+
+    // Nothing else left to do, it is up to the text material to call
+    // activateTexture() which will then add the texture dependency to the frame.
+
+    m_glyphImages.clear();
+    m_glyphPos.clear();
 }
 
 int QSGD3D12GlyphCache::glyphPadding() const
@@ -106,6 +149,16 @@ void QSGD3D12GlyphCache::activateTexture()
 {
     if (m_id)
         m_engine->activateTexture(m_id);
+}
+
+int QSGD3D12GlyphCache::currentWidth() const
+{
+    return TEXTURE_WIDTH;
+}
+
+int QSGD3D12GlyphCache::currentHeight() const
+{
+    return TEXTURE_HEIGHT;
 }
 
 QT_END_NAMESPACE

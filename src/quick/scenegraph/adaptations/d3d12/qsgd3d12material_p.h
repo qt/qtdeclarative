@@ -91,18 +91,24 @@ public:
         void *m_data = nullptr;
     };
 
+    struct ExtraState {
+        QVector4D blendFactor;
+    };
+
     enum UpdateResult {
         UpdatedShaders = 0x0001,
-        UpdatedConstantBuffer = 0x0002
+        UpdatedConstantBuffer = 0x0002,
+        UpdatedBlendFactor = 0x0004
     };
     Q_DECLARE_FLAGS(UpdateResults, UpdateResult)
 
     static RenderState makeRenderState(QSGRenderer *renderer, RenderState::DirtyStates dirty);
 
     virtual int constantBufferSize() const = 0;
-    virtual void preparePipeline(QSGD3D12ShaderState *shaders) = 0;
+    virtual void preparePipeline(QSGD3D12PipelineState *pipelineState) = 0;
     virtual UpdateResults updatePipeline(const RenderState &state,
-                                         QSGD3D12ShaderState *shaders,
+                                         QSGD3D12PipelineState *pipelineState,
+                                         ExtraState *extraState,
                                          quint8 *constantBuffer) = 0;
 
 private:
