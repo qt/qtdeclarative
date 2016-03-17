@@ -105,9 +105,12 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void fontChange(const QFont &newFont, const QFont &oldFont) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
+
+    QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;

@@ -285,6 +285,8 @@ public:
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;
 
+    void resolveFont() override;
+
     QQuickPopup *popup;
 };
 
@@ -303,6 +305,12 @@ void QQuickPopupItemPrivate::implicitHeightChanged()
 {
     QQuickControlPrivate::implicitHeightChanged();
     emit popup->implicitHeightChanged();
+}
+
+void QQuickPopupItemPrivate::resolveFont()
+{
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
+        inheritFont(window->font());
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
@@ -387,6 +395,13 @@ void QQuickPopupItem::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
     d->popup->contentItemChange(newItem, oldItem);
 }
 
+void QQuickPopupItem::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::fontChange(newFont, oldFont);
+    d->popup->fontChange(newFont, oldFont);
+}
+
 void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopupItem);
@@ -406,6 +421,12 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     Q_D(QQuickPopupItem);
     QQuickControl::paddingChange(newPadding, oldPadding);
     d->popup->paddingChange(newPadding, oldPadding);
+}
+
+QFont QQuickPopupItem::defaultFont() const
+{
+    Q_D(const QQuickPopupItem);
+    return d->popup->defaultFont();
 }
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -1177,6 +1198,29 @@ void QQuickPopup::resetBottomPadding()
     d->popupItem->resetBottomPadding();
 }
 
+/*!
+    \qmlproperty font Qt.labs.controls::Popup::font
+
+    This property holds the font currently set for the popup.
+*/
+QFont QQuickPopup::font() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->font();
+}
+
+void QQuickPopup::setFont(const QFont &font)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setFont(font);
+}
+
+void QQuickPopup::resetFont()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetFont();
+}
+
 QQuickWindow *QQuickPopup::window() const
 {
     Q_D(const QQuickPopup);
@@ -1212,6 +1256,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
+    if (parent)
+        QQuickControlPrivate::get(d->popupItem)->resolveFont();
     emit parentChanged();
 }
 
@@ -1659,6 +1705,13 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     emit contentItemChanged();
 }
 
+void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_UNUSED(newFont);
+    Q_UNUSED(oldFont);
+    emit fontChanged();
+}
+
 void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopup);
@@ -1717,6 +1770,11 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
         emit availableWidthChanged();
     if (tp || bp)
         emit availableHeightChanged();
+}
+
+QFont QQuickPopup::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

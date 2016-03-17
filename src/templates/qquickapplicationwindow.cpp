@@ -36,6 +36,7 @@
 
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+#include "qquickpopup_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
@@ -493,6 +494,11 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
     font = f;
 
     QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
+
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritFont(f);
 
     if (changed)
         emit q->fontChanged();

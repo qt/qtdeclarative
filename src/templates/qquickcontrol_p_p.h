@@ -99,7 +99,7 @@ public:
             return;
         updateFont(f);
     }
-    void resolveFont();
+    virtual void resolveFont();
     void inheritFont(const QFont &f);
     static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
