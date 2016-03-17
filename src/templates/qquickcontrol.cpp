@@ -292,12 +292,15 @@ void QQuickControlPrivate::inheritFont(const QFont &f)
 void QQuickControlPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickControl);
-    const bool changed = resolvedFont != f;
+    QFont old = resolvedFont;
     resolvedFont = f;
+
+    if (old != f)
+        q->fontChange(f, old);
 
     QQuickControlPrivate::updateFontRecur(q, f);
 
-    if (changed)
+    if (old != f)
         emit q->fontChanged();
 }
 
@@ -1039,6 +1042,12 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
         emit availableWidthChanged();
     if (!qFuzzyCompare(newGeometry.height(), oldGeometry.height()))
         emit availableHeightChanged();
+}
+
+void QQuickControl::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_UNUSED(newFont);
+    Q_UNUSED(oldFont);
 }
 
 void QQuickControl::mirrorChange()

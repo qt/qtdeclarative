@@ -180,6 +180,7 @@ protected:
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
+    virtual void fontChange(const QFont &newFont, const QFont &oldFont);
     virtual void mirrorChange();
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
