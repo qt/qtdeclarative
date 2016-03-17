@@ -60,7 +60,7 @@ public:
     explicit QQuickStyleSelector();
     ~QQuickStyleSelector();
 
-    QString select(const QString &filePath) const;
+    QString select(const QString &fileName) const;
 
     QString style() const;
     void setStyle(const QString &s);

@@ -82,10 +82,10 @@ static bool isLocalScheme(const QString &file)
     return local;
 }
 
-QString QQuickStyleSelector::select(const QString &filePath) const
+QString QQuickStyleSelector::select(const QString &fileName) const
 {
     Q_D(const QQuickStyleSelector);
-    QUrl url(d->baseUrl.toString() + filePath);
+    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
     if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
         if (isLocalScheme(url.scheme())) {
             QString equivalentPath = QLatin1Char(':') + url.path();
