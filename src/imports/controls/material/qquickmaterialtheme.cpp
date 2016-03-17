@@ -67,10 +67,6 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     menuItemFont.setPixelSize(16);
 }
 
-QQuickMaterialTheme::~QQuickMaterialTheme()
-{
-}
-
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
 {
     switch (type) {

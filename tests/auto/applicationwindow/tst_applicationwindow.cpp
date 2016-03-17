@@ -505,7 +505,6 @@ class TestTheme :  public QQuickProxyTheme
 public:
     TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme), m_font("Courier")
     { QGuiApplicationPrivate::platform_theme = this; }
-    ~TestTheme() { QGuiApplicationPrivate::platform_theme = theme(); }
 
     const QFont *font(Font type = SystemFont) const override
     {

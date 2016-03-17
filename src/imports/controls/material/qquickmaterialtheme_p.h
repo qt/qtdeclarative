@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMATERIALTHEME_H
-#define QQUICKMATERIALTHEME_H
+#ifndef QQUICKMATERIALTHEME_P_H
+#define QQUICKMATERIALTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,7 +48,6 @@
 // We mean it.
 //
 
-#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qfont.h>
 #include <QtQuickControls/private/qquickproxytheme_p.h>
 
@@ -57,9 +56,7 @@ QT_BEGIN_NAMESPACE
 class QQuickMaterialTheme :  public QQuickProxyTheme
 {
 public:
-    QQuickMaterialTheme(QPlatformTheme *theme);
-
-    ~QQuickMaterialTheme();
+    explicit QQuickMaterialTheme(QPlatformTheme *theme = nullptr);
 
     const QFont *font(Font type = SystemFont) const override;
 
@@ -72,4 +69,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKMATERIALTHEME_H
+#endif // QQUICKMATERIALTHEME_P_H

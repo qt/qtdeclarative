@@ -91,13 +91,8 @@ void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0) {
-        QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
-        if (old) {
-            QQuickProxyTheme *theme = new QQuickUniversalTheme(old);
-            QGuiApplicationPrivate::platform_theme = theme;
-        }
-    }
+    if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0)
+        QGuiApplicationPrivate::platform_theme = new QQuickUniversalTheme;
 
     engine->addImageProvider(QStringLiteral("universal"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
 

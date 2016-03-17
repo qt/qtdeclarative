@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKUNIVERSALTHEME_H
-#define QQUICKUNIVERSALTHEME_H
+#ifndef QQUICKUNIVERSALTHEME_P_H
+#define QQUICKUNIVERSALTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,7 +48,6 @@
 // We mean it.
 //
 
-#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qfont.h>
 #include <QtQuickControls/private/qquickproxytheme_p.h>
 
@@ -57,9 +56,7 @@ QT_BEGIN_NAMESPACE
 class QQuickUniversalTheme :  public QQuickProxyTheme
 {
 public:
-    QQuickUniversalTheme(QPlatformTheme *theme);
-
-    ~QQuickUniversalTheme();
+    explicit QQuickUniversalTheme(QPlatformTheme *theme = nullptr);
 
     const QFont *font(Font type = SystemFont) const override;
 
@@ -71,4 +68,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKUNIVERSALTHEME_H
+#endif // QQUICKUNIVERSALTHEME_P_H

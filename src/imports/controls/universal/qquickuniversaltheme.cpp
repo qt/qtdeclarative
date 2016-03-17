@@ -59,10 +59,6 @@ QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
     tabButtonFont.setWeight(QFont::Light);
 }
 
-QQuickUniversalTheme::~QQuickUniversalTheme()
-{
-}
-
 const QFont *QQuickUniversalTheme::font(QPlatformTheme::Font type) const
 {
     switch (type) {

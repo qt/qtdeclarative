@@ -36,19 +36,21 @@
 
 #include "qquickproxytheme_p.h"
 
-#include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpixmap.h>
 #include <QtGui/qfont.h>
 
 QT_BEGIN_NAMESPACE
 
 QQuickProxyTheme::QQuickProxyTheme(QPlatformTheme *theme)
-    : m_theme(theme)
+    : m_theme(theme ? theme : QGuiApplicationPrivate::platform_theme)
 {
 }
 
 QQuickProxyTheme::~QQuickProxyTheme()
 {
+    if (QGuiApplicationPrivate::platform_theme == this)
+        QGuiApplicationPrivate::platform_theme = m_theme;
 }
 
 QPlatformTheme *QQuickProxyTheme::theme() const
@@ -60,48 +62,42 @@ QPlatformMenuItem *QQuickProxyTheme::createPlatformMenuItem() const
 {
     if (m_theme)
         return m_theme->createPlatformMenuItem();
-    else
-        return QPlatformTheme::createPlatformMenuItem();
+    return QPlatformTheme::createPlatformMenuItem();
 }
 
 QPlatformMenu *QQuickProxyTheme::createPlatformMenu() const
 {
     if (m_theme)
         return m_theme->createPlatformMenu();
-    else
-        return QPlatformTheme::createPlatformMenu();
+    return QPlatformTheme::createPlatformMenu();
 }
 
 QPlatformMenuBar *QQuickProxyTheme::createPlatformMenuBar() const
 {
     if (m_theme)
         return m_theme->createPlatformMenuBar();
-    else
-        return QPlatformTheme::createPlatformMenuBar();
+    return QPlatformTheme::createPlatformMenuBar();
 }
 
 void QQuickProxyTheme::showPlatformMenuBar()
 {
     if (m_theme)
         m_theme->showPlatformMenuBar();
-    else
-        QPlatformTheme::showPlatformMenuBar();
+    QPlatformTheme::showPlatformMenuBar();
 }
 
 bool QQuickProxyTheme::usePlatformNativeDialog(QPlatformTheme::DialogType type) const
 {
     if (m_theme)
         return m_theme->usePlatformNativeDialog(type);
-    else
-        return QPlatformTheme::usePlatformNativeDialog(type);
+    return QPlatformTheme::usePlatformNativeDialog(type);
 }
 
 QPlatformDialogHelper *QQuickProxyTheme::createPlatformDialogHelper(QPlatformTheme::DialogType type) const
 {
     if (m_theme)
         return m_theme->createPlatformDialogHelper(type);
-    else
-        return QPlatformTheme::createPlatformDialogHelper(type);
+    return QPlatformTheme::createPlatformDialogHelper(type);
 }
 
 #ifndef QT_NO_SYSTEMTRAYICON
@@ -109,8 +105,7 @@ QPlatformSystemTrayIcon *QQuickProxyTheme::createPlatformSystemTrayIcon() const
 {
     if (m_theme)
         return m_theme->createPlatformSystemTrayIcon();
-    else
-        return QPlatformTheme::createPlatformSystemTrayIcon();
+    return QPlatformTheme::createPlatformSystemTrayIcon();
 }
 #endif
 
@@ -118,64 +113,56 @@ const QPalette *QQuickProxyTheme::palette(QPlatformTheme::Palette type) const
 {
     if (m_theme)
         return m_theme->palette(type);
-    else
-        return QPlatformTheme::palette(type);
+    return QPlatformTheme::palette(type);
 }
 
 const QFont *QQuickProxyTheme::font(QPlatformTheme::Font type) const
 {
     if (m_theme)
         return m_theme->font(type);
-    else
-        return QPlatformTheme::font(type);
+    return QPlatformTheme::font(type);
 }
 
 QVariant QQuickProxyTheme::themeHint(QPlatformTheme::ThemeHint hint) const
 {
     if (m_theme)
         return m_theme->themeHint(hint);
-    else
-        return QPlatformTheme::themeHint(hint);
+    return QPlatformTheme::themeHint(hint);
 }
 
 QPixmap QQuickProxyTheme::standardPixmap(QPlatformTheme::StandardPixmap sp, const QSizeF &size) const
 {
     if (m_theme)
         return m_theme->standardPixmap(sp, size);
-    else
-        return QPlatformTheme::standardPixmap(sp, size);
+    return QPlatformTheme::standardPixmap(sp, size);
 }
 
 QPixmap QQuickProxyTheme::fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size, QPlatformTheme::IconOptions iconOptions) const
 {
     if (m_theme)
         return m_theme->fileIconPixmap(fileInfo, size, iconOptions);
-    else
-        return QPlatformTheme::fileIconPixmap(fileInfo, size, iconOptions);
+    return QPlatformTheme::fileIconPixmap(fileInfo, size, iconOptions);
 }
 
 QIconEngine *QQuickProxyTheme::createIconEngine(const QString &iconName) const
 {
     if (m_theme)
         return m_theme->createIconEngine(iconName);
-    else
-        return QPlatformTheme::createIconEngine(iconName);
+    return QPlatformTheme::createIconEngine(iconName);
 }
 
 QList<QKeySequence> QQuickProxyTheme::keyBindings(QKeySequence::StandardKey key) const
 {
     if (m_theme)
         return m_theme->keyBindings(key);
-    else
-        return QPlatformTheme::keyBindings(key);
+    return QPlatformTheme::keyBindings(key);
 }
 
 QString QQuickProxyTheme::standardButtonText(int button) const
 {
     if (m_theme)
         return m_theme->standardButtonText(button);
-    else
-        return QPlatformTheme::standardButtonText(button);
+    return QPlatformTheme::standardButtonText(button);
 }
 
 QT_END_NAMESPACE

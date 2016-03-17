@@ -93,13 +93,8 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 {
     Q_UNUSED(engine);
 
-    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0) {
-        QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
-        if (old) {
-            QQuickProxyTheme *theme = new QQuickMaterialTheme(old);
-            QGuiApplicationPrivate::platform_theme = theme;
-        }
-    }
+    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0)
+        QGuiApplicationPrivate::platform_theme = new QQuickMaterialTheme;
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
