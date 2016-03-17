@@ -47,6 +47,7 @@
 //
 
 #include <QtCore/qurl.h>
+#include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
 
@@ -57,15 +58,16 @@ class QQuickStyleSelectorPrivate;
 class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStyleSelector
 {
 public:
-    explicit QQuickStyleSelector();
+    QQuickStyleSelector();
     ~QQuickStyleSelector();
+
+    QUrl baseUrl() const;
+    void setBaseUrl(const QUrl &url);
 
     QString select(const QString &fileName) const;
 
-    void setBaseUrl(const QUrl &base);
-    QUrl baseUrl() const;
-
 private:
+    Q_DISABLE_COPY(QQuickStyleSelector)
     Q_DECLARE_PRIVATE(QQuickStyleSelector)
     QScopedPointer<QQuickStyleSelectorPrivate> d_ptr;
 };

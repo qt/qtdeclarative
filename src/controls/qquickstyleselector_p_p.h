@@ -46,30 +46,14 @@
 // We mean it.
 //
 
-#include <QtCore/QString>
-#include <QtCore/QUrl>
-#include <private/qobject_p.h>
-#include <QtCore/qstringlist.h>
-
-#include "qquickstyleselector_p.h"
+#include <QtQuickControls/private/qquickstyleselector_p.h>
 
 QT_BEGIN_NAMESPACE
-
-struct QQuickStyleSelectorSharedData //Not QSharedData because currently is just a global store
-{
-    QStringList staticSelectors;
-    QStringList preloadedStatics;
-};
 
 class QQuickStyleSelectorPrivate
 {
 public:
-    static void updateSelectors();
-    static QStringList platformSelectors();
-    static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
-    QQuickStyleSelectorPrivate();
     QString select(const QString &filePath) const;
-    QStringList allSelectors(bool includeStyle) const;
 
     QUrl baseUrl;
 };
