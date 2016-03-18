@@ -79,7 +79,7 @@
 static inline void initResources()
 {
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_quick_templates);
+    Q_INIT_RESOURCE(qmake_Qt_labs_templates);
 #endif
 }
 

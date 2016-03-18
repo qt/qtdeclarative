@@ -55,7 +55,7 @@ static inline void initResources()
 {
     Q_INIT_RESOURCE(qtquickcontrolsplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_quick_controls);
+    Q_INIT_RESOURCE(qmake_Qt_labs_controls);
 #endif
 }
 
