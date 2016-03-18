@@ -374,12 +374,10 @@ bool QQuickStackViewPrivate::pushElement(QQuickStackElement *element)
 bool QQuickStackViewPrivate::popElements(QQuickStackElement *element)
 {
     Q_Q(QQuickStackView);
-    if (elements.count() > 1) {
-        while (elements.count() > 1 && elements.top() != element) {
-            delete elements.pop();
-            if (!element)
-                break;
-        }
+    while (elements.count() > 1 && elements.top() != element) {
+        delete elements.pop();
+        if (!element)
+            break;
     }
     return elements.top()->load(q);
 }
