@@ -180,10 +180,10 @@ The next line tells \c qmake that we have a collection of
 \l {The Qt Resource System}{resources} that should be built into the
 executable.
 
-\printline include
+\printline target.path
 
-This line includes a generated \c .pri file that handles deployment of our
-application to certain devices.
+This line determines where the example will be copied to when running
+\c {make install}.
 
 Now we can build and run the application:
 

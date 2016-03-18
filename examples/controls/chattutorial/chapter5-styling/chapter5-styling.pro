@@ -16,5 +16,5 @@ RESOURCES += \
     qml.qrc \
     ../shared/shared.qrc
 
-include(deployment.pri)
-
+target.path = $$[QT_INSTALL_EXAMPLES]/qtlabscontrols/chattutorial/chapter5-styling
+INSTALLS += target
