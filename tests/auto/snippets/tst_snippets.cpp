@@ -64,7 +64,7 @@ void tst_Snippets::initTestCase()
 
     qInfo() << datadir;
 
-    QDirIterator it(datadir, QStringList() << "qtlabs*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
+    QDirIterator it(datadir, QStringList() << "qtquick*.qml" << "qtlabs*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QFileInfo fi(it.next());
         filePaths.insert(fi.baseName(), qMakePair(fi.filePath(), outdir.filePath(fi.baseName() + ".png")));
