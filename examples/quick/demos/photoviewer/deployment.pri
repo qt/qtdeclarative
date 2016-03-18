@@ -1,8 +1,4 @@
-android-no-sdk {
-    target.path = /data/user/qt
-    export(target.path)
-    INSTALLS += target
-} else:android {
+android {
     x86 {
         target.path = /libs/x86
     } else: armeabi-v7a {
