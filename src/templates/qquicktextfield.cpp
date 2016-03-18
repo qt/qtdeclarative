@@ -63,11 +63,11 @@ QT_BEGIN_NAMESPACE
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
     \table
-    \row \li \image qtlabscontrols-textfield-normal.png
+    \row \li \image qtquickcontrols-textfield-normal.png
          \li A text field in its normal state.
-    \row \li \image qtlabscontrols-textfield-focused.png
+    \row \li \image qtquickcontrols-textfield-focused.png
          \li A text field that has active focus.
-    \row \li \image qtlabscontrols-textfield-disabled.png
+    \row \li \image qtquickcontrols-textfield-disabled.png
          \li A text field that is disabled.
     \endtable
 

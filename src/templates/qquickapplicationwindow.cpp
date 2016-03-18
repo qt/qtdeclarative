@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
     and run it by using \l QQmlApplicationEngine.  In this way you can control
     the window's properties, appearance and layout from QML.
 
-    \image qtlabscontrols-applicationwindow-wireframe.png
+    \image qtquickcontrols-applicationwindow-wireframe.png
 
     \qml
     import Qt.labs.controls 1.0

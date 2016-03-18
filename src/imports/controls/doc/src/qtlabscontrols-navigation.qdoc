@@ -38,19 +38,19 @@
 
     \section1 StackView Control
 
-    \image qtlabscontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.png
 
     \l StackView provides a stack-based navigation model.
 
     \section1 SwipeView Control
 
-    \image qtlabscontrols-swipeview-wireframe.png
+    \image qtquickcontrols-swipeview-wireframe.png
 
     \l SwipeView provides a swipe-based navigation model.
 
     \section1 TabBar and TabButton Controls
 
-    \image qtlabscontrols-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.png
 
     \l TabBar and \l TabButton provide a tab-based navigation model.
 */

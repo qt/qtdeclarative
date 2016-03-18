@@ -39,7 +39,7 @@
 
     \section1 Button Control
 
-    \image qtlabscontrols-button.png
+    \image qtquickcontrols-button.png
 
     \l Button presents a push-button control that can be pushed or clicked
     by the user. Buttons are normally used to perform an action, or to answer
@@ -48,7 +48,7 @@
 
     \section1 CheckBox Control
 
-    \image qtlabscontrols-checkbox.png
+    \image qtquickcontrols-checkbox.png
 
     \l CheckBox presents an option button that can be toggled on (checked)
     or off (unchecked). Check boxes are typically used to select one or more
@@ -56,7 +56,7 @@
 
     \section1 RadioButton Control
 
-    \image qtlabscontrols-radiobutton.png
+    \image qtquickcontrols-radiobutton.png
 
     \l RadioButton presents an option button that can be toggled on (checked)
     or off (unchecked). Radio buttons are typically used to select one option
@@ -64,7 +64,7 @@
 
     \section1 Switch Control
 
-    \image qtlabscontrols-switch.png
+    \image qtquickcontrols-switch.png
 
     \l Switch is an option button that can be dragged or toggled on (checked)
     or off (unchecked). Switches are typically used to select between two
@@ -72,7 +72,7 @@
 
     \section1 ToolButton Control
 
-    \image qtlabscontrols-toolbutton.png
+    \image qtquickcontrols-toolbutton.png
 
     \l ToolButton is functionally similar to \l Button, but provides a look
     that is more suitable within a \l ToolBar.

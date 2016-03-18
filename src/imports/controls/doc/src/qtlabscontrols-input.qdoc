@@ -40,44 +40,44 @@
 
     \section1 ComboBox Control
 
-    \image qtlabscontrols-combobox.png
+    \image qtquickcontrols-combobox.png
 
     \l ComboBox is used to select a value from a drop-down list.
 
     \section1 Dial Control
 
-    \image qtlabscontrols-dial.png
+    \image qtquickcontrols-dial.png
 
     \l Dial is a circular dial that is rotated to set a value.
 
     \section1 TextArea Control
 
-    \image qtlabscontrols-textarea.png
+    \image qtquickcontrols-textarea.png
 
     \l TextArea is a multi-line text editor.
 
     \section1 TextField Control
 
-    \image qtlabscontrols-textfield.png
+    \image qtquickcontrols-textfield.png
 
     \l TextField is a single line text editor.
 
     \section1 Slider Control
 
-    \image qtlabscontrols-slider.png
+    \image qtquickcontrols-slider.png
 
     \l Slider is used to select a value by sliding a handle along a track.
 
     \section1 RangeSlider Control
 
-    \image qtlabscontrols-rangeslider.png
+    \image qtquickcontrols-rangeslider.png
 
     \l RangeSlider is used to select a range specified by two values,
     by sliding each handle along a track.
 
     \section1 Tumbler Control
 
-    \image qtlabscontrols-tumbler.png
+    \image qtquickcontrols-tumbler.png
 
     \l Tumbler is a spinnable wheel of items that can be selected.
 */

@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    \image qtlabscontrols-scrollindicator.png
+    \image qtquickcontrols-scrollindicator.png
 
     \code
     Flickable {

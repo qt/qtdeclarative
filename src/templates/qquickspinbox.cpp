@@ -58,7 +58,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \ingroup input
     \brief A spinbox control that allows the user to select from a set of preset values.
 
-    \image qtlabscontrols-spinbox.png
+    \image qtquickcontrols-spinbox.png
 
     SpinBox allows the user to choose an integer value by clicking the up
     or down indicator buttons, or by pressing up or down on the keyboard.
@@ -68,18 +68,18 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     By default, SpinBox provides discrete values in the range of \c [0-99]
     with a \l stepSize of \c 1.
 
-    \snippet qtlabscontrols-spinbox.qml 1
+    \snippet qtquickcontrols-spinbox.qml 1
 
     \section2 Custom Values
 
-    \image qtlabscontrols-spinbox-textual.png
+    \image qtquickcontrols-spinbox-textual.png
 
     Even though SpinBox works on integer values, it can be customized to
     accept arbitrary input values. The following snippet demonstrates how
     \l validator, \l textFromValue and \l valueFromText can be used to
     customize the default behavior.
 
-    \snippet qtlabscontrols-spinbox-textual.qml 1
+    \snippet qtquickcontrols-spinbox-textual.qml 1
 
     \labs
 

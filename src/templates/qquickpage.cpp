@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.
 
-    \image qtlabscontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.png
 
     The following example snippet illustrates how to use a page-specific
     toolbar header and an application-wide tabbar footer.

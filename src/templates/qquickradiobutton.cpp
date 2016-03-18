@@ -54,13 +54,13 @@ QT_BEGIN_NAMESPACE
     from a set of options.
 
     \table
-    \row \li \image qtlabscontrols-radiobutton-normal.png
+    \row \li \image qtquickcontrols-radiobutton-normal.png
          \li A radio button in its normal state.
-    \row \li \image qtlabscontrols-radiobutton-checked.png
+    \row \li \image qtquickcontrols-radiobutton-checked.png
          \li A radio button that is checked.
-    \row \li \image qtlabscontrols-radiobutton-focused.png
+    \row \li \image qtquickcontrols-radiobutton-focused.png
          \li A radio button that has active focus.
-    \row \li \image qtlabscontrols-radiobutton-disabled.png
+    \row \li \image qtquickcontrols-radiobutton-disabled.png
          \li A radio button that is disabled.
     \endtable
 

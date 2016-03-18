@@ -51,13 +51,13 @@ QT_BEGIN_NAMESPACE
 
     TabBar provides a tab-based navigation model.
 
-    \image qtlabscontrols-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.png
 
     TabBar is populated with TabButton controls, and can be used together with
     any layout or container control that provides \c currentIndex -property,
     such as \l StackLayout or \l SwipeView
 
-    \snippet qtlabscontrols-tabbar.qml 1
+    \snippet qtquickcontrols-tabbar.qml 1
 
     \labs
 

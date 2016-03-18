@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtlabscontrols-toolbar.png
+    \image qtquickcontrols-toolbar.png
 
     \code
     ApplicationWindow {

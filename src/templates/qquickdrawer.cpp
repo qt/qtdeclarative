@@ -59,11 +59,11 @@ QT_BEGIN_NAMESPACE
 
     \table
     \row
-        \li \image qtlabscontrols-drawer-wireframe.png
+        \li \image qtquickcontrols-drawer-wireframe.png
             Drawer can be positioned at any of the four edges of the content item. \br
             In this image, it is against the left edge of the window.
 
-        \li \image qtlabscontrols-drawer-expanded-wireframe.png
+        \li \image qtquickcontrols-drawer-expanded-wireframe.png
             The drawer is then opened by \e "dragging" it out from the left edge \br
             of the window.
     \endtable

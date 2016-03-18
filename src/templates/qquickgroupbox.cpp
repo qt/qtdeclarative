@@ -62,22 +62,22 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtlabscontrols-groupbox.png
+    \image qtquickcontrols-groupbox.png
 
-    \snippet qtlabscontrols-groupbox.qml 1
+    \snippet qtquickcontrols-groupbox.qml 1
 
     \section2 Checkable GroupBox
 
     Even though GroupBox has no built-in check box, it is straightforward
     to create a checkable GroupBox by pairing it with a CheckBox.
 
-    \image qtlabscontrols-groupbox-checkable.png
+    \image qtquickcontrols-groupbox-checkable.png
 
     It is a common pattern to enable or disable the groupbox's children when
     its checkbox is toggled on or off, but it is the application that decides
     on the behavior of the groupbox.
 
-    \snippet qtlabscontrols-groupbox-checkable.qml 1
+    \snippet qtquickcontrols-groupbox-checkable.qml 1
 
     \labs
 

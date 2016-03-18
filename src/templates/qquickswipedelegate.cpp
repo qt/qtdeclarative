@@ -71,12 +71,12 @@ QT_BEGIN_NAMESPACE
     any position for \c exposure.left or \c exposure.right, the following will
     occur:
 
-    \image qtlabscontrols-swipedelegate.gif
+    \image qtquickcontrols-swipedelegate.gif
 
     If \c exposure.left and \c exposure.right are anchored to the left and
     right of the \l background item (respectively), they'll behave like this:
 
-    \image qtlabscontrols-swipedelegate-leading-trailing.gif
+    \image qtquickcontrols-swipedelegate-leading-trailing.gif
 
     When using \c exposure.left and \c exposure.right, the control cannot be
     swiped past the left and right edges. To achieve this type of "wrapping"
@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
     example, in the image below, we set \c exposure.behind and then swipe the
     control repeatedly in both directions:
 
-    \image qtlabscontrols-swipedelegate-behind.gif
+    \image qtquickcontrols-swipedelegate-behind.gif
 
     \labs
 

@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \l {AbstractButton::text}{text}, make items \l {AbstractButton::checkable}{checkable},
     and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
 
-    \snippet qtlabscontrols-itemdelegate.qml 1
+    \snippet qtquickcontrols-itemdelegate.qml 1
 
     \labs
 

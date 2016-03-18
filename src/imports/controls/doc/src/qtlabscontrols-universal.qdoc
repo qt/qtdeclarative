@@ -48,7 +48,7 @@
     The Universal style has been designed to look good on all devices, from
     phones and tablets to PCs.
 
-    \image qtlabscontrols-universal.png
+    \image qtquickcontrols-universal.png
     \caption The Universal style in light and dark themes
 
     \note The Universal style is not a native Windows 10 style. The Universal
@@ -81,7 +81,7 @@
                 }
                 \endqml
             \li
-                \image qtlabscontrols-universal-button.png
+                \image qtquickcontrols-universal-button.png
     \endtable
 
     Both attributes can be specified for any window or item, and they automatically
@@ -113,7 +113,7 @@
                 }
                 \endqml
             \li
-                \image qtlabscontrols-universal-dark.png
+                \image qtquickcontrols-universal-dark.png
     \endtable
 
     \section2 Dependency

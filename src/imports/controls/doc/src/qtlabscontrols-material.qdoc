@@ -48,7 +48,7 @@
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
-    \image qtlabscontrols-material.png
+    \image qtquickcontrols-material.png
     \caption The Material style in light and dark themes
 
     \note The Material style is not a native Android style. The Material
@@ -81,7 +81,7 @@
                 }
                 \endqml
             \li
-                \image qtlabscontrols-material-button.png
+                \image qtquickcontrols-material-button.png
     \endtable
 
     Both attributes can be specified for any window or item, and they automatically
@@ -113,7 +113,7 @@
                 }
                 \endqml
             \li
-                \image qtlabscontrols-material-dark.png
+                \image qtquickcontrols-material-dark.png
     \endtable
 
     \section2 Dependency

@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
     events from the window system, and paints a representation of itself on
     the screen.
 
-    \image qtlabscontrols-control.png
+    \image qtquickcontrols-control.png
     \labs
 */
 

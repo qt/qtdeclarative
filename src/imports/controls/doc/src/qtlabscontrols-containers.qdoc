@@ -39,58 +39,58 @@
 
     \section1 ApplicationWindow Control
 
-    \image qtlabscontrols-applicationwindow-wireframe.png
+    \image qtquickcontrols-applicationwindow-wireframe.png
 
     \l ApplicationWindow contains optional header and footer items.
 
     \section1 Frame Control
 
-    \image qtlabscontrols-frame.png
+    \image qtquickcontrols-frame.png
 
     \l Frame is used to layout a logical group of controls together, within
     a visual frame.
 
     \section1 GroupBox Control
 
-    \image qtlabscontrols-groupbox.png
+    \image qtquickcontrols-groupbox.png
 
     \l GroupBox is used to layout a logical group of controls together,
     within a titled visual frame.
 
     \section1 Page Control
 
-    \image qtlabscontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.png
 
     \l Page provides page-specific header and footer items.
 
     \section1 Pane Control
 
-    \image qtlabscontrols-pane.png
+    \image qtquickcontrols-pane.png
 
     \l Pane provides a background color that matches with the application
     style and theme.
 
     \section1 StackView Control
 
-    \image qtlabscontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.png
 
     \l StackView organizes content pages into a stack.
 
     \section1 SwipeView Control
 
-    \image qtlabscontrols-swipeview-wireframe.png
+    \image qtquickcontrols-swipeview-wireframe.png
 
     \l SwipeView organizes content pages into a swipable strip.
 
     \section1 TabBar Control
 
-    \image qtlabscontrols-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.png
 
     \l TabBar organizes content pages into tabs.
 
     \section1 ToolBar Control
 
-    \image qtlabscontrols-toolbar.png
+    \image qtquickcontrols-toolbar.png
 
     \l ToolBar is a container of application-wide and context-sensitive
     actions and controls.
