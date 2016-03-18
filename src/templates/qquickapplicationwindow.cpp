@@ -511,7 +511,7 @@ void QQuickApplicationWindow::setLocale(const QLocale &locale)
         return;
 
     d->locale = locale;
-    QQuickControlPrivate::updateLocaleRecur(contentItem(), locale);
+    QQuickControlPrivate::updateLocaleRecur(QQuickWindow::contentItem(), locale);
     emit localeChanged();
 }
 

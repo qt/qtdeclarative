@@ -106,7 +106,7 @@ public:
 
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
-    static QLocale calcLocale(QQuickItem *);
+    static QLocale calcLocale(const QQuickItem *item);
 
     // TODO: QLazilyAllocated<ExtraData>
     QFont font;

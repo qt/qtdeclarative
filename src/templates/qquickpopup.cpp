@@ -1212,8 +1212,6 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
-    if (parent)
-        QQuickControlPrivate::updateLocaleRecur(d->popupItem, QQuickControlPrivate::calcLocale(parent));
     emit parentChanged();
 }
 

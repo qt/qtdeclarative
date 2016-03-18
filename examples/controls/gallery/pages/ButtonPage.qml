@@ -76,6 +76,7 @@ Flickable {
                     id: button
                     text: "Second"
                     width: itemWidth
+                    highlighted: true
                 }
                 Button {
                     text: "Third"
