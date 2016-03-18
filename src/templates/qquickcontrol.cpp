@@ -382,7 +382,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
         if (!d->hasLocale)
-            d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
+            d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
     }
 }
 
@@ -664,22 +664,21 @@ void QQuickControl::resetLocale()
     if (!d->hasLocale)
         return;
 
+    d->hasLocale = false;
     d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
 }
 
-QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
+QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 {
-    QQuickItem *p = q;
+    const QQuickItem *p = item;
     while (p) {
-        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
-            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
-                p = qp->parentItem();
-                continue;
-            }
+        if (const QQuickPopupItem *popup = qobject_cast<const QQuickPopupItem *>(p)) {
+            item = popup;
+            break;
         }
 
-        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
-            return qc->locale();
+        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
+            return control->locale();
 
         QVariant v = p->property("locale");
         if (v.isValid() && v.userType() == QMetaType::QLocale)
@@ -688,9 +687,9 @@ QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
         p = p->parentItem();
     }
 
-    if (q) {
-        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
-            return w->locale();
+    if (item) {
+        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
+            return window->locale();
     }
 
     return QLocale();
@@ -723,14 +722,6 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
             QQuickControlPrivate::get(control)->updateLocale(l, false);
         else
             updateLocaleRecur(child, l);
-    }
-
-    const auto children = item->children();
-    for (QObject *child : children) {
-        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
-            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
-                updateLocaleRecur(qpi, l);
-        }
     }
 }
 

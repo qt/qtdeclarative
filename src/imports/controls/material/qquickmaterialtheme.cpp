@@ -51,17 +51,15 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     if (font.exactMatch()) {
         systemFont.setFamily(font.family());
         buttonFont.setFamily(font.family());
-        toolButtonFont.setFamily(font.family());
         itemViewFont.setFamily(font.family());
         menuItemFont.setFamily(font.family());
     }
 
+    systemFont.setPixelSize(14);
+
     buttonFont.setPixelSize(14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
-
-    toolButtonFont.setPixelSize(14);
-    toolButtonFont.setCapitalization(QFont::AllUppercase);
 
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
@@ -78,15 +76,12 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
     switch (type) {
     case QPlatformTheme::TabButtonFont:
     case QPlatformTheme::PushButtonFont:
-        return &buttonFont;
     case QPlatformTheme::ToolButtonFont:
-        return &toolButtonFont;
+        return &buttonFont;
     case QPlatformTheme::ItemViewFont:
         return &itemViewFont;
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
-    case QPlatformTheme::CheckBoxFont:
-    case QPlatformTheme::RadioButtonFont:
         return &menuItemFont;
     default:
         return &systemFont;
