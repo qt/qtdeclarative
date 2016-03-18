@@ -42,6 +42,10 @@
     environment variable. Alternatively, the preferred style and style-specific
     attributes can be specified in a configuration file.
 
+    The priority of these approaches follows the order they are listed below,
+    from highest to lowest. That is, using QQuickStyle to set the style will
+    always take priority over using the command line argument, for example.
+
     \section2 Using QQuickStyle in C++
 
     \l QQuickStyle provides API configuring a specific style. The following
