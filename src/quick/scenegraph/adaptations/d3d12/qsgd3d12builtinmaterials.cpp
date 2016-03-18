@@ -53,8 +53,16 @@
 #include "ps_textmask24.hlslh"
 #include "ps_textmask32.hlslh"
 #include "ps_textmask8.hlslh"
+#include "vs_styledtext.hlslh"
+#include "ps_styledtext.hlslh"
+#include "vs_outlinedtext.hlslh"
+#include "ps_outlinedtext.hlslh"
 
 QT_BEGIN_NAMESPACE
+
+// NB! In HLSL constant buffer data is packed into 4-byte boundaries and, more
+// importantly, it is packed so that it does not cross a 16-byte (float4)
+// boundary. Hence the need for padding in some cases.
 
 QSGMaterialType QSGD3D12VertexColorMaterial::mtype;
 
@@ -378,8 +386,10 @@ static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
     return 0;
 }
 
-QSGD3D12TextMaterial::QSGD3D12TextMaterial(QSGD3D12RenderContext *rc, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
-    : m_font(font),
+QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderContext *rc,
+                                           const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
+    : m_styleType(styleType),
+      m_font(font),
       m_rc(rc)
 {
     setFlag(Blending, true);
@@ -405,28 +415,39 @@ QSGD3D12TextMaterial::QSGD3D12TextMaterial(QSGD3D12RenderContext *rc, const QRaw
     }
 }
 
-QSGMaterialType QSGD3D12TextMaterial::mtype;
+QSGMaterialType QSGD3D12TextMaterial::mtype[QSGD3D12TextMaterial::NStyleTypes];
 
 QSGMaterialType *QSGD3D12TextMaterial::type() const
 {
-    return &QSGD3D12TextMaterial::mtype;
+    return &QSGD3D12TextMaterial::mtype[m_styleType];
 }
 
 int QSGD3D12TextMaterial::compare(const QSGMaterial *other) const
 {
     Q_ASSERT(other && type() == other->type());
     const QSGD3D12TextMaterial *o = static_cast<const QSGD3D12TextMaterial *>(other);
+    if (m_styleType != o->m_styleType)
+        return m_styleType - o->m_styleType;
     if (m_glyphCache != o->m_glyphCache)
         return m_glyphCache.data() < o->m_glyphCache.data() ? -1 : 1;
-    return qsg_colorDiff(color(), o->color());
+    if (m_styleShift != o->m_styleShift)
+        return m_styleShift.y() - o->m_styleShift.y();
+    int styleColorDiff = qsg_colorDiff(m_styleColor, o->m_styleColor);
+    if (styleColorDiff)
+        return styleColorDiff;
+    return qsg_colorDiff(m_color, o->m_color);
 }
 
-static const int TEXT_CB_SIZE_0 = 16 * sizeof(float); // float4x4
-static const int TEXT_CB_SIZE_1 = 2 * sizeof(float); // float2
-static const int TEXT_CB_SIZE_2 = sizeof(float); // float
-static const int TEXT_CB_SIZE_3 = sizeof(float); // float
-static const int TEXT_CB_SIZE_4 = 4 * sizeof(float); // float4
-static const int TEXT_CB_SIZE = TEXT_CB_SIZE_0 + TEXT_CB_SIZE_1 + TEXT_CB_SIZE_2 + TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
+static const int TEXT_CB_SIZE_0 = 16 * sizeof(float); // float4x4 mvp
+static const int TEXT_CB_SIZE_1 = 2 * sizeof(float); // float2 textureScale
+static const int TEXT_CB_SIZE_2 = sizeof(float); // float dpr
+static const int TEXT_CB_SIZE_3 = sizeof(float); // float color
+static const int TEXT_CB_SIZE_4 = 4 * sizeof(float); // float4 colorVec
+static const int TEXT_CB_SIZE_5 = 2 * sizeof(float); // float2 shift
+static const int TEXT_CB_SIZE_5_PADDING = 2 * sizeof(float); // float2 padding (the next float4 would cross the 16-byte boundary)
+static const int TEXT_CB_SIZE_6 = 4 * sizeof(float); // float4 styleColor
+static const int TEXT_CB_SIZE = TEXT_CB_SIZE_0 + TEXT_CB_SIZE_1 + TEXT_CB_SIZE_2 + TEXT_CB_SIZE_3
+        + TEXT_CB_SIZE_4 + TEXT_CB_SIZE_5 + TEXT_CB_SIZE_5_PADDING + TEXT_CB_SIZE_6;
 
 int QSGD3D12TextMaterial::constantBufferSize() const
 {
@@ -435,22 +456,33 @@ int QSGD3D12TextMaterial::constantBufferSize() const
 
 void QSGD3D12TextMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
 {
-    pipelineState->shaders.vs = g_VS_TextMask;
-    pipelineState->shaders.vsSize = sizeof(g_VS_TextMask);
-
-    switch (glyphCache()->glyphFormat()) {
-    case QFontEngine::Format_A32:
-        pipelineState->shaders.ps = g_PS_TextMask24;
-        pipelineState->shaders.psSize = sizeof(g_PS_TextMask24);
-        break;
-    case QFontEngine::Format_ARGB:
-        pipelineState->shaders.ps = g_PS_TextMask32;
-        pipelineState->shaders.psSize = sizeof(g_PS_TextMask32);
-        break;
-    default:
-        pipelineState->shaders.ps = g_PS_TextMask8;
-        pipelineState->shaders.psSize = sizeof(g_PS_TextMask8);
-        break;
+    if (m_styleType == Normal) {
+        pipelineState->shaders.vs = g_VS_TextMask;
+        pipelineState->shaders.vsSize = sizeof(g_VS_TextMask);
+        switch (glyphCache()->glyphFormat()) {
+        case QFontEngine::Format_A32:
+            pipelineState->shaders.ps = g_PS_TextMask24;
+            pipelineState->shaders.psSize = sizeof(g_PS_TextMask24);
+            break;
+        case QFontEngine::Format_ARGB:
+            pipelineState->shaders.ps = g_PS_TextMask32;
+            pipelineState->shaders.psSize = sizeof(g_PS_TextMask32);
+            break;
+        default:
+            pipelineState->shaders.ps = g_PS_TextMask8;
+            pipelineState->shaders.psSize = sizeof(g_PS_TextMask8);
+            break;
+        }
+    } else if (m_styleType == Outlined) {
+        pipelineState->shaders.vs = g_VS_OutlinedText;
+        pipelineState->shaders.vsSize = sizeof(g_VS_OutlinedText);
+        pipelineState->shaders.ps = g_PS_OutlinedText;
+        pipelineState->shaders.psSize = sizeof(g_PS_OutlinedText);
+    } else {
+        pipelineState->shaders.vs = g_VS_StyledText;
+        pipelineState->shaders.vsSize = sizeof(g_VS_StyledText);
+        pipelineState->shaders.ps = g_PS_StyledText;
+        pipelineState->shaders.psSize = sizeof(g_PS_StyledText);
     }
 
     pipelineState->shaders.rootSig.textureViews.resize(1);
@@ -464,9 +496,16 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     QSGD3D12Material::UpdateResults r = 0;
     quint8 *p = constantBuffer;
 
-    pipelineState->blend = QSGD3D12PipelineState::BlendColor;
-    extraState->blendFactor = m_color;
-    r |= UpdatedBlendFactor; // must be set always as this affects the command list
+    if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
+        pipelineState->blend = QSGD3D12PipelineState::BlendColor;
+        extraState->blendFactor = m_color;
+        r |= UpdatedBlendFactor; // must be set always as this affects the command list
+    }
+
+    if (state.isConstantBufferDirty()) { // only used to avoid flags like bool m_isLastStyleShiftValid
+        memset(p, 0, TEXT_CB_SIZE);
+        r |= UpdatedConstantBuffer;
+    }
 
     if (state.isMatrixDirty()) {
         memcpy(p, state.combinedMatrix().constData(), TEXT_CB_SIZE_0);
@@ -505,6 +544,24 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
             const float f[4] = { color.x(), color.y(), color.z(), color.w() };
             memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
         }
+        r |= UpdatedConstantBuffer;
+    }
+    p += TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
+
+    if (m_styleType == Styled && m_lastStyleShift != m_styleShift) {
+        m_lastStyleShift = m_styleShift;
+        const float f[2] = { m_styleShift.x(), m_styleShift.y() };
+        memcpy(p, f, TEXT_CB_SIZE_5);
+        r |= UpdatedConstantBuffer;
+    }
+    p += TEXT_CB_SIZE_5 + TEXT_CB_SIZE_5_PADDING;
+
+    if ((m_styleType == Styled || m_styleType == Outlined)
+            && (state.isOpacityDirty() || m_lastStyleColor != m_styleColor)) {
+        m_lastStyleColor = m_styleColor;
+        const QVector4D color = qsg_premultiply(m_styleColor, state.opacity());
+        const float f[4] = { color.x(), color.y(), color.z(), color.w() };
+        memcpy(p, f, TEXT_CB_SIZE_6);
         r |= UpdatedConstantBuffer;
     }
 

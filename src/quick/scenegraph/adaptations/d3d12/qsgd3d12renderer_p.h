@@ -103,6 +103,7 @@ private:
 
     QSGMaterialType *m_lastMaterialType = nullptr;
     QSGD3D12PipelineState m_pipelineState;
+    QSGD3D12PipelineState m_freshPipelineState;
 
     typedef QHash<QSGNode *, QSGD3D12Material::RenderState::DirtyStates> NodeDirtyMap;
     NodeDirtyMap m_nodeDirtyMap;

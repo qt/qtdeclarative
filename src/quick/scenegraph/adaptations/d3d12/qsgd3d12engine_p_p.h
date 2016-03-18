@@ -166,7 +166,7 @@ public:
 
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, QSGD3D12Engine::TextureCreateFlags flags);
-    void queueResizeTexture(uint id, const QSize &size);
+    void queueTextureResize(uint id, const QSize &size);
     void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
@@ -222,16 +222,19 @@ private:
         QSet<uint> pendingTextureUploads;
         QSet<uint> pendingTextureMipMap;
         QSet<uint> pendingTextureReleases;
+        QSet<uint> outOfFramePendingTextureReleases;
         struct DeleteQueueEntry {
             ComPtr<ID3D12Resource> res;
             ComPtr<ID3D12DescriptorHeap> descHeap;
             SIZE_T cpuDescriptorPtr = 0;
         };
         QVector<DeleteQueueEntry> deleteQueue;
-        void deferredDelete(ComPtr<ID3D12Resource> res) { DeleteQueueEntry e; e.res = res; deleteQueue << e; }
-        void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh) { DeleteQueueEntry e; e.descHeap = dh; deleteQueue << e; }
-        void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h) { DeleteQueueEntry e; e.cpuDescriptorPtr = h.ptr; deleteQueue << e; }
+        QVector<DeleteQueueEntry> outOfFrameDeleteQueue;
     };
+
+    void deferredDelete(ComPtr<ID3D12Resource> res);
+    void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh);
+    void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h);
 
     void markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size);
     void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);

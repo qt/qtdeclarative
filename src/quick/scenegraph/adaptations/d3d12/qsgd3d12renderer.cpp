@@ -74,6 +74,7 @@ QSGD3D12Renderer::QSGD3D12Renderer(QSGRenderContext *context)
       m_cboData(4096)
 {
     setNodeUpdater(new DummyUpdater);
+    m_freshPipelineState.shaders.rootSig.textureViews.reserve(4);
 }
 
 void QSGD3D12Renderer::renderScene(GLuint fboId)
@@ -365,9 +366,9 @@ void QSGD3D12Renderer::renderElements()
     m_engine->queueClearRenderTarget(clearColor());
     m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearDepth | QSGD3D12Engine::ClearStencil);
 
-    m_pipelineState.blend = QSGD3D12PipelineState::BlendNone;
-    m_pipelineState.depthEnable = true;
-    m_pipelineState.depthWrite = true;
+    m_pipelineState.blend = m_freshPipelineState.blend = QSGD3D12PipelineState::BlendNone;
+    m_pipelineState.depthEnable = m_freshPipelineState.depthEnable = true;
+    m_pipelineState.depthWrite = m_freshPipelineState.depthWrite = true;
 
     // First do opaque...
     // The algorithm is quite simple. We traverse the list back-to-front, and
@@ -400,8 +401,8 @@ void QSGD3D12Renderer::renderElements()
         }
     }
 
-    m_pipelineState.blend = QSGD3D12PipelineState::BlendPremul;
-    m_pipelineState.depthWrite = false;
+    m_pipelineState.blend = m_freshPipelineState.blend = QSGD3D12PipelineState::BlendPremul;
+    m_pipelineState.depthWrite = m_freshPipelineState.depthWrite = false;
 
     // ...then the alpha ones
     for (int i = 0; i < m_renderList.size(); ++i) {
@@ -440,7 +441,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
     QSGD3D12Material *m = static_cast<QSGD3D12Material *>(gn->activeMaterial());
 
     if (m->type() != m_lastMaterialType) {
-        m_pipelineState.shaders.rootSig.textureViews.clear();
+        m_pipelineState = m_freshPipelineState;
         m->preparePipeline(&m_pipelineState);
     }
 

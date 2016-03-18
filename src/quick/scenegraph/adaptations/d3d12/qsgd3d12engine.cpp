@@ -428,9 +428,9 @@ void QSGD3D12Engine::createTexture(uint id, const QSize &size, QImage::Format fo
     d->createTexture(id, size, format, flags);
 }
 
-void QSGD3D12Engine::queueResizeTexture(uint id, const QSize &size)
+void QSGD3D12Engine::queueTextureResize(uint id, const QSize &size)
 {
-    d->queueResizeTexture(id, size);
+    d->queueTextureResize(id, size);
 }
 
 void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos)
@@ -1099,14 +1099,6 @@ void QSGD3D12EnginePrivate::beginFrame()
                 copyCommandAllocator->Reset();
             }
         }
-        if (!pfd.pendingTextureReleases.isEmpty()) {
-            for (uint id : qAsConst(pfd.pendingTextureReleases)) {
-                Texture &t(textures[id - 1]);
-                t.entryInUse = false; // createTexture() can now reuse this entry
-                t.texture = nullptr;
-            }
-            pfd.pendingTextureReleases.clear();
-        }
 
         // Do the deferred deletes.
         if (!pfd.deleteQueue.isEmpty()) {
@@ -1119,6 +1111,28 @@ void QSGD3D12EnginePrivate::beginFrame()
                 }
             }
             pfd.deleteQueue.clear();
+        }
+        // Deferred deletes issued outside a begin-endFrame go to the next
+        // frame's out-of-frame delete queue as these cannot be executed in the
+        // next beginFrame, only in next + MAX_FRAMES_IN_FLIGHT. Move to the
+        // normal queue if this is the next beginFrame.
+        if (!pfd.outOfFrameDeleteQueue.isEmpty()) {
+            pfd.deleteQueue = pfd.outOfFrameDeleteQueue;
+            pfd.outOfFrameDeleteQueue.clear();
+        }
+
+        // Mark released texture slots free.
+        if (!pfd.pendingTextureReleases.isEmpty()) {
+            for (uint id : qAsConst(pfd.pendingTextureReleases)) {
+                Texture &t(textures[id - 1]);
+                t.entryInUse = false; // createTexture() can now reuse this entry
+                t.texture = nullptr;
+            }
+            pfd.pendingTextureReleases.clear();
+        }
+        if (!pfd.outOfFramePendingTextureReleases.isEmpty()) {
+            pfd.pendingTextureReleases = pfd.outOfFramePendingTextureReleases;
+            pfd.outOfFramePendingTextureReleases.clear();
         }
     }
 
@@ -1673,7 +1687,7 @@ void QSGD3D12EnginePrivate::ensureGPUDescriptorHeap(int cbvSrvUavDescriptorCount
     if (newSize != pfd.gpuCbvSrvUavHeapSize) {
         if (Q_UNLIKELY(debug_render()))
             qDebug("Out of space for SRVs, creating new CBV-SRV-UAV descriptor heap with descriptor count %d", newSize);
-        pfd.deferredDelete(pfd.gpuCbvSrvUavHeap);
+        deferredDelete(pfd.gpuCbvSrvUavHeap);
         createCbvSrvUavHeap(currentPFrameIndex, newSize);
         setDescriptorHeaps(true);
         pfd.cbvSrvUavNextFreeDescriptorIndex = 0;
@@ -1742,8 +1756,10 @@ static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, 
 
     if (!mipmap) {
         switch (format) {
+        case QImage::Format_Grayscale8:
         case QImage::Format_Indexed8:
-            f = DXGI_FORMAT_A8_UNORM;
+        case QImage::Format_Alpha8:
+            f = DXGI_FORMAT_R8_UNORM;
             bpp = 1;
             break;
         case QImage::Format_RGB32:
@@ -1838,11 +1854,8 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
         qDebug("created texture %u, size %dx%d, miplevels %d", id, adjustedSize.width(), adjustedSize.height(), textureDesc.MipLevels);
 }
 
-void QSGD3D12EnginePrivate::queueResizeTexture(uint id, const QSize &size)
+void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
 {
-    // This function can safely be called outside begin-endFrame, even though
-    // it uses currentPFrameIndex.
-
     Q_ASSERT(id);
     const int idx = id - 1;
     Q_ASSERT(idx < textures.count() && textures[idx].entryInUse);
@@ -1861,8 +1874,6 @@ void QSGD3D12EnginePrivate::queueResizeTexture(uint id, const QSize &size)
     if (Q_UNLIKELY(debug_render()))
         qDebug("resizing texture %u, size %dx%d", id, size.width(), size.height());
 
-    PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
-
     D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
     textureDesc.Width = size.width();
     textureDesc.Height = size.height();
@@ -1871,8 +1882,7 @@ void QSGD3D12EnginePrivate::queueResizeTexture(uint id, const QSize &size)
     defaultHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
 
     ComPtr<ID3D12Resource> oldTexture = t.texture;
-    // release the old one only in current_frame + 2
-    pfd.deferredDelete(t.texture);
+    deferredDelete(t.texture);
 
     HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
                                                  D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&t.texture));
@@ -1881,7 +1891,7 @@ void QSGD3D12EnginePrivate::queueResizeTexture(uint id, const QSize &size)
         return;
     }
 
-    pfd.deferredDelete(t.srv);
+    deferredDelete(t.srv);
     t.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -1987,6 +1997,8 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         QImage::Format convFormat;
         int bytesPerPixel;
         textureFormat(images[i].format(), t.alpha, t.mipmap, &convFormat, &bytesPerPixel);
+        if (Q_UNLIKELY(debug_render() && i == 0))
+            qDebug("source image format %d, target format %d, bpp %d", images[i].format(), convFormat, bytesPerPixel);
 
         QImage convImage = images[i].format() == convFormat ? images[i] : images[i].convertToFormat(convFormat);
 
@@ -2020,7 +2032,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
             return;
         }
         for (int y = 0, ye = convImage.height(); y < ye; ++y) {
-            memcpy(p, convImage.scanLine(y), convImage.width() * bytesPerPixel);
+            memcpy(p, convImage.constScanLine(y), convImage.width() * bytesPerPixel);
             p += stride;
         }
         sbuf.buffer->Unmap(0, nullptr);
@@ -2054,9 +2066,6 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
 
 void QSGD3D12EnginePrivate::releaseTexture(uint id)
 {
-    // This function can safely be called outside begin-endFrame, even though
-    // it uses currentPFrameIndex.
-
     if (!id)
         return;
 
@@ -2070,16 +2079,18 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
     if (!t.entryInUse)
         return;
 
-    PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
-
     if (t.texture) {
-        pfd.deferredDelete(t.texture);
-        pfd.deferredDelete(t.srv);
+        deferredDelete(t.texture);
+        deferredDelete(t.srv);
         for (D3D12_CPU_DESCRIPTOR_HANDLE h : t.mipUAVs)
-            pfd.deferredDelete(h);
+            deferredDelete(h);
     }
 
-    pfd.pendingTextureReleases.insert(id);
+    QSet<uint> *pendingTextureReleasesSet = inFrame
+            ? &pframeData[currentPFrameIndex].pendingTextureReleases
+            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFramePendingTextureReleases;
+
+    pendingTextureReleasesSet->insert(id);
 }
 
 SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
@@ -2252,6 +2263,36 @@ void QSGD3D12EnginePrivate::MipMapGen::queueGenerate(const Texture &t)
                                D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     pfd.cbvSrvUavNextFreeDescriptorIndex += descriptorCount;
+}
+
+void QSGD3D12EnginePrivate::deferredDelete(ComPtr<ID3D12Resource> res)
+{
+    PersistentFrameData::DeleteQueueEntry e;
+    e.res = res;
+    QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
+            ? &pframeData[currentPFrameIndex].deleteQueue
+            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+    (*dq) << e;
+}
+
+void QSGD3D12EnginePrivate::deferredDelete(ComPtr<ID3D12DescriptorHeap> dh)
+{
+    PersistentFrameData::DeleteQueueEntry e;
+    e.descHeap = dh;
+    QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
+            ? &pframeData[currentPFrameIndex].deleteQueue
+            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+    (*dq) << e;
+}
+
+void QSGD3D12EnginePrivate::deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h)
+{
+    PersistentFrameData::DeleteQueueEntry e;
+    e.cpuDescriptorPtr = h.ptr;
+    QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
+            ? &pframeData[currentPFrameIndex].deleteQueue
+            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+    (*dq) << e;
 }
 
 QT_END_NAMESPACE

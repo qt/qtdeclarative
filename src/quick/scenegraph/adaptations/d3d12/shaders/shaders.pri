@@ -71,6 +71,22 @@ textmask_pshader8.input = textmask_VSPS
 textmask_pshader8.header = ps_textmask8.hlslh
 textmask_pshader8.entry = PS_TextMask8
 textmask_pshader8.type = ps_5_0
+styledtext_vshader.input = textmask_VSPS
+styledtext_vshader.header = vs_styledtext.hlslh
+styledtext_vshader.entry = VS_StyledText
+styledtext_vshader.type = vs_5_0
+styledtext_pshader.input = textmask_VSPS
+styledtext_pshader.header = ps_styledtext.hlslh
+styledtext_pshader.entry = PS_StyledText
+styledtext_pshader.type = ps_5_0
+outlinedtext_vshader.input = textmask_VSPS
+outlinedtext_vshader.header = vs_outlinedtext.hlslh
+outlinedtext_vshader.entry = VS_OutlinedText
+outlinedtext_vshader.type = vs_5_0
+outlinedtext_pshader.input = textmask_VSPS
+outlinedtext_pshader.header = ps_outlinedtext.hlslh
+outlinedtext_pshader.entry = PS_OutlinedText
+outlinedtext_pshader.type = ps_5_0
 
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
@@ -79,6 +95,7 @@ HLSL_SHADERS = \
     texture_vshader texture_pshader \
     smoothtexture_vshader smoothtexture_pshader \
     mipmapgen_cshader \
-    textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8
+    textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8 \
+    styledtext_vshader styledtext_pshader outlinedtext_vshader outlinedtext_pshader
 
 load(hlsl_bytecode_header)

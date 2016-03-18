@@ -64,24 +64,36 @@ QSGD3D12GlyphCache::~QSGD3D12GlyphCache()
 
 void QSGD3D12GlyphCache::createTextureData(int width, int height)
 {
+    width = qMax(128, width);
+    height = qMax(32, height);
+
     m_id = m_engine->genTexture();
     Q_ASSERT(m_id);
 
     if (Q_UNLIKELY(debug_render()))
-        qDebug("new glyph cache texture %u of size %dx%d", m_id, width, height);
+        qDebug("new glyph cache texture %u of size %dx%d, fontengine format %d", m_id, width, height, m_format);
 
     m_size = QSize(width, height);
-    m_engine->createTexture(m_id, m_size, QImage::Format_ARGB32_Premultiplied, QSGD3D12Engine::CreateWithAlpha);
+
+    const QImage::Format imageFormat =
+            m_format == QFontEngine::Format_A8 ? QImage::Format_Alpha8 : QImage::Format_ARGB32_Premultiplied;
+    m_engine->createTexture(m_id, m_size, imageFormat, QSGD3D12Engine::CreateWithAlpha);
 }
 
 void QSGD3D12GlyphCache::resizeTextureData(int width, int height)
 {
+    width = qMax(128, width);
+    height = qMax(32, height);
+
+    if (m_size.width() >= width && m_size.height() >= height)
+        return;
+
     if (Q_UNLIKELY(debug_render()))
         qDebug("glyph cache texture %u resize to %dx%d", m_id, width, height);
 
     m_size = QSize(width, height);
 
-    m_engine->queueResizeTexture(m_id, m_size);
+    m_engine->queueTextureResize(m_id, m_size);
 }
 
 void QSGD3D12GlyphCache::beginFillTexture()

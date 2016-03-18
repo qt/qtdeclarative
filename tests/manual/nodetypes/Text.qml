@@ -42,6 +42,7 @@ import QtQuick 2.0
 
 Item {
     Text {
+        id: text1
         anchors.top: parent.top
         text: "árvíztűrő tükörfúrógép\nÁRVÍZTŰRŐ TÜKÖRFÚRÓGÉP"
     }
@@ -57,5 +58,14 @@ Item {
         font.pointSize: 20
         color: "green"
         NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+    }
+
+    Row {
+        anchors.top: text1.bottom
+        anchors.margins: 10
+        Text { font.pointSize: 24; text: "Normal" }
+        Text { font.pointSize: 24; text: "Raised"; style: Text.Raised; styleColor: "#AAAAAA" }
+        Text { font.pointSize: 24; text: "Outline"; style: Text.Outline; styleColor: "red" }
+        Text { font.pointSize: 24; text: "Sunken"; style: Text.Sunken; styleColor: "#AAAAAA" }
     }
 }

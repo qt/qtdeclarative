@@ -69,6 +69,7 @@ public:
         enum DirtyState {
             DirtyMatrix = 0x0001,
             DirtyOpacity = 0x0002,
+            DirtyConstantBuffer = 0x0004,
             DirtyAll = 0xFFFF
         };
         Q_DECLARE_FLAGS(DirtyStates, DirtyState)
@@ -77,6 +78,7 @@ public:
 
         bool isMatrixDirty() const { return m_dirty & DirtyMatrix; }
         bool isOpacityDirty() const { return m_dirty & DirtyOpacity; }
+        bool isConstantBufferDirty() const { return m_dirty & DirtyConstantBuffer; }
 
         float opacity() const;
         QMatrix4x4 combinedMatrix() const;

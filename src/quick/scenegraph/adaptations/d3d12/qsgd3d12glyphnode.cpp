@@ -54,25 +54,25 @@ void QSGD3D12GlyphNode::update()
 
     if (m_style == QQuickText::Normal) {
         // QSGBasicGlyphNode dtor will delete
-        m_material = new QSGD3D12TextMaterial(m_rc, font);
+        m_material = new QSGD3D12TextMaterial(QSGD3D12TextMaterial::Normal, m_rc, font);
     } else if (m_style == QQuickText::Outline) {
-        // ### not yet supported
-//        QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(font);
-//        material->setStyleColor(m_styleColor);
-//        m_material = material;
+        QSGD3D12TextMaterial *material = new QSGD3D12TextMaterial(QSGD3D12TextMaterial::Outlined,
+                                                                  m_rc, font, QFontEngine::Format_A8);
+        material->setStyleColor(m_styleColor);
+        m_material = material;
         margins = QMargins(1, 1, 1, 1);
     } else {
-        // ### not yet supported
-//        QSGStyledTextMaterial *material = new QSGStyledTextMaterial(font);
+        QSGD3D12TextMaterial *material = new QSGD3D12TextMaterial(QSGD3D12TextMaterial::Styled,
+                                                                  m_rc, font, QFontEngine::Format_A8);
         if (m_style == QQuickText::Sunken) {
-//            material->setStyleShift(QVector2D(0, -1));
+            material->setStyleShift(QVector2D(0, -1));
             margins.setTop(1);
         } else if (m_style == QQuickText::Raised) {
-//            material->setStyleShift(QVector2D(0, 1));
+            material->setStyleShift(QVector2D(0, 1));
             margins.setBottom(1);
         }
-//        material->setStyleColor(m_styleColor);
-//        m_material = material;
+        material->setStyleColor(m_styleColor);
+        m_material = material;
     }
 
     QSGD3D12TextMaterial *textMaterial = static_cast<QSGD3D12TextMaterial *>(m_material);

@@ -176,7 +176,14 @@ private:
 class QSGD3D12TextMaterial : public QSGD3D12Material
 {
 public:
-    QSGD3D12TextMaterial(QSGD3D12RenderContext *rc, const QRawFont &font,
+    enum StyleType {
+        Normal,
+        Styled,
+        Outlined,
+
+        NStyleTypes
+    };
+    QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderContext *rc, const QRawFont &font,
                          QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
 
     QSGMaterialType *type() const override;
@@ -193,6 +200,13 @@ public:
     void setColor(const QVector4D &color) { m_color = color; }
     const QVector4D &color() const { return m_color; }
 
+    void setStyleShift(const QVector2D &shift) { m_styleShift = shift; }
+    const QVector2D &styleShift() const { return m_styleShift; }
+
+    void setStyleColor(const QColor &c) { m_styleColor = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void setStyleColor(const QVector4D &color) { m_styleColor = color; }
+    const QVector4D &styleColor() const { return m_styleColor; }
+
     void populate(const QPointF &position,
                   const QVector<quint32> &glyphIndexes, const QVector<QPointF> &glyphPositions,
                   QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine,
@@ -201,14 +215,19 @@ public:
     QSGD3D12GlyphCache *glyphCache() const { return static_cast<QSGD3D12GlyphCache *>(m_glyphCache.data()); }
 
 private:
-    static QSGMaterialType mtype;
+    static QSGMaterialType mtype[NStyleTypes];
+    StyleType m_styleType;
     QSGD3D12RenderContext *m_rc;
     QVector4D m_color;
+    QVector2D m_styleShift;
+    QVector4D m_styleColor;
     QRawFont m_font;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
     QSize m_lastGlyphCacheSize;
     float m_lastDpr = 0;
     QVector4D m_lastColor;
+    QVector2D m_lastStyleShift;
+    QVector4D m_lastStyleColor;
 };
 
 QT_END_NAMESPACE
