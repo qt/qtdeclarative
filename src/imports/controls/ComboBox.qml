@@ -42,24 +42,23 @@ import Qt.labs.templates 1.0 as T
 T.ComboBox {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: (background ? background.implicitWidth : contentItem.implicitWidth) + leftPadding + rightPadding
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 8
     padding: 6
-    leftPadding: 8
-    rightPadding: 8
+    leftPadding: 12
+    rightPadding: 12
+
+    opacity: enabled ? 1 : 0.3
 
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
-        autoExclusive: true
-        checked: control.currentIndex === index
-        highlighted: control.highlightedIndex === index
+        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
+        highlighted: control.highlightedIndex == index
     }
     //! [delegate]
 
@@ -67,7 +66,7 @@ T.ComboBox {
     contentItem: Text {
         text: control.displayText
         font: control.font
-        color: "#ffffff"
+        color: control.activeKeyFocus ? "#0066ff" : "#353637"
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -76,28 +75,27 @@ T.ComboBox {
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 120
         implicitHeight: 40
 
-        Rectangle {
-            width: parent.width
-            height: parent.height
-            opacity: control.enabled ? 1.0 : 0.2
-            color: control.pressed || popup.visible ? "#585A5C" : "#353637"
-        }
+        color: control.activeKeyFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
+            (control.pressed || popup.visible ? "#d6d6d6" : "#f6f6f6")
+        border.color: control.activeKeyFocus ? "#0066ff" : "#353637"
+        border.width: control.activeKeyFocus ? 2 : 1
 
         Image {
-            x: parent.width - width - control.rightPadding
+            x: parent.width - width - 4
             y: (parent.height - height) / 2
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/drop-indicator.png"
+            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/double-arrow"
+                + (control.activeKeyFocus ? "-focus" : "") + ".png"
         }
     }
     //! [background]
 
     //! [popup]
     popup: T.Popup {
-        y: control.height - 1
+        y: control.height - (control.activeKeyFocus ? 0 : 1)
         implicitWidth: control.width
         implicitHeight: listview.contentHeight
         topMargin: 6
@@ -114,8 +112,8 @@ T.ComboBox {
                 parent: listview
                 width: listview.width
                 height: listview.height
-                border.color: "#353637"
                 color: "transparent"
+                border.color: "#353637"
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
