@@ -107,7 +107,6 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void Qt.labs.controls::ComboBox::activated(int index)
 
     This signal is emitted when the item at \a index is activated by the user.
-    \a index is the activated model index. The corresponding handler is \c onActivated.
 
     \sa currentIndex
 */
@@ -709,7 +708,10 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 /*!
     \qmlmethod void Qt.labs.controls::ComboBox::increase()
 
-    Select next value.
+    Increases the current index of the combo box, or the highlighted
+    index if the popup list when it is visible.
+
+    \sa currentIndex, highlightedIndex
 */
 void QQuickComboBox::increase()
 {
@@ -720,7 +722,10 @@ void QQuickComboBox::increase()
 /*!
     \qmlmethod void Qt.labs.controls::ComboBox::decrease()
 
-    Select previous value.
+    Decreases the current index of the combo box, or the highlighted
+    index if the popup list when it is visible.
+
+    \sa currentIndex, highlightedIndex
 */
 void QQuickComboBox::decrease()
 {
