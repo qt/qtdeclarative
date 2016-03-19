@@ -80,6 +80,8 @@ QT_BEGIN_NAMESPACE
 
 class QQuickScrollBarPrivate : public QQuickControlPrivate
 {
+    Q_DECLARE_PUBLIC(QQuickScrollBar)
+
 public:
     QQuickScrollBarPrivate() : size(0), position(0), offset(0),
         active(false), pressed(false), moving(false),
@@ -92,6 +94,8 @@ public:
         return bar->d_func();
     }
 
+    qreal positionAt(const QPoint &point) const;
+
     qreal size;
     qreal position;
     qreal offset;
@@ -101,6 +105,15 @@ public:
     Qt::Orientation orientation;
     QQuickItem *handle;
 };
+
+qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
+{
+    Q_Q(const QQuickScrollBar);
+    if (orientation == Qt::Horizontal)
+        return point.x() / q->width();
+    else
+        return point.y() / q->height();
+}
 
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
     QQuickControl(*(new QQuickScrollBarPrivate), parent)
@@ -265,7 +278,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->offset = positionAt(event->pos()) - d->position;
+    d->offset = d->positionAt(event->pos()) - d->position;
     if (d->offset < 0 || d->offset > d->size)
         d->offset = d->size / 2;
     setPressed(true);
@@ -275,25 +288,16 @@ void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseMoveEvent(event);
-    setPosition(qBound<qreal>(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
+    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
 }
 
 void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseReleaseEvent(event);
-    setPosition(qBound<qreal>(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
+    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
     d->offset = 0.0;
     setPressed(false);
-}
-
-qreal QQuickScrollBar::positionAt(const QPoint &point) const
-{
-    Q_D(const QQuickScrollBar);
-    if (d->orientation == Qt::Horizontal)
-        return point.x() / width();
-    else
-        return point.y() / height();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

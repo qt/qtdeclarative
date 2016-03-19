@@ -103,8 +103,6 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
-    virtual qreal positionAt(const QPoint &point) const;
-
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
