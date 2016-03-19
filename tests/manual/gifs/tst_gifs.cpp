@@ -100,7 +100,7 @@ void tst_Gifs::tumblerWrap()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
-    gifRecorder.setQmlFileName("qtlabscontrols-tumbler-wrap.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-tumbler-wrap.qml");
 
     gifRecorder.start();
 
@@ -170,7 +170,7 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(5);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtlabscontrols-slider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-slider.qml");
 
     gifRecorder.start();
 
@@ -207,7 +207,7 @@ void tst_Gifs::rangeSlider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(7);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtlabscontrols-rangeslider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-rangeslider.qml");
 
     gifRecorder.start();
 
@@ -256,7 +256,7 @@ void tst_Gifs::busyIndicator()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtlabscontrols-busyindicator.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-busyindicator.qml");
 
     gifRecorder.start();
 
@@ -283,7 +283,7 @@ void tst_Gifs::switchGif()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtlabscontrols-switch.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-switch.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -301,7 +301,7 @@ void tst_Gifs::button()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtlabscontrols-button.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols-button.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -315,7 +315,7 @@ void tst_Gifs::button()
 
 void tst_Gifs::tabBar()
 {
-    const QString qmlFileName = QStringLiteral("qtlabscontrols-tabbar.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols-tabbar.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -344,7 +344,7 @@ void tst_Gifs::tabBar()
 
 void tst_Gifs::menu()
 {
-    const QString qmlFileName = QStringLiteral("qtlabscontrols-menu.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols-menu.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -378,8 +378,8 @@ void tst_Gifs::menu()
 void tst_Gifs::swipeDelegate_data()
 {
     QTest::addColumn<QString>("qmlFileName");
-    QTest::newRow("qtlabscontrols-swipedelegate.qml") << QString::fromLatin1("qtlabscontrols-swipedelegate.qml");
-    QTest::newRow("qtlabscontrols-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtlabscontrols-swipedelegate-leading-trailing.qml");
+    QTest::newRow("qtquickcontrols-swipedelegate.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate.qml");
+    QTest::newRow("qtquickcontrols-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate-leading-trailing.qml");
 }
 
 void tst_Gifs::swipeDelegate()
@@ -431,7 +431,7 @@ void tst_Gifs::swipeDelegateBehind()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(14);
-    gifRecorder.setQmlFileName(QStringLiteral("qtlabscontrols-swipedelegate-behind.qml"));
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols-swipedelegate-behind.qml"));
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
