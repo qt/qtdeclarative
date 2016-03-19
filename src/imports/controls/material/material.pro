@@ -1,4 +1,4 @@
-TARGET = qtlabsmaterialstyleplugin
+TARGET = qtquickmaterialstyleplugin
 TARGETPATH = Qt/labs/controls/material
 IMPORT_VERSION = 1.0
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtlabsmaterialstyleplugin.cpp
+    $$PWD/qtquickmaterialstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtlabsmaterialstyleplugin.qrc
+    $$PWD/qtquickmaterialstyleplugin.qrc
 
 include(material.pri)
 

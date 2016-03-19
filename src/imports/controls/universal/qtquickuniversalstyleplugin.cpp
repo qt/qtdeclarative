@@ -47,7 +47,7 @@
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtlabsuniversalstyleplugin);
+    Q_INIT_RESOURCE(qtquickuniversalstyleplugin);
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_Qt_labs_controls_universal);
 #endif
@@ -55,14 +55,14 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsUniversalStylePlugin: public QQmlExtensionPlugin
+class QtQuickUniversalStylePlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsUniversalStylePlugin(QObject *parent = nullptr);
-    ~QtLabsUniversalStylePlugin();
+    QtQuickUniversalStylePlugin(QObject *parent = nullptr);
+    ~QtQuickUniversalStylePlugin();
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
@@ -70,12 +70,12 @@ private:
     QQuickProxyTheme *theme;
 };
 
-QtLabsUniversalStylePlugin::QtLabsUniversalStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-QtLabsUniversalStylePlugin::~QtLabsUniversalStylePlugin()
+QtQuickUniversalStylePlugin::~QtQuickUniversalStylePlugin()
 {
     if (theme) {
         QPlatformTheme *old = theme->theme();
@@ -84,12 +84,12 @@ QtLabsUniversalStylePlugin::~QtLabsUniversalStylePlugin()
     }
 }
 
-void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
+void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 1, 0, "Universal", tr("Universal is an attached property"));
 }
 
-void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0)
         QGuiApplicationPrivate::platform_theme = new QQuickUniversalTheme;
@@ -106,4 +106,4 @@ void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char
 
 QT_END_NAMESPACE
 
-#include "qtlabsuniversalstyleplugin.moc"
+#include "qtquickuniversalstyleplugin.moc"

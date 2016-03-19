@@ -47,7 +47,7 @@
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtlabsmaterialstyleplugin);
+    Q_INIT_RESOURCE(qtquickmaterialstyleplugin);
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_Qt_labs_controls_material);
 #endif
@@ -55,14 +55,14 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsMaterialStylePlugin : public QQmlExtensionPlugin
+class QtQuickMaterialStylePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtLabsMaterialStylePlugin(QObject *parent = nullptr);
-    ~QtLabsMaterialStylePlugin();
+    QtQuickMaterialStylePlugin(QObject *parent = nullptr);
+    ~QtQuickMaterialStylePlugin();
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
@@ -70,12 +70,12 @@ private:
     QQuickProxyTheme *theme;
 };
 
-QtLabsMaterialStylePlugin::QtLabsMaterialStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-QtLabsMaterialStylePlugin::~QtLabsMaterialStylePlugin()
+QtQuickMaterialStylePlugin::~QtQuickMaterialStylePlugin()
 {
     if (theme) {
         QPlatformTheme *old = theme->theme();
@@ -84,12 +84,12 @@ QtLabsMaterialStylePlugin::~QtLabsMaterialStylePlugin()
     }
 }
 
-void QtLabsMaterialStylePlugin::registerTypes(const char *uri)
+void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", tr("Material is an attached property"));
 }
 
-void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
 
@@ -107,4 +107,4 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 
 QT_END_NAMESPACE
 
-#include "qtlabsmaterialstyleplugin.moc"
+#include "qtquickmaterialstyleplugin.moc"

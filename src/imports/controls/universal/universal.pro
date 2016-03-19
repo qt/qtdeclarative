@@ -1,4 +1,4 @@
-TARGET = qtlabsuniversalstyleplugin
+TARGET = qtquickuniversalstyleplugin
 TARGETPATH = Qt/labs/controls/universal
 IMPORT_VERSION = 1.0
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtlabsuniversalstyleplugin.cpp
+    $$PWD/qtquickuniversalstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtlabsuniversalstyleplugin.qrc
+    $$PWD/qtquickuniversalstyleplugin.qrc
 
 include(universal.pri)
 
