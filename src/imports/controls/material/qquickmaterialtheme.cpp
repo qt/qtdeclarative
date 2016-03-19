@@ -53,6 +53,7 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         buttonFont.setFamily(font.family());
         itemViewFont.setFamily(font.family());
         menuItemFont.setFamily(font.family());
+        editorFont.setFamily(font.family());
     }
 
     systemFont.setPixelSize(14);
@@ -65,6 +66,8 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     itemViewFont.setWeight(QFont::Medium);
 
     menuItemFont.setPixelSize(16);
+
+    editorFont.setPixelSize(16);
 }
 
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
@@ -79,6 +82,8 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
         return &menuItemFont;
+    case QPlatformTheme::EditorFont:
+        return &editorFont;
     default:
         return &systemFont;
     }

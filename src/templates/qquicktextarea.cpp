@@ -170,7 +170,7 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &f)
     QFont parentFont = font.resolve(f);
     parentFont.resolve(font.resolve() | f.resolve());
 
-    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
     const QFont resolvedFont = parentFont.resolve(defaultFont);
 
     const bool changed = resolvedFont != sourceFont;

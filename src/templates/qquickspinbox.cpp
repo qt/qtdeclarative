@@ -658,6 +658,11 @@ void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
         newItem->setActiveFocusOnTab(true);
 }
 
+QFont QQuickSpinBox::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
+}
+
 #ifndef QT_NO_ACCESSIBILITY
 QAccessible::Role QQuickSpinBox::accessibleRole() const
 {

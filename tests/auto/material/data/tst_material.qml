@@ -425,7 +425,19 @@ TestCase {
 
             {tag: "ComboBox:pixelSize", type: "ComboBox", attribute: "pixelSize", value: 16, window: 20, pane: 10},
             {tag: "ComboBox:weight", type: "ComboBox", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
-            {tag: "ComboBox:capitalization", type: "ComboBox", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase}
+            {tag: "ComboBox:capitalization", type: "ComboBox", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
+            {tag: "TextField:pixelSize", type: "TextField", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "TextField:weight", type: "TextField", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "TextField:capitalization", type: "TextField", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
+            {tag: "TextArea:pixelSize", type: "TextArea", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "TextArea:weight", type: "TextArea", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "TextArea:capitalization", type: "TextArea", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
+            {tag: "SpinBox:pixelSize", type: "SpinBox", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "SpinBox:weight", type: "SpinBox", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "SpinBox:capitalization", type: "SpinBox", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase}
         ]
     }
 

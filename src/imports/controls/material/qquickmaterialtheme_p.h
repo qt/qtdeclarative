@@ -65,6 +65,7 @@ private:
     QFont buttonFont;
     QFont itemViewFont;
     QFont menuItemFont;
+    QFont editorFont;
 };
 
 QT_END_NAMESPACE

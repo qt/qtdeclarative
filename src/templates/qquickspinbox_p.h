@@ -130,6 +130,8 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
+    QFont defaultFont() const override;
+
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
