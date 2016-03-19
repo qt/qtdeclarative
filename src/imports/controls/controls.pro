@@ -12,14 +12,8 @@ QMAKE_DOCS = $$PWD/doc/qtlabscontrols.qdocconf
 OTHER_FILES += \
     qmldir
 
-HEADERS += \
-    $$PWD/qquickbusyindicatorring_p.h \
-    $$PWD/qquickprogressstrip_p.h
-
 SOURCES += \
-    $$PWD/qtquickcontrolsplugin.cpp \
-    $$PWD/qquickbusyindicatorring.cpp \
-    $$PWD/qquickprogressstrip.cpp
+    $$PWD/qtquickcontrolsplugin.cpp
 
 RESOURCES += \
     $$PWD/qtquickcontrolsplugin.qrc

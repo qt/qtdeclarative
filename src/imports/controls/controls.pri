@@ -1,3 +1,11 @@
+HEADERS += \
+    $$PWD/qquickbusyindicatorring_p.h \
+    $$PWD/qquickprogressstrip_p.h
+
+SOURCES += \
+    $$PWD/qquickbusyindicatorring.cpp \
+    $$PWD/qquickprogressstrip.cpp
+
 QML_CONTROLS = \
     ApplicationWindow.qml \
     BusyIndicator.qml \
