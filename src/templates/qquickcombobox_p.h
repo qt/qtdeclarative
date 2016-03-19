@@ -106,6 +106,7 @@ public:
 
     Q_INVOKABLE QString textAt(int index) const;
     Q_INVOKABLE int find(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly) const;
+
 public Q_SLOTS:
     void increase();
     void decrease();

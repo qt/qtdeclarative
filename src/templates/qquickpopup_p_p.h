@@ -207,4 +207,3 @@ public:
 QT_END_NAMESPACE
 
 #endif // QQUICKPOPUP_P_P_H
-
