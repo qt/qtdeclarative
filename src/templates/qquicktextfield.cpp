@@ -151,7 +151,7 @@ QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.control = this;
+    d->pressHandler.control = this;
     d->setImplicitResizeEnabled(false);
     setActiveFocusOnTab(true);
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
@@ -401,11 +401,11 @@ void QQuickTextField::focusOutEvent(QFocusEvent *event)
 void QQuickTextField::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mousePressEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mousePressEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mousePressEvent(event);
     }
@@ -414,11 +414,11 @@ void QQuickTextField::mousePressEvent(QMouseEvent *event)
 void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mouseMoveEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseMoveEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mouseMoveEvent(event);
     }
@@ -427,11 +427,11 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mouseReleaseEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseReleaseEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mouseReleaseEvent(event);
     }
@@ -440,8 +440,8 @@ void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 void QQuickTextField::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextField);
-    if (event->timerId() == d->pressAndHoldHelper.timer.timerId()) {
-        d->pressAndHoldHelper.timerEvent(event);
+    if (event->timerId() == d->pressHandler.timer.timerId()) {
+        d->pressHandler.timerEvent(event);
     } else {
         QQuickTextInput::timerEvent(event);
     }

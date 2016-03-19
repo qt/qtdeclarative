@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickpressandholdhelper_p.h"
+#include "qquickpresshandler_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtGui/qguiapplication.h>
@@ -44,14 +44,14 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickPressAndHoldHelper::QQuickPressAndHoldHelper()
+QQuickPressHandler::QQuickPressHandler()
     : control(nullptr)
     , longPress(false)
     , pressAndHoldSignalIndex(-1)
     , delayedMousePressEvent(nullptr)
 { }
 
-void QQuickPressAndHoldHelper::mousePressEvent(QMouseEvent *event)
+void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 {
     longPress = false;
     pressPos = event->localPos();
@@ -63,19 +63,19 @@ void QQuickPressAndHoldHelper::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QQuickPressAndHoldHelper::mouseMoveEvent(QMouseEvent *event)
+void QQuickPressHandler::mouseMoveEvent(QMouseEvent *event)
 {
     if (qAbs(int(event->localPos().x() - pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
         timer.stop();
 }
 
-void QQuickPressAndHoldHelper::mouseReleaseEvent(QMouseEvent *)
+void QQuickPressHandler::mouseReleaseEvent(QMouseEvent *)
 {
     if (!longPress)
         timer.stop();
 }
 
-void QQuickPressAndHoldHelper::timerEvent(QTimerEvent *)
+void QQuickPressHandler::timerEvent(QTimerEvent *)
 {
     timer.stop();
     clearDelayedMouseEvent();
@@ -98,7 +98,7 @@ void QQuickPressAndHoldHelper::timerEvent(QTimerEvent *)
     }
 }
 
-void QQuickPressAndHoldHelper::clearDelayedMouseEvent()
+void QQuickPressHandler::clearDelayedMouseEvent()
 {
     if (delayedMousePressEvent) {
         delete delayedMousePressEvent;
@@ -106,7 +106,7 @@ void QQuickPressAndHoldHelper::clearDelayedMouseEvent()
     }
 }
 
-bool QQuickPressAndHoldHelper::isActive()
+bool QQuickPressHandler::isActive()
 {
     return !(timer.isActive() || longPress);
 }

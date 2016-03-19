@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextinput_p_p.h>
-#include <QtQuickTemplates/private/qquickpressandholdhelper_p.h>
+#include <QtQuickTemplates/private/qquickpresshandler_p_p.h>
 
 #include "qquicktextfield_p.h"
 
@@ -97,7 +97,7 @@ public:
     QQuickItem *background;
     QString placeholder;
     Qt::FocusReason focusReason;
-    QQuickPressAndHoldHelper pressAndHoldHelper;
+    QQuickPressHandler pressHandler;
     QQuickAccessibleAttached *accessibleAttached;
 };
 

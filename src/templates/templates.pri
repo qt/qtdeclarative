@@ -31,7 +31,7 @@ HEADERS += \
     $$PWD/qquickpane_p_p.h \
     $$PWD/qquickpopup_p.h \
     $$PWD/qquickpopup_p_p.h \
-    $$PWD/qquickpressandholdhelper_p.h \
+    $$PWD/qquickpresshandler_p_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
     $$PWD/qquickrangeslider_p.h \
@@ -77,7 +77,7 @@ SOURCES += \
     $$PWD/qquickpageindicator.cpp \
     $$PWD/qquickpane.cpp \
     $$PWD/qquickpopup.cpp \
-    $$PWD/qquickpressandholdhelper.cpp \
+    $$PWD/qquickpresshandler.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \
     $$PWD/qquickrangeslider.cpp \

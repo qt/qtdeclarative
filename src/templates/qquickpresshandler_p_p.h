@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPRESSANDHOLDHELPER_H
-#define QQUICKPRESSANDHOLDHELPER_H
+#ifndef QQUICKPRESSHANDLER_P_P_H
+#define QQUICKPRESSHANDLER_P_P_H
 
 //
 //  W A R N I N G
@@ -57,9 +57,9 @@ class QQuickItem;
 class QMouseEvent;
 class QTimerEvent;
 
-struct QQuickPressAndHoldHelper
+struct QQuickPressHandler
 {
-    QQuickPressAndHoldHelper();
+    QQuickPressHandler();
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
@@ -79,4 +79,4 @@ struct QQuickPressAndHoldHelper
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPRESSANDHOLDHELPER_H
+#endif // QQUICKPRESSHANDLER_P_P_H
