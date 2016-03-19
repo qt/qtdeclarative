@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>gallery.qml</file>
-        <file>qtlabscontrols.conf</file>
+        <file>qtquickcontrols.conf</file>
         <file>images/arrow.png</file>
         <file>images/arrow@2x.png</file>
         <file>images/arrow@3x.png</file>

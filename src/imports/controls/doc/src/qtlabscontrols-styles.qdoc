@@ -93,7 +93,7 @@
 
     \section2 Configuration file
 
-    Qt Labs Controls support a special configuration file, \c :/qtlabscontrols.conf,
+    Qt Labs Controls support a special configuration file, \c :/qtquickcontrols.conf,
     that is built into an application's resources.
 
     The configuration file can specify the preferred style (may be overridden by either
@@ -123,7 +123,7 @@
     \code
     <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/">
-        <file>qtlabscontrols.conf</file>
+        <file>qtquickcontrols.conf</file>
     </qresource>
     </RCC>
     \endcode

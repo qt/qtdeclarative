@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-    <file>qtlabscontrols.conf</file>
+    <file>qtquickcontrols.conf</file>
 </qresource>
 </RCC>

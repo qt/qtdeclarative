@@ -806,7 +806,7 @@ should be very few adjustments necessary when switching styles.
 Now let's try each style's dark theme. The Default style has no dark theme, as
 it would add a slight overhead to a style that is designed to be as performant
 as possible. We'll test out the Material style first, so add an entry to
-\c qtlabscontrols.conf that tells it to use its dark theme:
+\c qtquickcontrols.conf that tells it to use its dark theme:
 
 \code
 [material]
