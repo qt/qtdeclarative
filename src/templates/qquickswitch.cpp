@@ -90,6 +90,7 @@ public:
     QQuickSwitchPrivate() : position(0) { }
 
     void updatePosition();
+    qreal positionAt(const QPoint &point) const;
 
     bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
@@ -104,6 +105,15 @@ void QQuickSwitchPrivate::updatePosition()
 {
     Q_Q(QQuickSwitch);
     q->setPosition(checked ? 1.0 : 0.0);
+}
+
+qreal QQuickSwitchPrivate::positionAt(const QPoint &point) const
+{
+    Q_Q(const QQuickSwitch);
+    qreal pos = point.x() / indicator->width();
+    if (q->isMirrored())
+        return 1.0 - pos;
+    return pos;
 }
 
 bool QQuickSwitchPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *event)
@@ -122,7 +132,7 @@ bool QQuickSwitchPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *e
     if (!child->keepMouseGrab())
         child->setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().x() - pressPoint.x(), Qt::XAxis, event));
     if (child->keepMouseGrab()) {
-        q->setPosition(q->positionAt(event->pos()));
+        q->setPosition(positionAt(event->pos()));
         event->accept();
     }
     return true;
@@ -243,14 +253,6 @@ bool QQuickSwitch::childMouseEventFilter(QQuickItem *child, QEvent *event)
         }
     }
     return false;
-}
-
-qreal QQuickSwitch::positionAt(const QPoint &point) const
-{
-    qreal pos = point.x() / indicator()->width();
-    if (isMirrored())
-        return 1.0 - pos;
-    return pos;
 }
 
 QT_END_NAMESPACE
