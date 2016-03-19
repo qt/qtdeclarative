@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
             height: 300
             modal: true
             focus: true
-            closePolicy: Popup.OnEscape | Popup.OnPressOutside
+            closePolicy: Popup.OnEscape | Popup.OnPressOutsideParent
         }
     }
     \endqml
@@ -120,7 +120,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , bottomMargin(0)
     , contentWidth(0)
     , contentHeight(0)
-    , closePolicy(QQuickPopup::OnEscape)
+    , closePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutside)
     , parentItem(nullptr)
     , enter(nullptr)
     , exit(nullptr)
@@ -1522,7 +1522,7 @@ void QQuickPopup::setScale(qreal scale)
     \value Popup.OnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
 
-    The default value is \c Popup.OnEscape.
+    The default value is \c {Popup.OnEscape | Popup.OnPressOutside}.
 */
 QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 {

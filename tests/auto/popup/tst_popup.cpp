@@ -129,11 +129,6 @@ void tst_popup::overlay()
     QCOMPARE(overlayPressedSignal.count(), 2);
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + popup->x() + popup->width() / 2,
-                                                                     button->y() + popup->y() + popup->height() / 2));
-    QCOMPARE(overlayPressedSignal.count(), 2);
-    QCOMPARE(overlayReleasedSignal.count(), 1);
-
     QVERIFY(!popup->isVisible());
 }
 

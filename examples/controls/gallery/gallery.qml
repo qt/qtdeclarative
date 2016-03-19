@@ -218,7 +218,6 @@ ApplicationWindow {
         height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
-        closePolicy: Popup.OnEscape | Popup.OnPressOutside
 
         contentItem: ColumnLayout {
             id: settingsColumn
@@ -295,7 +294,6 @@ ApplicationWindow {
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
         contentHeight: aboutColumn.height
-        closePolicy: Popup.OnEscape | Popup.OnPressOutside
 
         Column {
             id: aboutColumn
