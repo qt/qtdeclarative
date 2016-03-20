@@ -85,7 +85,7 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
 public:
     QQuickScrollBarPrivate() : size(0), position(0), offset(0),
         active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical), handle(nullptr)
+        orientation(Qt::Vertical)
     {
     }
 
@@ -96,6 +96,8 @@ public:
 
     qreal positionAt(const QPoint &point) const;
 
+    void resizeContent() override;
+
     qreal size;
     qreal position;
     qreal offset;
@@ -103,7 +105,6 @@ public:
     bool pressed;
     bool moving;
     Qt::Orientation orientation;
-    QQuickItem *handle;
 };
 
 qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
@@ -113,6 +114,21 @@ qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
         return point.x() / q->width();
     else
         return point.y() / q->height();
+}
+
+void QQuickScrollBarPrivate::resizeContent()
+{
+    Q_Q(QQuickScrollBar);
+    if (!contentItem)
+        return;
+
+    if (orientation == Qt::Horizontal) {
+        contentItem->setPosition(QPointF(q->leftPadding() + position * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * size, q->availableHeight()));
+    } else {
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
+    }
 }
 
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
@@ -152,6 +168,8 @@ void QQuickScrollBar::setSize(qreal size)
         return;
 
     d->size = size;
+    if (isComponentComplete())
+        d->resizeContent();
     emit sizeChanged();
 }
 
@@ -175,6 +193,8 @@ void QQuickScrollBar::setPosition(qreal position)
         return;
 
     d->position = position;
+    if (isComponentComplete())
+        d->resizeContent();
     emit positionChanged();
 }
 
@@ -245,33 +265,9 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
         return;
 
     d->orientation = orientation;
+    if (isComponentComplete())
+        d->resizeContent();
     emit orientationChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::ScrollBar::handle
-
-    This property holds the handle item.
-
-    \sa {Customizing ScrollBar}
-*/
-QQuickItem *QQuickScrollBar::handle() const
-{
-    Q_D(const QQuickScrollBar);
-    return d->handle;
-}
-
-void QQuickScrollBar::setHandle(QQuickItem *handle)
-{
-    Q_D(QQuickScrollBar);
-    if (d->handle == handle)
-        return;
-
-    delete d->handle;
-    d->handle = handle;
-    if (handle && !handle->parentItem())
-        handle->setParentItem(this);
-    emit handleChanged();
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)

@@ -64,7 +64,6 @@ class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
     explicit QQuickScrollBar(QQuickItem *parent = nullptr);
@@ -83,9 +82,6 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
-    QQuickItem *handle() const;
-    void setHandle(QQuickItem *handle);
-
 public Q_SLOTS:
     void setSize(qreal size);
     void setPosition(qreal position);
@@ -96,7 +92,6 @@ Q_SIGNALS:
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
-    void handleChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

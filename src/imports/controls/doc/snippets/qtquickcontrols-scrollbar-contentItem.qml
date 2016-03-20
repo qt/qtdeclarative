@@ -34,7 +34,7 @@ ScrollBar {
     active: true
     height: 100
     Rectangle {
-        parent: handle
+        parent: contentItem
         anchors.fill: parent
         color: "transparent"
         border.color: "red"

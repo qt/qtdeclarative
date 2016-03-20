@@ -354,7 +354,7 @@
     \section1 Customizing ScrollBar
 
         ScrollBar consists of two visual items: \l {Control::background}{background}
-        and \l {ScrollBar::handle}{handle}.
+        and \l {Control::contentItem}{content item}.
 
         \section3 Background
 
@@ -362,11 +362,11 @@
 
             ScrollBar has no background item by default.
 
-        \section3 Handle
+        \section3 Content item
 
-            \image qtquickcontrols-scrollbar-handle.png
+            \image qtquickcontrols-scrollbar-contentItem.png
 
-            \snippet ScrollBar.qml handle
+            \snippet ScrollBar.qml contentItem
 
 
     \section1 Customizing ScrollIndicator
