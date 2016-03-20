@@ -280,7 +280,7 @@
     \section1 Customizing ProgressBar
 
         ProgressBar consists of two visual items: \l {Control::background}{background}
-        and \l {ProgressBar::indicator}{indicator}.
+        and \l {Control::contentItem}{content item}.
 
         \section3 Background
 
@@ -288,11 +288,11 @@
 
             \snippet ProgressBar.qml background
 
-        \section3 Indicator
+        \section3 Content item
 
-            \image qtquickcontrols-progressbar-indicator.png
+            \image qtquickcontrols-progressbar-contentItem.png
 
-            \snippet ProgressBar.qml indicator
+            \snippet ProgressBar.qml contentItem
 
 
     \section1 Customizing RadioButton

@@ -207,9 +207,13 @@ QSGNode *QQuickMaterialProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePa
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
 
+    QRectF bounds = boundingRect();
+    bounds.setHeight(implicitHeight());
+    bounds.moveTop((height() - bounds.height()) / 2.0);
+
     if (!oldNode)
-        oldNode = new QSGSimpleRectNode(boundingRect(), Qt::transparent);
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(boundingRect());
+        oldNode = new QSGSimpleRectNode(bounds, Qt::transparent);
+    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(bounds);
 
     const int count = m_indeterminate ? 2 : 1;
     const qreal w = m_indeterminate ? 0 : m_progress * width();
@@ -230,7 +234,7 @@ QSGNode *QQuickMaterialProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePa
         QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(transformNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
-        rectNode->setRect(QRectF(0, 0, w, height()));
+        rectNode->setRect(QRectF(0, bounds.y(), w, bounds.height()));
         rectNode->setColor(m_color);
         rectNode->update();
 

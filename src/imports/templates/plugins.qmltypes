@@ -436,7 +436,6 @@ Module {
         Property { name: "position"; type: "double"; isReadonly: true }
         Property { name: "visualPosition"; type: "double"; isReadonly: true }
         Property { name: "indeterminate"; type: "bool" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
     }
     Component {
         name: "QQuickRadioButton"

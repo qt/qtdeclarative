@@ -43,17 +43,14 @@ T.ProgressBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            indicator ? indicator.implicitWidth : 0) + leftPadding + rightPadding
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [indicator]
-    indicator: ProgressStrip {
+    //! [contentItem]
+    contentItem: ProgressStrip {
         id: strip
-        x: control.leftPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
-        height: 10
+        implicitHeight: 10
 
         scale: control.mirrored ? -1 : 1
         indeterminate: control.indeterminate
@@ -66,7 +63,7 @@ T.ProgressBar {
             running: control.visible && control.indeterminate
         }
     }
-    //! [indicator]
+    //! [contentItem]
 
     //! [background]
     background: Rectangle {

@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(nullptr)
+    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false)
     {
     }
 
@@ -79,7 +79,6 @@ public:
     qreal to;
     qreal value;
     bool indeterminate;
-    QQuickItem *indicator;
 };
 
 QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
@@ -234,32 +233,6 @@ void QQuickProgressBar::setIndeterminate(bool indeterminate)
 
     d->indeterminate = indeterminate;
     emit indeterminateChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::ProgressBar::indicator
-
-    This property holds the graphical representation of the progress bar.
-
-    \sa {Customizing ProgressBar}
-*/
-QQuickItem *QQuickProgressBar::indicator() const
-{
-    Q_D(const QQuickProgressBar);
-    return d->indicator;
-}
-
-void QQuickProgressBar::setIndicator(QQuickItem *indicator)
-{
-    Q_D(QQuickProgressBar);
-    if (d->indicator == indicator)
-        return;
-
-    delete d->indicator;
-    d->indicator = indicator;
-    if (indicator && !indicator->parentItem())
-        indicator->setParentItem(this);
-    emit indicatorChanged();
 }
 
 void QQuickProgressBar::mirrorChange()

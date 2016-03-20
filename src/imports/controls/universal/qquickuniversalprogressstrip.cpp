@@ -281,6 +281,8 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
 
     QRectF bounds = boundingRect();
+    bounds.setHeight(implicitHeight());
+    bounds.moveTop((height() - bounds.height()) / 2.0);
     if (!m_indeterminate)
         bounds.setWidth(m_progress * bounds.width());
 
