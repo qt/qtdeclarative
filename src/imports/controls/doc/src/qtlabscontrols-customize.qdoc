@@ -372,7 +372,7 @@
     \section1 Customizing ScrollIndicator
 
         ScrollIndicator consists of two visual items: \l {Control::background}{background}
-        and \l {ScrollIndicator::indicator}{indicator}.
+        and \l {Control::contentItem}{content item}.
 
         \section3 Background
 
@@ -380,11 +380,11 @@
 
             ScrollIndicator has no background item by default.
 
-        \section3 Indicator
+        \section3 Content item
 
-            \image qtquickcontrols-scrollindicator-indicator.png
+            \image qtquickcontrols-scrollindicator-contentItem.png
 
-            \snippet ScrollIndicator.qml indicator
+            \snippet ScrollIndicator.qml contentItem
 
 
     \section1 Customizing Slider

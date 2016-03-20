@@ -34,7 +34,7 @@ ScrollIndicator {
     active: true
     height: 100
     Rectangle {
-        parent: indicator
+        parent: contentItem
         anchors.fill: parent
         color: "transparent"
         border.color: "red"

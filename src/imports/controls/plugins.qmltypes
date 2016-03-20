@@ -529,7 +529,6 @@ Module {
         Property { name: "position"; type: "double" }
         Property { name: "active"; type: "bool" }
         Property { name: "orientation"; type: "Qt::Orientation" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Method {
             name: "setSize"
             Parameter { name: "size"; type: "double" }
