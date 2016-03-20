@@ -499,9 +499,12 @@ Module {
         attachedType: "QQuickScrollBarAttached"
         Property { name: "size"; type: "double" }
         Property { name: "position"; type: "double" }
+        Property { name: "stepSize"; type: "double" }
         Property { name: "active"; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "orientation"; type: "Qt::Orientation" }
+        Method { name: "increase" }
+        Method { name: "decrease" }
         Method {
             name: "setSize"
             Parameter { name: "size"; type: "double" }

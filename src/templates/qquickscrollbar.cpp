@@ -73,6 +73,21 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
+    Notice that ScrollBar does not filter key events of the Flickable it is
+    attached to. The following example illustrates how to implement scrolling
+    with up and down keys:
+
+    \code
+    Flickable {
+        focus: true
+
+        Keys.onUpPressed: scrollBar.decrease()
+        Keys.onDownPressed: scrollBar.increase()
+
+        ScrollBar.vertical: ScrollBar { id: scrollBar }
+    }
+    \endcode
+
     \labs
 
     \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
@@ -83,7 +98,7 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollBar)
 
 public:
-    QQuickScrollBarPrivate() : size(0), position(0), offset(0),
+    QQuickScrollBarPrivate() : size(0), position(0), stepSize(0), offset(0),
         active(false), pressed(false), moving(false),
         orientation(Qt::Vertical)
     {
@@ -100,6 +115,7 @@ public:
 
     qreal size;
     qreal position;
+    qreal stepSize;
     qreal offset;
     bool active;
     bool pressed;
@@ -164,6 +180,7 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
+    size = qBound(0.0, size, 1.0 - d->position);
     if (qFuzzyCompare(d->size, size))
         return;
 
@@ -189,6 +206,7 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
+    position = qBound(0.0, position, 1.0 - d->size);
     if (qFuzzyCompare(d->position, position))
         return;
 
@@ -196,6 +214,29 @@ void QQuickScrollBar::setPosition(qreal position)
     if (isComponentComplete())
         d->resizeContent();
     emit positionChanged();
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::ScrollBar::stepSize
+
+    This property holds the step size. The default value is \c 0.0.
+
+    \sa increase(), decrease()
+*/
+qreal QQuickScrollBar::stepSize() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->stepSize;
+}
+
+void QQuickScrollBar::setStepSize(qreal step)
+{
+    Q_D(QQuickScrollBar);
+    if (qFuzzyCompare(d->stepSize, step))
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -268,6 +309,38 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
     if (isComponentComplete())
         d->resizeContent();
     emit orientationChanged();
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::ScrollBar::increase()
+
+    Increases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
+
+    \sa stepSize
+*/
+void QQuickScrollBar::increase()
+{
+    Q_D(QQuickScrollBar);
+    qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    setActive(true);
+    setPosition(d->position + step);
+    setActive(false);
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::ScrollBar::decrease()
+
+    Decreases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
+
+    \sa stepSize
+*/
+void QQuickScrollBar::decrease()
+{
+    Q_D(QQuickScrollBar);
+    qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    setActive(true);
+    setPosition(d->position - step);
+    setActive(false);
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)

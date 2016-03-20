@@ -210,4 +210,42 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_stepSize_data() {
+        return [
+            { tag: "0.0", stepSize: 0.0 },
+            { tag: "0.1", stepSize: 0.1 },
+            { tag: "0.5", stepSize: 0.5 }
+        ]
+    }
+
+    function test_stepSize(data) {
+        var control = scrollBar.createObject(testCase, {stepSize: data.stepSize})
+        verify(control)
+
+        compare(control.stepSize, data.stepSize)
+        compare(control.position, 0.0)
+
+        var count = 10
+        if (data.stepSize !== 0.0)
+            count = 1.0 / data.stepSize
+
+        // increase until 1.0
+        for (var i = 1; i <= count; ++i) {
+            control.increase()
+            compare(control.position, i / count)
+        }
+        control.increase()
+        compare(control.position, 1.0)
+
+        // decrease until 0.0
+        for (var d = count - 1; d >= 0; --d) {
+            control.decrease()
+            compare(control.position, d / count)
+        }
+        control.decrease()
+        compare(control.position, 0.0)
+
+        control.destroy()
+    }
 }

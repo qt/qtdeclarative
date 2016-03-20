@@ -61,6 +61,7 @@ class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
@@ -73,6 +74,9 @@ public:
     qreal size() const;
     qreal position() const;
 
+    qreal stepSize() const;
+    void setStepSize(qreal step);
+
     bool isActive() const;
     void setActive(bool active);
 
@@ -83,12 +87,15 @@ public:
     void setOrientation(Qt::Orientation orientation);
 
 public Q_SLOTS:
+    void increase();
+    void decrease();
     void setSize(qreal size);
     void setPosition(qreal position);
 
 Q_SIGNALS:
     void sizeChanged();
     void positionChanged();
+    void stepSizeChanged();
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
