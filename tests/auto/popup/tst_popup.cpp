@@ -63,6 +63,7 @@ void tst_popup::visible()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
@@ -92,6 +93,7 @@ void tst_popup::overlay()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickItem *overlay = window->overlay();
@@ -160,6 +162,7 @@ void tst_popup::closePolicy()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
