@@ -339,20 +339,10 @@ TestCase {
 
         compare(control2.font.family, "Arial")
         compare(control2.item2_2.font.family, control2.font.family)
-        compare(control2.item2_2.font.pointSize, control2.font.pointSize)
-        compare(control2.item2_2.font.weight, control2.font.weight)
         compare(control2.item2_3.font.family, control2.font.family)
-        compare(control2.item2_3.font.pointSize, control2.font.pointSize)
-        compare(control2.item2_3.font.weight, control2.font.weight)
         compare(control2.item2_4.font.family, control2.font.family)
-        compare(control2.item2_4.font.pointSize, control2.font.pointSize)
-        compare(control2.item2_4.font.weight, control2.font.weight)
         compare(control2.item2_5.font.family, control2.font.family)
-        compare(control2.item2_5.font.pointSize, control2.font.pointSize)
-        compare(control2.item2_5.font.weight, control2.font.weight)
         compare(control2.item2_6.font.family, control2.font.family)
-        compare(control2.item2_6.font.pointSize, control2.font.pointSize)
-        compare(control2.item2_6.font.weight, control2.font.weight)
 
         control2.font.pointSize = 48
         compare(control2.item2_2.font.pointSize, 48)
@@ -496,20 +486,10 @@ TestCase {
 
         compare(control3.font.family, "Arial")
         compare(control3.item3_3.font.family, control3.font.family)
-        compare(control3.item3_3.font.pointSize, control3.font.pointSize)
-        compare(control3.item3_3.font.weight, control3.font.weight)
         compare(control3.item3_4.font.family, control3.font.family)
-        compare(control3.item3_4.font.pointSize, control3.font.pointSize)
-        compare(control3.item3_4.font.weight, control3.font.weight)
         compare(control3.item3_5.font.family, control3.font.family)
-        compare(control3.item3_5.font.pointSize, control3.font.pointSize)
-        compare(control3.item3_5.font.weight, control3.font.weight)
         compare(control3.item3_7.font.family, control3.font.family)
-        compare(control3.item3_7.font.pointSize, control3.font.pointSize)
-        compare(control3.item3_7.font.weight, control3.font.weight)
         compare(control3.item3_8.font.family, control3.font.family)
-        compare(control3.item3_8.font.pointSize, control3.font.pointSize)
-        compare(control3.item3_8.font.weight, control3.font.weight)
 
         control3.font.pointSize = 48
         compare(control3.item3_3.font.pointSize, 48)
