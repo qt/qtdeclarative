@@ -365,9 +365,8 @@
    One exception to this is that a QObject singleton type property may not be aliased (because the
    singleton type name does not identify an object within the same component as any other item).
 
-   \b{NOTE:} A QObject singleton type instance returned from a singleton type provider is owned by the QML
-   engine.  For this reason, the singleton type provider function should \b{not} be implemented as a
-   singleton factory.
+   \b{NOTE:} A QObject singleton type instance returned from a singleton type provider is owned by
+   the QML engine unless the object has explicit QQmlEngine::CppOwnership flag set.
 
    Usage:
    \code
