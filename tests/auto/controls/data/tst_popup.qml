@@ -796,6 +796,16 @@ TestCase {
         control.destroy()
     }
 
+    // QTBUG-51989
+    function test_visible() {
+        var control = popupTemplate.createObject(testCase, {visible: true})
+        verify(control)
+
+        tryCompare(control, "visible", true)
+
+        control.destroy()
+    }
+
     Component {
         id: overlayTest
         ApplicationWindow {

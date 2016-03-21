@@ -1470,10 +1470,17 @@ bool QQuickPopup::isVisible() const
 
 void QQuickPopup::setVisible(bool visible)
 {
-    if (visible)
-        open();
-    else
-        close();
+    Q_D(QQuickPopup);
+    if (d->visible == visible)
+        return;
+
+    d->visible = visible;
+    if (d->complete) {
+        if (visible)
+            d->transitionManager.transitionEnter();
+        else
+            d->transitionManager.transitionExit();
+    }
 }
 
 /*!
