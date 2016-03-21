@@ -488,7 +488,19 @@ void QQuickPopupPositioner::repositionPopup()
 
         QQuickWindow *window = m_parentItem->window();
         if (window) {
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(m_popup->getMargins());
+            const QMarginsF margins = m_popup->getMargins();
+            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
+
+            // push inside the margins
+            if (margins.top() > 0 && rect.top() < bounds.top())
+                rect.moveTop(margins.top());
+            if (margins.bottom() > 0 && rect.bottom() > bounds.bottom())
+                rect.moveBottom(bounds.bottom());
+            if (margins.left() > 0 && rect.left() < bounds.left())
+                rect.moveLeft(margins.left());
+            if (margins.right() > 0 && rect.right() > bounds.right())
+                rect.moveRight(bounds.right());
+
             if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
                 // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
                 const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_x, m_parentItem->height() - m_y - rect.height(), rect.width(), rect.height()));

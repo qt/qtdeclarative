@@ -287,6 +287,66 @@ TestCase {
         control.destroy()
     }
 
+    function test_margins() {
+        var control = popupControl.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        control.open()
+        verify(control.visible)
+
+        control.margins = 10
+        compare(control.margins, 10)
+        compare(control.topMargin, 10)
+        compare(control.leftMargin, 10)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 10)
+        compare(control.contentItem.parent.y, 10)
+
+        control.topMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 10)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 10)
+        compare(control.contentItem.parent.y, 20)
+
+        control.leftMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, 20)
+
+        control.x = testCase.width
+        control.y = testCase.height
+        compare(control.contentItem.parent.x, testCase.width - control.width - 10)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+
+        control.rightMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 20)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+
+        control.bottomMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 20)
+        compare(control.bottomMargin, 20)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 20)
+
+        control.destroy()
+    }
+
     function test_background() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
