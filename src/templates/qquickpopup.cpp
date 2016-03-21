@@ -1285,6 +1285,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (d->parentItem == parent)
         return;
 
+    QQuickWindow *oldWindow = window();
+
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
@@ -1295,6 +1297,10 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
             p->updateLocale(window->locale(), false); // explicit=false
     }
     emit parentChanged();
+
+    QQuickWindow *newWindow = window();
+    if (oldWindow != newWindow)
+        emit windowChanged(newWindow);
 }
 
 /*!

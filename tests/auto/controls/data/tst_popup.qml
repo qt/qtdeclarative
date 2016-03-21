@@ -835,4 +835,16 @@ TestCase {
 
         window.destroy()
     }
+
+    function test_attached_applicationwindow() {
+        var control = popupTemplate.createObject(applicationWindow.contentItem)
+        verify(control)
+
+        compare(control.ApplicationWindow.window, applicationWindow)
+
+        control.parent = null
+        compare(control.ApplicationWindow.window, null)
+
+        control.destroy()
+    }
 }

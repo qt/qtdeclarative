@@ -312,6 +312,7 @@ Q_SIGNALS:
     void closePolicyChanged();
     void enterChanged();
     void exitChanged();
+    void windowChanged(QQuickWindow *window);
 
     void aboutToShow();
     void aboutToHide();
