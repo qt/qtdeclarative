@@ -30,7 +30,8 @@ import Qt.labs.controls 1.0
 
 Slider {
     value: 0.5
-    background: Rectangle {
+    Rectangle {
+        anchors.fill: background
         color: "transparent"
         border.color: "red"
     }

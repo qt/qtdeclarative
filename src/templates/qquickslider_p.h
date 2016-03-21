@@ -67,7 +67,6 @@ class Q_QUICKTEMPLATES_EXPORT QQuickSlider : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
-    Q_PROPERTY(QQuickItem *track READ track WRITE setTrack NOTIFY trackChanged FINAL)
 
 public:
     explicit QQuickSlider(QQuickItem *parent = nullptr);
@@ -106,9 +105,6 @@ public:
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
-    QQuickItem *track() const;
-    void setTrack(QQuickItem *track);
-
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -124,7 +120,6 @@ Q_SIGNALS:
     void pressedChanged();
     void orientationChanged();
     void handleChanged();
-    void trackChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

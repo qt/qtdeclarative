@@ -389,20 +389,14 @@
 
     \section1 Customizing Slider
 
-        Slider consists of three visual items: \l {Control::background}{background},
-        \l {Slider::track}{track} and \l {Slider::handle}{handle}.
+        Slider consists of two visual items: \l {Control::background}{background},
+        and \l {Slider::handle}{handle}.
 
         \section3 Background
 
             \image qtquickcontrols-slider-background.png
 
-            Slider has no background item by default.
-
-        \section3 Track
-
-            \image qtquickcontrols-slider-track.png
-
-            \snippet Slider.qml track
+            \snippet Slider.qml background
 
         \section3 Handle
 

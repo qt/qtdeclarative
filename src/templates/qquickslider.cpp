@@ -80,7 +80,7 @@ class QQuickSliderPrivate : public QQuickControlPrivate
 public:
     QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), pressed(false),
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
-        handle(nullptr), track(nullptr)
+        handle(nullptr)
     {
     }
 
@@ -100,7 +100,6 @@ public:
     Qt::Orientation orientation;
     QQuickSlider::SnapMode snapMode;
     QQuickItem *handle;
-    QQuickItem *track;
 };
 
 qreal QQuickSliderPrivate::valueAt(qreal position) const
@@ -417,32 +416,6 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (handle && !handle->parentItem())
         handle->setParentItem(this);
     emit handleChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::Slider::track
-
-    This property holds the track item.
-
-    \sa {Customizing Slider}
-*/
-QQuickItem *QQuickSlider::track() const
-{
-    Q_D(const QQuickSlider);
-    return d->track;
-}
-
-void QQuickSlider::setTrack(QQuickItem *track)
-{
-    Q_D(QQuickSlider);
-    if (d->track == track)
-        return;
-
-    delete d->track;
-    d->track = track;
-    if (track && !track->parentItem())
-        track->setParentItem(this);
-    emit trackChanged();
 }
 
 /*!

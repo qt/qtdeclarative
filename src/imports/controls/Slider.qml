@@ -41,10 +41,10 @@ T.Slider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            Math.max(track ? track.implicitWidth : 0,
+                            Math.max(background ? background.implicitWidth : 0,
                                      handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(track ? track.implicitHeight : 0,
+                             Math.max(background ? background.implicitHeight : 0,
                                       handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
@@ -63,8 +63,8 @@ T.Slider {
     }
     //! [handle]
 
-    //! [track]
-    track: Rectangle {
+    //! [background]
+    background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
         implicitWidth: horizontal ? 200 : 6
@@ -78,5 +78,5 @@ T.Slider {
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
-    //! [track]
+    //! [background]
 }
