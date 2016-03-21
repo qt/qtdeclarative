@@ -321,8 +321,8 @@
 
     \section1 Customizing RangeSlider
 
-        RangeSlider consists of four visual items:
-        \l {Control::background}{background}, \l {RangeSlider::track}{track},
+        RangeSlider consists of three visual items:
+        \l {Control::background}{background},
         \l {RangeSlider::first}{first.handle} and
         \l {RangeSlider::second.handle}{second.handle}.
 
@@ -330,13 +330,7 @@
 
             \image qtquickcontrols-rangeslider-background.png
 
-            RangeSlider has no background item by default.
-
-        \section3 Track
-
-            \image qtquickcontrols-rangeslider-track.png
-
-            \snippet RangeSlider.qml track
+            \snippet RangeSlider.qml background
 
         \section3 First Handle
 

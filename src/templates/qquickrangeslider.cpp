@@ -302,8 +302,7 @@ public:
         first(nullptr),
         second(nullptr),
         orientation(Qt::Horizontal),
-        snapMode(QQuickRangeSlider::NoSnap),
-        track(nullptr)
+        snapMode(QQuickRangeSlider::NoSnap)
     {
     }
 
@@ -315,7 +314,6 @@ public:
     QPoint pressPoint;
     Qt::Orientation orientation;
     QQuickRangeSlider::SnapMode snapMode;
-    QQuickItem *track;
 };
 
 static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
@@ -612,32 +610,6 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 
     d->orientation = orientation;
     emit orientationChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::RangeSlider::track
-
-    This property holds the track item.
-
-    \sa {Customizing Slider}
-*/
-QQuickItem *QQuickRangeSlider::track() const
-{
-    Q_D(const QQuickRangeSlider);
-    return d->track;
-}
-
-void QQuickRangeSlider::setTrack(QQuickItem *track)
-{
-    Q_D(QQuickRangeSlider);
-    if (d->track == track)
-        return;
-
-    delete d->track;
-    d->track = track;
-    if (track && !track->parentItem())
-        track->setParentItem(this);
-    emit trackChanged();
 }
 
 /*!

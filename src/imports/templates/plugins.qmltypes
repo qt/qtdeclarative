@@ -465,7 +465,6 @@ Module {
         Property { name: "stepSize"; type: "double" }
         Property { name: "snapMode"; type: "SnapMode" }
         Property { name: "orientation"; type: "Qt::Orientation" }
-        Property { name: "track"; type: "QQuickItem"; isPointer: true }
         Method {
             name: "setValues"
             Parameter { name: "firstValue"; type: "double" }

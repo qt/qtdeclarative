@@ -42,11 +42,11 @@ T.RangeSlider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-        Math.max(track ? track.implicitWidth : 0,
+        Math.max(background ? background.implicitWidth : 0,
             first.handle ? first.handle.implicitWidth : 0,
                 second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-        Math.max(track ? track.implicitHeight : 0,
+        Math.max(background ? background.implicitHeight : 0,
             first.handle ? first.handle.implicitHeight : 0,
                 second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
 
@@ -82,8 +82,8 @@ T.RangeSlider {
     }
     //! [secondHandle]
 
-    //! [track]
-    track: Item {
+    //! [background]
+    background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
 
@@ -99,8 +99,8 @@ T.RangeSlider {
         Rectangle {
             x: parent.horizontal ? 0 : (parent.width - width) / 2
             y: parent.horizontal ? (parent.height - height) / 2 : 0
-            width: parent.horizontal ? parent.width : 2 // SliderTrackThemeHeight
-            height: !parent.horizontal ? parent.height : 2 // SliderTrackThemeHeight
+            width: parent.horizontal ? parent.width : 2 // SliderBackgroundThemeHeight
+            height: !parent.horizontal ? parent.height : 2 // SliderBackgroundThemeHeight
 
             color: control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
@@ -108,11 +108,11 @@ T.RangeSlider {
         Rectangle {
             x: parent.horizontal ? control.first.position * parent.width : 0
             y: parent.horizontal ? (parent.height - height) / 2 : control.second.visualPosition * parent.height
-            width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width : 2 // SliderTrackThemeHeight
-            height: !parent.horizontal ? control.second.position * parent.height - control.first.position * parent.height : 2 // SliderTrackThemeHeight
+            width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width : 2 // SliderBackgroundThemeHeight
+            height: !parent.horizontal ? control.second.position * parent.height - control.first.position * parent.height : 2 // SliderBackgroundThemeHeight
 
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [track]
+    //! [background]
 }
