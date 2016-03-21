@@ -56,7 +56,9 @@ QT_BEGIN_NAMESPACE
 class QQuickUniversalProgressStrip : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress FINAL)
+    Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate FINAL)
 
 public:
     QQuickUniversalProgressStrip(QQuickItem *parent = nullptr);
@@ -64,14 +66,19 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-Q_SIGNALS:
-    void colorChanged();
+    qreal progress() const;
+    void setProgress(qreal progress);
+
+    bool isIndeterminate() const;
+    void setIndeterminate(bool indeterminate);
 
 protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     QColor m_color;
+    qreal m_progress;
+    bool m_indeterminate;
 };
 
 class QQuickUniversalProgressStripAnimator : public QQuickAnimator

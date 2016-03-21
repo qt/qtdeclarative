@@ -48,29 +48,22 @@ T.ProgressBar {
                              indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
 
     //! [indicator]
-    indicator: Rectangle {
+    indicator: ProgressStrip {
+        id: strip
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.indeterminate ? 0 : control.position * control.availableWidth
+        width: control.availableWidth
         height: 10
 
         scale: control.mirrored ? -1 : 1
+        indeterminate: control.indeterminate
         color: control.Universal.accent
+        progress: control.position
+        clip: control.indeterminate
 
-        ProgressStrip {
-            id: strip
-
-            width: control.availableWidth
-            height: control.availableHeight
-
-            clip: control.indeterminate
-            visible: control.indeterminate
-            color: control.Universal.accent
-
-            ProgressStripAnimator {
-                target: strip
-                running: strip.visible
-            }
+        ProgressStripAnimator {
+            target: strip
+            running: control.visible && control.indeterminate
         }
     }
     //! [indicator]
