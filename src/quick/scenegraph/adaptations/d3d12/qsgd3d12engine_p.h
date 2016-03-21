@@ -288,7 +288,7 @@ public:
 
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
-    void queueSetRenderTarget();
+    void queueSetRenderTarget(uint id = 0);
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, ClearFlags which);
     void queueSetBlendFactor(const QVector4D &factor);
@@ -323,6 +323,11 @@ public:
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
     void activateTexture(uint id);
+
+    uint genRenderTarget();
+    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
+    void releaseRenderTarget(uint id);
+    void activateRenderTargetAsTexture(uint id);
 
 private:
     QSGD3D12EnginePrivate *d;

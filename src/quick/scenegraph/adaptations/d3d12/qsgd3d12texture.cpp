@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 void QSGD3D12Texture::setImage(const QImage &image, uint flags)
 {
-    // ### atlas
+    // ### atlas?
 
     const bool alphaRequest = flags & QSGRenderContext::CreateTexture_Alpha;
     m_alphaWanted = alphaRequest && image.hasAlphaChannel();
@@ -91,16 +91,6 @@ bool QSGD3D12Texture::hasMipmaps() const
 QRectF QSGD3D12Texture::normalizedTextureSubRect() const
 {
     return QRectF(0, 0, 1, 1);
-}
-
-bool QSGD3D12Texture::isAtlasTexture() const
-{
-    return false; // ###
-}
-
-QSGTexture *QSGD3D12Texture::removedFromAtlas() const
-{
-    return nullptr; // ###
 }
 
 void QSGD3D12Texture::bind()

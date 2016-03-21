@@ -37,40 +37,129 @@
 **
 ****************************************************************************/
 
-#ifndef QSGD3D12CONTEXT_P_H
-#define QSGD3D12CONTEXT_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgcontext_p.h>
+#include "qsgd3d12layer_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12Context : public QSGContext
+QSGD3D12Layer::QSGD3D12Layer(QSGD3D12RenderContext *rc)
+    : m_rc(rc)
 {
-public:
-    QSGD3D12Context(QObject *parent = 0) : QSGContext(parent) { }
+}
 
-    QSGRenderContext *createRenderContext() override;
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
-    QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
-    QSGLayer *createLayer(QSGRenderContext *rc) override;
-    QSize minimumFBOSize() const override;
-    QSurfaceFormat defaultSurfaceFormat() const override;
-};
+QSGD3D12Layer::~QSGD3D12Layer()
+{
+    cleanup();
+}
+
+int QSGD3D12Layer::textureId() const
+{
+    return 0;
+}
+
+QSize QSGD3D12Layer::textureSize() const
+{
+    return QSize();
+}
+
+bool QSGD3D12Layer::hasAlphaChannel() const
+{
+    return true;
+}
+
+bool QSGD3D12Layer::hasMipmaps() const
+{
+    // ###
+    return false;
+}
+
+QRectF QSGD3D12Layer::normalizedTextureSubRect() const
+{
+    return QRectF(0, 0, 1, 1); // ### mirror h/v
+}
+
+void QSGD3D12Layer::bind()
+{
+
+}
+
+bool QSGD3D12Layer::updateTexture()
+{
+    return false;
+}
+
+void QSGD3D12Layer::setItem(QSGNode *item)
+{
+
+}
+
+void QSGD3D12Layer::setRect(const QRectF &rect)
+{
+
+}
+
+void QSGD3D12Layer::setSize(const QSize &size)
+{
+
+}
+
+void QSGD3D12Layer::scheduleUpdate()
+{
+
+}
+
+QImage QSGD3D12Layer::toImage() const
+{
+    // ### figure out something for item grab support
+    return QImage();
+}
+
+void QSGD3D12Layer::setLive(bool live)
+{
+
+}
+
+void QSGD3D12Layer::setRecursive(bool recursive)
+{
+
+}
+
+void QSGD3D12Layer::setFormat(GLenum format)
+{
+
+}
+
+void QSGD3D12Layer::setHasMipmaps(bool mipmap)
+{
+
+}
+
+void QSGD3D12Layer::setDevicePixelRatio(qreal ratio)
+{
+
+}
+
+void QSGD3D12Layer::setMirrorHorizontal(bool mirror)
+{
+
+}
+
+void QSGD3D12Layer::setMirrorVertical(bool mirror)
+{
+
+}
+
+void QSGD3D12Layer::markDirtyTexture()
+{
+
+}
+
+void QSGD3D12Layer::invalidated()
+{
+    cleanup();
+}
+
+void QSGD3D12Layer::cleanup()
+{
+}
 
 QT_END_NAMESPACE
-
-#endif // QSGD3D12CONTEXT_P_H

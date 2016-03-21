@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGD3D12CONTEXT_P_H
-#define QSGD3D12CONTEXT_P_H
+#ifndef QSGD3D12LAYER_P_H
+#define QSGD3D12LAYER_P_H
 
 //
 //  W A R N I N G
@@ -51,26 +51,48 @@
 // We mean it.
 //
 
-#include <private/qsgcontext_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12Context : public QSGContext
+class QSGD3D12RenderContext;
+
+class QSGD3D12Layer : public QSGLayer
 {
 public:
-    QSGD3D12Context(QObject *parent = 0) : QSGContext(parent) { }
+    QSGD3D12Layer(QSGD3D12RenderContext *rc);
+    ~QSGD3D12Layer();
 
-    QSGRenderContext *createRenderContext() override;
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
-    QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
-    QSGLayer *createLayer(QSGRenderContext *rc) override;
-    QSize minimumFBOSize() const override;
-    QSurfaceFormat defaultSurfaceFormat() const override;
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    QRectF normalizedTextureSubRect() const override;
+    void bind() override;
+
+    bool updateTexture() override;
+
+    void setItem(QSGNode *item) override;
+    void setRect(const QRectF &rect) override;
+    void setSize(const QSize &size) override;
+    void scheduleUpdate() override;
+    QImage toImage() const override;
+    void setLive(bool live) override;
+    void setRecursive(bool recursive) override;
+    void setFormat(GLenum format) override;
+    void setHasMipmaps(bool mipmap) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setMirrorHorizontal(bool mirror) override;
+    void setMirrorVertical(bool mirror) override;
+    void markDirtyTexture() override;
+    void invalidated() override;
+
+private:
+    void cleanup();
+
+    QSGD3D12RenderContext *m_rc;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGD3D12CONTEXT_P_H
+#endif // QSGD3D12LAYER_P_H

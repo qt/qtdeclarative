@@ -88,6 +88,11 @@ QSGLayer *QSGD3D12Context::createLayer(QSGRenderContext *rc)
     return nullptr;
 }
 
+QSize QSGD3D12Context::minimumFBOSize() const
+{
+    return QSize(16, 16);
+}
+
 QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
 {
     return QSGContext::defaultSurfaceFormat();

@@ -148,7 +148,7 @@ public:
 
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
-    void queueSetRenderTarget();
+    void queueSetRenderTarget(uint id);
     void queueClearRenderTarget(const QColor &color);
     void queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which);
     void queueSetBlendFactor(const QVector4D &factor);
@@ -172,6 +172,11 @@ public:
     SIZE_T textureSRV(uint id) const;
     void activateTexture(uint id);
 
+    uint genRenderTarget();
+    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
+    void releaseRenderTarget(uint id);
+    void activateRenderTargetAsTexture(uint id);
+
     // the device is intentionally hidden here. all resources have to go
     // through the engine and, unlike with GL, cannot just be created in random
     // places due to the need for proper tracking, managing and releasing.
@@ -184,6 +189,8 @@ private:
     void ensureGPUDescriptorHeap(int cbvSrvUavDescriptorCount);
 
     DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
+    ID3D12Resource *createColorBuffer(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size,
+                                      const QVector4D &clearColor, int samples);
     ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
 
     QSGD3D12CPUWaitableFence *createCPUWaitableFence() const;
@@ -196,8 +203,8 @@ private:
 
     ID3D12Resource *createBuffer(int size);
 
-    ID3D12Resource *backBufferRT() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTV() const;
+    ID3D12Resource *currentBackBufferRT() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferRTV() const;
 
     struct CPUBufferRef {
         const quint8 *p = nullptr;
@@ -253,9 +260,9 @@ private:
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
-    ComPtr<ID3D12Resource> renderTargets[SWAP_CHAIN_BUFFER_COUNT];
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv[SWAP_CHAIN_BUFFER_COUNT];
-    D3D12_CPU_DESCRIPTOR_HANDLE dsv;
+    ComPtr<ID3D12Resource> backBufferRT[SWAP_CHAIN_BUFFER_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTV[SWAP_CHAIN_BUFFER_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE backBufferDSV;
     ComPtr<ID3D12Resource> depthStencil;
     ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAMES_IN_FLIGHT];
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
@@ -284,7 +291,15 @@ private:
     QCache<QSGD3D12RootSignature, RootSigCacheEntry> rootSigCache;
 
     struct Texture {
-        bool entryInUse = false;
+        enum Flag {
+            EntryInUse = 0x01,
+            Alpha = 0x02,
+            MipMap = 0x04
+        };
+        int flags = 0;
+        bool entryInUse() const { return flags & EntryInUse; }
+        bool alpha() const { return flags & Alpha; }
+        bool mipmap() const { return flags & MipMap; }
         ComPtr<ID3D12Resource> texture;
         D3D12_CPU_DESCRIPTOR_HANDLE srv;
         quint64 fenceValue = 0;
@@ -298,8 +313,6 @@ private:
         };
         QVector<StagingBuffer> stagingBuffers;
         QVector<D3D12_CPU_DESCRIPTOR_HANDLE> mipUAVs;
-        bool alpha = true;
-        bool mipmap = false;
     };
 
     QVector<Texture> textures;
@@ -309,7 +322,17 @@ private:
     struct TransientFrameData {
         QSGGeometry::DrawingMode drawingMode;
         bool indexBufferSet;
-        QVector<uint> activeTextures;
+        struct ActiveTexture {
+            enum Type {
+                TypeTexture,
+                TypeRenderTarget
+            };
+            Type type = TypeTexture;
+            uint id = 0;
+            ActiveTexture(Type type, uint id) : type(type), id(id) { }
+            ActiveTexture() { }
+        };
+        QVector<ActiveTexture> activeTextures;
         int drawCount;
         ID3D12PipelineState *lastPso;
         ID3D12RootSignature *lastRootSig;
@@ -334,6 +357,25 @@ private:
     };
 
     MipMapGen mipmapper;
+
+    struct RenderTarget {
+        enum Flag {
+            EntryInUse = 0x01,
+            NeedsReadBarrier = 0x02,
+            Multisample = 0x04
+        };
+        int flags = 0;
+        bool entryInUse() const { return flags & EntryInUse; }
+        ComPtr<ID3D12Resource> color;
+        ComPtr<ID3D12Resource> colorResolve;
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv;
+        ComPtr<ID3D12Resource> ds;
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv;
+        D3D12_CPU_DESCRIPTOR_HANDLE srv;
+    };
+
+    QVector<RenderTarget> renderTargets;
+    uint currentRenderTarget;
 };
 
 QT_END_NAMESPACE

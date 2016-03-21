@@ -70,8 +70,6 @@ public:
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
     QRectF normalizedTextureSubRect() const override;
-    bool isAtlasTexture() const override;
-    QSGTexture *removedFromAtlas() const override;
     void bind() override;
 
     SIZE_T srv() const;
