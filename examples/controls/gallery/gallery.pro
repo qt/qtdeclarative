@@ -6,7 +6,8 @@ SOURCES += \
     gallery.cpp
 
 OTHER_FILES += \
-    gallery.qml
+    gallery.qml \
+    pages/*.qml
 
 RESOURCES += \
     gallery.qrc
