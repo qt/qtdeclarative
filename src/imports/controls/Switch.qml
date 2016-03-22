@@ -62,9 +62,9 @@ T.Switch {
             width: 56
             height: 16
             radius: 8
-            border.width: 1
-            color: control.checked ? "#353637" : "transparent"
-            border.color: control.checked ? "transparent" : "#353637"
+            color: control.checked ? (control.activeFocus ? "#0066ff" : "#353637") : "transparent"
+            border.width: control.activeFocus ? 2 : 1
+            border.color: control.checked ? "transparent" : (control.activeFocus ? "#0066ff" : "#353637")
         }
 
         Rectangle {
@@ -73,9 +73,9 @@ T.Switch {
             width: 28
             height: 28
             radius: 16
-            color: control.pressed ? "#e4e4e4" : "#f6f6f6"
-            border.width: 1
-            border.color: control.pressed ? "#26282a" : "#353637"
+            color: control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : (control.activeFocus ? "#f0f6ff" : "#f6f6f6")
+            border.width: control.activeFocus ? 2 : 1
+            border.color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
             Behavior on x {
                 enabled: !control.pressed
