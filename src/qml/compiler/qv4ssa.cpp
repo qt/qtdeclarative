@@ -2435,13 +2435,22 @@ protected:
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
     virtual void visitMove(Move *s) {
-        TypingResult sourceTy = run(s->source);
         if (Temp *t = s->target->asTemp()) {
+            if (Name *n = s->source->asName()) {
+                if (n->builtin == Name::builtin_qml_context) {
+                    _ty = TypingResult(t->memberResolver);
+                    setType(n, _ty.type);
+                    setType(t, _ty.type);
+                    return;
+                }
+            }
+            TypingResult sourceTy = run(s->source);
             setType(t, sourceTy.type);
             _ty = sourceTy;
             return;
         }
 
+        TypingResult sourceTy = run(s->source);
         _ty = run(s->target);
         _ty.fullyTyped &= sourceTy.fullyTyped;
     }

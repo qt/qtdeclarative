@@ -1790,7 +1790,12 @@ void JSCodeGen::beginFunctionBodyHook()
 
 #ifndef V4_BOOTSTRAP
     QV4::IR::Temp *temp = _block->TEMP(_qmlContextTemp);
-    move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0));
+    temp->type = QV4::IR::QObjectType;
+    temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+    initMetaObjectResolver(temp->memberResolver, _scopeObject);
+    auto name = _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0);
+    name->type = temp->type;
+    move(temp, name);
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
 #endif
