@@ -1009,10 +1009,10 @@ void QSGD3D12EnginePrivate::markCPUBufferDirty(CPUBufferRef *dst, PersistentFram
     }
 
     const QPair<int, int> range = qMakePair(offset, size);
-    if (!dst->dirty.contains(range)) {
+    if (!dst->dirty.contains(range))
         dst->dirty.append(range);
+    if (!buf->totalDirtyInFrame.contains(range))
         buf->totalDirtyInFrame.append(range);
-    }
 }
 
 void QSGD3D12EnginePrivate::ensureBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr)
@@ -1092,28 +1092,24 @@ void QSGD3D12EnginePrivate::beginFrame()
     pfd.index.totalDirtyInFrame.clear();
     pfd.constant.totalDirtyInFrame.clear();
 
+    Q_ASSERT(vertexData.dirty.isEmpty() && indexData.dirty.isEmpty() && constantData.dirty.isEmpty());
+
     if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
         // Now sync the buffer changes from the previous, potentially still in flight, frames.
         for (int delta = 1; delta < MAX_FRAMES_IN_FLIGHT; ++delta) {
             PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % MAX_FRAMES_IN_FLIGHT]);
-            if (pfd.vertex.buffer && pfd.vertex.dataSize == vertexData.size) {
-                vertexData.dirty = prevFrameData.vertex.totalDirtyInFrame;
-            } else {
-                vertexData.dirty.clear();
+            if (pfd.vertex.buffer && pfd.vertex.dataSize == vertexData.size)
+                vertexData.dirty.append(prevFrameData.vertex.totalDirtyInFrame);
+            else
                 vertexData.allDirty = true;
-            }
-            if (pfd.index.buffer && pfd.index.dataSize == indexData.size) {
-                indexData.dirty = prevFrameData.index.totalDirtyInFrame;
-            } else {
-                indexData.dirty.clear();
+            if (pfd.index.buffer && pfd.index.dataSize == indexData.size)
+                indexData.dirty.append(prevFrameData.index.totalDirtyInFrame);
+            else
                 indexData.allDirty = true;
-            }
-            if (pfd.constant.buffer && pfd.constant.dataSize == constantData.size) {
-                constantData.dirty = prevFrameData.constant.totalDirtyInFrame;
-            } else {
-                constantData.dirty.clear();
+            if (pfd.constant.buffer && pfd.constant.dataSize == constantData.size)
+                constantData.dirty.append(prevFrameData.constant.totalDirtyInFrame);
+            else
                 constantData.allDirty = true;
-            }
         }
 
         // Do some texture upload bookkeeping.
