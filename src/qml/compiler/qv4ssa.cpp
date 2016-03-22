@@ -1862,6 +1862,11 @@ public:
         return worklistSize == 0;
     }
 
+    unsigned size() const
+    {
+        return worklistSize;
+    }
+
     Stmt *takeNext(Stmt *last)
     {
         if (isEmpty())
@@ -2213,7 +2218,10 @@ public:
                 QTextStream qout(&buf);
                 qout<<"Typing stmt ";
                 IRPrinter(&qout).print(s);
+                qout.flush();
                 qDebug("%s", buf.data().constData());
+
+                qDebug("%u left in the worklist", _worklist->size());
             }
 
             if (!run(s)) {
@@ -2224,6 +2232,7 @@ public:
                     QTextStream qout(&buf);
                     qout<<"Pushing back stmt: ";
                     IRPrinter(&qout).print(s);
+                    qout.flush();
                     qDebug("%s", buf.data().constData());
                 }
             } else {
@@ -2233,6 +2242,7 @@ public:
                     QTextStream qout(&buf);
                     qout<<"Finished: ";
                     IRPrinter(&qout).print(s);
+                    qout.flush();
                     qDebug("%s", buf.data().constData());
                 }
             }
@@ -2290,6 +2300,7 @@ private:
                         QTextStream qout(&buf);
                         qout << "Pushing back dependent stmt: ";
                         IRPrinter(&qout).print(s);
+                        qout.flush();
                         qDebug("%s", buf.data().constData());
                     }
                 }
