@@ -46,6 +46,8 @@
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
 #include <private/qquickprofiler_p.h>
+#include <private/qsgsoftwarerenderer_p.h>
+#include <qpa/qplatformbackingstore.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -142,12 +144,11 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
-        // #### grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), false, false);
+        grabContent = static_cast<QSGSoftwareRenderer*>(cd->renderer)->backingStore()->handle()->toImage();
         data.grabOnly = false;
     }
 
     if (alsoSwap && window->isVisible()) {
-//        ### gl->swapBuffers(window);
         cd->fireFrameSwapped();
     }
 
