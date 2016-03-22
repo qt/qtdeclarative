@@ -962,48 +962,55 @@ static Enum toEnumValue(const QByteArray &value, bool *ok)
     return static_cast<Enum>(enumeration.keyToValue(value, ok));
 }
 
+static QByteArray resolveSetting(const QByteArray &env, const QSharedPointer<QSettings> &settings, const QString &name)
+{
+    QByteArray value = qgetenv(env);
+    if (value.isNull() && !settings.isNull())
+        value = settings->value(name).toByteArray();
+    return value;
+}
+
 void QQuickMaterialStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
-        if (!settings.isNull()) {
-            bool ok = false;
-            QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
-            Theme theme = toEnumValue<Theme>(value, &ok);
-            if (ok)
-                defaultTheme = m_theme = theme;
-            else if (!value.isEmpty())
-                qWarning().nospace().noquote() << settings->fileName() << ": unknown Material theme value: " << value;
 
-            value = settings->value(QStringLiteral("Primary")).toByteArray();
-            Color primary = toEnumValue<Color>(value, &ok);
-            if (ok) {
-                defaultPrimaryCustom = m_customPrimary = false;
-                defaultPrimary = m_primary = primary;
-            } else {
-                QColor color(value.constData());
-                if (color.isValid()) {
-                    defaultPrimaryCustom = m_customPrimary = true;
-                    defaultPrimary = m_primary = color.rgba();
-                } else if (!value.isEmpty()) {
-                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material primary value: " << value;
-                }
+        bool ok = false;
+        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
+        Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
+        if (ok)
+            defaultTheme = m_theme = themeEnum;
+        else if (!themeValue.isEmpty())
+            qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
+
+        QByteArray primaryValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
+        Color primaryEnum = toEnumValue<Color>(primaryValue, &ok);
+        if (ok) {
+            defaultPrimaryCustom = m_customPrimary = false;
+            defaultPrimary = m_primary = primaryEnum;
+        } else {
+            QColor color(primaryValue.constData());
+            if (color.isValid()) {
+                defaultPrimaryCustom = m_customPrimary = true;
+                defaultPrimary = m_primary = color.rgba();
+            } else if (!primaryValue.isEmpty()) {
+                qWarning().nospace().noquote() << "Material: unknown primary value: " << primaryValue;
             }
+        }
 
-            value = settings->value(QStringLiteral("Accent")).toByteArray();
-            Color accent = toEnumValue<Color>(value, &ok);
-            if (ok) {
-                defaultAccentCustom = m_customAccent = false;
-                defaultAccent = m_accent = accent;
+        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
+        Color accentEnum = toEnumValue<Color>(accentValue, &ok);
+        if (ok) {
+            defaultAccentCustom = m_customAccent = false;
+            defaultAccent = m_accent = accentEnum;
+        } else if (!accentValue.isEmpty()) {
+            QColor color(accentValue.constData());
+            if (color.isValid()) {
+                defaultAccentCustom = m_customAccent = true;
+                defaultAccent = m_accent = color.rgba();
             } else {
-                QColor color(value.constData());
-                if (color.isValid()) {
-                    defaultAccentCustom = m_customAccent = true;
-                    defaultAccent = m_accent = color.rgba();
-                } else if (!value.isEmpty()) {
-                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material accent value: " << value;
-                }
+                qWarning().nospace().noquote() << "Material: unknown accent value: " << accentValue;
             }
         }
         defaultsInitialized = true;

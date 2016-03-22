@@ -92,6 +92,7 @@
     \endcode
 
     \section2 Configuration file
+    \target qtlabscontrols-conf
 
     Qt Labs Controls support a special configuration file, \c :/qtquickcontrols.conf,
     that is built into an application's resources.

@@ -116,6 +116,27 @@
                 \image qtquickcontrols-universal-dark.png
     \endtable
 
+    In addition to specifying the attributes in QML, it is also possible to
+    specify them via environment variables or in a \l {qtlabscontrols-conf}
+    {configuration file}.
+
+    \section3 Environment Variables
+
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c QT_LABS_CONTROLS_UNIVERSAL_THEME
+            \li The value can be one of the available \l {theme-attached-prop}{themes},
+                for example \c "Dark".
+        \row
+            \li \c QT_LABS_CONTROLS_UNIVERSAL_ACCENT
+            \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
+                to use one of the pre-defined  \l {accent-attached-prop} {accents}, for
+                example \c "Violet".
+    \endtable
+
     \section2 Dependency
 
     The Universal style must be separately imported to gain access to the
