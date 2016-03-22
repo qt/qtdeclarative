@@ -691,17 +691,17 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         break;
 
     case Pad:
-        qreal w = qMin(qreal(d->pix.width()), width());
-        qreal h = qMin(qreal(d->pix.height()), height());
-        qreal x = (d->pix.width() > width()) ? -xOffset : 0;
-        qreal y = (d->pix.height() > height()) ? -yOffset : 0;
+        qreal w = qMin(qreal(pixWidth), width());
+        qreal h = qMin(qreal(pixHeight), height());
+        qreal x = (pixWidth > width()) ? -xOffset : 0;
+        qreal y = (pixHeight > height()) ? -yOffset : 0;
         targetRect = QRectF(x + xOffset, y + yOffset, w, h);
         sourceRect = QRectF(x, y, w, h);
         break;
     };
 
-    qreal nsWidth = (hWrap == QSGTexture::Repeat) ? d->pix.width() / d->devicePixelRatio : d->pix.width();
-    qreal nsHeight = (vWrap == QSGTexture::Repeat) ? d->pix.height() / d->devicePixelRatio : d->pix.height();
+    qreal nsWidth = (hWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.width() / d->devicePixelRatio : d->pix.width();
+    qreal nsHeight = (vWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.height() / d->devicePixelRatio : d->pix.height();
     QRectF nsrect(sourceRect.x() / nsWidth,
                   sourceRect.y() / nsHeight,
                   sourceRect.width() / nsWidth,
