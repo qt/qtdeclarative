@@ -180,7 +180,7 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
-    size = qBound(0.0, size, 1.0 - d->position);
+    size = qBound<qreal>(0.0, size, 1.0 - d->position);
     if (qFuzzyCompare(d->size, size))
         return;
 
@@ -206,7 +206,7 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
-    position = qBound(0.0, position, 1.0 - d->size);
+    position = qBound<qreal>(0.0, position, 1.0 - d->size);
     if (qFuzzyCompare(d->position, position))
         return;
 

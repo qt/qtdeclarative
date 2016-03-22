@@ -492,7 +492,7 @@ qreal QQuickSwipeExposure::position() const
 void QQuickSwipeExposure::setPosition(qreal position)
 {
     Q_D(QQuickSwipeExposure);
-    const qreal adjustedPosition = qBound(-1.0, position, 1.0);
+    const qreal adjustedPosition = qBound<qreal>(-1.0, position, 1.0);
     if (adjustedPosition == d->position)
         return;
 
