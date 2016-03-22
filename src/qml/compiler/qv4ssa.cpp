@@ -2194,6 +2194,7 @@ class TypeInference: public StmtVisitor, public ExprVisitor
         {}
     };
     TypingResult _ty;
+    Stmt *_currentStmt;
 
 public:
     TypeInference(QQmlEnginePrivate *qmlEngine, const DefUses &defUses)
@@ -2202,6 +2203,7 @@ public:
         , _tempTypes(_defUses.tempCount())
         , _worklist(0)
         , _ty(UnknownType)
+        , _currentStmt(nullptr)
     {}
 
     void run(StatementWorklist &w) {
@@ -2266,7 +2268,9 @@ private:
     bool run(Stmt *s) {
         TypingResult ty;
         std::swap(_ty, ty);
-        s->accept(this);
+        std::swap(_currentStmt, s);
+        _currentStmt->accept(this);
+        std::swap(_currentStmt, s);
         std::swap(_ty, ty);
         return ty.fullyTyped;
     }
@@ -2305,7 +2309,11 @@ private:
                     }
                 }
 
-                *_worklist += _defUses.uses(*t);
+                for (Stmt *s : qAsConst(_defUses.uses(*t))) {
+                    if (s != _currentStmt) {
+                        *_worklist += s;
+                    }
+                }
             }
         } else {
             e->type = (Type) ty.type;
