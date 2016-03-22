@@ -58,13 +58,14 @@ T.CheckBox {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        color: control.enabled ? (control.pressed ? "#e4e4e4" : "#f6f6f6") : "#353637"
-        border.color: control.enabled ? (control.pressed ? "#26282a" : "#353637") : "transparent"
+        color: control.enabled ? (control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
+        border.width: control.activeFocus ? 2 : 1
+        border.color: control.enabled ? (control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")) : "transparent"
 
         Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png"
+            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check" + (control.activeFocus ? "-focus.png" : ".png")
             visible: control.checkState === Qt.Checked
         }
 
@@ -73,7 +74,7 @@ T.CheckBox {
             y: (parent.height - height) / 2
             width: 16
             height: 3
-            color: "#353637"
+            color: control.activeFocus ? "#0066ff" : "#353637"
             visible: control.checkState === Qt.PartiallyChecked
         }
     }
