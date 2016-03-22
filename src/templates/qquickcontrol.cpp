@@ -73,6 +73,11 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
+static bool isKeyFocusReason(Qt::FocusReason reason)
+{
+    return reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason;
+}
+
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
@@ -379,10 +384,20 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        if (!d->hasLocale)
-            d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
+    switch (change) {
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            if (!d->hasLocale)
+                d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
+        }
+        break;
+    case ItemActiveFocusHasChanged:
+        if (isKeyFocusReason(d->focusReason))
+            emit activeKeyFocusChanged();
+        break;
+    default:
+        break;
     }
 }
 
@@ -786,7 +801,7 @@ void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
     \value Qt.MenuBarFocusReason       The menu bar took focus.
     \value Qt.OtherFocusReason         Another reason, usually application-specific.
 
-    \sa Item::activeFocus
+    \sa activeKeyFocus, Item::activeFocus
 */
 Qt::FocusReason QQuickControl::focusReason() const
 {
@@ -800,8 +815,31 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     if (d->focusReason == reason)
         return;
 
+    Qt::FocusReason oldReason = d->focusReason;
     d->focusReason = reason;
     emit focusReasonChanged();
+    if (d->activeFocus && isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit activeKeyFocusChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::activeKeyFocus
+    \readonly
+
+    This property holds whether the control has active focus and the focus
+    reason is either \c Qt.TabFocusReason, \c Qt.BacktabFocusReason, or
+    \c Qt.ShortcutFocusReason.
+
+    In general, for visualizing key focus, this property is preferred over
+    \l Item::activeFocus. This ensures that key focus is only visualized when
+    interacting with keys - not when interacting via touch or mouse.
+
+    \sa focusReason, Item::activeFocus
+*/
+bool QQuickControl::hasActiveKeyFocus() const
+{
+    Q_D(const QQuickControl);
+    return d->activeFocus && isKeyFocusReason(d->focusReason);
 }
 
 /*!
