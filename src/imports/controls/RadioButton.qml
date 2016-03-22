@@ -60,9 +60,9 @@ T.RadioButton {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         radius: width / 2
-        border.width: 1
-        border.color: (control.pressed ? "#26282a" : "#353637")
-        color: control.pressed ? "#e4e4e4" : "#f6f6f6"
+        color: control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
+        border.width: control.activeFocus ? 2 : 1
+        border.color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -70,7 +70,7 @@ T.RadioButton {
             width: 20
             height: 20
             radius: width / 2
-            color: control.pressed ? "#26282a" : "#353637"
+            color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
             visible: control.checked
         }
     }
