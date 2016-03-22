@@ -91,6 +91,17 @@ public:
         return border;
     }
 
+    static void calculateRects(const QQuickScaleGrid *border,
+                               const QSize &sourceSize,
+                               const QSizeF &targetSize,
+                               int horizontalTileMode,
+                               int verticalTileMode,
+                               qreal devicePixelRatio,
+                               QRectF *targetRect,
+                               QRectF *innerTargetRect,
+                               QRectF *innerSourceRect,
+                               QRectF *subSourceRect);
+
     QQuickScaleGrid *border;
     QUrl sciurl;
     QQuickBorderImage::TileMode horizontalTileMode;

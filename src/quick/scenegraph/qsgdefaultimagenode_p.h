@@ -89,6 +89,15 @@ public:
 
     virtual void preprocess();
 
+    static QSGGeometry *updateGeometry(const QRectF &targetRect,
+                                       const QRectF &innerTargetRect,
+                                       const QRectF &sourceRect,
+                                       const QRectF &innerSourceRect,
+                                       const QRectF &subSourceRect,
+                                       QSGGeometry *geometry,
+                                       bool mirror = false,
+                                       bool antialiasing = false);
+
 private:
     void updateGeometry();
 

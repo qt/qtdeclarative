@@ -96,6 +96,8 @@ namespace QQuickVisualTestUtil
             items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
         return items;
     }
+
+    bool compareImages(const QImage &ia, const QImage &ib);
 }
 
 #define QQUICK_VERIFY_POLISH(item) \
