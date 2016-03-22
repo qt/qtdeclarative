@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-gettingstarted.html
-    \title Getting Started with Qt Labs Controls
+    \page qtquickcontrols2-gettingstarted.html
+    \title Getting Started with Qt Quick Controls 2
 
     A basic example of a QML file that makes use of controls is shown here:
 

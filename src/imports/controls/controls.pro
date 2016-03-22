@@ -7,7 +7,7 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates-
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-QMAKE_DOCS = $$PWD/doc/qtlabscontrols.qdocconf
+QMAKE_DOCS = $$PWD/doc/qtquickcontrols2.qdocconf
 
 OTHER_FILES += \
     qmldir

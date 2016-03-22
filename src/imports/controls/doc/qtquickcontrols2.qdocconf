@@ -4,24 +4,24 @@ project                 = QtLabsControls
 description             = Qt Labs Controls Reference Documentation
 version                 = $QT_VERSION
 
-qhp.projects            = QtLabsControls
+qhp.projects            = QtQuickControls2
 
-qhp.QtLabsControls.file          = qtlabscontrols.qhp
-qhp.QtLabsControls.namespace     = org.qt-project.qtlabscontrols.$QT_VERSION_TAG
-qhp.QtLabsControls.virtualFolder = qtlabscontrols
-qhp.QtLabsControls.indexTitle    = Qt Labs Controls
-qhp.QtLabsControls.indexRoot     =
+qhp.QtQuickControls2.file          = qtquickcontrols2.qhp
+qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
+qhp.QtQuickControls2.virtualFolder = qtquickcontrols2
+qhp.QtQuickControls2.indexTitle    = Qt Quick Controls 2
+qhp.QtQuickControls2.indexRoot     =
 
-qhp.QtLabsControls.filterAttributes                  = qtlabscontrols $QT_VERSION qtrefdoc
-qhp.QtLabsControls.customFilters.Qt.name             = QtLabsControls $QT_VERSION
-qhp.QtLabsControls.customFilters.Qt.filterAttributes = qtlabscontrols $QT_VERSION
+qhp.QtQuickControls2.filterAttributes                  = qtquickcontrols2 $QT_VERSION qtrefdoc
+qhp.QtQuickControls2.customFilters.Qt.name             = QtQuickControls2 $QT_VERSION
+qhp.QtQuickControls2.customFilters.Qt.filterAttributes = qtquickcontrols2 $QT_VERSION
 
-qhp.QtLabsControls.subprojects = qtlabscontrolsqmltypes
+qhp.QtQuickControls2.subprojects = qtquickcontrols2qmltypes
 
-qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.title      = Controls QML Types
-qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.indexTitle = Qt Labs Controls QML Types
-qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.selectors  = qmlclass
-qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.sortPages  = true
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.title      = Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.indexTitle = Qt Quick Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.selectors  = qmlclass
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.sortPages  = true
 
 depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qmake qtsql qtwidgets
 
@@ -62,3 +62,7 @@ macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tb
 macro.endstyleproperty = "\\br"
 
 macro.labs = "\\note \\e{Types in the Qt.labs module are not guaranteed to remain compatible in future versions.}"
+
+#Add output suffix to the html filenames
+outputsuffixes = QML
+outputsuffixes.QML = 2

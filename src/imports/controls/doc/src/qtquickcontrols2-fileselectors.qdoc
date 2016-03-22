@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-fileselectors.html
-    \title Using File Selectors with Qt Labs Controls
+    \page qtquickcontrols2-fileselectors.html
+    \title Using File Selectors with Qt Quick Controls 2
 
     \l {QFileSelector}{File selectors} provide a convenient way of selecting
     file variants. Qt offers the platform name and the locale as built-in
@@ -136,6 +136,6 @@
     \list
       \li \l {QFileSelector}
       \li \l {QQmlFileSelector}
-      \li \l {Styling Qt Labs Controls}
+      \li \l {Styling Qt Quick Controls 2}
     \endlist
 */

@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-index.html
-    \title Qt Labs Controls
+    \page qtquickcontrols2-index.html
+    \title Qt Quick Controls 2
 
     \brief Provides a set of UI controls for Qt Quick.
 
@@ -45,10 +45,10 @@
     \section1 Important Concepts in Qt Labs Controls
 
     \list
-      \li \l{Getting Started with Qt Labs Controls}
-      \li \l{Styling Qt Labs Controls}
-      \li \l{High-DPI Support in Qt Labs Controls}
-      \li \l{Using File Selectors with Qt Labs Controls}
+      \li \l{Getting Started with Qt Quick Controls 2}
+      \li \l{Styling Qt Quick Controls 2}
+      \li \l{High-DPI Support in Qt Quick Controls 2}
+      \li \l{Using File Selectors with Qt Quick Controls 2}
       \li \l{Differences between Qt Quick Controls}
     \endlist
 
@@ -58,8 +58,8 @@
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
       \li \l{Qt Labs Calendar}
-      \li \l{Qt Labs Templates}
-      \li \l{Qt Labs Controls QML Types}{Qt Labs Controls QML Types}
-      \li \l{Qt Labs Controls Examples}
+      \li \l{Qt Quick Templates 2}
+      \li \l{Qt Quick Controls 2 QML Types}
+      \li \l{Qt Quick Controls 2 Examples}
     \endlist
 */

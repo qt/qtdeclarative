@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-styles.html
-    \title Styling Qt Labs Controls
+    \page qtquickcontrols2-styles.html
+    \title Styling Qt Quick Controls 2
 
     Qt Labs Controls comes with a selection of styles. The \l {Default Style}
     {Default} style is a simple and light-weight all-round style that offers
@@ -145,6 +145,6 @@
     \li \l {Default Style}
     \li \l {Material Style}
     \li \l {Universal Style}
-    \li \l{Using File Selectors with Qt Labs Controls}
+    \li \l{Using File Selectors with Qt Quick Controls 2}
     \endlist
 */

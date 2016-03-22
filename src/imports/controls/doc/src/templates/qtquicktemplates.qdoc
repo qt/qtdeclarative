@@ -27,11 +27,11 @@
 
 /*!
     \qmlmodule Qt.labs.templates 1.0
-    \title Qt Labs Templates QML Types
+    \title Qt Quick Templates 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for templates (Qt Labs Templates).
 
-    The \l {Qt Labs Templates} module provides a set of non-visual templates
+    The \l {Qt Quick Templates 2} module provides a set of non-visual templates
     that can be used to build user interface controls in QML using \l {Qt Quick}.
 
     The QML types can be imported using the following import statement in your
@@ -58,7 +58,7 @@
     \section1 Related Information
 
     \list
-        \li \l {Qt Labs Controls QML Types}
+        \li \l {Qt Quick Controls 2 QML Types}
     \endlist
 
     \noautolist

@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-material.html
+    \page qtquickcontrols2-material.html
     \title Material Style
 
     The Material Style is based on the Google Material Design Guidelines.
@@ -228,6 +228,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Labs Controls}
+      \li \l{Styling Qt Quick Controls 2}
     \endlist
 */

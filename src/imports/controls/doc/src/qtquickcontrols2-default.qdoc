@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-default.html
+    \page qtquickcontrols2-default.html
     \title Default Style
 
     The Default style is a basic all-round style.
@@ -48,6 +48,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Labs Controls}
+      \li \l{Styling Qt Quick Controls 2}
     \endlist
 */

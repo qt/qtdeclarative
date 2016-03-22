@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-customize.html
-    \title Customizing Qt Labs Controls
+    \page qtquickcontrols2-customize.html
+    \title Customizing Qt Quick Controls 2
     \brief A set of UI controls to create user interfaces in Qt Quick
 
     Qt Labs Controls consist of a hierarchy (tree) of items. In order to

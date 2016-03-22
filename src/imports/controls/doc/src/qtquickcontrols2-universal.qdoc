@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-universal.html
+    \page qtquickcontrols2-universal.html
     \title Universal Style
 
     The Universal Style is based on the Microsoft Universal Design Guidelines.
@@ -202,6 +202,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Labs Controls}
+      \li \l{Styling Qt Quick Controls 2}
     \endlist
 */

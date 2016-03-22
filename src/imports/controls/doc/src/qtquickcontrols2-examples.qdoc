@@ -28,8 +28,8 @@
 /*!
     \group qtlabscontrols-examples
     \ingroup all-examples
-    \title Qt Labs Controls Examples
-    \brief A collection of examples for \l {Qt Labs Controls}
+    \title Qt Quick Controls 2 Examples
+    \brief A collection of examples for \l {Qt Quick Controls 2}
 
-    These examples demonstrate creating user interfaces using \l {Qt Labs Controls}.
+    These examples demonstrate creating user interfaces using \l {Qt Quick Controls 2}.
 */

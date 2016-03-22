@@ -44,6 +44,6 @@
     \list
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
-      \li \l{Qt Labs Controls}
+      \li \l{Qt Quick Controls 2}
     \endlist
 */

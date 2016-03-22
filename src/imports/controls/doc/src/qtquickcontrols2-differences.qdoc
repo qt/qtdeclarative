@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \page qtlabscontrols-differences.html
+    \page qtquickcontrols2-differences.html
     \title Differences between Qt Quick Controls
 
     Qt Quick Controls were originally developed to support desktop platforms,
@@ -278,6 +278,6 @@
     \list
       \li \l{Qt Quick}
       \li \l{Qt Quick Controls}
-      \li \l{Qt Labs Controls QML Types}{Qt Labs Controls QML Types}
+      \li \l{Qt Quick Controls 2 QML Types}
     \endlist
 */

@@ -27,11 +27,11 @@
 
 /*!
     \qmlmodule Qt.labs.controls 1.0
-    \title Qt Labs Controls QML Types
+    \title Qt Quick Controls 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for user interfaces (Qt Labs Controls).
 
-    \l{Qt Labs Controls} provides QML types for creating user interfaces.
+    \l{Qt Quick Controls 2} provides QML types for creating user interfaces.
     These QML types work in conjunction with \l{Qt Quick} and
     \l{Qt Quick Layouts}.
 
