@@ -77,8 +77,6 @@ TestCase {
     }
 
     function test_swipeVelocity() {
-        skip("QTBUG-52003");
-
         var control = rectDrawer.createObject(testCase)
         verify(control.contentItem)
         compare(control.edge, Qt.LeftEdge)
