@@ -458,10 +458,10 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
     addAncestorListeners(parent);
 }
 
-void QQuickPopupPositioner::itemChildRemoved(QQuickItem *, QQuickItem *child)
+void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
     if (isAncestor(child))
-        removeAncestorListeners(child);
+        removeAncestorListeners(item);
 }
 
 void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
@@ -561,7 +561,7 @@ bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
     if (!m_parentItem)
         return false;
 
-    QQuickItem *parent = m_parentItem->parentItem();
+    QQuickItem *parent = m_parentItem;
     while (parent) {
         if (parent == item)
             return true;
