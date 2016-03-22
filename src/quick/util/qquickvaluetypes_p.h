@@ -304,6 +304,7 @@ class QQuickFontValueType
     Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
     Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing FINAL)
     Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
+    Q_PROPERTY(HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
 
 public:
     enum FontWeight { Thin = QFont::Thin,
@@ -322,6 +323,14 @@ public:
                            SmallCaps = QFont::SmallCaps,
                            Capitalize = QFont::Capitalize };
     Q_ENUM(Capitalization)
+
+    enum HintingPreference {
+        PreferDefaultHinting = QFont::PreferDefaultHinting,
+        PreferNoHinting = QFont::PreferNoHinting,
+        PreferVerticalHinting = QFont::PreferVerticalHinting,
+        PreferFullHinting = QFont::PreferFullHinting
+    };
+    Q_ENUM(HintingPreference)
 
     Q_INVOKABLE QString toString() const;
 
@@ -363,6 +372,9 @@ public:
 
     qreal wordSpacing() const;
     void setWordSpacing(qreal spacing);
+
+    HintingPreference hintingPreference() const;
+    void setHintingPreference(HintingPreference);
 };
 
 QT_END_NAMESPACE

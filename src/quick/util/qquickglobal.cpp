@@ -301,6 +301,7 @@ public:
         QV4::ScopedValue vundl(scope, obj->get((s = v4->newString(QStringLiteral("underline")))));
         QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight")))));
         QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
+        QV4::ScopedValue vhint(scope, obj->get((s = v4->newString(QStringLiteral("hintingPreference")))));
 
         // pull out the values, set ok to true if at least one valid field is given.
         if (vbold->isBoolean()) {
@@ -349,6 +350,10 @@ public:
         }
         if (vwspac->isNumber()) {
             retn.setWordSpacing(vwspac->asDouble());
+            if (ok) *ok = true;
+        }
+        if (vhint->isInt32()) {
+            retn.setHintingPreference(static_cast<QFont::HintingPreference>(vhint->integerValue()));
             if (ok) *ok = true;
         }
 
