@@ -1,0 +1,3 @@
+# QTBUG-52003
+[SwipeDelegate::test_swipeVelocity]
+osx
