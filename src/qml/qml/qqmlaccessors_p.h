@@ -103,7 +103,7 @@ class QQmlNotifier;
     } while (false);
 
 #define QML_PRIVATE_ACCESSOR(clazz, cpptype, name, variable) \
-    static void clazz ## _ ## name ## Read(QObject *o, qintptr, void *rv) \
+    static void clazz ## _ ## name ## Read(QObject *o, void *rv) \
     { \
         clazz ## Private *d = clazz ## Private::get(static_cast<clazz *>(o)); \
         *static_cast<cpptype *>(rv) = d->variable; \
@@ -114,8 +114,8 @@ class QQmlNotifier;
 class QQmlAccessors
 {
 public:
-    void (*read)(QObject *object, qintptr property, void *output);
-    void (*notifier)(QObject *object, qintptr property, QQmlNotifier **notifier);
+    void (*read)(QObject *object, void *output);
+    void (*notifier)(QObject *object, QQmlNotifier **notifier);
 };
 
 namespace QQmlAccessorProperties {
