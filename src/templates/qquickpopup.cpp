@@ -496,10 +496,10 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
     addAncestorListeners(parent);
 }
 
-void QQuickPopupPositioner::itemChildRemoved(QQuickItem *, QQuickItem *child)
+void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
     if (isAncestor(child))
-        removeAncestorListeners(child);
+        removeAncestorListeners(item);
 }
 
 void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
@@ -527,7 +527,19 @@ void QQuickPopupPrivate::reposition()
 
         QQuickWindow *window = q->window();
         if (window) {
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(getMargins());
+            const QMarginsF margins = getMargins();
+            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
+
+            // push inside the margins
+            if (margins.top() > 0 && rect.top() < bounds.top())
+                rect.moveTop(margins.top());
+            if (margins.bottom() > 0 && rect.bottom() > bounds.bottom())
+                rect.moveBottom(bounds.bottom());
+            if (margins.left() > 0 && rect.left() < bounds.left())
+                rect.moveLeft(margins.left());
+            if (margins.right() > 0 && rect.right() > bounds.right())
+                rect.moveRight(bounds.right());
+
             if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
                 // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
                 const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
@@ -588,7 +600,7 @@ bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
     if (!m_parentItem)
         return false;
 
-    QQuickItem *parent = m_parentItem->parentItem();
+    QQuickItem *parent = m_parentItem;
     while (parent) {
         if (parent == item)
             return true;
