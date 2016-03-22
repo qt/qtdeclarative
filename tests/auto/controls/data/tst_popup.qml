@@ -907,13 +907,19 @@ TestCase {
     }
 
     function test_attached_applicationwindow() {
-        var control = popupTemplate.createObject(applicationWindow.contentItem)
+        var control = popupControl.createObject(applicationWindow.contentItem)
         verify(control)
 
+        var child = rect.createObject(control.contentItem)
+
         compare(control.ApplicationWindow.window, applicationWindow)
+        compare(control.contentItem.ApplicationWindow.window, applicationWindow)
+        compare(child.ApplicationWindow.window, applicationWindow)
 
         control.parent = null
         compare(control.ApplicationWindow.window, null)
+        compare(control.contentItem.ApplicationWindow.window, null)
+        compare(child.ApplicationWindow.window, null)
 
         control.destroy()
     }

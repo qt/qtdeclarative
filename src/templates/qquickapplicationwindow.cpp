@@ -620,6 +620,16 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
     if (QQuickItem *item = qobject_cast<QQuickItem *>(parent)) {
         d->windowChange(item->window());
         QObjectPrivate::connect(item, &QQuickItem::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
+        if (!d->window) {
+            QQuickItem *p = item;
+            while (p) {
+                if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(p->parent())) {
+                    d->windowChange(popup->window());
+                    QObjectPrivate::connect(popup, &QQuickPopup::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
+                }
+                p = p->parentItem();
+            }
+        }
     } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent)) {
         d->windowChange(popup->window());
         QObjectPrivate::connect(popup, &QQuickPopup::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
