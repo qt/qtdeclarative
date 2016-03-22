@@ -146,6 +146,8 @@ private slots:
 
     void padding();
 
+    void hintingPreference();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4151,6 +4153,33 @@ void tst_qquicktext::padding()
 
     delete root;
 }
+
+void tst_qquicktext::hintingPreference()
+{
+    {
+        QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
+        QQmlComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QCOMPARE((int)textObject->font().hintingPreference(), (int)QFont::PreferDefaultHinting);
+
+        delete textObject;
+    }
+    {
+        QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\"; font.hintingPreference: Font.PreferNoHinting }";
+        QQmlComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QCOMPARE((int)textObject->font().hintingPreference(), (int)QFont::PreferNoHinting);
+
+        delete textObject;
+    }
+}
+
 
 QTEST_MAIN(tst_qquicktext)
 
