@@ -1,5 +1,5 @@
 TARGET = qmldbg_native
-QT += qml-private core-private
+QT = qml-private core-private
 
 SOURCES += \
     $$PWD/qqmlnativedebugconnector.cpp
