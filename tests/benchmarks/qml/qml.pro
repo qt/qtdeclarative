@@ -5,7 +5,6 @@ SUBDIRS += \
            compilation \
            javascript \
            holistic \
-           pointers \
            qqmlcomponent \
            qqmlimage \
            qqmlmetaproperty \
