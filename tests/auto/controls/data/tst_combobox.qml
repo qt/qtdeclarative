@@ -756,4 +756,29 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: asyncLoader
+        Loader {
+            active: false
+            asynchronous: true
+            sourceComponent: ComboBox {
+                model: ["First", "Second", "Third"]
+            }
+        }
+    }
+
+    // QTBUG-51972
+    function test_async() {
+        var loader = asyncLoader.createObject(testCase)
+        verify(loader)
+
+        loader.active = true
+        tryCompare(loader, "status", Loader.Ready)
+        verify(loader.item)
+        compare(loader.item.currentText, "First")
+        compare(loader.item.displayText, "First")
+
+        loader.destroy()
+    }
 }
