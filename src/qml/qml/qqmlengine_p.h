@@ -375,7 +375,7 @@ const QQmlEnginePrivate *QQmlEnginePrivate::get(const QQmlEngine *e)
 {
     Q_ASSERT(e);
 
-    return e->d_func();
+    return e ? e->d_func() : nullptr;
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContext *c)

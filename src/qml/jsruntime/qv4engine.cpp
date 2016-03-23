@@ -576,15 +576,6 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return currentContext;
 }
 
-ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
-{
-    Value *offset = static_cast<Value *>(context) + 1;
-    Q_ASSERT(offset->isInteger());
-    int o = offset->integerValue();
-    return o ? context - o : 0;
-}
-
-
 Heap::Object *ExecutionEngine::newObject()
 {
     return memoryManager->allocObject<Object>();
@@ -768,27 +759,6 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
     Scope scope(this);
     ScopedObject obj(scope, memoryManager->allocObject<ForEachIteratorObject>(o));
     return obj->d();
-}
-
-Heap::QmlContext *ExecutionEngine::qmlContext() const
-{
-    Heap::ExecutionContext *ctx = current;
-
-    // get the correct context when we're within a builtin function
-    if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = parentContext(currentContext)->d();
-
-    if (!ctx->outer)
-        return 0;
-
-    while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
-        ctx = ctx->outer;
-
-    Q_ASSERT(ctx);
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
-        return 0;
-
-    return static_cast<Heap::QmlContext *>(ctx);
 }
 
 QObject *ExecutionEngine::qmlScopeObject() const

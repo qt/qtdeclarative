@@ -43,7 +43,7 @@
 #include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>
-
+#include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmimedata.h>
