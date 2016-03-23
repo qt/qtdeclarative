@@ -105,9 +105,7 @@ public Q_SLOTS:
          || x * y >= m_image.width() * m_image.height())
             return QVariant();
 
-        const QRgb* pixel = reinterpret_cast<const QRgb*>(m_image.constScanLine(y));
-        pixel += x;
-        return QColor::fromRgba(*pixel);
+        return QColor::fromRgba(m_image.pixel(QPoint(x, y)));
     }
 
     bool equals(QuickTestImageObject *other) const
