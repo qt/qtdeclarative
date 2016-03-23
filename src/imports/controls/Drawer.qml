@@ -71,7 +71,7 @@ T.Drawer {
             height: horizontal ? parent.height : 1
             color: "#353637"
             x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
-            y: control.edge === Qt.BottomEdge ? parent.height - 1 : 0
+            y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
         }
     }
     //! [background]
