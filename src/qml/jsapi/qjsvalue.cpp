@@ -54,7 +54,7 @@
 #include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4scopedvalue_p.h>
-
+#include <private/qv4qobjectwrapper_p.h>
 
 /*!
   \since 5.0

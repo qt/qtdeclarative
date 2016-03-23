@@ -53,6 +53,7 @@
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qjsvalue_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 

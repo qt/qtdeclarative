@@ -57,6 +57,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/qvector3d.h>
 #include <QtQml/private/qqmlglobal_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <algorithm>
 

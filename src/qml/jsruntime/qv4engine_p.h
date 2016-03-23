@@ -57,6 +57,10 @@
 #include "qv4internalclass_p.h"
 #include <private/qintrusivelist_p.h>
 
+#ifndef V4_BOOTSTRAP
+#  include <private/qv8engine_p.h>
+#endif
+
 namespace WTF {
 class BumpPointerAllocator;
 class PageAllocation;
@@ -135,8 +139,13 @@ public:
 
     Function *globalCode;
 
+#ifdef V4_BOOTSTRAP
     QJSEngine *jsEngine() const;
     QQmlEngine *qmlEngine() const;
+#else // !V4_BOOTSTRAP
+    QJSEngine *jsEngine() const { return v8Engine->publicEngine(); }
+    QQmlEngine *qmlEngine() const { return v8Engine->engine(); }
+#endif // V4_BOOTSTRAP
     QV8Engine *v8Engine;
 
     enum JSObjects {

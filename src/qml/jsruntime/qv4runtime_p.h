@@ -61,6 +61,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlAccessors;
+
 #undef QV4_COUNT_RUNTIME_FUNCTIONS
 
 namespace QV4 {
@@ -100,9 +102,14 @@ enum TypeHint {
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't
 // throw exceptions and therefore don't need a check after the call.
+
+#ifndef V4_BOOTSTRAP
 struct NoThrowEngine : public ExecutionEngine
 {
 };
+#else
+struct NoThrowEngine;
+#endif
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
     // call

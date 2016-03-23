@@ -112,6 +112,7 @@ static ReturnedValue throwTypeError(CallContext *ctx)
 }
 
 
+#ifdef V4_BOOTSTRAP
 QJSEngine *ExecutionEngine::jsEngine() const
 {
     return v8Engine->publicEngine();
@@ -121,6 +122,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 {
     return v8Engine->engine();
 }
+#endif // V4_BOOTSTRAP
 
 qint32 ExecutionEngine::maxCallDepth = -1;
 

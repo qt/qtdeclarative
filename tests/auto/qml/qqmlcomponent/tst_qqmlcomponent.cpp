@@ -36,6 +36,8 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <private/qv8engine_p.h>
+#include <private/qqmlcontext_p.h>
+#include <private/qv4scopedvalue_p.h>
 #include <qcolor.h>
 #include "../../shared/util.h"
 #include "testhttpserver.h"

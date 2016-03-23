@@ -62,6 +62,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4objectproto_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>

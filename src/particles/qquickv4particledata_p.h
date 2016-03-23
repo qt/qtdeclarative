@@ -52,7 +52,7 @@
 //
 
 #include <private/qv8engine_p.h>
-
+#include <private/qv4persistent_p.h>
 #include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE

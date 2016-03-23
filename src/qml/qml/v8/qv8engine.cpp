@@ -70,6 +70,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4globalobject_p.h>

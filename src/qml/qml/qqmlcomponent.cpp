@@ -60,6 +60,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QStack>
 #include <QStringList>
