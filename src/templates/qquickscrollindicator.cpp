@@ -73,6 +73,13 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
+    Horizontal and vertical scroll indicators do not share the \l active state with
+    each other by default. In order to keep both indicators visible whilst scrolling
+    to either direction, establish a two-way binding between the active states as
+    presented by the following example:
+
+    \snippet qtquickcontrols-scrollindicator-active.qml 1
+
     \labs
 
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}

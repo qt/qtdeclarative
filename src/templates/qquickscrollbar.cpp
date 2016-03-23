@@ -88,6 +88,13 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    Horizontal and vertical scroll bars do not share the \l active state with
+    each other by default. In order to keep both bars visible whilst scrolling
+    to either direction, establish a two-way binding between the active states
+    as presented by the following example:
+
+    \snippet qtquickcontrols-scrollbar-active.qml 1
+
     \labs
 
     \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
