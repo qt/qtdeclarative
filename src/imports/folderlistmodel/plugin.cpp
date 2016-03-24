@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 class QmlFolderListModelPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
     virtual void registerTypes(const char *uri)

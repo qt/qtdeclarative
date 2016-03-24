@@ -70,7 +70,8 @@ qtHaveModule(widgets) {
         qjsvalue
 }
 
-SUBDIRS += $$PUBLICTESTS
+SUBDIRS += $$PUBLICTESTS \
+    qqmlextensionplugin
 SUBDIRS += $$METATYPETESTS
 !winrt { # no QProcess on winrt
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
