@@ -70,7 +70,7 @@ T.RadioButton {
             width: 20
             height: 20
             radius: width / 2
-            color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+            color: parent.border.color
             visible: control.checked
         }
     }
