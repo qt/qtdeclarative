@@ -230,6 +230,7 @@ QSGNode *QQuickUniversalProgressRing::updatePaintNode(QSGNode *oldNode, UpdatePa
     qreal diameter = size / 10.0;
     qreal radius = diameter / 2;
     qreal offset = (size - diameter * 2) / M_PI;
+    const QRectF rect(offset, offset, diameter, diameter);
 
     QSGNode *transformNode = oldNode->firstChild();
     for (int i = 0; i < m_count; ++i) {
@@ -251,7 +252,7 @@ QSGNode *QQuickUniversalProgressRing::updatePaintNode(QSGNode *oldNode, UpdatePa
         QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
-        rectNode->setRect(QRectF(offset, offset, diameter, diameter));
+        rectNode->setRect(rect);
         rectNode->setColor(m_color);
         rectNode->setRadius(radius);
         rectNode->update();
