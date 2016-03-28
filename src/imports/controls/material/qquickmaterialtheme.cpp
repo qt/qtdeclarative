@@ -49,11 +49,12 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         font.setFamily(QStringLiteral("Noto"));
 
     if (font.exactMatch()) {
-        systemFont.setFamily(font.family());
-        buttonFont.setFamily(font.family());
-        itemViewFont.setFamily(font.family());
-        menuItemFont.setFamily(font.family());
-        editorFont.setFamily(font.family());
+        const QString family = font.family();
+        systemFont.setFamily(family);
+        buttonFont.setFamily(family);
+        itemViewFont.setFamily(family);
+        menuItemFont.setFamily(family);
+        editorFont.setFamily(family);
     }
 
     systemFont.setPixelSize(14);

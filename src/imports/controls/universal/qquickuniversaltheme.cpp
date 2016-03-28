@@ -45,9 +45,10 @@ QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
 {
     const QFont font(QStringLiteral("Segoe UI"));
     if (font.exactMatch()) {
-        systemFont.setFamily(font.family());
-        groupBoxTitleFont.setFamily(font.family());
-        tabButtonFont.setFamily(font.family());
+        const QString family = font.family();
+        systemFont.setFamily(family);
+        groupBoxTitleFont.setFamily(family);
+        tabButtonFont.setFamily(family);
     }
 
     systemFont.setPixelSize(15);
