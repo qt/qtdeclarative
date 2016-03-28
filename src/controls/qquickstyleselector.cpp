@@ -121,9 +121,10 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
 
     // If we reach here there were no successful files found at a lower level in this branch, so we
     // should check this level as a potential result.
-    if (!QFileInfo::exists(path + fileName))
+    const QString result = path + fileName;
+    if (!QFileInfo::exists(result))
         return QString();
-    return path + fileName;
+    return result;
 }
 
 QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
@@ -133,8 +134,9 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
     if (!fi.exists())
         return filePath;
 
-    QString ret = selectionHelper(fi.path().isEmpty() ? QString() : fi.path() + QLatin1Char('/'),
-            fi.fileName(), allSelectors(true));
+    const QString path = fi.path();
+    const QString ret = selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
+                                        fi.fileName(), allSelectors(true));
 
     if (!ret.isEmpty())
         return ret;
@@ -178,14 +180,12 @@ QString QQuickStyleSelector::select(const QString &fileName) const
     }
 
     QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
-    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
-        if (isLocalScheme(url.scheme())) {
-            QString equivalentPath = QLatin1Char(':') + url.path();
-            QString selectedPath = d->select(equivalentPath);
-            url.setPath(selectedPath.remove(0, 1));
-        } else {
-            url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
-        }
+    if (isLocalScheme(url.scheme())) {
+        QString equivalentPath = QLatin1Char(':') + url.path();
+        QString selectedPath = d->select(equivalentPath);
+        url.setPath(selectedPath.remove(0, 1));
+    } else if (url.isLocalFile()) {
+        url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
     }
     return url.toString();
 }
