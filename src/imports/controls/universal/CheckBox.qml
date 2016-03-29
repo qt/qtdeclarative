@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.universal 1.0
+import Qt.labs.controls.universal.impl 1.0
 
 T.CheckBox {
     id: control
@@ -54,39 +55,10 @@ T.CheckBox {
     property bool useSystemFocusVisuals: true
 
     //! [indicator]
-    indicator: Rectangle {
-        id: normalRectangle
-        implicitWidth: 20
-        implicitHeight: 20
+    indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        color: !control.enabled ? "transparent" :
-                control.pressed && control.checkState !== Qt.PartiallyChecked ? control.Universal.baseMediumColor :
-                control.checkState === Qt.Checked ? control.Universal.accent : "transparent"
-        border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed ? control.Universal.baseMediumColor :
-                       control.checked ? control.Universal.accent : control.Universal.baseMediumHighColor
-        border.width: 2 // CheckBoxBorderThemeThickness
-
-        Image {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-
-            visible: control.checkState === Qt.Checked
-            source: "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.chromeWhiteColor)
-        }
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: parent.width / 2
-            height: parent.height / 2
-
-            visible: control.checkState === Qt.PartiallyChecked
-            color: !control.enabled ? control.Universal.baseLowColor :
-                    control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
-        }
+        control: control
     }
     //! [indicator]
 

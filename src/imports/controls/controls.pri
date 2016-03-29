@@ -11,6 +11,8 @@ QML_CONTROLS = \
     BusyIndicator.qml \
     Button.qml \
     CheckBox.qml \
+    CheckDelegate.qml \
+    CheckIndicator.qml \
     ComboBox.qml \
     Dial.qml \
     Drawer.qml \

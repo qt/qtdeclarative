@@ -90,6 +90,7 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
+    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
 }

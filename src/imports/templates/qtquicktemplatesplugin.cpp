@@ -41,6 +41,7 @@
 #include <QtQuickTemplates/private/qquickbusyindicator_p.h>
 #include <QtQuickTemplates/private/qquickbutton_p.h>
 #include <QtQuickTemplates/private/qquickcheckbox_p.h>
+#include <QtQuickTemplates/private/qquickcheckdelegate_p.h>
 #include <QtQuickTemplates/private/qquickcombobox_p.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQuickTemplates/private/qquickcontainer_p.h>
@@ -109,6 +110,7 @@ void QtQuickTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
+    qmlRegisterType<QQuickCheckDelegate>(uri, 1, 0, "CheckDelegate");
     qmlRegisterType<QQuickComboBox>(uri, 1, 0, "ComboBox");
     qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");

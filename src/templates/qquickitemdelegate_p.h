@@ -65,6 +65,9 @@ protected:
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
+
+protected:
+    QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
 };
 
 QT_END_NAMESPACE

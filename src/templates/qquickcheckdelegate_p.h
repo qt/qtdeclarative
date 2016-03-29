@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Templates module of the Qt Toolkit.
@@ -34,55 +34,60 @@
 **
 ****************************************************************************/
 
-#include "qquickitemdelegate_p.h"
-#include "qquickcontrol_p_p.h"
+#ifndef QQUICKCHECKDELEGATE_P_H
+#define QQUICKCHECKDELEGATE_P_H
 
-#include <QtGui/qpa/qplatformtheme.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickTemplates/private/qquickitemdelegate_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype ItemDelegate
-    \inherits AbstractButton
-    \instantiates QQuickItemDelegate
-    \inqmlmodule Qt.labs.controls
-    \brief  A standard view item that can be used in various views and controls.
+class QQuickCheckDelegatePrivate;
 
-    \image qtquickcontrols-itemdelegate.gif
-
-    ItemDelegate presents a standard view item. It can be used as a delegate
-    in various views and controls, such as \l ListView and \l ComboBox.
-
-    ItemDelegate inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text}, make items \l {AbstractButton::checkable}{checkable},
-    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
-
-    \snippet qtquickcontrols-itemdelegate.qml 1
-
-    \labs
-
-    \sa {Customizing ItemDelegate}, {Delegate Controls}
-*/
-
-QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) : QQuickAbstractButton(parent)
+class Q_QUICKTEMPLATES_EXPORT QQuickCheckDelegate : public QQuickItemDelegate
 {
-}
+    Q_OBJECT
+    Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
+    Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL)
 
-QQuickItemDelegate::QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent) :
-    QQuickAbstractButton(dd, parent)
-{
-}
+public:
+    explicit QQuickCheckDelegate(QQuickItem *parent = nullptr);
 
-QFont QQuickItemDelegate::defaultFont() const
-{
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
-}
+    bool isTristate() const;
+    void setTristate(bool tristate);
+
+    Qt::CheckState checkState() const;
+    void setCheckState(Qt::CheckState state);
+
+Q_SIGNALS:
+    void tristateChanged();
+    void checkStateChanged();
+
+protected:
+    void checkStateSet() override;
+    void nextCheckState() override;
 
 #ifndef QT_NO_ACCESSIBILITY
-QAccessible::Role QQuickItemDelegate::accessibleRole() const
-{
-    return QAccessible::ListItem;
-}
+    QAccessible::Role accessibleRole() const override;
 #endif
 
+private:
+    Q_DISABLE_COPY(QQuickCheckDelegate)
+    Q_DECLARE_PRIVATE(QQuickCheckDelegate)
+};
+
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCheckDelegate)
+
+#endif // QQUICKCHECKDELEGATE_P_H

@@ -47,7 +47,8 @@ Pane {
 
     property var delegateComponentMap: {
         "ItemDelegate": itemDelegateComponent,
-        "SwipeDelegate": swipeDelegateComponent
+        "SwipeDelegate": swipeDelegateComponent,
+        "CheckDelegate": checkDelegateComponent
     }
 
     Component {
@@ -90,6 +91,15 @@ Pane {
         }
     }
 
+    Component {
+        id: checkDelegateComponent
+
+        CheckDelegate {
+            text: labelText
+            width: parent.width
+        }
+    }
+
     ColumnLayout {
         id: column
         spacing: 40
@@ -115,6 +125,9 @@ Pane {
                 ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
                 ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
                 ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
+                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
+                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
+                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
             }
 
             section.property: "type"

@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qquickbutton_p.h \
     $$PWD/qquickbuttongroup_p.h \
     $$PWD/qquickcheckbox_p.h \
+    $$PWD/qquickcheckdelegate_p.h \
     $$PWD/qquickcombobox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
@@ -63,6 +64,7 @@ SOURCES += \
     $$PWD/qquickbutton.cpp \
     $$PWD/qquickbuttongroup.cpp \
     $$PWD/qquickcheckbox.cpp \
+    $$PWD/qquickcheckdelegate.cpp \
     $$PWD/qquickcombobox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \

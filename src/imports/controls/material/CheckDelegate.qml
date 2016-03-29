@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -39,7 +39,7 @@ import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.material 1.0
 import Qt.labs.controls.material.impl 1.0
 
-T.CheckBox {
+T.CheckDelegate {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -49,15 +49,12 @@ T.CheckBox {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    spacing: 8
-    topPadding: 14
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 14
+    padding: 16
+    spacing: 16
 
     //! [indicator]
     indicator: CheckIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
@@ -65,8 +62,8 @@ T.CheckBox {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
+        rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
 
         text: control.text
         font: control.font
@@ -77,4 +74,11 @@ T.CheckBox {
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        visible: control.pressed || control.highlighted
+        color: control.pressed ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
+    }
+    //! [background]
 }

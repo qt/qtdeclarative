@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.impl 1.0
 
 T.CheckBox {
     id: control
@@ -52,31 +53,10 @@ T.CheckBox {
     opacity: enabled ? 1 : 0.2
 
     //! [indicator]
-    indicator: Rectangle {
-        implicitWidth: 28
-        implicitHeight: 28
+    indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        color: control.enabled ? (control.pressed ? (control.activeKeyFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
-        border.width: control.activeKeyFocus ? 2 : 1
-        border.color: control.enabled ? (control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")) : "transparent"
-
-        Image {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check" + (control.activeKeyFocus ? "-focus.png" : ".png")
-            visible: control.checkState === Qt.Checked
-        }
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 16
-            height: 3
-            color: control.activeKeyFocus ? "#0066ff" : "#353637"
-            visible: control.checkState === Qt.PartiallyChecked
-        }
+        control: control
     }
     //! [indicator]
 

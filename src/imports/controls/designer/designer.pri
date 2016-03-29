@@ -6,6 +6,7 @@ QML_FILES += \
     $$PWD/ButtonSection.qml \
     $$PWD/ButtonSpecifics.qml \
     $$PWD/CheckBoxSpecifics.qml \
+    $$PWD/CheckDelegateSpecifics.qml \
     $$PWD/ComboBoxSpecifics.qml \
     $$PWD/ControlSection.qml \
     $$PWD/ControlSpecifics.qml \

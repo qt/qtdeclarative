@@ -97,6 +97,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("Button.qml")), uri, 1, 0, "Button");
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 1, 0, "CheckBox");
+    qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 1, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 1, 0, "ComboBox");
     qmlRegisterType(selector.select(QStringLiteral("Dial.qml")), uri, 1, 0, "Dial");
     qmlRegisterType(selector.select(QStringLiteral("Drawer.qml")), uri, 1, 0, "Drawer");
@@ -141,6 +142,9 @@ void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri
     qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 1, 0, "BusyRingAnimator");
     qmlRegisterType<QQuickProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickProgressAnimator>(import, 1, 0, "ProgressStripAnimator");
+
+    const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
+    qmlRegisterType(pluginBasePath + QStringLiteral("/CheckIndicator.qml"), import, 1, 0, "CheckIndicator");
 }
 
 QT_END_NAMESPACE

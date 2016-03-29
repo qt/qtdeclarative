@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -35,46 +35,32 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
 
-T.CheckBox {
-    id: control
+Rectangle {
+    id: indicator
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+    property Item control
 
-    spacing: 8
-    topPadding: 14
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 14
+    implicitWidth: 28
+    implicitHeight: 28
 
-    //! [indicator]
-    indicator: CheckIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+    color: control.enabled ? (control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
+    border.width: control.activeFocus ? 2 : 1
+    border.color: control.enabled ? (control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")) : "transparent"
+
+    Image {
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check" + (control.activeFocus ? "-focus.png" : ".png")
+        visible: control.checkState === Qt.Checked
     }
-    //! [indicator]
 
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
+    Rectangle {
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: 16
+        height: 3
+        color: control.activeFocus ? "#0066ff" : "#353637"
+        visible: control.checkState === Qt.PartiallyChecked
     }
-    //! [contentItem]
 }

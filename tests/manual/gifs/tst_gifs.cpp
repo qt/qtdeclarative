@@ -472,6 +472,7 @@ void tst_Gifs::delegates_data()
 {
     QTest::addColumn<QString>("name");
     QTest::newRow("ItemDelegate") << "itemdelegate";
+    QTest::newRow("CheckDelegate") << "checkdelegate";
 }
 
 void tst_Gifs::delegates()

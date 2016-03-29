@@ -96,6 +96,30 @@
             \snippet CheckBox.qml indicator
 
 
+    \section1 Customizing CheckDelegate
+
+        CheckDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-checkdelegate-background.png
+
+            \snippet CheckDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-checkdelegate-contentItem.png
+
+            \snippet CheckDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-checkdelegate-indicator.png
+
+            \snippet CheckDelegate.qml indicator
+
+
     \section1 Customizing ComboBox
 
         ComboBox consists of \l {Control::background}{background},

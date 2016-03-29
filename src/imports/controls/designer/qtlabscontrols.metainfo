@@ -43,6 +43,21 @@ MetaInfo {
     }
 
     Type {
+        name: "Qt.labs.controls.CheckDelegate"
+        icon: "images/checkbox-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Check Delegate"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/checkbox-icon.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Check Delegate')" }
+        }
+    }
+
+    Type {
         name: "Qt.labs.controls.ComboBox"
         icon: "images/combobox-icon16.png"
 
