@@ -299,8 +299,8 @@ void QQuickCustomMaterialShader::compile()
 
         QSGShaderSourceBuilder::initializeProgramFromFiles(
             program(),
-            QStringLiteral(":/items/shaders/shadereffectfallback.vert"),
-            QStringLiteral(":/items/shaders/shadereffectfallback.frag"));
+            QStringLiteral(":/qt-project.org/items/shaders/shadereffectfallback.vert"),
+            QStringLiteral(":/qt-project.org/items/shaders/shadereffectfallback.frag"));
 
 #ifndef QT_NO_DEBUG
         for (int i = 0; i < attrCount; ++i) {

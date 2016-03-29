@@ -95,8 +95,8 @@ public:
     SpriteSequenceMaterialData()
         : QSGMaterialShader()
     {
-        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/items/shaders/sprite.vert"));
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/items/shaders/sprite.frag"));
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/sprite.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/sprite.frag"));
     }
 
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) Q_DECL_OVERRIDE

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/items">
+    <qresource prefix="/qt-project.org/items">
         <file>shaders/sprite.frag</file>
         <file>shaders/sprite.vert</file>
         <file>shaders/shadereffect.vert</file>
