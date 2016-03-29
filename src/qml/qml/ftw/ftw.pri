@@ -5,7 +5,6 @@ HEADERS +=  \
     $$PWD/qhashedstring_p.h \
     $$PWD/qqmlrefcount_p.h \
     $$PWD/qfieldlist_p.h \
-    $$PWD/qhashfield_p.h \
     $$PWD/qqmlthread_p.h \
     $$PWD/qfinitestack_p.h \
     $$PWD/qrecursionwatcher_p.h \
