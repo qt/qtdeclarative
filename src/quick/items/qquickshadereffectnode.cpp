@@ -46,7 +46,7 @@ static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProvider
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         QSGTextureProvider *t = textureProviders.at(i);
-        if (t->texture() && t->texture()->isAtlasTexture())
+        if (t && t->texture() && t->texture()->isAtlasTexture())
             return true;
     }
     return false;
