@@ -50,8 +50,8 @@ QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
     : QSGMaterialShader()
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/opaquetexture.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/opaquetexture.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.frag"));
 }
 
 char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
@@ -356,7 +356,7 @@ QSGMaterialShader *QSGTextureMaterial::createShader() const
 QSGTextureMaterialShader::QSGTextureMaterialShader()
     : QSGOpaqueTextureMaterialShader()
 {
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/texture.frag"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/texture.frag"));
 }
 
 void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
