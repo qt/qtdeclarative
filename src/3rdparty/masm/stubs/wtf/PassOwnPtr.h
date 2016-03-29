@@ -101,8 +101,8 @@ public:
 private:
     template <typename PtrType> friend PassOwnPtr<PtrType> adoptPtr(PtrType*);
 
-    PassOwnPtr<T>& operator=(const PassOwnPtr<T>&)
-    {}
+    PassOwnPtr<T>& operator=(const PassOwnPtr<T>& t);
+
     mutable QScopedPointer<T> m_ptr;
 };
 
