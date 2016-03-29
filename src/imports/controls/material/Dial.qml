@@ -49,7 +49,7 @@ T.Dial {
         x: control.width / 2 - width / 2
         y: control.height / 2 - height / 2
         width: Math.max(64, Math.min(control.width, control.height))
-        height: Math.max(64, Math.min(control.width, control.height))
+        height: width
         color: "transparent"
         radius: width / 2
 
