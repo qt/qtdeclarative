@@ -130,11 +130,13 @@ struct QSGD3D12CPUWaitableFence
 class QSGD3D12EnginePrivate : public QSGD3D12DeviceManager::DeviceLossObserver
 {
 public:
-    void initialize(QWindow *w);
+    void initialize(WId w, const QSize &size, float dpr);
     bool isInitialized() const { return initialized; }
     void releaseResources();
-    void resize();
-    QWindow *currentWindow() const { return window; }
+    void setWindowSize(const QSize &size, float dpr);
+    WId currentWindow() const { return window; }
+    QSize currentWindowSize() const { return windowSize; }
+    float currentWindowDpr() const { return windowDpr; }
 
     void beginFrame();
     void endFrame();
@@ -255,7 +257,9 @@ private:
 
     bool initialized = false;
     bool inFrame = false;
-    QWindow *window = nullptr;
+    WId window = 0;
+    QSize windowSize;
+    float windowDpr;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;

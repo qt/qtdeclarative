@@ -294,14 +294,14 @@ QSGD3D12Engine::~QSGD3D12Engine()
     delete d;
 }
 
-bool QSGD3D12Engine::attachToWindow(QWindow *window)
+bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr)
 {
     if (d->isInitialized()) {
         qWarning("QSGD3D12Engine: Cannot attach active engine to window");
         return false;
     }
 
-    d->initialize(window);
+    d->initialize(window, size, dpr);
     return d->isInitialized();
 }
 
@@ -310,15 +310,30 @@ void QSGD3D12Engine::releaseResources()
     d->releaseResources();
 }
 
-void QSGD3D12Engine::resize()
+bool QSGD3D12Engine::hasResources() const
 {
-    d->waitGPU();
-    d->resize();
+    // An explicit releaseResources() or a device loss results in initialized == false.
+    return d->isInitialized();
 }
 
-QWindow *QSGD3D12Engine::window() const
+void QSGD3D12Engine::setWindowSize(const QSize &size, float dpr)
+{
+    d->setWindowSize(size, dpr);
+}
+
+WId QSGD3D12Engine::window() const
 {
     return d->currentWindow();
+}
+
+QSize QSGD3D12Engine::windowSize() const
+{
+    return d->currentWindowSize();
+}
+
+float QSGD3D12Engine::windowDevicePixelRatio() const
+{
+    return d->currentWindowDpr();
 }
 
 void QSGD3D12Engine::beginFrame()
@@ -616,14 +631,16 @@ void QSGD3D12EnginePrivate::releaseResources()
     // 'window' must be kept, may just be a device loss
 }
 
-void QSGD3D12EnginePrivate::initialize(QWindow *w)
+void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr)
 {
     if (initialized)
         return;
 
     window = w;
+    windowSize = size;
+    windowDpr = dpr;
 
-    HWND hwnd = reinterpret_cast<HWND>(window->winId());
+    HWND hwnd = reinterpret_cast<HWND>(w);
 
     if (qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0) {
         qDebug("Enabling debug layer");
@@ -651,8 +668,8 @@ void QSGD3D12EnginePrivate::initialize(QWindow *w)
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     swapChainDesc.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
-    swapChainDesc.BufferDesc.Width = window->width() * window->devicePixelRatio();
-    swapChainDesc.BufferDesc.Height = window->height() * window->devicePixelRatio();
+    swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
+    swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // D3D12 requires the flip model
@@ -863,20 +880,26 @@ void QSGD3D12EnginePrivate::setupRenderTargets()
     }
 
     backBufferDSV = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    ID3D12Resource *ds = createDepthStencil(backBufferDSV, window->size(), 0);
+    const QSize size(windowSize.width() * windowDpr, windowSize.height() * windowDpr);
+    ID3D12Resource *ds = createDepthStencil(backBufferDSV, size, 0);
     if (ds)
         depthStencil.Attach(ds);
 
     presentFrameIndex = 0;
 }
 
-void QSGD3D12EnginePrivate::resize()
+void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
 {
-    if (!initialized)
+    if (!initialized || (windowSize == size && windowDpr == dpr))
         return;
 
+    waitGPU();
+
+    windowSize = size;
+    windowDpr = dpr;
+
     if (Q_UNLIKELY(debug_render()))
-        qDebug() << window->size();
+        qDebug() << "resize" << size << dpr;
 
     // Clear these, otherwise resizing will fail.
     depthStencil = nullptr;
@@ -886,7 +909,9 @@ void QSGD3D12EnginePrivate::resize()
         cpuDescHeapManager.release(backBufferRTV[i], D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
-    HRESULT hr = swapChain->ResizeBuffers(SWAP_CHAIN_BUFFER_COUNT, window->width(), window->height(), DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+    const int w = windowSize.width() * windowDpr;
+    const int h = windowSize.height() * windowDpr;
+    HRESULT hr = swapChain->ResizeBuffers(SWAP_CHAIN_BUFFER_COUNT, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();
         return;
@@ -1074,7 +1099,7 @@ void QSGD3D12EnginePrivate::beginFrame()
 
     // The device may have been lost. This is the point to attempt to start again from scratch.
     if (!initialized && window)
-        initialize(window);
+        initialize(window, windowSize, windowDpr);
 
     // Block if needed. With 2 frames in flight frame N waits for frame N - 2, but not N - 1, to finish.
     currentPFrameIndex = frameIndex % MAX_FRAMES_IN_FLIGHT;
@@ -1213,7 +1238,7 @@ void QSGD3D12EnginePrivate::beginDrawCalls(bool needsBackbufferTransition)
 void QSGD3D12EnginePrivate::endFrame()
 {
     if (Q_UNLIKELY(debug_render()))
-        qDebug() << "***** end frame";
+        qDebug("***** end frame");
 
     endDrawCalls(true);
 

@@ -357,14 +357,7 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
 static inline float qsg_device_pixel_ratio(QSGD3D12Engine *engine)
 {
     // ### offscreen render target support will need changes
-    float devicePixelRatio = 1;
-    QWindow *w = engine->window();
-    if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w))
-        devicePixelRatio = qw->effectiveDevicePixelRatio();
-    else
-        devicePixelRatio = w->devicePixelRatio();
-
-    return devicePixelRatio;
+    return engine->windowDevicePixelRatio();
 }
 
 static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)

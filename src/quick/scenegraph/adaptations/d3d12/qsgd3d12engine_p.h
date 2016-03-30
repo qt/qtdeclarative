@@ -266,10 +266,13 @@ public:
     QSGD3D12Engine();
     ~QSGD3D12Engine();
 
-    bool attachToWindow(QWindow *window);
+    bool attachToWindow(WId window, const QSize &size, float dpr);
     void releaseResources();
-    void resize();
-    QWindow *window() const;
+    bool hasResources() const;
+    void setWindowSize(const QSize &size, float dpr);
+    WId window() const;
+    QSize windowSize() const;
+    float windowDevicePixelRatio() const;
 
     void beginFrame();
     void endFrame();
