@@ -52,8 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItemDelegatePrivate;
-
 class Q_QUICKTEMPLATES_EXPORT QQuickItemDelegate : public QQuickAbstractButton
 {
     Q_OBJECT
@@ -67,10 +65,6 @@ protected:
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
-
-private:
-    Q_DISABLE_COPY(QQuickItemDelegate)
-    Q_DECLARE_PRIVATE(QQuickItemDelegate)
 };
 
 QT_END_NAMESPACE
