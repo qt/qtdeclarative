@@ -60,6 +60,8 @@ private slots:
     void swipeDelegate_data();
     void swipeDelegate();
     void swipeDelegateBehind();
+    void delegates_data();
+    void delegates();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -462,6 +464,39 @@ void tst_Gifs::swipeDelegateBehind()
 
         QTest::qWait(500);
     }
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::delegates_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::newRow("ItemDelegate") << "itemdelegate";
+}
+
+void tst_Gifs::delegates()
+{
+    QFETCH(QString, name);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(5);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols-%1.qml").arg(name));
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *delegate = window->property("delegate").value<QQuickItem*>();
+    QVERIFY(delegate);
+
+    const QPoint delegateCenter(delegate->mapToScene(QPointF(delegate->width() / 2, delegate->height() / 2)).toPoint());
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 200);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
 
     gifRecorder.waitForFinish();
 }

@@ -48,6 +48,8 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \brief  A standard view item that can be used in various views and controls.
 
+    \image qtquickcontrols-itemdelegate.gif
+
     ItemDelegate presents a standard view item. It can be used as a delegate
     in various views and controls, such as \l ListView and \l ComboBox.
 
@@ -59,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa {Customizing ItemDelegate}
+    \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 
 QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) : QQuickAbstractButton(parent)
