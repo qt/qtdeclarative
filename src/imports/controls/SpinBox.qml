@@ -65,18 +65,30 @@ T.SpinBox {
 
     //! [contentItem]
     contentItem: TextInput {
+        z: 2
         text: control.textFromValue(control.value, control.locale)
 
         font: control.font
         color: "#353637"
-        selectionColor: "#fddd5c"
-        selectedTextColor: color
+        selectionColor: "#0066ff"
+        selectedTextColor: "#ffffff"
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
+
+        Rectangle {
+            x: -6 - (down.indicator ? 1 : 0)
+            y: -6
+            width: control.width - (up.indicator ? up.indicator.width - 1 : 0) - (down.indicator ? down.indicator.width - 1 : 0)
+            height: control.height
+            visible: control.activeFocus
+            color: "transparent"
+            border.color: "#0066ff"
+            border.width: 2
+        }
     }
     //! [contentItem]
 
