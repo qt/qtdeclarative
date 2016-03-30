@@ -1906,7 +1906,7 @@ void QQmlEnginePrivate::dereferenceScarceResources()
     // if the refcount is zero, then evaluation of the "top level"
     // expression must have completed.  We can safely release the
     // scarce resources.
-    if (scarceResourcesRefCount == 0) {
+    if (Q_UNLIKELY(scarceResourcesRefCount == 0)) {
         // iterate through the list and release them all.
         // note that the actual SRD is owned by the JS engine,
         // so we cannot delete the SRD; but we can free the
