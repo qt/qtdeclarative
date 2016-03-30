@@ -560,7 +560,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     }
 }
 
-ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
+ReturnedValue QObjectWrapper::wrap_slowPath(ExecutionEngine *engine, QObject *object)
 {
     if (QQmlData::wasDeleted(object))
         return QV4::Encode::null();
@@ -571,10 +571,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 
     Scope scope(engine);
 
-    if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined()) {
-        // We own the JS object
-        return ddata->jsWrapper.value();
-    } else if (ddata->jsWrapper.isUndefined() &&
+    if (ddata->jsWrapper.isUndefined() &&
                (ddata->jsEngineId == engine->m_engineId || // We own the QObject
                 ddata->jsEngineId == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV4Object)) { // Someone else has used the QObject, but it isn't tainted
