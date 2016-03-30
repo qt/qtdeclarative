@@ -269,6 +269,16 @@ private:
     void doDeleteInEngineThread();
 };
 
+/*
+   This function should be called prior to evaluation of any js expression,
+   so that scarce resources are not freed prematurely (eg, if there is a
+   nested javascript expression).
+ */
+inline void QQmlEnginePrivate::referenceScarceResources()
+{
+    scarceResourcesRefCount += 1;
+}
+
 /*!
 Returns true if the calling thread is the QQmlEngine thread.
 */

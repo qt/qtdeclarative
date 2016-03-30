@@ -494,6 +494,18 @@ int QQmlPropertyRawData::encodedIndex() const
     return isValueTypeVirtual()?QQmlPropertyData::encodeValueTypePropertyIndex(coreIndex, valueTypeCoreIndex):coreIndex;
 }
 
+inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
+{
+    if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
+        return 0;
+
+    if (index < propertyIndexCacheStart)
+        return _parent->property(index);
+
+    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
+    return ensureResolved(rv);
+}
+
 QQmlPropertyData *
 QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
 {
@@ -540,6 +552,14 @@ int QQmlPropertyCache::signalCount() const
 int QQmlPropertyCache::signalOffset() const
 {
     return signalHandlerIndexCacheStart;
+}
+
+inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
+{
+    if (p && p->notFullyResolved())
+        resolve(p);
+
+    return p;
 }
 
 QQmlMetaObject::QQmlMetaObject()

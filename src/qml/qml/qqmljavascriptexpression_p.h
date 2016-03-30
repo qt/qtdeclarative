@@ -243,6 +243,13 @@ bool QQmlJavaScriptExpression::hasDelayedError() const
     return m_error;
 }
 
+inline void QQmlJavaScriptExpression::clearError()
+{
+    if (m_error)
+        delete m_error;
+    m_error = 0;
+}
+
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard),
       expression(e), next(0)

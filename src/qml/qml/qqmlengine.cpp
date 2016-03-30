@@ -1600,15 +1600,6 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
     }
 }
 
-/*
-    index MUST in the range returned by QObjectPrivate::signalIndex()
-    This is different than the index returned by QMetaMethod::methodIndex()
-*/
-bool QQmlData::signalHasEndpoint(int index)
-{
-    return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
-}
-
 void QQmlData::disconnectNotifiers()
 {
     if (notifyList) {
@@ -1901,16 +1892,6 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
         engine->warning(error);
     else
         dumpwarning(error);
-}
-
-/*
-   This function should be called prior to evaluation of any js expression,
-   so that scarce resources are not freed prematurely (eg, if there is a
-   nested javascript expression).
- */
-void QQmlEnginePrivate::referenceScarceResources()
-{
-    scarceResourcesRefCount += 1;
 }
 
 /*

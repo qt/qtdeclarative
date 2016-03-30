@@ -336,14 +336,6 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::ExecutionEngine *engine, 
 
 }
 
-
-void QQmlJavaScriptExpression::clearError()
-{
-    if (m_error)
-        delete m_error;
-    m_error = 0;
-}
-
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
     Q_UNUSED(engine);
