@@ -57,7 +57,7 @@ TestCase {
 
     Component {
         id: scrollBar
-        ScrollBar { }
+        ScrollBar { padding: 0 }
     }
 
     Component {
@@ -209,5 +209,21 @@ TestCase {
         compare(control.position, 0.25)
 
         control.destroy()
+    }
+
+    function test_padding_data() {
+        return [
+            { tag: "horizontal", properties: { visible: true, orientation: Qt.Horizontal, width: testCase.width, leftPadding: testCase.width * 0.1 } },
+            { tag: "vertical", properties: { visible: true, orientation: Qt.Vertical, height: testCase.height, topPadding: testCase.height * 0.1 } }
+        ]
+    }
+
+    function test_padding(data) {
+        var control = scrollBar.createObject(testCase, data.properties)
+
+        mousePress(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
+        mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
+
+        compare(control.position, 0.5)
     }
 }

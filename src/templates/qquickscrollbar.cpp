@@ -285,9 +285,9 @@ qreal QQuickScrollBar::positionAt(const QPoint &point) const
 {
     Q_D(const QQuickScrollBar);
     if (d->orientation == Qt::Horizontal)
-        return point.x() / width();
+        return (point.x() - leftPadding()) / availableWidth();
     else
-        return point.y() / height();
+        return (point.y() - topPadding()) / availableHeight();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

@@ -60,8 +60,8 @@ T.ScrollBar {
         opacity: 0.0
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-        x: control.leftPadding + (horizontal ? control.position * control.width : 0)
-        y: control.topPadding + (horizontal ? 0 : control.position * control.height)
+        x: control.leftPadding + (horizontal ? control.position * control.availableWidth : 0)
+        y: control.topPadding + (horizontal ? 0 : control.position * control.availableHeight)
         width: horizontal ? control.size * control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.size * control.availableHeight
 
