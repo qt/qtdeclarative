@@ -6253,8 +6253,8 @@ void QQuickItem::setX(qreal v)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(oldx, y(), width(), height()));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(oldx, d->y, d->width, d->height));
 }
 
 void QQuickItem::setY(qreal v)
@@ -6268,8 +6268,8 @@ void QQuickItem::setY(qreal v)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), oldy, width(), height()));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, oldy, d->width, d->height));
 }
 
 /*!
@@ -6289,8 +6289,8 @@ void QQuickItem::setPosition(const QPointF &pos)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(oldx, oldy, width(), height()));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(oldx, oldy, d->width, d->height));
 }
 
 /*!
@@ -6319,8 +6319,8 @@ void QQuickItem::setWidth(qreal w)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), oldWidth, height()));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, oldWidth, d->height));
 }
 
 void QQuickItem::resetWidth()
@@ -6441,8 +6441,8 @@ void QQuickItem::setImplicitWidth(qreal w)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), oldWidth, height()));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, oldWidth, d->height));
 
     if (changed)
         d->implicitWidthChanged();
@@ -6483,8 +6483,8 @@ void QQuickItem::setHeight(qreal h)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), width(), oldHeight));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, d->width, oldHeight));
 }
 
 void QQuickItem::resetHeight()
@@ -6535,8 +6535,8 @@ void QQuickItem::setImplicitHeight(qreal h)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), width(), oldHeight));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, d->width, oldHeight));
 
     if (changed)
         d->implicitHeightChanged();
@@ -6580,8 +6580,8 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), oldWidth, oldHeight));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, oldWidth, oldHeight));
 
     if (!wDone && wChanged)
         d->implicitWidthChanged();
@@ -6617,8 +6617,8 @@ void QQuickItem::setSize(const QSizeF &size)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChanged(QRectF(x(), y(), width(), height()),
-                    QRectF(x(), y(), oldWidth, oldHeight));
+    geometryChanged(QRectF(d->x, d->y, d->width, d->height),
+                    QRectF(d->x, d->y, oldWidth, oldHeight));
 }
 
 /*!
