@@ -39,7 +39,20 @@
 ****************************************************************************/
 
 #include <QGuiApplication>
+#include <QThread>
 #include <QQuickView>
+#include <QQmlEngine>
+#include <QQmlContext>
+
+class Helper : public QObject
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE void sleep(int ms) {
+        QThread::msleep(ms);
+    }
+};
 
 int main(int argc, char **argv)
 {
@@ -52,9 +65,12 @@ int main(int argc, char **argv)
     qDebug("  [4] - A lot of rectangles (perf)");
     qDebug("  [I] - Images");
     qDebug("  [T] - Text");
+    qDebug("  [A] - Render thread Animator");
     qDebug("\nPress S to stop the currently running test\n");
 
+    Helper helper;
     QQuickView view;
+    view.engine()->rootContext()->setContextProperty(QLatin1String("helper"), &helper);
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.resize(1024, 768);
     view.setSource(QUrl("qrc:/main.qml"));
@@ -62,3 +78,5 @@ int main(int argc, char **argv)
 
     return app.exec();
 }
+
+#include "nodetypes.moc"

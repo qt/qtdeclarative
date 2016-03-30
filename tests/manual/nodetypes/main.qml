@@ -62,5 +62,8 @@ Item {
 
         if (event.key === Qt.Key_T)
             loader.source = "qrc:/Text.qml";
+
+        if (event.key === Qt.Key_A)
+            loader.source = "qrc:/Animators.qml";
     }
 }

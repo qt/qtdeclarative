@@ -174,7 +174,7 @@ void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 
     } else if (!m_controller && m_job) {
         m_controller = QQuickWindowPrivate::get(window)->animationController;
-        if (window->openglContext())
+        if (window->isSceneGraphInitialized())
             readyToAnimate();
         else
             connect(window, SIGNAL(sceneGraphInitialized()), this, SLOT(sceneGraphInitialized()));
@@ -387,9 +387,7 @@ void QQuickXAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
+
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->dx = m_value;
     m_helper->wasChanged = true;
@@ -405,9 +403,7 @@ void QQuickYAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
+
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->dy = m_value;
     m_helper->wasChanged = true;
@@ -476,9 +472,6 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller || !m_opacityNode)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_opacityNode->setOpacity(m_value);
@@ -494,9 +487,6 @@ void QQuickScaleAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
 
     m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
     m_helper->scale = m_value;
@@ -516,9 +506,6 @@ void QQuickRotationAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
 
     float t =  m_easing.valueForProgress(time / (qreal) m_duration);
     switch (m_direction) {
@@ -599,9 +586,7 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
 {
     if (!m_controller)
         return;
-#ifndef QT_NO_OPENGL
-    Q_ASSERT(!m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-#endif
+
     if (!m_node || m_uniformIndex == -1 || m_uniformType == -1)
         return;
 
