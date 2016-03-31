@@ -347,6 +347,8 @@ TestCase {
     }
 
     function test_swipeVelocity(data) {
+        skip("QTBUG-52003");
+
         var control = swipeDelegateComponent.createObject(testCase);
         verify(control);
 
