@@ -20,6 +20,8 @@ QML_FILES += \
     $$PWD/Popup.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
+    $$PWD/RadioDelegate.qml \
+    $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ScrollIndicator.qml \

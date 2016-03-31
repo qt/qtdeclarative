@@ -471,18 +471,24 @@ void tst_Gifs::swipeDelegateBehind()
 void tst_Gifs::delegates_data()
 {
     QTest::addColumn<QString>("name");
-    QTest::newRow("ItemDelegate") << "itemdelegate";
-    QTest::newRow("CheckDelegate") << "checkdelegate";
+    QTest::addColumn<QVector<int> >("pressIndices");
+    QTest::addColumn<int>("duration");
+
+    QTest::newRow("ItemDelegate") << "itemdelegate" << (QVector<int>() << 0 << 0) << 5;
+    QTest::newRow("CheckDelegate") << "checkdelegate" << (QVector<int>() << 0 << 0) << 5;
+    QTest::newRow("RadioDelegate") << "radiodelegate" << (QVector<int>() << 1 << 0) << 5;
 }
 
 void tst_Gifs::delegates()
 {
     QFETCH(QString, name);
+    QFETCH(QVector<int>, pressIndices);
+    QFETCH(int, duration);
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(5);
+    gifRecorder.setRecordingDuration(duration);
     gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols-%1.qml").arg(name));
     gifRecorder.setHighQuality(true);
 
@@ -492,12 +498,13 @@ void tst_Gifs::delegates()
     QQuickItem *delegate = window->property("delegate").value<QQuickItem*>();
     QVERIFY(delegate);
 
-    const QPoint delegateCenter(delegate->mapToScene(QPointF(delegate->width() / 2, delegate->height() / 2)).toPoint());
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 200);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
-
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 1000);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
+    for (int i = 0; i < pressIndices.size(); ++i) {
+        const int pressIndex = pressIndices.at(i);
+        const QPoint delegateCenter(delegate->mapToScene(QPointF(
+            delegate->width() / 2, delegate->height() / 2 + delegate->height() * pressIndex)).toPoint());
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, i == 0 ? 200 : 1000);
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
+    }
 
     gifRecorder.waitForFinish();
 }

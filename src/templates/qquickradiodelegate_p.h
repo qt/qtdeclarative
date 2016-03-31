@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRADIOBUTTON_P_H
-#define QQUICKRADIOBUTTON_P_H
+#ifndef QQUICKRADIODELEGATE_P_H
+#define QQUICKRADIODELEGATE_P_H
 
 //
 //  W A R N I N G
@@ -48,20 +48,20 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickitemdelegate_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES_EXPORT QQuickRadioButton : public QQuickAbstractButton
+class QQuickRadioDelegatePrivate;
+
+class Q_QUICKTEMPLATES_EXPORT QQuickRadioDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
 
 public:
-    explicit QQuickRadioButton(QQuickItem *parent = nullptr);
+    explicit QQuickRadioDelegate(QQuickItem *parent = nullptr);
 
 protected:
-    QFont defaultFont() const override;
-
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
@@ -69,6 +69,6 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickRadioButton)
+QML_DECLARE_TYPE(QQuickRadioDelegate)
 
-#endif // QQUICKRADIOBUTTON_P_H
+#endif // QQUICKRADIODELEGATE_P_H

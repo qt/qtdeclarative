@@ -28,6 +28,8 @@ QML_CONTROLS = \
     Popup.qml \
     ProgressBar.qml \
     RadioButton.qml \
+    RadioDelegate.qml \
+    RadioIndicator.qml \
     RangeSlider.qml \
     ScrollBar.qml \
     ScrollIndicator.qml \

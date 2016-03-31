@@ -53,26 +53,10 @@ T.RadioButton {
     opacity: enabled ? 1 : 0.2
 
     //! [indicator]
-    indicator: Rectangle {
-        implicitWidth: 28
-        implicitHeight: 28
+    indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        radius: width / 2
-        color: control.pressed ? (control.activeKeyFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
-        border.width: control.activeKeyFocus ? 2 : 1
-        border.color: control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 20
-            height: 20
-            radius: width / 2
-            color: parent.border.color
-            visible: control.checked
-        }
+        control: control
     }
     //! [indicator]
 

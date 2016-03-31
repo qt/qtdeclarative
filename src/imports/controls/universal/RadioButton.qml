@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.universal 1.0
+import Qt.labs.controls.universal.impl 1.0
 
 T.RadioButton {
     id: control
@@ -54,45 +55,10 @@ T.RadioButton {
     property bool useSystemFocusVisuals: true
 
     //! [indicator]
-    indicator: Rectangle {
-        id: outerEllipse
-        implicitWidth: 20
-        implicitHeight: 20
+    indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        radius: width / 2
-        color: "transparent"
-        border.width: 2 // RadioButtonBorderThemeThickness
-        border.color:  control.checked ? "transparent" :
-                      !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
-
-        Rectangle {
-            id: checkOuterEllipse
-            width: parent.width
-            height: parent.height
-
-            radius: width / 2
-            opacity: control.checked ? 1 : 0
-            color: "transparent"
-            border.width: 2 // RadioButtonBorderThemeThickness
-            border.color: !control.enabled ? control.Universal.baseLowColor :
-                           control.pressed ? control.Universal.baseMediumColor : control.Universal.accent
-        }
-
-        Rectangle {
-            id: checkGlyph
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: parent.width / 2
-            height: parent.height / 2
-
-            radius: width / 2
-            opacity: control.checked ? 1 : 0
-            color: !control.enabled ? control.Universal.baseLowColor :
-                    control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
-        }
+        control: control
     }
     //! [indicator]
 

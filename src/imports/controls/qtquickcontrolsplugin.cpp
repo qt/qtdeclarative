@@ -113,6 +113,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("Popup.qml")), uri, 1, 0, "Popup");
     qmlRegisterType(selector.select(QStringLiteral("ProgressBar.qml")), uri, 1, 0, "ProgressBar");
     qmlRegisterType(selector.select(QStringLiteral("RadioButton.qml")), uri, 1, 0, "RadioButton");
+    qmlRegisterType(selector.select(QStringLiteral("RadioDelegate.qml")), uri, 1, 0, "RadioDelegate");
     qmlRegisterType(selector.select(QStringLiteral("RangeSlider.qml")), uri, 1, 0, "RangeSlider");
     qmlRegisterType(selector.select(QStringLiteral("ScrollBar.qml")), uri, 1, 0, "ScrollBar");
     qmlRegisterType(selector.select(QStringLiteral("ScrollIndicator.qml")), uri, 1, 0, "ScrollIndicator");
@@ -145,6 +146,7 @@ void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri
 
     const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
     qmlRegisterType(pluginBasePath + QStringLiteral("/CheckIndicator.qml"), import, 1, 0, "CheckIndicator");
+    qmlRegisterType(pluginBasePath + QStringLiteral("/RadioIndicator.qml"), import, 1, 0, "RadioIndicator");
 }
 
 QT_END_NAMESPACE

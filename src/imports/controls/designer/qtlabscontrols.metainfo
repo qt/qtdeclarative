@@ -208,6 +208,21 @@ MetaInfo {
     }
 
     Type {
+        name: "Qt.labs.controls.RadioDelegate"
+        icon: "images/radiobutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Radio Delegate"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/radiobutton-icon.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Radio Delegate')" }
+        }
+    }
+
+    Type {
         name: "Qt.labs.controls.Slider"
         icon: "images/slider-icon16.png"
 

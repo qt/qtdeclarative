@@ -20,6 +20,7 @@ QML_FILES += \
     $$PWD/PaneSpecifics.qml \
     $$PWD/ProgressBarSpecifics.qml \
     $$PWD/RadioButtonSpecifics.qml \
+    $$PWD/RadioDelegateSpecifics.qml \
     $$PWD/SliderSpecifics.qml \
     $$PWD/SpinBoxSpecifics.qml \
     $$PWD/SwipeDelegateSpecifics.qml \

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -36,10 +36,8 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
 
-T.RadioButton {
+T.RadioDelegate {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -49,32 +47,39 @@ T.RadioButton {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    spacing: 8
-    topPadding: 14
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 14
-
-    //! [indicator]
-    indicator: RadioIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
-    }
-    //! [indicator]
+    padding: 12
+    spacing: 12
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? "#26282a" : "#bdbebf"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
+
+    //! [indicator]
+    indicator: RadioIndicator {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+
+        control: control
+    }
+    //! [indicator]
+
+    //! [background]
+    background: Rectangle {
+        implicitWidth: 100
+        implicitHeight: 40
+        visible: control.pressed || control.highlighted
+        color: control.pressed ? "#bdbebf" : "#eeeeee"
+    }
+    //! [background]
 }

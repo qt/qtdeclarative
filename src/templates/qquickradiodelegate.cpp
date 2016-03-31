@@ -34,41 +34,62 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRADIOBUTTON_P_H
-#define QQUICKRADIOBUTTON_P_H
+#include "qquickradiodelegate_p.h"
+#include "qquickabstractbutton_p_p.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES_EXPORT QQuickRadioButton : public QQuickAbstractButton
+/*!
+    \qmltype RadioDelegate
+    \inherits ItemDelegate
+    \instantiates QQuickRadioDelegate
+    \inqmlmodule Qt.labs.controls
+    \ingroup qtlabscontrols-delegates
+    \brief An item delegate that can be checked or unchecked.
+
+    \image qtquickcontrols-radiodelegate.gif
+
+    RadioDelegate presents an item delegate that can be toggled on (checked) or
+    off (unchecked). Radio delegates are typically used to select one option
+    from a set of options.
+
+    The state of the radio delegate can be set with the
+    \l {AbstractButton::}{checked} property.
+
+    \code
+    ButtonGroup {
+        id: buttonGroup
+    }
+
+    ListView {
+        model: ["Option 1", "Option 2", "Option 3"]
+        delegate: RadioDelegate {
+            text: modelData
+            checked: index == 0
+            ButtonGroup.group: buttonGroup
+        }
+    }
+    \endcode
+
+    \labs
+
+    \sa {Customizing RadioDelegate}, {Delegate Controls}
+*/
+
+QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent) :
+    QQuickItemDelegate(parent)
 {
-    Q_OBJECT
-
-public:
-    explicit QQuickRadioButton(QQuickItem *parent = nullptr);
-
-protected:
-    QFont defaultFont() const override;
+    setCheckable(true);
+    setAutoExclusive(true);
+}
 
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const override;
+QAccessible::Role QQuickRadioDelegate::accessibleRole() const
+{
+    return QAccessible::RadioButton;
+}
 #endif
-};
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickRadioButton)
-
-#endif // QQUICKRADIOBUTTON_P_H

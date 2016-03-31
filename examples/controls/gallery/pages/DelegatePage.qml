@@ -48,7 +48,8 @@ Pane {
     property var delegateComponentMap: {
         "ItemDelegate": itemDelegateComponent,
         "SwipeDelegate": swipeDelegateComponent,
-        "CheckDelegate": checkDelegateComponent
+        "CheckDelegate": checkDelegateComponent,
+        "RadioDelegate": radioDelegateComponent
     }
 
     Component {
@@ -100,6 +101,19 @@ Pane {
         }
     }
 
+    ButtonGroup {
+        id: radioButtonGroup
+    }
+
+    Component {
+        id: radioDelegateComponent
+
+        RadioDelegate {
+            text: labelText
+            ButtonGroup.group: radioButtonGroup
+        }
+    }
+
     ColumnLayout {
         id: column
         spacing: 40
@@ -128,6 +142,9 @@ Pane {
                 ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
                 ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
                 ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
+                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
+                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
+                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
             }
 
             section.property: "type"

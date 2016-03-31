@@ -25,32 +25,15 @@
 **
 ****************************************************************************/
 
-/*!
-    \page qtquickcontrols2-delegates.html
-    \title Delegate Controls
+import QtQuick 2.0
+import Qt.labs.controls 1.0
 
-    Qt Quick Controls 2 offers a selection of controls that are used as
-    delegates in views.
-
-    \annotatedlist qtlabscontrols-delegates
-
-    Each type of delegate has its own specific target use case. The following
-    sections offer guidelines for choosing the appropriate type of delegate,
-    depending on the use case.
-
-    \section1 ItemDelegate Control
-
-    \image qtquickcontrols-itemdelegate.gif
-
-    \l ItemDelegate presents a checkable control that can be pressed and
-    clicked by the user.
-
-    \section1 RadioDelegate Control
-
-    \image qtquickcontrols-radiodelegate.gif
-
-    \l RadioDelegate presents a checkable control that can be toggled on
-    (checked) or off (unchecked). Radio delegates are typically used to select
-    one option from a set of options.
-*/
-
+RadioDelegate {
+    text: "RadioDelegate"
+    checked: true
+    Rectangle {
+        anchors.fill: indicator
+        color: "transparent"
+        border.color: "red"
+    }
+}

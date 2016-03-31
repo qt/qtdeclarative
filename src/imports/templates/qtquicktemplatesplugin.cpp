@@ -60,6 +60,7 @@
 #include <QtQuickTemplates/private/qquickpopup_p.h>
 #include <QtQuickTemplates/private/qquickprogressbar_p.h>
 #include <QtQuickTemplates/private/qquickradiobutton_p.h>
+#include <QtQuickTemplates/private/qquickradiodelegate_p.h>
 #include <QtQuickTemplates/private/qquickrangeslider_p.h>
 #include <QtQuickTemplates/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates/private/qquickscrollindicator_p.h>
@@ -129,6 +130,7 @@ void QtQuickTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
     qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
+    qmlRegisterType<QQuickRadioDelegate>(uri, 1, 0, "RadioDelegate");
     qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");
     qmlRegisterType<QQuickRangeSliderNode>();
     qmlRegisterType<QQuickScrollBar>(uri, 1, 0, "ScrollBar");

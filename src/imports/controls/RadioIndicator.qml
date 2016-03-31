@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -35,46 +35,25 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
 
-T.RadioButton {
-    id: control
+Rectangle {
+    implicitWidth: 28
+    implicitHeight: 28
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+    radius: width / 2
+    color: control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
+    border.width: control.activeFocus ? 2 : 1
+    border.color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
-    spacing: 8
-    topPadding: 14
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 14
+    property Item control
 
-    //! [indicator]
-    indicator: RadioIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+    Rectangle {
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: 20
+        height: 20
+        radius: width / 2
+        color: parent.border.color
+        visible: control.checked
     }
-    //! [indicator]
-
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [contentItem]
 }

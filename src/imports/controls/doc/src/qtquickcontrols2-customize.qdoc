@@ -338,6 +338,30 @@
             \snippet RadioButton.qml indicator
 
 
+    \section1 Customizing RadioDelegate
+
+        RadioDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-radiodelegate-background.png
+
+            \snippet RadioDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-radiodelegate-contentItem.png
+
+            \snippet RadioDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-radiodelegate-indicator.png
+
+            \snippet RadioDelegate.qml indicator
+
+
     \section1 Customizing RangeSlider
 
         RangeSlider consists of three visual items:
@@ -538,7 +562,6 @@
             \image qtquickcontrols-switch-indicator.png
 
             \snippet Switch.qml indicator
-
 
     \section1 Customizing TabBar
 
