@@ -215,7 +215,8 @@ public:
     QSGD3D12GlyphCache *glyphCache() const { return static_cast<QSGD3D12GlyphCache *>(m_glyphCache.data()); }
 
 private:
-    static QSGMaterialType mtype[NStyleTypes];
+    static const int NTextMaterialTypes = NStyleTypes * 2;
+    static QSGMaterialType mtype[NTextMaterialTypes];
     StyleType m_styleType;
     QSGD3D12RenderContext *m_rc;
     QVector4D m_color;

@@ -408,11 +408,16 @@ QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderCo
     }
 }
 
-QSGMaterialType QSGD3D12TextMaterial::mtype[QSGD3D12TextMaterial::NStyleTypes];
+QSGMaterialType QSGD3D12TextMaterial::mtype[QSGD3D12TextMaterial::NTextMaterialTypes];
 
 QSGMaterialType *QSGD3D12TextMaterial::type() const
 {
-    return &QSGD3D12TextMaterial::mtype[m_styleType];
+    // Format_A32 has special blend settings and therefore two materials with
+    // the same style but different formats where one is A32 are treated as
+    // different. This way the renderer can manage the pipeline state properly.
+    const int matStyle = m_styleType * 2;
+    const int matFormat = glyphCache()->glyphFormat() != QFontEngine::Format_A32 ? 0 : 1;
+    return &QSGD3D12TextMaterial::mtype[matStyle + matFormat];
 }
 
 int QSGD3D12TextMaterial::compare(const QSGMaterial *other) const
@@ -490,6 +495,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     quint8 *p = constantBuffer;
 
     if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
+        // can freely change the state due to the way type() works
         pipelineState->blend = QSGD3D12PipelineState::BlendColor;
         extraState->blendFactor = m_color;
         r |= UpdatedBlendFactor; // must be set always as this affects the command list
