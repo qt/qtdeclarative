@@ -566,6 +566,29 @@
 
             \snippet Switch.qml indicator
 
+    \section1 Customizing SwitchDelegate
+
+        SwitchDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-switchdelegate-background.png
+
+            \snippet SwitchDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-switchdelegate-contentItem.png
+
+            \snippet SwitchDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-switchdelegate-indicator.png
+
+            \snippet SwitchDelegate.qml indicator
+
     \section1 Customizing TabBar
 
         TODO

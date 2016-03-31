@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -36,9 +36,10 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.impl 1.0
+import Qt.labs.controls.material 1.0
+import Qt.labs.controls.material.impl 1.0
 
-T.Switch {
+T.SwitchDelegate {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -48,12 +49,12 @@ T.Switch {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 6
-    spacing: 6
+    padding: 16
+    spacing: 16
 
     //! [indicator]
     indicator: SwitchIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
@@ -61,16 +62,23 @@ T.Switch {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
+        rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
     //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        visible: control.pressed || control.highlighted
+        color: control.pressed ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
+    }
+    //! [background]
 }

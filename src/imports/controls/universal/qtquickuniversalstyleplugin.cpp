@@ -95,6 +95,7 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
 
     const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/RadioIndicator.qml")), import, 1, 0, "RadioIndicator");
+    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
 }
 
 QString QtQuickUniversalStylePlugin::name() const

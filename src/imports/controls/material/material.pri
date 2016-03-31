@@ -45,6 +45,8 @@ QML_FILES += \
     $$PWD/SwipeDelegate.qml \
     $$PWD/SwipeView.qml \
     $$PWD/Switch.qml \
+    $$PWD/SwitchDelegate.qml \
+    $$PWD/SwitchIndicator.qml \
     $$PWD/TabBar.qml \
     $$PWD/TabButton.qml \
     $$PWD/TextArea.qml \

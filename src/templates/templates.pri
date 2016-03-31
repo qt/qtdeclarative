@@ -46,6 +46,7 @@ HEADERS += \
     $$PWD/qquickswipedelegate_p.h \
     $$PWD/qquickswipeview_p.h \
     $$PWD/qquickswitch_p.h \
+    $$PWD/qquickswitchdelegate_p.h \
     $$PWD/qquicktabbar_p.h \
     $$PWD/qquicktabbutton_p.h \
     $$PWD/qquicktextarea_p.h \
@@ -96,6 +97,7 @@ SOURCES += \
     $$PWD/qquickswipedelegate.cpp \
     $$PWD/qquickswipeview.cpp \
     $$PWD/qquickswitch.cpp \
+    $$PWD/qquickswitchdelegate.cpp \
     $$PWD/qquicktabbar.cpp \
     $$PWD/qquicktabbutton.cpp \
     $$PWD/qquicktextarea.cpp \

@@ -477,6 +477,7 @@ void tst_Gifs::delegates_data()
     QTest::newRow("ItemDelegate") << "itemdelegate" << (QVector<int>() << 0 << 1 << 2) << 5;
     QTest::newRow("CheckDelegate") << "checkdelegate" << (QVector<int>() << 0 << 0) << 5;
     QTest::newRow("RadioDelegate") << "radiodelegate" << (QVector<int>() << 1 << 0) << 5;
+    QTest::newRow("SwitchDelegate") << "switchdelegate" << (QVector<int>() << 0 << 0) << 5;
 }
 
 void tst_Gifs::delegates()

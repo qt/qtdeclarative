@@ -123,6 +123,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("SwipeDelegate.qml")), uri, 1, 0, "SwipeDelegate");
     qmlRegisterType(selector.select(QStringLiteral("SwipeView.qml")), uri, 1, 0, "SwipeView");
     qmlRegisterType(selector.select(QStringLiteral("Switch.qml")), uri, 1, 0, "Switch");
+    qmlRegisterType(selector.select(QStringLiteral("SwitchDelegate.qml")), uri, 1, 0, "SwitchDelegate");
     qmlRegisterType(selector.select(QStringLiteral("TabBar.qml")), uri, 1, 0, "TabBar");
     qmlRegisterType(selector.select(QStringLiteral("TabButton.qml")), uri, 1, 0, "TabButton");
     qmlRegisterType(selector.select(QStringLiteral("TextArea.qml")), uri, 1, 0, "TextArea");
@@ -147,6 +148,7 @@ void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri
     const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
     qmlRegisterType(pluginBasePath + QStringLiteral("/CheckIndicator.qml"), import, 1, 0, "CheckIndicator");
     qmlRegisterType(pluginBasePath + QStringLiteral("/RadioIndicator.qml"), import, 1, 0, "RadioIndicator");
+    qmlRegisterType(pluginBasePath + QStringLiteral("/SwitchIndicator.qml"), import, 1, 0, "SwitchIndicator");
 }
 
 QT_END_NAMESPACE

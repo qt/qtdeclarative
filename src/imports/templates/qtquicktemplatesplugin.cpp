@@ -70,6 +70,7 @@
 #include <QtQuickTemplates/private/qquickswipedelegate_p.h>
 #include <QtQuickTemplates/private/qquickswipeview_p.h>
 #include <QtQuickTemplates/private/qquickswitch_p.h>
+#include <QtQuickTemplates/private/qquickswitchdelegate_p.h>
 #include <QtQuickTemplates/private/qquicktabbar_p.h>
 #include <QtQuickTemplates/private/qquicktabbutton_p.h>
 #include <QtQuickTemplates/private/qquicktextarea_p.h>
@@ -144,6 +145,7 @@ void QtQuickTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwipeViewAttached>();
     qmlRegisterType<QQuickSwipeView>(uri, 1, 0, "SwipeView");
     qmlRegisterType<QQuickSwitch>(uri, 1, 0, "Switch");
+    qmlRegisterType<QQuickSwitchDelegate>(uri, 1, 0, "SwitchDelegate");
     qmlRegisterType<QQuickTabBar>(uri, 1, 0, "TabBar");
     qmlRegisterType<QQuickTabButton>(uri, 1, 0, "TabButton");
     qmlRegisterType<QQuickTextArea>(uri, 1, 0, "TextArea");

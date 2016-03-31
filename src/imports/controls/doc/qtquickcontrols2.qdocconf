@@ -43,7 +43,8 @@ headerdirs += ../../../templates \
 
 sourcedirs += ../../../templates \
               ../../calendar \
-              ../../../controls
+              ../../../controls \
+              src
 
 imagedirs += images
 

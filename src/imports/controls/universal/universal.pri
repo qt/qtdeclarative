@@ -29,6 +29,8 @@ QML_FILES += \
     $$PWD/SpinBox.qml \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
+    $$PWD/SwitchDelegate.qml \
+    $$PWD/SwitchIndicator.qml \
     $$PWD/Switch.qml \
     $$PWD/TabBar.qml \
     $$PWD/TabButton.qml \

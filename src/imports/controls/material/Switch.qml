@@ -38,7 +38,6 @@ import QtQuick 2.6
 import Qt.labs.controls.material 1.0
 import Qt.labs.controls.material.impl 1.0
 import Qt.labs.templates 1.0 as T
-import QtGraphicalEffects 1.0
 
 T.Switch {
     id: control
@@ -54,55 +53,10 @@ T.Switch {
     spacing: 8
 
     //! [indicator]
-    indicator: Item {
+    indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        implicitWidth: 38
-        implicitHeight: 32
-
-        Ripple {
-            x: handle.x + handle.width / 2 - width / 2
-            y: handle.y + handle.height / 2 - height / 2
-            width: handle.width
-            height: width
-            control: control
-            colored: control.checked
-            opacity: control.pressed || control.activeKeyFocus ? 1 : 0
-        }
-
-        Rectangle {
-            width: parent.width
-            height: 14
-            radius: height / 2
-            y: parent.height / 2 - height / 2
-            color: control.enabled ? (control.checked ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedTrackColor)
-                                   : control.Material.switchDisabledTrackColor
-        }
-
-        Rectangle {
-            id: handle
-            x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
-            y: (parent.height - height) / 2
-            width: 20
-            height: 20
-            radius: width / 2
-            color: control.enabled ? (control.checked ? control.Material.switchCheckedHandleColor : control.Material.switchUncheckedHandleColor)
-                                   : control.Material.switchDisabledHandleColor
-
-            Behavior on x {
-                enabled: !control.pressed
-                SmoothedAnimation {
-                    duration: 300
-                }
-            }
-
-            layer.enabled: true
-            layer.effect: DropShadow {
-                verticalOffset: 1
-                color: control.Material.dropShadowColor
-                spread: 0.3
-            }
-        }
+        control: control
     }
     //! [indicator]
 

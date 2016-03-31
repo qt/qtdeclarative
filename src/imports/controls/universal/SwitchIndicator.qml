@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -36,41 +36,37 @@
 
 import QtQuick 2.6
 import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.impl 1.0
+import Qt.labs.controls.universal 1.0
 
-T.Switch {
-    id: control
+Rectangle {
+    implicitWidth: 44
+    implicitHeight: 20
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+    radius: 10
+    color: !control.enabled ? "transparent" :
+            control.pressed ? control.Universal.baseMediumColor :
+            control.checked ? control.Universal.accent : "transparent"
+    border.color: !control.enabled ? control.Universal.baseLowColor :
+                   control.checked && !control.pressed ? control.Universal.accent : control.Universal.baseMediumColor
+    border.width: 2
 
-    padding: 6
-    spacing: 6
+    property Item control
 
-    //! [indicator]
-    indicator: SwitchIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+    Rectangle {
+        width: 10
+        height: 10
+        radius: 5
+
+        color: !control.enabled ? control.Universal.baseLowColor :
+                control.pressed || control.checked ? control.Universal.chromeWhiteColor : control.Universal.baseMediumHighColor
+
+        x: Math.max(5, Math.min(parent.width - width - 5,
+                                control.visualPosition * parent.width - (width / 2)))
+        y: (parent.height - height) / 2
+
+        Behavior on x {
+            enabled: !control.pressed
+            SmoothedAnimation { velocity: 200 }
+        }
     }
-    //! [indicator]
-
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [contentItem]
 }

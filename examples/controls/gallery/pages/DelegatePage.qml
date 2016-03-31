@@ -49,7 +49,8 @@ Pane {
         "ItemDelegate": itemDelegateComponent,
         "SwipeDelegate": swipeDelegateComponent,
         "CheckDelegate": checkDelegateComponent,
-        "RadioDelegate": radioDelegateComponent
+        "RadioDelegate": radioDelegateComponent,
+        "SwitchDelegate": switchDelegateComponent
     }
 
     Component {
@@ -114,6 +115,14 @@ Pane {
         }
     }
 
+    Component {
+        id: switchDelegateComponent
+
+        SwitchDelegate {
+            text: labelText
+        }
+    }
+
     ColumnLayout {
         id: column
         spacing: 40
@@ -145,6 +154,9 @@ Pane {
                 ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
                 ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
                 ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
+                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
+                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
+                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
             }
 
             section.property: "type"

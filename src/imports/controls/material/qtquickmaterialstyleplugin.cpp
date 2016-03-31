@@ -93,6 +93,7 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
     qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
+    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
 }
 
 QString QtQuickMaterialStylePlugin::name() const

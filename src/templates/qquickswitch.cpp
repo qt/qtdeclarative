@@ -179,14 +179,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
     \qmlproperty real Qt.labs.controls::Switch::position
     \readonly
 
-    This property holds the logical position of the thumb indicator.
-
-    The position is defined as a percentage of the indicator's size, scaled to
-    \c 0.0 - \c 1.0. The position can be used for example to determine whether
-    the thumb has been dragged past the halfway. For visualizing a thumb
-    indicator, the right-to-left aware \l visualPosition should be used instead.
-
-    \sa visualPosition
+    \input includes/qquickswitch.qdocinc position
 */
 qreal QQuickSwitch::position() const
 {
@@ -210,16 +203,7 @@ void QQuickSwitch::setPosition(qreal position)
     \qmlproperty real Qt.labs.controls::Switch::visualPosition
     \readonly
 
-    This property holds the visual position of the thumb indicator.
-
-    The position is defined as a percentage of the indicator's size, scaled to
-    \c 0.0 - \c 1.0. When the control is \l {Control::mirrored}{mirrored}, the
-    value is equal to \c {1.0 - position}. This makes the value suitable for
-    visualizing the thumb indicator taking right-to-left support into account.
-    In order to for example determine whether the thumb has been dragged past
-    the halfway, the logical \l position should be used instead.
-
-    \sa position
+    \input includes/qquickswitch.qdocinc visualPosition
 */
 qreal QQuickSwitch::visualPosition() const
 {

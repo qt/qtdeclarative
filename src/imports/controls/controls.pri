@@ -38,6 +38,8 @@ QML_CONTROLS = \
     StackView.qml \
     SwipeDelegate.qml \
     Switch.qml \
+    SwitchIndicator.qml \
+    SwitchDelegate.qml \
     SwipeView.qml \
     TabBar.qml \
     TabButton.qml \

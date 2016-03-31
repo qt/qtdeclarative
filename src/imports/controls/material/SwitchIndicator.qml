@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -35,42 +35,57 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.impl 1.0
+import QtGraphicalEffects 1.0
+import Qt.labs.controls.material 1.0
+import Qt.labs.controls.material.impl 1.0
 
-T.Switch {
-    id: control
+Item {
+    implicitWidth: 38
+    implicitHeight: 32
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+    property alias control: ripple.control
 
-    padding: 6
-    spacing: 6
-
-    //! [indicator]
-    indicator: SwitchIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+    Ripple {
+        id: ripple
+        x: handle.x + handle.width / 2 - width / 2
+        y: handle.y + handle.height / 2 - height / 2
+        width: handle.width
+        height: width
+        colored: control.checked
+        opacity: control.pressed || control.activeKeyFocus ? 1 : 0
     }
-    //! [indicator]
 
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
+    Rectangle {
+        width: parent.width
+        height: 14
+        radius: height / 2
+        y: parent.height / 2 - height / 2
+        color: control.enabled ? (control.checked ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedTrackColor)
+                               : control.Material.switchDisabledTrackColor
     }
-    //! [contentItem]
+
+    Rectangle {
+        id: handle
+        x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
+        y: (parent.height - height) / 2
+        width: 20
+        height: 20
+        radius: width / 2
+        color: control.enabled ? (control.checked ? control.Material.switchCheckedHandleColor : control.Material.switchUncheckedHandleColor)
+                               : control.Material.switchDisabledHandleColor
+
+        Behavior on x {
+            enabled: !control.pressed
+            SmoothedAnimation {
+                duration: 300
+            }
+        }
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            verticalOffset: 1
+            color: control.Material.dropShadowColor
+            spread: 0.3
+        }
+    }
 }

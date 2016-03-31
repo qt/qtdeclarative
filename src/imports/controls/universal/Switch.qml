@@ -54,37 +54,10 @@ T.Switch {
     property bool useSystemFocusVisuals: true
 
     //! [indicator]
-    indicator: Rectangle {
-        implicitWidth: 44
-        implicitHeight: 20
+    indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        radius: 10
-        color: !control.enabled ? "transparent" :
-                control.pressed ? control.Universal.baseMediumColor :
-                control.checked ? control.Universal.accent : "transparent"
-        border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.checked && !control.pressed ? control.Universal.accent : control.Universal.baseMediumColor
-        border.width: 2
-
-        Rectangle {
-            width: 10
-            height: 10
-            radius: 5
-
-            color: !control.enabled ? control.Universal.baseLowColor :
-                    control.pressed || control.checked ? control.Universal.chromeWhiteColor : control.Universal.baseMediumHighColor
-
-            x: Math.max(5, Math.min(parent.width - width - 5,
-                                    control.visualPosition * parent.width - (width / 2)))
-            y: (parent.height - height) / 2
-
-            Behavior on x {
-                enabled: !control.pressed
-                SmoothedAnimation { velocity: 200 }
-            }
-        }
+        control: control
     }
     //! [indicator]
 
