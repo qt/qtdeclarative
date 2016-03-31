@@ -293,9 +293,11 @@ bool QSGD3D12RenderThread::event(QEvent *e)
         if (sleeping)
             stopEventProcessing = true;
         if (!engine->window()) {
+            const int samples = wme->window->format().samples();
             if (Q_UNLIKELY(debug_loop()))
-                qDebug() << "RT - WM_RequestSync - initializing D3D12 engine" << wme->window << wme->size << wme->dpr;
-            engine->attachToWindow(wme->window->winId(), wme->size, wme->dpr);
+                qDebug() << "RT - WM_RequestSync - initializing D3D12 engine" << wme->window
+                         << wme->size << wme->dpr << samples;
+            engine->attachToWindow(wme->window->winId(), wme->size, wme->dpr, samples);
         }
         exposedWindow = wme->window;
         Q_ASSERT(exposedWindow->winId() == engine->window()); // one thread+engine for each window

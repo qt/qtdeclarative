@@ -70,6 +70,12 @@ int main(int argc, char **argv)
 
     Helper helper;
     QQuickView view;
+    if (app.arguments().contains(QLatin1String("--multisample"))) {
+        qDebug("Requesting sample count 4");
+        QSurfaceFormat fmt;
+        fmt.setSamples(4);
+        view.setFormat(fmt);
+    }
     view.engine()->rootContext()->setContextProperty(QLatin1String("helper"), &helper);
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.resize(1024, 768);

@@ -294,14 +294,14 @@ QSGD3D12Engine::~QSGD3D12Engine()
     delete d;
 }
 
-bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr)
+bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr, int samples)
 {
     if (d->isInitialized()) {
         qWarning("QSGD3D12Engine: Cannot attach active engine to window");
         return false;
     }
 
-    d->initialize(window, size, dpr);
+    d->initialize(window, size, dpr, samples);
     return d->isInitialized();
 }
 
@@ -597,9 +597,11 @@ void QSGD3D12EnginePrivate::releaseResources()
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
         commandAllocator[i] = nullptr;
 
-    depthStencil = nullptr;
-    for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
+    defaultDS = nullptr;
+    for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
         backBufferRT[i] = nullptr;
+        defaultRT[i] = nullptr;
+    }
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         pframeData[i].vertex.buffer = nullptr;
@@ -631,7 +633,7 @@ void QSGD3D12EnginePrivate::releaseResources()
     // 'window' must be kept, may just be a device loss
 }
 
-void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr)
+void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int samples)
 {
     if (initialized)
         return;
@@ -639,6 +641,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr)
     window = w;
     windowSize = size;
     windowDpr = dpr;
+    windowSamples = qMax(1, samples);
 
     HWND hwnd = reinterpret_cast<HWND>(w);
 
@@ -709,7 +712,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr)
 
     cpuDescHeapManager.initialize(device);
 
-    setupRenderTargets();
+    setupDefaultRenderTargets();
 
     if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator[0].Get(),
                                          nullptr, IID_PPV_ARGS(&commandList)))) {
@@ -784,10 +787,10 @@ DXGI_SAMPLE_DESC QSGD3D12EnginePrivate::makeSampleDesc(DXGI_FORMAT format, int s
                 sampleDesc.Count = samples;
                 sampleDesc.Quality = msaaInfo.NumQualityLevels - 1;
             } else {
-                qWarning("No quality levels for multisampling?");
+                qWarning("No quality levels for multisampling with sample count %d", samples);
             }
         } else {
-            qWarning("Failed to query multisample quality levels");
+            qWarning("Failed to query multisample quality levels for sample count %d", samples);
         }
     }
 
@@ -866,24 +869,32 @@ ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_H
     return resource;
 }
 
-void QSGD3D12EnginePrivate::setupRenderTargets()
+void QSGD3D12EnginePrivate::setupDefaultRenderTargets()
 {
-    // ### multisampling needs an offscreen rt and explicit resolve, add this at some point
-
     for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
         if (FAILED(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRT[i])))) {
             qWarning("Failed to get buffer %d from swap chain", i);
             return;
         }
-        backBufferRTV[i] = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        device->CreateRenderTargetView(backBufferRT[i].Get(), nullptr, backBufferRTV[i]);
+        defaultRTV[i] = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        if (windowSamples == 1) {
+            defaultRT[i] = backBufferRT[i];
+            device->CreateRenderTargetView(defaultRT[i].Get(), nullptr, defaultRTV[i]);
+        } else {
+            const QSize size(windowSize.width() * windowDpr, windowSize.height() * windowDpr);
+            const QColor cc(Qt::white); // ### what if setClearColor? non-fatal but debug layer warns...
+            const QVector4D clearColor(cc.redF(), cc.greenF(), cc.blueF(), cc.alphaF());
+            ID3D12Resource *msaaRT = createColorBuffer(defaultRTV[i], size, clearColor, windowSamples);
+            if (msaaRT)
+                defaultRT[i].Attach(msaaRT);
+        }
     }
 
-    backBufferDSV = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    defaultDSV = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     const QSize size(windowSize.width() * windowDpr, windowSize.height() * windowDpr);
-    ID3D12Resource *ds = createDepthStencil(backBufferDSV, size, 0);
+    ID3D12Resource *ds = createDepthStencil(defaultDSV, size, windowSamples);
     if (ds)
-        depthStencil.Attach(ds);
+        defaultDS.Attach(ds);
 
     presentFrameIndex = 0;
 }
@@ -902,11 +913,12 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
         qDebug() << "resize" << size << dpr;
 
     // Clear these, otherwise resizing will fail.
-    depthStencil = nullptr;
-    cpuDescHeapManager.release(backBufferDSV, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    defaultDS = nullptr;
+    cpuDescHeapManager.release(defaultDSV, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
         backBufferRT[i] = nullptr;
-        cpuDescHeapManager.release(backBufferRTV[i], D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        defaultRT[i] = nullptr;
+        cpuDescHeapManager.release(defaultRTV[i], D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
     const int w = windowSize.width() * windowDpr;
@@ -920,7 +932,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
         return;
     }
 
-    setupRenderTargets();
+    setupDefaultRenderTargets();
 }
 
 void QSGD3D12EnginePrivate::deviceLost()
@@ -974,6 +986,37 @@ void QSGD3D12EnginePrivate::transitionResource(ID3D12Resource *resource, ID3D12G
     commandList->ResourceBarrier(1, &barrier);
 }
 
+void QSGD3D12EnginePrivate::resolveMultisampledTarget(ID3D12Resource *msaa,
+                                                      ID3D12Resource *resolve,
+                                                      D3D12_RESOURCE_STATES resolveUsage,
+                                                      ID3D12GraphicsCommandList *commandList) const
+{
+    D3D12_RESOURCE_BARRIER barriers[2];
+    for (int i = 0; i < _countof(barriers); ++i) {
+        barriers[i].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barriers[i].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barriers[i].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    }
+
+    barriers[0].Transition.pResource = msaa;
+    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+    barriers[1].Transition.pResource = resolve;
+    barriers[1].Transition.StateBefore = resolveUsage;
+    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+    commandList->ResourceBarrier(2, barriers);
+
+    commandList->ResolveSubresource(resolve, 0, msaa, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+    barriers[0].Transition.pResource = msaa;
+    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barriers[1].Transition.pResource = resolve;
+    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+    barriers[1].Transition.StateAfter = resolveUsage;
+    commandList->ResourceBarrier(2, barriers);
+}
+
 void QSGD3D12EnginePrivate::uavBarrier(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList) const
 {
     D3D12_RESOURCE_BARRIER barrier = {};
@@ -1006,18 +1049,6 @@ ID3D12Resource *QSGD3D12EnginePrivate::createBuffer(int size)
         qWarning("Failed to create buffer resource: 0x%x", hr);
 
     return buf;
-}
-
-ID3D12Resource *QSGD3D12EnginePrivate::currentBackBufferRT() const
-{
-    return backBufferRT[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT].Get();
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12EnginePrivate::currentBackBufferRTV() const
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = backBufferRTV[0];
-    rtvHandle.ptr += (presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT) * cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    return rtvHandle;
 }
 
 void QSGD3D12EnginePrivate::markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size)
@@ -1099,7 +1130,7 @@ void QSGD3D12EnginePrivate::beginFrame()
 
     // The device may have been lost. This is the point to attempt to start again from scratch.
     if (!initialized && window)
-        initialize(window, windowSize, windowDpr);
+        initialize(window, windowSize, windowDpr, windowSamples);
 
     // Block if needed. With 2 frames in flight frame N waits for frame N - 2, but not N - 1, to finish.
     currentPFrameIndex = frameIndex % MAX_FRAMES_IN_FLIGHT;
@@ -1220,7 +1251,7 @@ void QSGD3D12EnginePrivate::beginFrame()
     beginDrawCalls(true);
 }
 
-void QSGD3D12EnginePrivate::beginDrawCalls(bool needsBackbufferTransition)
+void QSGD3D12EnginePrivate::beginDrawCalls(bool firstInFrame)
 {
     commandList->Reset(commandAllocator[frameIndex % MAX_FRAMES_IN_FLIGHT].Get(), nullptr);
 
@@ -1231,8 +1262,9 @@ void QSGD3D12EnginePrivate::beginDrawCalls(bool needsBackbufferTransition)
     tframeData.lastRootSig = nullptr;
     tframeData.descHeapSet = false;
 
-    if (needsBackbufferTransition)
-        transitionResource(currentBackBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    if (firstInFrame && windowSamples == 1)
+        transitionResource(defaultRT[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT].Get(), commandList.Get(),
+                D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void QSGD3D12EnginePrivate::endFrame()
@@ -1248,7 +1280,7 @@ void QSGD3D12EnginePrivate::endFrame()
     inFrame = false;
 }
 
-void QSGD3D12EnginePrivate::endDrawCalls(bool needsBackbufferTransition)
+void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
 {
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
 
@@ -1287,9 +1319,22 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool needsBackbufferTransition)
         }
     }
 
-    // Transition the backbuffer for present, if needed.
-    if (needsBackbufferTransition)
-        transitionResource(currentBackBufferRT(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    // Resolve and transition the backbuffer for present, if needed.
+    if (lastInFrame) {
+        const int idx = presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT;
+        if (windowSamples == 1) {
+            transitionResource(defaultRT[idx].Get(), commandList.Get(),
+                               D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        } else {
+            if (Q_UNLIKELY(debug_render())) {
+                const D3D12_RESOURCE_DESC desc = defaultRT[idx]->GetDesc();
+                qDebug("added resolve for multisampled render target (count %d, quality %d)",
+                       desc.SampleDesc.Count, desc.SampleDesc.Quality);
+            }
+            resolveMultisampledTarget(defaultRT[idx].Get(), backBufferRT[idx].Get(),
+                                      D3D12_RESOURCE_STATE_PRESENT, commandList.Get());
+        }
+    }
 
     // Go!
     HRESULT hr = commandList->Close();
@@ -1484,7 +1529,7 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        psoDesc.SampleDesc.Count = 1;
+        psoDesc.SampleDesc = defaultRT[0]->GetDesc().SampleDesc;
 
         HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&cachedPso->pso));
         if (FAILED(hr)) {
@@ -1589,8 +1634,8 @@ void QSGD3D12EnginePrivate::queueSetRenderTarget(uint id)
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 
     if (!id) {
-        rtvHandle = currentBackBufferRTV();
-        dsvHandle = backBufferDSV;
+        rtvHandle = defaultRTV[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT];
+        dsvHandle = defaultDSV;
     } else {
         const int idx = id - 1;
         Q_ASSERT(idx < renderTargets.count());
@@ -1613,7 +1658,7 @@ void QSGD3D12EnginePrivate::queueClearRenderTarget(const QColor &color)
     }
 
     const float clearColor[] = { float(color.redF()), float(color.blueF()), float(color.greenF()), float(color.alphaF()) };
-    commandList->ClearRenderTargetView(currentBackBufferRTV(), clearColor, 0, nullptr);
+    commandList->ClearRenderTargetView(defaultRTV[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT], clearColor, 0, nullptr);
 }
 
 void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which)
@@ -1623,7 +1668,7 @@ void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 sten
         return;
     }
 
-    commandList->ClearDepthStencilView(backBufferDSV, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
+    commandList->ClearDepthStencilView(defaultDSV, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
 }
 
 void QSGD3D12EnginePrivate::queueSetBlendFactor(const QVector4D &factor)
@@ -2419,6 +2464,7 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
     Q_ASSERT(idx < renderTargets.count() && renderTargets[idx].entryInUse());
     RenderTarget &rt(renderTargets[idx]);
 
+    samples = qMax(1, samples);
     ID3D12Resource *res = createColorBuffer(rt.rtv, size, clearColor, samples);
     if (res)
         rt.color.Attach(res);
@@ -2462,7 +2508,6 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
 
         device->CreateShaderResourceView(rt.colorResolve.Get(), nullptr, rt.srv);
     }
-
 }
 
 void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
@@ -2509,16 +2554,11 @@ void QSGD3D12EnginePrivate::activateRenderTargetAsTexture(uint id)
     Q_ASSERT(rt.entryInUse() && rt.color);
 
     if (rt.flags & RenderTarget::NeedsReadBarrier) {
-        if (rt.flags & RenderTarget::Multisample) {
-            transitionResource(rt.color.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-            transitionResource(rt.colorResolve.Get(), commandList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RESOLVE_DEST);
-            commandList->ResolveSubresource(rt.colorResolve.Get(), 0, rt.color.Get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
-            transitionResource(rt.colorResolve.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-            transitionResource(rt.color.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        } else {
-            transitionResource(rt.color.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        }
         rt.flags &= ~RenderTarget::NeedsReadBarrier;
+        if (rt.flags & RenderTarget::Multisample)
+            resolveMultisampledTarget(rt.color.Get(), rt.colorResolve.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, commandList.Get());
+        else
+            transitionResource(rt.color.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 
     tframeData.activeTextures.append(TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id));

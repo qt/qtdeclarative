@@ -130,7 +130,7 @@ struct QSGD3D12CPUWaitableFence
 class QSGD3D12EnginePrivate : public QSGD3D12DeviceManager::DeviceLossObserver
 {
 public:
-    void initialize(WId w, const QSize &size, float dpr);
+    void initialize(WId w, const QSize &size, float dpr, int samples);
     bool isInitialized() const { return initialized; }
     void releaseResources();
     void setWindowSize(const QSize &size, float dpr);
@@ -183,7 +183,7 @@ public:
     // through the engine and, unlike with GL, cannot just be created in random
     // places due to the need for proper tracking, managing and releasing.
 private:
-    void setupRenderTargets();
+    void setupDefaultRenderTargets();
     void deviceLost() override;
 
     bool createCbvSrvUavHeap(int pframeIndex, int descriptorCount);
@@ -200,13 +200,11 @@ private:
 
     void transitionResource(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList,
                             D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after) const;
-
+    void resolveMultisampledTarget(ID3D12Resource *msaa, ID3D12Resource *resolve, D3D12_RESOURCE_STATES resolveUsage,
+                                   ID3D12GraphicsCommandList *commandList) const;
     void uavBarrier(ID3D12Resource *resource, ID3D12GraphicsCommandList *commandList) const;
 
     ID3D12Resource *createBuffer(int size);
-
-    ID3D12Resource *currentBackBufferRT() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferRTV() const;
 
     struct CPUBufferRef {
         const quint8 *p = nullptr;
@@ -249,8 +247,8 @@ private:
     void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
     void updateBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
 
-    void beginDrawCalls(bool needsBackbufferTransition = false);
-    void endDrawCalls(bool needsBackbufferTransition = false);
+    void beginDrawCalls(bool firstInFrame = false);
+    void endDrawCalls(bool lastInFrame = false);
 
     static const int SWAP_CHAIN_BUFFER_COUNT = 2;
     static const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -260,14 +258,16 @@ private:
     WId window = 0;
     QSize windowSize;
     float windowDpr;
+    int windowSamples;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
     ComPtr<ID3D12Resource> backBufferRT[SWAP_CHAIN_BUFFER_COUNT];
-    D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTV[SWAP_CHAIN_BUFFER_COUNT];
-    D3D12_CPU_DESCRIPTOR_HANDLE backBufferDSV;
-    ComPtr<ID3D12Resource> depthStencil;
+    ComPtr<ID3D12Resource> defaultRT[SWAP_CHAIN_BUFFER_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE defaultRTV[SWAP_CHAIN_BUFFER_COUNT];
+    ComPtr<ID3D12Resource> defaultDS;
+    D3D12_CPU_DESCRIPTOR_HANDLE defaultDSV;
     ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAMES_IN_FLIGHT];
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
     ComPtr<ID3D12GraphicsCommandList> commandList;
