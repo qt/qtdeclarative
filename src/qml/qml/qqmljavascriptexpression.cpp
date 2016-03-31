@@ -40,7 +40,7 @@
 #include "qqmljavascriptexpression_p.h"
 
 #include <private/qqmlexpression_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4context_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
