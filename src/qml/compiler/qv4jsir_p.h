@@ -1061,7 +1061,32 @@ private:
 };
 
 // Map from meta property index (existence implies dependency) to notify signal index
-typedef QHash<int, int> PropertyDependencyMap;
+struct KeyValuePair
+{
+    quint32 _key;
+    quint32 _value;
+
+    KeyValuePair(): _key(0), _value(0) {}
+    KeyValuePair(quint32 key, quint32 value): _key(key), _value(value) {}
+
+    quint32 key() const { return _key; }
+    quint32 value() const { return _value; }
+};
+
+class PropertyDependencyMap: public QVarLengthArray<KeyValuePair, 8>
+{
+public:
+    void insert(quint32 key, quint32 value)
+    {
+        for (auto it = begin(), eit = end(); it != eit; ++it) {
+            if (it->_key == key) {
+                it->_value = value;
+                return;
+            }
+        }
+        append(KeyValuePair(key, value));
+    }
+};
 
 // The Function owns (manages), among things, a list of basic-blocks. All the blocks have an index,
 // which corresponds to the index in the entry/index in the vector in which they are stored. This
