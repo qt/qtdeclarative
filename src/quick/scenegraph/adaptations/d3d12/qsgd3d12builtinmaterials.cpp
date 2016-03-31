@@ -495,11 +495,6 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
         r |= UpdatedBlendFactor; // must be set always as this affects the command list
     }
 
-    if (state.isConstantBufferDirty()) { // only used to avoid flags like bool m_isLastStyleShiftValid
-        memset(p, 0, TEXT_CB_SIZE);
-        r |= UpdatedConstantBuffer;
-    }
-
     if (state.isMatrixDirty()) {
         memcpy(p, state.combinedMatrix().constData(), TEXT_CB_SIZE_0);
         r |= UpdatedConstantBuffer;
