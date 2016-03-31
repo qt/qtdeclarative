@@ -29,7 +29,7 @@
     \page qtquickcontrols2-containers.html
     \title Container Controls
 
-    Qt Labs Controls offers a selection of container-like controls.
+    Qt Quick Controls 2 offers a selection of container-like controls.
 
     \annotatedlist qtlabscontrols-containers
 

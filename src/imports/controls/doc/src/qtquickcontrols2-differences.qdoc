@@ -36,7 +36,7 @@
     or platform-independent style.
 
     On embedded systems, where the hardware has limited resources, this approach
-    can be inefficient. Qt Labs Controls were designed to solve this problem,
+    can be inefficient. Qt Quick Controls 2 were designed to solve this problem,
     using
     \l {https://blog.qt.io/blog/2015/03/31/qt-quick-controls-for-embedded/}{benchmarks}
     to guide the development.
@@ -57,7 +57,7 @@
     create their own complete style can copy the folder and start tweaking.
     Read more about implementing a style plugin {TODO}{here}.
 
-    In Qt Labs Controls, styles no longer provide components that are
+    In Qt Quick Controls 2, styles no longer provide components that are
     dynamically instantiated by controls, but controls themselves consist of
     item delegates that can be replaced. In effect, this means that delegates
     are Qt Quick items that are instantiated on the spot, as properties of the
@@ -88,7 +88,7 @@
     }
     \endqml
 
-    The API of Qt Labs Controls aims to be clean and simple. Common
+    The API of Qt Quick Controls 2 aims to be clean and simple. Common
     operations are easy, and more advanced ones are liberally documented with
     snippets that can be copied into your code.
 
@@ -98,7 +98,7 @@
     \header
         \li
         \li Qt Quick Controls
-        \li Qt Labs Controls
+        \li Qt Quick Controls 2
     \row
         \li Stylable delegates
         \li Yes
@@ -133,7 +133,7 @@
 
     \section2 Porting Qt Quick Controls Code
 
-    The API of Qt Labs Controls is very similar to Qt Quick Controls, but it
+    The API of Qt Quick Controls 2 is very similar to Qt Quick Controls, but it
     does come with some changes necessary to facilitate the improvements. The
     majority of changes are to do with styling; all of a control's delegates
     are now accessible in the control itself, instead of in a separate style
@@ -151,7 +151,7 @@
     }
     \endcode
 
-    To style a button in Qt Labs Controls:
+    To style a button in Qt Quick Controls 2:
 
     \qml
     Button {
@@ -184,7 +184,7 @@
     \table
     \header
         \li Qt Quick Controls
-        \li Qt Labs Controls
+        \li Qt Quick Controls 2
     \row
         \li \l [QtQuickControls] {Action}
         \li No equivalent; see \l [QtQuick] {Shortcut} instead.

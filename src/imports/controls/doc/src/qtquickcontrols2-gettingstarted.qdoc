@@ -39,7 +39,7 @@
     C++ application, doing this means you can only set window properties from
     C++.
 
-    With Qt Labs Controls, declare an ApplicationWindow as the root item of
+    With Qt Quick Controls 2, declare an ApplicationWindow as the root item of
     your application and launch it by using QQmlApplicationEngine instead.
     This ensures that you can control top level window properties from QML.
 

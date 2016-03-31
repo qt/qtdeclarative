@@ -29,7 +29,7 @@
     \page qtquickcontrols2-input.html
     \title Input Controls
 
-    Qt Labs Controls offers a variety of input controls for both numeric
+    Qt Quick Controls 2 offers a variety of input controls for both numeric
     and textual input.
 
     \annotatedlist qtlabscontrols-input

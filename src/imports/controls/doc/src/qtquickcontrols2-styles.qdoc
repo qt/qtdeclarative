@@ -29,9 +29,9 @@
     \page qtquickcontrols2-styles.html
     \title Styling Qt Quick Controls 2
 
-    Qt Labs Controls comes with a selection of styles. The \l {Default Style}
+    Qt Quick Controls 2 comes with a selection of styles. The \l {Default Style}
     {Default} style is a simple and light-weight all-round style that offers
-    the maximum performance for Qt Labs Controls. The more advanced
+    the maximum performance for Qt Quick Controls 2. The more advanced
     \l {Universal Style}{Universal} and \l {Material Style}{Material} styles
     offer an appealing design, but require more system resources.
 
@@ -49,7 +49,7 @@
     \section2 Using QQuickStyle in C++
 
     \l QQuickStyle provides API configuring a specific style. The following
-    example runs a Qt Labs Controls application with the Material style:
+    example runs a Qt Quick Controls 2 application with the Material style:
 
     \code
     #include <QGuiApplication>
@@ -74,7 +74,7 @@
 
     Passing a \c -style command line argument is the convenient way to test different
     styles. It takes precedence over the other methods listed below. The following
-    example runs a Qt Labs Controls application with the Material style:
+    example runs a Qt Quick Controls 2 application with the Material style:
 
     \code
     ./app -style material
@@ -84,7 +84,7 @@
 
     Setting the \c QT_LABS_CONTROLS_STYLE environment variable can be used to set
     a system-wide style preference. It takes precedence over the configuration file
-    mentioned below. The following example runs a Qt Labs Controls application with
+    mentioned below. The following example runs a Qt Quick Controls 2 application with
     the Universal style:
 
     \code
@@ -94,7 +94,7 @@
     \section2 Configuration file
     \target qtlabscontrols-conf
 
-    Qt Labs Controls support a special configuration file, \c :/qtquickcontrols.conf,
+    Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols.conf,
     that is built into an application's resources.
 
     The configuration file can specify the preferred style (may be overridden by either
@@ -117,7 +117,7 @@
     Accent=Brown
     \endcode
 
-    In order to make it possible for Qt Labs Controls to find the configuration file,
+    In order to make it possible for Qt Quick Controls 2 to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
     Here's an example \c .qrc file:
 
@@ -129,7 +129,7 @@
     </RCC>
     \endcode
 
-    \note Qt Labs Controls uses a file selector to load the configuration file. It
+    \note Qt Quick Controls 2 uses a file selector to load the configuration file. It
     is possible to provide a different configuration file for different platforms and
     locales. See \l QFileSelector documentation for more details.
 

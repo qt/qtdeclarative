@@ -52,7 +52,7 @@
     \caption The Material style in light and dark themes
 
     \note The Material style is not a native Android style. The Material
-    style is a 100% cross-platform Qt Labs Controls style implementation that
+    style is a 100% cross-platform Qt Quick Controls 2 style implementation that
     follows the Google Material Design Guidelines. The style runs on any
     platform, and looks more or less identical everywhere. Minor differences
     may occur due to differences in available system fonts and font rendering
@@ -153,7 +153,7 @@
     If the Material style is imported in a QML file that is always loaded, the
     Material style must be deployed with the application in order to be able
     to run the application regardless of which style the application is run with.
-    By using \l {Using File Selectors with Qt Labs Controls}{file selectors},
+    By using \l {Using File Selectors with Qt Quick Controls 2}{file selectors},
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 

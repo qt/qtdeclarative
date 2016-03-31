@@ -29,7 +29,7 @@
     \page qtquickcontrols2-indicators.html
     \title Indicator Controls
 
-    Qt Labs Controls offers a selection of indicator-like controls.
+    Qt Quick Controls 2 offers a selection of indicator-like controls.
 
     \annotatedlist qtlabscontrols-indicators
 

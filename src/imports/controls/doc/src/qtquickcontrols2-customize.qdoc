@@ -30,7 +30,7 @@
     \title Customizing Qt Quick Controls 2
     \brief A set of UI controls to create user interfaces in Qt Quick
 
-    Qt Labs Controls consist of a hierarchy (tree) of items. In order to
+    Qt Quick Controls 2 consist of a hierarchy (tree) of items. In order to
     provide a custom look and feel, the default QML implementation of each
     item can be replaced with a custom one. The following snippets present
     the default implementations of various items. These can be used as a

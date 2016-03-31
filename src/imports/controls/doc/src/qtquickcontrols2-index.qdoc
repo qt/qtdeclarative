@@ -31,7 +31,7 @@
 
     \brief Provides a set of UI controls for Qt Quick.
 
-    Qt Labs Controls provides a set of controls that can be used
+    Qt Quick Controls 2 provides a set of controls that can be used
     to build complete interfaces in Qt Quick.
 
     \section1 QML Types
@@ -42,7 +42,7 @@
     \section2 Qt.labs.calendar Module
     \generatelist {qmltypesbymodule Qt.labs.calendar}
 
-    \section1 Important Concepts in Qt Labs Controls
+    \section1 Important Concepts in Qt Quick Controls 2
 
     \list
       \li \l{Getting Started with Qt Quick Controls 2}

@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtLabsControls
 
     QQuickStyle provides API for querying and configuring the application
-    \l {Styling Qt Labs Controls}{styles} of Qt Labs Controls.
+    \l {Styling Qt Quick Controls 2}{styles} of Qt Quick Controls 2.
 
     \code
     #include <QGuiApplication>
@@ -72,10 +72,10 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \note The style must be configured \b before loading QML that imports
-    Qt Labs Controls. It is not possible to change the style after the QML
+    Qt Quick Controls 2. It is not possible to change the style after the QML
     types have been registered.
 
-    \sa {Styling Qt Labs Controls}
+    \sa {Styling Qt Quick Controls 2}
 */
 
 struct QQuickStyleSpec
@@ -138,7 +138,7 @@ QString QQuickStyle::name()
 
 /*!
     Returns the path of an overridden application style, or an empty
-    string if the style is one of the built-in Qt Labs Controls styles.
+    string if the style is one of the built-in Qt Quick Controls 2 styles.
 
     \note The application style can be specified by passing a \c -style command
           line argument. Therefore \c path() may not return a fully resolved
@@ -152,7 +152,7 @@ QString QQuickStyle::path()
 /*!
     Sets the application style.
 
-    \note The style must be configured \b before loading QML that imports Qt Labs Controls.
+    \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
           It is not possible to change the style after the QML types have been registered.
 */
 void QQuickStyle::setStyle(const QString &style)

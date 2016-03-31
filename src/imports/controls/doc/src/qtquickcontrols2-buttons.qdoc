@@ -29,7 +29,7 @@
     \page qtquickcontrols2-buttons.html
     \title Button Controls
 
-    Qt Labs Controls offers a selection of button-like controls.
+    Qt Quick Controls 2 offers a selection of button-like controls.
 
     \annotatedlist qtlabscontrols-buttons
 

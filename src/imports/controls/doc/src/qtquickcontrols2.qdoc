@@ -29,13 +29,13 @@
     \qmlmodule Qt.labs.controls 1.0
     \title Qt Quick Controls 2 QML Types
     \ingroup qmlmodules
-    \brief Provides QML types for user interfaces (Qt Labs Controls).
+    \brief Provides QML types for user interfaces (Qt Quick Controls 2).
 
     \l{Qt Quick Controls 2} provides QML types for creating user interfaces.
     These QML types work in conjunction with \l{Qt Quick} and
     \l{Qt Quick Layouts}.
 
-    Qt Labs Controls QML types can be imported into your application
+    Qt Quick Controls 2 QML types can be imported into your application
     using the following import statement in your .qml file:
 
     \badcode
