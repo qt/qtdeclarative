@@ -79,13 +79,16 @@ static bool isMemoryUsed(const char *mem)
 
 static QString roleTypeName(ListLayout::Role::DataType t)
 {
-    QString result;
-    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject", "VariantMap", "DateTime" };
+    static const QString roleTypeNames[] = {
+        QStringLiteral("String"), QStringLiteral("Number"), QStringLiteral("Bool"),
+        QStringLiteral("List"), QStringLiteral("QObject"), QStringLiteral("VariantMap"),
+        QStringLiteral("DateTime")
+    };
 
     if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
-        result = QString::fromLatin1(roleTypeNames[t]);
+        return roleTypeNames[t];
 
-    return result;
+    return QString();
 }
 
 const ListLayout::Role &ListLayout::getRoleOrCreate(const QString &key, Role::DataType type)
