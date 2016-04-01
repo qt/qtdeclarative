@@ -55,6 +55,9 @@ QT_BEGIN_NAMESPACE
 
 DECLARE_DEBUG_VAR(render)
 
+static const int DEFAULT_SWAP_CHAIN_BUFFER_COUNT = 3;
+static const int DEFAULT_FRAME_IN_FLIGHT_COUNT = 2;
+
 static const int MAX_DRAW_CALLS_PER_LIST = 128;
 
 static const int MAX_CACHED_ROOTSIG = 16;
@@ -594,16 +597,16 @@ void QSGD3D12EnginePrivate::releaseResources()
     copyCommandList = nullptr;
 
     copyCommandAllocator = nullptr;
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (int i = 0; i < frameInFlightCount; ++i)
         commandAllocator[i] = nullptr;
 
     defaultDS = nullptr;
-    for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
+    for (int i = 0; i < swapChainBufferCount; ++i) {
         backBufferRT[i] = nullptr;
         defaultRT[i] = nullptr;
     }
 
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+    for (int i = 0; i < frameInFlightCount; ++i) {
         pframeData[i].vertex.buffer = nullptr;
         pframeData[i].index.buffer = nullptr;
         pframeData[i].constant.buffer = nullptr;
@@ -622,7 +625,7 @@ void QSGD3D12EnginePrivate::releaseResources()
     swapChain = nullptr;
 
     delete presentFence;
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (int i = 0; i < frameInFlightCount; ++i)
         delete frameFence[i];
     textureUploadFence = nullptr;
 
@@ -644,6 +647,19 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     windowSamples = qMax(1, samples);
 
     HWND hwnd = reinterpret_cast<HWND>(w);
+
+    swapChainBufferCount = qMin(qEnvironmentVariableIntValue("QT_D3D_BUFFER_COUNT"), MAX_SWAP_CHAIN_BUFFER_COUNT);
+    if (swapChainBufferCount < 2)
+        swapChainBufferCount = DEFAULT_SWAP_CHAIN_BUFFER_COUNT;
+
+    frameInFlightCount = qMin(qEnvironmentVariableIntValue("QT_D3D_FRAME_COUNT"), MAX_FRAME_IN_FLIGHT_COUNT);
+    if (frameInFlightCount < 1)
+        frameInFlightCount = DEFAULT_FRAME_IN_FLIGHT_COUNT;
+
+    if (Q_UNLIKELY(debug_render())) {
+        qDebug("d3d12 engine init. swap chain buffer count %d, max frames prepared without blocking %d",
+               swapChainBufferCount, frameInFlightCount);
+    }
 
     if (qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0) {
         qDebug("Enabling debug layer");
@@ -670,7 +686,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     }
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-    swapChainDesc.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
+    swapChainDesc.BufferCount = swapChainBufferCount;
     swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
     swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -693,7 +709,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
 
     dev->dxgi()->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+    for (int i = 0; i < frameInFlightCount; ++i) {
         if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i])))) {
             qWarning("Failed to create command allocator");
             return;
@@ -705,7 +721,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         return;
     }
 
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+    for (int i = 0; i < frameInFlightCount; ++i) {
         if (!createCbvSrvUavHeap(i, GPU_CBVSRVUAV_DESCRIPTORS))
             return;
     }
@@ -732,7 +748,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     frameIndex = 0;
 
     presentFence = createCPUWaitableFence();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (int i = 0; i < frameInFlightCount; ++i)
         frameFence[i] = createCPUWaitableFence();
 
     if (FAILED(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&textureUploadFence)))) {
@@ -871,7 +887,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_H
 
 void QSGD3D12EnginePrivate::setupDefaultRenderTargets()
 {
-    for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
+    for (int i = 0; i < swapChainBufferCount; ++i) {
         if (FAILED(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRT[i])))) {
             qWarning("Failed to get buffer %d from swap chain", i);
             return;
@@ -915,7 +931,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
     // Clear these, otherwise resizing will fail.
     defaultDS = nullptr;
     cpuDescHeapManager.release(defaultDSV, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i) {
+    for (int i = 0; i < swapChainBufferCount; ++i) {
         backBufferRT[i] = nullptr;
         defaultRT[i] = nullptr;
         cpuDescHeapManager.release(defaultRTV[i], D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -923,7 +939,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
 
     const int w = windowSize.width() * windowDpr;
     const int h = windowSize.height() * windowDpr;
-    HRESULT hr = swapChain->ResizeBuffers(SWAP_CHAIN_BUFFER_COUNT, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();
         return;
@@ -1133,12 +1149,12 @@ void QSGD3D12EnginePrivate::beginFrame()
         initialize(window, windowSize, windowDpr, windowSamples);
 
     // Block if needed. With 2 frames in flight frame N waits for frame N - 2, but not N - 1, to finish.
-    currentPFrameIndex = frameIndex % MAX_FRAMES_IN_FLIGHT;
-    if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
+    currentPFrameIndex = frameIndex % frameInFlightCount;
+    if (frameIndex >= frameInFlightCount) {
         ID3D12Fence *fence = frameFence[currentPFrameIndex]->fence.Get();
         HANDLE event = frameFence[currentPFrameIndex]->event;
         // Frame fence values start from 1, hence the +1.
-        const quint64 inFlightFenceValue = frameIndex - MAX_FRAMES_IN_FLIGHT + 1;
+        const quint64 inFlightFenceValue = frameIndex - frameInFlightCount + 1;
         if (fence->GetCompletedValue() < inFlightFenceValue) {
             fence->SetEventOnCompletion(inFlightFenceValue, event);
             WaitForSingleObject(event, INFINITE);
@@ -1155,10 +1171,10 @@ void QSGD3D12EnginePrivate::beginFrame()
 
     Q_ASSERT(vertexData.dirty.isEmpty() && indexData.dirty.isEmpty() && constantData.dirty.isEmpty());
 
-    if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
+    if (frameIndex >= frameInFlightCount) {
         // Now sync the buffer changes from the previous, potentially still in flight, frames.
-        for (int delta = 1; delta < MAX_FRAMES_IN_FLIGHT; ++delta) {
-            PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % MAX_FRAMES_IN_FLIGHT]);
+        for (int delta = 1; delta < frameInFlightCount; ++delta) {
+            PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % frameInFlightCount]);
             if (pfd.vertex.buffer && pfd.vertex.dataSize == vertexData.size)
                 vertexData.dirty.append(prevFrameData.vertex.totalDirtyInFrame);
             else
@@ -1174,7 +1190,7 @@ void QSGD3D12EnginePrivate::beginFrame()
         }
 
         // Do some texture upload bookkeeping.
-        const quint64 finishedFrameIndex = frameIndex - MAX_FRAMES_IN_FLIGHT; // we know since we just blocked for this
+        const quint64 finishedFrameIndex = frameIndex - frameInFlightCount; // we know since we just blocked for this
         // pfd conveniently refers to the same slot that was used by that frame
         if (!pfd.pendingTextureUploads.isEmpty()) {
             if (Q_UNLIKELY(debug_render()))
@@ -1203,8 +1219,8 @@ void QSGD3D12EnginePrivate::beginFrame()
                 pfd.pendingTextureMipMap.clear();
             }
             bool hasPending = false;
-            for (int delta = 1; delta < MAX_FRAMES_IN_FLIGHT; ++delta) {
-                const PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % MAX_FRAMES_IN_FLIGHT]);
+            for (int delta = 1; delta < frameInFlightCount; ++delta) {
+                const PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % frameInFlightCount]);
                 if (!prevFrameData.pendingTextureUploads.isEmpty()) {
                     hasPending = true;
                     break;
@@ -1231,7 +1247,7 @@ void QSGD3D12EnginePrivate::beginFrame()
         }
         // Deferred deletes issued outside a begin-endFrame go to the next
         // frame's out-of-frame delete queue as these cannot be executed in the
-        // next beginFrame, only in next + MAX_FRAMES_IN_FLIGHT. Move to the
+        // next beginFrame, only in next + frameInFlightCount. Move to the
         // normal queue if this is the next beginFrame.
         if (!pfd.outOfFrameDeleteQueue.isEmpty()) {
             pfd.deleteQueue = pfd.outOfFrameDeleteQueue;
@@ -1258,7 +1274,7 @@ void QSGD3D12EnginePrivate::beginFrame()
 
 void QSGD3D12EnginePrivate::beginDrawCalls(bool firstInFrame)
 {
-    commandList->Reset(commandAllocator[frameIndex % MAX_FRAMES_IN_FLIGHT].Get(), nullptr);
+    commandList->Reset(commandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
 
     tframeData.drawingMode = QSGGeometry::DrawingMode(-1);
     tframeData.indexBufferSet = false;
@@ -1268,7 +1284,7 @@ void QSGD3D12EnginePrivate::beginDrawCalls(bool firstInFrame)
     tframeData.descHeapSet = false;
 
     if (firstInFrame && windowSamples == 1)
-        transitionResource(defaultRT[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT].Get(), commandList.Get(),
+        transitionResource(defaultRT[presentFrameIndex % swapChainBufferCount].Get(), commandList.Get(),
                 D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
@@ -1279,7 +1295,7 @@ void QSGD3D12EnginePrivate::endFrame()
 
     endDrawCalls(true);
 
-    commandQueue->Signal(frameFence[frameIndex % MAX_FRAMES_IN_FLIGHT]->fence.Get(), frameIndex + 1);
+    commandQueue->Signal(frameFence[frameIndex % frameInFlightCount]->fence.Get(), frameIndex + 1);
     ++frameIndex;
 
     inFrame = false;
@@ -1326,7 +1342,7 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
 
     // Resolve and transition the backbuffer for present, if needed.
     if (lastInFrame) {
-        const int idx = presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT;
+        const int idx = presentFrameIndex % swapChainBufferCount;
         if (windowSamples == 1) {
             transitionResource(defaultRT[idx].Get(), commandList.Get(),
                                D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -1639,7 +1655,7 @@ void QSGD3D12EnginePrivate::queueSetRenderTarget(uint id)
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 
     if (!id) {
-        rtvHandle = defaultRTV[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT];
+        rtvHandle = defaultRTV[presentFrameIndex % swapChainBufferCount];
         dsvHandle = defaultDSV;
     } else {
         const int idx = id - 1;
@@ -1663,7 +1679,7 @@ void QSGD3D12EnginePrivate::queueClearRenderTarget(const QColor &color)
     }
 
     const float clearColor[] = { float(color.redF()), float(color.blueF()), float(color.greenF()), float(color.alphaF()) };
-    commandList->ClearRenderTargetView(defaultRTV[presentFrameIndex % SWAP_CHAIN_BUFFER_COUNT], clearColor, 0, nullptr);
+    commandList->ClearRenderTargetView(defaultRTV[presentFrameIndex % swapChainBufferCount], clearColor, 0, nullptr);
 }
 
 void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which)
@@ -2250,7 +2266,7 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
 
     QSet<uint> *pendingTextureReleasesSet = inFrame
             ? &pframeData[currentPFrameIndex].pendingTextureReleases
-            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFramePendingTextureReleases;
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFramePendingTextureReleases;
 
     pendingTextureReleasesSet->insert(id);
 }
@@ -2433,7 +2449,7 @@ void QSGD3D12EnginePrivate::deferredDelete(ComPtr<ID3D12Resource> res)
     e.res = res;
     QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
             ? &pframeData[currentPFrameIndex].deleteQueue
-            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFrameDeleteQueue;
     (*dq) << e;
 }
 
@@ -2443,7 +2459,7 @@ void QSGD3D12EnginePrivate::deferredDelete(ComPtr<ID3D12DescriptorHeap> dh)
     e.descHeap = dh;
     QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
             ? &pframeData[currentPFrameIndex].deleteQueue
-            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFrameDeleteQueue;
     (*dq) << e;
 }
 
@@ -2453,7 +2469,7 @@ void QSGD3D12EnginePrivate::deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h)
     e.cpuDescriptorPtr = h.ptr;
     QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
             ? &pframeData[currentPFrameIndex].deleteQueue
-            : &pframeData[(currentPFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT].outOfFrameDeleteQueue;
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFrameDeleteQueue;
     (*dq) << e;
 }
 

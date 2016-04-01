@@ -250,8 +250,8 @@ private:
     void beginDrawCalls(bool firstInFrame = false);
     void endDrawCalls(bool lastInFrame = false);
 
-    static const int SWAP_CHAIN_BUFFER_COUNT = 2;
-    static const int MAX_FRAMES_IN_FLIGHT = 2;
+    static const int MAX_SWAP_CHAIN_BUFFER_COUNT = 4;
+    static const int MAX_FRAME_IN_FLIGHT_COUNT = 4;
 
     bool initialized = false;
     bool inFrame = false;
@@ -259,16 +259,18 @@ private:
     QSize windowSize;
     float windowDpr;
     int windowSamples;
+    int swapChainBufferCount;
+    int frameInFlightCount;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
-    ComPtr<ID3D12Resource> backBufferRT[SWAP_CHAIN_BUFFER_COUNT];
-    ComPtr<ID3D12Resource> defaultRT[SWAP_CHAIN_BUFFER_COUNT];
-    D3D12_CPU_DESCRIPTOR_HANDLE defaultRTV[SWAP_CHAIN_BUFFER_COUNT];
+    ComPtr<ID3D12Resource> backBufferRT[MAX_SWAP_CHAIN_BUFFER_COUNT];
+    ComPtr<ID3D12Resource> defaultRT[MAX_SWAP_CHAIN_BUFFER_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE defaultRTV[MAX_SWAP_CHAIN_BUFFER_COUNT];
     ComPtr<ID3D12Resource> defaultDS;
     D3D12_CPU_DESCRIPTOR_HANDLE defaultDSV;
-    ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAMES_IN_FLIGHT];
+    ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAME_IN_FLIGHT_COUNT];
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
     ComPtr<ID3D12GraphicsCommandList> commandList;
     ComPtr<ID3D12GraphicsCommandList> copyCommandList;
@@ -276,13 +278,13 @@ private:
     quint64 presentFrameIndex;
     quint64 frameIndex;
     QSGD3D12CPUWaitableFence *presentFence = nullptr;
-    QSGD3D12CPUWaitableFence *frameFence[MAX_FRAMES_IN_FLIGHT];
+    QSGD3D12CPUWaitableFence *frameFence[MAX_FRAME_IN_FLIGHT_COUNT];
 
     CPUBufferRef vertexData;
     CPUBufferRef indexData;
     CPUBufferRef constantData;
 
-    PersistentFrameData pframeData[MAX_FRAMES_IN_FLIGHT];
+    PersistentFrameData pframeData[MAX_FRAME_IN_FLIGHT_COUNT];
     int currentPFrameIndex;
 
     struct PSOCacheEntry {
