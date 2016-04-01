@@ -57,6 +57,7 @@ DECLARE_DEBUG_VAR(render)
 
 static const int DEFAULT_SWAP_CHAIN_BUFFER_COUNT = 3;
 static const int DEFAULT_FRAME_IN_FLIGHT_COUNT = 2;
+static const int DEFAULT_WAITABLE_SWAP_CHAIN_MAX_LATENCY = 0;
 
 static const int MAX_DRAW_CALLS_PER_LIST = 128;
 
@@ -656,10 +657,16 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     if (frameInFlightCount < 1)
         frameInFlightCount = DEFAULT_FRAME_IN_FLIGHT_COUNT;
 
-    if (Q_UNLIKELY(debug_render())) {
-        qDebug("d3d12 engine init. swap chain buffer count %d, max frames prepared without blocking %d",
-               swapChainBufferCount, frameInFlightCount);
-    }
+    static const char *latReqEnvVar = "QT_D3D_WAITABLE_SWAP_CHAIN_MAX_LATENCY";
+    if (!qEnvironmentVariableIsSet(latReqEnvVar))
+        waitableSwapChainMaxLatency = DEFAULT_WAITABLE_SWAP_CHAIN_MAX_LATENCY;
+    else
+        waitableSwapChainMaxLatency = qBound(0, qEnvironmentVariableIntValue(latReqEnvVar), 16);
+
+    qDebug("d3d12 engine init. swap chain buffer count %d, max frames prepared without blocking %d",
+           swapChainBufferCount, frameInFlightCount);
+    if (waitableSwapChainMaxLatency)
+        qDebug("Swap chain frame latency waitable object enabled. Frame latency is %d", waitableSwapChainMaxLatency);
 
     if (qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0) {
         qDebug("Enabling debug layer");
@@ -695,6 +702,8 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     swapChainDesc.OutputWindow = hwnd;
     swapChainDesc.SampleDesc.Count = 1; // Flip does not support MSAA so no choice here
     swapChainDesc.Windowed = TRUE;
+    if (waitableSwapChainMaxLatency)
+        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
     ComPtr<IDXGISwapChain> baseSwapChain;
     HRESULT hr = dev->dxgi()->CreateSwapChain(commandQueue.Get(), &swapChainDesc, &baseSwapChain);
@@ -708,6 +717,12 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     }
 
     dev->dxgi()->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+
+    if (waitableSwapChainMaxLatency) {
+        if (FAILED(swapChain->SetMaximumFrameLatency(waitableSwapChainMaxLatency)))
+            qWarning("Failed to set maximum frame latency to %d", waitableSwapChainMaxLatency);
+        swapEvent = swapChain->GetFrameLatencyWaitableObject();
+    }
 
     for (int i = 0; i < frameInFlightCount; ++i) {
         if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i])))) {
@@ -939,7 +954,8 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
 
     const int w = windowSize.width() * windowDpr;
     const int h = windowSize.height() * windowDpr;
-    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, DXGI_FORMAT_R8G8B8A8_UNORM,
+                                          waitableSwapChainMaxLatency ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();
         return;
@@ -1147,6 +1163,10 @@ void QSGD3D12EnginePrivate::beginFrame()
     // The device may have been lost. This is the point to attempt to start again from scratch.
     if (!initialized && window)
         initialize(window, windowSize, windowDpr, windowSamples);
+
+    // Wait for a buffer to be available for Present, if the waitable event is in use.
+    if (waitableSwapChainMaxLatency)
+        WaitForSingleObject(swapEvent, INFINITE);
 
     // Block if needed. With 2 frames in flight frame N waits for frame N - 2, but not N - 1, to finish.
     currentPFrameIndex = frameIndex % frameInFlightCount;
@@ -1867,6 +1887,11 @@ void QSGD3D12EnginePrivate::present()
     if (Q_UNLIKELY(debug_render()))
         qDebug("--- present with vsync ---");
 
+    // This call will not block the CPU unless at least 3 buffers are queued,
+    // unless the waitable frame latency event is enabled. Then the latency of
+    // 3 is changed to whatever value desired, and blocking happens in
+    // beginFrame. If none of these hold, the fence-based wait in beginFrame
+    // throttles. Vsync (interval 1) is always enabled.
     HRESULT hr = swapChain->Present(1, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();

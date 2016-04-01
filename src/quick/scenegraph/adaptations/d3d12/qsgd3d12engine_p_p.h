@@ -261,10 +261,12 @@ private:
     int windowSamples;
     int swapChainBufferCount;
     int frameInFlightCount;
+    int waitableSwapChainMaxLatency;
     ID3D12Device *device;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12CommandQueue> copyCommandQueue;
     ComPtr<IDXGISwapChain3> swapChain;
+    HANDLE swapEvent;
     ComPtr<ID3D12Resource> backBufferRT[MAX_SWAP_CHAIN_BUFFER_COUNT];
     ComPtr<ID3D12Resource> defaultRT[MAX_SWAP_CHAIN_BUFFER_COUNT];
     D3D12_CPU_DESCRIPTOR_HANDLE defaultRTV[MAX_SWAP_CHAIN_BUFFER_COUNT];
