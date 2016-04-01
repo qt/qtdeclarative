@@ -588,8 +588,7 @@ void QAbstractAnimationJob::updateDirection(QAbstractAnimationJob::Direction dir
 void QAbstractAnimationJob::finished()
 {
     //TODO: update this code so it is valid to delete the animation in animationFinished
-    for (int i = 0; i < changeListeners.count(); ++i) {
-        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+    for (const auto &change : changeListeners) {
         if (change.types & QAbstractAnimationJob::Completion) {
             RETURN_IF_DELETED(change.listener->animationFinished(this));
         }
@@ -603,8 +602,7 @@ void QAbstractAnimationJob::finished()
 
 void QAbstractAnimationJob::stateChanged(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState)
 {
-    for (int i = 0; i < changeListeners.count(); ++i) {
-        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+    for (const auto &change : changeListeners) {
         if (change.types & QAbstractAnimationJob::StateChange) {
             RETURN_IF_DELETED(change.listener->animationStateChanged(this, newState, oldState));
         }
@@ -613,8 +611,7 @@ void QAbstractAnimationJob::stateChanged(QAbstractAnimationJob::State newState, 
 
 void QAbstractAnimationJob::currentLoopChanged()
 {
-    for (int i = 0; i < changeListeners.count(); ++i) {
-        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+    for (const auto &change : changeListeners) {
         if (change.types & QAbstractAnimationJob::CurrentLoop) {
            RETURN_IF_DELETED(change.listener->animationCurrentLoopChanged(this));
         }
@@ -625,8 +622,7 @@ void QAbstractAnimationJob::currentTimeChanged(int currentTime)
 {
     Q_ASSERT(m_hasCurrentTimeChangeListeners);
 
-    for (int i = 0; i < changeListeners.count(); ++i) {
-        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+    for (const auto &change : changeListeners) {
         if (change.types & QAbstractAnimationJob::CurrentTime) {
            RETURN_IF_DELETED(change.listener->animationCurrentTimeChanged(this, currentTime));
         }
@@ -638,17 +634,18 @@ void QAbstractAnimationJob::addAnimationChangeListener(QAnimationJobChangeListen
     if (changes & QAbstractAnimationJob::CurrentTime)
         m_hasCurrentTimeChangeListeners = true;
 
-    changeListeners.append(ChangeListener(listener, changes));
+    changeListeners.push_back(ChangeListener(listener, changes));
 }
 
 void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
 {
     m_hasCurrentTimeChangeListeners = false;
 
-    changeListeners.removeOne(ChangeListener(listener, changes));
+    const auto it = std::find(changeListeners.begin(), changeListeners.end(), ChangeListener(listener, changes));
+    if (it != changeListeners.end())
+        changeListeners.erase(it);
 
-    for (int i = 0; i < changeListeners.count(); ++i) {
-        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+    for (const auto &change: changeListeners) {
         if (change.types & QAbstractAnimationJob::CurrentTime) {
             m_hasCurrentTimeChangeListeners = true;
             break;
