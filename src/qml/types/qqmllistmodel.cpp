@@ -169,9 +169,7 @@ ListLayout::ListLayout(const ListLayout *other) : currentBlock(0), currentBlockO
 
 ListLayout::~ListLayout()
 {
-    for (int i=0 ; i < roles.count() ; ++i) {
-        delete roles[i];
-    }
+    qDeleteAll(roles);
 }
 
 void ListLayout::sync(ListLayout *src, ListLayout *target)
@@ -1659,8 +1657,7 @@ QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agen
 
 QQmlListModel::~QQmlListModel()
 {
-    for (int i=0 ; i < m_modelObjects.count() ; ++i)
-        delete m_modelObjects[i];
+    qDeleteAll(m_modelObjects);
 
     if (m_primary) {
         m_listModel->destroy();
