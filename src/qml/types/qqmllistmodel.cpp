@@ -1440,8 +1440,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
         const QByteArray &keyUtf8 = key.toUtf8();
 
         QQmlListModel *existingModel = qobject_cast<QQmlListModel *>(m_meta->value(keyUtf8).value<QObject *>());
-        if (existingModel)
-            delete existingModel;
+        delete existingModel;
 
         if (m_meta->setValue(keyUtf8, value))
             roles << roleIndex;
@@ -1457,8 +1456,7 @@ DynamicRoleModelNodeMetaObject::~DynamicRoleModelNodeMetaObject()
 {
     for (int i=0 ; i < count() ; ++i) {
         QQmlListModel *subModel = qobject_cast<QQmlListModel *>(value(i).value<QObject *>());
-        if (subModel)
-            delete subModel;
+        delete subModel;
     }
 }
 
@@ -1469,8 +1467,7 @@ void DynamicRoleModelNodeMetaObject::propertyWrite(int index)
 
     QVariant v = value(index);
     QQmlListModel *model = qobject_cast<QQmlListModel *>(v.value<QObject *>());
-    if (model)
-        delete model;
+    delete model;
 }
 
 void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
