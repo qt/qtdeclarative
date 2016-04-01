@@ -1135,9 +1135,14 @@ void QSGD3D12EnginePrivate::beginFrame()
     // Block if needed. With 2 frames in flight frame N waits for frame N - 2, but not N - 1, to finish.
     currentPFrameIndex = frameIndex % MAX_FRAMES_IN_FLIGHT;
     if (frameIndex >= MAX_FRAMES_IN_FLIGHT) {
-        frameFence[currentPFrameIndex]->fence->SetEventOnCompletion(frameIndex - MAX_FRAMES_IN_FLIGHT,
-                                                                    frameFence[currentPFrameIndex]->event);
-        WaitForSingleObject(frameFence[currentPFrameIndex]->event, INFINITE);
+        ID3D12Fence *fence = frameFence[currentPFrameIndex]->fence.Get();
+        HANDLE event = frameFence[currentPFrameIndex]->event;
+        // Frame fence values start from 1, hence the +1.
+        const quint64 inFlightFenceValue = frameIndex - MAX_FRAMES_IN_FLIGHT + 1;
+        if (fence->GetCompletedValue() < inFlightFenceValue) {
+            fence->SetEventOnCompletion(inFlightFenceValue, event);
+            WaitForSingleObject(event, INFINITE);
+        }
         commandAllocator[currentPFrameIndex]->Reset();
     }
 
