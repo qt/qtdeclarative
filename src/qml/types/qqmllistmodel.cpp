@@ -2002,13 +2002,12 @@ int QQmlListModel::count() const
 */
 void QQmlListModel::clear()
 {
-    int cleared = count();
+    const int cleared = count();
 
     emitItemsAboutToBeRemoved(0, cleared);
 
     if (m_dynamicRoles) {
-        for (int i=0 ; i < m_modelObjects.count() ; ++i)
-            delete m_modelObjects[i];
+        qDeleteAll(m_modelObjects);
         m_modelObjects.clear();
     } else {
         m_listModel->clear();
