@@ -22,7 +22,6 @@
 #include <private/qintrusivelist_p.h>
 #include <private/qjsengine_p.h>
 #include <private/qjsvalue_p.h>
-#include <private/qpodvector_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlimport_p.h>

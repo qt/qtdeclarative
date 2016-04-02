@@ -243,7 +243,6 @@ qt_internal_add_qml_module(Qml
         qml/ftw/qintrusivelist.cpp qml/ftw/qintrusivelist_p.h
         qml/ftw/qlazilyallocated_p.h
         qml/ftw/qlinkedstringhash_p.h
-        qml/ftw/qpodvector_p.h
         qml/ftw/qprimefornumbits_p.h
         qml/ftw/qqmlnullablevalue_p.h
         qml/ftw/qqmlrefcount_p.h
