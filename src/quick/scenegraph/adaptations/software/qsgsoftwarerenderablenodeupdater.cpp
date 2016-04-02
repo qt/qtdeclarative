@@ -57,7 +57,7 @@ QSGSoftwareRenderableNodeUpdater::QSGSoftwareRenderableNodeUpdater(QSGAbstractSo
 {
     m_opacityState.push(1.0f);
     // Invalid RectF by default for no clip
-    m_clipState.push(QRectF(0.0f, 0.0f, -1.0f, -1.0f));
+    m_clipState.push(QRegion());
     m_transformState.push(QTransform());
 }
 
@@ -81,10 +81,10 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGTransformNode *)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 {
     // Make sure to translate the clip rect into world coordinates
-    if (!m_clipState.top().isValid())
-        m_clipState.push(m_transformState.top().mapRect(node->clipRect()));
-    else
-        m_clipState.push(m_transformState.top().mapRect(node->clipRect()).intersected(m_clipState.top()));
+    if (m_clipState.top().isEmpty()) {
+        m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect())));
+    } else
+        m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect()).intersected(m_clipState.top())));
     m_stateMap[node] = currentState(node);
     return true;
 }
@@ -200,7 +200,7 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
         // There is no parent, and no previous parent, so likely a root node
         m_opacityState.push(1.0f);
         m_transformState.push(QTransform());
-        m_clipState.push(QRectF(0.0f, 0.0f, -1.0f, -1.0f));
+        m_clipState.push(QRegion());
     }
 
     // If the node is being removed, then cleanup the state data

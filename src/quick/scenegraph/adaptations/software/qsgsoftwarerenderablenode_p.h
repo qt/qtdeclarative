@@ -82,10 +82,10 @@ public:
     bool isDirtyRegionEmpty() const;
 
     void setTransform(const QTransform &transform);
-    void setClipRect(const QRectF &clipRect);
+    void setClipRegion(const QRegion &clipRegion);
     void setOpacity(float opacity);
     QTransform transform() const { return m_transform; }
-    QRectF clipRect() const { return m_clipRect; }
+    QRegion clipRegion() const { return m_clipRegion; }
     float opacity() const { return m_opacity; }
 
     void markGeometryDirty();
@@ -118,7 +118,7 @@ private:
     QRegion m_previousDirtyRegion;
 
     QTransform m_transform;
-    QRectF m_clipRect;
+    QRegion m_clipRegion;
     float m_opacity;
 
     QRect m_boundingRect;
