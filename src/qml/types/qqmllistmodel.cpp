@@ -1982,15 +1982,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 */
 int QQmlListModel::count() const
 {
-    int count;
-
-    if (m_dynamicRoles)
-        count = m_modelObjects.count();
-    else {
-        count = m_listModel->elementCount();
-    }
-
-    return count;
+    return m_dynamicRoles ? m_modelObjects.count() : m_listModel->elementCount();
 }
 
 /*!
