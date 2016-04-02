@@ -19,6 +19,7 @@
 #include "qquickflickable_p.h"
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
+#include "qquickflickablebehavior_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qdatetime.h>
@@ -27,11 +28,12 @@
 #include <private/qquicktimeline_p_p.h>
 #include <private/qquickanimation_p_p.h>
 #include <private/qquicktransitionmanager_p_p.h>
-#include <private/qpodvector_p.h>
 
 #if QT_CONFIG(accessibility)
 #  include <QElapsedTimer>
 #endif
+
+#include <array>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,7 +81,8 @@ public:
         ~AxisData();
 
         void reset() {
-            velocityBuffer.clear();
+            velocitySamples = 0;
+            velocityWritePos = 0;
             dragStartOffset = 0;
             fixingUp = false;
             inOvershoot = false;
@@ -120,7 +123,9 @@ public:
         QElapsedTimer velocityTime;
         int vTime = 0;
         QQuickFlickablePrivate::Velocity smoothVelocity;
-        QPODVector<qreal,10> velocityBuffer;
+        std::array<qreal, QML_FLICK_SAMPLEBUFFER> velocityBuffer;
+        int velocitySamples = 0;
+        int velocityWritePos = 0;
         // bitfield
         uint atEnd : 1;
         uint atBeginning : 1;

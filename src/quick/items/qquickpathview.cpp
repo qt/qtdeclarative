@@ -4,7 +4,7 @@
 
 #include "qquickpathview_p.h"
 #include "qquickpathview_p_p.h"
-#include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
+#include "qquickwindow.h"
 #include "qquicktext_p.h"
 
 #include <QtQml/qqmlcomponent.h>
@@ -80,7 +80,8 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , highlightPosition(0)
     , highlightRangeStart(0), highlightRangeEnd(0)
     , highlightRangeMode(QQuickPathView::StrictlyEnforceRange)
-    , highlightMoveDuration(300), modelCount(0), snapMode(QQuickPathView::NoSnap)
+    , highlightMoveDuration(300), modelCount(0), velocitySamples(0)
+    , velocityWritePos(0), snapMode(QQuickPathView::NoSnap)
 {
     setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
@@ -1594,19 +1595,24 @@ QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercen
 
 void QQuickPathViewPrivate::addVelocitySample(qreal v)
 {
-    velocityBuffer.append(v);
-    if (velocityBuffer.count() > QML_FLICK_SAMPLEBUFFER)
-        velocityBuffer.remove(0);
+    velocityBuffer[velocityWritePos] = v;
+    velocityWritePos = (velocityWritePos + 1) % QML_FLICK_SAMPLEBUFFER;
+    if (velocitySamples < QML_FLICK_SAMPLEBUFFER)
+        ++velocitySamples;
     qCDebug(lcPathView) << "instantaneous velocity" << v;
 }
 
 qreal QQuickPathViewPrivate::calcVelocity() const
 {
     qreal velocity = 0;
-    if (velocityBuffer.count() > QML_FLICK_DISCARDSAMPLES) {
-        int count = velocityBuffer.count()-QML_FLICK_DISCARDSAMPLES;
+    if (velocitySamples > QML_FLICK_DISCARDSAMPLES) {
+        const int count = velocitySamples - QML_FLICK_DISCARDSAMPLES;
+        // velocityBuffer is a ring; read oldest-first so DISCARDSAMPLES drops the
+        // newest (least reliable, taken as the finger lifts) samples.
+        const int oldest = (velocityWritePos - velocitySamples + QML_FLICK_SAMPLEBUFFER)
+                           % QML_FLICK_SAMPLEBUFFER;
         for (int i = 0; i < count; ++i) {
-            qreal v = velocityBuffer.at(i);
+            qreal v = velocityBuffer[(oldest + i) % QML_FLICK_SAMPLEBUFFER];
             velocity += v;
         }
         velocity /= count;
@@ -1638,7 +1644,8 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
     Q_Q(QQuickPathView);
     if (!interactive || !items.size() || !model || !modelCount)
         return;
-    velocityBuffer.clear();
+    velocitySamples = 0;
+    velocityWritePos = 0;
     int idx = 0;
     for (; idx < items.size(); ++idx) {
         QQuickItem *item = items.at(idx);

@@ -4,7 +4,6 @@
 
 #include "qquickflickable_p.h"
 #include "qquickflickable_p_p.h"
-#include "qquickflickablebehavior_p.h"
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
 #include "qquickmousearea_p.h"
@@ -302,18 +301,24 @@ void QQuickFlickablePrivate::AxisData::addVelocitySample(qreal v, qreal maxVeloc
         v = maxVelocity;
     else if (v < -maxVelocity)
         v = -maxVelocity;
-    velocityBuffer.append(v);
-    if (velocityBuffer.count() > QML_FLICK_SAMPLEBUFFER)
-        velocityBuffer.remove(0);
+
+    velocityBuffer[velocityWritePos] = v;
+    velocityWritePos = (velocityWritePos + 1) % QML_FLICK_SAMPLEBUFFER;
+    if (velocitySamples < QML_FLICK_SAMPLEBUFFER)
+        ++velocitySamples;
 }
 
 void QQuickFlickablePrivate::AxisData::updateVelocity()
 {
     velocity = 0;
-    if (velocityBuffer.count() > QML_FLICK_DISCARDSAMPLES) {
-        int count = velocityBuffer.count()-QML_FLICK_DISCARDSAMPLES;
+    if (velocitySamples > QML_FLICK_DISCARDSAMPLES) {
+        int count = velocitySamples - QML_FLICK_DISCARDSAMPLES;
+        // velocityBuffer is a ring; read oldest-first so DISCARDSAMPLES drops the
+        // newest (least reliable, taken as the finger lifts) samples.
+        const int oldest = (velocityWritePos - velocitySamples + QML_FLICK_SAMPLEBUFFER)
+                           % QML_FLICK_SAMPLEBUFFER;
         for (int i = 0; i < count; ++i) {
-            qreal v = velocityBuffer.at(i);
+            qreal v = velocityBuffer[(oldest + i) % QML_FLICK_SAMPLEBUFFER];
             velocity += v;
         }
         velocity /= count;
@@ -1423,11 +1428,13 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     }
 
     if (rejectY) {
-        vData.velocityBuffer.clear();
+        vData.velocitySamples = 0;
+        vData.velocityWritePos = 0;
         vData.velocity = 0;
     }
     if (rejectX) {
-        hData.velocityBuffer.clear();
+        hData.velocitySamples = 0;
+        hData.velocityWritePos = 0;
         hData.velocity = 0;
     }
 
@@ -1866,8 +1873,10 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             if (yflick() && yDelta != 0) {
                 qreal instVelocity = yDelta / elapsed;
                 // if the direction has changed, start over with filtering, to allow instant movement in the opposite direction
-                if ((instVelocity < 0 && d->vData.velocity > 0) || (instVelocity > 0 && d->vData.velocity < 0))
-                    d->vData.velocityBuffer.clear();
+                if ((instVelocity < 0 && d->vData.velocity > 0) || (instVelocity > 0 && d->vData.velocity < 0)) {
+                    d->vData.velocitySamples = 0;
+                    d->vData.velocityWritePos = 0;
+                }
                 d->vData.addVelocitySample(instVelocity, d->maxVelocity);
                 d->vData.updateVelocity();
                 if ((yDelta > 0 && contentY() > -minYExtent()) || (yDelta < 0 && contentY() < -maxYExtent())) {
@@ -1883,8 +1892,10 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             if (xflick() && xDelta != 0) {
                 qreal instVelocity = xDelta / elapsed;
                 // if the direction has changed, start over with filtering, to allow instant movement in the opposite direction
-                if ((instVelocity < 0 && d->hData.velocity > 0) || (instVelocity > 0 && d->hData.velocity < 0))
-                    d->hData.velocityBuffer.clear();
+                if ((instVelocity < 0 && d->hData.velocity > 0) || (instVelocity > 0 && d->hData.velocity < 0)) {
+                    d->hData.velocitySamples = 0;
+                    d->hData.velocityWritePos = 0;
+                }
                 d->hData.addVelocitySample(instVelocity, d->maxVelocity);
                 d->hData.updateVelocity();
                 if ((xDelta > 0 && contentX() > -minXExtent()) || (xDelta < 0 && contentX() < -maxXExtent())) {

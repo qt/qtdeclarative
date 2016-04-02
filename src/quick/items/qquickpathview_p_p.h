@@ -22,6 +22,7 @@ QT_REQUIRE_CONFIG(quick_pathview);
 
 #include "qquickpathview_p.h"
 #include "qquickitem_p.h"
+#include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
 
 #include <QtQml/qqml.h>
 #include <QtCore/qdatetime.h>
@@ -30,9 +31,10 @@ QT_REQUIRE_CONFIG(quick_pathview);
 #include <private/qquickanimation_p_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qquicktimeline_p_p.h>
-#include <private/qpodvector_p.h>
 
 #include <QtCore/qpointer.h>
+
+#include <array>
 
 QT_BEGIN_NAMESPACE
 
@@ -166,7 +168,9 @@ public:
     QQuickPathView::HighlightRangeMode highlightRangeMode;
     int highlightMoveDuration;
     int modelCount;
-    QPODVector<qreal,10> velocityBuffer;
+    std::array<qreal, QML_FLICK_SAMPLEBUFFER> velocityBuffer;
+    int velocitySamples;
+    int velocityWritePos;
     QQuickPathView::SnapMode snapMode;
 };
 
