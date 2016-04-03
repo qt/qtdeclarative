@@ -72,6 +72,7 @@ QSGBasicImageNode::QSGBasicImageNode()
     , m_mirror(false)
     , m_dirtyGeometry(false)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
+    , m_dynamicTexture(nullptr)
 {
     setGeometry(&m_geometry);
 
@@ -162,9 +163,19 @@ void QSGBasicImageNode::preprocess()
     QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(materialTexture());
     if (t) {
         doDirty = t->updateTexture();
-        if (doDirty)
-            updateGeometry();
+        if (doDirty) {
+            // The geometry may need updating. This is expensive however, so do
+            // it only when something relevant has changed.
+            if (t != m_dynamicTexture
+                    || t->textureSize() != m_dynamicTextureSize
+                    || t->normalizedTextureSubRect() != m_dynamicTextureSubRect) {
+                updateGeometry();
+                m_dynamicTextureSize = t->textureSize();
+                m_dynamicTextureSubRect = t->normalizedTextureSubRect();
+            }
+        }
     }
+    m_dynamicTexture = t;
 
     if (updateMaterialBlending())
         doDirty = true;

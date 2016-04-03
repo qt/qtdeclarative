@@ -42,6 +42,7 @@
 #include "qsgd3d12rectanglenode_p.h"
 #include "qsgd3d12imagenode_p.h"
 #include "qsgd3d12glyphnode_p.h"
+#include "qsgd3d12layer_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -83,9 +84,7 @@ QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
 
 QSGLayer *QSGD3D12Context::createLayer(QSGRenderContext *rc)
 {
-    Q_UNUSED(rc);
-    Q_UNREACHABLE();
-    return nullptr;
+    return new QSGD3D12Layer(static_cast<QSGD3D12RenderContext *>(rc));
 }
 
 QSize QSGD3D12Context::minimumFBOSize() const

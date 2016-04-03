@@ -350,39 +350,39 @@ void QSGD3D12Engine::endFrame()
     d->endFrame();
 }
 
+void QSGD3D12Engine::beginLayer()
+{
+    d->beginLayer();
+}
+
+void QSGD3D12Engine::endLayer()
+{
+    d->endLayer();
+}
+
 void QSGD3D12Engine::finalizePipeline(const QSGD3D12PipelineState &pipelineState)
 {
     d->finalizePipeline(pipelineState);
 }
 
-void QSGD3D12Engine::resetVertexBuffer(const quint8 *data, int size)
+uint QSGD3D12Engine::genBuffer()
 {
-    d->resetVertexBuffer(data, size);
+    return d->genBuffer();
 }
 
-void QSGD3D12Engine::markVertexBufferDirty(int offset, int size)
+void QSGD3D12Engine::releaseBuffer(uint id)
 {
-    d->markVertexBufferDirty(offset, size);
+    d->releaseBuffer(id);
 }
 
-void QSGD3D12Engine::resetIndexBuffer(const quint8 *data, int size)
+void QSGD3D12Engine::resetBuffer(uint id, const quint8 *data, int size)
 {
-    d->resetIndexBuffer(data, size);
+    d->resetBuffer(id, data, size);
 }
 
-void QSGD3D12Engine::markIndexBufferDirty(int offset, int size)
+void QSGD3D12Engine::markBufferDirty(uint id, int offset, int size)
 {
-    d->markIndexBufferDirty(offset, size);
-}
-
-void QSGD3D12Engine::resetConstantBuffer(const quint8 *data, int size)
-{
-    d->resetConstantBuffer(data, size);
-}
-
-void QSGD3D12Engine::markConstantBufferDirty(int offset, int size)
-{
-    d->markConstantBufferDirty(offset, size);
+    d->markBufferDirty(id, offset, size);
 }
 
 void QSGD3D12Engine::queueViewport(const QRect &rect)
@@ -420,11 +420,9 @@ void QSGD3D12Engine::queueSetStencilRef(quint32 ref)
     d->queueSetStencilRef(ref);
 }
 
-void QSGD3D12Engine::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboSize, int vboStride,
-                               int cboOffset,
-                               int startIndexIndex, QSGD3D12Format indexFormat)
+void QSGD3D12Engine::queueDraw(const DrawParams &params)
 {
-    d->queueDraw(mode, count, vboOffset, vboSize, vboStride, cboOffset, startIndexIndex, indexFormat);
+    d->queueDraw(params);
 }
 
 void QSGD3D12Engine::present()
@@ -594,12 +592,15 @@ void QSGD3D12EnginePrivate::releaseResources()
 
     mipmapper.releaseResources();
 
-    commandList = nullptr;
+    frameCommandList = nullptr;
     copyCommandList = nullptr;
 
     copyCommandAllocator = nullptr;
-    for (int i = 0; i < frameInFlightCount; ++i)
-        commandAllocator[i] = nullptr;
+    for (int i = 0; i < frameInFlightCount; ++i) {
+        frameCommandAllocator[i] = nullptr;
+        pframeData[i].gpuCbvSrvUavHeap = nullptr;
+        delete frameFence[i];
+    }
 
     defaultDS = nullptr;
     for (int i = 0; i < swapChainBufferCount; ++i) {
@@ -607,15 +608,9 @@ void QSGD3D12EnginePrivate::releaseResources()
         defaultRT[i] = nullptr;
     }
 
-    for (int i = 0; i < frameInFlightCount; ++i) {
-        pframeData[i].vertex.buffer = nullptr;
-        pframeData[i].index.buffer = nullptr;
-        pframeData[i].constant.buffer = nullptr;
-        pframeData[i].gpuCbvSrvUavHeap = nullptr;
-    }
-
     psoCache.clear();
     rootSigCache.clear();
+    buffers.clear();
     textures.clear();
     renderTargets.clear();
 
@@ -626,8 +621,6 @@ void QSGD3D12EnginePrivate::releaseResources()
     swapChain = nullptr;
 
     delete presentFence;
-    for (int i = 0; i < frameInFlightCount; ++i)
-        delete frameFence[i];
     textureUploadFence = nullptr;
 
     deviceManager()->unref();
@@ -725,7 +718,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     }
 
     for (int i = 0; i < frameInFlightCount; ++i) {
-        if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i])))) {
+        if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&frameCommandAllocator[i])))) {
             qWarning("Failed to create command allocator");
             return;
         }
@@ -745,13 +738,13 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
 
     setupDefaultRenderTargets();
 
-    if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator[0].Get(),
-                                         nullptr, IID_PPV_ARGS(&commandList)))) {
+    if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, frameCommandAllocator[0].Get(),
+                                         nullptr, IID_PPV_ARGS(&frameCommandList)))) {
         qWarning("Failed to create command list");
         return;
     }
     // created in recording state, close it for now
-    commandList->Close();
+    frameCommandList->Close();
 
     if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator.Get(),
                                          nullptr, IID_PPV_ARGS(&copyCommandList)))) {
@@ -770,10 +763,6 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         qWarning("Failed to create fence");
         return;
     }
-
-    vertexData = CPUBufferRef();
-    indexData = CPUBufferRef();
-    constantData = CPUBufferRef();
 
     psoCache.setMaxCost(MAX_CACHED_PSO);
     rootSigCache.setMaxCost(MAX_CACHED_ROOTSIG);
@@ -1083,82 +1072,65 @@ ID3D12Resource *QSGD3D12EnginePrivate::createBuffer(int size)
     return buf;
 }
 
-void QSGD3D12EnginePrivate::markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size)
+void QSGD3D12EnginePrivate::ensureBuffer(Buffer *buf)
 {
-    if (!inFrame) {
-        qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
+    Buffer::InFlightData &bfd(buf->d[currentPFrameIndex]);
+    // Only enlarge, never shrink
+    const bool newBufferNeeded = bfd.buffer ? (buf->cpuDataRef.size > bfd.resourceSize) : true;
+    if (newBufferNeeded) {
+        // Round it up and overallocate a little bit so that a subsequent
+        // buffer contents rebuild with a slightly larger total size does
+        // not lead to creating a new buffer.
+        const quint32 sz = alignedSize(buf->cpuDataRef.size, 4096);
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("new buffer[pf=%d] of size %d (actual data size %d)", currentPFrameIndex, sz, buf->cpuDataRef.size);
+        bfd.buffer.Attach(createBuffer(sz));
+        bfd.resourceSize = sz;
+    }
+    // Cache the actual data size in the per-in-flight-frame data as well.
+    bfd.dataSize = buf->cpuDataRef.size;
+}
+
+void QSGD3D12EnginePrivate::updateBuffer(Buffer *buf)
+{
+    if (buf->cpuDataRef.dirty.isEmpty())
         return;
-    }
 
-    // Bail out when there was a resetV/I/CBuffer and the dirty list already spans the entire buffer data.
-    if (!dst->dirty.isEmpty()) {
-        if (dst->dirty[0].first == 0 && dst->dirty[0].second == dst->size)
-            return;
-    }
-
-    const QPair<int, int> range = qMakePair(offset, size);
-    if (!dst->dirty.contains(range))
-        dst->dirty.append(range);
-    if (!buf->totalDirtyInFrame.contains(range))
-        buf->totalDirtyInFrame.append(range);
-}
-
-void QSGD3D12EnginePrivate::ensureBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr)
-{
-    if (src->allDirty) {
-        src->allDirty = false;
-        // Only enlarge, never shrink
-        const bool newBufferNeeded = buf->buffer ? (src->size > buf->buffer->GetDesc().Width) : true;
-        if (newBufferNeeded) {
-            // Round it up and overallocate a little bit so that a subsequent
-            // buffer contents rebuild with a slightly larger total size does
-            // not lead to creating a new buffer.
-            quint32 sz = alignedSize(src->size, 4096);
-            if (Q_UNLIKELY(debug_render()))
-                qDebug("new %s buffer of size %d (actual data size %d)", dbgstr, sz, src->size);
-            buf->buffer.Attach(createBuffer(sz));
-        }
-        // Cache the actual data size in the per-in-flight-frame data as well.
-        buf->dataSize = src->size;
-        // Mark everything as dirty.
-        src->dirty.clear();
-        buf->totalDirtyInFrame.clear();
-        if (buf->buffer) {
-            const QPair<int, int> range = qMakePair(0, src->size);
-            src->dirty.append(range);
-            buf->totalDirtyInFrame.append(range);
-        }
-    }
-}
-
-void QSGD3D12EnginePrivate::updateBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr)
-{
+    Buffer::InFlightData &bfd(buf->d[currentPFrameIndex]);
     quint8 *p = nullptr;
     const D3D12_RANGE readRange = { 0, 0 };
-    if (!src->dirty.isEmpty()) {
-        if (FAILED(buf->buffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
-            qWarning("Map failed for %s buffer of size %d", dbgstr, src->size);
-            return;
-        }
-        for (const auto &r : qAsConst(src->dirty)) {
-            if (Q_UNLIKELY(debug_render()))
-                qDebug("%s o %d s %d", dbgstr, r.first, r.second);
-            memcpy(p + r.first, src->p + r.first, r.second);
-        }
-        buf->buffer->Unmap(0, nullptr);
-        src->dirty.clear();
+    if (FAILED(bfd.buffer->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+        qWarning("Map failed for buffer of size %d", buf->cpuDataRef.size);
+        return;
     }
+    for (const auto &r : qAsConst(buf->cpuDataRef.dirty)) {
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("%p o %d s %d", buf, r.first, r.second);
+        memcpy(p + r.first, buf->cpuDataRef.p + r.first, r.second);
+    }
+    bfd.buffer->Unmap(0, nullptr);
+    buf->cpuDataRef.dirty.clear();
 }
 
 void QSGD3D12EnginePrivate::beginFrame()
 {
-    if (inFrame)
-        qWarning("beginFrame called again without an endFrame");
-
-    inFrame = true;
+    if (inFrame && !activeLayers)
+        qFatal("beginFrame called again without an endFrame, frame index was %d", frameIndex);
 
     if (Q_UNLIKELY(debug_render()))
-        qDebug() << "***** begin frame, logical" << frameIndex << "present" << presentFrameIndex;
+        qDebug() << "***** begin frame, logical" << frameIndex << "present" << presentFrameIndex << "layer" << activeLayers;
+
+    if (inFrame && activeLayers) {
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("frame %d already in progress", frameIndex);
+        if (!currentLayerDepth) {
+            // There are layers and the real frame preparation starts now. Prepare for present.
+            beginFrameDraw();
+        }
+        return;
+    }
+
+    inFrame = true;
 
     // The device may have been lost. This is the point to attempt to start again from scratch.
     if (!initialized && window)
@@ -1179,34 +1151,44 @@ void QSGD3D12EnginePrivate::beginFrame()
             fence->SetEventOnCompletion(inFlightFenceValue, event);
             WaitForSingleObject(event, INFINITE);
         }
-        commandAllocator[currentPFrameIndex]->Reset();
+        frameCommandAllocator[currentPFrameIndex]->Reset();
     }
 
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
     pfd.cbvSrvUavNextFreeDescriptorIndex = 0;
 
-    pfd.vertex.totalDirtyInFrame.clear();
-    pfd.index.totalDirtyInFrame.clear();
-    pfd.constant.totalDirtyInFrame.clear();
-
-    Q_ASSERT(vertexData.dirty.isEmpty() && indexData.dirty.isEmpty() && constantData.dirty.isEmpty());
+    for (Buffer &b : buffers) {
+        if (b.entryInUse())
+            b.d[currentPFrameIndex].dirty.clear();
+    }
 
     if (frameIndex >= frameInFlightCount) {
-        // Now sync the buffer changes from the previous, potentially still in flight, frames.
-        for (int delta = 1; delta < frameInFlightCount; ++delta) {
-            PersistentFrameData &prevFrameData(pframeData[(frameIndex - delta) % frameInFlightCount]);
-            if (pfd.vertex.buffer && pfd.vertex.dataSize == vertexData.size)
-                vertexData.dirty.append(prevFrameData.vertex.totalDirtyInFrame);
-            else
-                vertexData.allDirty = true;
-            if (pfd.index.buffer && pfd.index.dataSize == indexData.size)
-                indexData.dirty.append(prevFrameData.index.totalDirtyInFrame);
-            else
-                indexData.allDirty = true;
-            if (pfd.constant.buffer && pfd.constant.dataSize == constantData.size)
-                constantData.dirty.append(prevFrameData.constant.totalDirtyInFrame);
-            else
-                constantData.allDirty = true;
+        // Now sync the buffer changes from the previous, potentially still in
+        // flight, frames. This is done by taking the ranges dirtied in those
+        // frames and adding them to the global CPU-side buffer's dirty list,
+        // as if this frame changed those ranges. (however, dirty ranges
+        // inherited this way are not added to this frame's persistent
+        // per-frame dirty list because the next frame after this one should
+        // inherit this frame's genuine changes only, the rest will come from
+        // the earlier ones)
+        for (int delta = frameInFlightCount - 1; delta >= 1; --delta) {
+            const int prevPFrameIndex = (frameIndex - delta) % frameInFlightCount;
+            PersistentFrameData &prevFrameData(pframeData[prevPFrameIndex]);
+            for (uint id : qAsConst(prevFrameData.buffersUsedInFrame)) {
+                Buffer &b(buffers[id - 1]);
+                if (b.d[currentPFrameIndex].buffer && b.d[currentPFrameIndex].dataSize == b.cpuDataRef.size) {
+                    if (Q_UNLIKELY(debug_render()))
+                        qDebug() << "frame" << frameIndex << "takes dirty" << b.d[prevPFrameIndex].dirty
+                                 << "from frame" << frameIndex - delta << "for buffer" << id;
+                    for (const auto &range : qAsConst(b.d[prevPFrameIndex].dirty))
+                        addDirtyRange(&b.cpuDataRef.dirty, range.first, range.second, b.cpuDataRef.size);
+                } else {
+                    if (Q_UNLIKELY(debug_render()))
+                        qDebug() << "frame" << frameIndex << "makes all dirty from frame" << frameIndex - delta
+                                 << "for buffer" << id;
+                    addDirtyRange(&b.cpuDataRef.dirty, 0, b.cpuDataRef.size, b.cpuDataRef.size);
+                }
+            }
         }
 
         // Do some texture upload bookkeeping.
@@ -1274,42 +1256,67 @@ void QSGD3D12EnginePrivate::beginFrame()
             pfd.outOfFrameDeleteQueue.clear();
         }
 
-        // Mark released texture slots free.
-        if (!pfd.pendingTextureReleases.isEmpty()) {
-            for (uint id : qAsConst(pfd.pendingTextureReleases)) {
-                Texture &t(textures[id - 1]);
-                t.flags &= ~RenderTarget::EntryInUse; // createTexture() can now reuse this entry
-                t.texture = nullptr;
+        // Mark released texture, buffer, etc. slots free.
+        if (!pfd.pendingReleases.isEmpty()) {
+            for (const auto &pr : qAsConst(pfd.pendingReleases)) {
+                Q_ASSERT(pr.id);
+                if (pr.type == PersistentFrameData::PendingRelease::TypeTexture) {
+                    Texture &t(textures[pr.id - 1]);
+                    Q_ASSERT(t.entryInUse());
+                    t.flags &= ~RenderTarget::EntryInUse; // createTexture() can now reuse this entry
+                    t.texture = nullptr;
+                } else if (pr.type == PersistentFrameData::PendingRelease::TypeBuffer) {
+                    Buffer &b(buffers[pr.id - 1]);
+                    Q_ASSERT(b.entryInUse());
+                    b.flags &= ~Buffer::EntryInUse;
+                    for (int i = 0; i < frameInFlightCount; ++i)
+                        b.d[i].buffer = nullptr;
+                } else {
+                    qFatal("Corrupt pending release list, type %d", pr.type);
+                }
             }
-            pfd.pendingTextureReleases.clear();
+            pfd.pendingReleases.clear();
         }
-        if (!pfd.outOfFramePendingTextureReleases.isEmpty()) {
-            pfd.pendingTextureReleases = pfd.outOfFramePendingTextureReleases;
-            pfd.outOfFramePendingTextureReleases.clear();
+        if (!pfd.outOfFramePendingReleases.isEmpty()) {
+            pfd.pendingReleases = pfd.outOfFramePendingReleases;
+            pfd.outOfFramePendingReleases.clear();
         }
     }
 
-    beginDrawCalls(true);
+    pfd.buffersUsedInFrame.clear();
+
+    beginDrawCalls();
+
+    // Prepare for present if this is a frame without layers.
+    if (!activeLayers)
+        beginFrameDraw();
 }
 
-void QSGD3D12EnginePrivate::beginDrawCalls(bool firstInFrame)
+void QSGD3D12EnginePrivate::beginDrawCalls()
 {
-    commandList->Reset(commandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
+    frameCommandList->Reset(frameCommandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
+    commandList = frameCommandList.Get();
 
     tframeData.drawingMode = QSGGeometry::DrawingMode(-1);
-    tframeData.indexBufferSet = false;
+    tframeData.currentIndexBuffer = 0;
     tframeData.drawCount = 0;
     tframeData.lastPso = nullptr;
     tframeData.lastRootSig = nullptr;
     tframeData.descHeapSet = false;
+}
 
-    if (firstInFrame && windowSamples == 1)
-        transitionResource(defaultRT[presentFrameIndex % swapChainBufferCount].Get(), commandList.Get(),
+void QSGD3D12EnginePrivate::beginFrameDraw()
+{
+    if (windowSamples == 1)
+        transitionResource(defaultRT[presentFrameIndex % swapChainBufferCount].Get(), commandList,
                 D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void QSGD3D12EnginePrivate::endFrame()
 {
+    if (!inFrame)
+        qFatal("endFrame called without beginFrame, frame index %d", frameIndex);
+
     if (Q_UNLIKELY(debug_render()))
         qDebug("***** end frame");
 
@@ -1326,9 +1333,13 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
 
     // Now is the time to sync all the changed areas in the buffers.
-    updateBuffer(&vertexData, &pfd.vertex, "vertex");
-    updateBuffer(&indexData, &pfd.index, "index");
-    updateBuffer(&constantData, &pfd.constant, "constant");
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << "buffers used in drawcall set" << pfd.buffersUsedInDrawCallSet;
+    for (uint id : qAsConst(pfd.buffersUsedInDrawCallSet))
+        updateBuffer(&buffers[id - 1]);
+
+    pfd.buffersUsedInFrame += pfd.buffersUsedInDrawCallSet;
+    pfd.buffersUsedInDrawCallSet.clear();
 
     // Add a wait on the 3D queue for the relevant texture uploads on the copy queue.
     if (!pfd.pendingTextureUploads.isEmpty()) {
@@ -1360,11 +1371,11 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
         }
     }
 
-    // Resolve and transition the backbuffer for present, if needed.
     if (lastInFrame) {
+        // Resolve and transition the backbuffer for present, if needed.
         const int idx = presentFrameIndex % swapChainBufferCount;
         if (windowSamples == 1) {
-            transitionResource(defaultRT[idx].Get(), commandList.Get(),
+            transitionResource(defaultRT[idx].Get(), commandList,
                                D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         } else {
             if (Q_UNLIKELY(debug_render())) {
@@ -1373,20 +1384,60 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
                        desc.SampleDesc.Count, desc.SampleDesc.Quality);
             }
             resolveMultisampledTarget(defaultRT[idx].Get(), backBufferRT[idx].Get(),
-                                      D3D12_RESOURCE_STATE_PRESENT, commandList.Get());
+                                      D3D12_RESOURCE_STATE_PRESENT, commandList);
+        }
+
+        if (activeLayers) {
+            if (Q_UNLIKELY(debug_render()))
+                qDebug("this frame had %d layers", activeLayers);
+            activeLayers = 0;
         }
     }
 
     // Go!
-    HRESULT hr = commandList->Close();
+    HRESULT hr = frameCommandList->Close();
     if (FAILED(hr)) {
         qWarning("Failed to close command list: 0x%x", hr);
         if (hr == E_INVALIDARG)
             qWarning("Invalid arguments. Some of the commands in the list is invalid in some way.");
     }
 
-    ID3D12CommandList *commandLists[] = { commandList.Get() };
+    ID3D12CommandList *commandLists[] = { frameCommandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    commandList = nullptr;
+}
+
+void QSGD3D12EnginePrivate::beginLayer()
+{
+    if (inFrame && !activeLayers)
+        qFatal("Layer rendering cannot be started while a frame is active");
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("===== beginLayer active %d depth %d (inFrame=%d)", activeLayers, currentLayerDepth, inFrame);
+
+    ++activeLayers;
+    ++currentLayerDepth;
+
+    // Do an early beginFrame. With multiple layers this results in
+    // beginLayer - beginFrame - endLayer - beginLayer - beginFrame - endLayer - ... - (*) beginFrame - endFrame
+    // where (*) denotes the start of the preparation of the actual, non-layer frame.
+
+    if (activeLayers == 1)
+        beginFrame();
+}
+
+void QSGD3D12EnginePrivate::endLayer()
+{
+    if (!inFrame || !activeLayers || !currentLayerDepth)
+        qFatal("Mismatched endLayer");
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("===== endLayer active %d depth %d", activeLayers, currentLayerDepth);
+
+    --currentLayerDepth;
+
+    // Do not touch activeLayers. It remains valid until endFrame.
 }
 
 // Root signature:
@@ -1604,42 +1655,6 @@ void QSGD3D12EnginePrivate::setDescriptorHeaps(bool force)
     }
 }
 
-void QSGD3D12EnginePrivate::resetVertexBuffer(const quint8 *data, int size)
-{
-    vertexData.p = data;
-    vertexData.size = size;
-    vertexData.allDirty = true;
-}
-
-void QSGD3D12EnginePrivate::markVertexBufferDirty(int offset, int size)
-{
-    markCPUBufferDirty(&vertexData, &pframeData[currentPFrameIndex].vertex, offset, size);
-}
-
-void QSGD3D12EnginePrivate::resetIndexBuffer(const quint8 *data, int size)
-{
-    indexData.p = data;
-    indexData.size = size;
-    indexData.allDirty = true;
-}
-
-void QSGD3D12EnginePrivate::markIndexBufferDirty(int offset, int size)
-{
-    markCPUBufferDirty(&indexData, &pframeData[currentPFrameIndex].index, offset, size);
-}
-
-void QSGD3D12EnginePrivate::resetConstantBuffer(const quint8 *data, int size)
-{
-    constantData.p = data;
-    constantData.size = size;
-    constantData.allDirty = true;
-}
-
-void QSGD3D12EnginePrivate::markConstantBufferDirty(int offset, int size)
-{
-    markCPUBufferDirty(&constantData, &pframeData[currentPFrameIndex].constant, offset, size);
-}
-
 void QSGD3D12EnginePrivate::queueViewport(const QRect &rect)
 {
     if (!inFrame) {
@@ -1679,7 +1694,7 @@ void QSGD3D12EnginePrivate::queueSetRenderTarget(uint id)
         dsvHandle = defaultDSV;
     } else {
         const int idx = id - 1;
-        Q_ASSERT(idx < renderTargets.count());
+        Q_ASSERT(idx < renderTargets.count() && renderTargets[idx].entryInUse());
         RenderTarget &rt(renderTargets[idx]);
         rtvHandle = rt.rtv;
         dsvHandle = rt.dsv;
@@ -1699,7 +1714,10 @@ void QSGD3D12EnginePrivate::queueClearRenderTarget(const QColor &color)
     }
 
     const float clearColor[] = { float(color.redF()), float(color.blueF()), float(color.greenF()), float(color.alphaF()) };
-    commandList->ClearRenderTargetView(defaultRTV[presentFrameIndex % swapChainBufferCount], clearColor, 0, nullptr);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = !currentRenderTarget
+            ? defaultRTV[presentFrameIndex % swapChainBufferCount]
+            : renderTargets[currentRenderTarget - 1].rtv;
+    commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 }
 
 void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 stencilValue, QSGD3D12Engine::ClearFlags which)
@@ -1709,7 +1727,10 @@ void QSGD3D12EnginePrivate::queueClearDepthStencil(float depthValue, quint8 sten
         return;
     }
 
-    commandList->ClearDepthStencilView(defaultDSV, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = !currentRenderTarget
+            ? defaultDSV
+            : renderTargets[currentRenderTarget - 1].dsv;
+    commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAGS(int(which)), depthValue, stencilValue, 0, nullptr);
 }
 
 void QSGD3D12EnginePrivate::queueSetBlendFactor(const QVector4D &factor)
@@ -1735,9 +1756,7 @@ void QSGD3D12EnginePrivate::queueSetStencilRef(quint32 ref)
     commandList->OMSetStencilRef(ref);
 }
 
-void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, int vboOffset, int vboSize, int vboStride,
-                                      int cboOffset,
-                                      int startIndexIndex, QSGD3D12Format indexFormat)
+void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
 {
     if (!inFrame) {
         qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
@@ -1746,35 +1765,40 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
 
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
 
-    // Ensure buffers are created but do not copy the data here, leave that to endDrawCalls().
-    ensureBuffer(&vertexData, &pfd.vertex, "vertex");
-    if (!pfd.vertex.buffer)
-        return;
-
-    if (indexData.size > 0) {
-        ensureBuffer(&indexData, &pfd.index, "index");
-        if (!pfd.index.buffer)
-            return;
-    } else if (indexData.allDirty) {
-        indexData.allDirty = false;
-        pfd.index.buffer = nullptr;
+    pfd.buffersUsedInDrawCallSet.insert(params.vertexBuf);
+    const int vertexBufIdx = params.vertexBuf - 1;
+    Q_ASSERT(params.vertexBuf && vertexBufIdx < buffers.count() && buffers[vertexBufIdx].entryInUse());
+    pfd.buffersUsedInDrawCallSet.insert(params.constantBuf);
+    const int constantBufIdx = params.constantBuf - 1;
+    Q_ASSERT(params.constantBuf && constantBufIdx < buffers.count() && buffers[constantBufIdx].entryInUse());
+    int indexBufIdx = -1;
+    if (params.indexBuf) {
+        pfd.buffersUsedInDrawCallSet.insert(params.indexBuf);
+        indexBufIdx = params.indexBuf - 1;
+        Q_ASSERT(indexBufIdx < buffers.count() && buffers[indexBufIdx].entryInUse());
     }
 
-    ensureBuffer(&constantData, &pfd.constant, "constant");
-    if (!pfd.constant.buffer)
-        return;
+    // Ensure buffers are created but do not copy the data here, leave that to endDrawCalls().
+    ensureBuffer(&buffers[vertexBufIdx]);
+    ensureBuffer(&buffers[constantBufIdx]);
+    if (indexBufIdx >= 0)
+        ensureBuffer(&buffers[indexBufIdx]);
 
     // Set the CBV.
-    if (cboOffset >= 0 && pfd.constant.buffer)
-        commandList->SetGraphicsRootConstantBufferView(0, pfd.constant.buffer->GetGPUVirtualAddress() + cboOffset);
+    if (params.cboOffset >= 0) {
+        ID3D12Resource *cbuf = buffers[constantBufIdx].d[currentPFrameIndex].buffer.Get();
+        if (cbuf)
+            commandList->SetGraphicsRootConstantBufferView(0, cbuf->GetGPUVirtualAddress() + params.cboOffset);
+    }
 
     // Set up vertex and index buffers.
-    Q_ASSERT(pfd.vertex.buffer);
-    Q_ASSERT(pfd.index.buffer || startIndexIndex < 0);
+    ID3D12Resource *vbuf = buffers[vertexBufIdx].d[currentPFrameIndex].buffer.Get();
+    ID3D12Resource *ibuf = indexBufIdx >= 0 && params.startIndexIndex >= 0
+            ? buffers[indexBufIdx].d[currentPFrameIndex].buffer.Get() : nullptr;
 
-    if (mode != tframeData.drawingMode) {
+    if (params.mode != tframeData.drawingMode) {
         D3D_PRIMITIVE_TOPOLOGY topology;
-        switch (mode) {
+        switch (params.mode) {
         case QSGGeometry::DrawPoints:
             topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
             break;
@@ -1791,27 +1815,27 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
             topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
             break;
         default:
-            qFatal("Unsupported drawing mode 0x%x", mode);
+            qFatal("Unsupported drawing mode 0x%x", params.mode);
             break;
         }
         commandList->IASetPrimitiveTopology(topology);
-        tframeData.drawingMode = mode;
+        tframeData.drawingMode = params.mode;
     }
 
     D3D12_VERTEX_BUFFER_VIEW vbv;
-    vbv.BufferLocation = pfd.vertex.buffer->GetGPUVirtualAddress() + vboOffset;
-    vbv.SizeInBytes = vboSize;
-    vbv.StrideInBytes = vboStride;
+    vbv.BufferLocation = vbuf->GetGPUVirtualAddress() + params.vboOffset;
+    vbv.SizeInBytes = params.vboSize;
+    vbv.StrideInBytes = params.vboStride;
 
     // must be set after the topology
     commandList->IASetVertexBuffers(0, 1, &vbv);
 
-    if (startIndexIndex >= 0 && !tframeData.indexBufferSet) {
-        tframeData.indexBufferSet = true;
+    if (params.startIndexIndex >= 0 && ibuf && tframeData.currentIndexBuffer != params.indexBuf) {
+        tframeData.currentIndexBuffer = params.indexBuf;
         D3D12_INDEX_BUFFER_VIEW ibv;
-        ibv.BufferLocation = pfd.index.buffer->GetGPUVirtualAddress();
-        ibv.SizeInBytes = indexData.size;
-        ibv.Format = DXGI_FORMAT(indexFormat);
+        ibv.BufferLocation = ibuf->GetGPUVirtualAddress();
+        ibv.SizeInBytes = buffers[indexBufIdx].cpuDataRef.size;
+        ibv.Format = DXGI_FORMAT(params.indexFormat);
         commandList->IASetIndexBuffer(&ibv);
     }
 
@@ -1840,10 +1864,10 @@ void QSGD3D12EnginePrivate::queueDraw(QSGGeometry::DrawingMode mode, int count, 
     }
 
     // Add the draw call.
-    if (startIndexIndex >= 0)
-        commandList->DrawIndexedInstanced(count, 1, startIndexIndex, 0, 0);
+    if (params.startIndexIndex >= 0)
+        commandList->DrawIndexedInstanced(params.count, 1, params.startIndexIndex, 0, 0);
     else
-        commandList->DrawInstanced(count, 1, 0, 0);
+        commandList->DrawInstanced(params.count, 1, 0, 0);
 
     ++tframeData.drawCount;
     if (tframeData.drawCount == MAX_DRAW_CALLS_PER_LIST) {
@@ -1941,6 +1965,98 @@ template<class T> void syncEntryFlags(T *e, int flag, bool b)
         e->flags |= flag;
     else
         e->flags &= ~flag;
+}
+
+uint QSGD3D12EnginePrivate::genBuffer()
+{
+    return newId(&buffers);
+}
+
+void QSGD3D12EnginePrivate::releaseBuffer(uint id)
+{
+    if (!id)
+        return;
+
+    const int idx = id - 1;
+    Q_ASSERT(idx < buffers.count());
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("releasing buffer %u", id);
+
+    Buffer &b(buffers[idx]);
+    if (!b.entryInUse())
+        return;
+
+    // Do not null out and do not mark the entry reusable yet.
+    // Do that only when the frames potentially in flight have finished for sure.
+
+    for (int i = 0; i < frameInFlightCount; ++i) {
+        if (b.d[i].buffer)
+            deferredDelete(b.d[i].buffer);
+    }
+
+    QSet<PersistentFrameData::PendingRelease> *pendingReleasesSet = inFrame
+            ? &pframeData[currentPFrameIndex].pendingReleases
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFramePendingReleases;
+
+    pendingReleasesSet->insert(PersistentFrameData::PendingRelease(PersistentFrameData::PendingRelease::TypeBuffer, id));
+}
+
+void QSGD3D12EnginePrivate::resetBuffer(uint id, const quint8 *data, int size)
+{
+    if (!inFrame) {
+        qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
+        return;
+    }
+
+    Q_ASSERT(id);
+    const int idx = id - 1;
+    Q_ASSERT(idx < buffers.count() && buffers[idx].entryInUse());
+    Buffer &b(buffers[idx]);
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("reset buffer %u, size %d", id, size);
+
+    b.cpuDataRef.p = data;
+    b.cpuDataRef.size = size;
+
+    b.cpuDataRef.dirty.clear();
+    b.d[currentPFrameIndex].dirty.clear();
+
+    if (size > 0) {
+        const QPair<int, int> range = qMakePair(0, size);
+        b.cpuDataRef.dirty.append(range);
+        b.d[currentPFrameIndex].dirty.append(range);
+    }
+}
+
+void QSGD3D12EnginePrivate::addDirtyRange(DirtyList *dirty, int offset, int size, int bufferSize)
+{
+    // Bail out when the dirty list already spans the entire buffer.
+    if (!dirty->isEmpty()) {
+        if (dirty->at(0).first == 0 && dirty->at(0).second == bufferSize)
+            return;
+    }
+
+    const QPair<int, int> range = qMakePair(offset, size);
+    if (!dirty->contains(range))
+        dirty->append(range);
+}
+
+void QSGD3D12EnginePrivate::markBufferDirty(uint id, int offset, int size)
+{
+    if (!inFrame) {
+        qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
+        return;
+    }
+
+    Q_ASSERT(id);
+    const int idx = id - 1;
+    Q_ASSERT(idx < buffers.count() && buffers[idx].entryInUse());
+    Buffer &b(buffers[idx]);
+
+    addDirtyRange(&b.cpuDataRef.dirty, offset, size, b.cpuDataRef.size);
+    addDirtyRange(&b.d[currentPFrameIndex].dirty, offset, size, b.cpuDataRef.size);
 }
 
 uint QSGD3D12EnginePrivate::genTexture()
@@ -2289,11 +2405,11 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
             deferredDelete(h);
     }
 
-    QSet<uint> *pendingTextureReleasesSet = inFrame
-            ? &pframeData[currentPFrameIndex].pendingTextureReleases
-            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFramePendingTextureReleases;
+    QSet<PersistentFrameData::PendingRelease> *pendingReleasesSet = inFrame
+            ? &pframeData[currentPFrameIndex].pendingReleases
+            : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFramePendingReleases;
 
-    pendingTextureReleasesSet->insert(id);
+    pendingReleasesSet->insert(PersistentFrameData::PendingRelease(PersistentFrameData::PendingRelease::TypeTexture, id));
 }
 
 SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
@@ -2425,7 +2541,7 @@ void QSGD3D12EnginePrivate::MipMapGen::queueGenerate(const Texture &t)
     // ensure() call above resized, or, typically, due to a texture-dependent
     // draw call earlier.
 
-    engine->transitionResource(t.texture.Get(), engine->commandList.Get(),
+    engine->transitionResource(t.texture.Get(), engine->commandList,
                                D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     QSGD3D12EnginePrivate::PersistentFrameData &pfd(engine->pframeData[engine->currentPFrameIndex]);
@@ -2459,10 +2575,10 @@ void QSGD3D12EnginePrivate::MipMapGen::queueGenerate(const Texture &t)
 
         engine->commandList->SetComputeRoot32BitConstants(2, 4, constants, 0);
         engine->commandList->Dispatch(sz.width(), sz.height(), 1);
-        engine->uavBarrier(t.texture.Get(), engine->commandList.Get());
+        engine->uavBarrier(t.texture.Get(), engine->commandList);
     }
 
-    engine->transitionResource(t.texture.Get(), engine->commandList.Get(),
+    engine->transitionResource(t.texture.Get(), engine->commandList,
                                D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     pfd.cbvSrvUavNextFreeDescriptorIndex += descriptorCount;
@@ -2510,6 +2626,10 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
     Q_ASSERT(idx < renderTargets.count() && renderTargets[idx].entryInUse());
     RenderTarget &rt(renderTargets[idx]);
 
+    rt.rtv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rt.dsv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    rt.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
     samples = qMax(1, samples);
     ID3D12Resource *res = createColorBuffer(rt.rtv, size, clearColor, samples);
     if (res)
@@ -2518,13 +2638,6 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
     ID3D12Resource *dsres = createDepthStencil(rt.dsv, size, samples);
     if (dsres)
         rt.ds.Attach(dsres);
-
-    rt.rtv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    rt.dsv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    rt.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    device->CreateRenderTargetView(rt.color.Get(), nullptr, rt.rtv);
-    device->CreateDepthStencilView(rt.ds.Get(), nullptr, rt.dsv);
 
     const bool multisample = rt.color->GetDesc().SampleDesc.Count > 1;
     syncEntryFlags(&rt, RenderTarget::Multisample, multisample);
@@ -2554,6 +2667,9 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
 
         device->CreateShaderResourceView(rt.colorResolve.Get(), nullptr, rt.srv);
     }
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("created new render target %u, size %dx%d, samples %d", id, size.width(), size.height(), samples);
 }
 
 void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
@@ -2566,6 +2682,9 @@ void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
     RenderTarget &rt(renderTargets[idx]);
     if (!rt.entryInUse())
         return;
+
+    if (Q_UNLIKELY(debug_render()))
+        qDebug("releasing render target %u", id);
 
     if (rt.colorResolve) {
         deferredDelete(rt.colorResolve);
@@ -2602,9 +2721,9 @@ void QSGD3D12EnginePrivate::activateRenderTargetAsTexture(uint id)
     if (rt.flags & RenderTarget::NeedsReadBarrier) {
         rt.flags &= ~RenderTarget::NeedsReadBarrier;
         if (rt.flags & RenderTarget::Multisample)
-            resolveMultisampledTarget(rt.color.Get(), rt.colorResolve.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, commandList.Get());
+            resolveMultisampledTarget(rt.color.Get(), rt.colorResolve.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, commandList);
         else
-            transitionResource(rt.color.Get(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            transitionResource(rt.color.Get(), commandList, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 
     tframeData.activeTextures.append(TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id));

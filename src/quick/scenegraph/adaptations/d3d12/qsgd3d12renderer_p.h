@@ -62,10 +62,13 @@ class QSGD3D12Renderer : public QSGRenderer
 {
 public:
     QSGD3D12Renderer(QSGRenderContext *context);
+    ~QSGD3D12Renderer();
 
     void renderScene(GLuint fboId) override;
     void render() override;
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
+
+    void turnToLayerRenderer() { m_layerRenderer = true; }
 
 private:
     void updateMatrices(QSGNode *node, QSGTransformNode *xform);
@@ -90,6 +93,7 @@ private:
 
     void queueDrawCall(const QSGGeometry *g, const Element &e);
 
+    bool m_layerRenderer = false;
     QSet<QSGNode *> m_dirtyTransformNodes;
     QSet<QSGNode *> m_dirtyOpacityNodes;
     QBitArray m_opaqueElements;
@@ -99,7 +103,10 @@ private:
     QDataBuffer<quint8> m_iboData;
     QDataBuffer<quint8> m_cboData;
     QDataBuffer<Element> m_renderList;
-    QSGD3D12Engine *m_engine;
+    uint m_vertexBuf = 0;
+    uint m_indexBuf = 0;
+    uint m_constantBuf = 0;
+    QSGD3D12Engine *m_engine = nullptr;
 
     QSGMaterialType *m_lastMaterialType = nullptr;
     QSGD3D12PipelineState m_pipelineState;
@@ -111,6 +118,8 @@ private:
     QRect m_activeScissorRect;
     QRect m_lastDeviceRect;
     bool m_projectionChangedDueToDeviceSize;
+
+    uint m_renderTarget = 0;
 };
 
 QT_END_NAMESPACE

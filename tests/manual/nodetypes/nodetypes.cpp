@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     qDebug("  [I] - Images");
     qDebug("  [T] - Text");
     qDebug("  [A] - Render thread Animator");
+    qDebug("  [L] - Layers");
     qDebug("\nPress S to stop the currently running test\n");
 
     Helper helper;

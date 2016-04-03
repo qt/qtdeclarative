@@ -276,13 +276,13 @@ public:
 
     void beginFrame();
     void endFrame();
+    void beginLayer();
+    void endLayer();
 
-    void resetVertexBuffer(const quint8 *data, int size);
-    void markVertexBufferDirty(int offset, int size);
-    void resetIndexBuffer(const quint8 *data, int size);
-    void markIndexBufferDirty(int offset, int size);
-    void resetConstantBuffer(const quint8 *data, int size);
-    void markConstantBufferDirty(int offset, int size);
+    uint genBuffer();
+    void releaseBuffer(uint id);
+    void resetBuffer(uint id, const quint8 *data, int size);
+    void markBufferDirty(uint id, int offset, int size);
 
     enum ClearFlag {
         ClearDepth = 0x1,
@@ -300,10 +300,21 @@ public:
 
     void finalizePipeline(const QSGD3D12PipelineState &pipelineState);
 
-    void queueDraw(QSGGeometry::DrawingMode mode, int count,
-                   int vboOffset, int vboSize, int vboStride,
-                   int cboOffset,
-                   int startIndexIndex = -1, QSGD3D12Format indexFormat = FmtUnsignedShort);
+    struct DrawParams {
+        QSGGeometry::DrawingMode mode = QSGGeometry::DrawTriangles;
+        int count = 0;
+        uint vertexBuf = 0;
+        uint indexBuf = 0;
+        uint constantBuf = 0;
+        int vboOffset = 0;
+        int vboSize = 0;
+        int vboStride = 0;
+        int cboOffset = 0;
+        int startIndexIndex = -1;
+        QSGD3D12Format indexFormat = FmtUnsignedShort;
+    };
+
+    void queueDraw(const DrawParams &params);
 
     void present();
     void waitGPU();

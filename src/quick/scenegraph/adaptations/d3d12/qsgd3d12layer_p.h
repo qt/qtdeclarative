@@ -59,6 +59,8 @@ class QSGD3D12RenderContext;
 
 class QSGD3D12Layer : public QSGLayer
 {
+    Q_OBJECT
+
 public:
     QSGD3D12Layer(QSGD3D12RenderContext *rc);
     ~QSGD3D12Layer();
@@ -84,13 +86,30 @@ public:
     void setDevicePixelRatio(qreal ratio) override;
     void setMirrorHorizontal(bool mirror) override;
     void setMirrorVertical(bool mirror) override;
+
+public Q_SLOTS:
     void markDirtyTexture() override;
     void invalidated() override;
 
 private:
     void cleanup();
+    void resetRenderTarget();
+    void updateContent();
 
     QSGD3D12RenderContext *m_rc;
+    uint m_rt = 0;
+    QSize m_rtSize;
+    QSize m_size;
+    QRectF m_rect;
+    QSGNode *m_item = nullptr;
+    QSGRenderer *m_renderer = nullptr;
+    float m_dpr = 1;
+    bool m_mirrorHorizontal = false;
+    bool m_mirrorVertical = true;
+    bool m_live = true;
+    bool m_recursive = false;
+    bool m_dirtyTexture = true;
+    bool m_updateContentPending = false;
 };
 
 QT_END_NAMESPACE

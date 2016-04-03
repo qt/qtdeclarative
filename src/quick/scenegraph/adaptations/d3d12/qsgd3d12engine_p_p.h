@@ -140,13 +140,13 @@ public:
 
     void beginFrame();
     void endFrame();
+    void beginLayer();
+    void endLayer();
 
-    void resetVertexBuffer(const quint8 *data, int size);
-    void markVertexBufferDirty(int offset, int size);
-    void resetIndexBuffer(const quint8 *data, int size);
-    void markIndexBufferDirty(int offset, int size);
-    void resetConstantBuffer(const quint8 *data, int size);
-    void markConstantBufferDirty(int offset, int size);
+    uint genBuffer();
+    void releaseBuffer(uint id);
+    void resetBuffer(uint id, const quint8 *data, int size);
+    void markBufferDirty(uint id, int offset, int size);
 
     void queueViewport(const QRect &rect);
     void queueScissor(const QRect &rect);
@@ -158,10 +158,7 @@ public:
 
     void finalizePipeline(const QSGD3D12PipelineState &pipelineState);
 
-    void queueDraw(QSGGeometry::DrawingMode mode, int count,
-                   int vboOffset, int vboSize, int vboStride,
-                   int cboOffset,
-                   int startIndexIndex, QSGD3D12Format indexFormat);
+    void queueDraw(const QSGD3D12Engine::DrawParams &params);
 
     void present();
     void waitGPU();
@@ -206,30 +203,15 @@ private:
 
     ID3D12Resource *createBuffer(int size);
 
-    struct CPUBufferRef {
-        const quint8 *p = nullptr;
-        quint32 size = 0;
-        bool allDirty = true;
-        QVector<QPair<int, int> > dirty;
-        CPUBufferRef() { dirty.reserve(64); }
-    };
+    typedef QVector<QPair<int, int> > DirtyList;
+    void addDirtyRange(DirtyList *dirty, int offset, int size, int bufferSize);
 
     struct PersistentFrameData {
-        struct ChangeTrackedBuffer {
-            ComPtr<ID3D12Resource> buffer;
-            QVector<QPair<int, int> > totalDirtyInFrame;
-            quint32 dataSize = 0;
-        };
-        ChangeTrackedBuffer vertex;
-        ChangeTrackedBuffer index;
-        ChangeTrackedBuffer constant;
         ComPtr<ID3D12DescriptorHeap> gpuCbvSrvUavHeap;
         int gpuCbvSrvUavHeapSize;
         int cbvSrvUavNextFreeDescriptorIndex;
         QSet<uint> pendingTextureUploads;
         QSet<uint> pendingTextureMipMap;
-        QSet<uint> pendingTextureReleases;
-        QSet<uint> outOfFramePendingTextureReleases;
         struct DeleteQueueEntry {
             ComPtr<ID3D12Resource> res;
             ComPtr<ID3D12DescriptorHeap> descHeap;
@@ -237,17 +219,34 @@ private:
         };
         QVector<DeleteQueueEntry> deleteQueue;
         QVector<DeleteQueueEntry> outOfFrameDeleteQueue;
+        QSet<uint> buffersUsedInDrawCallSet;
+        QSet<uint> buffersUsedInFrame;
+        struct PendingRelease {
+            enum Type {
+                TypeTexture,
+                TypeBuffer
+            };
+            Type type = TypeTexture;
+            uint id = 0;
+            PendingRelease(Type type, uint id) : type(type), id(id) { }
+            PendingRelease() { }
+            bool operator==(const PendingRelease &other) const { return type == other.type && id == other.id; }
+        };
+        QSet<PendingRelease> pendingReleases;
+        QSet<PendingRelease> outOfFramePendingReleases;
     };
+    friend uint qHash(const PersistentFrameData::PendingRelease &pr, uint seed);
 
     void deferredDelete(ComPtr<ID3D12Resource> res);
     void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh);
     void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h);
 
-    void markCPUBufferDirty(CPUBufferRef *dst, PersistentFrameData::ChangeTrackedBuffer *buf, int offset, int size);
-    void ensureBuffer(CPUBufferRef *src,  PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
-    void updateBuffer(CPUBufferRef *src, PersistentFrameData::ChangeTrackedBuffer *buf, const char *dbgstr);
+    struct Buffer;
+    void ensureBuffer(Buffer *buf);
+    void updateBuffer(Buffer *buf);
 
-    void beginDrawCalls(bool firstInFrame = false);
+    void beginDrawCalls();
+    void beginFrameDraw();
     void endDrawCalls(bool lastInFrame = false);
 
     static const int MAX_SWAP_CHAIN_BUFFER_COUNT = 4;
@@ -272,9 +271,9 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE defaultRTV[MAX_SWAP_CHAIN_BUFFER_COUNT];
     ComPtr<ID3D12Resource> defaultDS;
     D3D12_CPU_DESCRIPTOR_HANDLE defaultDSV;
-    ComPtr<ID3D12CommandAllocator> commandAllocator[MAX_FRAME_IN_FLIGHT_COUNT];
+    ComPtr<ID3D12CommandAllocator> frameCommandAllocator[MAX_FRAME_IN_FLIGHT_COUNT];
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
-    ComPtr<ID3D12GraphicsCommandList> commandList;
+    ComPtr<ID3D12GraphicsCommandList> frameCommandList;
     ComPtr<ID3D12GraphicsCommandList> copyCommandList;
     QSGD3D12CPUDescriptorHeapManager cpuDescHeapManager;
     quint64 presentFrameIndex;
@@ -282,12 +281,11 @@ private:
     QSGD3D12CPUWaitableFence *presentFence = nullptr;
     QSGD3D12CPUWaitableFence *frameFence[MAX_FRAME_IN_FLIGHT_COUNT];
 
-    CPUBufferRef vertexData;
-    CPUBufferRef indexData;
-    CPUBufferRef constantData;
-
     PersistentFrameData pframeData[MAX_FRAME_IN_FLIGHT_COUNT];
     int currentPFrameIndex;
+    ID3D12GraphicsCommandList *commandList = nullptr;
+    int activeLayers = 0;
+    int currentLayerDepth = 0;
 
     struct PSOCacheEntry {
         ComPtr<ID3D12PipelineState> pso;
@@ -329,7 +327,7 @@ private:
 
     struct TransientFrameData {
         QSGGeometry::DrawingMode drawingMode;
-        bool indexBufferSet;
+        uint currentIndexBuffer;
         struct ActiveTexture {
             enum Type {
                 TypeTexture,
@@ -384,7 +382,39 @@ private:
 
     QVector<RenderTarget> renderTargets;
     uint currentRenderTarget;
+
+    struct CPUBufferRef {
+        const quint8 *p = nullptr;
+        quint32 size = 0;
+        DirtyList dirty;
+        CPUBufferRef() { dirty.reserve(16); }
+    };
+
+    struct Buffer {
+        enum Flag {
+            EntryInUse = 0x01
+        };
+        int flags = 0;
+        bool entryInUse() const { return flags & EntryInUse; }
+        struct InFlightData {
+            ComPtr<ID3D12Resource> buffer;
+            DirtyList dirty;
+            quint32 dataSize = 0;
+            quint32 resourceSize = 0;
+            InFlightData() { dirty.reserve(16); }
+        };
+        InFlightData d[MAX_FRAME_IN_FLIGHT_COUNT];
+        CPUBufferRef cpuDataRef;
+    };
+
+    QVector<Buffer> buffers;
 };
+
+inline uint qHash(const QSGD3D12EnginePrivate::PersistentFrameData::PendingRelease &pr, uint seed = 0)
+{
+    Q_UNUSED(seed);
+    return pr.id + pr.type;
+}
 
 QT_END_NAMESPACE
 

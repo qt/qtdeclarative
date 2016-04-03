@@ -89,6 +89,10 @@ protected:
     uint m_dirtyGeometry : 1;
 
     QSGGeometry m_geometry;
+
+    QSGDynamicTexture *m_dynamicTexture;
+    QSize m_dynamicTextureSize;
+    QRectF m_dynamicTextureSubRect;
 };
 
 QT_END_NAMESPACE

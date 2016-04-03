@@ -77,15 +77,24 @@ QSGD3D12Renderer::QSGD3D12Renderer(QSGRenderContext *context)
     m_freshPipelineState.shaders.rootSig.textureViews.reserve(4);
 }
 
+QSGD3D12Renderer::~QSGD3D12Renderer()
+{
+    if (m_engine) {
+        m_engine->releaseBuffer(m_vertexBuf);
+        m_engine->releaseBuffer(m_indexBuf);
+        m_engine->releaseBuffer(m_constantBuf);
+    }
+}
+
 void QSGD3D12Renderer::renderScene(GLuint fboId)
 {
-    Q_UNUSED(fboId);
+    m_renderTarget = fboId;
 
-    struct B : public QSGBindable {
+    struct DummyBindable : public QSGBindable {
         void bind() const { }
     } bindable;
 
-    QSGRenderer::renderScene(bindable);
+    QSGRenderer::renderScene(bindable); // calls back render()
 }
 
 // Search through the node set and remove nodes that are descendants of other
@@ -207,7 +216,10 @@ void QSGD3D12Renderer::render()
 {
     QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(context());
     m_engine = rc->engine();
-    m_engine->beginFrame();
+    if (!m_layerRenderer)
+        m_engine->beginFrame();
+    else
+        m_engine->beginLayer();
 
     m_activeScissorRect = QRect();
 
@@ -226,9 +238,22 @@ void QSGD3D12Renderer::render()
 
         buildRenderList(rootNode(), nullptr);
 
-        m_engine->resetVertexBuffer(m_vboData.data(), m_vboData.size());
-        m_engine->resetIndexBuffer(m_iboData.data(), m_iboData.size());
-        m_engine->resetConstantBuffer(m_cboData.data(), m_cboData.size());
+        if (!m_vertexBuf)
+            m_vertexBuf = m_engine->genBuffer();
+        m_engine->resetBuffer(m_vertexBuf, m_vboData.data(), m_vboData.size());
+
+        if (!m_constantBuf)
+            m_constantBuf = m_engine->genBuffer();
+        m_engine->resetBuffer(m_constantBuf, m_cboData.data(), m_cboData.size());
+
+        if (m_iboData.size()) {
+            if (!m_indexBuf)
+                m_indexBuf = m_engine->genBuffer();
+            m_engine->resetBuffer(m_indexBuf, m_iboData.data(), m_iboData.size());
+        } else if (m_indexBuf) {
+            m_engine->releaseBuffer(m_indexBuf);
+            m_indexBuf = 0;
+        }
 
         if (Q_UNLIKELY(debug_build())) {
             qDebug("renderList: %d elements in total", m_renderList.size());
@@ -303,9 +328,10 @@ void QSGD3D12Renderer::render()
     m_nodeDirtyMap.clear();
 
     // Finalize buffers and execute commands.
-    m_engine->endFrame();
-
-    m_engine = nullptr;
+    if (!m_layerRenderer)
+        m_engine->endFrame();
+    else
+        m_engine->endLayer();
 }
 
 void QSGD3D12Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
@@ -361,7 +387,7 @@ void QSGD3D12Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGD3D12Renderer::renderElements()
 {
-    m_engine->queueSetRenderTarget();
+    m_engine->queueSetRenderTarget(m_renderTarget);
     m_engine->queueViewport(viewportRect());
     m_engine->queueClearRenderTarget(clearColor());
     m_engine->queueClearDepthStencil(1, 0, QSGD3D12Engine::ClearDepth | QSGD3D12Engine::ClearStencil);
@@ -473,7 +499,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
                                                                cboPtr);
 
     if (updRes.testFlag(QSGD3D12Material::UpdatedConstantBuffer))
-        m_engine->markConstantBufferDirty(e.cboOffset, e.cboSize);
+        m_engine->markBufferDirty(m_constantBuf, e.cboOffset, e.cboSize);
 
     if (updRes.testFlag(QSGD3D12Material::UpdatedBlendFactor))
         m_engine->queueSetBlendFactor(extraState.blendFactor);
@@ -524,20 +550,29 @@ void QSGD3D12Renderer::setInputLayout(const QSGGeometry *g, QSGD3D12PipelineStat
 
 void QSGD3D12Renderer::queueDrawCall(const QSGGeometry *g, const QSGD3D12Renderer::Element &e)
 {
+    QSGD3D12Engine::DrawParams dp;
+    dp.mode = QSGGeometry::DrawingMode(g->drawingMode());
+    dp.vertexBuf = m_vertexBuf;
+    dp.constantBuf = m_constantBuf;
+    dp.vboOffset = e.vboOffset;
+    dp.vboSize = g->vertexCount() * g->sizeOfVertex();
+    dp.vboStride = g->sizeOfVertex();
+    dp.cboOffset = e.cboOffset;
+
     if (e.iboOffset >= 0) {
         const QSGGeometry::Type indexType = QSGGeometry::Type(g->indexType());
         const QSGD3D12Format indexFormat = QSGD3D12Engine::toDXGIFormat(indexType);
         if (indexFormat == FmtUnknown)
             qFatal("QSGD3D12Renderer: unsupported index type 0x%x", indexType);
-        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->indexCount(),
-                            e.vboOffset, g->vertexCount() * g->sizeOfVertex(), g->sizeOfVertex(),
-                            e.cboOffset,
-                            e.iboOffset / e.iboStride, indexFormat);
+        dp.count = g->indexCount();
+        dp.indexBuf = m_indexBuf;
+        dp.startIndexIndex = e.iboOffset / e.iboStride;
+        dp.indexFormat = indexFormat;
     } else {
-        m_engine->queueDraw(QSGGeometry::DrawingMode(g->drawingMode()), g->vertexCount(),
-                            e.vboOffset, g->vertexCount() * g->sizeOfVertex(), g->sizeOfVertex(),
-                            e.cboOffset);
+        dp.count = g->vertexCount();
     }
+
+    m_engine->queueDraw(dp);
 }
 
 void QSGD3D12Renderer::setupClipping(const QSGGeometryNode *gn, int elementIndex)
@@ -665,7 +700,7 @@ void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementInd
     Q_ASSERT(ce.cboSize > 0);
     quint8 *p = m_cboData.data() + ce.cboOffset;
     memcpy(p, m.constData(), 16 * sizeof(float));
-    m_engine->markConstantBufferDirty(ce.cboOffset, ce.cboSize);
+    m_engine->markBufferDirty(m_constantBuf, ce.cboOffset, ce.cboSize);
 
     queueDrawCall(g, ce);
 

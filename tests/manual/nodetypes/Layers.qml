@@ -41,32 +41,66 @@
 import QtQuick 2.0
 
 Item {
-    focus: true
-
-    Loader {
+    Rectangle {
+        color: "lightGray"
         anchors.fill: parent
-        id: loader
-    }
+        anchors.margins: 10
 
-    Keys.onPressed: {
-        if (event.key === Qt.Key_S)
-            loader.source = "";
-
-        if (event.key === Qt.Key_R)
-            loader.source = "qrc:/Rects.qml";
-        if (event.key === Qt.Key_4)
-            loader.source = "qrc:/LotsOfRects.qml";
-
-        if (event.key === Qt.Key_I)
-            loader.source = "qrc:/Images.qml";
-
-        if (event.key === Qt.Key_T)
-            loader.source = "qrc:/Text.qml";
-
-        if (event.key === Qt.Key_A)
-            loader.source = "qrc:/Animators.qml";
-
-        if (event.key === Qt.Key_L)
-            loader.source = "qrc:/Layers.qml";
+        Row {
+            anchors.fill: parent
+            anchors.margins: 10
+            Rectangle {
+                color: "red"
+//                ColorAnimation on color {
+//                    from: "black"
+//                    to: "white"
+//                    duration: 2000
+//                    loops: Animation.Infinite
+//                }
+                width: 300
+                height: 100
+                layer.enabled: true
+                Text { text: "this is in a layer, going through an offscreen render target" }
+                clip: true
+                Rectangle {
+                    color: "lightGreen"
+                    width: 50
+                    height: 50
+                    x: 275
+                    y: 75
+                }
+            }
+            Rectangle {
+                color: "white"
+                width: 300
+                height: 100
+                Text { text: "this is not a layer" }
+            }
+            Rectangle {
+                color: "green"
+                width: 300
+                height: 100
+                layer.enabled: true
+                Text { text: "this is another layer" }
+                Rectangle {
+                    border.width: 4
+                    border.color: "black"
+                    anchors.centerIn: parent
+                    width: 150
+                    height: 50
+                    layer.enabled: true
+                    Text {
+                        anchors.centerIn: parent
+                        text: "layer in a layer"
+                    }
+                }
+                Image {
+                    source: "qrc:/face-smile.png"
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
+                }
+            }
+        }
     }
 }
