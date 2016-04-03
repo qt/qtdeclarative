@@ -37,67 +37,63 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGFONTGLYPHCACHE_H
+#define QSGOPENVGFONTGLYPHCACHE_H
 
-#include <QtQuick/qsgnode.h>
+#include <QtGui/QGlyphRun>
+#include <QtCore/QSet>
+#include <QtCore/QLinkedList>
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QSGOpenVGFontGlyphCache;
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGFontGlyphCacheManager
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGFontGlyphCacheManager();
+    ~QSGOpenVGFontGlyphCacheManager();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    QSGOpenVGFontGlyphCache *cache(const QRawFont &font);
+    void insertCache(const QRawFont &font, QSGOpenVGFontGlyphCache *cache);
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+private:
+    static QString fontKey(const QRawFont &font);
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    QHash<QString, QSGOpenVGFontGlyphCache *> m_caches;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+class QSGOpenVGFontGlyphCache
+{
+public:
+    QSGOpenVGFontGlyphCache(QSGOpenVGFontGlyphCacheManager *manager, const QRawFont &font);
+    ~QSGOpenVGFontGlyphCache();
+
+    const QSGOpenVGFontGlyphCacheManager *manager() const { return m_manager; }
+    const QRawFont &referenceFont() const { return m_referenceFont; }
+    int glyphCount() const { return m_glyphCount; }
+
+    void populate(const QVector<quint32> &glyphs);
+    void release(const QVector<quint32> &glyphs);
+
+    VGFont font() { return m_font; }
+
+private:
+    void requestGlyphs(const QSet<quint32> &glyphs);
+    void referenceGlyphs(const QSet<quint32> &glyphs);
+    void releaseGlyphs(const QSet<quint32> &glyphs);
+
+    QSGOpenVGFontGlyphCacheManager *m_manager;
+    QRawFont m_referenceFont;
+    int m_glyphCount;
+
+    VGFont m_font;
+    QSet<quint32> m_cachedGlyphs;
+    QSet<quint32> m_unusedGlyphs;
+};
+
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGFONTGLYPHCACHE_H

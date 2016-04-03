@@ -37,67 +37,42 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#include "qsgopenvgadaptation_p.h"
 
-#include <QtQuick/qsgnode.h>
+#include "qsgopenvgcontext_p.h"
+#include "qsgopenvgrenderloop_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+QSGOpenVGAdaptation::QSGOpenVGAdaptation(QObject *parent)
+    : QSGContextPlugin(parent)
 {
-public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+}
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+QStringList QSGOpenVGAdaptation::keys() const
+{
+    return QStringList() << QLatin1String("openvg");
+}
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+QSGContext *QSGOpenVGAdaptation::create(const QString &key) const
+{
+    Q_UNUSED(key)
+    if (!instance)
+        instance = new QSGOpenVGContext();
+    return instance;
+}
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+QSGRenderLoop *QSGOpenVGAdaptation::createWindowManager()
+{
+    return new QSGOpenVGRenderLoop();
+}
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+QSGContextFactoryInterface::Flags QSGOpenVGAdaptation::flags(const QString &key) const
+{
+    Q_UNUSED(key)
+    return 0;
+}
 
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+QSGOpenVGContext *QSGOpenVGAdaptation::instance = nullptr;
 
 QT_END_NAMESPACE
-
-#endif

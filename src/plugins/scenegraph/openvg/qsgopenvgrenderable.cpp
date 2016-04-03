@@ -37,67 +37,41 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
-
-#include <QtQuick/qsgnode.h>
+#include "qsgopenvgrenderable.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+QSGOpenVGRenderable::QSGOpenVGRenderable()
+    : m_opacity(1.0f)
 {
-public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
+    m_opacityPaint = vgCreatePaint();
+}
+
+QSGOpenVGRenderable::~QSGOpenVGRenderable()
+{
+    vgDestroyPaint(m_opacityPaint);
+}
+
+void QSGOpenVGRenderable::setOpacity(float opacity)
+{
+    if (m_opacity == opacity)
+        return;
+
+    m_opacity = opacity;
+    VGfloat values[] = {
+        1.0f, 1.0f, 1.0f, m_opacity
     };
+    vgSetParameterfv(m_opacityPaint, VG_PAINT_COLOR, 4, values);
+}
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+float QSGOpenVGRenderable::opacity() const
+{
+    return m_opacity;
+}
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
-
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+VGPaint QSGOpenVGRenderable::opacityPaint() const
+{
+    return m_opacityPaint;
+}
 
 QT_END_NAMESPACE
-
-#endif

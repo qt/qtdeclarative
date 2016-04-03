@@ -37,67 +37,54 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#include "qsgopenvgrenderer_p.h"
+#include "qsgopenvgcontext_p.h"
+#include "qsgopenvgnodevisitor.h"
+#include "qopenvgcontext_p.h"
+#include "qsgopenvghelpers.h"
 
-#include <QtQuick/qsgnode.h>
+#include <QtGui/QWindow>
+
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+QSGOpenVGRenderer::QSGOpenVGRenderer(QSGRenderContext *context)
+    : QSGRenderer(context)
 {
-public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+}
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+QSGOpenVGRenderer::~QSGOpenVGRenderer()
+{
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+}
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+void QSGOpenVGRenderer::renderScene(uint fboId)
+{
+    Q_UNUSED(fboId)
+    class B : public QSGBindable
+    {
+    public:
+        void bind() const { }
+    } bindable;
+    QSGRenderer::renderScene(bindable);
+}
 
-    virtual ~QSGRendererInterface();
+void QSGOpenVGRenderer::render()
+{
+    //Clear the window geometry with the clear color
+    vgSetfv(VG_CLEAR_COLOR, 4, QSGOpenVGHelpers::qColorToVGColor(clearColor()).constData());
+    vgClear(0, 0, VG_MAXINT, VG_MAXINT);
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    // Visit each node to render scene
+    QSGOpenVGNodeVisitor rendererVisitor;
+    rendererVisitor.visitChildren(rootNode());
+}
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+void QSGOpenVGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
+{
+    QSGRenderer::nodeChanged(node, state);
+}
 
 QT_END_NAMESPACE
-
-#endif

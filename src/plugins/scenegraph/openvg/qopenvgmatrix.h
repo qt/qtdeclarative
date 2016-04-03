@@ -37,67 +37,63 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QOPENVGMATRIX_H
+#define QOPENVGMATRIX_H
 
-#include <QtQuick/qsgnode.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/QDataStream>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QOpenVGMatrix
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QOpenVGMatrix();
+    explicit QOpenVGMatrix(const float *values);
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    const float& operator()(int row, int column) const;
+    float& operator()(int row, int column);
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    bool isIdentity() const;
+    void setToIdentity();
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+    void fill(float value);
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+    QOpenVGMatrix transposed() const;
 
-    virtual ~QSGRendererInterface();
+    QOpenVGMatrix& operator+=(const QOpenVGMatrix& other);
+    QOpenVGMatrix& operator-=(const QOpenVGMatrix& other);
+    QOpenVGMatrix& operator*=(const QOpenVGMatrix& other);
+    QOpenVGMatrix& operator*=(float factor);
+    QOpenVGMatrix& operator/=(float divisor);
+    friend QOpenVGMatrix operator*(const QOpenVGMatrix& m1, const QOpenVGMatrix& m2);
+#ifndef QT_NO_DEBUG_STREAM
+    friend QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m);
+#endif
+    bool operator==(const QOpenVGMatrix& other) const;
+    bool operator!=(const QOpenVGMatrix& other) const;
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    void copyDataTo(float *values) const;
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
+    float *data() { return *m; }
+    const float *data() const { return *m; }
+    const float *constData() const { return *m; }
 
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+private:
+    float m[3][3];
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+QOpenVGMatrix operator*(const QOpenVGMatrix& m1, const QOpenVGMatrix& m2);
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m);
+#endif
+
+#ifndef QT_NO_DATASTREAM
+QDataStream &operator<<(QDataStream &, const QOpenVGMatrix &);
+QDataStream &operator>>(QDataStream &, QOpenVGMatrix &);
+#endif
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QOPENVGMATRIX_H

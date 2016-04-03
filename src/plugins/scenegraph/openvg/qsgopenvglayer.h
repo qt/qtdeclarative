@@ -37,67 +37,79 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGLAYER_H
+#define QSGOPENVGLAYER_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <private/qsgcontext_p.h>
+
+#include "qopenvgcontext_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QSGOpenVGRenderer;
+class QSGOpenVGRenderContext;
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGLayer : public QSGLayer
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGLayer(QSGRenderContext *renderContext);
+    ~QSGOpenVGLayer();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    // QSGTexture interface
+public:
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    void bind() override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    // QSGDynamicTexture interface
+public:
+    bool updateTexture() override;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+    // QSGLayer interface
+public:
+    void setItem(QSGNode *item) override;
+    void setRect(const QRectF &rect) override;
+    void setSize(const QSize &size) override;
+    void scheduleUpdate() override;
+    QImage toImage() const override;
+    void setLive(bool live) override;
+    void setRecursive(bool recursive) override;
+    void setFormat(uint format) override;
+    void setHasMipmaps(bool mipmap) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setMirrorHorizontal(bool mirror) override;
+    void setMirrorVertical(bool mirror) override;
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+public slots:
+    void markDirtyTexture() override;
+    void invalidated() override;
 
-    virtual ~QSGRendererInterface();
+private:
+    void grab();
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    QSGNode *m_item;
+    QSGOpenVGRenderContext *m_context;
+    QSGOpenVGRenderer *m_renderer;
+    QRectF m_rect;
+    QSize m_size;
+    qreal m_device_pixel_ratio;
+    bool m_mirrorHorizontal;
+    bool m_mirrorVertical;
+    bool m_live;
+    bool m_grab;
+    bool m_recursive;
+    bool m_dirtyTexture;
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    QOpenVGContext *m_vgContext;
+    VGImage m_image;
+    QSize m_imageSize;
+    EGLSurface m_renderTarget;
+    EGLContext m_layerContext;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGLAYER_H

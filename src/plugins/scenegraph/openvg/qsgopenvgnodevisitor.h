@@ -37,67 +37,68 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGNODEVISITOR_H
+#define QSGOPENVGNODEVISITOR_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <QtCore/QStack>
+
+#include "qopenvgmatrix.h"
+
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGRenderable;
+class QSGOpenVGNodeVisitor : public QSGNodeVisitorEx
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
+    QSGOpenVGNodeVisitor();
+
+    bool visit(QSGTransformNode *) override;
+    void endVisit(QSGTransformNode *) override;
+    bool visit(QSGClipNode *) override;
+    void endVisit(QSGClipNode *) override;
+    bool visit(QSGGeometryNode *) override;
+    void endVisit(QSGGeometryNode *) override;
+    bool visit(QSGOpacityNode *) override;
+    void endVisit(QSGOpacityNode *) override;
+    bool visit(QSGInternalImageNode *) override;
+    void endVisit(QSGInternalImageNode *) override;
+    bool visit(QSGPainterNode *) override;
+    void endVisit(QSGPainterNode *) override;
+    bool visit(QSGInternalRectangleNode *) override;
+    void endVisit(QSGInternalRectangleNode *) override;
+    bool visit(QSGGlyphNode *) override;
+    void endVisit(QSGGlyphNode *) override;
+    bool visit(QSGRootNode *) override;
+    void endVisit(QSGRootNode *) override;
+    bool visit(QSGSpriteNode *) override;
+    void endVisit(QSGSpriteNode *) override;
+    bool visit(QSGRenderNode *) override;
+    void endVisit(QSGRenderNode *) override;
+
+private:
+    struct ClipState {
+        ClipState(VGPath p, QOpenVGMatrix t)
+        {
+            path = p;
+            transform = t;
+        }
+
+        VGPath path;
+        QOpenVGMatrix transform;
     };
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    VGPath generateClipPath(const QRectF &rect) const;
+    void renderRenderableNode(QSGOpenVGRenderable *node);
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    QStack<QOpenVGMatrix> m_transformStack;
+    QStack<float> m_opacityState;
+    QStack<ClipState*> m_clipStack;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGNODEVISITOR_H

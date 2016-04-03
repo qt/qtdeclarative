@@ -77,6 +77,7 @@ QT_BEGIN_NAMESPACE
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenGL OpenGL ES 2.0 or higher
     \value Direct3D12 Direct3D 12
+    \value OpenVG OpenVG via EGL
   */
 
 /*!

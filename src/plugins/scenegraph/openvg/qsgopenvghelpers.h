@@ -37,67 +37,28 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGHELPERS_H
+#define QSGOPENVGHELPERS_H
 
-#include <QtQuick/qsgnode.h>
+#include <QtGui/QPainterPath>
+#include <QtGui/QColor>
+#include <QtGui/QImage>
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+namespace QSGOpenVGHelpers {
 
-class Q_QUICK_EXPORT QSGRendererInterface
-{
-public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+VGPath qPainterPathToVGPath(const QPainterPath &path);
+void qDrawTiled(VGImage image, const QSize imageSize, const QRectF &targetRect, const QPointF offset, float scaleX, float scaleY);
+void qDrawBorderImage(VGImage image, const QSizeF &textureSize, const QRectF &targetRect, const QRectF &innerTargetRect, const QRectF &subSourceRect);
+void qDrawSubImage(VGImage image, const QRectF &sourceRect, const QPointF &destOffset);
+const QVector<VGfloat> qColorToVGColor(const QColor &color, float opacity = 1.0f);
+VGImageFormat qImageFormatToVGImageFormat(QImage::Format format);
+QImage::Format qVGImageFormatToQImageFormat(VGImageFormat format);
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
-
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
-
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGHELPERS_H

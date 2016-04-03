@@ -37,67 +37,60 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGINTERNALRECTANGLENODE_H
+#define QSGOPENVGINTERNALRECTANGLENODE_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include "qsgopenvgrenderable.h"
+
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGInternalRectangleNode : public QSGInternalRectangleNode, public QSGOpenVGRenderable
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGInternalRectangleNode();
+    ~QSGOpenVGInternalRectangleNode();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void setRect(const QRectF &rect) override;
+    void setColor(const QColor &color) override;
+    void setPenColor(const QColor &color) override;
+    void setPenWidth(qreal width) override;
+    void setGradientStops(const QGradientStops &stops) override;
+    void setRadius(qreal radius) override;
+    void setAligned(bool aligned) override;
+    void update() override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    void render() override;
+    void setOpacity(float opacity) override;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+private:
+    void createVGResources();
+    void destroyVGResources();
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+    void generateRectanglePath(const QRectF &rect, float radius, VGPath path) const;
+    void generateRectangleAndBorderPaths(const QRectF &rect, float penWidth, float radius, VGPath inside, VGPath outside) const;
+    void generateBorderPath(const QRectF &rect, float borderWidth, float borderHeight, float radius, VGPath path) const;
 
-    virtual ~QSGRendererInterface();
+    bool m_pathDirty = true;
+    bool m_fillDirty = true;
+    bool m_strokeDirty = true;
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    QRectF m_rect;
+    QColor m_fillColor;
+    QColor m_strokeColor;
+    qreal m_penWidth = 0.0;
+    qreal m_radius = 0.0;
+    bool m_aligned = false;
+    QGradientStops m_gradientStops;
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    VGPath m_rectanglePath;
+    VGPath m_borderPath;
+    VGPaint m_rectanglePaint;
+    VGPaint m_borderPaint;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGINTERNALRECTANGLENODE_H

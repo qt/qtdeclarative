@@ -37,67 +37,58 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGRENDERLOOP_H
+#define QSGOPENVGRENDERLOOP_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgrenderloop_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QOpenVGContext;
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGRenderLoop : public QSGRenderLoop
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
+    QSGOpenVGRenderLoop();
+    ~QSGOpenVGRenderLoop();
+
+
+    void show(QQuickWindow *window) override;
+    void hide(QQuickWindow *window) override;
+
+    void windowDestroyed(QQuickWindow *window) override;
+
+    void renderWindow(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window) override;
+    QImage grab(QQuickWindow *window) override;
+
+    void maybeUpdate(QQuickWindow *window) override;
+    void update(QQuickWindow *window) override;
+    void handleUpdateRequest(QQuickWindow *window) override;
+
+    void releaseResources(QQuickWindow *) override;
+
+    QSurface::SurfaceType windowSurfaceType() const override;
+
+    QAnimationDriver *animationDriver() const override;
+
+    QSGContext *sceneGraphContext() const override;
+    QSGRenderContext *createRenderContext(QSGContext *) const override;
+
+    struct WindowData {
+        bool updatePending : 1;
+        bool grabOnly : 1;
     };
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    QHash<QQuickWindow *, WindowData> m_windows;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    QSGContext *sg;
+    QSGRenderContext *rc;
+    QOpenVGContext *vg;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    QImage grabContent;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGRENDERLOOP_H

@@ -37,67 +37,56 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGINTERNALIMAGENODE_H
+#define QSGOPENVGINTERNALIMAGENODE_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include "qsgopenvgrenderable.h"
+
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGInternalImageNode : public QSGInternalImageNode, public QSGOpenVGRenderable
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGInternalImageNode();
+    ~QSGOpenVGInternalImageNode();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void render() override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    void setTargetRect(const QRectF &rect) override;
+    void setInnerTargetRect(const QRectF &rect) override;
+    void setInnerSourceRect(const QRectF &rect) override;
+    void setSubSourceRect(const QRectF &rect) override;
+    void setTexture(QSGTexture *texture) override;
+    void setMirror(bool mirror) override;
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void update() override;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+    void preprocess() override;
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+private:
 
-    virtual ~QSGRendererInterface();
+    QRectF m_targetRect;
+    QRectF m_innerTargetRect;
+    QRectF m_innerSourceRect = QRectF(0, 0, 1, 1);
+    QRectF m_subSourceRect = QRectF(0, 0, 1, 1);
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    bool m_mirror = false;
+    bool m_smooth = true;
+    bool m_tileHorizontal = false;
+    bool m_tileVertical = false;
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
+    QSGTexture *m_texture = nullptr;
 
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    VGImage m_subSourceRectImage = 0;
+    bool m_subSourceRectImageDirty = true;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGINTERNALIMAGENODE_H

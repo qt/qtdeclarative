@@ -37,67 +37,87 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
-
-#include <QtQuick/qsgnode.h>
+#include "qsgopenvgtexture.h"
+#include "qsgopenvghelpers.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+QSGOpenVGTexture::QSGOpenVGTexture(const QImage &image, uint flags)
 {
-public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    Q_UNUSED(flags)
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    VGImageFormat format = QSGOpenVGHelpers::qImageFormatToVGImageFormat(image.format());
+    m_image = vgCreateImage(format, image.width(), image.height(), VG_IMAGE_QUALITY_BETTER);
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    // Do Texture Upload
+    vgImageSubData(m_image, image.constBits(), image.bytesPerLine(), format, 0, 0, image.width(), image.height());
+}
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+QSGOpenVGTexture::~QSGOpenVGTexture()
+{
+    vgDestroyImage(m_image);
+}
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+int QSGOpenVGTexture::textureId() const
+{
+    return static_cast<int>(m_image);
+}
 
-    virtual ~QSGRendererInterface();
+QSize QSGOpenVGTexture::textureSize() const
+{
+    VGint imageWidth = vgGetParameteri(m_image, VG_IMAGE_WIDTH);
+    VGint imageHeight = vgGetParameteri(m_image, VG_IMAGE_HEIGHT);
+    return QSize(imageWidth, imageHeight);
+}
 
-    virtual GraphicsApi graphicsApi() const = 0;
+bool QSGOpenVGTexture::hasAlphaChannel() const
+{
+    VGImageFormat format = static_cast<VGImageFormat>(vgGetParameteri(m_image, VG_IMAGE_FORMAT));
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
+    switch (format) {
+    case VG_sRGBA_8888:
+    case VG_sRGBA_8888_PRE:
+    case VG_sRGBA_5551:
+    case VG_sRGBA_4444:
+    case VG_lRGBA_8888:
+    case VG_lRGBA_8888_PRE:
+    case VG_A_8:
+    case VG_A_1:
+    case VG_A_4:
+    case VG_sARGB_8888:
+    case VG_sARGB_8888_PRE:
+    case VG_sARGB_1555:
+    case VG_sARGB_4444:
+    case VG_lARGB_8888:
+    case VG_lARGB_8888_PRE:
+    case VG_sBGRA_8888:
+    case VG_sBGRA_8888_PRE:
+    case VG_sBGRA_5551:
+    case VG_sBGRA_4444:
+    case VG_lBGRA_8888:
+    case VG_lBGRA_8888_PRE:
+    case VG_sABGR_8888:
+    case VG_sABGR_8888_PRE:
+    case VG_sABGR_1555:
+    case VG_sABGR_4444:
+    case VG_lABGR_8888:
+    case VG_lABGR_8888_PRE:
+        return true;
+        break;
+    default:
+        break;
+    }
+    return false;
+}
 
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
-};
+bool QSGOpenVGTexture::hasMipmaps() const
+{
+    return false;
+}
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
+void QSGOpenVGTexture::bind()
+{
+    // No need to bind
+}
 
 QT_END_NAMESPACE
-
-#endif

@@ -37,67 +37,61 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGPAINTERNODE_H
+#define QSGOPENVGPAINTERNODE_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <QtQuick/QQuickPaintedItem>
+#include "qsgopenvgrenderable.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QSGOpenVGTexture;
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGPainterNode : public QSGPainterNode, public QSGOpenVGRenderable
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGPainterNode(QQuickPaintedItem *item);
+    ~QSGOpenVGPainterNode();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target) override;
+    void setSize(const QSize &size) override;
+    void setDirty(const QRect &dirtyRect) override;
+    void setOpaquePainting(bool opaque) override;
+    void setLinearFiltering(bool linearFiltering) override;
+    void setMipmapping(bool mipmapping) override;
+    void setSmoothPainting(bool s) override;
+    void setFillColor(const QColor &c) override;
+    void setContentsScale(qreal s) override;
+    void setFastFBOResizing(bool dynamic) override;
+    void setTextureSize(const QSize &size) override;
+    QImage toImage() const override;
+    void update() override;
+    QSGTexture *texture() const override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    void render() override;
+    void paint();
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+private:
+    QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+    QQuickPaintedItem *m_item;
+    QSGOpenVGTexture *m_texture;
+    QImage m_image;
 
-    virtual ~QSGRendererInterface();
+    QSize m_size;
+    bool m_dirtyContents;
+    QRect m_dirtyRect;
+    bool m_opaquePainting;
+    bool m_linear_filtering;
+    bool m_smoothPainting;
+    QColor m_fillColor;
+    qreal m_contentsScale;
+    QSize m_textureSize;
 
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    bool m_dirtyGeometry;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGPAINTERNODE_H

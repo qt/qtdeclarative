@@ -37,67 +37,59 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGGLYPHNODE_H
+#define QSGOPENVGGLYPHNODE_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <QtCore/QVector>
+
+#include <VG/openvg.h>
+
+#include "qsgopenvgrenderable.h"
+#include "qsgopenvgfontglyphcache.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QSGOpenVGFontGlyphCache;
+class QSGOpenVGRenderContext;
+class QSGRenderContext;
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGGlyphNode : public QSGGlyphNode, public QSGOpenVGRenderable
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGGlyphNode(QSGRenderContext *rc);
+    ~QSGOpenVGGlyphNode();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
+    void setColor(const QColor &color) override;
+    void setStyle(QQuickText::TextStyle style) override;
+    void setStyleColor(const QColor &color) override;
+    QPointF baseLine() const override;
+    void setPreferredAntialiasingMode(AntialiasingMode) override;
+    void update() override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    void render() override;
+    void setOpacity(float opacity) override;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+private:
+    void drawGlyphsAtOffset(const QPointF &offset);
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+    QPointF m_position;
+    QGlyphRun m_glyphRun;
+    QColor m_color;
+    QSGGeometry m_geometry;
+    QQuickText::TextStyle m_style;
+    QColor m_styleColor;
 
-    virtual ~QSGRendererInterface();
+    QSGOpenVGFontGlyphCache *m_glyphCache;
+    QVector<VGfloat> m_xAdjustments;
+    QVector<VGfloat> m_yAdjustments;
+    VGPaint m_fontColorPaint;
+    VGPaint m_styleColorPaint;
 
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+    QSGOpenVGRenderContext *m_renderContext;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGGLYPHNODE_H

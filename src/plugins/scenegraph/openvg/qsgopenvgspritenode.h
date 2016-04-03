@@ -37,67 +37,42 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QSGOPENVGSPRITENODE_H
+#define QSGOPENVGSPRITENODE_H
 
-#include <QtQuick/qsgnode.h>
+#include <private/qsgadaptationlayer_p.h>
+#include "qsgopenvgrenderable.h"
 
 QT_BEGIN_NAMESPACE
-
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QSGOpenVGTexture;
+class QSGOpenVGSpriteNode : public QSGSpriteNode, public QSGOpenVGRenderable
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QSGOpenVGSpriteNode();
+    ~QSGOpenVGSpriteNode();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void setTexture(QSGTexture *texture) override;
+    void setTime(float time) override;
+    void setSourceA(const QPoint &source) override;
+    void setSourceB(const QPoint &source) override;
+    void setSpriteSize(const QSize &size) override;
+    void setSheetSize(const QSize &size) override;
+    void setSize(const QSizeF &size) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void update() override;
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
+    void render() override;
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
-
-    virtual ~QSGRendererInterface();
-
-    virtual GraphicsApi graphicsApi() const = 0;
-
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
-
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+private:
+    QSGOpenVGTexture *m_texture;
+    float m_time;
+    QPoint m_sourceA;
+    QPoint m_sourceB;
+    QSize m_spriteSize;
+    QSize m_sheetSize;
+    QSizeF m_size;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGOPENVGSPRITENODE_H

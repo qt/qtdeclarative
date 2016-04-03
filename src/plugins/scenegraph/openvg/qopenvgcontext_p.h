@@ -37,67 +37,52 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QOPENVGCONTEXT_H
+#define QOPENVGCONTEXT_H
 
-#include <QtQuick/qsgnode.h>
+#include <QtGui/QWindow>
+#include <QtGui/QImage>
+
+#include <EGL/egl.h>
+#include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-
-class Q_QUICK_EXPORT QSGRendererInterface
+class QOpenVGContext
 {
 public:
-    enum GraphicsApi {
-        Unknown,
-        Software,
-        OpenGL,
-        Direct3D12,
-        OpenVG
-    };
+    QOpenVGContext(QWindow *window);
+    ~QOpenVGContext();
 
-    enum Resource {
-        DeviceResource,
-        CommandQueueResource,
-        CommandListResource,
-        PainterResource
-    };
+    void makeCurrent();
+    void makeCurrent(EGLSurface surface);
+    void doneCurrent();
+    void swapBuffers();
+    void swapBuffers(EGLSurface surface);
 
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
 
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+    QWindow *window() const;
 
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+    EGLDisplay eglDisplay() { return m_display; }
+    EGLConfig eglConfig() { return m_config; }
+    EGLContext eglContext() { return m_context; }
 
-    virtual ~QSGRendererInterface();
+    QImage readFramebuffer(const QSize &size);
 
-    virtual GraphicsApi graphicsApi() const = 0;
+    void getConfigs();
 
-    virtual void *getResource(QQuickWindow *window, Resource resource) const;
-    virtual void *getResource(QQuickWindow *window, const char *resource) const;
+    static void checkErrors();
 
-    virtual ShaderType shaderType() const = 0;
-    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
-    virtual ShaderSourceTypes shaderSourceType() const = 0;
+private:
+    EGLSurface m_surface;
+    EGLDisplay m_display;
+    EGLConfig m_config;
+    EGLContext m_context;
+
+    QWindow *m_window;
+
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QOPENVGCONTEXT_H
