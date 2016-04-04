@@ -244,13 +244,37 @@ struct StmtVisitor {
     virtual void visitPhi(Phi *) = 0;
 };
 
+struct MemberExpressionResolver;
+
+struct DiscoveredType {
+    int type;
+    MemberExpressionResolver *memberResolver;
+
+    DiscoveredType() : type(UnknownType), memberResolver(0) {}
+    DiscoveredType(Type t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
+    explicit DiscoveredType(int t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
+    explicit DiscoveredType(MemberExpressionResolver *memberResolver)
+        : type(QObjectType)
+        , memberResolver(memberResolver)
+    { Q_ASSERT(memberResolver); }
+
+    bool test(Type t) const { return type & t; }
+    bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
+
+    bool operator!=(Type other) const { return type != other; }
+    bool operator==(Type other) const { return type == other; }
+    bool operator==(const DiscoveredType &other) const { return type == other.type; }
+    bool operator!=(const DiscoveredType &other) const { return type != other.type; }
+};
 
 struct MemberExpressionResolver
 {
-    typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
+    typedef DiscoveredType (*ResolveFunction)(QQmlEnginePrivate *engine,
+                                              const MemberExpressionResolver *resolver,
+                                              Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0), extraData(0), flags(0) {}
+        : resolveMember(0), data(0), extraData(0), owner(nullptr), flags(0) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
@@ -258,6 +282,7 @@ struct MemberExpressionResolver
     ResolveFunction resolveMember;
     void *data; // Could be pointer to meta object, importNameSpace, etc. - depends on resolveMember implementation
     void *extraData; // Could be QQmlTypeNameCache
+    Function *owner;
     unsigned int flags;
 };
 

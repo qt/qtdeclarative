@@ -2073,27 +2073,6 @@ protected:
     }
 };
 
-struct DiscoveredType {
-    int type;
-    MemberExpressionResolver *memberResolver;
-
-    DiscoveredType() : type(UnknownType), memberResolver(0) {}
-    DiscoveredType(Type t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(int t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(MemberExpressionResolver *memberResolver)
-        : type(QObjectType)
-        , memberResolver(memberResolver)
-    { Q_ASSERT(memberResolver); }
-
-    bool test(Type t) const { return type & t; }
-    bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
-
-    bool operator!=(Type other) const { return type != other; }
-    bool operator==(Type other) const { return type == other; }
-    bool operator==(const DiscoveredType &other) const { return type == other.type; }
-    bool operator!=(const DiscoveredType &other) const { return type != other.type; }
-};
-
 class PropagateTempTypes: public StmtVisitor, ExprVisitor
 {
     const DefUses &defUses;
@@ -2449,7 +2428,7 @@ protected:
 
         if (_ty.fullyTyped && _ty.type.memberResolver && _ty.type.memberResolver->isValid()) {
             MemberExpressionResolver *resolver = _ty.type.memberResolver;
-            _ty.type.type = resolver->resolveMember(qmlEngine, resolver, e);
+            _ty.type = resolver->resolveMember(qmlEngine, resolver, e);
         } else
             _ty.type = VarType;
     }
