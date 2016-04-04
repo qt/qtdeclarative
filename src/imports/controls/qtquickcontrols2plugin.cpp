@@ -50,6 +50,7 @@
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
+#include "qquickdialring_p.h"
 #include "qquickprogressstrip_p.h"
 
 static inline void initResources()
@@ -144,6 +145,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 1, 0, "BusyRingAnimator");
     qmlRegisterType<QQuickProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickProgressAnimator>(import, 1, 0, "ProgressStripAnimator");
+    qmlRegisterType<QQuickDialRing>(import, 1, 0, "DialRing");
 
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 1, 0, "RadioIndicator");

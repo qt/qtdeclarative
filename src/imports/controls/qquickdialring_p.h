@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,46 +34,51 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.controls.impl 1.0
-import Qt.labs.templates 1.0 as T
+#ifndef QQUICKDIALRING_P_H
+#define QQUICKDIALRING_P_H
 
-T.Dial {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: 184
-    implicitHeight: 184
+#include <QtGui/qcolor.h>
+#include <QtQuick/qquickpainteditem.h>
 
-    //! [background]
-    background: DialRing {
-        width: control.availableWidth
-        height: control.availableHeight
-        color: control.activeFocus ? "#0066ff" : "#353637"
-        progress: control.position
-        opacity: control.enabled ? 1 : 0.3
-    }
-    //! [background]
+QT_BEGIN_NAMESPACE
 
-    //! [handle]
-    handle: Image {
-        id: handleItem
-        x: background.x + background.width / 2 - handle.width / 2
-        y: background.y + background.height / 2 - handle.height / 2
-        width: 14
-        height: 10
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/dial-indicator" + (control.activeKeyFocus ? "-focus.png" : ".png")
-        antialiasing: true
-        opacity: control.enabled ? 1 : 0.3
-        transform: [
-            Translate {
-                y: -background.height * 0.4 + handle.height / 2
-            },
-            Rotation {
-                angle: control.angle
-                origin.x: handle.width / 2
-                origin.y: handle.height / 2
-            }
-        ]
-    }
-    //! [handle]
-}
+class QQuickDialRing : public QQuickPaintedItem
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+
+public:
+    QQuickDialRing(QQuickItem *parent = nullptr);
+
+    qreal progress() const;
+    void setProgress(qreal progress);
+
+    QColor color() const;
+    void setColor(const QColor &color);
+
+    void paint(QPainter *painter) override;
+
+Q_SIGNALS:
+    void progressChanged();
+    void colorChanged();
+
+private:
+    qreal m_progress;
+    QColor m_color;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKDIALRING_P_H
