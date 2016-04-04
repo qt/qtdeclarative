@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPage
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief A control that makes it convenient to add a header and footer to a page.
 
     Page is a container control which makes it convenient to add

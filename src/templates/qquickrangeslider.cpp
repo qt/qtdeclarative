@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickRangeSlider
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A slider control used to select a range of values.
 
     \image qtquickcontrols-rangeslider.gif

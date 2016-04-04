@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickSwitch
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
+    \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
     \image qtquickcontrols-switch.gif

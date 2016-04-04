@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     \inherits Window
     \instantiates QQuickApplicationWindow
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief Provides a top-level application window.
 
     ApplicationWindow is a \l Window which makes it convenient to add

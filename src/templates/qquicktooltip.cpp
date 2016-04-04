@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickToolTip
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-popups
+    \ingroup qtquickcontrols2-popups
     \brief Provides tool tips for any control.
 
     A tool tip is a short piece of text that informs the user of a control's

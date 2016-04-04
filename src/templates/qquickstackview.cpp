@@ -48,8 +48,8 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickStackView
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-navigation
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-navigation
+    \ingroup qtquickcontrols2-containers
     \brief Provides a stack-based navigation model.
 
     \image qtquickcontrols-stackview-wireframe.png

@@ -46,8 +46,8 @@ QT_BEGIN_NAMESPACE
     \inherits Container
     \instantiates QQuickSwipeView
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-navigation
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-navigation
+    \ingroup qtquickcontrols2-containers
     \brief Enables the user to navigate pages by swiping sideways.
 
     SwipeView provides a swipe-based navigation model.

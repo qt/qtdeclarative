@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPageIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief Indicates the currently active page.
 
     PageIndicator is used to indicate the currently active page

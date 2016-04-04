@@ -158,7 +158,7 @@ QString QQuickStyle::path()
 void QQuickStyle::setStyle(const QString &style)
 {
     if (QQmlMetaType::isModule(QStringLiteral("Qt.labs.controls"), 1, 0)) {
-        qWarning() << "ERROR: QQuickStyle::setStyle() must be called before loading QML that imports Qt Labs Controls.";
+        qWarning() << "ERROR: QQuickStyle::setStyle() must be called before loading QML that imports Qt Quick Controls 2.";
         return;
     }
 

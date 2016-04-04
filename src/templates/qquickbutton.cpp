@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickButton
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
+    \ingroup qtquickcontrols2-buttons
     \brief A push-button control that can be clicked by the user.
 
     \image qtquickcontrols-button.gif

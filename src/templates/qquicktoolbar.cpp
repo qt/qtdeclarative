@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Frame
     \instantiates QQuickToolBar
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief A container with context-sensitive controls.
 
     ToolBar is a container of application-wide and context sensitive

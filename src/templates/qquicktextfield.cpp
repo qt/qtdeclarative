@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \inherits TextInput
     \instantiates QQuickTextField
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A single line text input control.
 
     TextField is a single line text editor. TextField extends TextInput with

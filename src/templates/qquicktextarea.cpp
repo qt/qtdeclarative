@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inherits TextEdit
     \instantiates QQuickTextArea
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A multi line text input control.
 
     TextArea is a multi-line text editor. TextArea extends TextEdit with

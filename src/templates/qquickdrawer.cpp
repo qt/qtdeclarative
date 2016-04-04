@@ -52,8 +52,8 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickDrawer
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-navigation
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-navigation
+    \ingroup qtquickcontrols2-containers
     \brief Provides a swipe-based side panel.
 
     Drawer provides a swipe-based side panel, similar to those often used in

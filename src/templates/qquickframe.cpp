@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Pane
     \instantiates QQuickFrame
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief A logical group of controls within a visual frame.
 
     Frame is used to layout a logical group of controls together within a

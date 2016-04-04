@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickBusyIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief Indicates activity while content is being loaded.
 
     \image qtquickcontrols-busyindicator.gif

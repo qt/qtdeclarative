@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickTumbler
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A spinnable wheel of items that can be selected.
 
     \code

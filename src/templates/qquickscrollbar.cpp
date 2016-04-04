@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollBar
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief An interactive scroll bar control.
 
     ScrollBar is an interactive bar that can be used to scroll to a specific

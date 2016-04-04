@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickComboBox
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A combined button and popup list taking minimal space.
 
     \image qtquickcontrols-combobox.png

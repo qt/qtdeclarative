@@ -1,7 +1,7 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
-project                 = QtLabsControls
-description             = Qt Labs Controls Reference Documentation
+project                 = QtQuickControls2
+description             = Qt Quick Controls Reference Documentation
 version                 = $QT_VERSION
 
 qhp.projects            = QtQuickControls2
@@ -45,10 +45,10 @@ sourcedirs += ../../../templates \
 
 imagedirs += images
 
-navigation.landingpage  = "Qt Labs Controls"
-navigation.qmltypespage = "Qt Labs Controls QML Types"
+navigation.landingpage  = "Qt Quick Controls 2"
+navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
 
-tagfile                 = qtlabscontrols.tags
+tagfile                 = qtquickcontrols2.tags
 
 # \styleimport {Qt.labs.controls.universal 1.0}
 macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"

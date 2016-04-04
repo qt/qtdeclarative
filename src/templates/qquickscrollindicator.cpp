@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief A non-interactive scroll indicator control.
 
     ScrollIndicator is a non-interactive indicator that indicates the current scroll

@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Frame
     \instantiates QQuickGroupBox
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief A frame with a logical group of controls.
 
     GroupBox is used to layout a logical group of controls together, within

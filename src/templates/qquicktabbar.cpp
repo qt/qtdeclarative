@@ -45,8 +45,8 @@ QT_BEGIN_NAMESPACE
     \inherits Container
     \instantiates QQuickTabBar
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-navigation
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-navigation
+    \ingroup qtquickcontrols2-containers
     \brief A bar with icons allowing to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.

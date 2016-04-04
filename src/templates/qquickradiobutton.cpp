@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickRadioButton
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
+    \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
     RadioButton presents an option button that can be toggled on (checked) or

@@ -50,7 +50,7 @@ ApplicationWindow {
     width: 360
     height: 520
     visible: true
-    title: "Qt Labs Controls"
+    title: "Qt Quick Controls 2"
 
     Settings {
         id: settings
@@ -186,7 +186,7 @@ ApplicationWindow {
 
             Label {
                 color: "#26282a"
-                text: "Qt Labs Controls provides a set of controls that can be used to build complete interfaces in Qt Quick."
+                text: "Qt Quick Controls 2 provides a set of controls that can be used to build complete interfaces in Qt Quick."
                 anchors.margins: 20
                 anchors.top: logo.bottom
                 anchors.left: parent.left
@@ -302,7 +302,7 @@ ApplicationWindow {
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "The Qt Labs Controls module is a technology preview of the next generation user interface controls based on Qt Quick."
+                text: "The Qt Quick Controls 2 module is a technology preview of the next generation user interface controls based on Qt Quick."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }

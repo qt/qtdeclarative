@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPane
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief Provides a background matching with the application style and theme.
 
     Pane provides a background color that matches with the application style

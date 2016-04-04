@@ -190,84 +190,84 @@
         \li No equivalent; see \l [QtQuick] {Shortcut} instead.
     \row
         \li \l [QtQuickControls] {ApplicationWindow}
-        \li \l [QtLabsControls] {ApplicationWindow}
+        \li \l [QtQuickControls2] {ApplicationWindow}
     \row
         \li \l [QtQuickControls] {BusyIndicator}
-        \li \l [QtLabsControls] {BusyIndicator}
+        \li \l [QtQuickControls2] {BusyIndicator}
     \row
         \li \l [QtQuickControls] {Button}
-        \li \l [QtLabsControls] {Button}
+        \li \l [QtQuickControls2] {Button}
     \row
         \li \l [QtQuickControls] {Calendar}
         \li No equivalent; see \l [QML] {MonthGrid}, \l [QML] {DayOfWeekRow} and \l [QML] {WeekNumberColumn} instead.
     \row
         \li \l [QtQuickControls] {CheckBox}
-        \li \l [QtLabsControls] {CheckBox}
+        \li \l [QtQuickControls2] {CheckBox}
     \row
         \li \l [QtQuickControls] {ComboBox}
-        \li \l [QtLabsControls] {ComboBox}
+        \li \l [QtQuickControls2] {ComboBox}
     \row
         \li \l [QtQuickControls] {ExclusiveGroup}
-        \li \l [QtLabsControls] {ButtonGroup}
+        \li \l [QtQuickControls2] {ButtonGroup}
     \row
         \li \l [QtQuickControls] {GroupBox}
 
-        \li \l [QtLabsControls] {GroupBox}, or \l [QtLabsControls] {Frame}
+        \li \l [QtQuickControls2] {GroupBox}, or \l [QtQuickControls2] {Frame}
             if a title is not required.
 
     \row
         \li \l [QtQuickControls] {Label}
-        \li \l [QtLabsControls] {Label}
+        \li \l [QtQuickControls2] {Label}
     \row
         \li \l [QtQuickControls] {Menu}
-        \li \l [QtLabsControls] {Menu}
+        \li \l [QtQuickControls2] {Menu}
     \row
         \li \l [QtQuickControls] {ProgressBar}
-        \li \l [QtLabsControls] {ProgressBar}
+        \li \l [QtQuickControls2] {ProgressBar}
     \row
         \li \l [QtQuickControls] {RadioButton}
-        \li \l [QtLabsControls] {RadioButton}
+        \li \l [QtQuickControls2] {RadioButton}
     \row
         \li \l [QtQuickControls] {ScrollView}
-        \li \l [QtLabsControls] {ScrollBar},
-            \l [QtLabsControls] {ScrollIndicator}
+        \li \l [QtQuickControls2] {ScrollBar},
+            \l [QtQuickControls2] {ScrollIndicator}
     \row
         \li \l [QtQuickControls] {Slider}
-        \li \l [QtLabsControls] {Slider}
+        \li \l [QtQuickControls2] {Slider}
     \row
         \li \l [QtQuickControls] {SpinBox}
-        \li \l [QtLabsControls] {SpinBox}
+        \li \l [QtQuickControls2] {SpinBox}
     \row
         \li \l [QtQuickControls] {Stack},
             \l [QtQuickControls] {StackView},
             \l [QtQuickControls] {StackViewDelegate}
-        \li \l [QtLabsControls] {StackView}
+        \li \l [QtQuickControls2] {StackView}
     \row
         \li \l [QtQuickControls] {StatusBar}
         \li No equivalent
     \row
         \li \l [QtQuickControls] {Switch}
-        \li \l [QtLabsControls] {Switch}
+        \li \l [QtQuickControls2] {Switch}
     \row
         \li \l [QtQuickControls] {Tab},
             \l [QtQuickControls] {TabView}
-        \li \l [QtLabsControls] {TabBar} in combination with, for example,
-            \l [QtLabsControls] {SwipeView}.
+        \li \l [QtQuickControls2] {TabBar} in combination with, for example,
+            \l [QtQuickControls2] {SwipeView}.
     \row
         \li \l [QtQuickControls] {TableView}
         \li No equivalent
     \row
         \li \l [QtQuickControls] {TextArea}
-        \li \l [QtLabsControls] {TextArea}
+        \li \l [QtQuickControls2] {TextArea}
     \row
         \li \l [QtQuickControls] {TextField}
-        \li \l [QtLabsControls] {TextField}
+        \li \l [QtQuickControls2] {TextField}
     \row
         \li \l [QtQuickControls] {ToolBar}
-        \li \l [QtLabsControls] {ToolBar}
+        \li \l [QtQuickControls2] {ToolBar}
     \row
         \li \l [QtQuickControls] {ToolButton}
-        \li \l [QtLabsControls] {ToolButton}
+        \li \l [QtQuickControls2] {ToolButton}
     \row
         \li \l [QtQuickControls] {TreeView}
         \li No equivalent
