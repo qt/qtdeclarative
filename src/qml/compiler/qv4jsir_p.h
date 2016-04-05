@@ -1258,7 +1258,8 @@ struct Function {
     uint isNamedExpression : 1;
     uint hasTry: 1;
     uint hasWith: 1;
-    uint unused : 25;
+    uint isQmlBinding: 1;
+    uint unused : 24;
 
     // Location of declaration in source code (-1 if not specified)
     int line;

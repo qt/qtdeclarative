@@ -435,7 +435,7 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
-    InternalClass *ic = scope.engine->emptyClass;
+    InternalClass *ic = v4->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
 

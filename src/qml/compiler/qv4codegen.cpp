@@ -1961,6 +1961,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
+    function->isQmlBinding = _env->compilationMode == QmlBinding;
 
     AST::SourceLocation loc = ast->firstSourceLocation();
     function->line = loc.startLine;

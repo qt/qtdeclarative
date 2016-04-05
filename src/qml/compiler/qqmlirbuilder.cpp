@@ -1890,7 +1890,9 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
     // Look for IDs first.
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
-            _function->idObjectDependencies.insert(mapping.idIndex);
+            if (_function->isQmlBinding)
+                _function->idObjectDependencies.insert(mapping.idIndex);
+
             QV4::IR::Expr *s = _block->MEMBER(_block->TEMP(_qmlContextTemp), _function->newString(name), 0, QV4::IR::Member::MemberOfIdObjectsArray, mapping.idIndex);
             QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
             _block->MOVE(result, s);

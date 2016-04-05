@@ -106,7 +106,8 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
             m_nextExpression->m_prevExpression = m_prevExpression;
     }
 
-    clearGuards();
+    clearActiveGuards();
+    clearPermanentGuards();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
 }
@@ -114,12 +115,12 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
     activeGuards.setFlagValue(v);
-    if (!v) clearGuards();
+    if (!v) clearActiveGuards();
 }
 
 void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 {
-    clearGuards();
+    clearActiveGuards();
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -214,7 +215,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
     ep->propertyCapture = lastPropertyCapture;
 }
 
-void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)
+void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
 {
     if (watcher->wasDeleted())
         return;
@@ -234,14 +235,17 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)
         g->connect(n);
     }
 
-    expression->activeGuards.prepend(g);
+    if (duration == OnlyOnce)
+        expression->permanentGuards.prepend(g);
+    else
+        expression->activeGuards.prepend(g);
 }
 
 /*! \internal
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */
-void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n)
+void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration)
 {
     if (watcher->wasDeleted())
         return;
@@ -280,7 +284,10 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n)
             g->connect(o, n, engine);
         }
 
-        expression->activeGuards.prepend(g);
+        if (duration == Permanently)
+            expression->permanentGuards.prepend(g);
+        else
+            expression->activeGuards.prepend(g);
     }
 }
 
@@ -297,6 +304,11 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     if (!capture)
         return;
 
+    if (capture->expression->m_permanentDependenciesRegistered)
+        return;
+
+    capture->expression->m_permanentDependenciesRegistered = true;
+
     QV4::Scoped<QV4::QmlContext> context(scope, engine->qmlContext());
     QQmlContextData *qmlContext = context->qmlContext();
 
@@ -304,7 +316,8 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
     for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
         Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
-        capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
+        capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings,
+                                 QQmlPropertyCapture::Permanently);
     }
 
     Q_ASSERT(qmlContext->contextObject);
@@ -313,7 +326,8 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     for (int i = 0; i < contextPropertyDependencyCount; ++i) {
         const int propertyIndex = *contextPropertyDependency++;
         const int notifyIndex = *contextPropertyDependency++;
-        capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex);
+        capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex,
+                                 QQmlPropertyCapture::Permanently);
     }
 
     QObject *scopeObject = context->qmlScope();
@@ -322,7 +336,8 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {
         const int propertyIndex = *scopePropertyDependency++;
         const int notifyIndex = *scopePropertyDependency++;
-        capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
+        capture->captureProperty(scopeObject, propertyIndex, notifyIndex,
+                                 QQmlPropertyCapture::Permanently);
     }
 
 }
@@ -406,9 +421,15 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
 }
 
 
-void QQmlJavaScriptExpression::clearGuards()
+void QQmlJavaScriptExpression::clearActiveGuards()
 {
     while (QQmlJavaScriptExpressionGuard *g = activeGuards.takeFirst())
+        g->Delete();
+}
+
+void QQmlJavaScriptExpression::clearPermanentGuards()
+{
+    while (QQmlJavaScriptExpressionGuard *g = permanentGuards.takeFirst())
         g->Delete();
 }
 

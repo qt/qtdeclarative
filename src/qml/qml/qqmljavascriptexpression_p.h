@@ -136,7 +136,8 @@ public:
     inline bool hasDelayedError() const;
     QQmlError error(QQmlEngine *) const;
     void clearError();
-    void clearGuards();
+    void clearActiveGuards();
+    void clearPermanentGuards();
     QQmlDelayedError *delayedError();
 
     static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
@@ -157,10 +158,12 @@ private:
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
+    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> permanentGuards;
 
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
     QQmlJavaScriptExpression  *m_nextExpression;
+    bool m_permanentDependenciesRegistered = false;
 
 protected:
     QV4::PersistentValue m_function;
@@ -177,10 +180,14 @@ public:
         Q_ASSERT(errorString == 0);
     }
 
-    void captureProperty(QQmlNotifier *);
-    void captureProperty(QObject *, int, int);
+    enum Duration {
+        OnlyOnce,
+        Permanently
+    };
 
     static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
+    void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
+    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
