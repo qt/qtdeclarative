@@ -1820,7 +1820,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 
     if (item->contains(p)) {
         QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
-                          event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source());
+                          event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
         wheel.accept();
         q->sendEvent(item, &wheel);
         if (wheel.isAccepted()) {

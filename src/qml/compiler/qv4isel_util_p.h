@@ -145,11 +145,11 @@ public:
     {
         _stackSlotForTemp.reserve(function->tempCount);
 
-        foreach (IR::BasicBlock *bb, function->basicBlocks()) {
+        for (IR::BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             _currentBasicBlock = bb;
-            foreach (IR::Stmt *s, bb->statements())
+            for (IR::Stmt *s : bb->statements())
                 process(s);
         }
 

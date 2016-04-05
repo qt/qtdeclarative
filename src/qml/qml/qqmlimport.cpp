@@ -888,6 +888,11 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
 }
 #endif
 
+static inline QString msgCannotLoadPlugin(const QString &uri, const QString &why)
+{
+    return QQmlImportDatabase::tr("plugin cannot be loaded for module \"%1\": %2").arg(uri, why);
+}
+
 /*!
 Import an extension defined by a qmldir file.
 
@@ -949,7 +954,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         // The reason is that the lower level may add url and line/column numbering information.
                         QQmlError poppedError = errors->takeFirst();
                         QQmlError error;
-                        error.setDescription(QQmlImportDatabase::tr("plugin cannot be loaded for module \"%1\": %2").arg(uri).arg(poppedError.description()));
+                        error.setDescription(msgCannotLoadPlugin(uri, poppedError.description()));
                         error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                         errors->prepend(error);
                     }
@@ -1020,10 +1025,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
 
     if (errors) {
         QQmlError error;
-        error.setDescription(
-                    QQmlImportDatabase::tr(
-                        "plugin cannot be loaded for module \"%1\": library loading is disabled")
-                    .arg(uri));
+        error.setDescription(msgCannotLoadPlugin(uri, QQmlImportDatabase::tr("library loading is disabled")));
         error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
         errors->prepend(error);
     }

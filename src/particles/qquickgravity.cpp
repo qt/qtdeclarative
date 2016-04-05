@@ -90,8 +90,8 @@ bool QQuickGravityAffector::affectParticle(QQuickParticleData *d, qreal dt)
         m_dy = m_magnitude * std::sin(m_angle * CONV);
     }
 
-    d->setInstantaneousVX(d->curVX() + m_dx*dt);
-    d->setInstantaneousVY(d->curVY() + m_dy*dt);
+    d->setInstantaneousVX(d->curVX(m_system) + m_dx*dt, m_system);
+    d->setInstantaneousVY(d->curVY(m_system) + m_dy*dt, m_system);
     return true;
 }
 QT_END_NAMESPACE

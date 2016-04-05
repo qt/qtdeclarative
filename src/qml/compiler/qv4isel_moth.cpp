@@ -255,16 +255,16 @@ protected:
 
         if (IR::Jump *jump = s->asJump()) {
             IR::MoveMapping moves;
-            foreach (IR::Stmt *succStmt, jump->target->statements()) {
+            for (IR::Stmt *succStmt : jump->target->statements()) {
                 if (IR::Phi *phi = succStmt->asPhi()) {
                     forceActivation(*phi->targetTemp);
-                    for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
-                        IR::Expr *e = phi->d->incoming[i];
+                    for (int i = 0, ei = phi->incoming.size(); i != ei; ++i) {
+                        IR::Expr *e = phi->incoming[i];
                         if (IR::Temp *t = e->asTemp()) {
                             forceActivation(*t);
                         }
                         if (jump->target->in[i] == _currentBasicBlock)
-                            moves.add(phi->d->incoming[i], phi->targetTemp);
+                            moves.add(phi->incoming[i], phi->targetTemp);
                     }
                 } else {
                     break;
@@ -303,7 +303,7 @@ protected:
 #if !defined(QT_NO_DEBUG)
         Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
         Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
-        foreach (IR::Expr *e, phi->d->incoming) {
+        foreach (IR::Expr *e, phi->incoming) {
             if (IR::Temp *t = e->asTemp())
                 Q_ASSERT(_stackSlotForTemp.contains(t->index));
         }
@@ -385,7 +385,7 @@ void InstructionSelection::run(int functionIndex)
     addInstruction(push);
 
     currentLine = 0;
-    QVector<IR::BasicBlock *> basicBlocks = _function->basicBlocks();
+    const QVector<IR::BasicBlock *> &basicBlocks = _function->basicBlocks();
     for (int i = 0, ei = basicBlocks.size(); i != ei; ++i) {
         blockNeedsDebugInstruction = irModule->debugMode;
         _block = basicBlocks[i];
@@ -404,7 +404,7 @@ void InstructionSelection::run(int functionIndex)
             exceptionHandler = _block->catchBlock;
         }
 
-        foreach (IR::Stmt *s, _block->statements()) {
+        for (IR::Stmt *s : _block->statements()) {
             _currentStatement = s;
 
             if (s->location.isValid()) {

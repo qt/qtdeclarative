@@ -151,29 +151,29 @@ bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
     qreal newX, newY;
     switch (m_affectedParameter){
     case Position:
-        newX = data->curX() + dx;
+        newX = data->curX(m_system) + dx;
         if (m_xVariance > qAbs(newX) )
             data->x += dx;
-        newY = data->curY() + dy;
+        newY = data->curY(m_system) + dy;
         if (m_yVariance > qAbs(newY) )
             data->y += dy;
         break;
     default:
     case Velocity:
-        newX = data->curVX() + dx;
-        if (m_xVariance > qAbs(newX) )
-            data->setInstantaneousVX(newX);
-        newY = data->curVY() + dy;
-        if (m_yVariance > qAbs(newY) )
-            data->setInstantaneousVY(newY);
+        newX = data->curVX(m_system) + dx;
+        if (m_xVariance > qAbs(newX))
+            data->setInstantaneousVX(newX, m_system);
+        newY = data->curVY(m_system) + dy;
+        if (m_yVariance > qAbs(newY))
+            data->setInstantaneousVY(newY, m_system);
         break;
     case Acceleration:
         newX = data->ax + dx;
-        if (m_xVariance > qAbs(newX) )
-            data->setInstantaneousAX(newX);
+        if (m_xVariance > qAbs(newX))
+            data->setInstantaneousAX(newX, m_system);
         newY = data->ay + dy;
-        if (m_yVariance > qAbs(newY) )
-            data->setInstantaneousAY(newY);
+        if (m_yVariance > qAbs(newY))
+            data->setInstantaneousAY(newY, m_system);
         break;
     }
     return true;

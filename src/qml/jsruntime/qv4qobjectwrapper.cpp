@@ -141,8 +141,8 @@ struct ReadAccessor {
     {
         Q_ASSERT(property.accessors);
 
-        property.accessors->read(object, property.accessorData, output);
-        if (n) property.accessors->notifier(object, property.accessorData, n);
+        property.accessors->read(object, output);
+        if (n) property.accessors->notifier(object, n);
     }
 };
 

@@ -56,7 +56,6 @@
 #include <cmath>
 #include <iostream>
 #include <cassert>
-#include <algorithm>
 
 QT_USE_NAMESPACE
 
@@ -86,120 +85,6 @@ static void showMeTheCode(IR::Function *function, const char *marker)
         qDebug("%s", buf.data().constData());
     }
 }
-
-#if !defined(BROKEN_STD_VECTOR_BOOL_OR_BROKEN_STD_FIND)
-// Sanity:
-class BitVector
-{
-    std::vector<bool> bits;
-
-public:
-    BitVector(int size = 0, bool value = false)
-        : bits(size, value)
-    {}
-
-    void reserve(int size)
-    { bits.reserve(size); }
-
-    int size() const
-    {
-        Q_ASSERT(bits.size() < INT_MAX);
-        return static_cast<int>(bits.size());
-    }
-
-    void resize(int newSize)
-    { bits.resize(newSize); }
-
-    void assign(int newSize, bool value)
-    { bits.assign(newSize, value); }
-
-    int findNext(int start, bool value, bool wrapAround) const
-    {
-        // The ++operator of std::vector<bool>::iterator in libc++ has a bug when using it on an
-        // iterator pointing to the last element. It will not be set to ::end(), but beyond
-        // that. (It will be set to the first multiple of the native word size that is bigger
-        // than size().)
-        //
-        // See http://llvm.org/bugs/show_bug.cgi?id=19663
-        //
-        // The work-around is to calculate the distance, and compare it to the size() to see if it's
-        // beyond the end, or take the minimum of the distance and the size.
-
-        size_t pos = std::distance(bits.begin(),
-                                   std::find(bits.begin() + start, bits.end(), value));
-        if (wrapAround && pos >= static_cast<size_t>(size()))
-            pos = std::distance(bits.begin(),
-                                std::find(bits.begin(), bits.begin() + start, value));
-
-        pos = qMin(pos, static_cast<size_t>(size()));
-
-        Q_ASSERT(pos <= static_cast<size_t>(size()));
-        Q_ASSERT(pos < INT_MAX);
-
-        return static_cast<int>(pos);
-    }
-
-    bool at(int idx) const
-    { return bits.at(idx); }
-
-    void setBit(int idx)
-    { bits[idx] = true; }
-
-    void clearBit(int idx)
-    { bits[idx] = false; }
-};
-#else // Insanity:
-class BitVector
-{
-    QBitArray bits;
-
-public:
-    BitVector(int size = 0, bool value = false)
-        : bits(size, value)
-    {}
-
-    void reserve(int size)
-    { Q_UNUSED(size); }
-
-    int size() const
-    { return bits.size(); }
-
-    void resize(int newSize)
-    { bits.resize(newSize); }
-
-    void assign(int newSize, bool value)
-    {
-        bits.resize(newSize);
-        bits.fill(value);
-    }
-
-    int findNext(int start, bool value, bool wrapAround) const
-    {
-        for (int i = start, ei = size(); i < ei; ++i) {
-            if (at(i) == value)
-                return i;
-        }
-
-        if (wrapAround) {
-            for (int i = 0, ei = start; i < ei; ++i) {
-                if (at(i) == value)
-                    return i;
-            }
-        }
-
-        return size();
-    }
-
-    bool at(int idx) const
-    { return bits.at(idx); }
-
-    void setBit(int idx)
-    { bits[idx] = true; }
-
-    void clearBit(int idx)
-    { bits[idx] = false; }
-};
-#endif
 
 class ProcessedBlocks
 {
@@ -557,7 +442,7 @@ class DominatorTree
             BasicBlockIndex p = d->parent[n];
             BasicBlockIndex s = p;
 
-            foreach (BasicBlock *v, function->basicBlock(n)->in) {
+            for (BasicBlock *v : function->basicBlock(n)->in) {
                 BasicBlockIndex ss = InvalidBasicBlockIndex;
                 if (d->dfnum[v->index()] <= d->dfnum[n])
                     ss = v->index();
@@ -617,7 +502,7 @@ public:
         // compute children of each node in the dominator tree
         std::vector<std::vector<BasicBlockIndex> > children; // BasicBlock index -> children
         children.resize(function->basicBlockCount());
-        foreach (BasicBlock *n, function->basicBlocks()) {
+        for (BasicBlock *n : function->basicBlocks()) {
             if (n->isRemoved())
                 continue;
             const BasicBlockIndex nodeIndex = n->index();
@@ -633,7 +518,7 @@ public:
         nodeStatus.resize(function->basicBlockCount());
         std::vector<BasicBlockIndex> worklist;
         worklist.reserve(function->basicBlockCount());
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             BasicBlockIndex nodeIndex = bb->index();
@@ -667,7 +552,7 @@ public:
             if (np.todo.empty()) {
                 BasicBlockSet &S = DF[node];
                 S.init(function);
-                foreach (BasicBlock *y, function->basicBlock(node)->out)
+                for (BasicBlock *y : function->basicBlock(node)->out)
                     if (idom[y->index()] != node)
                         S.insert(y);
                 for (BasicBlockIndex child : np.children) {
@@ -689,7 +574,7 @@ public:
             buf.open(QIODevice::WriteOnly);
             QTextStream qout(&buf);
             qout << "Dominator Frontiers:" << endl;
-            foreach (BasicBlock *n, function->basicBlocks()) {
+            for (BasicBlock *n : function->basicBlocks()) {
                 if (n->isRemoved())
                     continue;
 
@@ -706,7 +591,7 @@ public:
         }
 
         if (DebugDominatorFrontiers && DebugCodeCanUseLotsOfCpu) {
-            foreach (BasicBlock *n, function->basicBlocks()) {
+            for (BasicBlock *n : function->basicBlocks()) {
                 if (n->isRemoved())
                     continue;
                 const BasicBlockSet &fBlocks = DF[n->index()];
@@ -714,7 +599,7 @@ public:
                     BasicBlock *fBlock = *it;
                     Q_ASSERT(!dominates(n, fBlock) || fBlock == n);
                     bool hasDominatedSucc = false;
-                    foreach (BasicBlock *succ, fBlock->in) {
+                    for (BasicBlock *succ : fBlock->in) {
                         if (dominates(n, succ)) {
                             hasDominatedSucc = true;
                             break;
@@ -747,7 +632,7 @@ public:
             buf.open(QIODevice::WriteOnly);
             QTextStream qout(&buf);
             qout << "Immediate dominators:" << endl;
-            foreach (BasicBlock *to, function->basicBlocks()) {
+            for (BasicBlock *to : function->basicBlocks()) {
                 if (to->isRemoved())
                     continue;
 
@@ -881,7 +766,7 @@ private:
     {
         std::vector<int> nodeDepths(size_t(function->basicBlockCount()), -1);
         nodeDepths[0] = 0;
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -945,8 +830,7 @@ private:
         std::vector<BasicBlockIndex> prefix;
         prefix.reserve(32);
 
-        for (int i = 0, ei = node->in.size(); i != ei; ++i) {
-            BasicBlock *in = node->in.at(i);
+        for (BasicBlock *in : node->in) {
             if (node == in) // back-edge to self
                 continue;
             if (dominates(node->index(), in->index())) // a known back-edge
@@ -1055,13 +939,13 @@ public:
         for (size_t i = 0; i != ei; ++i)
             A_orig[i].reserve(8);
 
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
             currentBB = bb;
             killed.assign(function->tempCount, false);
-            foreach (Stmt *s, bb->statements())
+            for (Stmt *s : bb->statements())
                 s->accept(this);
         }
     }
@@ -1381,16 +1265,15 @@ public:
 
 void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
     Phi *phiNode = f->NewStmt<Phi>();
-    phiNode->d = new Phi::Data;
     phiNode->targetTemp = f->New<Temp>();
     phiNode->targetTemp->init(a.kind, a.index);
     y->prependStatement(phiNode);
 
-    phiNode->d->incoming.resize(y->in.size());
+    phiNode->incoming.resize(y->in.size());
     for (int i = 0, ei = y->in.size(); i < ei; ++i) {
         Temp *t = f->New<Temp>();
         t->init(a.kind, a.index);
-        phiNode->d->incoming[i] = t;
+        phiNode->incoming[i] = t;
     }
 }
 
@@ -1565,7 +1448,7 @@ private:
             processed.markAsProcessed(bb);
 
             BasicBlock *next = 0;
-            foreach (BasicBlock *out, bb->out) {
+            for (BasicBlock *out : bb->out) {
                 if (processed.alreadyProcessed(out))
                     continue;
                 if (!next)
@@ -1581,17 +1464,17 @@ private:
     {
         currentBB = bb;
 
-        foreach (Stmt *s, bb->statements()) {
+        for (Stmt *s : bb->statements()) {
             currentStmt = s;
             s->accept(this);
         }
 
-        foreach (BasicBlock *Y, bb->out) {
+        for (BasicBlock *Y : bb->out) {
             const int j = Y->in.indexOf(bb);
             Q_ASSERT(j >= 0 && j < Y->in.size());
-            foreach (Stmt *s, Y->statements()) {
+            for (Stmt *s : Y->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    Temp *t = phi->d->incoming[j]->asTemp();
+                    Temp *t = phi->incoming[j]->asTemp();
                     unsigned newTmp = currentNumber(*t);
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
                     t->index = newTmp;
@@ -1845,11 +1728,11 @@ public:
     {
         grow();
 
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!s)
                     continue;
 
@@ -1905,7 +1788,7 @@ public:
 
     void applyToFunction()
     {
-        foreach (BasicBlock *bb, theFunction->basicBlocks()) {
+        for (BasicBlock *bb : theFunction->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
@@ -1977,6 +1860,11 @@ public:
     bool isEmpty() const
     {
         return worklistSize == 0;
+    }
+
+    unsigned size() const
+    {
+        return worklistSize;
     }
 
     Stmt *takeNext(Stmt *last)
@@ -2185,27 +2073,6 @@ protected:
     }
 };
 
-struct DiscoveredType {
-    int type;
-    MemberExpressionResolver *memberResolver;
-
-    DiscoveredType() : type(UnknownType), memberResolver(0) {}
-    DiscoveredType(Type t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(int t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(MemberExpressionResolver *memberResolver)
-        : type(QObjectType)
-        , memberResolver(memberResolver)
-    { Q_ASSERT(memberResolver); }
-
-    bool test(Type t) const { return type & t; }
-    bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
-
-    bool operator!=(Type other) const { return type != other; }
-    bool operator==(Type other) const { return type == other; }
-    bool operator==(const DiscoveredType &other) const { return type == other.type; }
-    bool operator!=(const DiscoveredType &other) const { return type != other.type; }
-};
-
 class PropagateTempTypes: public StmtVisitor, ExprVisitor
 {
     const DefUses &defUses;
@@ -2274,7 +2141,7 @@ protected:
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
     virtual void visitPhi(Phi *s) {
         s->targetTemp->accept(this);
-        foreach (Expr *e, s->d->incoming)
+        foreach (Expr *e, s->incoming)
             e->accept(this);
     }
 };
@@ -2306,6 +2173,7 @@ class TypeInference: public StmtVisitor, public ExprVisitor
         {}
     };
     TypingResult _ty;
+    Stmt *_currentStmt;
 
 public:
     TypeInference(QQmlEnginePrivate *qmlEngine, const DefUses &defUses)
@@ -2314,6 +2182,7 @@ public:
         , _tempTypes(_defUses.tempCount())
         , _worklist(0)
         , _ty(UnknownType)
+        , _currentStmt(nullptr)
     {}
 
     void run(StatementWorklist &w) {
@@ -2330,7 +2199,10 @@ public:
                 QTextStream qout(&buf);
                 qout<<"Typing stmt ";
                 IRPrinter(&qout).print(s);
+                qout.flush();
                 qDebug("%s", buf.data().constData());
+
+                qDebug("%u left in the worklist", _worklist->size());
             }
 
             if (!run(s)) {
@@ -2341,6 +2213,7 @@ public:
                     QTextStream qout(&buf);
                     qout<<"Pushing back stmt: ";
                     IRPrinter(&qout).print(s);
+                    qout.flush();
                     qDebug("%s", buf.data().constData());
                 }
             } else {
@@ -2350,6 +2223,7 @@ public:
                     QTextStream qout(&buf);
                     qout<<"Finished: ";
                     IRPrinter(&qout).print(s);
+                    qout.flush();
                     qDebug("%s", buf.data().constData());
                 }
             }
@@ -2373,7 +2247,9 @@ private:
     bool run(Stmt *s) {
         TypingResult ty;
         std::swap(_ty, ty);
-        s->accept(this);
+        std::swap(_currentStmt, s);
+        _currentStmt->accept(this);
+        std::swap(_currentStmt, s);
         std::swap(_ty, ty);
         return ty.fullyTyped;
     }
@@ -2407,11 +2283,16 @@ private:
                         QTextStream qout(&buf);
                         qout << "Pushing back dependent stmt: ";
                         IRPrinter(&qout).print(s);
+                        qout.flush();
                         qDebug("%s", buf.data().constData());
                     }
                 }
 
-                *_worklist += _defUses.uses(*t);
+                for (Stmt *s : qAsConst(_defUses.uses(*t))) {
+                    if (s != _currentStmt) {
+                        *_worklist += s;
+                    }
+                }
             }
         } else {
             e->type = (Type) ty.type;
@@ -2547,7 +2428,7 @@ protected:
 
         if (_ty.fullyTyped && _ty.type.memberResolver && _ty.type.memberResolver->isValid()) {
             MemberExpressionResolver *resolver = _ty.type.memberResolver;
-            _ty.type.type = resolver->resolveMember(qmlEngine, resolver, e);
+            _ty.type = resolver->resolveMember(qmlEngine, resolver, e);
         } else
             _ty.type = VarType;
     }
@@ -2569,9 +2450,9 @@ protected:
     virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
     virtual void visitPhi(Phi *s) {
-        _ty = run(s->d->incoming[0]);
-        for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
-            TypingResult ty = run(s->d->incoming[i]);
+        _ty = run(s->incoming[0]);
+        for (int i = 1, ei = s->incoming.size(); i != ei; ++i) {
+            TypingResult ty = run(s->incoming[i]);
             if (!ty.fullyTyped && _ty.fullyTyped) {
                 // When one of the temps not fully typed, we already know that we cannot completely type this node.
                 // So, pick the type we calculated upto this point, and wait until the unknown one will be typed.
@@ -2834,12 +2715,12 @@ public:
 
     void run(IR::Function *f, StatementWorklist &worklist) {
         _f = f;
-        foreach (BasicBlock *bb, f->basicBlocks()) {
+        for (BasicBlock *bb : f->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             _conversions.clear();
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 _currStmt = s;
                 s->accept(this);
             }
@@ -2890,7 +2771,7 @@ public:
                     _defUses.addUse(*source, conversion.stmt);
 
                     if (Phi *phi = conversion.stmt->asPhi()) {
-                        int idx = phi->d->incoming.indexOf(t);
+                        int idx = phi->incoming.indexOf(t);
                         Q_ASSERT(idx != -1);
                         bb->in[idx]->insertStatementBeforeTerminator(convCall);
                     } else {
@@ -3042,14 +2923,15 @@ protected:
     virtual void visitRet(Ret *s) { run(s->expr); }
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
-        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
-            run(s->d->incoming[i], ty);
+        for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
+            run(s->incoming[i], ty);
     }
 };
 
 void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &worklist, DefUses &defUses)
 {
-    foreach (BasicBlock *toBB, f->basicBlocks()) {
+    const QVector<BasicBlock *> copy = f->basicBlocks();
+    for (BasicBlock *toBB : copy) {
         if (toBB->isRemoved())
             continue;
         if (toBB->in.size() < 2)
@@ -3117,7 +2999,7 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
             df.setImmediateDominator(newBB, fromBB);
 
             bool toNeedsNewIdom = true;
-            foreach (BasicBlock *bb, toBB->in) {
+            for (BasicBlock *bb : toBB->in) {
                 if (bb != newBB && !df.dominates(toBB, bb)) {
                     toNeedsNewIdom = false;
                     break;
@@ -3227,7 +3109,7 @@ public:
 
             backedges.clear();
 
-            foreach (BasicBlock *in, bb->in)
+            for (BasicBlock *in : bb->in)
                 if (dt.dominates(bb, in))
                     backedges.push_back(in);
 
@@ -3304,7 +3186,7 @@ private:
                 // those predecessors are not in the current subloop. It might be the case
                 // that they are in other loops, which we will then add as a subloop to the
                 // current loop.
-                foreach (BasicBlock *predIn, predIt->in)
+                for (BasicBlock *predIn : predIt->in)
                     if (predIn->containingGroup() != subloop)
                         worklist.push_back(predIn);
             } else {
@@ -3315,7 +3197,7 @@ private:
                 predIt->setContainingGroup(loopHead);
 
                 // Add all incoming edges to the worklist.
-                foreach (BasicBlock *bb, predIt->in)
+                for (BasicBlock *bb : predIt->in)
                     worklist.push_back(bb);
             }
         }
@@ -3327,7 +3209,7 @@ private:
 
     void createLoopInfos(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
             if (BasicBlock *loopHeader = bb->containingGroup())
@@ -3400,7 +3282,7 @@ class BlockScheduler
     {
         Q_ASSERT(candidate->containingGroup() == currentGroup.group);
 
-        foreach (BasicBlock *in, candidate->in) {
+        for (BasicBlock *in : candidate->in) {
             if (emitted.alreadyProcessed(in))
                 continue;
 
@@ -3510,7 +3392,7 @@ public:
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
     foreach (BasicBlock *bb, basicBlocks) {
         if (bb && bb->out.size() > 1) {
-            foreach (BasicBlock *bb2, bb->out) {
+            for (BasicBlock *bb2 : bb->out) {
                 if (bb2 && bb2->in.size() > 1) {
                     qDebug() << "found critical edge between block"
                              << bb->index() << "and block" << bb2->index();
@@ -3545,28 +3427,28 @@ static void cleanupBasicBlocks(IR::Function *function)
 
         reachableBlocks.setBit(bb->index());
 
-        foreach (BasicBlock *outBB, bb->out) {
+        for (BasicBlock *outBB : bb->out) {
             if (!reachableBlocks.at(outBB->index()))
                 postponed.append(outBB);
         }
     }
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved()) // the block has already been removed, so ignore it
             continue;
         if (reachableBlocks.at(bb->index())) // the block is reachable, so ignore it
             continue;
 
-        foreach (BasicBlock *outBB, bb->out) {
+        for (BasicBlock *outBB : bb->out) {
             if (outBB->isRemoved() || !reachableBlocks.at(outBB->index()))
                 continue; // We do not need to unlink from blocks that are scheduled to be removed.
 
             int idx = outBB->in.indexOf(bb);
             if (idx != -1) {
                 outBB->in.remove(idx);
-                foreach (Stmt *s, outBB->statements()) {
+                for (Stmt *s : outBB->statements()) {
                     if (Phi *phi = s->asPhi())
-                        phi->d->incoming.remove(idx);
+                        phi->incoming.remove(idx);
                     else
                         break;
                 }
@@ -3581,9 +3463,9 @@ static void cleanupBasicBlocks(IR::Function *function)
 
 inline Const *isConstPhi(Phi *phi)
 {
-    if (Const *c = phi->d->incoming[0]->asConst()) {
-        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
-            if (Const *cc = phi->d->incoming[i]->asConst()) {
+    if (Const *c = phi->incoming[0]->asConst()) {
+        for (int i = 1, ei = phi->incoming.size(); i != ei; ++i) {
+            if (Const *cc = phi->incoming[i]->asConst()) {
                 if (c->value != cc->value)
                     return 0;
                 if (!(c->type == cc->type || (c->type & NumberType && cc->type & NumberType)))
@@ -3684,8 +3566,8 @@ protected:
     virtual void visitCJump(CJump *s) { check(s->cond); }
     virtual void visitRet(Ret *s) { check(s->expr); }
     virtual void visitPhi(Phi *s) {
-        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
-            check(s->d->incoming[i]);
+        for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
+            check(s->incoming[i]);
     }
 
 private:
@@ -3746,11 +3628,11 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
                 if (!outStmt)
                     continue;
                 if (Phi *phi = outStmt->asPhi()) {
-                    if (Temp *t = phi->d->incoming[idx]->asTemp()) {
+                    if (Temp *t = phi->incoming[idx]->asTemp()) {
                         defUses.removeUse(phi, *t);
                         W += defUses.defStmt(*t);
                     }
-                    phi->d->incoming.remove(idx);
+                    phi->incoming.remove(idx);
                     W += phi;
                 } else {
                     break;
@@ -3800,14 +3682,14 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
                 continue;
 
             // unlink all incoming edges
-            foreach (BasicBlock *in, bb->in) {
+            for (BasicBlock *in : bb->in) {
                 int idx = in->out.indexOf(bb);
                 if (idx != -1)
                     in->out.remove(idx);
             }
 
             // unlink all outgoing edges, including "arguments" to phi statements
-            foreach (BasicBlock *out, bb->out) {
+            for (BasicBlock *out : bb->out) {
                 if (out->isRemoved())
                     continue;
 
@@ -3823,7 +3705,7 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
             }
 
             // unlink all defs/uses from the statements in the basic block
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!s)
                     continue;
 
@@ -3938,7 +3820,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
             Util(qout).genLoop(l);
     }
 
-    foreach (BasicBlock *bb, f->basicBlocks()) {
+    for (BasicBlock *bb : f->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -3949,7 +3831,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
         else
             qout << ", shape=circle";
         qout << "];\n";
-        foreach (BasicBlock *out, bb->out)
+        for (BasicBlock *out : bb->out)
             qout << "  L" << idx << " -> L" << out->index() << "\n";
     }
 
@@ -3987,9 +3869,9 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
             }
 
             // copy propagation:
-            if (phi->d->incoming.size() == 1) {
+            if (phi->incoming.size() == 1) {
                 Temp *t = phi->targetTemp;
-                Expr *e = phi->d->incoming.first();
+                Expr *e = phi->incoming.first();
 
                 QVector<Stmt *> newT2Uses;
                 replaceUses(t, e, W, &newT2Uses);
@@ -4420,14 +4302,14 @@ private:
     void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd)
     {
         LiveRegs live;
-        foreach (BasicBlock *successor, bb->out) {
+        for (BasicBlock *successor : bb->out) {
             live.unite(_liveIn[successor->index()]);
             const int bbIndex = successor->in.indexOf(bb);
             Q_ASSERT(bbIndex >= 0);
 
-            foreach (Stmt *s, successor->statements()) {
+            for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    if (Temp *t = phi->d->incoming.at(bbIndex)->asTemp())
+                    if (Temp *t = phi->incoming.at(bbIndex)->asTemp())
                         live.insert(*t);
                 } else {
                     break;
@@ -4435,7 +4317,7 @@ private:
             }
         }
 
-        QVector<Stmt *> statements = bb->statements();
+        const QVector<Stmt *> &statements = bb->statements();
 
         foreach (const Temp &opd, live)
             interval(&opd).addRange(start(bb), end(bb));
@@ -4483,7 +4365,7 @@ void removeUnreachleBlocks(IR::Function *function)
 {
     QVector<BasicBlock *> newSchedule;
     newSchedule.reserve(function->basicBlockCount());
-    foreach (BasicBlock *bb, function->basicBlocks())
+    for (BasicBlock *bb : function->basicBlocks())
         if (!bb->isRemoved())
             newSchedule.append(bb);
     function->setScheduledBlocks(newSchedule);
@@ -4528,9 +4410,9 @@ public:
             }
         }
 
-        foreach (BasicBlock *bb, function->basicBlocks())
+        for (BasicBlock *bb : function->basicBlocks())
             if (!bb->isRemoved())
-                foreach (Stmt *s, bb->statements())
+                for (Stmt *s : bb->statements())
                     s->accept(this);
 
         if (convertArgs && function->formals.size() > 0)
@@ -4614,7 +4496,7 @@ public:
     {
         block = new BasicBlock(originalBlock->function, 0);
 
-        foreach (Stmt *s, originalBlock->statements()) {
+        for (Stmt *s : originalBlock->statements()) {
             s->accept(this);
             clonedStmt->location = s->location;
         }
@@ -4644,9 +4526,8 @@ protected:
         clonedStmt = phi;
 
         phi->targetTemp = clone(stmt->targetTemp);
-        phi->d = new Phi::Data;
-        foreach (Expr *in, stmt->d->incoming)
-            phi->d->incoming.append(clone(in));
+        foreach (Expr *in, stmt->incoming)
+            phi->incoming.append(clone(in));
         block->appendStatement(phi);
     }
 
@@ -4731,7 +4612,8 @@ private:
         // the terminators will automatically insert that edge). The blocks where the originals
         // pointed to will have an extra incoming edge from the copied blocks.
 
-        foreach (BasicBlock *in, loop->loopHeader->in) {
+        BasicBlock::IncomingEdges inCopy = loop->loopHeader->in;
+        for (BasicBlock *in : inCopy) {
             if (unpeeled.loopHeader != in // this can happen for really tight loops (where there are no body blocks). This is a back-edge in that case.
                     && !unpeeled.loopBody.contains(in) // if the edge is not coming from within the copied set, leave it alone
                     && !dt.dominates(loop->loopHeader, in)) // an edge coming from within the loop (so a back-edge): this is handled when rewiring all outgoing edges
@@ -4805,7 +4687,7 @@ static void verifyCFG(IR::Function *function)
     if (!DoVerification)
         return;
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved()) {
             Q_ASSERT(bb->in.isEmpty());
             Q_ASSERT(bb->out.isEmpty());
@@ -4837,14 +4719,14 @@ static void verifyCFG(IR::Function *function)
         }
 
         // Check the outgoing edges:
-        foreach (BasicBlock *out, bb->out) {
+        for (BasicBlock *out : bb->out) {
             Q_UNUSED(out);
             Q_ASSERT(!out->isRemoved());
             Q_ASSERT(out->in.contains(bb));
         }
 
         // Check the incoming edges:
-        foreach (BasicBlock *in, bb->in) {
+        for (BasicBlock *in : bb->in) {
             Q_UNUSED(in);
             Q_ASSERT(!in->isRemoved());
             Q_ASSERT(in->out.contains(bb));
@@ -4861,7 +4743,7 @@ static void verifyImmediateDominators(const DominatorTree &dt, IR::Function *fun
     dt.dumpImmediateDominators();
     DominatorTree referenceTree(function);
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
@@ -4882,11 +4764,11 @@ static void verifyNoPointerSharing(IR::Function *function)
     public:
         void operator()(IR::Function *f)
         {
-            foreach (BasicBlock *bb, f->basicBlocks()) {
+            for (BasicBlock *bb : f->basicBlocks()) {
                 if (bb->isRemoved())
                     continue;
 
-                foreach (Stmt *s, bb->statements())
+                for (Stmt *s : bb->statements())
                     s->accept(this);
             }
         }
@@ -4901,7 +4783,7 @@ static void verifyNoPointerSharing(IR::Function *function)
         {
             check(s);
             s->targetTemp->accept(this);
-            foreach (Expr *e, s->d->incoming)
+            foreach (Expr *e, s->incoming)
                 e->accept(this);
         }
 
@@ -4950,11 +4832,11 @@ class RemoveLineNumbers: public SideEffectsChecker, public StmtVisitor
 public:
     static void run(IR::Function *function)
     {
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
 
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 if (!hasSideEffects(s)) {
                     s->location = QQmlJS::AST::SourceLocation();
                 }
@@ -5166,13 +5048,13 @@ LifeTimeIntervals::LifeTimeIntervals(IR::Function *function)
 // basic-block.
 void LifeTimeIntervals::renumber(IR::Function *function)
 {
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         if (bb->isRemoved())
             continue;
 
         _basicBlockPosition[bb->index()].start = _lastPosition + 1;
 
-        foreach (Stmt *s, bb->statements()) {
+        for (Stmt *s : bb->statements()) {
             if (s->asPhi())
                 continue;
 
@@ -5202,7 +5084,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 
     function->removeSharedExpressions();
     int statementCount = 0;
-    foreach (BasicBlock *bb, function->basicBlocks())
+    for (BasicBlock *bb : function->basicBlocks())
         if (!bb->isRemoved())
             statementCount += bb->statementCount();
 //    showMeTheCode(function);
@@ -5332,15 +5214,15 @@ void Optimizer::convertOutOfSSA() {
 
     // There should be no critical edges at this point.
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         MoveMapping moves;
 
-        foreach (BasicBlock *successor, bb->out) {
+        for (BasicBlock *successor : bb->out) {
             const int inIdx = successor->in.indexOf(bb);
             Q_ASSERT(inIdx >= 0);
-            foreach (Stmt *s, successor->statements()) {
+            for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    moves.add(clone(phi->d->incoming[inIdx], function),
+                    moves.add(clone(phi->incoming[inIdx], function),
                               clone(phi->targetTemp, function)->asTemp());
                 } else {
                     break;
@@ -5368,7 +5250,7 @@ void Optimizer::convertOutOfSSA() {
         moves.insertMoves(bb, function, true);
     }
 
-    foreach (BasicBlock *bb, function->basicBlocks()) {
+    for (BasicBlock *bb : function->basicBlocks()) {
         while (!bb->isEmpty()) {
             if (bb->statements().first()->asPhi()) {
                 bb->removeStatement(0);

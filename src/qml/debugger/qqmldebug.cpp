@@ -134,22 +134,11 @@ void QQmlDebuggingEnabler::setServices(const QStringList &services)
  */
 bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const QString &hostName)
 {
-#ifndef QQML_NO_DEBUG_PROTOCOL
-    QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
-    QQmlDebugConnector *connector = QQmlDebugConnector::instance();
-    if (connector) {
-        QVariantHash configuration;
-        configuration[QLatin1String("portFrom")] = configuration[QLatin1String("portTo")] = port;
-        configuration[QLatin1String("block")] = (mode == WaitForClient);
-        configuration[QLatin1String("hostAddress")] = hostName;
-        return connector->open(configuration);
-    }
-#else
-    Q_UNUSED(port);
-    Q_UNUSED(mode);
-    Q_UNUSED(hostName);
-#endif
-    return false;
+    QVariantHash configuration;
+    configuration[QLatin1String("portFrom")] = configuration[QLatin1String("portTo")] = port;
+    configuration[QLatin1String("block")] = (mode == WaitForClient);
+    configuration[QLatin1String("hostAddress")] = hostName;
+    return startDebugConnector(QLatin1String("QQmlDebugServer"), configuration);
 }
 
 /*!
@@ -164,18 +153,33 @@ bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const Q
  */
 bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName, StartMode mode)
 {
+    QVariantHash configuration;
+    configuration[QLatin1String("fileName")] = socketFileName;
+    configuration[QLatin1String("block")] = (mode == WaitForClient);
+    return startDebugConnector(QLatin1String("QQmlDebugServer"), configuration);
+}
+
+/*!
+ * \since 5.7
+ *
+ * Enables debugging for QML engines created after calling this function. A debug connector plugin
+ * specified by \a pluginName will be loaded and started using the given \a configuration. Supported
+ * configuration entries and their semantics depend on the plugin being loaded. You can only start
+ * one debug connector at a time. A debug connector may have already been started if the
+ * -qmljsdebugger= command line argument was given. This method returns \c true if a new debug
+ * connector was successfully started, or \c false otherwise.
+ */
+bool QQmlDebuggingEnabler::startDebugConnector(const QString &pluginName,
+                                               const QVariantHash &configuration)
+{
 #ifndef QQML_NO_DEBUG_PROTOCOL
-    QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
+    QQmlDebugConnector::setPluginKey(pluginName);
     QQmlDebugConnector *connector = QQmlDebugConnector::instance();
-    if (connector) {
-        QVariantHash configuration;
-        configuration[QLatin1String("fileName")] = socketFileName;
-        configuration[QLatin1String("block")] = (mode == WaitForClient);
+    if (connector)
         return connector->open(configuration);
-    }
 #else
-    Q_UNUSED(fileName);
-    Q_UNUSED(mode);
+    Q_UNUSED(pluginName);
+    Q_UNUSED(configuration);
 #endif
     return false;
 }

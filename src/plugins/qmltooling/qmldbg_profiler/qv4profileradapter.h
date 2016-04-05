@@ -53,6 +53,7 @@
 
 #include <private/qv4profiling_p.h>
 #include <private/qqmlabstractprofileradapter_p.h>
+#include "qqmldebugpacket.h"
 
 #include <QStack>
 #include <QList>
@@ -86,8 +87,9 @@ private:
     int m_functionCallPos;
     int m_memoryPos;
     QStack<qint64> m_stack;
-    qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
-    qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
+    qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages, QQmlDebugPacket &d);
+    qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext,
+                            QQmlDebugPacket &d);
 
     static quint64 translateFeatures(quint64 qmlFeatures);
 };

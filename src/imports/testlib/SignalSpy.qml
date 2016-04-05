@@ -222,14 +222,16 @@ Item {
     /*! \internal */
     function qtest_update() {
         if (qtest_prevTarget != null) {
-            var prevFunc = qtest_prevTarget[qtest_prevSignalName]
+            var prevHandlerName = qtest_signalHandlerName(qtest_prevSignalName)
+            var prevFunc = qtest_prevTarget[prevHandlerName]
             if (prevFunc)
                 prevFunc.disconnect(spy.qtest_activated)
             qtest_prevTarget = null
             qtest_prevSignalName = ""
         }
         if (target != null && signalName != "") {
-            var func = target[signalName]
+            var handlerName = qtest_signalHandlerName(signalName)
+            var func = target[handlerName]
             if (func === undefined) {
                 spy.qtest_valid = false
                 console.log("Signal '" + signalName + "' not found")
@@ -249,5 +251,12 @@ Item {
     function qtest_activated() {
         ++qtest_count
         spy.qtest_signalArguments[spy.qtest_signalArguments.length] = arguments
+    }
+
+    /*! \internal */
+    function qtest_signalHandlerName(sn) {
+        if (sn.substr(0, 2) === "on" && sn[2] === sn[2].toUpperCase())
+            return sn
+        return "on" + sn.substr(0, 1).toUpperCase() + sn.substr(1)
     }
 }

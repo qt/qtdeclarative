@@ -689,47 +689,50 @@ Item {
             id: test_distributeToPixelGrid_Component
             RowLayout {
                 spacing: 0
-                Rectangle {
-                    color: 'red'
-                    Layout.minimumWidth: 10
-                    Layout.preferredWidth: 50
-                    Layout.maximumWidth: 90
-                    Layout.fillWidth: true
-                    implicitHeight: 10
-                }
-                Rectangle {
-                    color: 'red'
-                    Layout.minimumWidth: 10
-                    Layout.preferredWidth: 20
-                    Layout.maximumWidth: 90
-                    Layout.fillWidth: true
-                    implicitHeight: 10
-                }
-                Rectangle {
-                    color: 'red'
-                    Layout.minimumWidth: 10
-                    Layout.preferredWidth: 70
-                    Layout.maximumWidth: 90
-                    Layout.fillWidth: true
-                    implicitHeight: 10
-                }
             }
         }
 
         function test_distributeToPixelGrid_data() {
             return [
-                    { tag: "narrow",  spacing: 0, width: 60 },
-                    { tag: "belowPreferred",  spacing: 0, width: 130 },
-                    { tag: "belowPreferredWithSpacing", spacing: 10, width: 130 },
-                    { tag: "abovePreferred",  spacing: 0, width: 150 },
-                    { tag: "stretchSomethingToMaximum",  spacing: 0, width: 240,
+                    { tag: "narrow",  spacing: 0, width: 60, hints: [{pref: 50}, {pref: 20}, {pref: 70}] },
+                    { tag: "belowPreferred",  spacing: 0, width: 130, hints: [{pref: 50}, {pref: 20}, {pref: 70}]},
+                    { tag: "belowPreferredWithSpacing", spacing: 10, width: 130, hints: [{pref: 50}, {pref: 20}, {pref: 70}]},
+                    { tag: "abovePreferred",  spacing: 0, width: 150, hints: [{pref: 50}, {pref: 20}, {pref: 70}]},
+                    { tag: "stretchSomethingToMaximum",  spacing: 0, width: 240, hints: [{pref: 50}, {pref: 20}, {pref: 70}],
                       expected: [90, 60, 90] },
-                    { tag: "minSizeHasFractions",  spacing: 2, width: 31 + 4, hints: [{min: 10+1/3}, {min: 10+1/3}, {min: 10+1/3}],
+                    { tag: "minSizeHasFractions",  spacing: 2, width: 33 + 4, hints: [{min: 10+1/3}, {min: 10+1/3}, {min: 10+1/3}],
                       /*expected: [11, 11, 11]*/ },     /* verify that nothing gets allocated a size smaller than its minimum */
                     { tag: "maxSizeHasFractions",  spacing: 2, width: 271 + 4, hints: [{max: 90+1/3}, {max: 90+1/3}, {max: 90+1/3}],
                       /*expected: [90, 90, 90]*/ },     /* verify that nothing gets allocated a size larger than its maximum */
                     { tag: "fixedSizeHasFractions",  spacing: 2, width: 31 + 4, hints: [{min: 10+1/3, max: 10+1/3}, {min: 10+1/3, max: 10+1/3}, {min: 10+1/3, max: 10+1/3}],
                       /*expected: [11, 11, 11]*/ },     /* verify that nothing gets allocated a size smaller than its minimum */
+                    { tag: "481", spacing: 0, width: 481,
+                      hints: [{min:0, pref:0, max:999}, {min:0, pref:0, max: 999}, {min: 0, pref: 0, max:0}],
+                      expected: [241, 240, 0] },
+                    { tag: "theend", spacing: 1, width: 18,
+                      hints: [{min: 10, pref: 10, max:10}, {min:3, pref:3.33}, {min:2, pref:2.33}],
+                      expected: [10, 4, 2] },
+                    { tag: "theend2",  spacing: 1, width: 18,
+                      hints: [{min: 10, pref: 10, max:10}, {min:3, pref:3.33}, {min:2.33, pref:2.33}],
+                      expected: [10, 3, 3] },
+                    { tag: "43",  spacing: 0, width: 43,
+                      hints: [{min: 10, pref: 10, max:10}, {min:10, pref:30.33}, {min:2.33, pref:2.33}],
+                      expected: [10, 30, 3] },
+                    { tag: "40",  spacing: 0, width: 40,
+                      hints: [{min: 10, pref: 10, max:10}, {min:10, pref:30.33}, {min:2.33, pref:2.33}],
+                      expected: [10, 27, 3] },
+                    { tag: "roundingAccumulates1",  spacing: 0, width: 50,
+                      hints: [{pref: 10, max:30.3},
+                              {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3},
+                              {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3},
+                              {pref: 10, max:30.3}],
+                      expected: [10,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   10] },
+                    { tag: "roundingAccumulates2",  spacing: 0, width: 60,
+                      hints: [{pref: 20, max:30.3},
+                              {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3},
+                              {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3}, {min:2.3, pref:2.3},
+                              {pref: 20, max:30.3}],
+                      expected: [15,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   15] },
                     ];
         }
 
@@ -740,26 +743,32 @@ Item {
             layout.spacing = data.spacing
             layout.width  = data.width
             layout.height = 10
+
+            var hints = data.hints
+            var i;
+            var n = hints.length
+            for (i = 0; i < n; ++i) {
+                var rect = layoutItem_Component.createObject(layout)
+                rect.Layout.fillWidth = true
+                var h = hints[i]
+                rect.Layout.minimumWidth = h.hasOwnProperty('min') ? h.min : 10
+                if (h.hasOwnProperty('pref'))
+                    rect.Layout.preferredWidth = h.pref
+                rect.Layout.maximumWidth = h.hasOwnProperty('max') ? h.max : 90
+            }
+
             var kids = layout.children
 
-            if (data.hasOwnProperty('hints')) {
-                var hints = data.hints
-                for (var i = 0; i < hints.length; ++i) {
-                    var h = hints[i]
-                    if (h.hasOwnProperty('min'))
-                        kids[i].Layout.minimumWidth = h.min
-                    if (h.hasOwnProperty('pref'))
-                        kids[i].Layout.preferredWidth = h.pref
-                    if (h.hasOwnProperty('max'))
-                        kids[i].Layout.maximumWidth = h.max
-                }
-            }
             waitForRendering(layout)
 
-            var sum = 2 * layout.spacing
+            var sum = (n - 1) * layout.spacing
             // TEST
-            for (var i = 0; i < kids.length; ++i) {
+            for (i = 0; i < n; ++i) {
                 compare(kids[i].x % 1, 0)           // checks if position is a whole integer
+                // check if width is a whole integer (unless there are constraints preventing it from stretching)
+                verify(kids[i].width % 1 == 0
+                       || Math.floor(kids[i].Layout.maximumWidth) < kids[i].width
+                       || layout.width < layout.Layout.maximumWidth + 1)
                 // verify if the items are within the size constraints as specified
                 verify(kids[i].width >= kids[i].Layout.minimumWidth)
                 verify(kids[i].width <= kids[i].Layout.maximumWidth)

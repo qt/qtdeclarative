@@ -716,7 +716,7 @@ void QSGPlainTexture::bind()
     GLenum externalFormat = GL_RGBA;
     GLenum internalFormat = GL_RGBA;
 
-#if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_NO_SDK)
+#if defined(Q_OS_ANDROID)
     QString *deviceName =
             static_cast<QString *>(QGuiApplication::platformNativeInterface()->nativeResourceForIntegration("AndroidDeviceName"));
     static bool wrongfullyReportsBgra8888Support = deviceName != 0

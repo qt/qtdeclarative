@@ -63,7 +63,7 @@ void tst_qquickcustomaffector::test_basic()
         if (d->t == -1)
             continue; //Particle data unused
         //in CI the whole simulation often happens at once, so dead particles end up missing out
-        if (!d->stillAlive())
+        if (!d->stillAlive(system))
             continue; //parameters no longer get set once you die
 
         QCOMPARE(d->x, 100.f);
@@ -95,13 +95,13 @@ void tst_qquickcustomaffector::test_move()
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
-        if (!d->stillAlive())
+        if (!d->stillAlive(system))
             continue; //parameters no longer get set once you die
 
-        QVERIFY(myFuzzyCompare(d->curX(), 50.0));
-        QVERIFY(myFuzzyCompare(d->curY(), 50.0));
-        QVERIFY(myFuzzyCompare(d->curVX(), 50.0));
-        QVERIFY(myFuzzyCompare(d->curVY(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curX(system), 50.0));
+        QVERIFY(myFuzzyCompare(d->curY(system), 50.0));
+        QVERIFY(myFuzzyCompare(d->curVX(system), 50.0));
+        QVERIFY(myFuzzyCompare(d->curVY(system), 50.0));
         QVERIFY(myFuzzyCompare(d->curAX(), 50.0));
         QVERIFY(myFuzzyCompare(d->curAY(), 50.0));
         QCOMPARE(d->lifeSpan, 0.5f);

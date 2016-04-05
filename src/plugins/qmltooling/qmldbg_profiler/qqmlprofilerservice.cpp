@@ -342,12 +342,15 @@ void QQmlProfilerServiceImpl::sendMessages()
     while (!m_startTimes.empty()) {
         QQmlAbstractProfilerAdapter *first = m_startTimes.begin().value();
         m_startTimes.erase(m_startTimes.begin());
-        if (!m_startTimes.empty()) {
-            qint64 next = first->sendMessages(m_startTimes.begin().key(), messages);
-            if (next != -1)
-                m_startTimes.insert(next, first);
-        } else {
-            first->sendMessages(std::numeric_limits<qint64>::max(), messages);
+        qint64 next = first->sendMessages(m_startTimes.isEmpty() ?
+                                              std::numeric_limits<qint64>::max() :
+                                              m_startTimes.begin().key(), messages);
+        if (next != -1)
+            m_startTimes.insert(next, first);
+
+        if (messages.length() >= QQmlAbstractProfilerAdapter::s_numMessagesPerBatch) {
+            emit messagesToClient(name(), messages);
+            messages.clear();
         }
     }
 

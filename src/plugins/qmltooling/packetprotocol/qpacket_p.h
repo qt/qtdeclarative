@@ -61,7 +61,9 @@ class QPacket : public QDataStream
 public:
     QPacket(int version);
     explicit QPacket(int version, const QByteArray &ba);
-    QByteArray data() const;
+    const QByteArray &data() const;
+    QByteArray squeezedData() const;
+    void clear();
 
 private:
     void init(QIODevice::OpenMode mode);

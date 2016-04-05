@@ -57,6 +57,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef __QNXNTO__
+using std::perror;
+#endif
+
 namespace JSC {
 
 class JSGlobalData;

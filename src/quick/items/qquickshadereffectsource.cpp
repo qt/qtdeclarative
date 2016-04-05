@@ -269,6 +269,8 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
     Modifying this property makes most sense when the item is used as a
     source texture of a \l ShaderEffect.
 
+    The default value is \c{ShaderEffectSource.ClampToEdge}.
+
     \list
     \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
     \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically

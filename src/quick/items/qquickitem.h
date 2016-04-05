@@ -59,7 +59,7 @@ class Q_QUICK_EXPORT QQuickTransform : public QObject
 {
     Q_OBJECT
 public:
-    QQuickTransform(QObject *parent = 0);
+    explicit QQuickTransform(QObject *parent = Q_NULLPTR);
     ~QQuickTransform();
 
     void appendToItem(QQuickItem *);
@@ -195,7 +195,7 @@ public:
     };
     Q_ENUM(TransformOrigin)
 
-    QQuickItem(QQuickItem *parent = 0);
+    explicit QQuickItem(QQuickItem *parent = Q_NULLPTR);
     virtual ~QQuickItem();
 
     QQuickWindow *window() const;
@@ -440,7 +440,7 @@ protected:
     virtual void updatePolish();
 
 protected:
-    QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
+    QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = Q_NULLPTR);
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))

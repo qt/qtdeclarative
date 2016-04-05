@@ -122,11 +122,15 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     updateOffsets();
 
     QList<QQuickParticleData*> toAffect;
-    foreach (QQuickParticleGroupData* gd, m_system->groupData)
-        if (activeGroup(m_system->groupData.key(gd)))
-            foreach (QQuickParticleData* d, gd->data)
-                if (shouldAffect(d))
+    foreach (QQuickParticleGroupData* gd, m_system->groupData) {
+        if (activeGroup(gd->index)) {
+            foreach (QQuickParticleData* d, gd->data) {
+                if (shouldAffect(d)) {
                     toAffect << d;
+                }
+            }
+        }
+    }
 
     if (toAffect.isEmpty())
         return;
@@ -134,8 +138,8 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     if (justAffected) {
         foreach (QQuickParticleData* d, toAffect) {//Not postAffect to avoid saying the particle changed
             if (m_onceOff)
-                m_onceOffed << qMakePair(d->group, d->index);
-            emit affected(d->curX(), d->curY());
+                m_onceOffed << qMakePair(d->groupId, d->index);
+            emit affected(d->curX(m_system), d->curY(m_system));
         }
         return;
     }
@@ -150,7 +154,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     QV4::ScopedArrayObject array(scope, v4->newArrayObject(toAffect.size()));
     QV4::ScopedValue v(scope);
     for (int i=0; i<toAffect.size(); i++)
-        array->putIndexed(i, (v = toAffect[i]->v4Value()));
+        array->putIndexed(i, (v = toAffect[i]->v4Value(m_system)));
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
@@ -180,7 +184,7 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     //This does the property based affecting, called by superclass if signal isn't hooked up.
     bool changed = false;
-    QPointF curPos(d->curX(), d->curY());
+    QPointF curPos(d->curX(m_system), d->curY(m_system));
 
     if (m_acceleration != &m_nullVector){
         QPointF pos = m_acceleration->sample(curPos);
@@ -190,22 +194,22 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
             pos += curAcc;
         }
         if (pos != curAcc) {
-            d->setInstantaneousAX(pos.x());
-            d->setInstantaneousAY(pos.y());
+            d->setInstantaneousAX(pos.x(), m_system);
+            d->setInstantaneousAY(pos.y(), m_system);
             changed = true;
         }
     }
 
     if (m_velocity != &m_nullVector){
         QPointF pos = m_velocity->sample(curPos);
-        QPointF curVel = QPointF(d->curVX(), d->curVY());
+        QPointF curVel = QPointF(d->curVX(m_system), d->curVY(m_system));
         if (m_relative) {
             pos *= dt;
             pos += curVel;
         }
         if (pos != curVel) {
-            d->setInstantaneousVX(pos.x());
-            d->setInstantaneousVY(pos.y());
+            d->setInstantaneousVX(pos.x(), m_system);
+            d->setInstantaneousVY(pos.y(), m_system);
             changed = true;
         }
     }
@@ -217,8 +221,8 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
             pos += curPos;
         }
         if (pos != curPos) {
-            d->setInstantaneousX(pos.x());
-            d->setInstantaneousY(pos.y());
+            d->setInstantaneousX(pos.x(), m_system);
+            d->setInstantaneousY(pos.y(), m_system);
             changed = true;
         }
     }

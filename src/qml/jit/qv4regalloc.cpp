@@ -180,9 +180,9 @@ public:
         _calls.reserve(function->statementCount() / 3);
         _hints.resize(function->tempCount);
 
-        foreach (BasicBlock *bb, function->basicBlocks()) {
+        for (BasicBlock *bb : function->basicBlocks()) {
             _currentBB = bb;
-            foreach (Stmt *s, bb->statements()) {
+            for (Stmt *s : bb->statements()) {
                 _currentStmt = s;
                 s->accept(this);
             }
@@ -702,8 +702,8 @@ protected: // IRDecoder
     virtual void visitPhi(IR::Phi *s)
     {
         addDef(s->targetTemp, true);
-        for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
-            Expr *e = s->d->incoming.at(i);
+        for (int i = 0, ei = s->incoming.size(); i < ei; ++i) {
+            Expr *e = s->incoming.at(i);
             if (Temp *t = e->asTemp()) {
                 // The actual use of an incoming value in a phi node is right before the terminator
                 // of the other side of the incoming edge.
@@ -821,8 +821,8 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     const QVector<const RegisterInfo *> &_fpRegs;
 
     Stmt *_currentStmt;
-    QVector<Move *> _loads;
-    QVector<Move *> _stores;
+    std::vector<Move *> _loads;
+    std::vector<Move *> _stores;
 
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtStart;
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
@@ -872,7 +872,7 @@ private:
     {
         QVector<Stmt *> newStatements;
 
-        foreach (BasicBlock *bb, _function->basicBlocks()) {
+        for (BasicBlock *bb : _function->basicBlocks()) {
             _currentStmt = 0;
 
             QVector<Stmt *> statements = bb->statements();
@@ -892,13 +892,13 @@ private:
                 else
                     addNewIntervals(defPosition(_currentStmt));
                 _currentStmt->accept(this);
-                foreach (Move *load, _loads)
+                for (Move *load : _loads)
                     newStatements.append(load);
                 if (_currentStmt->asPhi())
                     newStatements.prepend(_currentStmt);
                 else
                     newStatements.append(_currentStmt);
-                foreach (Move *store, _stores)
+                for (Move *store : _stores)
                     newStatements.append(store);
             }
 
@@ -912,7 +912,7 @@ private:
                 os << "Intervals live at the start of L" << bb->index() << ":" << endl;
                 if (_liveAtStart[bb].isEmpty())
                     os << "\t(none)" << endl;
-                foreach (const LifeTimeInterval *i, _liveAtStart[bb]) {
+                for (const LifeTimeInterval *i : _liveAtStart.value(bb)) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
@@ -920,7 +920,7 @@ private:
                 os << "Intervals live at the end of L" << bb->index() << ":" << endl;
                 if (_liveAtEnd[bb].isEmpty())
                     os << "\t(none)" << endl;
-                foreach (const LifeTimeInterval *i, _liveAtEnd[bb]) {
+                for (const LifeTimeInterval *i : _liveAtEnd.value(bb)) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
@@ -943,7 +943,7 @@ private:
         Q_ASSERT(pReg);
         int spillSlot = _assignedSpillSlots[i->temp().index];
         if (spillSlot != RegisterAllocator::InvalidSpillSlot)
-            _stores.append(generateSpill(spillSlot, i->temp().type, pReg->reg<int>()));
+            _stores.push_back(generateSpill(spillSlot, i->temp().type, pReg->reg<int>()));
     }
 
     void addNewIntervals(int position)
@@ -976,15 +976,15 @@ private:
 
     void resolve()
     {
-        foreach (BasicBlock *bb, _function->basicBlocks()) {
-            foreach (BasicBlock *bbOut, bb->out)
+        for (BasicBlock *bb : _function->basicBlocks()) {
+            for (BasicBlock *bbOut : bb->out)
                 resolveEdge(bb, bbOut);
         }
     }
 
     Phi *findDefPhi(const Temp &t, BasicBlock *bb) const
     {
-        foreach (Stmt *s, bb->statements()) {
+        for (Stmt *s : bb->statements()) {
             Phi *phi = s->asPhi();
             if (!phi)
                 return 0;
@@ -1017,21 +1017,21 @@ private:
         int successorStart = _intervals->startPosition(successor);
         Q_ASSERT(successorStart > 0);
 
-        foreach (const LifeTimeInterval *it, _liveAtStart[successor]) {
+        for (const LifeTimeInterval *it : _liveAtStart.value(successor)) {
             bool isPhiTarget = false;
             Expr *moveFrom = 0;
 
             if (it->start() == successorStart) {
                 if (Phi *phi = findDefPhi(it->temp(), successor)) {
                     isPhiTarget = true;
-                    Expr *opd = phi->d->incoming[successor->in.indexOf(predecessor)];
+                    Expr *opd = phi->incoming[successor->in.indexOf(predecessor)];
                     if (opd->asConst()) {
                         moveFrom = opd;
                     } else {
                         Temp *t = opd->asTemp();
                         Q_ASSERT(t);
 
-                        foreach (const LifeTimeInterval *it2, _liveAtEnd[predecessor]) {
+                        for (const LifeTimeInterval *it2 : _liveAtEnd.value(predecessor)) {
                             if (it2->temp() == *t
                                     && it2->reg() != LifeTimeInterval::InvalidRegister
                                     && it2->covers(predecessorEnd)) {
@@ -1046,7 +1046,7 @@ private:
                     }
                 }
             } else {
-                foreach (const LifeTimeInterval *predIt, _liveAtEnd[predecessor]) {
+                for (const LifeTimeInterval *predIt : _liveAtEnd.value(predecessor)) {
                     if (predIt->temp() == it->temp()) {
                         if (predIt->reg() != LifeTimeInterval::InvalidRegister
                                 && predIt->covers(predecessorEnd)) {
@@ -1191,7 +1191,7 @@ protected:
             Q_ASSERT(i->isSplitFromInterval());
             const RegisterInfo *pReg = platformRegister(*i);
             Q_ASSERT(pReg);
-            _loads.append(generateUnspill(i->temp(), pReg->reg<int>()));
+            _loads.push_back(generateUnspill(i->temp(), pReg->reg<int>()));
         }
 
         if (i->reg() != LifeTimeInterval::InvalidRegister &&
@@ -1303,7 +1303,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
         qout << "Ranges:" << endl;
         QVector<LifeTimeInterval *> intervals = _unhandled;
         std::reverse(intervals.begin(), intervals.end());
-        foreach (const LifeTimeInterval *r, intervals) {
+        for (const LifeTimeInterval *r : qAsConst(intervals)) {
             r->dump(qout);
             qout << endl;
         }
@@ -1490,11 +1490,11 @@ void RegisterAllocator::linearScan()
         }
     }
 
-    foreach (LifeTimeInterval *r, _active)
+    for (LifeTimeInterval *r : qAsConst(_active))
         if (!r->isFixedInterval())
             _handled.append(r);
     _active.clear();
-    foreach (LifeTimeInterval *r, _inactive)
+    for (LifeTimeInterval *r : qAsConst(_inactive))
         if (!r->isFixedInterval())
             _handled.append(r);
     _inactive.clear();
@@ -1922,7 +1922,7 @@ void RegisterAllocator::dump(IR::Function *function) const
     qout << "Ranges:" << endl;
     QVector<LifeTimeInterval *> handled = _handled;
     std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
-    foreach (const LifeTimeInterval *r, handled) {
+    for (const LifeTimeInterval *r : qAsConst(handled)) {
         r->dump(qout);
         qout << endl;
     }
