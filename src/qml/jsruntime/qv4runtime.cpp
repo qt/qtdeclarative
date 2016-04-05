@@ -225,7 +225,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
     if (std::isnan(num)) {
         *result = QStringLiteral("NaN");
         return;
-    } else if (qIsInf(num)) {
+    } else if (qt_is_inf(num)) {
         *result = num < 0 ? QStringLiteral("-Infinity") : QStringLiteral("Infinity");
         return;
     }

@@ -40,7 +40,7 @@
 #include "qquicklayout_p.h"
 #include <QEvent>
 #include <QtCore/qcoreapplication.h>
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qmath.h>
 #include <limits>
 
@@ -134,7 +134,7 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
 */
 void QQuickLayoutAttached::setMinimumWidth(qreal width)
 {
-    if (qIsNaN(width))
+    if (qt_is_nan(width))
         return;
     m_isMinimumWidthSet = width >= 0;
     if (m_minimumWidth == width)
@@ -162,7 +162,7 @@ void QQuickLayoutAttached::setMinimumWidth(qreal width)
 */
 void QQuickLayoutAttached::setMinimumHeight(qreal height)
 {
-    if (qIsNaN(height))
+    if (qt_is_nan(height))
         return;
     m_isMinimumHeightSet = height >= 0;
     if (m_minimumHeight == height)
@@ -186,7 +186,7 @@ void QQuickLayoutAttached::setMinimumHeight(qreal height)
 */
 void QQuickLayoutAttached::setPreferredWidth(qreal width)
 {
-    if (qIsNaN(width) || m_preferredWidth == width)
+    if (qt_is_nan(width) || m_preferredWidth == width)
         return;
 
     m_preferredWidth = width;
@@ -207,7 +207,7 @@ void QQuickLayoutAttached::setPreferredWidth(qreal width)
 */
 void QQuickLayoutAttached::setPreferredHeight(qreal height)
 {
-    if (qIsNaN(height) || m_preferredHeight == height)
+    if (qt_is_nan(height) || m_preferredHeight == height)
         return;
 
     m_preferredHeight = height;
@@ -232,7 +232,7 @@ void QQuickLayoutAttached::setPreferredHeight(qreal height)
 */
 void QQuickLayoutAttached::setMaximumWidth(qreal width)
 {
-    if (qIsNaN(width))
+    if (qt_is_nan(width))
         return;
     m_isMaximumWidthSet = width >= 0;
     if (m_maximumWidth == width)
@@ -259,7 +259,7 @@ void QQuickLayoutAttached::setMaximumWidth(qreal width)
 */
 void QQuickLayoutAttached::setMaximumHeight(qreal height)
 {
-    if (qIsNaN(height))
+    if (qt_is_nan(height))
         return;
     m_isMaximumHeightSet = height >= 0;
     if (m_maximumHeight == height)

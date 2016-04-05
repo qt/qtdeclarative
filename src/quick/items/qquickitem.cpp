@@ -56,7 +56,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qcoreevent.h>
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtCore/qloggingcategory.h>
 
@@ -6307,7 +6307,7 @@ qreal QQuickItem::width() const
 void QQuickItem::setWidth(qreal w)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(w))
+    if (qt_is_nan(w))
         return;
 
     d->widthValid = true;
@@ -6471,7 +6471,7 @@ qreal QQuickItem::height() const
 void QQuickItem::setHeight(qreal h)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(h))
+    if (qt_is_nan(h))
         return;
 
     d->heightValid = true;

@@ -55,6 +55,7 @@
 #include <private/qqmljsastfwd_p.h>
 #include <private/qflagpointer_p.h>
 
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QVector>
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
@@ -1344,7 +1345,7 @@ inline Expr *BasicBlock::CONST(Type type, double value)
     } else if (type == NullType) {
         value = 0;
     } else if (type == UndefinedType) {
-        value = qQNaN();
+        value = qt_qnan();
     }
 
     e->init(type, value);

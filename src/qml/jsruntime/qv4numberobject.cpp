@@ -95,7 +95,7 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
 
-    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qQNaN()));
+    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qt_qnan()));
     ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
@@ -149,7 +149,7 @@ ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
 
         if (std::isnan(num)) {
             return scope.engine->newString(QStringLiteral("NaN"))->asReturnedValue();
-        } else if (qIsInf(num)) {
+        } else if (qt_is_inf(num)) {
             return scope.engine->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity"))->asReturnedValue();
         }
 
@@ -223,7 +223,7 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
     QString str;
     if (std::isnan(v))
         str = QStringLiteral("NaN");
-    else if (qIsInf(v))
+    else if (qt_is_inf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
     else if (v < 1.e21)
         str = NumberLocale::instance()->toString(v, 'f', int(fdigits));

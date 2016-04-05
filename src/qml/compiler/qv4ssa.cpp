@@ -2667,7 +2667,7 @@ void convertConst(Const *c, Type targetType)
         break;
     case NullType:
     case UndefinedType:
-        c->value = qQNaN();
+        c->value = qt_qnan();
         c->type = targetType;
     default:
         Q_UNIMPLEMENTED();
