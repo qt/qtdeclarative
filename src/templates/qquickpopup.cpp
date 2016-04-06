@@ -145,14 +145,8 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
-        if (onOutsideParent) {
-            if (!popupItem->contains(item->mapToItem(popupItem, event->pos())) &&
-                    (!parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos())))) {
-                q->close();
-                return true;
-            }
-        } else if (onOutside) {
-            if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+        if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
                 q->close();
                 return true;
             }
