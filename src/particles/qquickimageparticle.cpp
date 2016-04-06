@@ -1020,10 +1020,13 @@ void QQuickImageParticle::setEntryEffect(EntryEffect arg)
 void QQuickImageParticle::resetColor()
 {
     m_explicitColor = false;
-    foreach (const QString &str, m_groups)
-        foreach (QQuickParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
-            if (d->colorOwner == this)
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+            if (d->colorOwner == this) {
                 d->colorOwner = 0;
+            }
+        }
+    }
     m_color = QColor();
     m_color_variation = 0.0f;
     m_redVariation = 0.0f;
@@ -1036,10 +1039,13 @@ void QQuickImageParticle::resetColor()
 void QQuickImageParticle::resetRotation()
 {
     m_explicitRotation = false;
-    foreach (const QString &str, m_groups)
-        foreach (QQuickParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
-            if (d->rotationOwner == this)
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+            if (d->rotationOwner == this) {
                 d->rotationOwner = 0;
+            }
+        }
+    }
     m_rotation = 0;
     m_rotationVariation = 0;
     m_rotationVelocity = 0;
@@ -1050,10 +1056,13 @@ void QQuickImageParticle::resetRotation()
 void QQuickImageParticle::resetDeformation()
 {
     m_explicitDeformation = false;
-    foreach (const QString &str, m_groups)
-        foreach (QQuickParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
-            if (d->deformationOwner == this)
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+            if (d->deformationOwner == this) {
                 d->deformationOwner = 0;
+            }
+        }
+    }
     if (m_xVector)
         delete m_xVector;
     if (m_yVector)
@@ -1159,21 +1168,21 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     //Will return datum if the datum is a sentinel or uninitialized, to centralize that one check
     if (datum->systemIndex == -1)
         return datum;
-    QQuickParticleGroupData* gd = m_system->groupData[datum->group];
-    if (!m_shadowData.contains(datum->group)) {
+    QQuickParticleGroupData* gd = m_system->groupData[datum->groupId];
+    if (!m_shadowData.contains(datum->groupId)) {
         QVector<QQuickParticleData*> data;
         const int gdSize = gd->size();
         data.reserve(gdSize);
         for (int i = 0; i < gdSize; i++) {
-            QQuickParticleData* datum = new QQuickParticleData(m_system);
+            QQuickParticleData* datum = new QQuickParticleData;
             *datum = *(gd->data[i]);
             data << datum;
         }
-        m_shadowData.insert(datum->group, data);
+        m_shadowData.insert(datum->groupId, data);
     }
     //### If dynamic resize is added, remember to potentially resize the shadow data on out-of-bounds access request
 
-    return m_shadowData[datum->group][datum->index];
+    return m_shadowData[datum->groupId][datum->index];
 }
 
 bool QQuickImageParticle::loadingSomething()
@@ -1255,9 +1264,9 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         perfLevel = Simple;
     }
 
-    foreach (const QString &str, m_groups){//For sharing higher levels, need to have highest used so it renders
-        int gIdx = m_system->groupIds[str];
-        foreach (QQuickParticlePainter* p, m_system->groupData[gIdx]->painters){
+    for (auto groupId : groupIds()) {
+        //For sharing higher levels, need to have highest used so it renders
+        for (QQuickParticlePainter* p : qAsConst(m_system->groupData[groupId]->painters)) {
             QQuickImageParticle* other = qobject_cast<QQuickImageParticle*>(p);
             if (other){
                 if (other->perfLevel > perfLevel) {
@@ -1382,16 +1391,15 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     }
 
     m_nodes.clear();
-    foreach (const QString &str, m_groups){
-        int gIdx = m_system->groupIds[str];
-        int count = m_system->groupData[gIdx]->size();
+    for (auto groupId : groupIds()) {
+        int count = m_system->groupData[groupId]->size();
         QSGGeometryNode* node = new QSGGeometryNode();
         node->setMaterial(m_material);
         node->markDirty(QSGNode::DirtyMaterial);
 
-        m_nodes.insert(gIdx, node);
-        m_idxStarts.insert(gIdx, m_lastIdxStart);
-        m_startsIdx.append(qMakePair<int,int>(m_lastIdxStart, gIdx));
+        m_nodes.insert(groupId, node);
+        m_idxStarts.insert(groupId, m_lastIdxStart);
+        m_startsIdx.append(qMakePair<int,int>(m_lastIdxStart, groupId));
         m_lastIdxStart += count;
 
         //Create Particle Geometry
@@ -1423,7 +1431,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             g->setDrawingMode(GL_TRIANGLES);
 
         for (int p=0; p < count; ++p)
-            commit(gIdx, p);//commit sets geometry for the node, has its own perfLevel switch
+            commit(groupId, p);//commit sets geometry for the node, has its own perfLevel switch
 
         if (perfLevel == Sprites)
             initTexCoords<SpriteVertex>((SpriteVertex*)g->vertexData(), vCount);
@@ -1538,10 +1546,9 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
 void QQuickImageParticle::spritesUpdate(qreal time)
 {
     // Sprite progression handled CPU side, so as to have per-frame control.
-    foreach (const QString &str, m_groups) {
-        int gIdx = m_system->groupIds[str];
-        foreach (QQuickParticleData* mainDatum, m_system->groupData[gIdx]->data) {
-            QSGGeometryNode *node = m_nodes[gIdx];
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* mainDatum : qAsConst(m_system->groupData[groupId]->data)) {
+            QSGGeometryNode *node = m_nodes[groupId];
             if (!node)
                 continue;
             //TODO: Interpolate between two different animations if it's going to transition next frame
@@ -1549,7 +1556,7 @@ void QQuickImageParticle::spritesUpdate(qreal time)
             QQuickParticleData* datum = (mainDatum->animationOwner == this ? mainDatum : getShadowDatum(mainDatum));
             int spriteIdx = 0;
             for (int i = 0; i<m_startsIdx.count(); i++) {
-                if (m_startsIdx[i].second == gIdx){
+                if (m_startsIdx[i].second == groupId){
                     spriteIdx = m_startsIdx[i].first + datum->index;
                     break;
                 }

@@ -206,8 +206,8 @@ void QQuickItemParticle::tick(int time)
                 m_managed << d->delegate;
         }
         if (d && d->delegate){//###Data can be zero if creating an item leads to a reset - this screws things up.
-            d->delegate->setX(d->curX() - d->delegate->width()/2);//TODO: adjust for system?
-            d->delegate->setY(d->curY() - d->delegate->height()/2);
+            d->delegate->setX(d->curX(m_system) - d->delegate->width() / 2); //TODO: adjust for system?
+            d->delegate->setY(d->curY(m_system) - d->delegate->height() / 2);
             QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
             if (mpa){
                 mpa->m_mp = this;
@@ -231,10 +231,10 @@ void QQuickItemParticle::reset()
     // delete all managed items which had their logical particles cleared
     // but leave it alone if the logical particle is maintained
     QSet<QQuickItem*> lost = QSet<QQuickItem*>::fromList(m_managed);
-    foreach (const QString group, m_groups){
-        int gIdx = m_system->groupIds[group];
-        foreach (QQuickParticleData* d, m_system->groupData[gIdx]->data)
-                lost.remove(d->delegate);
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+            lost.remove(d->delegate);
+        }
     }
     m_deletables.append(lost.toList());
     //TODO: This doesn't yet handle calling detach on taken particles in the system reset case
@@ -249,11 +249,12 @@ QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
         m_pleaseReset = false;
         //Refill loadables, delayed here so as to only happen once per frame max
         //### Constant resetting might lead to m_loadables never being populated when tick() occurs
-        foreach (const QString group, m_groups){
-            int gIdx = m_system->groupIds[group];
-            foreach (QQuickParticleData* d, m_system->groupData[gIdx]->data)
-                if (!d->delegate && d->t != -1  && d->stillAlive())
+        for (auto groupId : groupIds()) {
+            for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+                if (!d->delegate && d->t != -1  && d->stillAlive(m_system)) {
                     m_loadables << d;
+                }
+            }
         }
     }
     prepareNextFrame();
@@ -276,37 +277,32 @@ void QQuickItemParticle::prepareNextFrame()
         return;
 
     //TODO: Size, better fade?
-    foreach (const QString &str, m_groups){
-        const int gIdx = m_system->groupIds[str];
-        const QVector<QQuickParticleData*> dataVector = m_system->groupData.value(gIdx)->data;
-        const int count = dataVector.size();
-
-        for (int i=0; i<count; i++){
-            QQuickParticleData* data = dataVector.at(i);
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* data : qAsConst(m_system->groupData[groupId]->data)) {
             QQuickItem* item = data->delegate;
             if (!item)
                 continue;
-            qreal t = ((timeStamp/1000.0) - data->t) / data->lifeSpan;
+            float t = ((timeStamp / 1000.0f) - data->t) / data->lifeSpan;
             if (m_stasis.contains(item)) {
                 data->t += dt;//Stasis effect
                 continue;
             }
-            if (t >= 1.0){//Usually happens from load
+            if (t >= 1.0f){//Usually happens from load
                 m_deletables << item;
                 data->delegate = 0;
             }else{//Fade
                 data->delegate->setVisible(true);
                 if (m_fade){
-                    qreal o = 1.;
-                    if (t<0.2)
-                        o = t*5;
-                    if (t>0.8)
+                    float o = 1.f;
+                    if (t <0.2f)
+                        o = t * 5;
+                    if (t > 0.8f)
                         o = (1-t)*5;
                     item->setOpacity(o);
                 }
             }
-            item->setX(data->curX() - item->width()/2 - m_systemOffset.x());
-            item->setY(data->curY() - item->height()/2 - m_systemOffset.y());
+            item->setX(data->curX(m_system) - item->width() / 2 - m_systemOffset.x());
+            item->setY(data->curY(m_system) - item->height() / 2 - m_systemOffset.y());
         }
     }
 }

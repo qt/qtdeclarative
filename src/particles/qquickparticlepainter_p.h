@@ -64,23 +64,38 @@ class QQuickParticlePainter : public QQuickItem
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
 
+public: // data
+    typedef QQuickParticleVarLengthArray<QQuickParticleGroupData::ID, 4> GroupIDs;
+
 public:
     explicit QQuickParticlePainter(QQuickItem *parent = 0);
     //Data Interface to system
     void load(QQuickParticleData*);
     void reload(QQuickParticleData*);
     void setCount(int c);
-    int count();
+
+    int count() const
+    {
+        return m_count;
+    }
+
     void performPendingCommits();//Called from updatePaintNode
     QQuickParticleSystem* system() const
     {
         return m_system;
     }
 
-
     QStringList groups() const
     {
         return m_groups;
+    }
+
+    const GroupIDs &groupIds() const
+    {
+        if (m_groupIdsNeedRecalculation) {
+            recalculateGroupIds();
+        }
+        return m_groupIds;
     }
 
     void itemChange(ItemChange, const ItemChangeData &);
@@ -94,14 +109,7 @@ Q_SIGNALS:
 public Q_SLOTS:
     void setSystem(QQuickParticleSystem* arg);
 
-    void setGroups(const QStringList &arg)
-    {
-        if (m_groups != arg) {
-            m_groups = arg;
-            //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
-            Q_EMIT groupsChanged(arg);
-        }
-    }
+    void setGroups(const QStringList &arg);
 
     void calcSystemOffset(bool resetPending = false);
 
@@ -130,13 +138,18 @@ protected:
     friend class QQuickParticleSystem;
     int m_count;
     bool m_pleaseReset;//Used by subclasses, but it's a nice optimization to know when stuff isn't going to matter.
-    QStringList m_groups;
     QPointF m_systemOffset;
 
     QQuickWindow *m_window;
 
-private:
+private: // methods
+    void recalculateGroupIds() const;
+
+private: // data
+    QStringList m_groups;
     QSet<QPair<int,int> > m_pendingCommits;
+    mutable GroupIDs m_groupIds;
+    mutable bool m_groupIdsNeedRecalculation;
 };
 
 QT_END_NAMESPACE

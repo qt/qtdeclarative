@@ -79,6 +79,7 @@ QQuickProfilerAdapter::~QQuickProfilerAdapter()
 static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
                                            QList<QByteArray> &messages)
 {
+    QQmlDebugPacket ds;
     Q_ASSERT_X(((data.messageType | data.detailType) & (1 << 31)) == 0, Q_FUNC_INFO,
                "You can use at most 31 message types and 31 detail types.");
     for (uint decodedMessageType = 0; (data.messageType >> decodedMessageType) != 0;
@@ -91,8 +92,6 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
             if ((data.detailType & (1 << decodedDetailType)) == 0)
                 continue;
 
-            //### using QDataStream is relatively expensive
-            QQmlDebugPacket ds;
             ds << data.time << decodedMessageType << decodedDetailType;
 
             switch (decodedMessageType) {
@@ -145,7 +144,8 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
                 Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
                 break;
             }
-            messages << ds.data();
+            messages.append(ds.squeezedData());
+            ds.clear();
         }
     }
 }
@@ -153,7 +153,7 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
 qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     while (next < m_data.size()) {
-        if (m_data[next].time <= until)
+        if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
             qQuickProfilerDataToByteArrays(m_data[next++], messages);
         else
             return m_data[next].time;

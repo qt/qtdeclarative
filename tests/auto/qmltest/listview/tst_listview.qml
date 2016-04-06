@@ -51,6 +51,22 @@ Item {
     }
 
     ListView {
+        id: singleElementList
+        height: 20
+        width: 50
+        model: 1
+        property real heightForDelegate: 100
+        property real contentHeightOnDelegateResize
+        delegate: Rectangle {
+            height: singleElementList.heightForDelegate
+            onHeightChanged: {
+                singleElementList.forceLayout();
+                singleElementList.contentHeightOnDelegateResize = singleElementList.contentHeight;
+            }
+        }
+    }
+
+    ListView {
         id: viewmanyitems
         model: manyitems
         delegate: Text { text: model.name }
@@ -312,6 +328,11 @@ Item {
             keyClick("k");
             compare(listInteractiveCurrentIndexEnforce.currentIndex, 1);
             tryCompare(listInteractiveCurrentIndexEnforce, "contentX", listInteractiveCurrentIndexEnforce.width);
+        }
+
+        function test_forceLayoutForContentHeight() {
+            singleElementList.heightForDelegate = 200;
+            compare(singleElementList.contentHeightOnDelegateResize, 200);
         }
     }
 }

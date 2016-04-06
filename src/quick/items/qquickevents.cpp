@@ -263,6 +263,56 @@ Item {
     \endqml
 */
 
+/*!
+    \qmlproperty int QtQuick::MouseEvent::source
+    \since 5.7
+
+    This property holds the source of the mouse event.
+
+    The mouse event source can be used to distinguish between genuine and
+    artificial mouse events. When using other pointing devices such as
+    touchscreens and graphics tablets, if the application does not make use of
+    the actual touch or tablet events, mouse events may be synthesized by the
+    operating system or by Qt itself.
+
+    The value can be one of:
+
+    \value Qt.MouseEventNotSynthesized The most common value. On platforms where
+    such information is available, this value indicates that the event
+    represents a genuine mouse event from the system.
+
+    \value Qt.MouseEventSynthesizedBySystem Indicates that the mouse event was
+    synthesized from a touch or tablet event by the platform.
+
+    \value Qt.MouseEventSynthesizedByQt Indicates that the mouse event was
+    synthesized from an unhandled touch or tablet event by Qt.
+
+    \value Qt.MouseEventSynthesizedByApplication Indicates that the mouse event
+    was synthesized by the application. This allows distinguishing
+    application-generated mouse events from the ones that are coming from the
+    system or are synthesized by Qt.
+
+    For example, to react only to events which come from an actual mouse:
+    \qml
+    MouseArea {
+        onPressed: if (mouse.source !== Qt.MouseEventNotSynthesized) {
+            mouse.accepted = false
+        }
+
+        onClicked: doSomething()
+    }
+    \endqml
+
+    If the handler for the press event rejects the event, it will be propagated
+    further, and then another Item underneath can handle synthesized events
+    from touchscreens. For example, if a Flickable is used underneath (and the
+    MouseArea is not a child of the Flickable), it can be useful for the
+    MouseArea to handle genuine mouse events in one way, while allowing touch
+    events to fall through to the Flickable underneath, so that the ability to
+    flick on a touchscreen is retained. In that case the ability to drag the
+    Flickable via mouse would be lost, but it does not prevent Flickable from
+    receiving mouse wheel events.
+*/
 
 /*!
     \qmltype WheelEvent

@@ -42,6 +42,7 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,6 +66,8 @@ struct Q_QML_EXPORT QQmlDebuggingEnabler
                                     const QString &hostName = QString());
     static bool connectToLocalDebugger(const QString &socketFileName,
                                        StartMode mode = DoNotWaitForClient);
+    static bool startDebugConnector(const QString &pluginName,
+                                    const QVariantHash &configuration = QVariantHash());
 };
 
 // Execute code in constructor before first QQmlEngine is instantiated

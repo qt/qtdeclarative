@@ -64,9 +64,13 @@ QT_BEGIN_NAMESPACE
 
     If empty, it will paint the default particle group ("").
 */
-QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent) :
-    QQuickItem(parent),
-    m_system(0), m_count(0), m_pleaseReset(true), m_window(0)
+QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent)
+    : QQuickItem(parent)
+    , m_system(0)
+    , m_count(0)
+    , m_pleaseReset(true)
+    , m_window(0)
+    , m_groupIdsNeedRecalculation(false)
 {
 }
 
@@ -89,11 +93,32 @@ void QQuickParticlePainter::componentComplete()
     QQuickItem::componentComplete();
 }
 
+void QQuickParticlePainter::recalculateGroupIds() const
+{
+    if (!m_system) {
+        m_groupIds.clear();
+        return;
+    }
+
+    m_groupIdsNeedRecalculation = false;
+    m_groupIds.clear();
+
+    for (const QString &str : groups()) {
+        QQuickParticleGroupData::ID groupId = m_system->groupIds.value(str, QQuickParticleGroupData::InvalidID);
+        if (groupId == QQuickParticleGroupData::InvalidID) {
+            // invalid data, not finished setting up, or whatever. Fallback: do not cache.
+            m_groupIdsNeedRecalculation = true;
+        } else {
+            m_groupIds.append(groupId);
+        }
+    }
+}
 
 void QQuickParticlePainter::setSystem(QQuickParticleSystem *arg)
 {
     if (m_system != arg) {
         m_system = arg;
+        m_groupIdsNeedRecalculation = true;
         if (m_system){
             m_system->registerParticlePainter(this);
             reset();
@@ -102,19 +127,29 @@ void QQuickParticlePainter::setSystem(QQuickParticleSystem *arg)
     }
 }
 
+void QQuickParticlePainter::setGroups(const QStringList &arg)
+{
+    if (m_groups != arg) {
+        m_groups = arg;
+        m_groupIdsNeedRecalculation = true;
+        //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
+        Q_EMIT groupsChanged(arg);
+    }
+}
+
 void QQuickParticlePainter::load(QQuickParticleData* d)
 {
-    initialize(d->group, d->index);
+    initialize(d->groupId, d->index);
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reload(QQuickParticleData* d)
 {
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reset()
@@ -131,11 +166,6 @@ void QQuickParticlePainter::setCount(int c)//### TODO: some resizeing so that pa
     m_count = c;
     emit countChanged();
     reset();
-}
-
-int QQuickParticlePainter::count()
-{
-    return m_count;
 }
 
 void QQuickParticlePainter::calcSystemOffset(bool resetPending)

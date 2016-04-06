@@ -94,7 +94,7 @@ public:
     inline void *allocate(size_t size)
     {
         size = (size + 7) & ~7;
-        if (_ptr && (_ptr + size < _end)) {
+        if (Q_LIKELY(_ptr && (_ptr + size < _end))) {
             void *addr = _ptr;
             _ptr += size;
             return addr;
@@ -111,7 +111,7 @@ public:
     template <typename Tp> Tp *New() { return new (this->allocate(sizeof(Tp))) Tp(); }
 
 private:
-    void *allocate_helper(size_t size)
+    Q_NEVER_INLINE void *allocate_helper(size_t size)
     {
         Q_ASSERT(size < BLOCK_SIZE);
 

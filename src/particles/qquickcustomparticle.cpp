@@ -324,19 +324,18 @@ QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
         return 0;
     }
 
-    if (m_groups.isEmpty())
+    if (groups().isEmpty())
         return 0;
 
     QQuickShaderEffectNode *rootNode = 0;
     QQuickShaderEffectMaterial *material = new QQuickShaderEffectMaterial;
     m_dirtyProgram = true;
 
-    foreach (const QString &str, m_groups){
-        int gIdx = m_system->groupIds[str];
-        int count = m_system->groupData[gIdx]->size();
+    for (auto groupId : groupIds()) {
+        int count = m_system->groupData[groupId]->size();
 
         QQuickShaderEffectNode* node = new QQuickShaderEffectNode();
-        m_nodes.insert(gIdx, node);
+        m_nodes.insert(groupId, node);
 
         node->setMaterial(material);
 
@@ -349,7 +348,7 @@ QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
         node->setFlag(QSGNode::OwnsGeometry, true);
         PlainVertex *vertices = (PlainVertex *) g->vertexData();
         for (int p=0; p < count; ++p) {
-            commit(gIdx, p);
+            commit(groupId, p);
             vertices[0].tx = 0;
             vertices[0].ty = 0;
 

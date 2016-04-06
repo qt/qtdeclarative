@@ -108,11 +108,34 @@ QPacket::QPacket(int version, const QByteArray &data)
 }
 
 /*!
-  Returns raw packet data.
+  Returns a reference to the raw packet data.
   */
-QByteArray QPacket::data() const
+const QByteArray &QPacket::data() const
 {
     return buf.data();
+}
+
+/*!
+  Returns a copy of the raw packet data, with extra reserved space removed.
+  Mind that this triggers a deep copy. Use it if you anticipate the data to be detached soon anyway.
+  */
+QByteArray QPacket::squeezedData() const
+{
+    QByteArray ret = buf.data();
+    ret.squeeze();
+    return ret;
+}
+
+/*!
+  Clears the packet, discarding any data.
+ */
+void QPacket::clear()
+{
+    buf.reset();
+    QByteArray &buffer = buf.buffer();
+    // Keep the old size to prevent unnecessary allocations
+    buffer.reserve(buffer.capacity());
+    buffer.truncate(0);
 }
 
 QT_END_NAMESPACE

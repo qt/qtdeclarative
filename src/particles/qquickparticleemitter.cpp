@@ -237,6 +237,8 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
+  , m_groupIdNeedRecalculation(false)
+  , m_groupId(QQuickParticleGroupData::DefaultGroupID)
 
 {
     //TODO: Reset velocity/acc back to null vector? Or allow null pointer?
@@ -257,10 +259,22 @@ bool QQuickParticleEmitter::isEmitConnected()
     IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV4Handle));
 }
 
+void QQuickParticleEmitter::reclaculateGroupId() const
+{
+    if (!m_system) {
+        m_groupId = QQuickParticleGroupData::InvalidID;
+        return;
+    }
+    m_groupId = m_system->groupIds.value(group(), QQuickParticleGroupData::InvalidID);
+    m_groupIdNeedRecalculation = m_groupId == QQuickParticleGroupData::InvalidID;
+}
+
 void QQuickParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QQuickParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QQuickParticleSystem*>(parentItem()));
+    if (m_system)
+        m_system->finishRegisteringParticleEmitter(this);
     QQuickItem::componentComplete();
 }
 
@@ -317,13 +331,6 @@ void QQuickParticleEmitter::setMaxParticleCount(int arg)
         emit maximumEmittedChanged(arg);
         emit particleCountChanged();
     }
-}
-
-int QQuickParticleEmitter::particleCount() const
-{
-    if (m_maxParticleCount >= 0)
-        return m_maxParticleCount;
-    return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
 }
 
 void QQuickParticleEmitter::setVelocityFromMovement(qreal t)
@@ -402,7 +409,6 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         //int pos = m_last_particle % m_particle_count;
         QQuickParticleData* datum = m_system->newDatum(m_system->groupIds[m_group], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
-            datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;
             qreal vx =
               - 2 * ax * (1 - t)
@@ -475,7 +481,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
     }
 
     foreach (QQuickParticleData* d, toEmit)
-            m_system->emitParticle(d);
+            m_system->emitParticle(d, this);
 
     if (isEmitConnected()) {
         QQmlEngine *qmlEngine = ::qmlEngine(this);
@@ -487,7 +493,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
         QV4::ScopedValue v(scope);
         for (int i=0; i<toEmit.size(); i++)
-            array->putIndexed(i, (v = toEmit[i]->v4Value()));
+            array->putIndexed(i, (v = toEmit[i]->v4Value(m_system)));
 
         emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
     }

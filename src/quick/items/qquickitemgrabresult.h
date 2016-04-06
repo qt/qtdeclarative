@@ -79,7 +79,7 @@ private Q_SLOTS:
 private:
     friend class QQuickItem;
 
-    QQuickItemGrabResult(QObject *parent = 0);
+    QQuickItemGrabResult(QObject *parent = Q_NULLPTR);
 };
 
 QT_END_NAMESPACE

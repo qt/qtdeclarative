@@ -716,6 +716,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             QQmlTypeNameCache::Result res = context->imports->query(stringAt(binding->propertyNameIndex));
             if (res.isValid())
                 attachedType = res.type;
+            else
+                return false;
         }
         const int id = attachedType->attachedPropertiesId(QQmlEnginePrivate::get(engine));
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);

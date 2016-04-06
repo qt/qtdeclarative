@@ -290,6 +290,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
+
+    qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 }
 
 static void initResources()

@@ -54,7 +54,6 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <private/qv4string_p.h>
-#include <private/qv4scopedvalue_p.h>
 
 #include <private/qflagpointer_p.h>
 

@@ -155,7 +155,7 @@ Q_SIGNALS:
 
 protected:
     void setHovered(bool);
-    bool setPressed(Qt::MouseButton button, bool);
+    bool setPressed(Qt::MouseButton button, bool p, Qt::MouseEventSource source);
     bool sendMouseEvent(QMouseEvent *event);
 
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

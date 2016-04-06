@@ -298,7 +298,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::ExecutionEngine *engine, 
     // Let the caller check and avoid the function call :)
     Q_ASSERT(compiledFunction->hasQmlDependencies());
 
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->qmlEngine());
     if (!ep)
         return;
     QQmlPropertyCapture *capture = ep->propertyCapture;

@@ -63,15 +63,15 @@ public:
     };
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 
-    QSGEngine(QObject *parent = 0);
+    explicit QSGEngine(QObject *parent = Q_NULLPTR);
     ~QSGEngine();
 
     void initialize(QOpenGLContext *context);
     void invalidate();
 
     QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption(0)) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption(0)) const;
+    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
+    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
 };
 
 QT_END_NAMESPACE

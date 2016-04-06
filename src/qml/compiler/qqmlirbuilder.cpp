@@ -1589,7 +1589,9 @@ enum MetaObjectResolverFlags {
 
 static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
-static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
+static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
+                                              const QV4::IR::MemberExpressionResolver *resolver,
+                                              QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
 
@@ -1600,7 +1602,6 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
         int value = type->enumValue(qmlEngine, *member->name, &ok);
         if (ok) {
             member->setEnumValue(value);
-            resolver->clear();
             return QV4::IR::SInt32Type;
         }
     }
@@ -1611,25 +1612,30 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
         tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
         // When a singleton tries to reference itself, it may not be complete yet.
         if (tdata->isComplete()) {
-            initMetaObjectResolver(resolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
-            resolver->flags |= AllPropertiesAreFinal;
-            return resolver->resolveMember(qmlEngine, resolver, member);
+            auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+            newResolver->owner = resolver->owner;
+            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+            newResolver->flags |= AllPropertiesAreFinal;
+            return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
     }  else if (type->isSingleton()) {
         const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
         if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
-            initMetaObjectResolver(resolver, qmlEngine->cache(singletonMeta));
+            auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+            newResolver->owner = resolver->owner;
+            initMetaObjectResolver(newResolver, qmlEngine->cache(singletonMeta));
             member->kind = QV4::IR::Member::MemberOfSingletonObject;
-            return resolver->resolveMember(qmlEngine, resolver, member);
+            return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
     } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
         QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
-        initMetaObjectResolver(resolver, cache);
+        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+        newResolver->owner = resolver->owner;
+        initMetaObjectResolver(newResolver, cache);
         member->setAttachedPropertiesId(type->attachedPropertiesId(qmlEngine));
-        return resolver->resolveMember(qmlEngine, resolver, member);
+        return newResolver->resolveMember(qmlEngine, newResolver, member);
     }
 
-    resolver->clear();
     return result;
 }
 
@@ -1643,7 +1649,9 @@ static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, QQm
     resolver->flags = 0;
 }
 
-static QV4::IR::Type resolveImportNamespace(QQmlEnginePrivate *, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
+static QV4::IR::DiscoveredType resolveImportNamespace(
+        QQmlEnginePrivate *, const QV4::IR::MemberExpressionResolver *resolver,
+        QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
     QQmlTypeNameCache *typeNamespace = static_cast<QQmlTypeNameCache*>(resolver->extraData);
@@ -1660,19 +1668,21 @@ static QV4::IR::Type resolveImportNamespace(QQmlEnginePrivate *, QV4::IR::Member
             // through the singleton getter in the run-time. Until then we
             // can't accelerate access :(
             if (!r.type->isSingleton()) {
-                initQmlTypeResolver(resolver, r.type);
-                return QV4::IR::QObjectType;
+                auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+                newResolver->owner = resolver->owner;
+                initQmlTypeResolver(newResolver, r.type);
+                return QV4::IR::DiscoveredType(newResolver);
             }
         } else {
             Q_ASSERT(false); // How can this happen?
         }
     }
 
-    resolver->clear();
     return result;
 }
 
-static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlTypeNameCache *imports, const void *importNamespace)
+static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver,
+                                        QQmlTypeNameCache *imports, const void *importNamespace)
 {
     resolver->resolveMember = &resolveImportNamespace;
     resolver->data = const_cast<void*>(importNamespace);
@@ -1680,7 +1690,9 @@ static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resol
     resolver->flags = 0;
 }
 
-static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4::IR::MemberExpressionResolver *resolver, QV4::IR::Member *member)
+static QV4::IR::DiscoveredType resolveMetaObjectProperty(
+        QQmlEnginePrivate *qmlEngine, const QV4::IR::MemberExpressionResolver *resolver,
+        QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
     QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
@@ -1694,7 +1706,6 @@ static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4
             int value = metaEnum.keyToValue(enumName.constData(), &ok);
             if (ok) {
                 member->setEnumValue(value);
-                resolver->clear();
                 return QV4::IR::SInt32Type;
             }
         }
@@ -1739,21 +1750,25 @@ static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4
             default:
                 if (property->isQObject()) {
                     if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
-                        initMetaObjectResolver(resolver, cache);
-                        return QV4::IR::QObjectType;
+                        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+                        newResolver->owner = resolver->owner;
+                        initMetaObjectResolver(newResolver, cache);
+                        return QV4::IR::DiscoveredType(newResolver);
                     }
                 } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType)) {
                     if (QQmlPropertyCache *cache = qmlEngine->cache(valueTypeMetaObject)) {
-                        initMetaObjectResolver(resolver, cache);
-                        resolver->flags |= ResolveTypeInformationOnly;
-                        return QV4::IR::QObjectType;
+                        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+                        newResolver->owner = resolver->owner;
+                        initMetaObjectResolver(newResolver, cache);
+                        newResolver->flags |= ResolveTypeInformationOnly;
+                        return QV4::IR::DiscoveredType(newResolver);
                     }
                 }
                 break;
             }
         }
     }
-    resolver->clear();
+
     return result;
 }
 
@@ -1809,6 +1824,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             result = _block->TEMP(result->index);
             if (mapping.type) {
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                result->memberResolver->owner = _function;
                 initMetaObjectResolver(result->memberResolver, mapping.type);
                 result->memberResolver->flags |= AllPropertiesAreFinal;
             }
@@ -1831,6 +1847,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
 
                 result = _block->TEMP(result->index);
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                result->memberResolver->owner = _function;
                 initQmlTypeResolver(result->memberResolver, r.type);
                 return result;
             } else {
@@ -1839,6 +1856,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
                 namespaceName->freeOfSideEffects = true;
                 QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                result->memberResolver->owner = _function;
                 initImportNamespaceResolver(result->memberResolver, imports, r.importNamespace);
 
                 _block->MOVE(result, namespaceName);
@@ -1855,6 +1873,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         if (pd) {
             QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
             base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+            base->memberResolver->owner = _function;
             initMetaObjectResolver(base->memberResolver, _scopeObject);
             return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlScopeObject);
         }
@@ -1868,6 +1887,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         if (pd) {
             QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
             base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+            base->memberResolver->owner = _function;
             initMetaObjectResolver(base->memberResolver, _contextObject);
             return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlContextObject);
         }

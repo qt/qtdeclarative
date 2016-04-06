@@ -55,7 +55,7 @@ class Q_QUICK_EXPORT QQuickRenderControl : public QObject
     Q_OBJECT
 
 public:
-    QQuickRenderControl(QObject *parent = 0);
+    explicit QQuickRenderControl(QObject *parent = Q_NULLPTR);
     ~QQuickRenderControl();
 
     void prepareThread(QThread *targetThread);
@@ -68,8 +68,8 @@ public:
 
     QImage grab();
 
-    static QWindow *renderWindowFor(QQuickWindow *win, QPoint *offset = 0);
-    virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return 0; }
+    static QWindow *renderWindowFor(QQuickWindow *win, QPoint *offset = Q_NULLPTR);
+    virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return Q_NULLPTR; }
 
 Q_SIGNALS:
     void renderRequested();

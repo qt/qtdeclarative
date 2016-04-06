@@ -209,7 +209,6 @@ public:
         };
         struct { // When HasAccessors
             QQmlAccessors *accessors;
-            qintptr accessorData;
         };
     };
     int coreIndex;

@@ -59,7 +59,7 @@ void tst_qquickgravity::test_basic()
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     float mag = 707.10678f;
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
-        if (d->t == -1 || !d->stillAlive())
+        if (d->t == -1 || !d->stillAlive(system))
             continue; //Particle data unused or dead
 
         float t = ((qreal)system->timeInt/1000.0) - d->t;

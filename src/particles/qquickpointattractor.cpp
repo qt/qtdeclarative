@@ -115,8 +115,8 @@ bool QQuickAttractorAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     if (m_strength == 0.0)
         return false;
-    qreal dx = m_x+m_offset.x() - d->curX();
-    qreal dy = m_y+m_offset.y() - d->curY();
+    qreal dx = m_x+m_offset.x() - d->curX(m_system);
+    qreal dy = m_y+m_offset.y() - d->curY(m_system);
     qreal r = std::sqrt((dx*dx) + (dy*dy));
     qreal theta = std::atan2(dy,dx);
     qreal ds = 0;
@@ -146,15 +146,15 @@ bool QQuickAttractorAffector::affectParticle(QQuickParticleData *d, qreal dt)
         d->y = (d->y + dy);
         break;
     case Acceleration:
-        d->setInstantaneousAX(d->ax + dx);
-        d->setInstantaneousAY(d->ay + dy);
+        d->setInstantaneousAX(d->ax + dx, m_system);
+        d->setInstantaneousAY(d->ay + dy, m_system);
         break;
     case Velocity: //also default
     default:
-        vx = d->curVX();
-        vy = d->curVY();
-        d->setInstantaneousVX(vx + dx);
-        d->setInstantaneousVY(vy + dy);
+        vx = d->curVX(m_system);
+        vy = d->curVY(m_system);
+        d->setInstantaneousVX(vx + dx, m_system);
+        d->setInstantaneousVY(vy + dy, m_system);
     }
 
     return true;

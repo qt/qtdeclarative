@@ -88,23 +88,23 @@ QQuickAgeAffector::QQuickAgeAffector(QQuickItem *parent) :
 bool QQuickAgeAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    if (d->stillAlive()){
-        qreal curT = (qreal)m_system->timeInt/1000.0;
-        qreal ttl = (qreal)m_lifeLeft/1000.0;
+    if (d->stillAlive(m_system)){
+        float curT = m_system->timeInt / 1000.0f;
+        float ttl = m_lifeLeft / 1000.0f;
         if (!m_advancePosition && ttl > 0){
-            qreal x = d->curX();
-            qreal vx = d->curVX();
-            qreal ax = d->curAX();
-            qreal y = d->curY();
-            qreal vy = d->curVY();
-            qreal ay = d->curAY();
+            float x = d->curX(m_system);
+            float vx = d->curVX(m_system);
+            float ax = d->curAX();
+            float y = d->curY(m_system);
+            float vy = d->curVY(m_system);
+            float ay = d->curAY();
             d->t = curT - (d->lifeSpan - ttl);
-            d->setInstantaneousX(x);
-            d->setInstantaneousVX(vx);
-            d->setInstantaneousAX(ax);
-            d->setInstantaneousY(y);
-            d->setInstantaneousVY(vy);
-            d->setInstantaneousAY(ay);
+            d->setInstantaneousX(x, m_system);
+            d->setInstantaneousVX(vx, m_system);
+            d->setInstantaneousAX(ax, m_system);
+            d->setInstantaneousY(y, m_system);
+            d->setInstantaneousVY(vy, m_system);
+            d->setInstantaneousAY(ay, m_system);
         } else {
             d->t = curT - (d->lifeSpan - ttl);
         }

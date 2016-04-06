@@ -53,9 +53,9 @@ class Q_QML_EXPORT QQmlApplicationEngine : public QQmlEngine
 {
     Q_OBJECT
 public:
-    QQmlApplicationEngine(QObject *parent=0);
-    QQmlApplicationEngine(const QUrl &url, QObject *parent=0);
-    QQmlApplicationEngine(const QString &filePath, QObject *parent=0);
+    QQmlApplicationEngine(QObject *parent = Q_NULLPTR);
+    QQmlApplicationEngine(const QUrl &url, QObject *parent = Q_NULLPTR);
+    QQmlApplicationEngine(const QString &filePath, QObject *parent = Q_NULLPTR);
     ~QQmlApplicationEngine();
 
     QList<QObject*> rootObjects();

@@ -222,6 +222,8 @@ private slots:
     void ensureVisible();
     void padding();
 
+    void QTBUG_51115_readOnlyResetsSelection();
+
 private:
     void simulateKey(QWindow *, int key);
 
@@ -6738,6 +6740,17 @@ void tst_qquicktextinput::padding()
     QCOMPARE(obj->bottomPadding(), 0.0);
 
     delete root;
+}
+
+void tst_qquicktextinput::QTBUG_51115_readOnlyResetsSelection()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("qtbug51115.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QQuickTextInput *obj = qobject_cast<QQuickTextInput*>(view.rootObject());
+
+    QCOMPARE(obj->selectedText(), QString());
 }
 
 QTEST_MAIN(tst_qquicktextinput)

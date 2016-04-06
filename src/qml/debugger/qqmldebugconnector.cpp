@@ -127,18 +127,15 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
     }
 
     if (!params->instance) {
-        const QString serverConnector = QStringLiteral("QQmlDebugServer");
-        const QString nativeConnector = QStringLiteral("QQmlNativeDebugConnector");
-        const bool isNative = params->arguments.startsWith(QLatin1String("native"));
         if (!params->pluginKey.isEmpty()) {
-            if (params->pluginKey == serverConnector || params->pluginKey == nativeConnector)
-                params->instance = loadQQmlDebugConnector(params->pluginKey);
-            else
-                return 0; // We cannot load anything else, yet
+            params->instance = loadQQmlDebugConnector(params->pluginKey);
         } else if (params->arguments.isEmpty()) {
             return 0; // no explicit class name given and no command line arguments
         } else {
-            params->instance = loadQQmlDebugConnector(isNative ? nativeConnector : serverConnector);
+            params->instance = loadQQmlDebugConnector(
+                        params->arguments.startsWith(QLatin1String("native")) ?
+                            QStringLiteral("QQmlNativeDebugConnector") :
+                            QStringLiteral("QQmlDebugServer"));
         }
 
         if (params->instance) {

@@ -39,7 +39,6 @@
 
 #include "qv4profileradapter.h"
 #include "qqmlprofilerservice.h"
-#include "qqmldebugpacket.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,27 +67,28 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
                                    QVector<QV4::Profiling::MemoryAllocationProperties>)));
 }
 
-qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages)
+qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages,
+                                              QQmlDebugPacket &d)
 {
     while (m_memoryData.length() > m_memoryPos && m_memoryData[m_memoryPos].timestamp <= until) {
-        QQmlDebugPacket d;
         QV4::Profiling::MemoryAllocationProperties &props = m_memoryData[m_memoryPos];
         d << props.timestamp << MemoryAllocation << props.type << props.size;
         ++m_memoryPos;
-        messages.append(d.data());
+        messages.append(d.squeezedData());
+        d.clear();
     }
     return m_memoryData.length() == m_memoryPos ? -1 : m_memoryData[m_memoryPos].timestamp;
 }
 
 qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &messages,
-                                            qint64 callNext)
+                                            qint64 callNext, QQmlDebugPacket &d)
 {
     if (callNext == -1) {
         m_functionCallData.clear();
         m_functionCallPos = 0;
     }
 
-    qint64 memoryNext = appendMemoryEvents(until, messages);
+    qint64 memoryNext = appendMemoryEvents(until, messages, d);
 
     if (memoryNext == -1) {
         m_memoryData.clear();
@@ -101,42 +101,43 @@ qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &mes
 
 qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
+    QQmlDebugPacket d;
     while (true) {
         while (!m_stack.isEmpty() &&
                (m_functionCallPos == m_functionCallData.length() ||
                 m_stack.top() <= m_functionCallData[m_functionCallPos].start)) {
-            if (m_stack.top() > until)
-                return finalizeMessages(until, messages, m_stack.top());
+            if (m_stack.top() > until || messages.length() > s_numMessagesPerBatch)
+                return finalizeMessages(until, messages, m_stack.top(), d);
 
-            appendMemoryEvents(m_stack.top(), messages);
-            QQmlDebugPacket d;
+            appendMemoryEvents(m_stack.top(), messages, d);
             d << m_stack.pop() << RangeEnd << Javascript;
-            messages.append(d.data());
+            messages.append(d.squeezedData());
+            d.clear();
         }
         while (m_functionCallPos != m_functionCallData.length() &&
                (m_stack.empty() || m_functionCallData[m_functionCallPos].start < m_stack.top())) {
             const QV4::Profiling::FunctionCallProperties &props =
                     m_functionCallData[m_functionCallPos];
-            if (props.start > until)
-                return finalizeMessages(until, messages, props.start);
+            if (props.start > until || messages.length() > s_numMessagesPerBatch)
+                return finalizeMessages(until, messages, props.start, d);
 
-            appendMemoryEvents(props.start, messages);
+            appendMemoryEvents(props.start, messages, d);
 
-            QQmlDebugPacket d_start;
-            d_start << props.start << RangeStart << Javascript;
-            messages.push_back(d_start.data());
-            QQmlDebugPacket d_location;
-            d_location << props.start << RangeLocation << Javascript << props.file << props.line
-                       << props.column;
-            messages.push_back(d_location.data());
-            QQmlDebugPacket d_data;
-            d_data << props.start << RangeData << Javascript << props.name;
-            messages.push_back(d_data.data());
+            d << props.start << RangeStart << Javascript;
+            messages.push_back(d.squeezedData());
+            d.clear();
+            d << props.start << RangeLocation << Javascript << props.file << props.line
+              << props.column;
+            messages.push_back(d.squeezedData());
+            d.clear();
+            d << props.start << RangeData << Javascript << props.name;
+            messages.push_back(d.squeezedData());
+            d.clear();
             m_stack.push(props.end);
             ++m_functionCallPos;
         }
         if (m_stack.empty() && m_functionCallPos == m_functionCallData.length())
-            return finalizeMessages(until, messages, -1);
+            return finalizeMessages(until, messages, -1, d);
     }
 }
 

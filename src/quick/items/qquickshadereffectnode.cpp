@@ -497,6 +497,7 @@ QQuickShaderEffectNode::~QQuickShaderEffectNode()
 void QQuickShaderEffectNode::markDirtyTexture()
 {
     markDirty(DirtyMaterial);
+    Q_EMIT dirtyTexture();
 }
 
 void QQuickShaderEffectNode::textureProviderDestroyed(QObject *object)

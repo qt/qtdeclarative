@@ -272,11 +272,13 @@ QT_BEGIN_NAMESPACE
 struct QV4ParticleData : public QV4::Object
 {
     struct Data : QV4::Object::Data {
-        Data(QQuickParticleData *datum)
+        Data(QQuickParticleData *datum, QQuickParticleSystem* particleSystem)
             : datum(datum)
+            , particleSystem(particleSystem)
         {
         }
         QQuickParticleData* datum;//TODO: Guard needed?
+        QQuickParticleSystem* particleSystem;
     };
     V4_OBJECT(QV4::Object)
 };
@@ -312,7 +314,7 @@ static QV4::ReturnedValue particleData_lifeLeft(QV4::CallContext *ctx)
     if (!r || !r->d()->datum)
         return ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));
 
-    return QV4::Encode(r->d()->datum->lifeLeft());
+    return QV4::Encode(r->d()->datum->lifeLeft(r->d()->particleSystem));
 }
 
 static QV4::ReturnedValue particleData_curSize(QV4::CallContext *ctx)
@@ -323,7 +325,7 @@ static QV4::ReturnedValue particleData_curSize(QV4::CallContext *ctx)
     if (!r || !r->d()->datum)
         return ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));
 
-    return QV4::Encode(r->d()->datum->curSize());
+    return QV4::Encode(r->d()->datum->curSize(r->d()->particleSystem));
 }
 #define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::ReturnedValue particleData_get_ ## NAME (QV4::CallContext *ctx) \
 { \
@@ -397,7 +399,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum) \
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
-    return QV4::Encode(r->d()->datum-> GETTER ());\
+    return QV4::Encode(r->d()->datum-> GETTER (r->d()->particleSystem));\
 }\
 \
 static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
@@ -407,7 +409,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qQNaN());\
+    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qQNaN(), r->d()->particleSystem);\
     return QV4::Encode::undefined(); \
 }
 
@@ -503,7 +505,7 @@ QV4ParticleDataDeletable::~QV4ParticleDataDeletable()
 V4_DEFINE_EXTENSION(QV4ParticleDataDeletable, particleV4Data);
 
 
-QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData* datum)
+QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData* datum, QQuickParticleSystem *system)
 {
     if (!engine || !datum)
         return;
@@ -511,7 +513,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4ParticleDataDeletable *d = particleV4Data(scope.engine);
-    QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QV4ParticleData>(datum));
+    QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QV4ParticleData>(datum, system));
     QV4::ScopedObject p(scope, d->proto.value());
     o->setPrototype(p);
     m_v4Value = o;

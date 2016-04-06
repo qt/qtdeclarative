@@ -103,6 +103,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(int button READ button)
     Q_PROPERTY(int buttons READ buttons)
     Q_PROPERTY(int modifiers READ modifiers)
+    Q_PROPERTY(int source READ source REVISION 7)
     Q_PROPERTY(bool wasHeld READ wasHeld)
     Q_PROPERTY(bool isClick READ isClick)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
@@ -111,13 +112,14 @@ public:
     QQuickMouseEvent(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers
                   , bool isClick=false, bool wasHeld=false)
         : _x(x), _y(y), _button(button), _buttons(buttons), _modifiers(modifiers)
-          , _wasHeld(wasHeld), _isClick(isClick), _accepted(true) {}
+          , _source(Qt::MouseEventNotSynthesized), _wasHeld(wasHeld), _isClick(isClick), _accepted(true) {}
 
     qreal x() const { return _x; }
     qreal y() const { return _y; }
     int button() const { return _button; }
     int buttons() const { return _buttons; }
     int modifiers() const { return _modifiers; }
+    int source() const { return _source; }
     bool wasHeld() const { return _wasHeld; }
     bool isClick() const { return _isClick; }
 
@@ -125,6 +127,7 @@ public:
     void setX(qreal x) { _x = x; }
     void setY(qreal y) { _y = y; }
     void setPosition(const QPointF &point) { _x = point.x(); _y = point.y(); }
+    void setSource(Qt::MouseEventSource s) { _source = s; }
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
@@ -135,6 +138,7 @@ private:
     Qt::MouseButton _button;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
+    Qt::MouseEventSource _source;
     bool _wasHeld;
     bool _isClick;
     bool _accepted;
