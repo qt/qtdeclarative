@@ -267,6 +267,8 @@ private:
     struct Deletable { Deletable():next(0) {} virtual ~Deletable() {} Deletable *next; };
     QFieldList<Deletable, &Deletable::next> toDeleteInEngineThread;
     void doDeleteInEngineThread();
+
+    void cleanupScarceResources();
 };
 
 /*
@@ -277,6 +279,26 @@ private:
 inline void QQmlEnginePrivate::referenceScarceResources()
 {
     scarceResourcesRefCount += 1;
+}
+
+/*
+   This function should be called after evaluation of the js expression is
+   complete, and so the scarce resources may be freed safely.
+ */
+inline void QQmlEnginePrivate::dereferenceScarceResources()
+{
+    Q_ASSERT(scarceResourcesRefCount > 0);
+    scarceResourcesRefCount -= 1;
+
+    // if the refcount is zero, then evaluation of the "top level"
+    // expression must have completed.  We can safely release the
+    // scarce resources.
+    if (Q_LIKELY(scarceResourcesRefCount == 0)) {
+        QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
+        if (Q_UNLIKELY(!engine->scarceResources.isEmpty())) {
+            cleanupScarceResources();
+        }
+    }
 }
 
 /*!
