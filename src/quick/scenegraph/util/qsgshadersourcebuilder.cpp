@@ -382,9 +382,9 @@ QString QSGShaderSourceBuilder::resolveShaderPath(const QString &path) const
         int idx = path.lastIndexOf(QLatin1Char('.'));
         QString resolvedPath;
         if (idx != -1)
-            resolvedPath = path.left(idx)
-                         + QStringLiteral("_core")
-                         + path.right(path.length() - idx);
+            resolvedPath = path.leftRef(idx)
+                         + QLatin1String("_core")
+                         + path.rightRef(path.length() - idx);
         return resolvedPath;
     }
 }

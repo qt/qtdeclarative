@@ -1042,7 +1042,7 @@ QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index
                 return QString();
             int from = dot+1;
             dot = name.indexOf(QLatin1Char('.'), from);
-            value = obj->property(name.mid(from, dot-from).toUtf8());
+            value = obj->property(name.midRef(from, dot - from).toUtf8());
         }
         return value.toString();
     }

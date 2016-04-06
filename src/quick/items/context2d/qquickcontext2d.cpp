@@ -65,6 +65,7 @@
 #include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qmath.h>
+#include <QtCore/qvector.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QRunnable>
 #include <QtGui/qguiapplication.h>
@@ -200,7 +201,7 @@ QColor qt_color_from_string(const QV4::Value &name)
     return QColor();
 }
 
-static int qParseFontSizeFromToken(const QString &fontSizeToken, bool &ok)
+static int qParseFontSizeFromToken(const QStringRef &fontSizeToken, bool &ok)
 {
     ok = false;
     float size = fontSizeToken.trimmed().toFloat(&ok);
@@ -216,11 +217,11 @@ static int qParseFontSizeFromToken(const QString &fontSizeToken, bool &ok)
     \c true if successful. If the font size is invalid, \c false is returned
     and a warning is printed.
 */
-static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
+static bool qSetFontSizeFromToken(QFont &font, const QStringRef &fontSizeToken)
 {
-    const QString trimmedToken = fontSizeToken.trimmed();
-    const QString unitStr = trimmedToken.right(2);
-    const QString value = trimmedToken.left(trimmedToken.size() - 2);
+    const QStringRef trimmedToken = fontSizeToken.trimmed();
+    const QStringRef unitStr = trimmedToken.right(2);
+    const QStringRef value = trimmedToken.left(trimmedToken.size() - 2);
     bool ok = false;
     int size = 0;
     if (unitStr == QLatin1String("px")) {
@@ -246,7 +247,7 @@ static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
     each family is separated by spaces. Families with spaces in their name
     must be quoted.
 */
-static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesString)
+static QStringList qExtractFontFamiliesFromString(const QStringRef &fontFamiliesString)
 {
     QStringList extractedFamilies;
     int quoteIndex = -1;
@@ -259,7 +260,7 @@ static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesStr
             } else {
                 if (ch == fontFamiliesString.at(quoteIndex)) {
                     // Found the matching quote. +1/-1 because we don't want the quote as part of the name.
-                    const QString family = fontFamiliesString.mid(quoteIndex + 1, index - quoteIndex - 1);
+                    const QString family = fontFamiliesString.mid(quoteIndex + 1, index - quoteIndex - 1).toString();
                     extractedFamilies.push_back(family);
                     currentFamily.clear();
                     quoteIndex = -1;
@@ -390,16 +391,17 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
     fontSizeEnd += 3;
 
     QFont newFont;
-    if (!qSetFontSizeFromToken(newFont, fontString.mid(fontSizeStart, fontSizeEnd - fontSizeStart)))
+    if (!qSetFontSizeFromToken(newFont, fontString.midRef(fontSizeStart, fontSizeEnd - fontSizeStart)))
         return currentFont;
 
     // We don't want to parse the size twice, so remove it now.
     QString remainingFontString = fontString;
     remainingFontString.remove(fontSizeStart, fontSizeEnd - fontSizeStart);
+    QStringRef remainingFontStringRef(&remainingFontString);
 
     // Next, we have to take any font families out, as QString::split() will ruin quoted family names.
-    const QString fontFamiliesString = remainingFontString.mid(fontSizeStart);
-    remainingFontString.chop(remainingFontString.length() - fontSizeStart);
+    const QStringRef fontFamiliesString = remainingFontStringRef.mid(fontSizeStart);
+    remainingFontStringRef.truncate(fontSizeStart);
     QStringList fontFamilies = qExtractFontFamiliesFromString(fontFamiliesString);
     if (fontFamilies.isEmpty()) {
         return currentFont;
@@ -408,16 +410,16 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
         return currentFont;
 
     // Now that we've removed the messy parts, we can split the font string on spaces.
-    const QString trimmedTokensStr = remainingFontString.trimmed();
+    const QStringRef trimmedTokensStr = remainingFontStringRef.trimmed();
     if (trimmedTokensStr.isEmpty()) {
         // No optional properties.
         return newFont;
     }
-    const QStringList tokens = trimmedTokensStr.split(QLatin1Char(' '));
+    const auto tokens = trimmedTokensStr.split(QLatin1Char(' '));
 
     int usedTokens = NoTokens;
     // Optional properties can be in any order, but font-size and font-family must be last.
-    for (const QString &token : tokens) {
+    for (const QStringRef &token : tokens) {
         if (token.compare(QLatin1String("normal")) == 0) {
             if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
                 // Could be font-style, font-variant or font-weight.

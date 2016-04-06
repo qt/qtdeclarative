@@ -49,6 +49,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qvector.h>
 
 //#define TRACE_PROTOCOL(s) qDebug() << s
 #define TRACE_PROTOCOL(s)
@@ -182,24 +183,21 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
     : m_blockingMode(false)
 {
     const QString args = commandLineArguments();
-    const QStringList lstjsDebugArguments = args.split(QLatin1Char(','));
+    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','));
     QStringList services;
-    QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
-    QStringList::const_iterator argsIt = lstjsDebugArguments.cbegin();
-    for (; argsIt != argsItEnd; ++argsIt) {
-        const QString strArgument = *argsIt;
+    for (const QStringRef &strArgument : lstjsDebugArguments) {
         if (strArgument == QLatin1String("block")) {
             m_blockingMode = true;
         } else if (strArgument == QLatin1String("native")) {
             // Ignore. This is used to signal that this connector
             // should be loaded and that has already happened.
         } else if (strArgument.startsWith(QLatin1String("services:"))) {
-            services.append(strArgument.mid(9));
+            services.append(strArgument.mid(9).toString());
         } else if (!services.isEmpty()) {
-            services.append(strArgument);
+            services.append(strArgument.toString());
         } else {
             qWarning("QML Debugger: Invalid argument \"%s\" detected. Ignoring the same.",
-                     qUtf8Printable(strArgument));
+                     strArgument.toUtf8().constData());
         }
     }
     setServices(services);

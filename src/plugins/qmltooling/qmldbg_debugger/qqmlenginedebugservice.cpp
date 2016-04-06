@@ -683,11 +683,13 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
     QQmlContext *context = qmlContext(object);
 
     if (object && context) {
-        QString parentProperty = propertyName;
-        if (propertyName.indexOf(QLatin1Char('.')) != -1)
-            parentProperty = propertyName.left(propertyName.indexOf(QLatin1Char('.')));
+        QStringRef parentPropertyRef(&propertyName);
+        const int idx = parentPropertyRef.indexOf(QLatin1Char('.'));
+        if (idx != -1)
+            parentPropertyRef = parentPropertyRef.left(idx);
 
-        if (object->property(parentProperty.toLatin1()).isValid()) {
+        const QByteArray parentProperty = parentPropertyRef.toLatin1();
+        if (object->property(parentProperty).isValid()) {
             QQmlProperty property(object, propertyName);
             QQmlPropertyPrivate::removeBinding(property);
             if (property.isResettable()) {
@@ -700,7 +702,7 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
                 // overwrite with default value
                 if (QQmlType *objType = QQmlMetaType::qmlType(object->metaObject())) {
                     if (QObject *emptyObject = objType->create()) {
-                        if (emptyObject->property(parentProperty.toLatin1()).isValid()) {
+                        if (emptyObject->property(parentProperty).isValid()) {
                             QVariant defaultValue = QQmlProperty(emptyObject, propertyName).read();
                             if (defaultValue.isValid()) {
                                 setBinding(objectId, propertyName, defaultValue, true);

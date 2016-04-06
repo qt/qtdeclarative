@@ -1874,7 +1874,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, QVaria
         return QVariant(d->m_text.mid(d->m_cursor));
     case Qt::ImTextBeforeCursor:
         if (argument.isValid())
-            return QVariant(d->m_text.left(d->m_cursor).right(argument.toInt()));
+            return QVariant(d->m_text.leftRef(d->m_cursor).right(argument.toInt()).toString());
         return QVariant(d->m_text.left(d->m_cursor));
     default:
         return QQuickItem::inputMethodQuery(property);

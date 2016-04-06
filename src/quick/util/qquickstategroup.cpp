@@ -47,6 +47,7 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qvector.h>
 
 #include <private/qobject_p.h>
 #include <qqmlinfo.h>
@@ -379,28 +380,29 @@ QQuickTransition *QQuickStateGroupPrivate::findTransition(const QString &from, c
                       (t->fromState() == QLatin1String("*") &&
                        t->toState() == QLatin1String("*"))))
                 break;
-            QStringList fromState;
-            QStringList toState;
+            const QString fromStateStr = t->fromState();
+            const QString toStateStr = t->toState();
 
-            fromState = t->fromState().split(QLatin1Char(','));
+            QVector<QStringRef> fromState = fromStateStr.splitRef(QLatin1Char(','));
             for (int jj = 0; jj < fromState.count(); ++jj)
                 fromState[jj] = fromState.at(jj).trimmed();
-            toState = t->toState().split(QLatin1Char(','));
+            QVector<QStringRef> toState = toStateStr.splitRef(QLatin1Char(','));
             for (int jj = 0; jj < toState.count(); ++jj)
                 toState[jj] = toState.at(jj).trimmed();
             if (ii == 1)
                 qSwap(fromState, toState);
             int tScore = 0;
-            if (fromState.contains(from))
+            const QString asterisk = QStringLiteral("*");
+            if (fromState.contains(QStringRef(&from)))
                 tScore += 2;
-            else if (fromState.contains(QLatin1String("*")))
+            else if (fromState.contains(QStringRef(&asterisk)))
                 tScore += 1;
             else
                 continue;
 
-            if (toState.contains(to))
+            if (toState.contains(QStringRef(&to)))
                 tScore += 2;
-            else if (toState.contains(QLatin1String("*")))
+            else if (toState.contains(QStringRef(&asterisk)))
                 tScore += 1;
             else
                 continue;

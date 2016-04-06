@@ -85,12 +85,11 @@ QString resolveLocalUrl(const QString &url, const QString &relative)
     } else if (relative.at(0) == Slash || !url.contains(Slash)) {
         return relative;
     } else {
-        QString base(url.left(url.lastIndexOf(Slash) + 1));
-
+        const QStringRef baseRef = url.leftRef(url.lastIndexOf(Slash) + 1);
         if (relative == QLatin1String("."))
-            return base;
+            return baseRef.toString();
 
-        base.append(relative);
+        QString base = baseRef + relative;
 
         // Remove any relative directory elements in the path
         int length = base.length();
@@ -815,11 +814,11 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
                             QString u1 = import->url;
                             QString u2 = import2->url;
                             if (base) {
-                                QString b = *base;
+                                QStringRef b(base);
                                 int dot = b.lastIndexOf(Dot);
                                 if (dot >= 0) {
                                     b = b.left(dot+1);
-                                    QString l = b.left(dot);
+                                    QStringRef l = b.left(dot);
                                     if (u1.startsWith(b))
                                         u1 = u1.mid(b.count());
                                     else if (u1 == l)
@@ -1173,11 +1172,11 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
         QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
         if (!absoluteFilePath.isEmpty()) {
             QString url;
-            QString absolutePath = absoluteFilePath.left(absoluteFilePath.lastIndexOf(Slash)+1);
+            const QStringRef absolutePath = absoluteFilePath.leftRef(absoluteFilePath.lastIndexOf(Slash) + 1);
             if (absolutePath.at(0) == Colon)
                 url = QLatin1String("qrc://") + absolutePath.mid(1);
             else
-                url = QUrl::fromLocalFile(absolutePath).toString();
+                url = QUrl::fromLocalFile(absolutePath.toString()).toString();
 
             QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
             cache->versionMajor = vmaj;

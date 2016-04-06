@@ -179,16 +179,16 @@ bool QQmlTypeCompiler::compile()
     for (int scriptIndex = 0; scriptIndex < scripts.count(); ++scriptIndex) {
         const QQmlTypeData::ScriptReference &script = scripts.at(scriptIndex);
 
-        QString qualifier = script.qualifier;
+        QStringRef qualifier(&script.qualifier);
         QString enclosingNamespace;
 
         const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
         if (lastDotIndex != -1) {
-            enclosingNamespace = qualifier.left(lastDotIndex);
+            enclosingNamespace = qualifier.left(lastDotIndex).toString();
             qualifier = qualifier.mid(lastDotIndex+1);
         }
 
-        compiledData->importCache->add(qualifier, scriptIndex, enclosingNamespace);
+        compiledData->importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
         QQmlScriptData *scriptData = script.script->scriptData();
         scriptData->addref();
         compiledData->scripts << scriptData;
@@ -624,7 +624,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         QString path = compiler->url().path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
-            QString nameBase = path.mid(lastSlash + 1, path.length()-lastSlash-5);
+            const QStringRef nameBase = path.midRef(lastSlash + 1, path.length() - lastSlash - 5);
             if (!nameBase.isEmpty() && nameBase.at(0).isUpper())
                 newClassName = nameBase.toUtf8() + "_QMLTYPE_" +
                                QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
@@ -1163,10 +1163,10 @@ struct StaticQtMetaObject : public QObject
         { return &staticQtMetaObject; }
 };
 
-bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
+bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &enumName, int enumValue, bool isQtObject)
 {
     if (enumName.length() > 0 && enumName[0].isLower() && !isQtObject) {
-        COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName));
+        COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName.toString()));
     }
     binding->type = QV4::CompiledData::Binding::Type_Number;
     binding->value.d = (double)enumValue;
@@ -1197,7 +1197,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
 
     QHashedStringRef typeName(string.constData(), dot);
     const bool isQtObject = (typeName == QLatin1String("Qt"));
-    QString enumValue = string.mid(dot+1);
+    const QStringRef enumValue = string.midRef(dot + 1);
 
     if (isIntProp) {
         // Allow enum assignment to ints.

@@ -58,6 +58,7 @@
 #include <private/qv4functionobject_p.h>
 
 #include <QStringList>
+#include <QVector>
 #include <private/qmetaobject_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <QtCore/qdebug.h>
@@ -240,14 +241,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
     QQmlTypeNameCache *typeNameCache = context?context->imports:0;
 
-    QStringList path = name.split(QLatin1Char('.'));
+    const auto path = name.splitRef(QLatin1Char('.'));
     if (path.isEmpty()) return;
 
     QObject *currentObject = obj;
 
     // Everything up to the last property must be an "object type" property
     for (int ii = 0; ii < path.count() - 1; ++ii) {
-        const QString &pathName = path.at(ii);
+        const QStringRef &pathName = path.at(ii);
 
         if (typeNameCache) {
             QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
@@ -284,7 +285,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
         QQmlPropertyData local;
         QQmlPropertyData *property =
-            QQmlPropertyCache::property(engine, currentObject, pathName, context, local);
+            QQmlPropertyCache::property(engine, currentObject, pathName.toString(), context, local);
 
         if (!property) return; // Not a property
         if (property->isFunction())
@@ -324,14 +325,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
     }
 
-    const QString &terminal = path.last();
+    const QStringRef &terminal = path.last();
 
     if (terminal.count() >= 3 &&
         terminal.at(0) == QLatin1Char('o') &&
         terminal.at(1) == QLatin1Char('n') &&
         terminal.at(2).isUpper()) {
 
-        QString signalName = terminal.mid(2);
+        QString signalName = terminal.mid(2).toString();
         signalName[0] = signalName.at(0).toLower();
 
         // XXX - this code treats methods as signals
@@ -376,13 +377,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     }
 
     // Property
+    const QString terminalString = terminal.toString();
     QQmlPropertyData local;
     QQmlPropertyData *property =
-        QQmlPropertyCache::property(engine, currentObject, terminal, context, local);
+        QQmlPropertyCache::property(engine, currentObject, terminalString, context, local);
     if (property && !property->isFunction()) {
         object = currentObject;
         core = *property;
-        nameCache = terminal;
+        nameCache = terminalString;
         isNameCached = true;
     }
 }

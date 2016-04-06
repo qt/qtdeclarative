@@ -221,8 +221,8 @@ QString Binding::valueAsString(const Unit *unit) const
         // This code must match that in the qsTr() implementation
         const QString &path = unit->stringAt(unit->sourceFileIndex);
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) :
-                                             QString();
+        QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
+                                              : QStringRef();
         QByteArray contextUtf8 = context.toUtf8();
         QByteArray comment = unit->stringAt(value.translationData.commentIndex).toUtf8();
         QByteArray text = unit->stringAt(stringIndex).toUtf8();
