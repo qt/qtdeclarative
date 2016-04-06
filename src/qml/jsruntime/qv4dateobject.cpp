@@ -466,7 +466,7 @@ static inline double ParseString(const QString &s)
                 if (format < Minute || format >= TimezoneHour)
                     error = true;
                 format = TimezoneHour;
-            } else if (*ch == 'Z' || *ch == 0) {
+            } else if (*ch == 'Z' || ch->unicode() == 0) {
                 format = Done;
             }
             current = 0;
