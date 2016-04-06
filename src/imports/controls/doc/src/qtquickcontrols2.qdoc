@@ -60,3 +60,27 @@
     \generatelist {qmltypesbymodule Qt.labs.calendar}
     \noautolist
 */
+
+/*!
+    \module QtQuickControls2
+    \title Qt Quick Controls 2 C++ Classes
+    \ingroup modules
+    \brief Provides classes for setting up the controls from C++.
+
+    The C++ types can be included into your application using the following
+    include statement:
+
+    \code
+    #include <QtQuickControls2>
+    \endcode
+
+    \note If you are using a few classes from this module, we recommend including
+    those specific classes only instead of the module.
+
+    To link against the corresponding C++ libraries, add the following to your
+    qmake project file:
+
+    \code
+    QT += quickcontrols2
+    \endcode
+*/

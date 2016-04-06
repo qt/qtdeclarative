@@ -34,6 +34,34 @@
     Qt Quick Controls 2 provides a set of controls that can be used
     to build complete interfaces in Qt Quick.
 
+    \section1 Prerequisites
+
+    The QML types can be imported into your application using the following
+    import statement in your \c {.qml} file:
+
+    \code
+    import QtQuick.Controls 2.0
+    \endcode
+
+    The C++ types can be included into your application using the following
+    include statement:
+
+    \code
+    #include <QtQuickControls2>
+    \endcode
+
+    \note If you are using a few classes from this module, we recommend including
+    those specific classes only instead of the module.
+
+    To link against the corresponding C++ libraries, add the following to your
+    qmake project file:
+
+    \code
+    QT += quickcontrols2
+    \endcode
+
+    For more details, see \l {Getting Started with Qt Quick Controls 2}.
+
     \section1 QML Types
 
     \section2 Qt.labs.controls Module
@@ -60,6 +88,7 @@
       \li \l{Qt Labs Calendar}
       \li \l{Qt Quick Templates 2}
       \li \l{Qt Quick Controls 2 QML Types}
+      \li \l{Qt Quick Controls 2 C++ Classes}
       \li \l{Qt Quick Controls 2 Examples}
     \endlist
 */

@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QQuickStyle
     \brief The QQQuickStyle class allows configuring the application style.
-    \inmodule QtLabsControls
+    \inmodule QtQuickControls2
 
     QQuickStyle provides API for querying and configuring the application
     \l {Styling Qt Quick Controls 2}{styles} of Qt Quick Controls 2.
