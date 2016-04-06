@@ -46,6 +46,7 @@
 #include <QtQuickTemplates/private/qquickcontainer_p.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickControls/private/qquickpluginutils_p.h>
 #include <QtQuickControls/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
@@ -86,10 +87,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
 
     QQuickStyleSelector selector;
-    if (QFile::exists(QLatin1String(":/qt-project.org/imports/Qt/labs/controls/ApplicationWindow.qml")))
-        selector.setBaseUrl(QUrl(QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls")));
-    else
-        selector.setBaseUrl(baseUrl());
+    selector.setBaseUrl(QQuickPluginUtils::pluginBaseUrl(*this));
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())

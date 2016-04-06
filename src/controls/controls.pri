@@ -1,5 +1,6 @@
 HEADERS += \
     $$PWD/qquickcolorimageprovider_p.h \
+    $$PWD/qquickpluginutils_p.h \
     $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickstyle.h \
     $$PWD/qquickstyleattached_p.h \
@@ -9,6 +10,7 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qquickcolorimageprovider.cpp \
+    $$PWD/qquickpluginutils.cpp \
     $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickstyle.cpp \
     $$PWD/qquickstyleattached.cpp \
