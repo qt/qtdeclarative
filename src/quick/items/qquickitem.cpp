@@ -117,17 +117,17 @@ static void QQuickItem_parentNotifier(QObject *o, QQmlNotifier **n)
     *n = &d->parentNotifier;
 }
 
-QML_PRIVATE_ACCESSOR(QQuickItem, QQuickItem *, parent, parentItem)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, x, x)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height)
+QML_PRIVATE_ACCESSOR(QQuickItem, QQuickItem *, parent, parentItem, setParentItem)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, x, x, setX)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y, setY)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width, setWidth)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height, setHeight)
 
-static QQmlAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentNotifier };
-static QQmlAccessors QQuickItem_x = { QQuickItem_xRead, 0 };
-static QQmlAccessors QQuickItem_y = { QQuickItem_yRead, 0 };
-static QQmlAccessors QQuickItem_width = { QQuickItem_widthRead, 0 };
-static QQmlAccessors QQuickItem_height = { QQuickItem_heightRead, 0 };
+static QQmlAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentWrite, QQuickItem_parentNotifier };
+static QQmlAccessors QQuickItem_x = { QQuickItem_xRead, QQuickItem_xWrite, 0 };
+static QQmlAccessors QQuickItem_y = { QQuickItem_yRead, QQuickItem_yWrite, 0 };
+static QQmlAccessors QQuickItem_width = { QQuickItem_widthRead, QQuickItem_widthWrite, 0 };
+static QQmlAccessors QQuickItem_height = { QQuickItem_heightRead, QQuickItem_heightWrite, 0 };
 
 QML_DECLARE_PROPERTIES(QQuickItem) {
     { QML_PROPERTY_NAME(parent), 0, &QQuickItem_parent },
