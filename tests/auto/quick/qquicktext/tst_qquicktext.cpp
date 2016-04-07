@@ -700,7 +700,7 @@ void tst_qquicktext::textFormat()
         QQuickText *text = qobject_cast<QQuickText *>(object.data());
         QVERIFY(text);
 
-        QSignalSpy spy(text, SIGNAL(textFormatChanged(TextFormat)));
+        QSignalSpy spy(text, &QQuickText::textFormatChanged);
 
         QCOMPARE(text->textFormat(), QQuickText::AutoText);
 

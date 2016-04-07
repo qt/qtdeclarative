@@ -311,8 +311,8 @@ Q_SIGNALS:
     void selectionColorChanged();
     void selectedTextColorChanged();
     void fontChanged(const QFont &font);
-    void horizontalAlignmentChanged(HAlignment alignment);
-    void verticalAlignmentChanged(VAlignment alignment);
+    void horizontalAlignmentChanged(QQuickTextInput::HAlignment alignment);
+    void verticalAlignmentChanged(QQuickTextInput::VAlignment alignment);
     void wrapModeChanged();
     void readOnlyChanged(bool isReadOnly);
     void cursorVisibleChanged(bool isCursorVisible);
@@ -320,14 +320,14 @@ Q_SIGNALS:
     void maximumLengthChanged(int maximumLength);
     void validatorChanged();
     void inputMaskChanged(const QString &inputMask);
-    void echoModeChanged(EchoMode echoMode);
+    void echoModeChanged(QQuickTextInput::EchoMode echoMode);
     void passwordCharacterChanged();
     Q_REVISION(3) void passwordMaskDelayChanged(int delay);
     void displayTextChanged();
     void activeFocusOnPressChanged(bool activeFocusOnPress);
     void autoScrollChanged(bool autoScroll);
     void selectByMouseChanged(bool selectByMouse);
-    void mouseSelectionModeChanged(SelectionMode mode);
+    void mouseSelectionModeChanged(QQuickTextInput::SelectionMode mode);
     void persistentSelectionChanged();
     void canPasteChanged();
     void canUndoChanged();

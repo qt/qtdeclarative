@@ -1349,7 +1349,7 @@ void tst_qquicktextinput::mouseSelectionMode_accessors()
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
     QVERIFY(input);
 
-    QSignalSpy spy(input, SIGNAL(mouseSelectionModeChanged(SelectionMode)));
+    QSignalSpy spy(input, &QQuickTextInput::mouseSelectionModeChanged);
 
     QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectCharacters);
 
