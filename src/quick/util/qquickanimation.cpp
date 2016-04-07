@@ -1441,7 +1441,7 @@ QQuickVector3dAnimation::~QQuickVector3dAnimation()
 }
 
 /*!
-    \qmlproperty real QtQuick::Vector3dAnimation::from
+    \qmlproperty vector3d QtQuick::Vector3dAnimation::from
     This property holds the starting value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,
@@ -1463,7 +1463,7 @@ void QQuickVector3dAnimation::setFrom(QVector3D f)
 }
 
 /*!
-    \qmlproperty real QtQuick::Vector3dAnimation::to
+    \qmlproperty vector3d QtQuick::Vector3dAnimation::to
     This property holds the end value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,

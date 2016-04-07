@@ -158,6 +158,8 @@ protected:
     QQuickAnimatorJob();
     void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
+    qreal progress(int time) const;
+
     QPointer<QQuickItem> m_target;
     QQuickAnimatorController *m_controller;
 
