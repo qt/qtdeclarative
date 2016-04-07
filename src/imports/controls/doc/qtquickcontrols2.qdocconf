@@ -39,9 +39,11 @@ examplesinstallpath = qtquickcontrols2/controls
 
 headerdirs += ../../../templates \
               ../../calendar \
+              ../../../controls
 
 sourcedirs += ../../../templates \
-              ../../calendar
+              ../../calendar \
+              ../../../controls
 
 imagedirs += images
 
