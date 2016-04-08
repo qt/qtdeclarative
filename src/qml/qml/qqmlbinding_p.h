@@ -72,12 +72,12 @@ class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
 {
     friend class QQmlAbstractBinding;
 public:
-    QQmlBinding(const QString &, QObject *, QQmlContext *);
-    QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
-    QQmlBinding(const QString &, QObject *, QQmlContextData *);
-    QQmlBinding(const QString &, QObject *, QQmlContextData *,
-                const QString &url, quint16 lineNumber, quint16 columnNumber);
-    QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *);
+    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContext *);
+    static QQmlBinding *create(const QQmlPropertyData *, const QQmlScriptString &, QObject *, QQmlContext *);
+    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *);
+    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *,
+                               const QString &url, quint16 lineNumber, quint16 columnNumber);
+    static QQmlBinding *create(const QQmlPropertyData *, const QV4::Value &, QObject *, QQmlContextData *);
     ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);
@@ -101,17 +101,27 @@ public:
     QString expressionIdentifier() Q_DECL_OVERRIDE;
     void expressionChanged() Q_DECL_OVERRIDE;
 
+protected:
+    virtual void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
+                          QQmlPropertyPrivate::WriteFlags flags, QV4::Scope &scope,
+                          const QV4::ScopedFunctionObject &f) = 0;
+
+    QQmlPropertyData getPropertyData() const;
+    int getPropertyCoreIndex() const;
+    int getPropertyType() const;
+
+    bool write(const QV4::Value &result, bool isUndefined, QQmlPropertyPrivate::WriteFlags flags);
+
+    bool slowWrite(const QV4::Value &result, bool isUndefined,
+                   QQmlPropertyPrivate::WriteFlags flags);
+
 private:
     inline bool updatingFlag() const;
     inline void setUpdatingFlag(bool);
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
-    QQmlPropertyData getPropertyData() const;
 
-    bool write(const QQmlPropertyData &core,
-                       const QV4::Value &result, bool isUndefined,
-                       QQmlPropertyPrivate::WriteFlags flags);
-
+    static QQmlBinding *newBinding(const QQmlPropertyData *property);
 };
 
 bool QQmlBinding::updatingFlag() const

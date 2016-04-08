@@ -294,6 +294,10 @@ struct Scoped
         return ptr->cast<T>();
     }
 
+    const T *operator->() const {
+        return ptr->cast<T>();
+    }
+
     bool operator!() const {
         return !ptr->m();
     }

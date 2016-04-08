@@ -136,9 +136,10 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
 
                 QQmlBinding *newBinding = 0;
                 if (!isLiteralValue) {
-                    newBinding = new QQmlBinding(expression.toString(), object,
-                                                 QQmlContextData::get(context), fileName,
-                                                 line, column);
+                    newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
+                                                     expression.toString(), object,
+                                                     QQmlContextData::get(context), fileName,
+                                                     line, column);
                     newBinding->setTarget(property);
                 }
 

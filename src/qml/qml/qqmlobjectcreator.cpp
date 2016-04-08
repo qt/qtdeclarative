@@ -813,8 +813,6 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
 
             bs->takeExpression(expr);
         } else {
-            QQmlBinding *qmlBinding = new QQmlBinding(function, _scopeObject, context);
-
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
             // the point property (_qobjectForBindings) and after evaluating the expression,
@@ -824,6 +822,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             if (_valueTypeProperty)
                 targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
 
+            QQmlBinding *qmlBinding = QQmlBinding::create(&targetCorePropertyData, function, _scopeObject, context);
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
 
             qmlBinding->setTarget(_bindingTarget, targetCorePropertyData);

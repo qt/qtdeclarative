@@ -456,11 +456,13 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             if (e.id != QQmlBinding::Invalid) {
                 QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
                 QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->compilationUnit->runtimeFunctions[e.id]));
-                newBinding = new QQmlBinding(function, object(), context);
+                newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
+                                                 function, object(), context);
             }
 //            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this)) : 0;
             if (!newBinding)
-                newBinding = new QQmlBinding(e.expression, object(), context, e.url.toString(), e.line, e.column);
+                newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
+                                                 e.expression, object(), context, e.url.toString(), e.line, e.column);
 
             if (d->isExplicit) {
                 // in this case, we don't want to assign a binding, per se,
@@ -624,8 +626,11 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
         if (entry.name == name) {
             entry.expression = expression;
             if (state() && state()->isStateActive()) {
-                QQmlBinding *newBinding = new QQmlBinding(expression, object(), qmlContext(this));
-                newBinding->setTarget(d->property(name));
+                auto prop = d->property(name);
+                QQmlBinding *newBinding = QQmlBinding::create(
+                            &QQmlPropertyPrivate::get(prop)->core, expression, object(),
+                            qmlContext(this));
+                newBinding->setTarget(prop);
                 QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
             }
             return;
@@ -643,8 +648,11 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
                 state()->changeBindingInRevertList(object(), name, oldBinding);
             }
 
-            QQmlBinding *newBinding = new QQmlBinding(expression, object(), qmlContext(this));
-            newBinding->setTarget(d->property(name));
+            auto prop = d->property(name);
+            QQmlBinding *newBinding = QQmlBinding::create(
+                        &QQmlPropertyPrivate::get(prop)->core, expression, object(),
+                        qmlContext(this));
+            newBinding->setTarget(prop);
             QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
         } else {
             QQuickStateAction action;
@@ -654,7 +662,9 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             action.specifiedObject = object();
             action.specifiedProperty = name;
 
-            QQmlBinding *newBinding = new QQmlBinding(expression, object(), qmlContext(this));
+            QQmlBinding *newBinding = QQmlBinding::create(
+                        &QQmlPropertyPrivate::get(action.property)->core, expression,
+                        object(), qmlContext(this));
             if (d->isExplicit) {
                 // don't assign the binding, merely evaluate the expression.
                 // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
