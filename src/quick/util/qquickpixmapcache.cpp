@@ -515,7 +515,6 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
         QQuickTextureFactory *t = 0;
         QQuickPixmapReply::ReadError error = QQuickPixmapReply::NoError;
         QString errorString;
-        QSize readSize;
         if (!response->errorString().isEmpty()) {
             error = QQuickPixmapReply::Loading;
             errorString = response->errorString();

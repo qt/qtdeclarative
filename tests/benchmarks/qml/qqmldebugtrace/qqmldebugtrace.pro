@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 QT += qml testlib
 TEMPLATE = app
 TARGET = tst_qqmldebugtrace

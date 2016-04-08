@@ -972,6 +972,9 @@ Item {
         \sa mouseRelease(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseDrag(), mouseWheel()
     */
     function mousePress(item, x, y, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mousePress", 1)
+
         if (button === undefined)
             button = Qt.LeftButton
         if (modifiers === undefined)
@@ -1003,6 +1006,9 @@ Item {
         \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseDrag(), mouseWheel()
     */
     function mouseRelease(item, x, y, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseRelease", 1)
+
         if (button === undefined)
             button = Qt.LeftButton
         if (modifiers === undefined)
@@ -1036,6 +1042,9 @@ Item {
         \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseRelease(), mouseWheel()
     */
     function mouseDrag(item, x, y, dx, dy, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseDrag", 1)
+
         if (item.x === undefined || item.y === undefined)
             return
         if (button === undefined)
@@ -1083,6 +1092,9 @@ Item {
         \sa mousePress(), mouseRelease(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseDrag(), mouseWheel()
     */
     function mouseClick(item, x, y, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseClick", 1)
+
         if (button === undefined)
             button = Qt.LeftButton
         if (modifiers === undefined)
@@ -1114,6 +1126,9 @@ Item {
         \sa mouseDoubleClickSequence(), mousePress(), mouseRelease(), mouseClick(), mouseMove(), mouseDrag(), mouseWheel()
     */
     function mouseDoubleClick(item, x, y, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseDoubleClick", 1)
+
         if (button === undefined)
             button = Qt.LeftButton
         if (modifiers === undefined)
@@ -1152,6 +1167,9 @@ Item {
         \sa mouseDoubleClick(), mousePress(), mouseRelease(), mouseClick(), mouseMove(), mouseDrag(), mouseWheel()
     */
     function mouseDoubleClickSequence(item, x, y, button, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseDoubleClickSequence", 1)
+
         if (button === undefined)
             button = Qt.LeftButton
         if (modifiers === undefined)
@@ -1181,6 +1199,9 @@ Item {
         \sa mousePress(), mouseRelease(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseDrag(), mouseWheel()
     */
     function mouseMove(item, x, y, delay, buttons) {
+        if (!item)
+            qtest_fail("No item given to mouseMove", 1)
+
         if (delay == undefined)
             delay = -1
         if (buttons == undefined)
@@ -1206,6 +1227,9 @@ Item {
         \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseRelease(), mouseDrag(), QWheelEvent::angleDelta()
     */
     function mouseWheel(item, x, y, xDelta, yDelta, buttons, modifiers, delay) {
+        if (!item)
+            qtest_fail("No item given to mouseWheel", 1)
+
         if (delay == undefined)
             delay = -1
         if (buttons == undefined)
