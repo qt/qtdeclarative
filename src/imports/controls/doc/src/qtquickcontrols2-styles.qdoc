@@ -146,5 +146,6 @@
     \li \l {Material Style}
     \li \l {Universal Style}
     \li \l{Using File Selectors with Qt Quick Controls 2}
+    \li \l {Deploying Qt Quick Controls 2 Applications}
     \endlist
 */
