@@ -52,7 +52,7 @@
 
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +65,7 @@ namespace Heap {
 struct DateObject : Object {
     DateObject()
     {
-        date = qQNaN();
+        date = qt_qnan();
     }
 
     DateObject(const Value &date)

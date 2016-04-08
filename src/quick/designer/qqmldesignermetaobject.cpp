@@ -41,7 +41,7 @@
 
 #include <QSharedPointer>
 #include <QMetaProperty>
-#include <qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QDebug>
 
 #include <private/qqmlengine_p.h>
@@ -271,19 +271,19 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
     if (call == QMetaObject::WriteProperty
             && propertyById.userType() == QMetaType::QVariant
             && reinterpret_cast<QVariant *>(a[0])->type() == QVariant::Double
-            && qIsNaN(reinterpret_cast<QVariant *>(a[0])->toDouble())) {
+            && qt_is_nan(reinterpret_cast<QVariant *>(a[0])->toDouble())) {
         return -1;
     }
 
     if (call == QMetaObject::WriteProperty
             && propertyById.userType() == QMetaType::Double
-            && qIsNaN(*reinterpret_cast<double*>(a[0]))) {
+            && qt_is_nan(*reinterpret_cast<double*>(a[0]))) {
         return -1;
     }
 
     if (call == QMetaObject::WriteProperty
             && propertyById.userType() == QMetaType::Float
-            && qIsNaN(*reinterpret_cast<float*>(a[0]))) {
+            && qt_is_nan(*reinterpret_cast<float*>(a[0]))) {
         return -1;
     }
 

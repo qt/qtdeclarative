@@ -40,7 +40,7 @@
 #include "qqmljavascriptexpression_p.h"
 
 #include <private/qqmlexpression_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4context_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
@@ -334,14 +334,6 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::ExecutionEngine *engine, 
         capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
     }
 
-}
-
-
-void QQmlJavaScriptExpression::clearError()
-{
-    if (m_error)
-        delete m_error;
-    m_error = 0;
 }
 
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const

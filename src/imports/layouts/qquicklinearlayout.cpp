@@ -40,7 +40,7 @@
 #include "qquicklinearlayout_p.h"
 #include "qquickgridlayoutengine_p.h"
 #include "qquicklayoutstyleinfo_p.h"
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include "qdebug.h"
 #include <limits>
 
@@ -566,7 +566,7 @@ qreal QQuickGridLayout::columnSpacing() const
 void QQuickGridLayout::setColumnSpacing(qreal spacing)
 {
     Q_D(QQuickGridLayout);
-    if (qIsNaN(spacing) || columnSpacing() == spacing)
+    if (qt_is_nan(spacing) || columnSpacing() == spacing)
         return;
 
     d->engine.setSpacing(spacing, Qt::Horizontal);
@@ -588,7 +588,7 @@ qreal QQuickGridLayout::rowSpacing() const
 void QQuickGridLayout::setRowSpacing(qreal spacing)
 {
     Q_D(QQuickGridLayout);
-    if (qIsNaN(spacing) || rowSpacing() == spacing)
+    if (qt_is_nan(spacing) || rowSpacing() == spacing)
         return;
 
     d->engine.setSpacing(spacing, Qt::Vertical);
@@ -867,7 +867,7 @@ qreal QQuickLinearLayout::spacing() const
 void QQuickLinearLayout::setSpacing(qreal space)
 {
     Q_D(QQuickLinearLayout);
-    if (qIsNaN(space) || spacing() == space)
+    if (qt_is_nan(space) || spacing() == space)
         return;
 
     d->engine.setSpacing(space, Qt::Horizontal | Qt::Vertical);

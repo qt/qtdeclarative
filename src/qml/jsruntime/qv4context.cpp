@@ -39,7 +39,7 @@
 
 #include <QString>
 #include "qv4debugging_p.h"
-#include <qv4context_p.h>
+#include <qv4context_p_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
@@ -47,7 +47,6 @@
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
-#include "private/qqmlcontextwrapper_p.h"
 
 using namespace QV4;
 
@@ -574,19 +573,3 @@ Heap::FunctionObject *ExecutionContext::getFunctionObject() const
 
     return 0;
 }
-
-
-QObject *QmlContext::qmlScope() const
-{
-    return d()->qml->scopeObject;
-}
-
-QQmlContextData *QmlContext::qmlContext() const
-{
-    return d()->qml->context;
-}
-
-void QmlContext::takeContextOwnership() {
-    d()->qml->ownsContext = true;
-}
-

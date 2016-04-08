@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Layouts module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -36,49 +36,48 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QV4CONTEXT_P_P_H
+#define QV4CONTEXT_P_P_H
 
-#include <QtQml/qqmlextensionplugin.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquicklinearlayout_p.h"
-#include "qquickstacklayout_p.h"
+// This header defines a couple of inlinable methods.
+// These implementation cannot be put in qv4context_p.h, because they rely on the
+// QQmlContextWrapper, which in turn is a QV4::Object subclass (so it includes qv4object_p.h),
+// which includes qv4engine_p.h, that needs to include qv4context_p.h
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Layouts);
-#endif
-}
+#include "qv4context_p.h"
+#include "private/qqmlcontextwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
-//![class decl]
-class QtQuickLayoutsPlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
-public:
-    QtQuickLayoutsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent)
-    {
-        initResources();
-    }
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Layouts"));
-        Q_UNUSED(uri);
+namespace QV4 {
 
-        qmlRegisterType<QQuickRowLayout>(uri, 1, 0, "RowLayout");
-        qmlRegisterType<QQuickColumnLayout>(uri, 1, 0, "ColumnLayout");
-        qmlRegisterType<QQuickGridLayout>(uri, 1, 0, "GridLayout");
-        qmlRegisterType<QQuickStackLayout>(uri, 1, 3, "StackLayout");
-        qmlRegisterUncreatableType<QQuickLayout>(uri, 1, 0, "Layout",
-                                                           QStringLiteral("Do not create objects of type Layout"));
-        qmlRegisterUncreatableType<QQuickLayout>(uri, 1, 2, "Layout",
-                                                           QStringLiteral("Do not create objects of type Layout"));
-        qmlRegisterRevision<QQuickGridLayoutBase, 1>(uri, 1, 1);
-    }
-};
-//![class decl]
+QObject *QmlContext::qmlScope() const
+{
+    return d()->qml->scopeObject;
+}
+
+QQmlContextData *QmlContext::qmlContext() const
+{
+    return d()->qml->context;
+}
+
+void QmlContext::takeContextOwnership() {
+    d()->qml->ownsContext = true;
+}
+
+} // QV4 namespace
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // QV4CONTEXT_P_P_H

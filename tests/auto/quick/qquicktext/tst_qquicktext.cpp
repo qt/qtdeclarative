@@ -59,6 +59,7 @@ public:
     tst_qquicktext();
 
 private slots:
+    void cleanup();
     void text();
     void width();
     void wrap();
@@ -168,6 +169,11 @@ private:
     QQuickView *createView(const QString &filename);
     int numberOfNonWhitePixels(int fromX, int toX, const QImage &image);
 };
+
+void tst_qquicktext::cleanup()
+{
+    QVERIFY(QGuiApplication::topLevelWindows().isEmpty());
+}
 
 tst_qquicktext::tst_qquicktext()
 {
@@ -551,7 +557,7 @@ void tst_qquicktext::multilineElide_data()
 void tst_qquicktext::multilineElide()
 {
     QFETCH(QQuickText::TextFormat, format);
-    QQuickView *window = createView(testFile("multilineelide.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("multilineelide.qml")));
 
     QQuickText *myText = qobject_cast<QQuickText*>(window->rootObject());
     QVERIFY(myText != 0);
@@ -595,8 +601,6 @@ void tst_qquicktext::multilineElide()
     // change line height
     myText->setLineHeight(1.1);
     QCOMPARE(myText->lineCount(), 1);
-
-    delete window;
 }
 
 void tst_qquicktext::implicitElide_data()
@@ -758,7 +762,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     dummy.showFullScreen();  // so make test window a second window.
 #endif
 
-    QQuickView *window = createView(testFile("horizontalAlignment_RightToLeft.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("horizontalAlignment_RightToLeft.qml")));
     QQuickText *text = window->rootObject()->findChild<QQuickText*>("text");
     QVERIFY(text != 0);
     window->showNormal();
@@ -861,7 +865,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
 
-    delete window;
+    window.reset();
 
     // alignment of Text with no text set to it
     QString componentStr = "import QtQuick 2.0\nText {}";
@@ -2100,7 +2104,7 @@ void tst_qquicktext::embeddedImages()
 
 void tst_qquicktext::lineCount()
 {
-    QQuickView *window = createView(testFile("lineCount.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("lineCount.qml")));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -2123,13 +2127,11 @@ void tst_qquicktext::lineCount()
     QCOMPARE(myText->lineCount(), 2);
     QCOMPARE(myText->truncated(), true);
     QCOMPARE(myText->maximumLineCount(), 2);
-
-    delete window;
 }
 
 void tst_qquicktext::lineHeight()
 {
-    QQuickView *window = createView(testFile("lineHeight.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("lineHeight.qml")));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -2156,8 +2158,6 @@ void tst_qquicktext::lineHeight()
     myText->setLineHeightMode(QQuickText::FixedHeight);
     myText->setLineHeight(10);
     QCOMPARE(myText->height(), myText->lineCount() * 10.0);
-
-    delete window;
 }
 
 void tst_qquicktext::implicitSize_data()
@@ -2729,7 +2729,7 @@ void tst_qquicktext::clipRect()
 
 void tst_qquicktext::lineLaidOut()
 {
-    QQuickView *window = createView(testFile("lineLayout.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayout.qml")));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -2749,17 +2749,15 @@ void tst_qquicktext::lineLaidOut()
             QCOMPARE(r.height(), qreal(20));
         }
     }
-
-    delete window;
 }
 
 void tst_qquicktext::lineLaidOutRelayout()
 {
-    QQuickView *window = createView(testFile("lineLayoutRelayout.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayoutRelayout.qml")));
 
     window->show();
     window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -2782,13 +2780,11 @@ void tst_qquicktext::lineLaidOutRelayout()
             QCOMPARE(r.y(), i * h - maxH);
         }
     }
-
-    delete window;
 }
 
 void tst_qquicktext::lineLaidOutHAlign()
 {
-    QQuickView *window = createView(testFile("lineLayoutHAlign.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayoutHAlign.qml")));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -2799,8 +2795,6 @@ void tst_qquicktext::lineLaidOutHAlign()
     QCOMPARE(textPrivate->layout.lineCount(), 1);
 
     QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().x() < 0.0);
-
-    delete window;
 }
 
 void tst_qquicktext::imgTagsBaseUrl_data()
@@ -2960,7 +2954,7 @@ void tst_qquicktext::imgTagsMultipleImages()
 
 void tst_qquicktext::imgTagsElide()
 {
-    QQuickView *window = createView(testFile("imgTagsElide.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("imgTagsElide.qml")));
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
@@ -2971,12 +2965,11 @@ void tst_qquicktext::imgTagsElide()
     QTRY_COMPARE(textPrivate->extra->visibleImgTags.count(), 1);
 
     delete myText;
-    delete window;
 }
 
 void tst_qquicktext::imgTagsUpdates()
 {
-    QQuickView *window = createView(testFile("imgTagsUpdates.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("imgTagsUpdates.qml")));
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
@@ -2998,7 +2991,6 @@ void tst_qquicktext::imgTagsUpdates()
     QCOMPARE(spy.count(), 3);
 
     delete myText;
-    delete window;
 }
 
 void tst_qquicktext::imgTagsError()

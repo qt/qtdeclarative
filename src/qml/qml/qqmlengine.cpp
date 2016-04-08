@@ -1605,15 +1605,6 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
     }
 }
 
-/*
-    index MUST in the range returned by QObjectPrivate::signalIndex()
-    This is different than the index returned by QMetaMethod::methodIndex()
-*/
-bool QQmlData::signalHasEndpoint(int index)
-{
-    return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
-}
-
 void QQmlData::disconnectNotifiers()
 {
     if (notifyList) {
@@ -1909,16 +1900,6 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
 }
 
 /*
-   This function should be called prior to evaluation of any js expression,
-   so that scarce resources are not freed prematurely (eg, if there is a
-   nested javascript expression).
- */
-void QQmlEnginePrivate::referenceScarceResources()
-{
-    scarceResourcesRefCount += 1;
-}
-
-/*
    This function should be called after evaluation of the js expression is
    complete, and so the scarce resources may be freed safely.
  */
@@ -1930,7 +1911,7 @@ void QQmlEnginePrivate::dereferenceScarceResources()
     // if the refcount is zero, then evaluation of the "top level"
     // expression must have completed.  We can safely release the
     // scarce resources.
-    if (scarceResourcesRefCount == 0) {
+    if (Q_UNLIKELY(scarceResourcesRefCount == 0)) {
         // iterate through the list and release them all.
         // note that the actual SRD is owned by the JS engine,
         // so we cannot delete the SRD; but we can free the

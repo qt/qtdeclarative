@@ -42,7 +42,7 @@
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qthreadstorage.h>
 
 #include <cmath>
@@ -100,7 +100,7 @@ static double copySign(double x, double y)
 ReturnedValue MathObject::method_abs(CallContext *context)
 {
     if (!context->argc())
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
 
     if (context->args()[0].isInteger()) {
         int i = context->args()[0].integerValue();
@@ -118,7 +118,7 @@ ReturnedValue MathObject::method_acos(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : 2;
     if (v > 1)
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
 
     return Encode(std::acos(v));
 }
@@ -127,14 +127,14 @@ ReturnedValue MathObject::method_asin(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : 2;
     if (v > 1)
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
     else
         return Encode(std::asin(v));
 }
 
 ReturnedValue MathObject::method_atan(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     if (v == 0.0)
         return Encode(v);
     else
@@ -143,10 +143,10 @@ ReturnedValue MathObject::method_atan(CallContext *context)
 
 ReturnedValue MathObject::method_atan2(CallContext *context)
 {
-    double v1 = context->argc() ? context->args()[0].toNumber() : qQNaN();
-    double v2 = context->argc() > 1 ? context->args()[1].toNumber() : qQNaN();
+    double v1 = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v2 = context->argc() > 1 ? context->args()[1].toNumber() : qt_qnan();
 
-    if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0))
+    if ((v1 < 0) && qt_is_finite(v1) && qt_is_inf(v2) && (copySign(1.0, v2) == 1.0))
         return Encode(copySign(0, -1.0));
 
     if ((v1 == 0.0) && (v2 == 0.0)) {
@@ -161,7 +161,7 @@ ReturnedValue MathObject::method_atan2(CallContext *context)
 
 ReturnedValue MathObject::method_ceil(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     if (v < 0.0 && v > -1.0)
         return Encode(copySign(0, -1.0));
     else
@@ -170,18 +170,18 @@ ReturnedValue MathObject::method_ceil(CallContext *context)
 
 ReturnedValue MathObject::method_cos(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     return Encode(std::cos(v));
 }
 
 ReturnedValue MathObject::method_exp(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
-    if (qIsInf(v)) {
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    if (qt_is_inf(v)) {
         if (copySign(1.0, v) == -1.0)
             return Encode(0);
         else
-            return Encode(qInf());
+            return Encode(qt_inf());
     } else {
         return Encode(std::exp(v));
     }
@@ -189,22 +189,22 @@ ReturnedValue MathObject::method_exp(CallContext *context)
 
 ReturnedValue MathObject::method_floor(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     return Encode(std::floor(v));
 }
 
 ReturnedValue MathObject::method_log(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     if (v < 0)
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
     else
         return Encode(std::log(v));
 }
 
 ReturnedValue MathObject::method_max(CallContext *context)
 {
-    double mx = -qInf();
+    double mx = -qt_inf();
     for (int i = 0; i < context->argc(); ++i) {
         double x = context->args()[i].toNumber();
         if (x > mx || std::isnan(x))
@@ -215,7 +215,7 @@ ReturnedValue MathObject::method_max(CallContext *context)
 
 ReturnedValue MathObject::method_min(CallContext *context)
 {
-    double mx = qInf();
+    double mx = qt_inf();
     for (int i = 0; i < context->argc(); ++i) {
         double x = context->args()[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
@@ -228,24 +228,24 @@ ReturnedValue MathObject::method_min(CallContext *context)
 
 ReturnedValue MathObject::method_pow(CallContext *context)
 {
-    double x = context->argc() > 0 ? context->args()[0].toNumber() : qQNaN();
-    double y = context->argc() > 1 ? context->args()[1].toNumber() : qQNaN();
+    double x = context->argc() > 0 ? context->args()[0].toNumber() : qt_qnan();
+    double y = context->argc() > 1 ? context->args()[1].toNumber() : qt_qnan();
 
     if (std::isnan(y))
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
 
     if (y == 0) {
         return Encode(1);
     } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
         return Encode(qInf());
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
             if (std::fmod(-y, 2.0) == 1.0)
-                return Encode(-qInf());
+                return Encode(-qt_inf());
             else
-                return Encode(qInf());
+                return Encode(qt_inf());
         } else if (y > 0) {
             if (std::fmod(y, 2.0) == 1.0)
                 return Encode(copySign(0, -1.0));
@@ -255,12 +255,12 @@ ReturnedValue MathObject::method_pow(CallContext *context)
     }
 
 #ifdef Q_OS_AIX
-    else if (qIsInf(x) && copySign(1.0, x) == -1.0) {
+    else if (qt_is_inf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
             if (std::fmod(y, 2.0) == 1.0)
-                return Encode(-qInf());
+                return Encode(-qt_inf());
             else
-                return Encode(qInf());
+                return Encode(qt_inf());
         } else if (y < 0) {
             if (std::fmod(-y, 2.0) == 1.0)
                 return Encode(copySign(0, -1.0));
@@ -273,7 +273,7 @@ ReturnedValue MathObject::method_pow(CallContext *context)
         return Encode(std::pow(x, y));
     }
     // ###
-    return Encode(qQNaN());
+    return Encode(qt_qnan());
 }
 
 Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
@@ -294,26 +294,26 @@ ReturnedValue MathObject::method_random(CallContext *context)
 
 ReturnedValue MathObject::method_round(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     v = copySign(std::floor(v + 0.5), v);
     return Encode(v);
 }
 
 ReturnedValue MathObject::method_sin(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     return Encode(std::sin(v));
 }
 
 ReturnedValue MathObject::method_sqrt(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     return Encode(std::sqrt(v));
 }
 
 ReturnedValue MathObject::method_tan(CallContext *context)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qQNaN();
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     if (v == 0.0)
         return Encode(v);
     else

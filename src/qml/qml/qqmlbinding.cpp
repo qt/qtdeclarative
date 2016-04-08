@@ -226,9 +226,6 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
     Q_ASSERT(m_target.data());
     Q_ASSERT(core.coreIndex != -1);
 
-    QQmlEngine *engine = context()->engine;
-    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
-
 #define QUICK_STORE(cpptype, conversion) \
         { \
             cpptype o = (conversion); \
@@ -239,7 +236,7 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         } \
 
 
-    if (!isUndefined && !core.isValueTypeVirtual()) {
+    if (Q_LIKELY(!isUndefined && !core.isValueTypeVirtual())) {
         switch (core.propType) {
         case QMetaType::Int:
             if (result.isInteger())
@@ -269,6 +266,9 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         }
     }
 #undef QUICK_STORE
+
+    QQmlEngine *engine = context()->engine;
+    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
 
     int type = core.isValueTypeVirtual() ? core.valueTypePropType : core.propType;
 
@@ -497,7 +497,7 @@ QQmlPropertyData QQmlBinding::getPropertyData() const
     Q_ASSERT(propertyData);
 
     QQmlPropertyData d = *propertyData;
-    if (valueTypeIndex != -1) {
+    if (Q_UNLIKELY(valueTypeIndex != -1)) {
         const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d.propType);
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);

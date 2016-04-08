@@ -101,7 +101,11 @@ public:
         : available(PageSize)
         , allocated(PageSize)
     {
-        for (int i=0; i<PageSize; ++i) blocks[i] = i;
+        for (int i=0; i<PageSize; ++i)
+            blocks[i] = i;
+
+        // Zero out all new pages.
+        memset(data, 0, sizeof(data));
     }
 
     const Type *at(uint index) const
@@ -153,7 +157,7 @@ public:
         void *mem = p->at(pos);
         p->available--;
         p->allocated.setBit(pos);
-        Type *t = new (mem) Type();
+        Type *t = (Type*)mem;
         return t;
     }
 
@@ -163,8 +167,9 @@ public:
         if (!page->allocated.testBit(index))
             qFatal("Double delete in allocator: page=%d, index=%d", pageIndex , index);
 
-        // Call the destructor
-        page->at(index)->~Type();
+        // Zero this instance as we're done with it.
+        void *mem = page->at(index);
+        memset(mem, 0, sizeof(Type));
 
         page->allocated[index] = false;
         page->available++;
@@ -440,21 +445,9 @@ struct Batch
     QDataBuffer<DrawSet> drawSets;
 };
 
+// NOTE: Node is zero-allocated by the Allocator.
 struct Node
 {
-    Node()
-        : sgNode(0)
-        , parent(0)
-        , data(0)
-        , firstChild(0)
-        , nextSibling(0)
-        , lastChild(0)
-        , dirtyState(0)
-        , isOpaque(false)
-        , isBatchRoot(false)
-    {
-    }
-
     QSGNode *sgNode;
     Node *parent;
     void *data;

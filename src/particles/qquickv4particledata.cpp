@@ -43,6 +43,7 @@
 #include <QDebug>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
+#include <QtCore/private/qnumeric_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -388,7 +389,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->d()->datum-> VARIABLE = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();\
+    r->d()->datum-> VARIABLE = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();\
     return QV4::Encode::undefined(); \
 }
 
@@ -409,7 +410,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qQNaN(), r->d()->particleSystem);\
+    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan(), r->d()->particleSystem);\
     return QV4::Encode::undefined(); \
 }
 
