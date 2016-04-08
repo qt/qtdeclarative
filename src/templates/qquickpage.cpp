@@ -93,6 +93,8 @@ public:
 
     void relayout();
 
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) override;
+    void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
@@ -123,6 +125,20 @@ void QQuickPagePrivate::relayout()
         footer->setY(q->height() - fh);
         footer->setWidth(q->width());
     }
+}
+
+void QQuickPagePrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+{
+    Q_UNUSED(item)
+    Q_UNUSED(newRect)
+    Q_UNUSED(oldRect)
+    relayout();
+}
+
+void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
+{
+    Q_UNUSED(item);
+    relayout();
 }
 
 void QQuickPagePrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -168,14 +184,16 @@ void QQuickPage::setHeader(QQuickItem *header)
         return;
 
     if (d->header) {
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->header->setParentItem(nullptr);
     }
     d->header = header;
     if (header) {
         header->setParentItem(this);
         QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(header->z()))
             header->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
@@ -212,14 +230,16 @@ void QQuickPage::setFooter(QQuickItem *footer)
         return;
 
     if (d->footer) {
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(this);
         QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(footer->z()))
             footer->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
