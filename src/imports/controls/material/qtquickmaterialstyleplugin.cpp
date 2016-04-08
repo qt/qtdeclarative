@@ -42,6 +42,7 @@
 #include "qquickmaterialprogressstrip_p.h"
 
 #include <QtQuickControls/private/qquickstyleselector_p.h>
+#include <QtQuickControls/private/qquickpluginutils_p.h>
 
 static inline void initResources()
 {
@@ -82,13 +83,15 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
 
+    const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
+
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
-    qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
-    qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
+    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
+    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
 }
 
 QString QtQuickMaterialStylePlugin::name() const
