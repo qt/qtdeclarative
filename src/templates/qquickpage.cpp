@@ -200,9 +200,9 @@ void QQuickPage::setHeader(QQuickItem *header)
             toolBar->setPosition(QQuickToolBar::Header);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
             tabBar->setPosition(QQuickTabBar::Header);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit headerChanged();
 }
 
@@ -246,9 +246,9 @@ void QQuickPage::setFooter(QQuickItem *footer)
             toolBar->setPosition(QQuickToolBar::Footer);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
             tabBar->setPosition(QQuickTabBar::Footer);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit footerChanged();
 }
 
