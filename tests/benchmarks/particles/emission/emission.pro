@@ -1,4 +1,4 @@
-CONFIG += testcase
+CONFIG += benchmark
 TARGET = tst_emission
 SOURCES += tst_emission.cpp
 macx:CONFIG -= app_bundle

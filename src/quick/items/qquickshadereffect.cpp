@@ -1033,12 +1033,12 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         Key s = m_common.source;
         QSGShaderSourceBuilder builder;
         if (s.sourceCode[Key::FragmentShader].isEmpty()) {
-            builder.appendSourceFile(QStringLiteral(":/items/shaders/shadereffect.frag"));
+            builder.appendSourceFile(QStringLiteral(":/qt-project.org/items/shaders/shadereffect.frag"));
             s.sourceCode[Key::FragmentShader] = builder.source();
             builder.clear();
         }
         if (s.sourceCode[Key::VertexShader].isEmpty()) {
-            builder.appendSourceFile(QStringLiteral(":/items/shaders/shadereffect.vert"));
+            builder.appendSourceFile(QStringLiteral(":/qt-project.org/items/shaders/shadereffect.vert"));
             s.sourceCode[Key::VertexShader] = builder.source();
         }
         s.className = metaObject()->className();

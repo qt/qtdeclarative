@@ -52,7 +52,7 @@ static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProvider
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         QSGTextureProvider *t = textureProviders.at(i);
-        if (t->texture() && t->texture()->isAtlasTexture())
+        if (t && t->texture() && t->texture()->isAtlasTexture())
             return true;
     }
     return false;
@@ -305,8 +305,8 @@ void QQuickCustomMaterialShader::compile()
 
         QSGShaderSourceBuilder::initializeProgramFromFiles(
             program(),
-            QStringLiteral(":/items/shaders/shadereffectfallback.vert"),
-            QStringLiteral(":/items/shaders/shadereffectfallback.frag"));
+            QStringLiteral(":/qt-project.org/items/shaders/shadereffectfallback.vert"),
+            QStringLiteral(":/qt-project.org/items/shaders/shadereffectfallback.frag"));
 
 #ifndef QT_NO_DEBUG
         for (int i = 0; i < attrCount; ++i) {

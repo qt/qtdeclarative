@@ -116,8 +116,8 @@ QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
     , m_textureScale_id(-1)
     , m_glyphFormat(glyphFormat)
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/textmask.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/textmask.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/textmask.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/textmask.frag"));
 }
 
 static inline qreal fontSmoothingGamma()
@@ -176,7 +176,7 @@ public:
     QSG8BitTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
         : QSGTextMaskShader(glyphFormat)
     {
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/8bittextmask.frag"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/8bittextmask.frag"));
     }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
@@ -201,7 +201,7 @@ public:
         : QSGTextMaskShader(glyphFormat)
         , m_useSRGB(false)
     {
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/24bittextmask.frag"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/24bittextmask.frag"));
     }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
@@ -279,7 +279,7 @@ public:
     QSG32BitColorTextShader(QFontEngine::GlyphFormat glyphFormat)
         : QSGTextMaskShader(glyphFormat)
     {
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/32bitcolortext.frag"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/32bitcolortext.frag"));
     }
 
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
@@ -303,8 +303,8 @@ public:
     QSGStyledTextShader(QFontEngine::GlyphFormat glyphFormat)
         : QSG8BitTextMaskShader(glyphFormat)
     {
-        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/styledtext.vert"));
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/styledtext.frag"));
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/styledtext.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/styledtext.frag"));
     }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
@@ -375,8 +375,8 @@ public:
     QSGOutlinedTextShader(QFontEngine::GlyphFormat glyphFormat)
         : QSGStyledTextShader(glyphFormat)
     {
-        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/outlinedtext.vert"));
-        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/outlinedtext.frag"));
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/outlinedtext.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/outlinedtext.frag"));
     }
 };
 

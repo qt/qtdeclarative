@@ -1,5 +1,5 @@
 TARGET = qmldbg_native
-QT += qml-private core-private packetprotocol-private
+QT = qml-private core-private packetprotocol-private
 
 HEADERS += \
     $$PWD/../shared/qqmldebugpacket.h \

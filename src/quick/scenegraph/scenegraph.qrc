@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/scenegraph">
+    <qresource prefix="/qt-project.org/scenegraph">
         <file>shaders/flatcolor.frag</file>
         <file>shaders/flatcolor.vert</file>
         <file>shaders/8bittextmask.frag</file>
