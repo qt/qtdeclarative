@@ -106,7 +106,7 @@ T.RangeSlider {
         }
 
         Rectangle {
-            x: parent.horizontal ? control.first.position * parent.width : 0
+            x: parent.horizontal ? control.first.position * parent.width : (parent.width - width) / 2
             y: parent.horizontal ? (parent.height - height) / 2 : control.second.visualPosition * parent.height
             width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width : 2 // SliderBackgroundThemeHeight
             height: !parent.horizontal ? control.second.position * parent.height - control.first.position * parent.height : 2 // SliderBackgroundThemeHeight
