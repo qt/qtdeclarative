@@ -1675,7 +1675,7 @@ void QSGD3D12EnginePrivate::queueScissor(const QRect &rect)
     }
 
     tframeData.scissor = rect;
-    const D3D12_RECT scissorRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
+    const D3D12_RECT scissorRect = { rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height() };
     commandList->RSSetScissorRects(1, &scissorRect);
 }
 
@@ -1763,6 +1763,8 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
         return;
     }
 
+    const bool skip = tframeData.scissor.isEmpty();
+
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
 
     pfd.buffersUsedInDrawCallSet.insert(params.vertexBuf);
@@ -1785,7 +1787,7 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
         ensureBuffer(&buffers[indexBufIdx]);
 
     // Set the CBV.
-    if (params.cboOffset >= 0) {
+    if (!skip && params.cboOffset >= 0) {
         ID3D12Resource *cbuf = buffers[constantBufIdx].d[currentPFrameIndex].buffer.Get();
         if (cbuf)
             commandList->SetGraphicsRootConstantBufferView(0, cbuf->GetGPUVirtualAddress() + params.cboOffset);
@@ -1796,7 +1798,7 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
     ID3D12Resource *ibuf = indexBufIdx >= 0 && params.startIndexIndex >= 0
             ? buffers[indexBufIdx].d[currentPFrameIndex].buffer.Get() : nullptr;
 
-    if (params.mode != tframeData.drawingMode) {
+    if (!skip && params.mode != tframeData.drawingMode) {
         D3D_PRIMITIVE_TOPOLOGY topology;
         switch (params.mode) {
         case QSGGeometry::DrawPoints:
@@ -1822,15 +1824,17 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
         tframeData.drawingMode = params.mode;
     }
 
-    D3D12_VERTEX_BUFFER_VIEW vbv;
-    vbv.BufferLocation = vbuf->GetGPUVirtualAddress() + params.vboOffset;
-    vbv.SizeInBytes = params.vboSize;
-    vbv.StrideInBytes = params.vboStride;
+    if (!skip) {
+        D3D12_VERTEX_BUFFER_VIEW vbv;
+        vbv.BufferLocation = vbuf->GetGPUVirtualAddress() + params.vboOffset;
+        vbv.SizeInBytes = params.vboSize;
+        vbv.StrideInBytes = params.vboStride;
 
-    // must be set after the topology
-    commandList->IASetVertexBuffers(0, 1, &vbv);
+        // must be set after the topology
+        commandList->IASetVertexBuffers(0, 1, &vbv);
+    }
 
-    if (params.startIndexIndex >= 0 && ibuf && tframeData.currentIndexBuffer != params.indexBuf) {
+    if (!skip && params.startIndexIndex >= 0 && ibuf && tframeData.currentIndexBuffer != params.indexBuf) {
         tframeData.currentIndexBuffer = params.indexBuf;
         D3D12_INDEX_BUFFER_VIEW ibv;
         ibv.BufferLocation = ibuf->GetGPUVirtualAddress();
@@ -1842,34 +1846,38 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
     // Copy the SRVs to a drawcall-dedicated area of the shader-visible descriptor heap.
     Q_ASSERT(tframeData.activeTextures.count() == tframeData.pipelineState.shaders.rootSig.textureViews.count());
     if (!tframeData.activeTextures.isEmpty()) {
-        ensureGPUDescriptorHeap(tframeData.activeTextures.count());
-        const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        D3D12_CPU_DESCRIPTOR_HANDLE dst = pfd.gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
-        dst.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
-        for (const TransientFrameData::ActiveTexture &t : qAsConst(tframeData.activeTextures)) {
-            Q_ASSERT(t.id);
-            const int idx = t.id - 1;
-            const bool isTex = t.type == TransientFrameData::ActiveTexture::TypeTexture;
-            device->CopyDescriptorsSimple(1, dst, isTex ? textures[idx].srv : renderTargets[idx].srv,
-                                          D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            dst.ptr += stride;
+        if (!skip) {
+            ensureGPUDescriptorHeap(tframeData.activeTextures.count());
+            const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            D3D12_CPU_DESCRIPTOR_HANDLE dst = pfd.gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
+            dst.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
+            for (const TransientFrameData::ActiveTexture &t : qAsConst(tframeData.activeTextures)) {
+                Q_ASSERT(t.id);
+                const int idx = t.id - 1;
+                const bool isTex = t.type == TransientFrameData::ActiveTexture::TypeTexture;
+                device->CopyDescriptorsSimple(1, dst, isTex ? textures[idx].srv : renderTargets[idx].srv,
+                                              D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                dst.ptr += stride;
+            }
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuAddr = pfd.gpuCbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
+            gpuAddr.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
+            commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
+
+            pfd.cbvSrvUavNextFreeDescriptorIndex += tframeData.activeTextures.count();
         }
-
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuAddr = pfd.gpuCbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
-        gpuAddr.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
-        commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
-
-        pfd.cbvSrvUavNextFreeDescriptorIndex += tframeData.activeTextures.count();
         tframeData.activeTextures.clear();
     }
 
     // Add the draw call.
-    if (params.startIndexIndex >= 0)
-        commandList->DrawIndexedInstanced(params.count, 1, params.startIndexIndex, 0, 0);
-    else
-        commandList->DrawInstanced(params.count, 1, 0, 0);
+    if (!skip) {
+        ++tframeData.drawCount;
+        if (params.startIndexIndex >= 0)
+            commandList->DrawIndexedInstanced(params.count, 1, params.startIndexIndex, 0, 0);
+        else
+            commandList->DrawInstanced(params.count, 1, 0, 0);
+    }
 
-    ++tframeData.drawCount;
     if (tframeData.drawCount == MAX_DRAW_CALLS_PER_LIST) {
         if (Q_UNLIKELY(debug_render()))
             qDebug("Limit of %d draw calls reached, executing command list", MAX_DRAW_CALLS_PER_LIST);

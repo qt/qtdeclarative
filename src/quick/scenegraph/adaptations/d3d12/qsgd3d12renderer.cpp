@@ -627,10 +627,10 @@ void QSGD3D12Renderer::setupClipping(const QSGGeometryNode *gn, int elementIndex
             int iy2 = qRound((fy2 + 1) * devRect.height() * 0.5f);
 
             if (!(clipTypes & ClipScissor)) {
-                scissorRect = QRect(ix1, devRect.height() - iy2, ix2 - ix1 + 1, iy2 - iy1 + 1);
+                scissorRect = QRect(ix1, devRect.height() - iy2, ix2 - ix1, iy2 - iy1);
                 clipTypes |= ClipScissor;
             } else {
-                scissorRect &= QRect(ix1, devRect.height() - iy2, ix2 - ix1 + 1, iy2 - iy1 + 1);
+                scissorRect &= QRect(ix1, devRect.height() - iy2, ix2 - ix1, iy2 - iy1);
             }
         } else
 #endif
