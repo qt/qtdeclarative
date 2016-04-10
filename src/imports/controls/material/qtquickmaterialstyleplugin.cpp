@@ -34,15 +34,13 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#include <QtQuickControls/private/qquickstyleplugin_p.h>
 
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialtheme_p.h"
 #include "qquickmaterialprogressring_p.h"
 #include "qquickmaterialprogressstrip_p.h"
 
-#include <QtGui/private/qguiapplication_p.h>
-#include <QtQuickControls/qquickstyle.h>
 #include <QtQuickControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
@@ -55,7 +53,7 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickMaterialStylePlugin : public QQmlExtensionPlugin
+class QtQuickMaterialStylePlugin : public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -66,11 +64,11 @@ public:
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
-private:
-    QScopedPointer<QQuickProxyTheme> theme;
+    QString name() const override;
+    QQuickProxyTheme *createTheme() const override;
 };
 
-QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
 }
@@ -82,12 +80,7 @@ void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
 
 void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_UNUSED(engine);
-
-    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0) {
-        theme.reset(new QQuickMaterialTheme);
-        QGuiApplicationPrivate::platform_theme = theme.data();
-    }
+    QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
@@ -96,6 +89,16 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
     qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
     qmlRegisterType(QUrl(baseUrl().toString() + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
+}
+
+QString QtQuickMaterialStylePlugin::name() const
+{
+    return QStringLiteral("material");
+}
+
+QQuickProxyTheme *QtQuickMaterialStylePlugin::createTheme() const
+{
+    return new QQuickMaterialTheme;
 }
 
 QT_END_NAMESPACE

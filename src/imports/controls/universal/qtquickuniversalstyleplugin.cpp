@@ -34,16 +34,15 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#include <QtQuickControls/private/qquickstyleplugin_p.h>
+
 #include "qquickuniversalfocusrectangle_p.h"
 #include "qquickuniversalprogressring_p.h"
 #include "qquickuniversalprogressstrip_p.h"
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
 
-#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuickControls/private/qquickcolorimageprovider_p.h>
-#include <QtQuickControls/qquickstyle.h>
 
 static inline void initResources()
 {
@@ -55,7 +54,7 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickUniversalStylePlugin: public QQmlExtensionPlugin
+class QtQuickUniversalStylePlugin: public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -66,11 +65,11 @@ public:
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
-private:
-    QScopedPointer<QQuickProxyTheme> theme;
+    QString name() const override;
+    QQuickProxyTheme *createTheme() const override;
 };
 
-QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
 }
@@ -82,12 +81,9 @@ void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0) {
-        theme.reset(new QQuickUniversalTheme);
-        QGuiApplicationPrivate::platform_theme = theme.data();
-    }
+    QQuickStylePlugin::initializeEngine(engine, uri);
 
-    engine->addImageProvider(QStringLiteral("universal"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
+    engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 1, 0, "FocusRectangle");
@@ -95,6 +91,16 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
     qmlRegisterType<QQuickUniversalProgressRingAnimator>(import, 1, 0, "ProgressRingAnimator");
     qmlRegisterType<QQuickUniversalProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 1, 0, "ProgressStripAnimator");
+}
+
+QString QtQuickUniversalStylePlugin::name() const
+{
+    return QStringLiteral("universal");
+}
+
+QQuickProxyTheme *QtQuickUniversalStylePlugin::createTheme() const
+{
+    return new QQuickUniversalTheme;
 }
 
 QT_END_NAMESPACE
