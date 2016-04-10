@@ -68,17 +68,17 @@ T.Slider {
         implicitWidth: horizontal ? 200 : 1
         implicitHeight: horizontal ? 1 : 200
         width: horizontal ? control.availableWidth : implicitWidth
-        height: horizontal ? 1 : control.position * implicitHeight - 4
+        height: horizontal ? implicitHeight : control.availableHeight
         color: control.Material.primaryTextColor
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
 
         Rectangle {
-            x: 0
-            y: parent.horizontal ? -1 : control.visualPosition * parent.height + 3
+            x: parent.horizontal ? 0 : (parent.width - width) / 2
+            y: parent.horizontal ? (parent.height - height) / 2 : control.visualPosition * parent.height
             width: parent.horizontal ? control.position * parent.width : 3
-            height: parent.horizontal ? 3 : control.availableHeight
+            height: parent.horizontal ? 3 : control.position * parent.height
 
             color: control.Material.accentColor
         }
