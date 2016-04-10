@@ -62,26 +62,17 @@ class QtQuickUniversalStylePlugin: public QQmlExtensionPlugin
 
 public:
     QtQuickUniversalStylePlugin(QObject *parent = nullptr);
-    ~QtQuickUniversalStylePlugin();
+
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:
-    QQuickProxyTheme *theme;
+    QScopedPointer<QQuickProxyTheme> theme;
 };
 
 QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
-}
-
-QtQuickUniversalStylePlugin::~QtQuickUniversalStylePlugin()
-{
-    if (theme) {
-        QPlatformTheme *old = theme->theme();
-        QGuiApplicationPrivate::platform_theme = old;
-        delete theme;
-    }
 }
 
 void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
@@ -91,8 +82,10 @@ void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0)
-        QGuiApplicationPrivate::platform_theme = new QQuickUniversalTheme;
+    if (QQuickStyle::name().compare(QLatin1String("universal"), Qt::CaseInsensitive) == 0) {
+        theme.reset(new QQuickUniversalTheme);
+        QGuiApplicationPrivate::platform_theme = theme.data();
+    }
 
     engine->addImageProvider(QStringLiteral("universal"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
 

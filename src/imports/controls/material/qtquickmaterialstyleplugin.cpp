@@ -62,26 +62,17 @@ class QtQuickMaterialStylePlugin : public QQmlExtensionPlugin
 
 public:
     QtQuickMaterialStylePlugin(QObject *parent = nullptr);
-    ~QtQuickMaterialStylePlugin();
+
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:
-    QQuickProxyTheme *theme;
+    QScopedPointer<QQuickProxyTheme> theme;
 };
 
 QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
-}
-
-QtQuickMaterialStylePlugin::~QtQuickMaterialStylePlugin()
-{
-    if (theme) {
-        QPlatformTheme *old = theme->theme();
-        QGuiApplicationPrivate::platform_theme = old;
-        delete theme;
-    }
 }
 
 void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
@@ -93,8 +84,10 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
 {
     Q_UNUSED(engine);
 
-    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0)
-        QGuiApplicationPrivate::platform_theme = new QQuickMaterialTheme;
+    if (QQuickStyle::name().compare(QLatin1String("material"), Qt::CaseInsensitive) == 0) {
+        theme.reset(new QQuickMaterialTheme);
+        QGuiApplicationPrivate::platform_theme = theme.data();
+    }
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
