@@ -507,7 +507,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     }
     p += TEXT_CB_SIZE_0;
 
-    if (m_lastGlyphCacheSize != glyphCache()->currentSize()) {
+    if (state.isCachedMaterialDataDirty() || m_lastGlyphCacheSize != glyphCache()->currentSize()) {
         m_lastGlyphCacheSize = glyphCache()->currentSize();
         const float textureScale[2] = { 1.0f / m_lastGlyphCacheSize.width(),
                                         1.0f / m_lastGlyphCacheSize.height() };
@@ -542,7 +542,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     }
     p += TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
 
-    if (m_styleType == Styled && m_lastStyleShift != m_styleShift) {
+    if (m_styleType == Styled && (state.isCachedMaterialDataDirty() || m_lastStyleShift != m_styleShift)) {
         m_lastStyleShift = m_styleShift;
         const float f[2] = { m_styleShift.x(), m_styleShift.y() };
         memcpy(p, f, TEXT_CB_SIZE_5);
