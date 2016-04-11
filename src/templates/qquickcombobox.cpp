@@ -165,7 +165,7 @@ public:
 
     void itemClicked();
 
-    void initItem(int index, QObject *object);
+    void createdItem(int index, QObject *object);
     void countChanged();
     void updateCurrentText();
     void increase();
@@ -235,7 +235,7 @@ void QQuickComboBoxPrivate::itemClicked()
     }
 }
 
-void QQuickComboBoxPrivate::initItem(int index, QObject *object)
+void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(object);
     if (button)
@@ -317,7 +317,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     if (oldModel) {
         disconnect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
         disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
-        disconnect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
+        disconnect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
     ownModel = false;
@@ -337,7 +337,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     if (delegateModel) {
         connect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
         connect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
-        connect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
+        connect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
     emit q->delegateModelChanged();
