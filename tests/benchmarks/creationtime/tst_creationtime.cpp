@@ -121,7 +121,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls");
+    addTestRows(&engine, "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::material()
@@ -133,7 +133,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
+    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::universal()
@@ -145,7 +145,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal");
+    addTestRows(&engine, "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::calendar()

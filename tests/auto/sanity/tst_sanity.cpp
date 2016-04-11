@@ -310,9 +310,9 @@ void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(&engine, "calendar");
-    addTestRows(&engine, "controls");
-    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
-    addTestRows(&engine, "controls/universal");
+    addTestRows(&engine, "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_Sanity)

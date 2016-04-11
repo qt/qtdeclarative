@@ -177,7 +177,7 @@ void tst_ObjectCount::controls()
 void tst_ObjectCount::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls");
+    addTestRows(&engine, "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_ObjectCount::material()
@@ -189,7 +189,7 @@ void tst_ObjectCount::material()
 void tst_ObjectCount::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
+    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_ObjectCount::universal()
@@ -201,7 +201,7 @@ void tst_ObjectCount::universal()
 void tst_ObjectCount::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal");
+    addTestRows(&engine, "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_ObjectCount)
