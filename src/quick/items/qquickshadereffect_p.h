@@ -63,9 +63,6 @@
 
 QT_BEGIN_NAMESPACE
 
-const char *qtPositionAttributeName();
-const char *qtTexCoordAttributeName();
-
 class QSGContext;
 class QSignalMapper;
 class QQuickCustomMaterialShader;

@@ -50,24 +50,11 @@
 
 #include "qquickimage_p.h"
 #include "qquickshadereffectsource_p.h"
+#include "qquickshadereffectmesh_p.h"
 
 #include <QtCore/qsignalmapper.h>
-#include <QtGui/qopenglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
-
-static const char qt_position_attribute_name[] = "qt_Vertex";
-static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
-
-const char *qtPositionAttributeName()
-{
-    return qt_position_attribute_name;
-}
-
-const char *qtTexCoordAttributeName()
-{
-    return qt_texcoord_attribute_name;
-}
 
 namespace {
 
@@ -256,14 +243,14 @@ void QQuickShaderEffectCommon::updateParseLog(bool ignoreAttributes)
 {
     parseLog.clear();
     if (!ignoreAttributes) {
-        if (!attributes.contains(qt_position_attribute_name)) {
+        if (!attributes.contains(qtPositionAttributeName())) {
             parseLog += QLatin1String("Warning: Missing reference to \'");
-            parseLog += QLatin1String(qt_position_attribute_name);
+            parseLog += QLatin1String(qtPositionAttributeName());
             parseLog += QLatin1String("\'.\n");
         }
-        if (!attributes.contains(qt_texcoord_attribute_name)) {
+        if (!attributes.contains(qtTexCoordAttributeName())) {
             parseLog += QLatin1String("Warning: Missing reference to \'");
-            parseLog += QLatin1String(qt_texcoord_attribute_name);
+            parseLog += QLatin1String(qtTexCoordAttributeName());
             parseLog += QLatin1String("\'.\n");
         }
     }
@@ -339,8 +326,8 @@ void QQuickShaderEffectCommon::updateShader(QQuickItem *item, Key::ShaderType sh
     if (code.isEmpty()) {
         // Optimize for default code.
         if (shaderType == Key::VertexShader) {
-            attributes.append(QByteArray(qt_position_attribute_name));
-            attributes.append(QByteArray(qt_texcoord_attribute_name));
+            attributes.append(QByteArray(qtPositionAttributeName()));
+            attributes.append(QByteArray(qtTexCoordAttributeName()));
             UniformData d;
             d.name = "qt_Matrix";
             d.specialType = UniformData::Matrix;

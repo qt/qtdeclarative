@@ -73,6 +73,7 @@ HEADERS += \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
     $$PWD/qquickshadereffectsource_p.h \
+    $$PWD/qquickshadereffectmesh_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h
 
@@ -124,6 +125,7 @@ SOURCES += \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowattached.cpp \
     $$PWD/qquickshadereffectsource.cpp \
+    $$PWD/qquickshadereffectmesh.cpp \
     $$PWD/qquickrendercontrol.cpp
 
 # Items that depend on OpenGL Renderer
@@ -131,7 +133,6 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qquickopenglinfo.cpp \
         $$PWD/qquickshadereffect.cpp \
-        $$PWD/qquickshadereffectmesh.cpp \
         $$PWD/qquickshadereffectnode.cpp \
         $$PWD/qquickframebufferobject.cpp \
         $$PWD/qquickspriteengine.cpp \
@@ -147,7 +148,6 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qquickspritesequence_p.h \
         $$PWD/qquickanimatedsprite_p.h \
         $$PWD/qquickshadereffect_p.h \
-        $$PWD/qquickshadereffectmesh_p.h \
         $$PWD/qquickshadereffectnode_p.h \
         $$PWD/qquickframebufferobject.h \
         $$PWD/qquickitemgrabresult.h

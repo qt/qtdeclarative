@@ -81,6 +81,7 @@
 # include "qquickanimatedsprite_p.h"
 # include "qquickopenglinfo_p.h"
 #endif
+#include "qquickshadereffectmesh_p.h"
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
@@ -211,11 +212,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPinchEvent>();
 
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
-#ifndef QT_NO_OPENGL
-    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
     qmlRegisterType<QQuickGridMesh>("QtQuick", 2, 0, "GridMesh");
+#ifndef QT_NO_OPENGL
+    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
 #endif
+
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");

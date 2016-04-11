@@ -39,9 +39,21 @@
 
 #include "qquickshadereffectmesh_p.h"
 #include <QtQuick/qsggeometry.h>
-#include "qquickshadereffect_p.h"
 
 QT_BEGIN_NAMESPACE
+
+static const char qt_position_attribute_name[] = "qt_Vertex";
+static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
+
+const char *qtPositionAttributeName()
+{
+    return qt_position_attribute_name;
+}
+
+const char *qtTexCoordAttributeName()
+{
+    return qt_texcoord_attribute_name;
+}
 
 QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObject *parent)
     : QObject(parent)

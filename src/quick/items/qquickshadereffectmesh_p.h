@@ -43,8 +43,8 @@
 #include <QtGui/qcolor.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qsize.h>
-#include <QtCore/qvariant.h>
-#include <QtGui/qopenglfunctions.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qbytearray.h>
 
 #ifndef QQUICKSHADEREFFECTMESH_P_H
 #define QQUICKSHADEREFFECTMESH_P_H
@@ -61,6 +61,9 @@
 //
 
 QT_BEGIN_NAMESPACE
+
+const char *qtPositionAttributeName();
+const char *qtTexCoordAttributeName();
 
 class QSGGeometry;
 class QRectF;
