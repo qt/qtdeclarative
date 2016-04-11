@@ -134,9 +134,9 @@ qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
 {
     Q_Q(const QQuickScrollBar);
     if (orientation == Qt::Horizontal)
-        return point.x() / q->width();
+        return (point.x() - q->leftPadding()) / q->availableWidth();
     else
-        return point.y() / q->height();
+        return (point.y() - q->topPadding()) / q->availableHeight();
 }
 
 void QQuickScrollBarPrivate::resizeContent()
