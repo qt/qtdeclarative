@@ -82,7 +82,7 @@ public:
     {
     }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *, QQuickItem *parent) Q_DECL_OVERRIDE;
     void updatePosition();
     void restartDrag();
@@ -148,9 +148,10 @@ public:
     \sa {Qt Quick Examples - Drag and Drop}, {Qt Quick Examples - externaldraganddrop}
 */
 
-void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change,
+                                                    const QRectF &)
 {
-    if (newGeometry.topLeft() == oldGeometry.topLeft() || !active || itemMoved)
+    if (!change.positionChange() || !active || itemMoved)
         return;
     updatePosition();
 }

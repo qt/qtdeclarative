@@ -84,7 +84,7 @@ public:
     QQuickLoaderPrivate();
     ~QQuickLoaderPrivate();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) Q_DECL_OVERRIDE;
     void itemImplicitWidthChanged(QQuickItem *) Q_DECL_OVERRIDE;
     void itemImplicitHeightChanged(QQuickItem *) Q_DECL_OVERRIDE;
     void clear();

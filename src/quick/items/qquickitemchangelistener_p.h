@@ -58,12 +58,69 @@ QT_BEGIN_NAMESPACE
 class QRectF;
 class QQuickItem;
 class QQuickAnchorsPrivate;
+
+class QQuickGeometryChange
+{
+public:
+    enum Kind: int {
+        Nothing = 0x00,
+        X       = 0x01,
+        Y       = 0x02,
+        Width   = 0x04,
+        Height  = 0x08,
+
+        Size = Width | Height,
+        All = X | Y | Size
+    };
+
+    QQuickGeometryChange(int change = Nothing)
+        : kind(change)
+    {}
+
+    bool noChange() const { return kind == Nothing; }
+    bool anyChange() const { return !noChange(); }
+
+    bool xChange() const { return kind & X; }
+    bool yChange() const { return kind & Y; }
+    bool widthChange() const { return kind & Width; }
+    bool heightChange() const { return kind & Height; }
+
+    bool positionChange() const { return xChange() || yChange(); }
+    bool sizeChange() const { return widthChange() || heightChange(); }
+
+    bool horizontalChange() const { return xChange() || widthChange(); }
+    bool verticalChange() const { return yChange() || heightChange(); }
+
+    void setXChange(bool enabled) { set(X, enabled); }
+    void setYChange(bool enabled) { set(Y, enabled); }
+    void setWidthChange(bool enabled) { set(Width, enabled); }
+    void setHeightChange(bool enabled) { set(Height, enabled); }
+    void setSizeChange(bool enabled) { set(Size, enabled); }
+    void setAllChanged(bool enabled) { set(All, enabled); }
+    void setHorizontalChange(bool enabled) { set(X | Width, enabled); }
+    void setVerticalChange(bool enabled) { set(Y | Height, enabled); }
+
+    void set(int bits, bool enabled)
+    {
+        if (enabled) {
+            kind |= bits;
+        } else {
+            kind &= ~bits;
+        }
+    }
+
+    bool matches(QQuickGeometryChange other) const { return kind & other.kind; }
+
+private:
+    int kind;
+};
+
 class QQuickItemChangeListener
 {
 public:
     virtual ~QQuickItemChangeListener() {}
 
-    virtual void itemGeometryChanged(QQuickItem *, const QRectF & /* new */, const QRectF & /* old */ ) {}
+    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}

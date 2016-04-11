@@ -98,7 +98,7 @@ public:
     void complete();
 
 protected:
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
     void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
     void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
@@ -188,7 +188,7 @@ public:
 
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
     void itemOpacityChanged(QQuickItem *) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
     void itemSiblingOrderChanged(QQuickItem *) Q_DECL_OVERRIDE;
@@ -318,24 +318,12 @@ public:
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
-    enum GeometryChangeType {
-        NoChange = 0,
-        XChange = 0x01,
-        YChange = 0x02,
-        WidthChange = 0x04,
-        HeightChange = 0x08,
-        SizeChange = WidthChange | HeightChange,
-        GeometryChange = XChange | YChange | SizeChange
-    };
-
-    Q_DECLARE_FLAGS(GeometryChangeTypes, GeometryChangeType)
-
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l = Q_NULLPTR, QQuickItemPrivate::ChangeTypes t = 0) : listener(l), types(t), gTypes(GeometryChange) {}
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::GeometryChangeTypes gt) : listener(l), types(Geometry), gTypes(gt) {}
+        ChangeListener(QQuickItemChangeListener *l = nullptr, QQuickItemPrivate::ChangeTypes t = 0) : listener(l), types(t), gTypes(QQuickGeometryChange::All) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickGeometryChange gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
-        QQuickItemPrivate::GeometryChangeTypes gTypes;  //NOTE: not used for ==
+        QQuickGeometryChange gTypes;  //NOTE: not used for ==
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
@@ -389,8 +377,8 @@ public:
 
     void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
-    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
-    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
+    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, QQuickGeometryChange types);
+    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, QQuickGeometryChange types);
 
     QQuickStateGroup *_states();
     QQuickStateGroup *_stateGroup;

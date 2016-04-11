@@ -289,15 +289,15 @@ void QQuickContents::updateRect()
     QQuickItemPrivate::get(m_item)->emitChildrenRectChanged(rectF());
 }
 
-void QQuickContents::itemGeometryChanged(QQuickItem *changed, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickContents::itemGeometryChanged(QQuickItem *changed, QQuickGeometryChange change, const QRectF &)
 {
     Q_UNUSED(changed)
     bool wChanged = false;
     bool hChanged = false;
     //### we can only pass changed if the left edge has moved left, or the right edge has moved right
-    if (newGeometry.width() != oldGeometry.width() || newGeometry.x() != oldGeometry.x())
+    if (change.horizontalChange())
         wChanged = calcWidth(/*changed*/);
-    if (newGeometry.height() != oldGeometry.height() || newGeometry.y() != oldGeometry.y())
+    if (change.verticalChange())
         hChanged = calcHeight(/*changed*/);
     if (wChanged || hChanged)
         updateRect();
@@ -3676,32 +3676,30 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     if (d->_anchors)
         QQuickAnchorsPrivate::get(d->_anchors)->updateMe();
 
-    bool xChange = (newGeometry.x() != oldGeometry.x());
-    bool yChange = (newGeometry.y() != oldGeometry.y());
-    bool widthChange = (newGeometry.width() != oldGeometry.width());
-    bool heightChange = (newGeometry.height() != oldGeometry.height());
+    QQuickGeometryChange change;
+    QRectF diff(newGeometry.x() - oldGeometry.x(),
+                newGeometry.y() - oldGeometry.y(),
+                newGeometry.width() - oldGeometry.width(),
+                newGeometry.height() - oldGeometry.height());
+    change.setXChange(diff.x() != 0);
+    change.setYChange(diff.y() != 0);
+    change.setWidthChange(diff.width() != 0);
+    change.setHeightChange(diff.height() != 0);
 
-    const auto listeners = d->changeListeners;
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Geometry) {
-            if (change.gTypes == QQuickItemPrivate::GeometryChange) {
-                change.listener->itemGeometryChanged(this, newGeometry, oldGeometry);
-            } else if ((xChange && (change.gTypes & QQuickItemPrivate::XChange)) ||
-                       (yChange && (change.gTypes & QQuickItemPrivate::YChange)) ||
-                       (widthChange && (change.gTypes & QQuickItemPrivate::WidthChange)) ||
-                       (heightChange && (change.gTypes & QQuickItemPrivate::HeightChange))) {
-                change.listener->itemGeometryChanged(this, newGeometry, oldGeometry);
-            }
+    for (const QQuickItemPrivate::ChangeListener &listener : qAsConst(d->changeListeners)) {
+        if (listener.types & QQuickItemPrivate::Geometry) {
+            if (change.matches(listener.gTypes))
+                listener.listener->itemGeometryChanged(this, change, diff);
         }
     }
 
-    if (xChange)
+    if (change.xChange())
         emit xChanged();
-    if (yChange)
+    if (change.yChange())
         emit yChanged();
-    if (widthChange)
+    if (change.widthChange())
         emit widthChanged();
-    if (heightChange)
+    if (change.heightChange())
         emit heightChanged();
 }
 
@@ -3820,7 +3818,8 @@ void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *liste
     changeListeners.removeOne(change);
 }
 
-void QQuickItemPrivate::updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types)
+void QQuickItemPrivate::updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener,
+                                                          QQuickGeometryChange types)
 {
     ChangeListener change(listener, types);
     int index = changeListeners.indexOf(change);
@@ -3831,10 +3830,10 @@ void QQuickItemPrivate::updateOrAddGeometryChangeListener(QQuickItemChangeListen
 }
 
 void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener,
-                                                             GeometryChangeTypes types)
+                                                             QQuickGeometryChange types)
 {
     ChangeListener change(listener, types);
-    if (types == NoChange) {
+    if (types.noChange()) {
         changeListeners.removeOne(change);
     } else {
         int index = changeListeners.indexOf(change);
@@ -8118,7 +8117,7 @@ void QQuickItemLayer::itemOpacityChanged(QQuickItem *item)
     updateOpacity();
 }
 
-void QQuickItemLayer::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+void QQuickItemLayer::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     updateGeometry();
 }

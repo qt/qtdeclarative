@@ -2700,7 +2700,11 @@ struct TestListener : public QQuickItemChangeListener
 {
     TestListener(bool remove = false) : remove(remove) { reset(); }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &) override { ++itemGeometryChanges; value = newGeometry; }
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange, const QRectF &) override
+    {
+        ++itemGeometryChanges;
+        value = QRectF(item->x(), item->y(), item->width(), item->height());
+    }
     void itemSiblingOrderChanged(QQuickItem *) override { ++itemSiblingOrderChanges; }
     void itemVisibilityChanged(QQuickItem *) override { ++itemVisibilityChanges; }
     void itemOpacityChanged(QQuickItem *) override { ++itemOpacityChanges; }

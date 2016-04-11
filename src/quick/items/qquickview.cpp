@@ -131,14 +131,15 @@ void QQuickViewPrivate::execute()
     }
 }
 
-void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
+                                            const QRectF &diff)
 {
     Q_Q(QQuickView);
     if (resizeItem == root && resizeMode == QQuickView::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
 }
 
 /*!

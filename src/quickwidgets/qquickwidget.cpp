@@ -244,14 +244,15 @@ void QQuickWidgetPrivate::execute()
     }
 }
 
-void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
+                                              const QRectF &diff)
 {
     Q_Q(QQuickWidget);
     if (resizeItem == root && resizeMode == QQuickWidget::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
 }
 
 void QQuickWidgetPrivate::render(bool needsSync)
