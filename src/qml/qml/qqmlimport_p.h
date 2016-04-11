@@ -130,8 +130,7 @@ public:
 
     QList<CompositeSingletonReference> resolvedCompositeSingletons() const;
 
-    static QString completeQmldirPath(const QString &uri, const QString &base, int vmaj, int vmin,
-                                      QQmlImports::ImportVersion version);
+    static QStringList completeQmldirPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin);
     static QString versionString(int vmaj, int vmin, ImportVersion version);
 
     static bool isLocal(const QString &url);

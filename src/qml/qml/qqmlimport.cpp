@@ -483,20 +483,58 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
     return scripts;
 }
 
-/*!
-    Form a complete path to a qmldir file, from a base URL, a module URI and version specification.
-*/
-QString QQmlImports::completeQmldirPath(const QString &uri, const QString &base, int vmaj, int vmin,
-                                        ImportVersion version)
+static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
 {
-    QString url = uri;
-    url.replace(Dot, Slash);
+    QString str;
+    for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
+        if (it != refs.cbegin())
+            str += sep;
+        str += *it;
+    }
+    return str;
+}
 
-    QString dir = base;
-    if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-        dir += Slash;
+/*!
+    Forms complete paths to a qmldir file, from a base URL, a module URI and version specification.
 
-    return dir + url + versionString(vmaj, vmin, version) + Slash_qmldir;
+    For example, QtQml.Models 2.0:
+    - base/QtQml/Models.2.0/qmldir
+    - base/QtQml.2.0/Models/qmldir
+    - base/QtQml/Models.2/qmldir
+    - base/QtQml.2/Models/qmldir
+    - base/QtQml/Models/qmldir
+*/
+QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
+{
+    const QVector<QStringRef> parts = uri.splitRef(Dot, QString::SkipEmptyParts);
+
+    QStringList qmlDirPathsPaths;
+    // fully & partially versioned parts + 1 unversioned for each base path
+    qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
+
+    for (int version = FullyVersioned; version <= Unversioned; ++version) {
+        const QString ver = versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
+
+        for (const QString &path : basePaths) {
+            QString dir = path;
+            if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
+                dir += Slash;
+
+            // append to the end
+            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + Slash_qmldir;
+
+            if (version != Unversioned) {
+                // insert in the middle
+                for (int index = parts.count() - 2; index >= 0; --index) {
+                    qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
+                                            + ver + Slash
+                                            + joinStringRefs(parts.mid(index + 1), Slash) + Slash_qmldir;
+                }
+            }
+        }
+    }
+
+    return qmlDirPathsPaths;
 }
 
 QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
@@ -1130,32 +1168,29 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     QStringList localImportPaths = database->importPathList(QQmlImportDatabase::Local);
 
     // Search local import paths for a matching version
-    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
-        foreach (const QString &path, localImportPaths) {
-            QString qmldirPath = QQmlImports::completeQmldirPath(uri, path, vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
+    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(uri, localImportPaths, vmaj, vmin);
+    for (const QString &qmldirPath : qmlDirPaths) {
+        QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
+        if (!absoluteFilePath.isEmpty()) {
+            QString url;
+            QString absolutePath = absoluteFilePath.left(absoluteFilePath.lastIndexOf(Slash)+1);
+            if (absolutePath.at(0) == Colon)
+                url = QLatin1String("qrc://") + absolutePath.mid(1);
+            else
+                url = QUrl::fromLocalFile(absolutePath).toString();
 
-            QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
-            if (!absoluteFilePath.isEmpty()) {
-                QString url;
-                QString absolutePath = absoluteFilePath.left(absoluteFilePath.lastIndexOf(Slash)+1);
-                if (absolutePath.at(0) == Colon)
-                    url = QLatin1String("qrc://") + absolutePath.mid(1);
-                else
-                    url = QUrl::fromLocalFile(absolutePath).toString();
+            QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
+            cache->versionMajor = vmaj;
+            cache->versionMinor = vmin;
+            cache->qmldirFilePath = absoluteFilePath;
+            cache->qmldirPathUrl = url;
+            cache->next = cacheHead;
+            database->qmldirCache.insert(uri, cache);
 
-                QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-                cache->versionMajor = vmaj;
-                cache->versionMinor = vmin;
-                cache->qmldirFilePath = absoluteFilePath;
-                cache->qmldirPathUrl = url;
-                cache->next = cacheHead;
-                database->qmldirCache.insert(uri, cache);
+            *outQmldirFilePath = absoluteFilePath;
+            *outQmldirPathUrl = url;
 
-                *outQmldirFilePath = absoluteFilePath;
-                *outQmldirPathUrl = url;
-
-                return true;
-            }
+            return true;
         }
     }
 

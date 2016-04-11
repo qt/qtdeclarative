@@ -1380,13 +1380,10 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
                     // Probe for all possible locations
                     int priority = 0;
-                    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
-                        foreach (const QString &path, remotePathList) {
-                            QString qmldirUrl = QQmlImports::completeQmldirPath(importUri, path, import->majorVersion, import->minorVersion,
-                                                                                static_cast<QQmlImports::ImportVersion>(version));
-                            if (!fetchQmldir(QUrl(qmldirUrl), import, ++priority, errors))
-                                return false;
-                        }
+                    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(importUri, remotePathList, import->majorVersion, import->minorVersion);
+                    for (const QString &qmldirPath : qmlDirPaths) {
+                        if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors))
+                            return false;
                     }
                 }
             }
