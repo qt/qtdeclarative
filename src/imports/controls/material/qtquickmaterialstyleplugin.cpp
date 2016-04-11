@@ -42,6 +42,7 @@
 #include "qquickmaterialprogressstrip_p.h"
 
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
+#include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
 
 static inline void initResources()
 {
@@ -83,6 +84,7 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterType<QQuickPaddedRectangle>(import, 1, 0, "PaddedRectangle");
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");

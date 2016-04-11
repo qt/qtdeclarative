@@ -38,12 +38,13 @@ import QtQuick 2.6
 import QtGraphicalEffects 1.0
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.material 1.0
+import Qt.labs.controls.material.impl 1.0
 
 T.SpinBox {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + 2 * padding +
+                            contentItem.implicitWidth +
                             (up.indicator ? up.indicator.implicitWidth : 0) +
                             (down.indicator ? down.indicator.implicitWidth : 0))
     implicitHeight: Math.max(contentItem.implicitHeight + topPadding + bottomPadding,
@@ -52,9 +53,11 @@ T.SpinBox {
                              down.indicator ? down.indicator.implicitHeight : 0)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 6
-    leftPadding: 6 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
-    rightPadding: 6 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    spacing: 6
+    topPadding: 8
+    bottomPadding: 16
+    leftPadding: (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
+    rightPadding: (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
     //! [validator]
     validator: IntValidator {
@@ -82,10 +85,13 @@ T.SpinBox {
     //! [contentItem]
 
     //! [up.indicator]
-    up.indicator: Rectangle {
+    up.indicator: PaddedRectangle {
         x: control.mirrored ? 0 : parent.width - width
-        implicitWidth: 26
+        implicitWidth: 48
+        implicitHeight: 48
         height: parent.height
+        width: height
+        padding: control.spacing
         radius: 3
         color: Qt.tint(Qt.tint(control.Material.raisedButtonColor,
                                control.activeFocus ? control.Material.raisedButtonHoverColor : "transparent"),
@@ -109,10 +115,13 @@ T.SpinBox {
     //! [up.indicator]
 
     //! [down.indicator]
-    down.indicator: Rectangle {
+    down.indicator: PaddedRectangle {
         x: control.mirrored ? parent.width - width : 0
-        implicitWidth: 26
+        implicitWidth: 48
+        implicitHeight: 48
         height: parent.height
+        width: height
+        padding: control.spacing
         radius: 3
         color: Qt.tint(Qt.tint(control.Material.raisedButtonColor,
                                control.activeFocus ? control.Material.raisedButtonHoverColor : "transparent"),
@@ -130,12 +139,12 @@ T.SpinBox {
 
     //! [background]
     background: Item {
-        implicitWidth: 100
-        implicitHeight: 26
+        implicitWidth: 192
+        implicitHeight: 48
 
         Rectangle {
             x: parent.width / 2 - width / 2
-            y: parent.y + parent.height - height
+            y: parent.y + parent.height - height - control.bottomPadding / 2
             width: control.availableWidth
             height: control.activeFocus ? 2 : 1
             color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
