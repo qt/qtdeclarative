@@ -61,6 +61,11 @@ QSGContext *QSGD3D12Adaptation::create(const QString &) const
     return contextInstance;
 }
 
+QSGContextFactoryInterface::Flags QSGD3D12Adaptation::flags(const QString &) const
+{
+    return QSGContextFactoryInterface::SupportsShaderEffectV2;
+}
+
 QSGRenderLoop *QSGD3D12Adaptation::createWindowManager()
 {
     return new QSGD3D12RenderLoop;

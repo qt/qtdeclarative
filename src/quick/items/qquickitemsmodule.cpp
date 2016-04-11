@@ -75,12 +75,12 @@
 #include <QtQuick/private/qquickcontext2d_p.h>
 #ifndef QT_NO_OPENGL
 # include "qquickitemgrabresult.h"
-# include <private/qquickopenglshadereffect_p.h>
 # include "qquicksprite_p.h"
 # include "qquickspritesequence_p.h"
 # include "qquickanimatedsprite_p.h"
 # include "qquickopenglinfo_p.h"
 #endif
+#include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
@@ -214,9 +214,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
     qmlRegisterType<QQuickGridMesh>("QtQuick", 2, 0, "GridMesh");
-#ifndef QT_NO_OPENGL
-    qmlRegisterType<QQuickOpenGLShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
-#endif
+    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
 
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
@@ -267,8 +265,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickItem, 2>(uri, 2, 4, "Item");
     qmlRegisterType<QQuickListView, 2>(uri, 2, 4, "ListView");
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
+    qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
+
 #ifndef QT_NO_OPENGL
-    qmlRegisterType<QQuickOpenGLShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
 #endif
     qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");

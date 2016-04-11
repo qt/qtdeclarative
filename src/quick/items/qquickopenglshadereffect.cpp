@@ -523,12 +523,13 @@ void QQuickOpenGLShaderEffectCommon::propertyChanged(QQuickItem *item, int mappe
     }
 }
 
-QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickItem *parent)
-    : QQuickItem(parent)
+QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent)
+    : QObject(parent)
+    , m_item(item)
     , m_meshResolution(1, 1)
     , m_mesh(0)
-    , m_cullMode(NoCulling)
-    , m_status(Uncompiled)
+    , m_cullMode(QQuickShaderEffect::NoCulling)
+    , m_status(QQuickShaderEffect::Uncompiled)
     , m_blending(true)
     , m_dirtyUniforms(true)
     , m_dirtyUniformValues(true)
@@ -540,13 +541,12 @@ QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickItem *parent)
     , m_customVertexShader(false)
     , m_supportsAtlasTextures(false)
 {
-    setFlag(QQuickItem::ItemHasContents);
 }
 
 QQuickOpenGLShaderEffect::~QQuickOpenGLShaderEffect()
 {
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
-        m_common.disconnectPropertySignals(this, Key::ShaderType(shaderType));
+        m_common.disconnectPropertySignals(m_item, Key::ShaderType(shaderType));
 }
 
 void QQuickOpenGLShaderEffect::setFragmentShader(const QByteArray &code)
@@ -557,12 +557,12 @@ void QQuickOpenGLShaderEffect::setFragmentShader(const QByteArray &code)
     m_dirtyProgram = true;
     m_dirtyParseLog = true;
 
-    if (isComponentComplete())
-        m_common.updateShader(this, Key::FragmentShader);
+    if (m_item->isComponentComplete())
+        m_common.updateShader(m_item, Key::FragmentShader);
 
-    update();
-    if (m_status != Uncompiled) {
-        m_status = Uncompiled;
+    m_item->update();
+    if (m_status != QQuickShaderEffect::Uncompiled) {
+        m_status = QQuickShaderEffect::Uncompiled;
         emit statusChanged();
     }
     emit fragmentShaderChanged();
@@ -577,12 +577,12 @@ void QQuickOpenGLShaderEffect::setVertexShader(const QByteArray &code)
     m_dirtyParseLog = true;
     m_customVertexShader = true;
 
-    if (isComponentComplete())
-        m_common.updateShader(this, Key::VertexShader);
+    if (m_item->isComponentComplete())
+        m_common.updateShader(m_item, Key::VertexShader);
 
-    update();
-    if (m_status != Uncompiled) {
-        m_status = Uncompiled;
+    m_item->update();
+    if (m_status != QQuickShaderEffect::Uncompiled) {
+        m_status = QQuickShaderEffect::Uncompiled;
         emit statusChanged();
     }
     emit vertexShaderChanged();
@@ -594,7 +594,7 @@ void QQuickOpenGLShaderEffect::setBlending(bool enable)
         return;
 
     m_blending = enable;
-    update();
+    m_item->update();
 
     emit blendingChanged();
 }
@@ -637,16 +637,16 @@ void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)
 
     m_dirtyMesh = true;
     m_dirtyParseLog = true;
-    update();
+    m_item->update();
     emit meshChanged();
 }
 
-void QQuickOpenGLShaderEffect::setCullMode(CullMode face)
+void QQuickOpenGLShaderEffect::setCullMode(QQuickShaderEffect::CullMode face)
 {
     if (face == m_cullMode)
         return;
     m_cullMode = face;
-    update();
+    m_item->update();
     emit cullModeChanged();
 }
 
@@ -668,7 +668,7 @@ QString QQuickOpenGLShaderEffect::parseLog()
     return m_common.parseLog;
 }
 
-bool QQuickOpenGLShaderEffect::event(QEvent *event)
+void QQuickOpenGLShaderEffect::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
         QDynamicPropertyChangeEvent *e = static_cast<QDynamicPropertyChangeEvent *>(event);
@@ -676,21 +676,20 @@ bool QQuickOpenGLShaderEffect::event(QEvent *event)
             for (int i = 0; i < m_common.uniformData[shaderType].size(); ++i) {
                 if (m_common.uniformData[shaderType].at(i).name == e->propertyName()) {
                     bool textureProviderChanged;
-                    m_common.propertyChanged(this, (shaderType << 16) | i, &textureProviderChanged);
+                    m_common.propertyChanged(m_item, (shaderType << 16) | i, &textureProviderChanged);
                     m_dirtyTextureProviders |= textureProviderChanged;
                     m_dirtyUniformValues = true;
-                    update();
+                    m_item->update();
                 }
             }
         }
     }
-    return QQuickItem::event(event);
 }
 
 void QQuickOpenGLShaderEffect::updateGeometry()
 {
     m_dirtyGeometry = true;
-    update();
+    m_item->update();
 }
 
 void QQuickOpenGLShaderEffect::updateGeometryIfAtlased()
@@ -702,38 +701,36 @@ void QQuickOpenGLShaderEffect::updateGeometryIfAtlased()
 void QQuickOpenGLShaderEffect::updateLogAndStatus(const QString &log, int status)
 {
     m_log = parseLog() + log;
-    m_status = Status(status);
+    m_status = QQuickShaderEffect::Status(status);
     emit logChanged();
     emit statusChanged();
 }
 
-void QQuickOpenGLShaderEffect::sourceDestroyed(QObject *object)
+void QQuickOpenGLShaderEffect::handleSourceDestroyed(QObject *object)
 {
     m_common.sourceDestroyed(object);
 }
 
-
-void QQuickOpenGLShaderEffect::propertyChanged(int mappedId)
+void QQuickOpenGLShaderEffect::handlePropertyChanged(int mappedId)
 {
     bool textureProviderChanged;
-    m_common.propertyChanged(this, mappedId, &textureProviderChanged);
+    m_common.propertyChanged(m_item, mappedId, &textureProviderChanged);
     m_dirtyTextureProviders |= textureProviderChanged;
     m_dirtyUniformValues = true;
-    update();
+    m_item->update();
 }
 
-void QQuickOpenGLShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickOpenGLShaderEffect::handleGeometryChanged(const QRectF &, const QRectF &)
 {
     m_dirtyGeometry = true;
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
-QSGNode *QQuickOpenGLShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
 {
     QQuickOpenGLShaderEffectNode *node = static_cast<QQuickOpenGLShaderEffectNode *>(oldNode);
 
     // In the case of zero-size or a bad vertex shader, don't try to create a node...
-    if (m_common.attributes.isEmpty() || width() <= 0 || height() <= 0) {
+    if (m_common.attributes.isEmpty() || m_item->width() <= 0 || m_item->height() <= 0) {
         if (node)
             delete node;
         return 0;
@@ -821,7 +818,7 @@ QSGNode *QQuickOpenGLShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaint
     if (m_dirtyGeometry) {
         node->setFlag(QSGNode::OwnsGeometry, false);
         QSGGeometry *geometry = node->geometry();
-        QRectF rect(0, 0, width(), height());
+        QRectF rect(0, 0, m_item->width(), m_item->height());
         QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
 
         geometry = mesh->updateGeometry(geometry, m_common.attributes, srcRect, rect);
@@ -831,7 +828,7 @@ QSGNode *QQuickOpenGLShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaint
                 m_log = parseLog();
                 m_log += QLatin1String("*** Mesh ***\n");
                 m_log += log;
-                m_status = Error;
+                m_status = QQuickShaderEffect::Error;
                 emit logChanged();
                 emit statusChanged();
             }
@@ -848,18 +845,16 @@ QSGNode *QQuickOpenGLShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaint
     return node;
 }
 
-void QQuickOpenGLShaderEffect::componentComplete()
+void QQuickOpenGLShaderEffect::handleComponentComplete()
 {
-    m_common.updateShader(this, Key::VertexShader);
-    m_common.updateShader(this, Key::FragmentShader);
-    QQuickItem::componentComplete();
+    m_common.updateShader(m_item, Key::VertexShader);
+    m_common.updateShader(m_item, Key::FragmentShader);
 }
 
-void QQuickOpenGLShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
+void QQuickOpenGLShaderEffect::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     if (change == QQuickItem::ItemSceneChange)
         m_common.updateWindow(value.window);
-    QQuickItem::itemChange(change, value);
 }
 
 QT_END_NAMESPACE

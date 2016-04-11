@@ -63,6 +63,11 @@ QSGContext *QSGSoftwareAdaptation::create(const QString &) const
     return instance;
 }
 
+QSGContextFactoryInterface::Flags QSGSoftwareAdaptation::flags(const QString &) const
+{
+    return QSGContextFactoryInterface::SupportsShaderEffectV2;
+}
+
 QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
 {
     return new QSGSoftwareRenderLoop();

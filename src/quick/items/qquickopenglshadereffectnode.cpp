@@ -111,8 +111,8 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
     QQuickOpenGLShaderEffectMaterial *material = static_cast<QQuickOpenGLShaderEffectMaterial *>(newEffect);
     if (!material->m_emittedLogChanged && material->m_node) {
         material->m_emittedLogChanged = true;
-        emit material->m_node->logAndStatusChanged(m_log, m_compiled ? QQuickOpenGLShaderEffect::Compiled
-                                                                     : QQuickOpenGLShaderEffect::Error);
+        emit material->m_node->logAndStatusChanged(m_log, m_compiled ? QQuickShaderEffect::Compiled
+                                                                     : QQuickShaderEffect::Error);
     }
 
     int textureProviderIndex = 0;

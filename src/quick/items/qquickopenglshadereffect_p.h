@@ -96,36 +96,12 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffect : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffect : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
-    Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
-    Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
-    Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
-    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
-    Q_PROPERTY(QString log READ log NOTIFY logChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 1)
 
 public:
-    enum CullMode
-    {
-        NoCulling = QQuickShaderEffect::NoCulling,
-        BackFaceCulling = QQuickShaderEffect::BackFaceCulling,
-        FrontFaceCulling = QQuickShaderEffect::FrontFaceCulling
-    };
-    Q_ENUM(CullMode)
-
-    enum Status
-    {
-        Compiled,
-        Uncompiled,
-        Error
-    };
-    Q_ENUM(Status)
-
-    QQuickOpenGLShaderEffect(QQuickItem *parent = 0);
+    QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
     ~QQuickOpenGLShaderEffect();
 
     QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
@@ -140,18 +116,16 @@ public:
     QVariant mesh() const;
     void setMesh(const QVariant &mesh);
 
-    CullMode cullMode() const { return m_cullMode; }
-    void setCullMode(CullMode face);
+    QQuickShaderEffect::CullMode cullMode() const { return m_cullMode; }
+    void setCullMode(QQuickShaderEffect::CullMode face);
 
     QString log() const { return m_log; }
-    Status status() const { return m_status; }
+    QQuickShaderEffect::Status status() const { return m_status; }
 
     bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
     void setSupportsAtlasTextures(bool supports);
 
     QString parseLog();
-
-    bool event(QEvent *) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -164,17 +138,18 @@ Q_SIGNALS:
     void supportsAtlasTexturesChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void handleEvent(QEvent *);
+    void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
+    void handleComponentComplete();
+    void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
+    void handleSourceDestroyed(QObject *object);
+    void handlePropertyChanged(int mappedId);
 
 private Q_SLOTS:
     void updateGeometry();
     void updateGeometryIfAtlased();
     void updateLogAndStatus(const QString &log, int status);
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
 
 private:
     friend class QQuickCustomMaterialShader;
@@ -183,12 +158,13 @@ private:
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
+    QQuickShaderEffect *m_item;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
-    CullMode m_cullMode;
+    QQuickShaderEffect::CullMode m_cullMode;
     QString m_log;
-    Status m_status;
+    QQuickShaderEffect::Status m_status;
 
     QQuickOpenGLShaderEffectCommon m_common;
 
@@ -202,6 +178,8 @@ private:
     uint m_dirtyGeometry : 1;
     uint m_customVertexShader : 1;
     uint m_supportsAtlasTextures : 1;
+
+    friend class QQuickShaderEffect;
 };
 
 QT_END_NAMESPACE

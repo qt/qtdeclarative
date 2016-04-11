@@ -55,6 +55,7 @@ public:
 
     QStringList keys() const override;
     QSGContext *create(const QString &key) const override;
+    QSGContextFactoryInterface::Flags flags(const QString &key) const override;
     QSGRenderLoop *createWindowManager() override;
 private:
     static QSGSoftwareContext *instance;

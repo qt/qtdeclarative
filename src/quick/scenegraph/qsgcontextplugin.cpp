@@ -77,13 +77,15 @@ struct QSGAdaptionBackendData
     bool tried;
     QSGContextFactoryInterface *factory;
     QString name;
+    QSGContextFactoryInterface::Flags flags;
 
     QVector<QSGContextFactoryInterface *> builtIns;
 };
 
 QSGAdaptionBackendData::QSGAdaptionBackendData()
     : tried(false)
-    , factory(0)
+    , factory(nullptr)
+    , flags(0)
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
@@ -93,6 +95,16 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
 }
 
 Q_GLOBAL_STATIC(QSGAdaptionBackendData, qsg_adaptation_data)
+
+// This only works when the backend is loaded (contextFactory() was called),
+// otherwise the return value is 0.
+//
+// Note that the default (OpenGL) implementation always results in 0, custom flags
+// can only be returned from the other (either compiled-in or plugin-based) backends.
+QSGContextFactoryInterface::Flags qsg_backend_flags()
+{
+    return qsg_adaptation_data()->flags;
+}
 
 QSGAdaptionBackendData *contextFactory()
 {
@@ -136,6 +148,8 @@ QSGAdaptionBackendData *contextFactory()
             for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {
                 if (builtInBackend->keys().contains(requestedBackend)) {
                     backendData->factory = builtInBackend;
+                    backendData->name = requestedBackend;
+                    backendData->flags = backendData->factory->flags(requestedBackend);
                     break;
                 }
             }
@@ -146,7 +160,10 @@ QSGAdaptionBackendData *contextFactory()
                 const int index = loader()->indexOf(requestedBackend);
                 if (index != -1)
                     backendData->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(index));
-                backendData->name = requestedBackend;
+                if (backendData->factory) {
+                    backendData->name = requestedBackend;
+                    backendData->flags = backendData->factory->flags(requestedBackend);
+                }
 #ifndef QT_NO_DEBUG
                 if (!backendData->factory) {
                     qWarning("Could not create scene graph context for backend '%s'"

@@ -56,6 +56,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickOpenGLShaderEffect;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
@@ -106,6 +108,8 @@ public:
     QString log() const;
     Status status() const;
 
+    bool isComponentComplete() const;
+
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
@@ -115,6 +119,22 @@ Q_SIGNALS:
     void logChanged();
     void statusChanged();
     void supportsAtlasTexturesChanged();
+
+protected:
+    bool event(QEvent *e) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) override;
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+
+private Q_SLOTS:
+    void sourceDestroyed(QObject *object);
+    void propertyChanged(int mappedId);
+
+private:
+#ifndef QT_NO_OPENGL
+    QQuickOpenGLShaderEffect *m_glImpl;
+#endif
 };
 
 QT_END_NAMESPACE
