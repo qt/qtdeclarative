@@ -55,7 +55,7 @@ T.Button {
         text: control.text
         font: control.font
         opacity: enabled || highlighted ? 1 : 0.3
-        color: control.checked || control.highlighted ? "#ffffff" : (control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637"))
+        color: control.checked || control.highlighted ? "#ffffff" : (control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637"))
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -68,10 +68,10 @@ T.Button {
         implicitHeight: 40
         opacity: enabled ? 1 : (control.checked ? 0.2 : 0.3)
         color: control.checked || control.highlighted ?
-            (control.activeFocus ? (control.pressed ? "#599bff" : "#0066ff") : (control.pressed ? "#585a5c" : "#353637")) :
-            (control.activeFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") : (control.pressed ? "#d6d6d6" : "#f6f6f6"))
-        border.color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
-        border.width: control.checked || control.highlighted ? 0 : (control.activeFocus ? 2 : 1)
+            (control.activeKeyFocus ? (control.pressed ? "#599bff" : "#0066ff") : (control.pressed ? "#585a5c" : "#353637")) :
+            (control.activeKeyFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") : (control.pressed ? "#d6d6d6" : "#f6f6f6"))
+        border.color: control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+        border.width: control.checked || control.highlighted ? 0 : (control.activeKeyFocus ? 2 : 1)
     }
     //! [background]
 }

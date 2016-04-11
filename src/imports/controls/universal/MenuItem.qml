@@ -92,7 +92,7 @@ T.MenuItem {
             width: parent.width - 2
             height: parent.height - 2
 
-            visible: control.activeFocus
+            visible: control.activeKeyFocus
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

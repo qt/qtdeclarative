@@ -94,12 +94,12 @@ T.SwipeDelegate {
     background: Rectangle {
         color: !control.enabled ? control.Universal.chromeDisabledHighColor :
             (control.pressed ? control.Universal.chromeHighColor :
-            (control.activeFocus || control.hovered ? control.Universal.chromeLowColor : control.Universal.chromeMediumColor))
+            (control.activeKeyFocus || control.hovered ? control.Universal.chromeLowColor : control.Universal.chromeMediumColor))
 
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.activeFocus || control.highlighted
+            visible: control.activeKeyFocus || control.highlighted
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

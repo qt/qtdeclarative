@@ -86,7 +86,7 @@ T.CheckBox {
             height: width
             control: control
             colored: control.checked
-            opacity: control.pressed || control.activeFocus ? 1 : 0
+            opacity: control.pressed || control.activeKeyFocus ? 1 : 0
         }
 
         // TODO: This needs to be transparent
