@@ -181,7 +181,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 
     This property holds the logical position of the thumb indicator.
 
-    The position is defined as a percentage of the control's size, scaled to
+    The position is defined as a percentage of the indicator's size, scaled to
     \c 0.0 - \c 1.0. The position can be used for example to determine whether
     the thumb has been dragged past the halfway. For visualizing a thumb
     indicator, the right-to-left aware \l visualPosition should be used instead.
@@ -212,7 +212,7 @@ void QQuickSwitch::setPosition(qreal position)
 
     This property holds the visual position of the thumb indicator.
 
-    The position is defined as a percentage of the control's size, scaled to
+    The position is defined as a percentage of the indicator's size, scaled to
     \c 0.0 - \c 1.0. When the control is \l {Control::mirrored}{mirrored}, the
     value is equal to \c {1.0 - position}. This makes the value suitable for
     visualizing the thumb indicator taking right-to-left support into account.
