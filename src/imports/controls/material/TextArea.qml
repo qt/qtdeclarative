@@ -44,11 +44,12 @@ T.TextArea {
     implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
                             background ? background.implicitWidth : 0,
                             placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+    implicitHeight: Math.max(contentHeight + 1 + topPadding + bottomPadding,
                              background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+                             placeholder.implicitHeight + 1 + topPadding + bottomPadding)
 
-    padding: 6
+    topPadding: 8
+    bottomPadding: 16
 
     color: enabled ? Material.primaryTextColor : Material.hintTextColor
     selectionColor: Material.accentColor
@@ -98,7 +99,7 @@ T.TextArea {
 
     //! [background]
     background: Rectangle {
-        y: control.height - height
+        y: control.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor

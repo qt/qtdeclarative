@@ -44,9 +44,10 @@ T.TextField {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             placeholder.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+                             placeholder.implicitHeight + 1 + topPadding + bottomPadding)
 
-    padding: 6
+    topPadding: 8
+    bottomPadding: 16
 
     color: enabled ? Material.primaryTextColor : Material.hintTextColor
     selectionColor: Material.accentColor
@@ -98,7 +99,7 @@ T.TextField {
 
     //! [background]
     background: Rectangle {
-        y: control.height - height
+        y: control.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
