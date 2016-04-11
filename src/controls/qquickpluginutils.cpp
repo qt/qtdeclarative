@@ -47,8 +47,7 @@ QT_BEGIN_NAMESPACE
 QString QQuickPluginUtils::pluginBasePath(const QQmlExtensionPlugin &plugin)
 {
 #ifdef QT_STATIC
-    Q_UNUSED(plugin);
-    return QLatin1String("qrc:/qt-project.org/imports/Qt/labs/controls");
+    return QLatin1String("qrc") + plugin.baseUrl().path();
 #else
     return plugin.baseUrl().toString();
 #endif
