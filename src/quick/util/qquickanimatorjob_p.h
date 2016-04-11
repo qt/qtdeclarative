@@ -68,7 +68,7 @@ class QQuickAbstractAnimation;
 
 class QQuickAnimatorController;
 class QQuickAnimatorProxyJobPrivate;
-class QQuickShaderEffectNode;
+class QQuickOpenGLShaderEffectNode;
 
 class QSGOpacityNode;
 
@@ -296,7 +296,7 @@ public:
 
 private:
     QByteArray m_uniform;
-    QQuickShaderEffectNode *m_node;
+    QQuickOpenGLShaderEffectNode *m_node;
 
     int m_uniformIndex : 8;
     int m_uniformType : 8;

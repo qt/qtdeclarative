@@ -44,7 +44,8 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
 #ifndef QT_NO_OPENGL
-# include <private/qquickshadereffectnode_p.h>
+# include <private/qquickopenglshadereffectnode_p.h>
+# include <private/qquickopenglshadereffect_p.h>
 #endif
 #include <private/qanimationgroupjob_p.h>
 
@@ -553,7 +554,7 @@ QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
 
 void QQuickUniformAnimatorJob::setTarget(QQuickItem *target)
 {
-    if (qobject_cast<QQuickShaderEffect *>(target) != 0)
+    if (qobject_cast<QQuickOpenGLShaderEffect *>(target) != 0)
         m_target = target;
 }
 
@@ -566,14 +567,14 @@ void QQuickUniformAnimatorJob::nodeWasDestroyed()
 
 void QQuickUniformAnimatorJob::afterNodeSync()
 {
-    m_node = static_cast<QQuickShaderEffectNode *>(QQuickItemPrivate::get(m_target)->paintNode);
+    m_node = static_cast<QQuickOpenGLShaderEffectNode *>(QQuickItemPrivate::get(m_target)->paintNode);
 
     if (m_node && m_uniformIndex == -1 && m_uniformType == -1) {
-        QQuickShaderEffectMaterial *material =
-                static_cast<QQuickShaderEffectMaterial *>(m_node->material());
+        QQuickOpenGLShaderEffectMaterial *material =
+                static_cast<QQuickOpenGLShaderEffectMaterial *>(m_node->material());
         bool found = false;
-        for (int t=0; !found && t<QQuickShaderEffectMaterialKey::ShaderTypeCount; ++t) {
-            const QVector<QQuickShaderEffectMaterial::UniformData> &uniforms = material->uniforms[t];
+        for (int t=0; !found && t<QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++t) {
+            const QVector<QQuickOpenGLShaderEffectMaterial::UniformData> &uniforms = material->uniforms[t];
             for (int i=0; i<uniforms.size(); ++i) {
                 if (uniforms.at(i).name == m_uniform) {
                     m_uniformIndex = i;
@@ -597,8 +598,8 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
 
     m_value = m_from + (m_to - m_from) * progress(time);
 
-    QQuickShaderEffectMaterial *material =
-            static_cast<QQuickShaderEffectMaterial *>(m_node->material());
+    QQuickOpenGLShaderEffectMaterial *material =
+            static_cast<QQuickOpenGLShaderEffectMaterial *>(m_node->material());
     material->uniforms[m_uniformType][m_uniformIndex].value = m_value;
     // As we're not touching the nodes, we need to explicitly mark it dirty.
     // Otherwise, the renderer will abort repainting if this was the only

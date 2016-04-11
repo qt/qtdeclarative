@@ -44,6 +44,7 @@
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QRunnable>
+#include <QOpenGLFunctions>
 
 struct TouchEventData {
     QEvent::Type type;

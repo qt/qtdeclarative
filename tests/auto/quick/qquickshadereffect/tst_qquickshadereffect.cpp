@@ -30,13 +30,12 @@
 
 #include <QList>
 #include <QByteArray>
-#include <private/qquickshadereffect_p.h>
-
+#include <private/qquickopenglshadereffect_p.h>
+#include <QMatrix4x4>
 #include <QtQuick/QQuickView>
 #include "../../shared/util.h"
 
-
-class TestShaderEffect : public QQuickShaderEffect
+class TestShaderEffect : public QQuickOpenGLShaderEffect
 {
     Q_OBJECT
     Q_PROPERTY(QVariant source READ dummyRead NOTIFY dummyChanged)

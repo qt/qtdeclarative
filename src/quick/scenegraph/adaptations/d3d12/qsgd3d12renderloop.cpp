@@ -45,7 +45,6 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qquickanimatorcontroller_p.h>
-#include <private/qquickshadereffectnode_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
@@ -330,7 +329,6 @@ bool QSGD3D12RenderThread::event(QEvent *e)
                 qDebug("RT - WM_TryRelease - invalidating rc");
             if (wme->window) {
                 QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
-                QQuickShaderEffectMaterial::cleanupMaterialCache();
                 if (wme->destroying)
                     wd->cleanupNodesOnShutdown();
                 rc->invalidate();

@@ -47,6 +47,7 @@
 #ifndef QT_NO_OPENGL
 # include <QtGui/QOpenGLContext>
 # include <QtQuick/private/qsgdefaultrendercontext_p.h>
+# include <QtQuick/private/qquickopenglshadereffectnode_p.h>
 #endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -57,7 +58,6 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtCore/private/qobject_p.h>
 
-#include <private/qquickshadereffectnode_p.h>
 
 QT_BEGIN_NAMESPACE
 #ifndef QT_NO_OPENGL
@@ -186,7 +186,9 @@ void QQuickRenderControlPrivate::windowDestroyed()
         delete QQuickWindowPrivate::get(window)->animationController;
         QQuickWindowPrivate::get(window)->animationController = 0;
 
-        QQuickShaderEffectMaterial::cleanupMaterialCache();
+#ifndef QT_NO_OPENGL
+        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#endif
 
         window = 0;
     }

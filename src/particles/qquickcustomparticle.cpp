@@ -237,7 +237,7 @@ void QQuickCustomParticle::reset()
 
 QSGNode *QQuickCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    QQuickShaderEffectNode *rootNode = static_cast<QQuickShaderEffectNode *>(oldNode);
+    QQuickOpenGLShaderEffectNode *rootNode = static_cast<QQuickOpenGLShaderEffectNode *>(oldNode);
     if (m_pleaseReset){
         delete rootNode;//Automatically deletes children
         rootNode = 0;
@@ -258,7 +258,7 @@ QSGNode *QQuickCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     return rootNode;
 }
 
-QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffectNode *rootNode)
+QQuickOpenGLShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickOpenGLShaderEffectNode *rootNode)
 {
     if (!rootNode)
         rootNode = buildCustomNodes();
@@ -269,7 +269,7 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
     if (m_dirtyProgram) {
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
-        QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(rootNode->material());
+        QQuickOpenGLShaderEffectMaterial *material = static_cast<QQuickOpenGLShaderEffectMaterial *>(rootNode->material());
         Q_ASSERT(material);
 
         Key s = m_common.source;
@@ -294,7 +294,7 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
 
         material->setProgramSource(s);
         material->attributes = m_common.attributes;
-        foreach (QQuickShaderEffectNode* node, m_nodes)
+        foreach (QQuickOpenGLShaderEffectNode* node, m_nodes)
             node->markDirty(QSGNode::DirtyMaterial);
 
         m_dirtyProgram = false;
@@ -307,9 +307,9 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
     return rootNode;
 }
 
-QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
+QQuickOpenGLShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
 {
-    typedef QHash<int, QQuickShaderEffectNode*>::const_iterator NodeHashConstIt;
+    typedef QHash<int, QQuickOpenGLShaderEffectNode*>::const_iterator NodeHashConstIt;
 
     if (!QOpenGLContext::currentContext())
         return 0;
@@ -327,14 +327,14 @@ QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
     if (groups().isEmpty())
         return 0;
 
-    QQuickShaderEffectNode *rootNode = 0;
-    QQuickShaderEffectMaterial *material = new QQuickShaderEffectMaterial;
+    QQuickOpenGLShaderEffectNode *rootNode = 0;
+    QQuickOpenGLShaderEffectMaterial *material = new QQuickOpenGLShaderEffectMaterial;
     m_dirtyProgram = true;
 
     for (auto groupId : groupIds()) {
         int count = m_system->groupData[groupId]->size();
 
-        QQuickShaderEffectNode* node = new QQuickShaderEffectNode();
+        QQuickOpenGLShaderEffectNode* node = new QQuickOpenGLShaderEffectNode();
         m_nodes.insert(groupId, node);
 
         node->setMaterial(material);
@@ -400,7 +400,7 @@ void QQuickCustomParticle::propertyChanged(int mappedId)
 }
 
 
-void QQuickCustomParticle::buildData(QQuickShaderEffectNode *rootNode)
+void QQuickCustomParticle::buildData(QQuickOpenGLShaderEffectNode *rootNode)
 {
     if (!rootNode)
         return;
@@ -410,9 +410,9 @@ void QQuickCustomParticle::buildData(QQuickShaderEffectNode *rootNode)
                 m_common.uniformData[shaderType][i].value = qVariantFromValue(m_lastTime);
         }
     }
-    m_common.updateMaterial(rootNode, static_cast<QQuickShaderEffectMaterial *>(rootNode->material()),
+    m_common.updateMaterial(rootNode, static_cast<QQuickOpenGLShaderEffectMaterial *>(rootNode->material()),
                             m_dirtyUniforms, true, m_dirtyTextureProviders);
-    foreach (QQuickShaderEffectNode* node, m_nodes)
+    foreach (QQuickOpenGLShaderEffectNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);
     m_dirtyUniforms = m_dirtyUniformValues = m_dirtyTextureProviders = false;
 }

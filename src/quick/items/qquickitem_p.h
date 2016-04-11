@@ -77,9 +77,6 @@
 #include <QtCore/qelapsedtimer.h>
 
 #include <QtQuick/private/qquickshadereffectsource_p.h>
-#ifndef QT_NO_OPENGL
-# include <QtQuick/private/qquickshadereffect_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 

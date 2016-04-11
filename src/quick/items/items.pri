@@ -74,6 +74,7 @@ HEADERS += \
     $$PWD/qquickwindowmodule_p.h \
     $$PWD/qquickshadereffectsource_p.h \
     $$PWD/qquickshadereffectmesh_p.h \
+    $$PWD/qquickshadereffect_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h
 
@@ -126,14 +127,15 @@ SOURCES += \
     $$PWD/qquickwindowattached.cpp \
     $$PWD/qquickshadereffectsource.cpp \
     $$PWD/qquickshadereffectmesh.cpp \
+    $$PWD/qquickshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp
 
 # Items that depend on OpenGL Renderer
 contains(QT_CONFIG, opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qquickopenglinfo.cpp \
-        $$PWD/qquickshadereffect.cpp \
-        $$PWD/qquickshadereffectnode.cpp \
+        $$PWD/qquickopenglshadereffect.cpp \
+        $$PWD/qquickopenglshadereffectnode.cpp \
         $$PWD/qquickframebufferobject.cpp \
         $$PWD/qquickspriteengine.cpp \
         $$PWD/qquicksprite.cpp \
@@ -147,8 +149,8 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qquicksprite_p.h \
         $$PWD/qquickspritesequence_p.h \
         $$PWD/qquickanimatedsprite_p.h \
-        $$PWD/qquickshadereffect_p.h \
-        $$PWD/qquickshadereffectnode_p.h \
+        $$PWD/qquickopenglshadereffect_p.h \
+        $$PWD/qquickopenglshadereffectnode_p.h \
         $$PWD/qquickframebufferobject.h \
         $$PWD/qquickitemgrabresult.h
 

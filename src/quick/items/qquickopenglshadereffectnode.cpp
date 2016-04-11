@@ -37,9 +37,9 @@
 **
 ****************************************************************************/
 
-#include <private/qquickshadereffectnode_p.h>
+#include <private/qquickopenglshadereffectnode_p.h>
 
-#include "qquickshadereffect_p.h"
+#include "qquickopenglshadereffect_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
@@ -61,29 +61,29 @@ static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProvider
 class QQuickCustomMaterialShader : public QSGMaterialShader
 {
 public:
-    QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes);
+    QQuickCustomMaterialShader(const QQuickOpenGLShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes);
     void deactivate() Q_DECL_OVERRIDE;
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
     char const *const *attributeNames() const Q_DECL_OVERRIDE;
 
 protected:
-    friend class QQuickShaderEffectNode;
+    friend class QQuickOpenGLShaderEffectNode;
 
     void compile() Q_DECL_OVERRIDE;
     const char *vertexShader() const Q_DECL_OVERRIDE;
     const char *fragmentShader() const Q_DECL_OVERRIDE;
 
-    const QQuickShaderEffectMaterialKey m_key;
+    const QQuickOpenGLShaderEffectMaterialKey m_key;
     QVector<QByteArray> m_attributes;
     QVector<const char *> m_attributeNames;
     QString m_log;
     bool m_compiled;
 
-    QVector<int> m_uniformLocs[QQuickShaderEffectMaterialKey::ShaderTypeCount];
+    QVector<int> m_uniformLocs[QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount];
     uint m_initialized : 1;
 };
 
-QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
+QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickOpenGLShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
     : m_key(key)
     , m_attributes(attributes)
     , m_compiled(false)
@@ -104,20 +104,20 @@ void QQuickCustomMaterialShader::deactivate()
 
 void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    typedef QQuickShaderEffectMaterial::UniformData UniformData;
+    typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
     Q_ASSERT(newEffect != 0);
 
-    QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(newEffect);
+    QQuickOpenGLShaderEffectMaterial *material = static_cast<QQuickOpenGLShaderEffectMaterial *>(newEffect);
     if (!material->m_emittedLogChanged && material->m_node) {
         material->m_emittedLogChanged = true;
-        emit material->m_node->logAndStatusChanged(m_log, m_compiled ? QQuickShaderEffect::Compiled
-                                                                     : QQuickShaderEffect::Error);
+        emit material->m_node->logAndStatusChanged(m_log, m_compiled ? QQuickOpenGLShaderEffect::Compiled
+                                                                     : QQuickOpenGLShaderEffect::Error);
     }
 
     int textureProviderIndex = 0;
     if (!m_initialized) {
-        for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+        for (int shaderType = 0; shaderType < QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
             Q_ASSERT(m_uniformLocs[shaderType].isEmpty());
             m_uniformLocs[shaderType].reserve(material->uniforms[shaderType].size());
             for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
@@ -138,7 +138,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
     }
 
     QOpenGLFunctions *functions = state.context()->functions();
-    for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+    for (int shaderType = 0; shaderType < QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
             const UniformData &d = material->uniforms[shaderType].at(i);
             int loc = m_uniformLocs[shaderType].at(i);
@@ -230,14 +230,14 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
     }
     functions->glActiveTexture(GL_TEXTURE0);
 
-    const QQuickShaderEffectMaterial *oldMaterial = static_cast<const QQuickShaderEffectMaterial *>(oldEffect);
+    const QQuickOpenGLShaderEffectMaterial *oldMaterial = static_cast<const QQuickOpenGLShaderEffectMaterial *>(oldEffect);
     if (oldEffect == 0 || material->cullMode != oldMaterial->cullMode) {
         switch (material->cullMode) {
-        case QQuickShaderEffectMaterial::FrontFaceCulling:
+        case QQuickShaderEffect::FrontFaceCulling:
             functions->glEnable(GL_CULL_FACE);
             functions->glCullFace(GL_FRONT);
             break;
-        case QQuickShaderEffectMaterial::BackFaceCulling:
+        case QQuickShaderEffect::BackFaceCulling:
             functions->glEnable(GL_CULL_FACE);
             functions->glCullFace(GL_BACK);
             break;
@@ -322,16 +322,16 @@ void QQuickCustomMaterialShader::compile()
 
 const char *QQuickCustomMaterialShader::vertexShader() const
 {
-    return m_key.sourceCode[QQuickShaderEffectMaterialKey::VertexShader].constData();
+    return m_key.sourceCode[QQuickOpenGLShaderEffectMaterialKey::VertexShader].constData();
 }
 
 const char *QQuickCustomMaterialShader::fragmentShader() const
 {
-    return m_key.sourceCode[QQuickShaderEffectMaterialKey::FragmentShader].constData();
+    return m_key.sourceCode[QQuickOpenGLShaderEffectMaterialKey::FragmentShader].constData();
 }
 
 
-bool QQuickShaderEffectMaterialKey::operator == (const QQuickShaderEffectMaterialKey &other) const
+bool QQuickOpenGLShaderEffectMaterialKey::operator == (const QQuickOpenGLShaderEffectMaterialKey &other) const
 {
     if (className != other.className)
         return false;
@@ -342,39 +342,39 @@ bool QQuickShaderEffectMaterialKey::operator == (const QQuickShaderEffectMateria
     return true;
 }
 
-bool QQuickShaderEffectMaterialKey::operator != (const QQuickShaderEffectMaterialKey &other) const
+bool QQuickOpenGLShaderEffectMaterialKey::operator != (const QQuickOpenGLShaderEffectMaterialKey &other) const
 {
     return !(*this == other);
 }
 
-uint qHash(const QQuickShaderEffectMaterialKey &key)
+uint qHash(const QQuickOpenGLShaderEffectMaterialKey &key)
 {
     uint hash = qHash((const void *)key.className);
-    typedef QQuickShaderEffectMaterialKey Key;
+    typedef QQuickOpenGLShaderEffectMaterialKey Key;
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
         hash = hash * 31337 + qHash(key.sourceCode[shaderType]);
     return hash;
 }
 
-class QQuickShaderEffectMaterialCache : public QObject
+class QQuickOpenGLShaderEffectMaterialCache : public QObject
 {
     Q_OBJECT
 public:
-    static QQuickShaderEffectMaterialCache *get(bool create = true) {
+    static QQuickOpenGLShaderEffectMaterialCache *get(bool create = true) {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        QQuickShaderEffectMaterialCache *me = ctx->findChild<QQuickShaderEffectMaterialCache *>(QStringLiteral("__qt_ShaderEffectCache"), Qt::FindDirectChildrenOnly);
+        QQuickOpenGLShaderEffectMaterialCache *me = ctx->findChild<QQuickOpenGLShaderEffectMaterialCache *>(QStringLiteral("__qt_ShaderEffectCache"), Qt::FindDirectChildrenOnly);
         if (!me && create) {
-            me = new QQuickShaderEffectMaterialCache();
+            me = new QQuickOpenGLShaderEffectMaterialCache();
             me->setObjectName(QStringLiteral("__qt_ShaderEffectCache"));
             me->setParent(ctx);
         }
         return me;
     }
-    QHash<QQuickShaderEffectMaterialKey, QSGMaterialType *> cache;
+    QHash<QQuickOpenGLShaderEffectMaterialKey, QSGMaterialType *> cache;
 };
 
-QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
-    : cullMode(NoCulling)
+QQuickOpenGLShaderEffectMaterial::QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node)
+    : cullMode(QQuickShaderEffect::NoCulling)
     , geometryUsesTextureSubRect(false)
     , m_node(node)
     , m_emittedLogChanged(false)
@@ -382,17 +382,17 @@ QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *n
     setFlag(Blending | RequiresFullMatrix, true);
 }
 
-QSGMaterialType *QQuickShaderEffectMaterial::type() const
+QSGMaterialType *QQuickOpenGLShaderEffectMaterial::type() const
 {
     return m_type;
 }
 
-QSGMaterialShader *QQuickShaderEffectMaterial::createShader() const
+QSGMaterialShader *QQuickOpenGLShaderEffectMaterial::createShader() const
 {
     return new QQuickCustomMaterialShader(m_source, attributes);
 }
 
-bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &other) const
+bool QQuickOpenGLShaderEffectMaterial::UniformData::operator == (const UniformData &other) const
 {
     if (specialType != other.specialType)
         return false;
@@ -409,14 +409,14 @@ bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &ot
     }
 }
 
-int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
+int QQuickOpenGLShaderEffectMaterial::compare(const QSGMaterial *o) const
 {
-    const QQuickShaderEffectMaterial *other = static_cast<const QQuickShaderEffectMaterial *>(o);
+    const QQuickOpenGLShaderEffectMaterial *other = static_cast<const QQuickOpenGLShaderEffectMaterial *>(o);
     if ((hasAtlasTexture(textureProviders) && !geometryUsesTextureSubRect) || (hasAtlasTexture(other->textureProviders) && !other->geometryUsesTextureSubRect))
         return 1;
     if (cullMode != other->cullMode)
         return 1;
-    for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+    for (int shaderType = 0; shaderType < QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         if (uniforms[shaderType] != other->uniforms[shaderType])
             return 1;
     }
@@ -440,12 +440,12 @@ int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
     return 0;
 }
 
-void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMaterialKey &source)
+void QQuickOpenGLShaderEffectMaterial::setProgramSource(const QQuickOpenGLShaderEffectMaterialKey &source)
 {
     m_source = source;
     m_emittedLogChanged = false;
 
-    QQuickShaderEffectMaterialCache *cache = QQuickShaderEffectMaterialCache::get();
+    QQuickOpenGLShaderEffectMaterialCache *cache = QQuickOpenGLShaderEffectMaterialCache::get();
     m_type = cache->cache.value(m_source);
     if (!m_type) {
         m_type = new QSGMaterialType();
@@ -453,16 +453,16 @@ void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMateri
     }
 }
 
-void QQuickShaderEffectMaterial::cleanupMaterialCache()
+void QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache()
 {
-    QQuickShaderEffectMaterialCache *cache = QQuickShaderEffectMaterialCache::get(false);
+    QQuickOpenGLShaderEffectMaterialCache *cache = QQuickOpenGLShaderEffectMaterialCache::get(false);
     if (cache) {
         qDeleteAll(cache->cache.values());
         delete cache;
     }
 }
 
-void QQuickShaderEffectMaterial::updateTextures() const
+void QQuickOpenGLShaderEffectMaterial::updateTextures() const
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         if (QSGTextureProvider *provider = textureProviders.at(i)) {
@@ -472,7 +472,7 @@ void QQuickShaderEffectMaterial::updateTextures() const
     }
 }
 
-void QQuickShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
+void QQuickOpenGLShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         if (provider == textureProviders.at(i))
@@ -481,7 +481,7 @@ void QQuickShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *p
 }
 
 
-QQuickShaderEffectNode::QQuickShaderEffectNode()
+QQuickOpenGLShaderEffectNode::QQuickOpenGLShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
 
@@ -490,28 +490,28 @@ QQuickShaderEffectNode::QQuickShaderEffectNode()
 #endif
 }
 
-QQuickShaderEffectNode::~QQuickShaderEffectNode()
+QQuickOpenGLShaderEffectNode::~QQuickOpenGLShaderEffectNode()
 {
 }
 
-void QQuickShaderEffectNode::markDirtyTexture()
+void QQuickOpenGLShaderEffectNode::markDirtyTexture()
 {
     markDirty(DirtyMaterial);
     Q_EMIT dirtyTexture();
 }
 
-void QQuickShaderEffectNode::textureProviderDestroyed(QObject *object)
+void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(QObject *object)
 {
     Q_ASSERT(material());
-    static_cast<QQuickShaderEffectMaterial *>(material())->invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
+    static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
 }
 
-void QQuickShaderEffectNode::preprocess()
+void QQuickOpenGLShaderEffectNode::preprocess()
 {
     Q_ASSERT(material());
-    static_cast<QQuickShaderEffectMaterial *>(material())->updateTextures();
+    static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->updateTextures();
 }
 
-#include "qquickshadereffectnode.moc"
+#include "qquickopenglshadereffectnode.moc"
 
 QT_END_NAMESPACE

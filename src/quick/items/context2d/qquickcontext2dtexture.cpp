@@ -47,6 +47,7 @@
 #ifndef QT_NO_OPENGL
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
+#include <QOpenGLFunctions>
 #endif
 #include <QtCore/QThread>
 #include <QtGui/QGuiApplication>
