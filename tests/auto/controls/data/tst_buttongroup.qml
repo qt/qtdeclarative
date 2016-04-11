@@ -212,7 +212,7 @@ TestCase {
 
         group.buttons = []
         compare(group.buttons.length, 0)
-        compare(group.checkedButton, null)
+        tryCompare(group, "checkedButton", null)
         compare(buttonsSpy.count, 5)
 
         group.destroy()
@@ -320,5 +320,32 @@ TestCase {
         compare(buttonsSpy.count, 2)
 
         group.destroy()
+    }
+
+    Component {
+        id: repeater
+        Column {
+            id: column
+            property ButtonGroup group: ButtonGroup { buttons: column.children }
+            property alias repeater: r
+            Repeater {
+                id: r
+                model: 3
+                delegate: RadioDelegate {
+                    checked: index == 0
+                    objectName: index
+                }
+            }
+        }
+    }
+
+    function test_repeater() {
+        var container = repeater.createObject(testCase)
+        verify(container)
+
+        verify(container.group.checkedButton)
+        compare(container.group.checkedButton.objectName, "0")
+
+        container.destroy()
     }
 }

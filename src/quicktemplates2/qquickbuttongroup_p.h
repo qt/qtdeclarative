@@ -87,6 +87,8 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuickButtonGroup)
     Q_DECLARE_PRIVATE(QQuickButtonGroup)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickButtonGroupAttached : public QObject
