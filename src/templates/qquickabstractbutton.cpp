@@ -478,9 +478,9 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
 
+        nextCheckState();
         emit released();
         emit clicked();
-        nextCheckState();
 
         if (d->autoRepeat)
             d->stopPressRepeat();
@@ -525,6 +525,9 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     bool wasPressed = d->pressed;
     setPressed(false);
 
+    if (contains(event->pos()))
+        nextCheckState();
+
     if (wasPressed) {
         emit released();
         if (!d->wasHeld)
@@ -532,9 +535,6 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
-
-    if (contains(event->pos()))
-        nextCheckState();
 
     if (d->autoRepeat)
         d->stopPressRepeat();

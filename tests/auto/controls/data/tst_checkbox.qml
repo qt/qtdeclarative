@@ -139,10 +139,10 @@ TestCase {
         verify(control.spy.success)
 
         control.spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        "released",
+                                        "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.checked, true)
         compare(control.checkState, Qt.Checked)
@@ -156,10 +156,10 @@ TestCase {
         compare(control.pressed, true)
         verify(control.spy.success)
         control.spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "released",
+                                        "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
@@ -209,10 +209,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        "released",
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, true)
         compare(control.checkState, Qt.Checked)
@@ -222,10 +222,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.Checked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "released",
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
@@ -343,9 +343,9 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.PartiallyChecked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
+                                        ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         "released",
-                                        "clicked",
-                                        ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }]]
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, true)
         compare(control.checkState, Qt.Checked)
@@ -355,10 +355,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.Checked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "released",
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
@@ -368,10 +368,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
+                                        "released",
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, true)
         compare(control.checkState, Qt.PartiallyChecked)
@@ -381,9 +381,9 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.PartiallyChecked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
+                                        ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         "released",
-                                        "clicked",
-                                        ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }]]
+                                        "clicked"]
         mouseClick(control)
         compare(control.checked, true)
         compare(control.checkState, Qt.Checked)
@@ -393,10 +393,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.Checked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "released",
+                                        "clicked"]
         mouseClick(control)
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
@@ -406,10 +406,10 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
-                                        "released",
-                                        "clicked",
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
-                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }]]
+                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
+                                        "released",
+                                        "clicked"]
         mouseClick(control)
         compare(control.checked, true)
         compare(control.checkState, Qt.PartiallyChecked)
