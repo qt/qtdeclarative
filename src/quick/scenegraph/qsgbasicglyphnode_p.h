@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGMaterial;
 
-class QSGBasicGlyphNode: public QSGGlyphNode
+class Q_QUICK_PRIVATE_EXPORT QSGBasicGlyphNode: public QSGGlyphNode
 {
 public:
     QSGBasicGlyphNode();

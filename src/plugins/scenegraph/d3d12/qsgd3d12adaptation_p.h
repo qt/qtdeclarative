@@ -61,6 +61,9 @@ class QSGRenderLoop;
 
 class QSGD3D12Adaptation : public QSGContextPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QSGContextFactoryInterface" FILE "d3d12.json")
+
 public:
     QSGD3D12Adaptation(QObject *parent = 0);
 

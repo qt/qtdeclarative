@@ -53,6 +53,7 @@
 
 #include <private/qsgrenderer_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
+#include <QtCore/qbitarray.h>
 #include "qsgd3d12engine_p.h"
 #include "qsgd3d12material_p.h"
 

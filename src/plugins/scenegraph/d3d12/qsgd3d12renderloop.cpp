@@ -49,6 +49,8 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <QElapsedTimer>
+#include <QQueue>
+#include <QGuiApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -517,8 +519,7 @@ void QSGD3D12RenderThread::sync(bool inExpose)
 
 void QSGD3D12RenderThread::syncAndRender()
 {
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
-    if (profileFrames) {
+    if (Q_UNLIKELY(debug_time())) {
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
     }
@@ -542,7 +543,7 @@ void QSGD3D12RenderThread::syncAndRender()
         sync(exposeRequested);
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (profileFrames)
+    if (Q_UNLIKELY(debug_time()))
         syncTime = threadTimer.nsecsElapsed();
 #endif
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
@@ -578,7 +579,7 @@ void QSGD3D12RenderThread::syncAndRender()
 
     if (canRender) {
         wd->renderSceneGraph(engine->windowSize());
-        if (profileFrames)
+        if (Q_UNLIKELY(debug_time()))
             renderTime = threadTimer.nsecsElapsed();
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
@@ -1035,15 +1036,14 @@ void QSGD3D12RenderLoop::polishAndSync(WindowData *w, bool inExpose)
     qint64 polishTime = 0;
     qint64 waitTime = 0;
     qint64 syncTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
-    if (profileFrames)
+    if (Q_UNLIKELY(debug_time()))
         timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->polishItems();
 
-    if (profileFrames)
+    if (Q_UNLIKELY(debug_time()))
         polishTime = timer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
 
@@ -1060,7 +1060,7 @@ void QSGD3D12RenderLoop::polishAndSync(WindowData *w, bool inExpose)
 
     if (Q_UNLIKELY(debug_loop()))
         qDebug("polishAndSync - wait for sync");
-    if (profileFrames)
+    if (Q_UNLIKELY(debug_time()))
         waitTime = timer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
     w->thread->waitCondition.wait(&w->thread->mutex);
@@ -1069,7 +1069,7 @@ void QSGD3D12RenderLoop::polishAndSync(WindowData *w, bool inExpose)
     if (Q_UNLIKELY(debug_loop()))
         qDebug("polishAndSync - unlock after sync");
 
-    if (profileFrames)
+    if (Q_UNLIKELY(debug_time()))
         syncTime = timer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
 

@@ -45,9 +45,6 @@
 
 // Built-in adaptations
 #include <QtQuick/private/qsgsoftwareadaptation_p.h>
-#ifdef QSG_D3D12
-#include <QtQuick/private/qsgd3d12adaptation_p.h>
-#endif
 #ifndef QT_NO_OPENGL
 #include <QtQuick/private/qsgdefaultcontext_p.h>
 #endif
@@ -89,9 +86,6 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
-#ifdef QSG_D3D12
-    builtIns.append(new QSGD3D12Adaptation);
-#endif
 }
 
 Q_GLOBAL_STATIC(QSGAdaptionBackendData, qsg_adaptation_data)

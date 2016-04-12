@@ -40,6 +40,8 @@
 #include "qsgd3d12builtinmaterials_p.h"
 #include "qsgd3d12rendercontext_p.h"
 #include <QQuickWindow>
+#include <QtCore/qmath.h>
+#include <QtGui/private/qfixed_p.h>
 
 #include "vs_vertexcolor.hlslh"
 #include "ps_vertexcolor.hlslh"
