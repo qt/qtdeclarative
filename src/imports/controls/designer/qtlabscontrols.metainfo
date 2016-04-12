@@ -23,7 +23,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Button')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Button\")" }
         }
     }
 
@@ -38,7 +38,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Check Box')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Check Box\")" }
         }
     }
 
@@ -97,7 +97,7 @@ MetaInfo {
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
-            Property { name: "title"; type: "binding"; value: "qsTr('Group Box')" }
+            Property { name: "title"; type: "binding"; value: "qsTr(\"Group Box\")" }
         }
     }
 
@@ -112,7 +112,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Item Delegate')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Item Delegate\")" }
         }
     }
 
@@ -127,7 +127,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Label')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Label\")" }
         }
     }
 
@@ -188,7 +188,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Radio Button')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Radio Button\")" }
         }
     }
 
@@ -231,7 +231,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Switch')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Switch\")" }
         }
     }
 
@@ -246,7 +246,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Text Area')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Text Area\")" }
         }
     }
 
@@ -261,7 +261,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Text Field')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Text Field\")" }
         }
     }
 
@@ -276,7 +276,7 @@ MetaInfo {
             version: "1.0"
             requiredImport: "Qt.labs.controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Tool Button')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Tool Button\")" }
         }
     }
 
