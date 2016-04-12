@@ -2937,6 +2937,13 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
     QCOMPARE(o->actuals().count(), 0);
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QByteArray(\"Hello\")", QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 29);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QByteArray>(o->actuals().at(0)), QByteArray("Hello"));
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)

@@ -1591,12 +1591,6 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         else
             qstringPtr = new (&allocData) QString(value.toQStringNoThrow());
         type = callType;
-    } else if (callType == QMetaType::QByteArray) {
-        if (const ArrayBuffer *ab = value.as<ArrayBuffer>())
-            qbyteArrayPtr = new (&allocData) QByteArray(ab->asByteArray());
-        else
-            qbyteArrayPtr = new (&allocData) QByteArray();
-        type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = 0;
         if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
