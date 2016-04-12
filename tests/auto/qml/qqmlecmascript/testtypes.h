@@ -795,6 +795,8 @@ public:
     Q_INVOKABLE void method_QObject(QObject *a) { invoke(13); m_actuals << qVariantFromValue(a); }
     Q_INVOKABLE void method_QScriptValue(QJSValue a) { invoke(14); m_actuals << qVariantFromValue(a); }
     Q_INVOKABLE void method_intQScriptValue(int a, QJSValue b) { invoke(15); m_actuals << a << qVariantFromValue(b); }
+    Q_INVOKABLE QJSValue method_intQJSValue(int a, QJSValue b) { invoke(29); m_actuals << a << qVariantFromValue(b); return b.call(); }
+    Q_INVOKABLE QJSValue method_intQJSValue(int a, int b) { m_actuals << a << b; return QJSValue();} // Should never be called.
 
     Q_INVOKABLE void method_overload(int a) { invoke(16); m_actuals << a; }
     Q_INVOKABLE void method_overload(int a, int b) { invoke(17); m_actuals << a << b; }

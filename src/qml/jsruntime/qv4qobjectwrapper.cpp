@@ -1270,6 +1270,8 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
             return 5;
+        } else if (conversionType == qMetaTypeId<QJSValue>()) {
+            return 0;
         } else {
             return 10;
         }
