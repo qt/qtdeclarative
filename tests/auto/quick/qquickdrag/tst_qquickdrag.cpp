@@ -144,6 +144,8 @@ private slots:
     void cleanupTestCase();
 
     void active();
+    void setActive_data();
+    void setActive();
     void drop();
     void move();
     void parentChange();
@@ -377,6 +379,50 @@ void tst_QQuickDrag::active()
     dropTarget.reset();
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0); QCOMPARE(dropTarget.moveEvents, 0);
+}
+
+void tst_QQuickDrag::setActive_data()
+{
+    QTest::addColumn<QString>("dragType");
+
+    QTest::newRow("default") << "";
+    QTest::newRow("internal") << "Drag.dragType: Drag.Internal";
+    QTest::newRow("none") << "Drag.dragType: Drag.None";
+    /* We don't test Drag.Automatic, because that causes QDrag::exec() to be
+     * invoked, and on some platforms tha's implemented by running a main loop
+     * until the drag has finished -- and at that point, the Drag.active will
+     * be false again. */
+}
+
+// QTBUG-52540
+void tst_QQuickDrag::setActive()
+{
+    QFETCH(QString, dragType);
+
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.contentItem());
+    dropTarget.setSize(QSizeF(100, 100));
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.0\n"
+            "Item {\n"
+                "property bool dragActive: Drag.active\n"
+                "property Item dragTarget: Drag.target\n" +
+                dragType.toUtf8() + "\n"
+                "x: 50; y: 50\n"
+                "width: 10; height: 10\n"
+            "}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(item);
+    item->setParentItem(&dropTarget);
+
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), false);
+
+    evaluate<void>(item, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), true);
 }
 
 void tst_QQuickDrag::drop()
