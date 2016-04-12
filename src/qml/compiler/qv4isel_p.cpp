@@ -156,14 +156,15 @@ void IRDecoder::visitMove(IR::Move *s)
                     }
                 }
                 if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
-                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex, s->target);
+                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property,
+                                          m->property->coreIndex, s->target);
                     return;
                 }
-                getQObjectProperty(m->base, m->property->coreIndex, captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
+                getQObjectProperty(m->base, m->property, captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
 #endif // V4_BOOTSTRAP
                 return;
             } else if (m->kind == IR::Member::MemberOfIdObjectsArray) {
-                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->idIndex, s->target);
+                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, nullptr, m->idIndex, s->target);
                 return;
             } else if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {
                 getProperty(m->base, *m->name, s->target);

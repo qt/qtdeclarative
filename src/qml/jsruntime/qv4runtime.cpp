@@ -1415,6 +1415,116 @@ ReturnedValue Runtime::method_getQmlQObjectProperty(ExecutionEngine *engine, con
     return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->object(), propertyIndex, captureRequired);
 }
 
+template <typename PropertyType>
+static inline PropertyType getQObjectProperty(QObject *object, ExecutionEngine *engine, QQmlAccessors *accessors, int coreIndex, int notifyIndex)
+{
+    PropertyType t;
+    accessors->read(object, &t);
+    if (notifyIndex != -1) {
+        QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+        if (ep && ep->propertyCapture) {
+            if (accessors->notifier) {
+                QQmlNotifier *n = nullptr;
+                accessors->notifier(object, &n);
+                if (n) {
+                    ep->propertyCapture->captureProperty(n);
+                }
+            } else {
+                ep->propertyCapture->captureProperty(object, coreIndex, notifyIndex);
+            }
+        }
+    }
+
+    return t;
+}
+
+ReturnedValue Runtime::method_accessQObjectQRealProperty(ExecutionEngine *engine,
+                                                         const Value &object,
+                                                         QQmlAccessors *accessors, int coreIndex,
+                                                         int notifyIndex)
+{
+    auto casted = object.as<QObjectWrapper>();
+    QObject *o = casted ? casted->object() : nullptr;
+    if (Q_LIKELY(o)) {
+        return QV4::Encode(getQObjectProperty<qreal>(o, engine, accessors, coreIndex, notifyIndex));
+    }
+    engine->throwTypeError(QStringLiteral("Cannot read property of null"));
+    return Encode::undefined();
+}
+
+ReturnedValue Runtime::method_accessQObjectQObjectProperty(ExecutionEngine *engine,
+                                                           const Value &object,
+                                                           QQmlAccessors *accessors, int coreIndex,
+                                                           int notifyIndex)
+{
+    auto casted = object.as<QObjectWrapper>();
+    QObject *o = casted ? casted->object() : nullptr;
+    if (Q_LIKELY(o)) {
+        return QV4::QObjectWrapper::wrap(engine, getQObjectProperty<QObject *>(o, engine, accessors,
+                                                                               coreIndex,
+                                                                               notifyIndex));
+    }
+
+    engine->throwTypeError(QStringLiteral("Cannot read property of null"));
+    return Encode::undefined();
+}
+
+ReturnedValue Runtime::method_accessQObjectIntProperty(ExecutionEngine *engine, const Value &object,
+                                                       QQmlAccessors *accessors, int coreIndex,
+                                                       int notifyIndex)
+{
+    auto casted = object.as<QObjectWrapper>();
+    QObject *o = casted ? casted->object() : nullptr;
+    if (Q_LIKELY(o)) {
+        return QV4::Encode(getQObjectProperty<int>(o, engine, accessors, coreIndex, notifyIndex));
+    }
+    engine->throwTypeError(QStringLiteral("Cannot read property of null"));
+    return Encode::undefined();
+}
+
+ReturnedValue Runtime::method_accessQObjectBoolProperty(ExecutionEngine *engine, const Value &object,
+                                                        QQmlAccessors *accessors, int coreIndex,
+                                                        int notifyIndex)
+{
+    auto casted = object.as<QObjectWrapper>();
+    QObject *o = casted ? casted->object() : nullptr;
+    if (Q_LIKELY(o)) {
+        return QV4::Encode(getQObjectProperty<bool>(o, engine, accessors, coreIndex, notifyIndex));
+    }
+    engine->throwTypeError(QStringLiteral("Cannot read property of null"));
+    return Encode::undefined();
+}
+
+ReturnedValue Runtime::method_accessQObjectQStringProperty(ExecutionEngine *engine,
+                                                           const Value &object,
+                                                           QQmlAccessors *accessors, int coreIndex,
+                                                           int notifyIndex)
+{
+    auto casted = object.as<QObjectWrapper>();
+    QObject *o = casted ? casted->object() : nullptr;
+    if (Q_LIKELY(o)) {
+        return QV4::Encode(engine->newString(getQObjectProperty<QString>(o, engine, accessors,
+                                                                         coreIndex, notifyIndex)));
+    }
+    engine->throwTypeError(QStringLiteral("Cannot read property of null"));
+    return Encode::undefined();
+}
+
+ReturnedValue Runtime::method_accessQmlScopeObjectQObjectProperty(const Value &context,
+                                                                  QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    QObject *rv = 0;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::QObjectWrapper::wrap(c.engine(), rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
 QV4::ReturnedValue Runtime::method_getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex)
 {
     QObject *scopeObject = engine->qmlScopeObject();

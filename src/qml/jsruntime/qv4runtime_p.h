@@ -56,8 +56,12 @@
 #include "qv4engine_p.h"
 #include "qv4math_p.h"
 #include "qv4runtimeapi_p.h"
-#include <QtCore/qnumeric.h>
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlaccessors_p.h>
+#include <private/qqmlcontextwrapper_p.h>
+#endif
 
+#include <QtCore/qnumeric.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -415,6 +419,68 @@ inline Bool Runtime::method_compareStrictNotEqual(const Value &left, const Value
 inline Bool Runtime::method_toBoolean(const Value &value)
 {
     return value.toBoolean();
+}
+
+inline ReturnedValue Runtime::method_accessQmlScopeObjectQRealProperty(const Value &context,
+                                                                       QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    qreal rv = 0;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+inline ReturnedValue Runtime::method_accessQmlScopeObjectIntProperty(const Value &context,
+                                                                     QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    int rv = 0;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+inline ReturnedValue Runtime::method_accessQmlScopeObjectBoolProperty(const Value &context,
+                                                                      QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    bool rv = false;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+inline ReturnedValue Runtime::method_accessQmlScopeObjectQStringProperty(ExecutionEngine *engine,
+                                                                         const Value &context,
+                                                                         QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    QString rv;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(engine->newString(rv));
+#else
+    Q_UNUSED(engine);
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
 }
 
 } // namespace QV4
