@@ -94,6 +94,7 @@ struct PlainVertices {
 
 QQuickCustomParticle::QQuickCustomParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
+    , m_common(this)
     , m_dirtyUniforms(true)
     , m_dirtyUniformValues(true)
     , m_dirtyTextureProviders(true)

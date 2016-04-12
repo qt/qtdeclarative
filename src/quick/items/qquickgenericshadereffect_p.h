@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKOPENGLSHADEREFFECT_P_H
-#define QQUICKOPENGLSHADEREFFECT_P_H
+#ifndef QQUICKGENERICSHADEREFFECT_P_H
+#define QQUICKGENERICSHADEREFFECT_P_H
 
 //
 //  W A R N I N G
@@ -52,64 +52,24 @@
 //
 
 #include <QtQuick/qquickitem.h>
-
-#include <QtQuick/qsgmaterial.h>
 #include <private/qtquickglobal_p.h>
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qquickopenglshadereffectnode_p.h>
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 
-#include <QtCore/qpointer.h>
-
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
-class QSignalMapper;
-class QQuickOpenGLCustomMaterialShader;
-
-// Common class for QQuickOpenGLShaderEffect and QQuickCustomParticle.
-struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
-{
-    typedef QQuickOpenGLShaderEffectMaterialKey Key;
-    typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
-
-    QQuickOpenGLShaderEffectCommon(QObject *host) : host(host) { }
-    ~QQuickOpenGLShaderEffectCommon();
-    void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
-    void connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
-    void updateParseLog(bool ignoreAttributes);
-    void lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code);
-    void updateShader(QQuickItem *item, Key::ShaderType shaderType);
-    void updateMaterial(QQuickOpenGLShaderEffectNode *node, QQuickOpenGLShaderEffectMaterial *material,
-                        bool updateUniforms, bool updateUniformValues, bool updateTextureProviders);
-    void updateWindow(QQuickWindow *window);
-
-    // Called by slots in QQuickOpenGLShaderEffect:
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(QQuickItem *item, int mappedId, bool *textureProviderChanged);
-
-    QObject *host;
-    Key source;
-    QVector<QByteArray> attributes;
-    QVector<UniformData> uniformData[Key::ShaderTypeCount];
-    QVector<QSignalMapper *> signalMappers[Key::ShaderTypeCount];
-    QString parseLog;
-};
-
-
-class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffect : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickGenericShaderEffect : public QObject
 {
     Q_OBJECT
 
 public:
-    QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
-    ~QQuickOpenGLShaderEffect();
+    QQuickGenericShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
+    ~QQuickGenericShaderEffect();
 
-    QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
+    QByteArray fragmentShader() const { return QByteArray(); }
     void setFragmentShader(const QByteArray &code);
 
-    QByteArray vertexShader() const { return m_common.source.sourceCode[Key::VertexShader]; }
+    QByteArray vertexShader() const { return QByteArray(); }
     void setVertexShader(const QByteArray &code);
 
     bool blending() const { return m_blending; }
@@ -127,28 +87,15 @@ public:
     bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
     void setSupportsAtlasTextures(bool supports);
 
-    QString parseLog();
-
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
     void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
 
-private Q_SLOTS:
-    void updateGeometry();
-    void updateGeometryIfAtlased();
-    void updateLogAndStatus(const QString &log, int status);
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
+    QString parseLog() { return QString(); }
 
 private:
-    friend class QQuickCustomMaterialShader;
-    friend class QQuickOpenGLShaderEffectNode;
-
-    typedef QQuickOpenGLShaderEffectMaterialKey Key;
-    typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
-
     QQuickShaderEffect *m_item;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
@@ -157,20 +104,10 @@ private:
     QString m_log;
     QQuickShaderEffect::Status m_status;
 
-    QQuickOpenGLShaderEffectCommon m_common;
-
     uint m_blending : 1;
-    uint m_dirtyUniforms : 1;
-    uint m_dirtyUniformValues : 1;
-    uint m_dirtyTextureProviders : 1;
-    uint m_dirtyProgram : 1;
-    uint m_dirtyParseLog : 1;
-    uint m_dirtyMesh : 1;
-    uint m_dirtyGeometry : 1;
-    uint m_customVertexShader : 1;
     uint m_supportsAtlasTextures : 1;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKOPENGLSHADEREFFECT_P_H
+#endif // QQUICKGENERICSHADEREFFECT_P_H

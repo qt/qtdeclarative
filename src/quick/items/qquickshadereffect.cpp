@@ -42,6 +42,7 @@
 #ifndef QT_NO_OPENGL
 #include <private/qquickopenglshadereffect_p.h>
 #endif
+#include <private/qquickgenericshadereffect_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -196,16 +197,18 @@ QT_BEGIN_NAMESPACE
 QSGContextFactoryInterface::Flags qsg_backend_flags();
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
-    : QQuickItem(parent)
+    : QQuickItem(parent),
+      m_glImpl(nullptr),
+      m_impl(nullptr)
 {
     setFlag(QQuickItem::ItemHasContents);
 
 #ifndef QT_NO_OPENGL
     if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectV2))
         m_glImpl = new QQuickOpenGLShaderEffect(this, this);
-    else
-        m_glImpl = nullptr;
 #endif
+    if (!m_glImpl)
+        m_impl = new QQuickGenericShaderEffect(this, this);
 }
 
 /*!
@@ -223,16 +226,18 @@ QByteArray QQuickShaderEffect::fragmentShader() const
     if (m_glImpl)
         return m_glImpl->fragmentShader();
 #endif
-    return QByteArray();
+    return m_impl->fragmentShader();
 }
 
 void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setFragmentShader(code);
+        return;
+    }
 #endif
-    Q_UNUSED(code);
+    m_impl->setFragmentShader(code);
 }
 
 /*!
@@ -249,16 +254,18 @@ QByteArray QQuickShaderEffect::vertexShader() const
     if (m_glImpl)
         return m_glImpl->vertexShader();
 #endif
-    return QByteArray();
+    return m_impl->vertexShader();
 }
 
 void QQuickShaderEffect::setVertexShader(const QByteArray &code)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setVertexShader(code);
+        return;
+    }
 #endif
-    Q_UNUSED(code);
+    m_impl->setVertexShader(code);
 }
 
 /*!
@@ -276,16 +283,18 @@ bool QQuickShaderEffect::blending() const
     if (m_glImpl)
         return m_glImpl->blending();
 #endif
-    return true;
+    return m_impl->blending();
 }
 
 void QQuickShaderEffect::setBlending(bool enable)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setBlending(enable);
+        return;
+    }
 #endif
-    Q_UNUSED(enable);
+    m_impl->setBlending(enable);
 }
 
 /*!
@@ -307,16 +316,18 @@ QVariant QQuickShaderEffect::mesh() const
     if (m_glImpl)
         return m_glImpl->mesh();
 #endif
-    return QVariant();
+    return m_impl->mesh();
 }
 
 void QQuickShaderEffect::setMesh(const QVariant &mesh)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setMesh(mesh);
+        return;
+    }
 #endif
-    Q_UNUSED(mesh);
+    m_impl->setMesh(mesh);
 }
 
 /*!
@@ -339,16 +350,18 @@ QQuickShaderEffect::CullMode QQuickShaderEffect::cullMode() const
     if (m_glImpl)
         return m_glImpl->cullMode();
 #endif
-    return NoCulling;
+    return m_impl->cullMode();
 }
 
 void QQuickShaderEffect::setCullMode(CullMode face)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setCullMode(face);
+        return;
+    }
 #endif
-    Q_UNUSED(face);
+    return m_impl->setCullMode(face);
 }
 
 /*!
@@ -378,16 +391,18 @@ bool QQuickShaderEffect::supportsAtlasTextures() const
     if (m_glImpl)
         return m_glImpl->supportsAtlasTextures();
 #endif
-    return false;
+    return m_impl->supportsAtlasTextures();
 }
 
 void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->setSupportsAtlasTextures(supports);
+        return;
+    }
 #endif
-    Q_UNUSED(supports);
+    m_impl->setSupportsAtlasTextures(supports);
 }
 
 /*!
@@ -424,7 +439,7 @@ QString QQuickShaderEffect::log() const
     if (m_glImpl)
         return m_glImpl->log();
 #endif
-    return QString();
+    return m_impl->log();
 }
 
 QQuickShaderEffect::Status QQuickShaderEffect::status() const
@@ -433,24 +448,31 @@ QQuickShaderEffect::Status QQuickShaderEffect::status() const
     if (m_glImpl)
         return m_glImpl->status();
 #endif
-    return Uncompiled;
+    return m_impl->status();
 }
 
 bool QQuickShaderEffect::event(QEvent *e)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->handleEvent(e);
+        return QQuickItem::event(e);
+    }
 #endif
+    m_impl->handleEvent(e);
     return QQuickItem::event(e);
 }
 
 void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->handleGeometryChanged(newGeometry, oldGeometry);
+        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        return;
+    }
 #endif
+    m_impl->handleGeometryChanged(newGeometry, oldGeometry);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -460,24 +482,32 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
     if (m_glImpl)
         return m_glImpl->handleUpdatePaintNode(oldNode, updatePaintNodeData);
 #endif
-    return nullptr;
+    return m_impl->handleUpdatePaintNode(oldNode, updatePaintNodeData);
 }
 
 void QQuickShaderEffect::componentComplete()
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->handleComponentComplete();
+        QQuickItem::componentComplete();
+        return;
+    }
 #endif
+    m_impl->handleComponentComplete();
     QQuickItem::componentComplete();
 }
 
 void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
 {
 #ifndef QT_NO_OPENGL
-    if (m_glImpl)
+    if (m_glImpl) {
         m_glImpl->handleItemChange(change, value);
+        QQuickItem::itemChange(change, value);
+        return;
+    }
 #endif
+    m_impl->handleItemChange(change, value);
     QQuickItem::itemChange(change, value);
 }
 
@@ -486,22 +516,13 @@ bool QQuickShaderEffect::isComponentComplete() const
     return QQuickItem::isComponentComplete();
 }
 
-void QQuickShaderEffect::sourceDestroyed(QObject *object)
+QString QQuickShaderEffect::parseLog()
 {
 #ifndef QT_NO_OPENGL
     if (m_glImpl)
-        m_glImpl->handleSourceDestroyed(object);
+        return m_glImpl->parseLog();
 #endif
-    Q_UNUSED(object);
-}
-
-void QQuickShaderEffect::propertyChanged(int mappedId)
-{
-#ifndef QT_NO_OPENGL
-    if (m_glImpl)
-        m_glImpl->handlePropertyChanged(mappedId);
-#endif
-    Q_UNUSED(mappedId);
+    return m_impl->parseLog();
 }
 
 QT_END_NAMESPACE

@@ -193,13 +193,13 @@ void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QQuickItem *item,
         const UniformData &d = uniformData[shaderType].at(i);
         QSignalMapper *mapper = signalMappers[shaderType].at(i);
         QObject::disconnect(item, 0, mapper, SLOT(map()));
-        QObject::disconnect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));
+        QObject::disconnect(mapper, SIGNAL(mapped(int)), host, SLOT(propertyChanged(int)));
         if (d.specialType == UniformData::Sampler) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
                 if (item->window())
                     QQuickItemPrivate::get(source)->derefWindow();
-                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), host, SLOT(sourceDestroyed(QObject*)));
             }
         }
     }
@@ -219,7 +219,7 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item, Ke
             const QByteArray signalName = '2' + mp.notifySignal().methodSignature();
             QSignalMapper *mapper = signalMappers[shaderType].at(i);
             QObject::connect(item, signalName, mapper, SLOT(map()));
-            QObject::connect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));
+            QObject::connect(mapper, SIGNAL(mapped(int)), host, SLOT(propertyChanged(int)));
         } else {
             // If the source is set via a dynamic property, like the layer is, then we need this
             // check to disable the warning.
@@ -232,7 +232,7 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item, Ke
             if (source) {
                 if (item->window())
                     QQuickItemPrivate::get(source)->refWindow(item->window());
-                QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+                QObject::connect(source, SIGNAL(destroyed(QObject*)), host, SLOT(sourceDestroyed(QObject*)));
             }
         }
     }
@@ -499,7 +499,7 @@ void QQuickOpenGLShaderEffectCommon::propertyChanged(QQuickItem *item, int mappe
             // would trigger both to be disconnected. Without the connection we'll end up
             // with a dangling pointer in the uniformData.
             if (qquick_uniqueInUniformData(source, uniformData, shaderType, index))
-                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), host, SLOT(sourceDestroyed(QObject*)));
         }
 
         d.value = item->property(d.name.constData());
@@ -512,7 +512,7 @@ void QQuickOpenGLShaderEffectCommon::propertyChanged(QQuickItem *item, int mappe
             // will not get a parent. In those cases, 'source' should get the window from 'item'.
             if (item->window())
                 QQuickItemPrivate::get(source)->refWindow(item->window());
-            QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+            QObject::connect(source, SIGNAL(destroyed(QObject*)), host, SLOT(sourceDestroyed(QObject*)));
         }
         if (textureProviderChanged)
             *textureProviderChanged = true;
@@ -530,6 +530,7 @@ QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QOb
     , m_mesh(0)
     , m_cullMode(QQuickShaderEffect::NoCulling)
     , m_status(QQuickShaderEffect::Uncompiled)
+    , m_common(this)
     , m_blending(true)
     , m_dirtyUniforms(true)
     , m_dirtyUniformValues(true)
@@ -563,9 +564,9 @@ void QQuickOpenGLShaderEffect::setFragmentShader(const QByteArray &code)
     m_item->update();
     if (m_status != QQuickShaderEffect::Uncompiled) {
         m_status = QQuickShaderEffect::Uncompiled;
-        emit statusChanged();
+        emit m_item->statusChanged();
     }
-    emit fragmentShaderChanged();
+    emit m_item->fragmentShaderChanged();
 }
 
 void QQuickOpenGLShaderEffect::setVertexShader(const QByteArray &code)
@@ -583,9 +584,9 @@ void QQuickOpenGLShaderEffect::setVertexShader(const QByteArray &code)
     m_item->update();
     if (m_status != QQuickShaderEffect::Uncompiled) {
         m_status = QQuickShaderEffect::Uncompiled;
-        emit statusChanged();
+        emit m_item->statusChanged();
     }
-    emit vertexShaderChanged();
+    emit m_item->vertexShaderChanged();
 }
 
 void QQuickOpenGLShaderEffect::setBlending(bool enable)
@@ -596,7 +597,7 @@ void QQuickOpenGLShaderEffect::setBlending(bool enable)
     m_blending = enable;
     m_item->update();
 
-    emit blendingChanged();
+    emit m_item->blendingChanged();
 }
 
 QVariant QQuickOpenGLShaderEffect::mesh() const
@@ -638,7 +639,7 @@ void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)
     m_dirtyMesh = true;
     m_dirtyParseLog = true;
     m_item->update();
-    emit meshChanged();
+    emit m_item->meshChanged();
 }
 
 void QQuickOpenGLShaderEffect::setCullMode(QQuickShaderEffect::CullMode face)
@@ -647,7 +648,7 @@ void QQuickOpenGLShaderEffect::setCullMode(QQuickShaderEffect::CullMode face)
         return;
     m_cullMode = face;
     m_item->update();
-    emit cullModeChanged();
+    emit m_item->cullModeChanged();
 }
 
 void QQuickOpenGLShaderEffect::setSupportsAtlasTextures(bool supports)
@@ -656,7 +657,7 @@ void QQuickOpenGLShaderEffect::setSupportsAtlasTextures(bool supports)
         return;
     m_supportsAtlasTextures = supports;
     updateGeometry();
-    emit supportsAtlasTexturesChanged();
+    emit m_item->supportsAtlasTexturesChanged();
 }
 
 QString QQuickOpenGLShaderEffect::parseLog()
@@ -702,16 +703,16 @@ void QQuickOpenGLShaderEffect::updateLogAndStatus(const QString &log, int status
 {
     m_log = parseLog() + log;
     m_status = QQuickShaderEffect::Status(status);
-    emit logChanged();
-    emit statusChanged();
+    emit m_item->logChanged();
+    emit m_item->statusChanged();
 }
 
-void QQuickOpenGLShaderEffect::handleSourceDestroyed(QObject *object)
+void QQuickOpenGLShaderEffect::sourceDestroyed(QObject *object)
 {
     m_common.sourceDestroyed(object);
 }
 
-void QQuickOpenGLShaderEffect::handlePropertyChanged(int mappedId)
+void QQuickOpenGLShaderEffect::propertyChanged(int mappedId)
 {
     bool textureProviderChanged;
     m_common.propertyChanged(m_item, mappedId, &textureProviderChanged);
@@ -829,8 +830,8 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
                 m_log += QLatin1String("*** Mesh ***\n");
                 m_log += log;
                 m_status = QQuickShaderEffect::Error;
-                emit logChanged();
-                emit statusChanged();
+                emit m_item->logChanged();
+                emit m_item->statusChanged();
             }
             delete node;
             return 0;

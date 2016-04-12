@@ -35,7 +35,7 @@
 #include <QtQuick/QQuickView>
 #include "../../shared/util.h"
 
-class TestShaderEffect : public QQuickOpenGLShaderEffect
+class TestShaderEffect : public QQuickShaderEffect
 {
     Q_OBJECT
     Q_PROPERTY(QVariant source READ dummyRead NOTIFY dummyChanged)

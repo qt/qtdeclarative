@@ -57,6 +57,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickOpenGLShaderEffect;
+class QQuickGenericShaderEffect;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
 {
@@ -109,6 +110,7 @@ public:
     Status status() const;
 
     bool isComponentComplete() const;
+    QString parseLog();
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -127,14 +129,11 @@ protected:
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
-private Q_SLOTS:
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
-
 private:
 #ifndef QT_NO_OPENGL
     QQuickOpenGLShaderEffect *m_glImpl;
 #endif
+    QQuickGenericShaderEffect *m_impl;
 };
 
 QT_END_NAMESPACE
