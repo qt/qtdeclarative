@@ -41,6 +41,7 @@
 #include "qv4arraybuffer_p.h"
 #include "qv4string_p.h"
 
+#include <QtCore/private/qnumeric_p.h>
 #include "qendian.h"
 
 using namespace QV4;
@@ -291,7 +292,7 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
         return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
-    double val = ctx->argc() >= 2 ? ctx->args()[1].toNumber() : qQNaN();
+    double val = ctx->argc() >= 2 ? ctx->args()[1].toNumber() : qt_qnan();
     bool littleEndian = ctx->argc() < 3 ? false : ctx->args()[2].toBoolean();
 
     if (sizeof(T) == 4) {

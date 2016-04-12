@@ -90,7 +90,7 @@ void tst_affectors::test_basic()
         if (d->t == -1)
             continue; //Particle data unused
 
-        if (d->stillAlive())
+        if (d->stillAlive(system))
             stillAlive++;
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
@@ -130,7 +130,7 @@ void tst_affectors::test_filtered()
         if (d->t == -1)
             continue; //Particle data unused
 
-        if (d->stillAlive())
+        if (d->stillAlive(system))
             stillAlive++;
         QCOMPARE(d->x, 160.f);
         QCOMPARE(d->y, 160.f);

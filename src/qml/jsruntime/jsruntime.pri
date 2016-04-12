@@ -49,6 +49,7 @@ HEADERS += \
     $$PWD/qv4global_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \
+    $$PWD/qv4context_p_p.h \
     $$PWD/qv4math_p.h \
     $$PWD/qv4persistent_p.h \
     $$PWD/qv4debugging_p.h \
@@ -98,6 +99,7 @@ HEADERS += \
 
 HEADERS += \
     $$PWD/qv4runtime_p.h \
+    $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
     $$PWD/qv4value_p.h

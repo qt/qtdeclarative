@@ -239,6 +239,10 @@ void QQuickAnimatorJob::debugAnimation(QDebug d) const
       << "target:" << m_target << "value:" << m_value;
 }
 
+qreal QQuickAnimatorJob::progress(int time) const
+{
+    return m_easing.valueForProgress((m_duration == 0) ? qreal(1) : qreal(time) / qreal(m_duration));
+}
 qreal QQuickAnimatorJob::value() const
 {
     qreal v;
@@ -388,7 +392,7 @@ void QQuickXAnimatorJob::updateCurrentTime(int time)
     if (!m_controller)
         return;
 
-    m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
+    m_value = m_from + (m_to - m_from) * progress(time);
     m_helper->dx = m_value;
     m_helper->wasChanged = true;
 }
@@ -404,7 +408,7 @@ void QQuickYAnimatorJob::updateCurrentTime(int time)
     if (!m_controller)
         return;
 
-    m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
+    m_value = m_from + (m_to - m_from) * progress(time);
     m_helper->dy = m_value;
     m_helper->wasChanged = true;
 }
@@ -473,7 +477,7 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
     if (!m_controller || !m_opacityNode)
         return;
 
-    m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
+    m_value = m_from + (m_to - m_from) * progress(time);
     m_opacityNode->setOpacity(m_value);
 }
 
@@ -488,7 +492,7 @@ void QQuickScaleAnimatorJob::updateCurrentTime(int time)
     if (!m_controller)
         return;
 
-    m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
+    m_value = m_from + (m_to - m_from) * progress(time);
     m_helper->scale = m_value;
     m_helper->wasChanged = true;
 }
@@ -507,7 +511,8 @@ void QQuickRotationAnimatorJob::updateCurrentTime(int time)
     if (!m_controller)
         return;
 
-    float t =  m_easing.valueForProgress(time / (qreal) m_duration);
+    float t = progress(time);
+
     switch (m_direction) {
     case QQuickRotationAnimator::Clockwise:
         m_value = _q_interpolateClockwiseRotation(m_from, m_to, t).toFloat();
@@ -590,7 +595,7 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
     if (!m_node || m_uniformIndex == -1 || m_uniformType == -1)
         return;
 
-    m_value = m_from + (m_to - m_from) * m_easing.valueForProgress(time / (qreal) m_duration);
+    m_value = m_from + (m_to - m_from) * progress(time);
 
     QQuickShaderEffectMaterial *material =
             static_cast<QQuickShaderEffectMaterial *>(m_node->material());

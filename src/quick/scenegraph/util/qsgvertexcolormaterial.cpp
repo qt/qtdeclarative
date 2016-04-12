@@ -66,8 +66,8 @@ QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
     : QSGMaterialShader()
 {
 #ifndef QT_NO_OPENGL
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/vertexcolor.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/vertexcolor.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/vertexcolor.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/vertexcolor.frag"));
 #endif
 }
 

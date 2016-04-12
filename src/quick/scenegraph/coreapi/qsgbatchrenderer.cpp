@@ -2105,8 +2105,8 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                 if (!m_clipProgram.isLinked()) {
                     QSGShaderSourceBuilder::initializeProgramFromFiles(
                         &m_clipProgram,
-                        QStringLiteral(":/scenegraph/shaders/stencilclip.vert"),
-                        QStringLiteral(":/scenegraph/shaders/stencilclip.frag"));
+                        QStringLiteral(":/qt-project.org/scenegraph/shaders/stencilclip.vert"),
+                        QStringLiteral(":/qt-project.org/scenegraph/shaders/stencilclip.frag"));
                     m_clipProgram.bindAttributeLocation("vCoord", 0);
                     m_clipProgram.link();
                     m_clipMatrixId = m_clipProgram.uniformLocation("matrix");
@@ -3116,8 +3116,8 @@ void Renderer::visualize()
         VisualizeShader *prog = new VisualizeShader();
         QSGShaderSourceBuilder::initializeProgramFromFiles(
             prog,
-            QStringLiteral(":/scenegraph/shaders/visualization.vert"),
-            QStringLiteral(":/scenegraph/shaders/visualization.frag"));
+            QStringLiteral(":/qt-project.org/scenegraph/shaders/visualization.vert"),
+            QStringLiteral(":/qt-project.org/scenegraph/shaders/visualization.frag"));
         prog->bindAttributeLocation("v", 0);
         prog->link();
         prog->bind();

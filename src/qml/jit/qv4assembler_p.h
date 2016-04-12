@@ -63,6 +63,8 @@
 #include <config.h>
 #include <wtf/Vector.h>
 
+#include <climits>
+
 #if ENABLE(ASSEMBLER)
 
 #include <assembler/MacroAssembler.h>
@@ -72,11 +74,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace JIT {
-
-#define OP(op) \
-    { isel_stringIfy(op), op, 0, 0, 0 }
-#define OPCONTEXT(op) \
-    { isel_stringIfy(op), 0, op, 0, 0 }
 
 class InstructionSelection;
 
@@ -94,14 +91,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QList<QVector<QV4::Primitive> > constantValues;
 };
 
-struct RelativeCall {
-    JSC::MacroAssembler::Address addr;
-
-    explicit RelativeCall(const JSC::MacroAssembler::Address &addr)
-        : addr(addr)
-    {}
-};
-
 struct LookupCall {
     JSC::MacroAssembler::Address addr;
     uint getterSetterOffset;
@@ -110,6 +99,13 @@ struct LookupCall {
         : addr(addr)
         , getterSetterOffset(getterSetterOffset)
     {}
+};
+
+struct RuntimeCall {
+    JSC::MacroAssembler::Address addr;
+
+    inline RuntimeCall(uint offset = INT_MIN);
+    bool isValid() const { return addr.offset >= 0; }
 };
 
 template <typename T>
@@ -321,12 +317,12 @@ public:
 
     typedef JSC::FunctionPtr FunctionPtr;
 
-    struct CallToLink {
-        Call call;
-        FunctionPtr externalFunction;
+#ifndef QT_NO_DEBUG
+    struct CallInfo {
         Label label;
         const char* functionName;
     };
+#endif
     struct PointerToValue {
         PointerToValue(IR::Expr *value)
             : value(value)
@@ -349,27 +345,23 @@ public:
         IR::BasicBlock *block;
     };
 
-    void callAbsolute(const char* functionName, FunctionPtr function) {
-        CallToLink ctl;
-        ctl.call = call();
-        ctl.externalFunction = function;
-        ctl.functionName = functionName;
-        ctl.label = label();
-        _callsToLink.append(ctl);
-    }
-
-    void callAbsolute(const char* /*functionName*/, Address addr) {
-        call(addr);
-    }
-
-    void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
-    {
-        call(relativeCall.addr);
-    }
-
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
     {
         call(lookupCall.addr);
+    }
+
+    void callAbsolute(const char *functionName, const RuntimeCall &runtimeCall)
+    {
+        call(runtimeCall.addr);
+#ifndef QT_NO_DEBUG
+        // the code below is to get proper function names in the disassembly
+        CallInfo info;
+        info.functionName = functionName;
+        info.label = label();
+        _callInfos.append(info);
+#else
+        Q_UNUSED(functionName)
+#endif
     }
 
     void registerBlock(IR::BasicBlock*, IR::BasicBlock *nextBlock);
@@ -1184,7 +1176,9 @@ private:
     IR::Function *_function;
     QHash<IR::BasicBlock *, Label> _addrs;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
-    QList<CallToLink> _callsToLink;
+#ifndef QT_NO_DEBUG
+    QVector<CallInfo> _callInfos;
+#endif
 
     struct DataLabelPatch {
         DataLabelPtr dataLabel;
@@ -1245,24 +1239,21 @@ void Assembler::copyValue(Result result, IR::Expr* source)
     }
 }
 
+inline RuntimeCall::RuntimeCall(uint offset)
+    : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
+{
+}
+
 
 
 template <typename T> inline bool prepareCall(T &, Assembler *)
 { return true; }
 
-template <> inline bool prepareCall(RelativeCall &relativeCall, Assembler *as)
-{
-    as->loadPtr(Assembler::Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-    as->loadPtr(Assembler::Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
-                relativeCall.addr.base);
-    return true;
-}
-
 template <> inline bool prepareCall(LookupCall &lookupCall, Assembler *as)
 {
     // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
-    // same as prepareCall(RelativeCall ....) : load the table from the context
+    // load the table from the context
     as->loadPtr(Assembler::Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
     as->loadPtr(Assembler::Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
                 lookupCall.addr.base);

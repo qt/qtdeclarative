@@ -204,7 +204,7 @@ static inline double MonthFromTime(double t)
     else if (d < 365.0 + l)
         return 11;
 
-    return qQNaN(); // ### assert?
+    return qt_qnan(); // ### assert?
 }
 
 static inline double DateFromTime(double t)
@@ -228,7 +228,7 @@ static inline double DateFromTime(double t)
     case 11: return d - 333.0 - l;
     }
 
-    return qQNaN(); // ### assert
+    return qt_qnan(); // ### assert
 }
 
 static inline double WeekDay(double t)
@@ -260,7 +260,7 @@ static inline double DayFromMonth(double month, double leap)
     case 11: return 334.0 + leap;
     }
 
-    return qQNaN(); // ### assert?
+    return qt_qnan(); // ### assert?
 }
 
 static double MakeDay(double year, double month, double day)
@@ -339,7 +339,7 @@ static inline double currentTime()
 static inline double TimeClip(double t)
 {
     if (! qIsFinite(t) || fabs(t) > 8.64e15)
-        return qQNaN();
+        return qt_qnan();
     return Primitive::toInteger(t);
 }
 
@@ -466,7 +466,7 @@ static inline double ParseString(const QString &s)
                 if (format < Minute || format >= TimezoneHour)
                     error = true;
                 format = TimezoneHour;
-            } else if (*ch == 'Z' || *ch == 0) {
+            } else if (*ch == 'Z' || ch->unicode() == 0) {
                 format = Done;
             }
             current = 0;
@@ -544,7 +544,7 @@ static inline double ParseString(const QString &s)
         }
     }
     if (!dt.isValid())
-        return qQNaN();
+        return qt_qnan();
     return dt.toMSecsSinceEpoch();
 }
 
@@ -636,7 +636,7 @@ DEFINE_OBJECT_VTABLE(DateObject);
 
 Heap::DateObject::DateObject(const QDateTime &date)
 {
-    this->date = date.isValid() ? date.toMSecsSinceEpoch() : qQNaN();
+    this->date = date.isValid() ? date.toMSecsSinceEpoch() : qt_qnan();
 }
 
 QDateTime DateObject::toQDateTime() const
@@ -770,7 +770,7 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
 ReturnedValue DatePrototype::method_parse(CallContext *ctx)
 {
     if (!ctx->argc())
-        return Encode(qQNaN());
+        return Encode(qt_qnan());
     return Encode(ParseString(ctx->args()[0].toQString()));
 }
 
@@ -1000,7 +1000,7 @@ ReturnedValue DatePrototype::method_setTime(CallContext *ctx)
     if (!self)
         return ctx->engine()->throwTypeError();
 
-    double t = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double t = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     self->setDate(TimeClip(t));
     return Encode(self->date());
 }
@@ -1013,7 +1013,7 @@ ReturnedValue DatePrototype::method_setMilliseconds(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double ms = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double ms = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
     return Encode(self->date());
 }
@@ -1025,7 +1025,7 @@ ReturnedValue DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double ms = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double ms = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     self->setDate(TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
     return Encode(self->date());
 }
@@ -1037,7 +1037,7 @@ ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double sec = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double sec = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double ms = (ctx->argc() < 2) ? msFromTime(t) : ctx->args()[1].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
     self->setDate(t);
@@ -1051,7 +1051,7 @@ ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double sec = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double sec = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double ms = (ctx->argc() < 2) ? msFromTime(t) : ctx->args()[1].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)));
     self->setDate(t);
@@ -1065,7 +1065,7 @@ ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double min = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double min = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double sec = (ctx->argc() < 2) ? SecFromTime(t) : ctx->args()[1].toNumber();
     double ms = (ctx->argc() < 3) ? msFromTime(t) : ctx->args()[2].toNumber();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
@@ -1080,7 +1080,7 @@ ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double min = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double min = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double sec = (ctx->argc() < 2) ? SecFromTime(t) : ctx->args()[1].toNumber();
     double ms = (ctx->argc() < 3) ? msFromTime(t) : ctx->args()[2].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)));
@@ -1095,7 +1095,7 @@ ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double hour = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double hour = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double min = (ctx->argc() < 2) ? MinFromTime(t) : ctx->args()[1].toNumber();
     double sec = (ctx->argc() < 3) ? SecFromTime(t) : ctx->args()[2].toNumber();
     double ms = (ctx->argc() < 4) ? msFromTime(t) : ctx->args()[3].toNumber();
@@ -1111,7 +1111,7 @@ ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double hour = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double hour = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double min = (ctx->argc() < 2) ? MinFromTime(t) : ctx->args()[1].toNumber();
     double sec = (ctx->argc() < 3) ? SecFromTime(t) : ctx->args()[2].toNumber();
     double ms = (ctx->argc() < 4) ? msFromTime(t) : ctx->args()[3].toNumber();
@@ -1127,7 +1127,7 @@ ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double date = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double date = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
     self->setDate(t);
     return Encode(self->date());
@@ -1140,7 +1140,7 @@ ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double date = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double date = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)));
     self->setDate(t);
     return Encode(self->date());
@@ -1153,7 +1153,7 @@ ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = LocalTime(self->date());
-    double month = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double month = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double date = (ctx->argc() < 2) ? DateFromTime(t) : ctx->args()[1].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
     self->setDate(t);
@@ -1167,7 +1167,7 @@ ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double month = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double month = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double date = (ctx->argc() < 2) ? DateFromTime(t) : ctx->args()[1].toNumber();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)));
     self->setDate(t);
@@ -1185,10 +1185,10 @@ ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
         t = 0;
     else
         t = LocalTime(t);
-    double year = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double year = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double r;
     if (std::isnan(year)) {
-        r = qQNaN();
+        r = qt_qnan();
     } else {
         if ((Primitive::toInteger(year) >= 0) && (Primitive::toInteger(year) <= 99))
             year += 1900;
@@ -1207,7 +1207,7 @@ ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     double t = self->date();
-    double year = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double year = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double month = (ctx->argc() < 2) ? MonthFromTime(t) : ctx->args()[1].toNumber();
     double date = (ctx->argc() < 3) ? DateFromTime(t) : ctx->args()[2].toNumber();
     t = TimeClip(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)));
@@ -1224,7 +1224,7 @@ ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
     double t = LocalTime(self->date());
     if (std::isnan(t))
         t = 0;
-    double year = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double year = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     double month = (ctx->argc() < 2) ? MonthFromTime(t) : ctx->args()[1].toNumber();
     double date = (ctx->argc() < 3) ? DateFromTime(t) : ctx->args()[2].toNumber();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));

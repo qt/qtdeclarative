@@ -704,14 +704,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     }
 }
 
-QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
-{
-    if (p && p->notFullyResolved())
-        resolve(p);
-
-    return p;
-}
-
 void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
 {
     Q_ASSERT(data->notFullyResolved());
@@ -837,19 +829,6 @@ int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
         return _parent->methodIndexToSignalIndex(index);
 
     return index - methodIndexCacheStart + signalHandlerIndexCacheStart;
-}
-
-QQmlPropertyData *
-QQmlPropertyCache::property(int index) const
-{
-    if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
-        return 0;
-
-    if (index < propertyIndexCacheStart)
-        return _parent->property(index);
-
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
-    return ensureResolved(rv);
 }
 
 QQmlPropertyData *

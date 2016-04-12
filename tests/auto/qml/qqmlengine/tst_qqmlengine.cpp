@@ -615,9 +615,9 @@ void tst_qqmlengine::qtqmlModule_data()
             << QString(testFileUrl("qtqmlModule.3.qml").toString() + QLatin1String(":1 module \"QtQml\" version 1.0 is not installed\n"))
             << QStringList();
 
-    QTest::newRow("import QtQml of incorrect version (2.5)")
+    QTest::newRow("import QtQml of incorrect version (2.50)")
             << testFileUrl("qtqmlModule.4.qml")
-            << QString(testFileUrl("qtqmlModule.4.qml").toString() + QLatin1String(":1 module \"QtQml\" version 2.5 is not installed\n"))
+            << QString(testFileUrl("qtqmlModule.4.qml").toString() + QLatin1String(":1 module \"QtQml\" version 2.50 is not installed\n"))
             << QStringList();
 
     QTest::newRow("QtQml 2.0 module provides Component, QtObject, Connections, Binding and Timer")

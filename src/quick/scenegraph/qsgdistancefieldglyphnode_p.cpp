@@ -94,8 +94,8 @@ QSGDistanceFieldTextMaterialShader::QSGDistanceFieldTextMaterialShader()
     , m_lastAlphaMin(-1)
     , m_lastAlphaMax(-1)
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/distancefieldtext.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/distancefieldtext.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldtext.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldtext.frag"));
 }
 
 void QSGDistanceFieldTextMaterialShader::updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc)
@@ -345,7 +345,7 @@ DistanceFieldOutlineTextMaterialShader::DistanceFieldOutlineTextMaterialShader()
     , m_outlineAlphaMax0_id(-1)
     , m_outlineAlphaMax1_id(-1)
 {
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/distancefieldoutlinetext.frag"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldoutlinetext.frag"));
 }
 
 void DistanceFieldOutlineTextMaterialShader::initialize()
@@ -427,8 +427,8 @@ DistanceFieldShiftedStyleTextMaterialShader::DistanceFieldShiftedStyleTextMateri
     : DistanceFieldStyledTextMaterialShader()
     , m_shift_id(-1)
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/distancefieldshiftedtext.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/distancefieldshiftedtext.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldshiftedtext.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldshiftedtext.frag"));
 }
 
 void DistanceFieldShiftedStyleTextMaterialShader::initialize()
@@ -507,8 +507,8 @@ QSGHiQSubPixelDistanceFieldTextMaterialShader::QSGHiQSubPixelDistanceFieldTextMa
     , m_fontScale_id(-1)
     , m_vecDelta_id(-1)
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/hiqsubpixeldistancefieldtext.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/hiqsubpixeldistancefieldtext.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/hiqsubpixeldistancefieldtext.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/hiqsubpixeldistancefieldtext.frag"));
 }
 
 void QSGHiQSubPixelDistanceFieldTextMaterialShader::initialize()
@@ -574,8 +574,8 @@ public:
 QSGLoQSubPixelDistanceFieldTextMaterialShader::QSGLoQSubPixelDistanceFieldTextMaterialShader()
     : QSGHiQSubPixelDistanceFieldTextMaterialShader()
 {
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/loqsubpixeldistancefieldtext.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/loqsubpixeldistancefieldtext.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/loqsubpixeldistancefieldtext.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/loqsubpixeldistancefieldtext.frag"));
 }
 
 QSGMaterialType *QSGLoQSubPixelDistanceFieldTextMaterial::type() const

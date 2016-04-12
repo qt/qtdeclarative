@@ -169,9 +169,7 @@ ListLayout::ListLayout(const ListLayout *other) : currentBlock(0), currentBlockO
 
 ListLayout::~ListLayout()
 {
-    for (int i=0 ; i < roles.count() ; ++i) {
-        delete roles[i];
-    }
+    qDeleteAll(roles);
 }
 
 void ListLayout::sync(ListLayout *src, ListLayout *target)
@@ -1440,8 +1438,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
         const QByteArray &keyUtf8 = key.toUtf8();
 
         QQmlListModel *existingModel = qobject_cast<QQmlListModel *>(m_meta->value(keyUtf8).value<QObject *>());
-        if (existingModel)
-            delete existingModel;
+        delete existingModel;
 
         if (m_meta->setValue(keyUtf8, value))
             roles << roleIndex;
@@ -1457,8 +1454,7 @@ DynamicRoleModelNodeMetaObject::~DynamicRoleModelNodeMetaObject()
 {
     for (int i=0 ; i < count() ; ++i) {
         QQmlListModel *subModel = qobject_cast<QQmlListModel *>(value(i).value<QObject *>());
-        if (subModel)
-            delete subModel;
+        delete subModel;
     }
 }
 
@@ -1469,8 +1465,7 @@ void DynamicRoleModelNodeMetaObject::propertyWrite(int index)
 
     QVariant v = value(index);
     QQmlListModel *model = qobject_cast<QQmlListModel *>(v.value<QObject *>());
-    if (model)
-        delete model;
+    delete model;
 }
 
 void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
@@ -1662,8 +1657,7 @@ QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agen
 
 QQmlListModel::~QQmlListModel()
 {
-    for (int i=0 ; i < m_modelObjects.count() ; ++i)
-        delete m_modelObjects[i];
+    qDeleteAll(m_modelObjects);
 
     if (m_primary) {
         m_listModel->destroy();
@@ -1982,15 +1976,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 */
 int QQmlListModel::count() const
 {
-    int count;
-
-    if (m_dynamicRoles)
-        count = m_modelObjects.count();
-    else {
-        count = m_listModel->elementCount();
-    }
-
-    return count;
+    return m_dynamicRoles ? m_modelObjects.count() : m_listModel->elementCount();
 }
 
 /*!
@@ -2002,13 +1988,12 @@ int QQmlListModel::count() const
 */
 void QQmlListModel::clear()
 {
-    int cleared = count();
+    const int cleared = count();
 
     emitItemsAboutToBeRemoved(0, cleared);
 
     if (m_dynamicRoles) {
-        for (int i=0 ; i < m_modelObjects.count() ; ++i)
-            delete m_modelObjects[i];
+        qDeleteAll(m_modelObjects);
         m_modelObjects.clear();
     } else {
         m_listModel->clear();

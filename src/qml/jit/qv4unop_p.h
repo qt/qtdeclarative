@@ -64,7 +64,7 @@ class Assembler;
 
 struct Unop {
     Unop(Assembler *assembler, IR::AluOp operation)
-        : as(assembler)
+        : _as(assembler)
         , op(operation)
     {}
 
@@ -74,7 +74,7 @@ struct Unop {
     void generateNot(IR::Expr *source, IR::Expr *target);
     void generateCompl(IR::Expr *source, IR::Expr *target);
 
-    Assembler *as;
+    Assembler *_as;
     IR::AluOp op;
 };
 

@@ -47,7 +47,7 @@
 #include <QCoreApplication>
 #include <QEasingCurve>
 #include <QTime>
-#include <QtNumeric>
+#include <QtCore/private/qnumeric_p.h>
 
 #include <algorithm>
 
@@ -387,7 +387,7 @@ void QQuickTimeLine::set(QQuickTimeLineValue &timeLineValue, qreal value)
 */
 int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal acceleration)
 {
-    if (qFuzzyIsNull(acceleration) || qIsNaN(acceleration))
+    if (qFuzzyIsNull(acceleration) || qt_is_nan(acceleration))
         return -1;
 
     if ((velocity > 0.0f) == (acceleration > 0.0f))
@@ -414,7 +414,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
 */
 int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal acceleration, qreal maxDistance)
 {
-    if (qFuzzyIsNull(maxDistance) || qIsNaN(maxDistance) || qFuzzyIsNull(acceleration) || qIsNaN(acceleration))
+    if (qFuzzyIsNull(maxDistance) || qt_is_nan(maxDistance) || qFuzzyIsNull(acceleration) || qt_is_nan(acceleration))
         return -1;
 
     Q_ASSERT(acceleration > 0.0f && maxDistance > 0.0f);
@@ -444,7 +444,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
 */
 int QQuickTimeLine::accelDistance(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal distance)
 {
-    if (qFuzzyIsNull(distance) || qIsNaN(distance) || qFuzzyIsNull(velocity) || qIsNaN(velocity))
+    if (qFuzzyIsNull(distance) || qt_is_nan(distance) || qFuzzyIsNull(velocity) || qt_is_nan(velocity))
         return -1;
 
     Q_ASSERT((distance >= 0.0f) == (velocity >= 0.0f));

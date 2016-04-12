@@ -58,8 +58,8 @@ QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
     : QSGMaterialShader()
 {
 #ifndef QT_NO_OPENGL
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/opaquetexture.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/opaquetexture.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.frag"));
 #endif
 }
 
@@ -370,7 +370,7 @@ QSGTextureMaterialShader::QSGTextureMaterialShader()
     : QSGOpaqueTextureMaterialShader()
 {
 #ifndef QT_NO_OPENGL
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/texture.frag"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/texture.frag"));
 #endif
 }
 

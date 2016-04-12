@@ -149,7 +149,7 @@ public:
     inline QQmlNotifierEndpoint *notify(int index);
     void addNotify(int index, QQmlNotifierEndpoint *);
     int endpointCount(int index);
-    bool signalHasEndpoint(int index);
+    bool signalHasEndpoint(int index) const;
     void disconnectNotifiers();
 
     // The context that created the C++ object
@@ -262,6 +262,15 @@ QQmlNotifierEndpoint *QQmlData::notify(int index)
     } else {
         return 0;
     }
+}
+
+/*
+    The index MUST be in the range returned by QObjectPrivate::signalIndex()
+    This is different than the index returned by QMetaMethod::methodIndex()
+*/
+inline bool QQmlData::signalHasEndpoint(int index) const
+{
+    return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
 }
 
 bool QQmlData::hasBindingBit(int coreIndex) const

@@ -2,19 +2,16 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
            binding \
-           creation \
            compilation \
            javascript \
            holistic \
-           pointers \
            qqmlcomponent \
            qqmlimage \
            qqmlmetaproperty \
 #            script \ ### FIXME: doesn't build
-           qmltime \
-           js \
-           qquickwindow
+           js
 
-qtHaveModule(opengl): SUBDIRS += painting
+qtHaveModule(opengl): SUBDIRS += painting qquickwindow
+qtHaveModule(widgets): SUBDIRS += creation
 
 include(../trusted-benchmarks.pri)

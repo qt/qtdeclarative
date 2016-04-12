@@ -134,7 +134,7 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
                                    QJsonObject &dict)
 {
     QV4::Scope scope(engine);
-    QV4::ScopedValue typeString(scope, QV4::Runtime::typeofValue(engine, value));
+    QV4::ScopedValue typeString(scope, QV4::Runtime::method_typeofValue(engine, value));
     dict.insert(QStringLiteral("type"), typeString->toQStringNoThrow());
 
     const QLatin1String valueKey("value");

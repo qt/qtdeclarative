@@ -68,8 +68,8 @@ FlatColorMaterialShader::FlatColorMaterialShader()
     : QSGMaterialShader(*new QSGMaterialShaderPrivate)
 {
 #ifndef QT_NO_OPENGL
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/flatcolor.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/flatcolor.frag"));
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.frag"));
 #endif
 }
 

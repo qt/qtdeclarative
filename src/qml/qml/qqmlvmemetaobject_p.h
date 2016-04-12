@@ -171,7 +171,7 @@ public:
     QQmlPropertyCache *propertyCache() const { return cache; }
 
 protected:
-    virtual int metaCall(QObject *o, QMetaObject::Call c, int id, void **a);
+    int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) Q_DECL_OVERRIDE;
     bool intercept(QMetaObject::Call c, int id, void **a);
 
 public:

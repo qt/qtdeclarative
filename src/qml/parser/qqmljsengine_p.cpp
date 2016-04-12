@@ -40,7 +40,7 @@
 #include "qqmljsengine_p.h"
 #include "qqmljsglobal_p.h"
 
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qdebug.h>
 
@@ -62,7 +62,7 @@ static inline int toDigit(char c)
 double integerFromString(const char *buf, int size, int radix)
 {
     if (size == 0)
-        return qQNaN();
+        return qt_qnan();
 
     double sign = 1.0;
     int i = 0;
@@ -101,7 +101,7 @@ double integerFromString(const char *buf, int size, int radix)
         if (!qstrcmp(buf, "Infinity"))
             result = qInf();
         else
-            result = qQNaN();
+            result = qt_qnan();
     } else {
         result = 0;
         double multiplier = 1;

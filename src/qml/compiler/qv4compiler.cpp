@@ -82,7 +82,6 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
-        s->flags = 0; // ###
         s->size = qstr.length();
         memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
 
@@ -385,15 +384,13 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
         *writtenDeps++ = id;
 
     writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
-    for (QV4::IR::PropertyDependencyMap::ConstIterator property = irFunction->contextObjectPropertyDependencies.constBegin(), end = irFunction->contextObjectPropertyDependencies.constEnd();
-         property != end; ++property) {
+    for (auto property : irFunction->contextObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 
     writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
-    for (QV4::IR::PropertyDependencyMap::ConstIterator property = irFunction->scopeObjectPropertyDependencies.constBegin(), end = irFunction->scopeObjectPropertyDependencies.constEnd();
-         property != end; ++property) {
+    for (auto property : irFunction->scopeObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }

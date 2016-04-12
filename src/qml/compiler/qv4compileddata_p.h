@@ -91,8 +91,8 @@ struct Unit;
 
 struct Location
 {
-    qint32 line;
-    qint32 column;
+    qint32 line : 20;
+    qint32 column : 12;
 
     Location(): line(-1), column(-1) {}
 
@@ -109,8 +109,8 @@ struct RegExp
         RegExp_IgnoreCase = 0x02,
         RegExp_Multiline  = 0x04
     };
-    quint32 flags;
-    quint32 stringIndex;
+    quint32 flags : 4;
+    quint32 stringIndex : 28;
 
     static int calculateSize() { return sizeof(RegExp); }
 };
@@ -125,16 +125,16 @@ struct Lookup
         Type_IndexedSetter = 4
     };
 
-    quint32 type_and_flags;
-    quint32 nameIndex;
+    quint32 type_and_flags : 4;
+    quint32 nameIndex : 28;
 
     static int calculateSize() { return sizeof(Lookup); }
 };
 
 struct JSClassMember
 {
-    uint nameOffset : 31;
-    uint isAccessor : 1;
+    quint32 nameOffset : 31;
+    quint32 isAccessor : 1;
 };
 
 struct JSClass
@@ -147,7 +147,6 @@ struct JSClass
 
 struct String
 {
-    quint32 flags; // isArrayIndex
     qint32 size;
     // uint16 strdata[]
 
@@ -326,7 +325,6 @@ struct Parameter
     quint32 nameIndex;
     quint32 type;
     quint32 customTypeNameIndex;
-    quint32 reserved;
     Location location;
 };
 

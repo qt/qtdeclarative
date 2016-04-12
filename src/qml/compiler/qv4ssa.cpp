@@ -2435,13 +2435,22 @@ protected:
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
     virtual void visitMove(Move *s) {
-        TypingResult sourceTy = run(s->source);
         if (Temp *t = s->target->asTemp()) {
+            if (Name *n = s->source->asName()) {
+                if (n->builtin == Name::builtin_qml_context) {
+                    _ty = TypingResult(t->memberResolver);
+                    setType(n, _ty.type);
+                    setType(t, _ty.type);
+                    return;
+                }
+            }
+            TypingResult sourceTy = run(s->source);
             setType(t, sourceTy.type);
             _ty = sourceTy;
             return;
         }
 
+        TypingResult sourceTy = run(s->source);
         _ty = run(s->target);
         _ty.fullyTyped &= sourceTy.fullyTyped;
     }
@@ -2658,7 +2667,7 @@ void convertConst(Const *c, Type targetType)
         break;
     case NullType:
     case UndefinedType:
-        c->value = qQNaN();
+        c->value = qt_qnan();
         c->type = targetType;
     default:
         Q_UNIMPLEMENTED();
@@ -3739,42 +3748,42 @@ bool tryOptimizingComparison(Expr *&expr)
 
     switch (b->op) {
     case OpGt:
-        leftConst->value = Runtime::compareGreaterThan(l, r);
+        leftConst->value = Runtime::method_compareGreaterThan(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLt:
-        leftConst->value = Runtime::compareLessThan(l, r);
+        leftConst->value = Runtime::method_compareLessThan(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpGe:
-        leftConst->value = Runtime::compareGreaterEqual(l, r);
+        leftConst->value = Runtime::method_compareGreaterEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLe:
-        leftConst->value = Runtime::compareLessEqual(l, r);
+        leftConst->value = Runtime::method_compareLessEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpStrictEqual:
-        leftConst->value = Runtime::compareStrictEqual(l, r);
+        leftConst->value = Runtime::method_compareStrictEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpEqual:
-        leftConst->value = Runtime::compareEqual(l, r);
+        leftConst->value = Runtime::method_compareEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpStrictNotEqual:
-        leftConst->value = Runtime::compareStrictNotEqual(l, r);
+        leftConst->value = Runtime::method_compareStrictNotEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpNotEqual:
-        leftConst->value = Runtime::compareNotEqual(l, r);
+        leftConst->value = Runtime::method_compareNotEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;

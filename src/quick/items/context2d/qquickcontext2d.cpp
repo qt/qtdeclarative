@@ -65,7 +65,7 @@
 #include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qmath.h>
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QRunnable>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qopenglframebufferobject.h>
@@ -1260,7 +1260,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalAlpha(QV4::CallContext *c
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->thisObject().as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    double globalAlpha = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    double globalAlpha = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
 
     if (!qIsFinite(globalAlpha))
         return QV4::Encode::undefined();
@@ -2010,7 +2010,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetX(QV4::CallContext 
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->thisObject());
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetX = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    qreal offsetX = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     if (qIsFinite(offsetX) && offsetX != r->d()->context->state.shadowOffsetX) {
         r->d()->context->state.shadowOffsetX = offsetX;
         r->d()->context->buffer()->setShadowOffsetX(offsetX);
@@ -2038,7 +2038,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetY(QV4::CallContext 
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->thisObject());
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetY = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();
+    qreal offsetY = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
     if (qIsFinite(offsetY) && offsetY != r->d()->context->state.shadowOffsetY) {
         r->d()->context->state.shadowOffsetY = offsetY;
         r->d()->context->buffer()->setShadowOffsetY(offsetY);

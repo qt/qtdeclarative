@@ -46,7 +46,7 @@
 
 #include <private/qbezier_p.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -560,7 +560,7 @@ void QQuickPath::createPointCache() const
 {
     Q_D(const QQuickPath);
     qreal pathLength = d->pathLength;
-    if (pathLength <= 0 || qIsNaN(pathLength))
+    if (pathLength <= 0 || qt_is_nan(pathLength))
         return;
 
     const int segments = segmentCount(d->_path, pathLength);
@@ -633,7 +633,7 @@ QPointF QQuickPath::sequentialPointAt(const QPainterPath &path, const qreal &pat
 
 QPointF QQuickPath::forwardsPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle)
 {
-    if (pathLength <= 0 || qIsNaN(pathLength))
+    if (pathLength <= 0 || qt_is_nan(pathLength))
         return path.pointAtPercent(0);  //expensive?
 
     const int lastElement = path.elementCount() - 1;
@@ -689,7 +689,7 @@ QPointF QQuickPath::forwardsPointAt(const QPainterPath &path, const qreal &pathL
 //ideally this should be merged with forwardsPointAt
 QPointF QQuickPath::backwardsPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle)
 {
-    if (pathLength <= 0 || qIsNaN(pathLength))
+    if (pathLength <= 0 || qt_is_nan(pathLength))
         return path.pointAtPercent(0);
 
     const int firstElement = 1; //element 0 is always a MoveTo, which we ignore

@@ -36,9 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef QHASHFIELD_P_H
-#define QHASHFIELD_P_H
+#ifndef QV4CONTEXT_P_P_H
+#define QV4CONTEXT_P_P_H
 
 //
 //  W A R N I N G
@@ -51,68 +50,34 @@
 // We mean it.
 //
 
+// This header defines a couple of inlinable methods.
+// These implementation cannot be put in qv4context_p.h, because they rely on the
+// QQmlContextWrapper, which in turn is a QV4::Object subclass (so it includes qv4object_p.h),
+// which includes qv4engine_p.h, that needs to include qv4context_p.h
 
-#include <QtCore/qglobal.h>
+#include "qv4context_p.h"
+#include "private/qqmlcontextwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
-// QHashField can be used for doing coarse grained set testing, in
-// cases where you do not expect the set to contain the item.  For
-// example where you would write:
-//     QSet<QString> strings;
-//     for (int ii = 0; ii < mystrings.count(); ++ii) {
-//         if (strings.contains(mystrings.at(ii)))
-//             qFatal("Duplication!");
-//         strings.insert(mystrings);
-//     }
-// You may write:
-//     QHashField strings;
-//     for (int ii = 0; ii < mystrings.count(); ++ii) {
-//         if (strings.testAndSet(qHash(mystrings.at(ii)))) {
-//             // The string *might* be duplicated
-//             for (int jj = 0; jj < ii; ++jj) {
-//                 if (mystrings.at(ii) == mystrings.at(jj))
-//                     qFatal("Duplication!");
-//             }
-//          }
-//     }
-// For small lists of things, where the hash is cheap to calculate
-// and you don't expect duplication this will be much faster.
-class QHashField {
-public:
-    inline QHashField();
+namespace QV4 {
 
-    inline void clear();
-
-    inline bool test(quint32 hash);
-    inline bool testAndSet(quint32 hash);
-private:
-    quint32 m_field;
-};
-
-QHashField::QHashField()
-: m_field(0)
+QObject *QmlContext::qmlScope() const
 {
+    return d()->qml->scopeObject;
 }
 
-void QHashField::clear()
+QQmlContextData *QmlContext::qmlContext() const
 {
-    m_field = 0;
+    return d()->qml->context;
 }
 
-bool QHashField::test(quint32 hash)
-{
-    return m_field & (1 << (hash % 31));
+void QmlContext::takeContextOwnership() {
+    d()->qml->ownsContext = true;
 }
 
-bool QHashField::testAndSet(quint32 hash)
-{
-    quint32 mask = 1 << (hash % 31);
-    bool rv = m_field & mask;
-    m_field |= mask;
-    return rv;
-}
+} // QV4 namespace
 
 QT_END_NAMESPACE
 
-#endif // QHASHFIELD_P_H
+#endif // QV4CONTEXT_P_P_H

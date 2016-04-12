@@ -179,6 +179,7 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
     qmlRegisterType<QQmlBind>(uri, versionMajor, versionMinor,"Binding");
+    qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
     qmlRegisterType<QQmlConnections,1>(uri, versionMajor, (versionMinor < 3 ? 3 : versionMinor), "Connections"); //Only available in >=2.3
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
@@ -1605,15 +1606,6 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
     }
 }
 
-/*
-    index MUST in the range returned by QObjectPrivate::signalIndex()
-    This is different than the index returned by QMetaMethod::methodIndex()
-*/
-bool QQmlData::signalHasEndpoint(int index)
-{
-    return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
-}
-
 void QQmlData::disconnectNotifiers()
 {
     if (notifyList) {
@@ -1909,16 +1901,6 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
 }
 
 /*
-   This function should be called prior to evaluation of any js expression,
-   so that scarce resources are not freed prematurely (eg, if there is a
-   nested javascript expression).
- */
-void QQmlEnginePrivate::referenceScarceResources()
-{
-    scarceResourcesRefCount += 1;
-}
-
-/*
    This function should be called after evaluation of the js expression is
    complete, and so the scarce resources may be freed safely.
  */
@@ -1930,7 +1912,7 @@ void QQmlEnginePrivate::dereferenceScarceResources()
     // if the refcount is zero, then evaluation of the "top level"
     // expression must have completed.  We can safely release the
     // scarce resources.
-    if (scarceResourcesRefCount == 0) {
+    if (Q_UNLIKELY(scarceResourcesRefCount == 0)) {
         // iterate through the list and release them all.
         // note that the actual SRD is owned by the JS engine,
         // so we cannot delete the SRD; but we can free the

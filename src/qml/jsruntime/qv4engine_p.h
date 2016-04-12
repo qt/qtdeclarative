@@ -55,6 +55,7 @@
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include "qv4internalclass_p.h"
+#include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
 namespace WTF {
@@ -108,6 +109,8 @@ public:
 
     Value *jsStackLimit;
     quintptr cStackLimit;
+
+    Runtime runtime;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -472,6 +475,13 @@ public:
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 };
+
+// This is a trick to tell the code generators that functions taking a NoThrowContext won't
+// throw exceptions and therefore don't need a check after the call.
+struct NoThrowEngine : public ExecutionEngine
+{
+};
+
 
 inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
 {

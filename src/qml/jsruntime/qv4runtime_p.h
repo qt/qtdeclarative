@@ -55,7 +55,7 @@
 #include "qv4context_p.h"
 #include "qv4engine_p.h"
 #include "qv4math_p.h"
-
+#include "qv4runtimeapi_p.h"
 #include <QtCore/qnumeric.h>
 
 
@@ -98,150 +98,6 @@ enum TypeHint {
     STRING_HINT
 };
 
-// This is a trick to tell the code generators that functions taking a NoThrowContext won't
-// throw exceptions and therefore don't need a check after the call.
-struct NoThrowEngine : public ExecutionEngine
-{
-};
-
-struct Q_QML_PRIVATE_EXPORT Runtime {
-    // call
-    static ReturnedValue callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
-    static ReturnedValue callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
-    static ReturnedValue callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue callElement(ExecutionEngine *engine, const Value &index, CallData *callData);
-    static ReturnedValue callValue(ExecutionEngine *engine, const Value &func, CallData *callData);
-
-    // construct
-    static ReturnedValue constructGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue constructActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue constructProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue constructValue(ExecutionEngine *engine, const Value &func, CallData *callData);
-
-    // set & get
-    static void setActivationProperty(ExecutionEngine *engine, int nameIndex, const Value &value);
-    static void setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value);
-    static void setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value);
-    static ReturnedValue getProperty(ExecutionEngine *engine, const Value &object, int nameIndex);
-    static ReturnedValue getActivationProperty(ExecutionEngine *engine, int nameIndex);
-    static ReturnedValue getElement(ExecutionEngine *engine, const Value &object, const Value &index);
-
-    // typeof
-    static ReturnedValue typeofValue(ExecutionEngine *engine, const Value &val);
-    static ReturnedValue typeofName(ExecutionEngine *engine, int nameIndex);
-    static ReturnedValue typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue typeofMember(ExecutionEngine *engine, const Value &base, int nameIndex);
-    static ReturnedValue typeofElement(ExecutionEngine *engine, const Value &base, const Value &index);
-
-    // delete
-    static ReturnedValue deleteElement(ExecutionEngine *engine, const Value &base, const Value &index);
-    static ReturnedValue deleteMember(ExecutionEngine *engine, const Value &base, int nameIndex);
-    static ReturnedValue deleteMemberString(ExecutionEngine *engine, const Value &base, String *name);
-    static ReturnedValue deleteName(ExecutionEngine *engine, int nameIndex);
-
-    // exceptions & scopes
-    static void throwException(ExecutionEngine *engine, const Value &value);
-    static ReturnedValue unwindException(ExecutionEngine *engine);
-    static void pushWithScope(const Value &o, ExecutionEngine *engine);
-    static void pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex);
-    static void popScope(ExecutionEngine *engine);
-
-    // closures
-    static ReturnedValue closure(ExecutionEngine *engine, int functionId);
-
-    // function header
-    static void declareVar(ExecutionEngine *engine, bool deletable, int nameIndex);
-    static ReturnedValue setupArgumentsObject(ExecutionEngine *engine);
-    static void convertThisToObject(ExecutionEngine *engine);
-
-    // literals
-    static ReturnedValue arrayLiteral(ExecutionEngine *engine, Value *values, uint length);
-    static ReturnedValue objectLiteral(ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags);
-    static ReturnedValue regexpLiteral(ExecutionEngine *engine, int id);
-
-    // foreach
-    static ReturnedValue foreachIterator(ExecutionEngine *engine, const Value &in);
-    static ReturnedValue foreachNextPropertyName(const Value &foreach_iterator);
-
-    // unary operators
-    typedef ReturnedValue (*UnaryOperation)(const Value &value);
-    static ReturnedValue uPlus(const Value &value);
-    static ReturnedValue uMinus(const Value &value);
-    static ReturnedValue uNot(const Value &value);
-    static ReturnedValue complement(const Value &value);
-    static ReturnedValue increment(const Value &value);
-    static ReturnedValue decrement(const Value &value);
-
-    // binary operators
-    typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
-    typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
-
-    static ReturnedValue instanceof(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue in(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue add(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue addString(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue bitOr(const Value &left, const Value &right);
-    static ReturnedValue bitXor(const Value &left, const Value &right);
-    static ReturnedValue bitAnd(const Value &left, const Value &right);
-    static ReturnedValue sub(const Value &left, const Value &right);
-    static ReturnedValue mul(const Value &left, const Value &right);
-    static ReturnedValue div(const Value &left, const Value &right);
-    static ReturnedValue mod(const Value &left, const Value &right);
-    static ReturnedValue shl(const Value &left, const Value &right);
-    static ReturnedValue shr(const Value &left, const Value &right);
-    static ReturnedValue ushr(const Value &left, const Value &right);
-    static ReturnedValue greaterThan(const Value &left, const Value &right);
-    static ReturnedValue lessThan(const Value &left, const Value &right);
-    static ReturnedValue greaterEqual(const Value &left, const Value &right);
-    static ReturnedValue lessEqual(const Value &left, const Value &right);
-    static ReturnedValue equal(const Value &left, const Value &right);
-    static ReturnedValue notEqual(const Value &left, const Value &right);
-    static ReturnedValue strictEqual(const Value &left, const Value &right);
-    static ReturnedValue strictNotEqual(const Value &left, const Value &right);
-
-    // comparisons
-    typedef Bool (*CompareOperation)(const Value &left, const Value &right);
-    static Bool compareGreaterThan(const Value &l, const Value &r);
-    static Bool compareLessThan(const Value &l, const Value &r);
-    static Bool compareGreaterEqual(const Value &l, const Value &r);
-    static Bool compareLessEqual(const Value &l, const Value &r);
-    static Bool compareEqual(const Value &left, const Value &right);
-    static Bool compareNotEqual(const Value &left, const Value &right);
-    static Bool compareStrictEqual(const Value &left, const Value &right);
-    static Bool compareStrictNotEqual(const Value &left, const Value &right);
-
-    typedef Bool (*CompareOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
-    static Bool compareInstanceof(ExecutionEngine *engine, const Value &left, const Value &right);
-    static Bool compareIn(ExecutionEngine *engine, const Value &left, const Value &right);
-
-    // conversions
-    static Bool toBoolean(const Value &value);
-    static ReturnedValue toDouble(const Value &value);
-    static int toInt(const Value &value);
-    static int doubleToInt(const double &d);
-    static unsigned toUInt(const Value &value);
-    static unsigned doubleToUInt(const double &d);
-
-    // qml
-    static ReturnedValue getQmlContext(NoThrowEngine *engine);
-    static ReturnedValue getQmlImportedScripts(NoThrowEngine *engine);
-    static ReturnedValue getQmlSingleton(NoThrowEngine *engine, int nameIndex);
-    static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
-    static ReturnedValue getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
-    static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
-    static ReturnedValue getQmlIdObject(ExecutionEngine *engine, const Value &context, uint index);
-
-    static void setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
-    static void setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
-    static void setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value);
-};
 
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue objectDefaultValue(const Object *object, int typeHint);
@@ -281,7 +137,7 @@ inline double RuntimeHelpers::toNumber(const Value &value)
     return value.toNumber();
 }
 
-inline ReturnedValue Runtime::uPlus(const Value &value)
+inline ReturnedValue Runtime::method_uPlus(const Value &value)
 {
     TRACE1(value);
 
@@ -294,7 +150,7 @@ inline ReturnedValue Runtime::uPlus(const Value &value)
     return Encode(n);
 }
 
-inline ReturnedValue Runtime::uMinus(const Value &value)
+inline ReturnedValue Runtime::method_uMinus(const Value &value)
 {
     TRACE1(value);
 
@@ -307,7 +163,7 @@ inline ReturnedValue Runtime::uMinus(const Value &value)
     }
 }
 
-inline ReturnedValue Runtime::complement(const Value &value)
+inline ReturnedValue Runtime::method_complement(const Value &value)
 {
     TRACE1(value);
 
@@ -315,7 +171,7 @@ inline ReturnedValue Runtime::complement(const Value &value)
     return Encode((int)~n);
 }
 
-inline ReturnedValue Runtime::uNot(const Value &value)
+inline ReturnedValue Runtime::method_uNot(const Value &value)
 {
     TRACE1(value);
 
@@ -324,7 +180,7 @@ inline ReturnedValue Runtime::uNot(const Value &value)
 }
 
 // binary operators
-inline ReturnedValue Runtime::bitOr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitOr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -333,7 +189,7 @@ inline ReturnedValue Runtime::bitOr(const Value &left, const Value &right)
     return Encode(lval | rval);
 }
 
-inline ReturnedValue Runtime::bitXor(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitXor(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -342,7 +198,7 @@ inline ReturnedValue Runtime::bitXor(const Value &left, const Value &right)
     return Encode(lval ^ rval);
 }
 
-inline ReturnedValue Runtime::bitAnd(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitAnd(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -352,7 +208,7 @@ inline ReturnedValue Runtime::bitAnd(const Value &left, const Value &right)
 }
 
 #ifndef V4_BOOTSTRAP
-inline ReturnedValue Runtime::add(ExecutionEngine *engine, const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -365,7 +221,7 @@ inline ReturnedValue Runtime::add(ExecutionEngine *engine, const Value &left, co
 }
 #endif // V4_BOOTSTRAP
 
-inline ReturnedValue Runtime::sub(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -378,7 +234,7 @@ inline ReturnedValue Runtime::sub(const Value &left, const Value &right)
     return Primitive::fromDouble(lval - rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::mul(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -391,7 +247,7 @@ inline ReturnedValue Runtime::mul(const Value &left, const Value &right)
     return Primitive::fromDouble(lval * rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::div(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_div(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -409,7 +265,7 @@ inline ReturnedValue Runtime::div(const Value &left, const Value &right)
     return Primitive::fromDouble(lval / rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::mod(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -424,7 +280,7 @@ inline ReturnedValue Runtime::mod(const Value &left, const Value &right)
     return Primitive::fromDouble(std::fmod(lval, rval)).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::shl(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_shl(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -433,7 +289,7 @@ inline ReturnedValue Runtime::shl(const Value &left, const Value &right)
     return Encode((int)(lval << rval));
 }
 
-inline ReturnedValue Runtime::shr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_shr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -442,7 +298,7 @@ inline ReturnedValue Runtime::shr(const Value &left, const Value &right)
     return Encode((int)(lval >> rval));
 }
 
-inline ReturnedValue Runtime::ushr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_ushr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -453,39 +309,39 @@ inline ReturnedValue Runtime::ushr(const Value &left, const Value &right)
     return Encode(res);
 }
 
-inline ReturnedValue Runtime::greaterThan(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_greaterThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareGreaterThan(left, right);
+    bool r = method_compareGreaterThan(left, right);
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::lessThan(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_lessThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareLessThan(left, right);
+    bool r = method_compareLessThan(left, right);
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::greaterEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_greaterEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareGreaterEqual(left, right);
+    bool r = method_compareGreaterEqual(left, right);
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::lessEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_lessEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareLessEqual(left, right);
+    bool r = method_compareLessEqual(left, right);
     return Encode(r);
 }
 
-inline Bool Runtime::compareEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -503,23 +359,23 @@ inline Bool Runtime::compareEqual(const Value &left, const Value &right)
     return RuntimeHelpers::equalHelper(left, right);
 }
 
-inline ReturnedValue Runtime::equal(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_equal(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareEqual(left, right);
+    bool r = method_compareEqual(left, right);
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::notEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_notEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = !Runtime::compareEqual(left, right);
+    bool r = !method_compareEqual(left, right);
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::strictEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_strictEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -527,7 +383,7 @@ inline ReturnedValue Runtime::strictEqual(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::strictNotEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_strictNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -535,28 +391,28 @@ inline ReturnedValue Runtime::strictNotEqual(const Value &left, const Value &rig
     return Encode(r);
 }
 
-inline Bool Runtime::compareNotEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    return !Runtime::compareEqual(left, right);
+    return !Runtime::method_compareEqual(left, right);
 }
 
-inline Bool Runtime::compareStrictEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareStrictEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
     return RuntimeHelpers::strictEqual(left, right);
 }
 
-inline Bool Runtime::compareStrictNotEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareStrictNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
     return ! RuntimeHelpers::strictEqual(left, right);
 }
 
-inline Bool Runtime::toBoolean(const Value &value)
+inline Bool Runtime::method_toBoolean(const Value &value)
 {
     return value.toBoolean();
 }

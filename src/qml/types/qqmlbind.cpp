@@ -51,6 +51,7 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qtimer.h>
 
 #include <private/qobject_p.h>
 
@@ -59,16 +60,18 @@ QT_BEGIN_NAMESPACE
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
-    QQmlBindPrivate() : componentComplete(true), obj(0) {}
+    QQmlBindPrivate() : obj(0), componentComplete(true), delayed(false), pendingEval(false) {}
     ~QQmlBindPrivate() { }
 
     QQmlNullableValue<bool> when;
-    bool componentComplete;
     QPointer<QObject> obj;
     QString propName;
     QQmlNullableValue<QVariant> value;
     QQmlProperty prop;
     QQmlAbstractBinding::Ptr prevBind;
+    bool componentComplete:1;
+    bool delayed:1;
+    bool pendingEval:1;
 
     void validate(QObject *binding) const;
 };
@@ -281,7 +284,42 @@ void QQmlBind::setValue(const QVariant &v)
 {
     Q_D(QQmlBind);
     d->value = v;
-    eval();
+    prepareEval();
+}
+
+/*!
+    \qmlproperty bool QtQml::Binding::delayed
+
+    This property holds whether the binding should be delayed.
+
+    A delayed binding will not immediately update the target, but rather wait
+    until the event queue has been cleared. This can be used as an optimization,
+    or to prevent intermediary values from being assigned.
+
+    \code
+    Binding {
+        target: contactName; property: 'text'
+        value: givenName + " " + familyName; when: list.ListView.isCurrentItem
+        delayed: true
+    }
+    \endcode
+*/
+bool QQmlBind::delayed() const
+{
+    Q_D(const QQmlBind);
+    return d->delayed;
+}
+
+void QQmlBind::setDelayed(bool delayed)
+{
+    Q_D(QQmlBind);
+    if (d->delayed == delayed)
+        return;
+
+    d->delayed = delayed;
+
+    if (!d->delayed)
+        eval();
 }
 
 void QQmlBind::setTarget(const QQmlProperty &p)
@@ -307,9 +345,22 @@ void QQmlBind::componentComplete()
     eval();
 }
 
+void QQmlBind::prepareEval()
+{
+    Q_D(QQmlBind);
+    if (d->delayed) {
+        if (!d->pendingEval)
+            QTimer::singleShot(0, this, &QQmlBind::eval);
+        d->pendingEval = true;
+    } else {
+        eval();
+    }
+}
+
 void QQmlBind::eval()
 {
     Q_D(QQmlBind);
+    d->pendingEval = false;
     if (!d->prop.isValid() || d->value.isNull || !d->componentComplete)
         return;
 

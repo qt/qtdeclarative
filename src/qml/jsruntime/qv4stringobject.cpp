@@ -270,7 +270,7 @@ ReturnedValue StringPrototype::method_charCodeAt(CallContext *context)
     if (pos >= 0 && pos < str.length())
         return Encode(str.at(pos).unicode());
 
-    return Encode(qQNaN());
+    return Encode(qt_qnan());
 }
 
 ReturnedValue StringPrototype::method_concat(CallContext *context)
