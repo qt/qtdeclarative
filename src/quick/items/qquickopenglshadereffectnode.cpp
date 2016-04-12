@@ -45,6 +45,7 @@
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtCore/qmutex.h>
+#include <QtGui/qopenglfunctions.h>
 
 QT_BEGIN_NAMESPACE
 
