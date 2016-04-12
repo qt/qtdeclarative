@@ -49,28 +49,26 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         font.setFamily(QStringLiteral("Noto"));
 
     if (font.exactMatch()) {
-        systemFont.setFamily(font.family());
-        buttonFont.setFamily(font.family());
-        toolButtonFont.setFamily(font.family());
-        itemViewFont.setFamily(font.family());
-        menuItemFont.setFamily(font.family());
+        const QString family = font.family();
+        systemFont.setFamily(family);
+        buttonFont.setFamily(family);
+        itemViewFont.setFamily(family);
+        menuItemFont.setFamily(family);
+        editorFont.setFamily(family);
     }
+
+    systemFont.setPixelSize(14);
 
     buttonFont.setPixelSize(14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
 
-    toolButtonFont.setPixelSize(14);
-    toolButtonFont.setCapitalization(QFont::AllUppercase);
-
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
 
     menuItemFont.setPixelSize(16);
-}
 
-QQuickMaterialTheme::~QQuickMaterialTheme()
-{
+    editorFont.setPixelSize(16);
 }
 
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
@@ -78,16 +76,15 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
     switch (type) {
     case QPlatformTheme::TabButtonFont:
     case QPlatformTheme::PushButtonFont:
-        return &buttonFont;
     case QPlatformTheme::ToolButtonFont:
-        return &toolButtonFont;
+        return &buttonFont;
     case QPlatformTheme::ItemViewFont:
         return &itemViewFont;
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
-    case QPlatformTheme::CheckBoxFont:
-    case QPlatformTheme::RadioButtonFont:
         return &menuItemFont;
+    case QPlatformTheme::EditorFont:
+        return &editorFont;
     default:
         return &systemFont;
     }

@@ -6,6 +6,7 @@ QML_FILES += \
     $$PWD/ButtonSection.qml \
     $$PWD/ButtonSpecifics.qml \
     $$PWD/CheckBoxSpecifics.qml \
+    $$PWD/CheckDelegateSpecifics.qml \
     $$PWD/ComboBoxSpecifics.qml \
     $$PWD/ControlSection.qml \
     $$PWD/ControlSpecifics.qml \
@@ -19,6 +20,7 @@ QML_FILES += \
     $$PWD/PaneSpecifics.qml \
     $$PWD/ProgressBarSpecifics.qml \
     $$PWD/RadioButtonSpecifics.qml \
+    $$PWD/RadioDelegateSpecifics.qml \
     $$PWD/SliderSpecifics.qml \
     $$PWD/SpinBoxSpecifics.qml \
     $$PWD/SwipeDelegateSpecifics.qml \

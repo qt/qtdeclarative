@@ -35,18 +35,44 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Window 2.2
 import Qt.labs.templates 1.0 as T
 
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay || Window.contentItem
-    width: parent ? parent.width : 0 // TODO: Window.width
-    height: parent ? parent.height : 0 // TODO: Window.height
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    // TODO: make this a proper transition
-    animation: SmoothedAnimation {
-        velocity: 5
+    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
+    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
+
+    topPadding: control.edge === Qt.BottomEdge
+    leftPadding: control.edge === Qt.RightEdge
+    rightPadding: control.edge === Qt.LeftEdge
+    bottomPadding: control.edge === Qt.TopEdge
+
+    //! [enter]
+    enter: Transition { SmoothedAnimation { velocity: 5 } }
+    //! [enter]
+
+    //! [exit]
+    exit: Transition { SmoothedAnimation { velocity: 5 } }
+    //! [exit]
+
+    //! [contentItem]
+    contentItem: Item { }
+    //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        Rectangle {
+            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
+            width: horizontal ? 1 : parent.width
+            height: horizontal ? parent.height : 1
+            color: "#353637"
+            x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
+            y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
+        }
     }
+    //! [background]
 }

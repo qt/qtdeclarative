@@ -57,7 +57,7 @@ TestCase {
 
     Component {
         id: scrollBar
-        ScrollBar { }
+        ScrollBar { padding: 0 }
     }
 
     Component {
@@ -207,6 +207,62 @@ TestCase {
         compare(pressedSpy.count, 4)
         compare(control.pressed, false)
         compare(control.position, 0.25)
+
+        control.destroy()
+    }
+
+    function test_stepSize_data() {
+        return [
+            { tag: "0.0", stepSize: 0.0 },
+            { tag: "0.1", stepSize: 0.1 },
+            { tag: "0.5", stepSize: 0.5 }
+        ]
+    }
+
+    function test_stepSize(data) {
+        var control = scrollBar.createObject(testCase, {stepSize: data.stepSize})
+        verify(control)
+
+        compare(control.stepSize, data.stepSize)
+        compare(control.position, 0.0)
+
+        var count = 10
+        if (data.stepSize !== 0.0)
+            count = 1.0 / data.stepSize
+
+        // increase until 1.0
+        for (var i = 1; i <= count; ++i) {
+            control.increase()
+            compare(control.position, i / count)
+        }
+        control.increase()
+        compare(control.position, 1.0)
+
+        // decrease until 0.0
+        for (var d = count - 1; d >= 0; --d) {
+            control.decrease()
+            compare(control.position, d / count)
+        }
+        control.decrease()
+        compare(control.position, 0.0)
+
+        control.destroy()
+    }
+
+    function test_padding_data() {
+        return [
+            { tag: "horizontal", properties: { visible: true, orientation: Qt.Horizontal, width: testCase.width, leftPadding: testCase.width * 0.1 } },
+            { tag: "vertical", properties: { visible: true, orientation: Qt.Vertical, height: testCase.height, topPadding: testCase.height * 0.1 } }
+        ]
+    }
+
+    function test_padding(data) {
+        var control = scrollBar.createObject(testCase, data.properties)
+
+        mousePress(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
+        mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
+
+        compare(control.position, 0.5)
 
         control.destroy()
     }

@@ -55,9 +55,11 @@ void QQuickUniversalFocusRectangle::paint(QPainter *painter)
         return;
 
     QRect bounds = boundingRect().toAlignedRect();
-    const QString key = QStringLiteral("qquickuniversalfocusrectangle_%1_%2").arg(bounds.width()).arg(bounds.height());
+    const int boundsWidth = bounds.width();
+    const int boundsHeight = bounds.width();
+    const QString key = QStringLiteral("qquickuniversalfocusrectangle_%1_%2").arg(QString::number(boundsWidth), QString::number(boundsHeight));
 
-    QPixmap pixmap(bounds.width(), bounds.height());
+    QPixmap pixmap(boundsWidth, boundsHeight);
     if (!QPixmapCache::find(key, &pixmap)) {
         bounds.adjust(0, 0, -1, -1);
         pixmap.fill(Qt::transparent);
@@ -70,7 +72,7 @@ void QQuickUniversalFocusRectangle::paint(QPainter *painter)
         p.drawRect(bounds);
 
         pen.setColor(Qt::black);
-        pen.setDashPattern(QVector<qreal>() << 1 << 1);
+        pen.setDashPattern(QVector<qreal>(2, 1));
         p.setPen(pen);
         p.drawRect(bounds);
 

@@ -42,24 +42,20 @@ T.ScrollIndicator {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            indicator.implicitWidth + leftPadding + rightPadding)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             indicator.implicitHeight + topPadding + bottomPadding)
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [indicator]
-    indicator: Rectangle {
+    //! [contentItem]
+    contentItem: Rectangle {
+        id: indicator
+
         implicitWidth: 6
         implicitHeight: 6
 
         color: control.Universal.baseMediumLowColor
         visible: control.size < 1.0
         opacity: 0.0
-
-        readonly property bool horizontal: control.orientation === Qt.Horizontal
-        x: control.leftPadding + (horizontal ? control.position * control.width : 0)
-        y: control.topPadding + (horizontal ? 0 : control.position * control.height)
-        width: horizontal ? control.size * control.availableWidth : implicitWidth
-        height: horizontal ? implicitHeight : control.size * control.availableHeight
 
         states: [
             State {
@@ -82,5 +78,5 @@ T.ScrollIndicator {
             }
         ]
     }
-    //! [indicator]
+    //! [contentItem]
 }

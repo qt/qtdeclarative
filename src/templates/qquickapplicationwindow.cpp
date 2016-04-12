@@ -36,6 +36,7 @@
 
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+#include "qquickpopup_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
@@ -53,7 +54,7 @@ QT_BEGIN_NAMESPACE
     \inherits Window
     \instantiates QQuickApplicationWindow
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief Provides a top-level application window.
 
     ApplicationWindow is a \l Window which makes it convenient to add
@@ -63,7 +64,7 @@ QT_BEGIN_NAMESPACE
     and run it by using \l QQmlApplicationEngine.  In this way you can control
     the window's properties, appearance and layout from QML.
 
-    \image qtlabscontrols-applicationwindow-wireframe.png
+    \image qtquickcontrols-applicationwindow-wireframe.png
 
     \qml
     import Qt.labs.controls 1.0
@@ -113,6 +114,8 @@ public:
 
     void relayout();
 
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) override;
+    void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
@@ -187,6 +190,20 @@ void QQuickApplicationWindowPrivate::relayout()
     }
 }
 
+void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+{
+    Q_UNUSED(item)
+    Q_UNUSED(newRect)
+    Q_UNUSED(oldRect)
+    relayout();
+}
+
+void QQuickApplicationWindowPrivate::itemVisibilityChanged(QQuickItem *item)
+{
+    Q_UNUSED(item);
+    relayout();
+}
+
 void QQuickApplicationWindowPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_UNUSED(item);
@@ -243,9 +260,11 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 {
     Q_D(QQuickApplicationWindow);
     if (d->header)
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
     if (d->footer)
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
 }
 
 /*!
@@ -308,23 +327,25 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
         return;
 
     if (d->header) {
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->header->setParentItem(nullptr);
     }
     d->header = header;
     if (header) {
         header->setParentItem(contentItem());
         QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(header->z()))
             header->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
             toolBar->setPosition(QQuickToolBar::Header);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
             tabBar->setPosition(QQuickTabBar::Header);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit headerChanged();
 }
 
@@ -352,23 +373,25 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
         return;
 
     if (d->footer) {
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(contentItem());
         QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(footer->z()))
             footer->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
             toolBar->setPosition(QQuickToolBar::Footer);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
             tabBar->setPosition(QQuickTabBar::Footer);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit footerChanged();
 }
 
@@ -494,6 +517,11 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
 
     QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
 
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritFont(f);
+
     if (changed)
         emit q->fontChanged();
 }
@@ -511,7 +539,13 @@ void QQuickApplicationWindow::setLocale(const QLocale &locale)
         return;
 
     d->locale = locale;
-    QQuickControlPrivate::updateLocaleRecur(contentItem(), locale);
+    QQuickControlPrivate::updateLocaleRecur(QQuickWindow::contentItem(), locale);
+
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = QQuickWindow::contentItem()->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->updateLocale(locale, false); // explicit=false
+
     emit localeChanged();
 }
 
@@ -605,10 +639,22 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
     : QObject(*(new QQuickApplicationWindowAttachedPrivate), parent)
 {
     Q_D(QQuickApplicationWindowAttached);
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
-    if (item) {
+    if (QQuickItem *item = qobject_cast<QQuickItem *>(parent)) {
         d->windowChange(item->window());
         QObjectPrivate::connect(item, &QQuickItem::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
+        if (!d->window) {
+            QQuickItem *p = item;
+            while (p) {
+                if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(p->parent())) {
+                    d->windowChange(popup->window());
+                    QObjectPrivate::connect(popup, &QQuickPopup::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
+                }
+                p = p->parentItem();
+            }
+        }
+    } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent)) {
+        d->windowChange(popup->window());
+        QObjectPrivate::connect(popup, &QQuickPopup::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
     }
 }
 

@@ -39,10 +39,10 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
-#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
-#include <QtLabsTemplates/private/qquickoverlay_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
-#include <QtLabsTemplates/private/qquickbutton_p.h>
+#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates/private/qquickoverlay_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates/private/qquickbutton_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -63,6 +63,7 @@ void tst_popup::visible()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
@@ -92,6 +93,7 @@ void tst_popup::overlay()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickItem *overlay = window->overlay();
@@ -127,11 +129,6 @@ void tst_popup::overlay()
     QCOMPARE(overlayPressedSignal.count(), 2);
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + popup->x() + popup->width() / 2,
-                                                                     button->y() + popup->y() + popup->height() / 2));
-    QCOMPARE(overlayPressedSignal.count(), 2);
-    QCOMPARE(overlayReleasedSignal.count(), 1);
-
     QVERIFY(!popup->isVisible());
 }
 
@@ -160,6 +157,7 @@ void tst_popup::closePolicy()
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();

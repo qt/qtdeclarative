@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inherits TextEdit
     \instantiates QQuickTextArea
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A multi line text input control.
 
     TextArea is a multi-line text editor. TextArea extends TextEdit with
@@ -141,7 +141,7 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
     Q_D(QQuickTextArea);
     setActiveFocusOnTab(true);
     d->setImplicitResizeEnabled(false);
-    d->pressAndHoldHelper.control = this;
+    d->pressHandler.control = this;
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::_q_readOnlyChanged);
 }
@@ -170,7 +170,7 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &f)
     QFont parentFont = font.resolve(f);
     parentFont.resolve(font.resolve() | f.resolve());
 
-    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
     const QFont resolvedFont = parentFont.resolve(defaultFont);
 
     const bool changed = resolvedFont != sourceFont;
@@ -376,11 +376,11 @@ void QQuickTextArea::focusOutEvent(QFocusEvent *event)
 void QQuickTextArea::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
-    d->pressAndHoldHelper.mousePressEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mousePressEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextEdit::mousePressEvent(event);
     }
@@ -389,11 +389,11 @@ void QQuickTextArea::mousePressEvent(QMouseEvent *event)
 void QQuickTextArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
-    d->pressAndHoldHelper.mouseMoveEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseMoveEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextEdit::mouseMoveEvent(event);
     }
@@ -402,11 +402,11 @@ void QQuickTextArea::mouseMoveEvent(QMouseEvent *event)
 void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
-    d->pressAndHoldHelper.mouseReleaseEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseReleaseEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextEdit::mouseReleaseEvent(event);
     }
@@ -415,8 +415,8 @@ void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
 void QQuickTextArea::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextArea);
-    if (event->timerId() == d->pressAndHoldHelper.timer.timerId()) {
-        d->pressAndHoldHelper.timerEvent(event);
+    if (event->timerId() == d->pressHandler.timer.timerId()) {
+        d->pressHandler.timerEvent(event);
     } else {
         QQuickTextEdit::timerEvent(event);
     }

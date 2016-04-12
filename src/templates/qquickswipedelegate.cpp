@@ -37,6 +37,7 @@
 #include "qquickswipedelegate_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickabstractbutton_p_p.h"
+#include "qquickvelocitycalculator_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -71,12 +72,12 @@ QT_BEGIN_NAMESPACE
     any position for \c exposure.left or \c exposure.right, the following will
     occur:
 
-    \image qtlabscontrols-swipedelegate.gif
+    \image qtquickcontrols-swipedelegate.gif
 
     If \c exposure.left and \c exposure.right are anchored to the left and
     right of the \l background item (respectively), they'll behave like this:
 
-    \image qtlabscontrols-swipedelegate-leading-trailing.gif
+    \image qtquickcontrols-swipedelegate-leading-trailing.gif
 
     When using \c exposure.left and \c exposure.right, the control cannot be
     swiped past the left and right edges. To achieve this type of "wrapping"
@@ -85,7 +86,7 @@ QT_BEGIN_NAMESPACE
     example, in the image below, we set \c exposure.behind and then swipe the
     control repeatedly in both directions:
 
-    \image qtlabscontrols-swipedelegate-behind.gif
+    \image qtquickcontrols-swipedelegate-behind.gif
 
     \labs
 
@@ -136,6 +137,7 @@ public:
     // before the last press event.
     bool wasActive;
     bool active;
+    QQuickVelocityCalculator velocityCalculator;
     QQmlComponent *left;
     QQmlComponent *behind;
     QQmlComponent *right;
@@ -490,7 +492,7 @@ qreal QQuickSwipeExposure::position() const
 void QQuickSwipeExposure::setPosition(qreal position)
 {
     Q_D(QQuickSwipeExposure);
-    const qreal adjustedPosition = qBound(-1.0, position, 1.0);
+    const qreal adjustedPosition = qBound<qreal>(-1.0, position, 1.0);
     if (adjustedPosition == d->position)
         return;
 
@@ -553,6 +555,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     }
 
     exposurePrivate->positionBeforePress = exposurePrivate->position;
+    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
     pressPoint = item->mapToItem(q, event->pos());
     return false;
 }
@@ -650,17 +653,23 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     return q->keepMouseGrab();
 }
 
-bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *)
+static const qreal exposeVelocityThreshold = 300.0;
+
+bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
-
     QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
+    exposurePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
 
-    if (exposurePrivate->position > 0.5) {
+    // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
+    const qreal swipeVelocity = exposurePrivate->velocityCalculator.velocity().x();
+    if (exposurePrivate->position > 0.5 ||
+        (exposurePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
         exposure.setPosition(1.0);
         exposure.setActive(true);
         exposurePrivate->wasActive = true;
-    } else if (exposurePrivate->position < -0.5) {
+    } else if (exposurePrivate->position < -0.5 ||
+        (exposurePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
         exposure.setPosition(-1.0);
         exposure.setActive(true);
         exposurePrivate->wasActive = true;
@@ -815,6 +824,7 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
     QQuickAbstractButton::mousePressEvent(event);
     QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&d->exposure);
     exposurePrivate->positionBeforePress = exposurePrivate->position;
+    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
 }
 
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)

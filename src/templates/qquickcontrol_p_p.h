@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
-class Q_LABSTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
+class Q_QUICKTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 #ifndef QT_NO_ACCESSIBILITY
     , public QAccessible::ActivationObserver
 #endif
@@ -99,14 +99,14 @@ public:
             return;
         updateFont(f);
     }
-    void resolveFont();
+    virtual void resolveFont();
     void inheritFont(const QFont &f);
     static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
 
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
-    static QLocale calcLocale(QQuickItem *);
+    static QLocale calcLocale(const QQuickItem *item);
 
     // TODO: QLazilyAllocated<ExtraData>
     QFont font;

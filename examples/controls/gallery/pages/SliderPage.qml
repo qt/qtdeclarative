@@ -63,5 +63,12 @@ Pane {
             width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
+        Slider {
+            orientation: Qt.Vertical
+            value: 0.5
+            height: itemWidth
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
     }
 }

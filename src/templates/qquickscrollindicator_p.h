@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,14 +56,13 @@ class QQuickFlickable;
 class QQuickScrollIndicatorAttached;
 class QQuickScrollIndicatorPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicator : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
     explicit QQuickScrollIndicator(QQuickItem *parent = nullptr);
@@ -79,9 +78,6 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
-    QQuickItem *indicator() const;
-    void setIndicator(QQuickItem *indicator);
-
 public Q_SLOTS:
     void setSize(qreal size);
     void setPosition(qreal position);
@@ -91,7 +87,6 @@ Q_SIGNALS:
     void positionChanged();
     void activeChanged();
     void orientationChanged();
-    void indicatorChanged();
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY
@@ -105,7 +100,7 @@ private:
 
 class QQuickScrollIndicatorAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollIndicator *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

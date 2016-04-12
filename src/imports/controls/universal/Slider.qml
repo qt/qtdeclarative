@@ -42,10 +42,10 @@ T.Slider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            Math.max(track ? track.implicitWidth : 0,
+                            Math.max(background ? background.implicitWidth : 0,
                                      handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(track ? track.implicitHeight : 0,
+                             Math.max(background ? background.implicitHeight : 0,
                                       handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
@@ -67,8 +67,8 @@ T.Slider {
     }
     //! [handle]
 
-    //! [track]
-    track: Item {
+    //! [background]
+    background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
 
@@ -99,5 +99,5 @@ T.Slider {
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [track]
+    //! [background]
 }

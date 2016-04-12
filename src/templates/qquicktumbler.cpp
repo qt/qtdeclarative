@@ -37,7 +37,7 @@
 #include "qquicktumbler_p.h"
 
 #include <QtQuick/private/qquickflickable_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickTumbler
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A spinnable wheel of items that can be selected.
 
     \code
@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet tst_tumbler.qml contentItem
 
-    \image qtlabscontrols-tumbler-wrap.gif
+    \image qtquickcontrols-tumbler-wrap.gif
 
     \labs
 

@@ -56,18 +56,18 @@ QT_BEGIN_NAMESPACE
     \inherits TextInput
     \instantiates QQuickTextField
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A single line text input control.
 
     TextField is a single line text editor. TextField extends TextInput with
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
     \table
-    \row \li \image qtlabscontrols-textfield-normal.png
+    \row \li \image qtquickcontrols-textfield-normal.png
          \li A text field in its normal state.
-    \row \li \image qtlabscontrols-textfield-focused.png
+    \row \li \image qtquickcontrols-textfield-focused.png
          \li A text field that has active focus.
-    \row \li \image qtlabscontrols-textfield-disabled.png
+    \row \li \image qtquickcontrols-textfield-disabled.png
          \li A text field that is disabled.
     \endtable
 
@@ -151,7 +151,7 @@ QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.control = this;
+    d->pressHandler.control = this;
     d->setImplicitResizeEnabled(false);
     setActiveFocusOnTab(true);
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
@@ -184,7 +184,7 @@ void QQuickTextFieldPrivate::inheritFont(const QFont &f)
     QFont parentFont = font.resolve(f);
     parentFont.resolve(font.resolve() | f.resolve());
 
-    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
     const QFont resolvedFont = parentFont.resolve(defaultFont);
 
     const bool changed = resolvedFont != sourceFont;
@@ -401,11 +401,11 @@ void QQuickTextField::focusOutEvent(QFocusEvent *event)
 void QQuickTextField::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mousePressEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mousePressEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mousePressEvent(event);
     }
@@ -414,11 +414,11 @@ void QQuickTextField::mousePressEvent(QMouseEvent *event)
 void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mouseMoveEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseMoveEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mouseMoveEvent(event);
     }
@@ -427,11 +427,11 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->pressAndHoldHelper.mouseReleaseEvent(event);
-    if (d->pressAndHoldHelper.isActive()) {
-        if (d->pressAndHoldHelper.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
-            d->pressAndHoldHelper.clearDelayedMouseEvent();
+    d->pressHandler.mouseReleaseEvent(event);
+    if (d->pressHandler.isActive()) {
+        if (d->pressHandler.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextInput::mouseReleaseEvent(event);
     }
@@ -440,8 +440,8 @@ void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 void QQuickTextField::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextField);
-    if (event->timerId() == d->pressAndHoldHelper.timer.timerId()) {
-        d->pressAndHoldHelper.timerEvent(event);
+    if (event->timerId() == d->pressHandler.timer.timerId()) {
+        d->pressHandler.timerEvent(event);
     } else {
         QQuickTextInput::timerEvent(event);
     }

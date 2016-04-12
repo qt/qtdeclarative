@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextinput_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +57,7 @@ class QQuickText;
 class QQuickTextFieldPrivate;
 class QQuickMouseEvent;
 
-class Q_LABSTEMPLATES_EXPORT QQuickTextField : public QQuickTextInput
+class Q_QUICKTEMPLATES_EXPORT QQuickTextField : public QQuickTextInput
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override

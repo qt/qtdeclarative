@@ -48,8 +48,8 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickstackview_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickstackview_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4persistent_p.h>

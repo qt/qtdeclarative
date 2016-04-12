@@ -154,7 +154,7 @@ T.SwipeDelegate {
     background: Rectangle {
         color: !control.enabled ? control.Material.swipeDelegateDisabledColor :
             (control.pressed ? control.Material.swipeDelegatePressColor :
-            (control.activeFocus || control.hovered ? control.Material.swipeDelegateHoverColor : control.Material.swipeDelegateColor))
+            (control.activeKeyFocus || control.hovered ? control.Material.swipeDelegateHoverColor : control.Material.swipeDelegateColor))
 
         Behavior on x {
             enabled: !control.pressed

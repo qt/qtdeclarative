@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickCheckBox
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
+    \ingroup qtquickcontrols2-buttons
     \brief An option button that can be checked or unchecked.
 
     CheckBox presents an option button that can be toggled on (checked) or
@@ -63,13 +63,13 @@ QT_BEGIN_NAMESPACE
     in a treeview, for example.
 
     \table
-    \row \li \image qtlabscontrols-checkbox-normal.png
+    \row \li \image qtquickcontrols-checkbox-normal.png
          \li A check box in its normal state.
-    \row \li \image qtlabscontrols-checkbox-checked.png
+    \row \li \image qtquickcontrols-checkbox-checked.png
          \li A check box that is checked.
-    \row \li \image qtlabscontrols-checkbox-focused.png
+    \row \li \image qtquickcontrols-checkbox-focused.png
          \li A check box that has active focus.
-    \row \li \image qtlabscontrols-checkbox-disabled.png
+    \row \li \image qtquickcontrols-checkbox-disabled.png
          \li A check box that is disabled.
     \endtable
 

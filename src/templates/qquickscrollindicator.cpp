@@ -47,14 +47,14 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief A non-interactive scroll indicator control.
 
     ScrollIndicator is a non-interactive indicator that indicates the current scroll
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    \image qtlabscontrols-scrollindicator.png
+    \image qtquickcontrols-scrollindicator.png
 
     \code
     Flickable {
@@ -73,6 +73,13 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
+    Horizontal and vertical scroll indicators do not share the \l active state with
+    each other by default. In order to keep both indicators visible whilst scrolling
+    to either direction, establish a two-way binding between the active states as
+    presented by the following example:
+
+    \snippet qtquickcontrols-scrollindicator-active.qml 1
+
     \labs
 
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
@@ -80,18 +87,36 @@ QT_BEGIN_NAMESPACE
 
 class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
 {
+    Q_DECLARE_PUBLIC(QQuickScrollIndicator)
+
 public:
     QQuickScrollIndicatorPrivate() : size(0), position(0),
-        active(false), orientation(Qt::Vertical), indicator(nullptr)
+        active(false), orientation(Qt::Vertical)
     {
     }
+
+    void resizeContent() override;
 
     qreal size;
     qreal position;
     bool active;
     Qt::Orientation orientation;
-    QQuickItem *indicator;
 };
+
+void QQuickScrollIndicatorPrivate::resizeContent()
+{
+    Q_Q(QQuickScrollIndicator);
+    if (!contentItem)
+        return;
+
+    if (orientation == Qt::Horizontal) {
+        contentItem->setPosition(QPointF(q->leftPadding() + position * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * size, q->availableHeight()));
+    } else {
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
+    }
+}
 
 QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
@@ -128,6 +153,8 @@ void QQuickScrollIndicator::setSize(qreal size)
         return;
 
     d->size = size;
+    if (isComponentComplete())
+        d->resizeContent();
     emit sizeChanged();
 }
 
@@ -151,6 +178,8 @@ void QQuickScrollIndicator::setPosition(qreal position)
         return;
 
     d->position = position;
+    if (isComponentComplete())
+        d->resizeContent();
     emit positionChanged();
 }
 
@@ -198,33 +227,9 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
         return;
 
     d->orientation = orientation;
+    if (isComponentComplete())
+        d->resizeContent();
     emit orientationChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::ScrollIndicator::indicator
-
-    This property holds the indicator item.
-
-    \sa {Customizing ScrollIndicator}
-*/
-QQuickItem *QQuickScrollIndicator::indicator() const
-{
-    Q_D(const QQuickScrollIndicator);
-    return d->indicator;
-}
-
-void QQuickScrollIndicator::setIndicator(QQuickItem *indicator)
-{
-    Q_D(QQuickScrollIndicator);
-    if (d->indicator == indicator)
-        return;
-
-    delete d->indicator;
-    d->indicator = indicator;
-    if (indicator && !indicator->parentItem())
-        indicator->setParentItem(this);
-    emit indicatorChanged();
 }
 
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

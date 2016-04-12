@@ -34,68 +34,70 @@
 
 #include "qquickstyleselector_p.h"
 #include "qquickstyleselector_p_p.h"
+#include "qquickstyle.h"
 
-#include <QtCore/QDir>
-#include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
-#include <QtCore/QUrl>
-#include <QtCore/QFileInfo>
-#include <QtCore/QLocale>
-#include <QtCore/QDebug>
-#include <QtCore/QSettings>
+#include <QtCore/qdir.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qsysinfo.h>
+#include <QtCore/qlocale.h>
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQuickStyleSelectorSharedData, sharedData);
-static QBasicMutex sharedDataMutex;
-
-QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
+static bool isLocalScheme(const QString &scheme)
 {
-}
-
-QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
-{
-    Q_D(QQuickStyleSelector);
-    d->style = QGuiApplicationPrivate::styleOverride.toLower();
-    if (d->style.isEmpty())
-        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE")).toLower();
-    if (d->style.isEmpty()) {
-        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
-        if (settings)
-            d->style = settings->value(QStringLiteral("Style")).toString().toLower();
-    }
-}
-
-QQuickStyleSelector::~QQuickStyleSelector()
-{
-}
-
-static bool isLocalScheme(const QString &file)
-{
-    bool local = file == QLatin1String("qrc");
+    bool local = scheme == QLatin1String("qrc");
 #ifdef Q_OS_ANDROID
-    local |= file == QLatin1String("assets");
+    local |= scheme == QLatin1String("assets");
 #endif
     return local;
 }
 
-QString QQuickStyleSelector::select(const QString &fileName) const
+// similar, but not identical to QSysInfo::osType
+static QStringList platformSelectors()
 {
-    Q_D(const QQuickStyleSelector);
-    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
-    if (isLocalScheme(url.scheme()) || url.isLocalFile()) {
-        if (isLocalScheme(url.scheme())) {
-            QString equivalentPath = QLatin1Char(':') + url.path();
-            QString selectedPath = d->select(equivalentPath);
-            url.setPath(selectedPath.remove(0, 1));
-        } else {
-            url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
-        }
+    static QStringList selectors;
+    if (!selectors.isEmpty())
+        return selectors;
+
+#if defined(Q_OS_WIN)
+    // can't fall back to QSysInfo because we need both "winphone" and "winrt" for the Windows Phone case
+    selectors << QStringLiteral("windows");
+    selectors << QSysInfo::kernelType();  // "wince" and "winnt"
+#  if defined(Q_OS_WINRT)
+    selectors << QStringLiteral("winrt");
+#    if defined(Q_OS_WINPHONE)
+    selectors << QStringLiteral("winphone");
+#    endif
+#  endif
+#elif defined(Q_OS_UNIX)
+    selectors << QStringLiteral("unix");
+#  if !defined(Q_OS_ANDROID) && !defined(Q_OS_BLACKBERRY)
+    // we don't want "linux" for Android or "qnx" for Blackberry here
+    selectors << QSysInfo::kernelType();
+#     ifdef Q_OS_MAC
+    selectors << QStringLiteral("mac"); // compatibility, since kernelType() is "darwin"
+#     endif
+#  endif
+    QString productName = QSysInfo::productType();
+    if (productName != QLatin1String("unknown"))
+        selectors << productName; // "opensuse", "fedora", "osx", "ios", "blackberry", "android"
+#endif
+    return selectors;
+}
+
+static QStringList allSelectors(bool includeStyle)
+{
+    QStringList selectors = platformSelectors();
+    selectors += QLocale().name();
+    if (includeStyle) {
+        QString style = QQuickStyle::name();
+        if (!style.isEmpty())
+            selectors.prepend(style.toLower());
     }
-    return url.toString();
+    return selectors;
 }
 
 static QString selectionHelper(const QString &path, const QString &fileName, const QStringList &selectors)
@@ -119,9 +121,10 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
 
     // If we reach here there were no successful files found at a lower level in this branch, so we
     // should check this level as a potential result.
-    if (!QFileInfo::exists(path + fileName))
+    const QString result = path + fileName;
+    if (!QFileInfo::exists(result))
         return QString();
-    return path + fileName;
+    return result;
 }
 
 QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
@@ -131,41 +134,21 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
     if (!fi.exists())
         return filePath;
 
-    QString ret = selectionHelper(fi.path().isEmpty() ? QString() : fi.path() + QLatin1Char('/'),
-            fi.fileName(), allSelectors());
+    const QString path = fi.path();
+    const QString ret = selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
+                                        fi.fileName(), allSelectors(true));
 
     if (!ret.isEmpty())
         return ret;
     return filePath;
 }
 
-QString QQuickStyleSelector::style() const
+QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
-    Q_D(const QQuickStyleSelector);
-    return d->style;
 }
 
-void QQuickStyleSelector::setStyle(const QString &s)
+QQuickStyleSelector::~QQuickStyleSelector()
 {
-    Q_D(QQuickStyleSelector);
-    d->style = s;
-}
-
-QStringList QQuickStyleSelectorPrivate::allSelectors() const
-{
-    QMutexLocker locker(&sharedDataMutex);
-    updateSelectors();
-    QStringList selectors = sharedData->staticSelectors;
-    if (!style.isEmpty())
-        selectors.prepend(style);
-    return selectors;
-}
-
-void QQuickStyleSelector::setBaseUrl(const QUrl &base)
-{
-    Q_D(QQuickStyleSelector);
-    if (d->baseUrl != base)
-        d->baseUrl = base;
 }
 
 QUrl QQuickStyleSelector::baseUrl() const
@@ -174,53 +157,37 @@ QUrl QQuickStyleSelector::baseUrl() const
     return d->baseUrl;
 }
 
-void QQuickStyleSelectorPrivate::updateSelectors()
+void QQuickStyleSelector::setBaseUrl(const QUrl &url)
 {
-    if (!sharedData->staticSelectors.isEmpty())
-        return; //Already loaded
-
-    sharedData->staticSelectors << sharedData->preloadedStatics; //Potential for static selectors from other modules
-
-    // TODO: Update on locale changed?
-    sharedData->staticSelectors << QLocale().name();
-
-    sharedData->staticSelectors << platformSelectors();
+    Q_D(QQuickStyleSelector);
+    d->baseUrl = url;
 }
 
-QStringList QQuickStyleSelectorPrivate::platformSelectors()
+QString QQuickStyleSelector::select(const QString &fileName) const
 {
-    // similar, but not identical to QSysInfo::osType
-    QStringList ret;
-#if defined(Q_OS_WIN)
-    // can't fall back to QSysInfo because we need both "winphone" and "winrt" for the Windows Phone case
-    ret << QStringLiteral("windows");
-    ret << QSysInfo::kernelType();  // "wince" and "winnt"
-#  if defined(Q_OS_WINRT)
-    ret << QStringLiteral("winrt");
-#    if defined(Q_OS_WINPHONE)
-    ret << QStringLiteral("winphone");
-#    endif
-#  endif
-#elif defined(Q_OS_UNIX)
-    ret << QStringLiteral("unix");
-#  if !defined(Q_OS_ANDROID) && !defined(Q_OS_BLACKBERRY)
-    // we don't want "linux" for Android or "qnx" for Blackberry here
-    ret << QSysInfo::kernelType();
-#     ifdef Q_OS_MAC
-    ret << QStringLiteral("mac"); // compatibility, since kernelType() is "darwin"
-#     endif
-#  endif
-    QString productName = QSysInfo::productType();
-    if (productName != QLatin1String("unknown"))
-        ret << productName; // "opensuse", "fedora", "osx", "ios", "blackberry", "android"
-#endif
-    return ret;
-}
+    Q_D(const QQuickStyleSelector);
+    const QString overridePath = QQuickStyle::path();
+    if (!overridePath.isEmpty()) {
+        const QString stylePath = overridePath + QQuickStyle::name() + QLatin1Char('/');
+        if (QFile::exists(stylePath + fileName)) {
+            // the style name is included to the path, so exclude it from the selectors.
+            // the rest of the selectors (os, locale) are still valid, though.
+            const QString selectedPath = selectionHelper(stylePath, fileName, allSelectors(false));
+            if (selectedPath.startsWith(QLatin1Char(':')))
+                return QLatin1String("qrc") + selectedPath;
+            return QUrl::fromLocalFile(selectedPath).toString();
+        }
+    }
 
-void QQuickStyleSelectorPrivate::addStatics(const QStringList &statics)
-{
-    QMutexLocker locker(&sharedDataMutex);
-    sharedData->preloadedStatics << statics;
+    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
+    if (isLocalScheme(url.scheme())) {
+        QString equivalentPath = QLatin1Char(':') + url.path();
+        QString selectedPath = d->select(equivalentPath);
+        url.setPath(selectedPath.remove(0, 1));
+    } else if (url.isLocalFile()) {
+        url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
+    }
+    return url.toString();
 }
 
 QT_END_NAMESPACE

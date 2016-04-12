@@ -47,28 +47,27 @@
 //
 
 #include <QtCore/qurl.h>
+#include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
+#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyleSelectorPrivate;
 
-class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickStyleSelector
+class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStyleSelector
 {
 public:
-    explicit QQuickStyleSelector();
+    QQuickStyleSelector();
     ~QQuickStyleSelector();
+
+    QUrl baseUrl() const;
+    void setBaseUrl(const QUrl &url);
 
     QString select(const QString &fileName) const;
 
-    QString style() const;
-    void setStyle(const QString &s);
-
-    void setBaseUrl(const QUrl &base);
-    QUrl baseUrl() const;
-
 private:
+    Q_DISABLE_COPY(QQuickStyleSelector)
     Q_DECLARE_PRIVATE(QQuickStyleSelector)
     QScopedPointer<QQuickStyleSelectorPrivate> d_ptr;
 };

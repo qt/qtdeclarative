@@ -107,7 +107,7 @@ T.ComboBox {
             width: parent.width
             height: parent.height
             radius: parent.radius
-            visible: control.activeFocus
+            visible: control.activeKeyFocus
             color: control.Material.checkBoxUncheckedRippleColor
         }
     }

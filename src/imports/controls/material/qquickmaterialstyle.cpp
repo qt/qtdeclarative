@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -413,6 +413,16 @@ static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
+static QColor alphaBlend(const QColor &bg, const QColor &fg)
+{
+    QColor result;
+    result.setRedF(fg.redF() * fg.alphaF() + bg.redF() * (1.0 - fg.alphaF()));
+    result.setGreenF(fg.greenF() * fg.alphaF() + bg.greenF() * (1.0 - fg.alphaF()));
+    result.setBlueF(fg.blueF() * fg.alphaF() + bg.blueF() * (1.0 - fg.alphaF()));
+    result.setAlphaF(bg.alphaF() + fg.alphaF() * (1.0 - bg.alphaF()));
+    return result;
+}
+
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_explicitTheme(false),
     m_explicitPrimary(false),
@@ -715,12 +725,14 @@ QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
 {
-    return shade(accentColor(), Shade600);
+    // Add overlaying black shadow 12% opacity
+    return alphaBlend(accentColor(), QColor::fromRgba(0x1F000000));
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
 {
-    return shade(accentColor(), Shade700);
+    // Add overlaying black shadow 12% opacity
+    return alphaBlend(shade(accentColor(), m_theme == Light ? Shade700 : Shade100), QColor::fromRgba(0x1F000000));
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
@@ -838,6 +850,11 @@ QColor QQuickMaterialStyle::listHighlightColor() const
     return QColor::fromRgba(m_theme == Light ? 0x1e000000 : 0x1effffff);
 }
 
+QColor QQuickMaterialStyle::tooltipColor() const
+{
+    return color(Grey, Shade700);
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);
@@ -894,33 +911,33 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
 {
     switch (shade) {
     case Shade50:
-        return lighterShade(color, 0.52);
+        return lighterShade(color, m_theme == Light ? 0.52 : 0.26);
     case Shade100:
-        return lighterShade(color, 0.37);
+        return lighterShade(color, m_theme == Light ? 0.37 : 0.11);
     case Shade200:
-        return lighterShade(color, 0.26);
+        return m_theme == Light ? lighterShade(color, 0.26) : color;
     case Shade300:
-        return lighterShade(color, 0.12);
+        return m_theme == Light ? lighterShade(color, 0.12) : darkerShade(color, 0.14);
     case Shade400:
-        return lighterShade(color, 0.06);
+        return m_theme == Light ? lighterShade(color, 0.06) : darkerShade(color, 0.20);
     case Shade500:
-        return color;
+        return m_theme == Light ? color : darkerShade(color, 0.26);
     case Shade600:
-        return darkerShade(color, 0.06);
+        return darkerShade(color, m_theme == Light ? 0.06 : 0.32);
     case Shade700:
-        return darkerShade(color, 0.12);
+        return darkerShade(color, m_theme == Light ? 0.12 : 0.38);
     case Shade800:
-        return darkerShade(color, 0.18);
+        return darkerShade(color, m_theme == Light ? 0.18 : 0.44);
     case Shade900:
-        return darkerShade(color, 0.24);
+        return darkerShade(color, m_theme == Light ? 0.24 : 0.50);
     case ShadeA100:
-        return lighterShade(color, 0.54);
+        return lighterShade(color, m_theme == Light ? 0.54 : 0.28);
     case ShadeA200:
-        return lighterShade(color, 0.37);
+        return lighterShade(color, m_theme == Light ? 0.37 : 0.11);
     case ShadeA400:
-        return lighterShade(color, 0.06);
+        return m_theme == Light ? lighterShade(color, 0.06) : darkerShade(color, 0.20);
     case ShadeA700:
-        return darkerShade(color, 0.12);
+        return darkerShade(color, m_theme == Light ? 0.12 : 0.38);
     default:
         Q_UNREACHABLE();
         return QColor();
@@ -945,48 +962,55 @@ static Enum toEnumValue(const QByteArray &value, bool *ok)
     return static_cast<Enum>(enumeration.keyToValue(value, ok));
 }
 
+static QByteArray resolveSetting(const QByteArray &env, const QSharedPointer<QSettings> &settings, const QString &name)
+{
+    QByteArray value = qgetenv(env);
+    if (value.isNull() && !settings.isNull())
+        value = settings->value(name).toByteArray();
+    return value;
+}
+
 void QQuickMaterialStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
-        if (!settings.isNull()) {
-            bool ok = false;
-            QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
-            Theme theme = toEnumValue<Theme>(value, &ok);
-            if (ok)
-                defaultTheme = m_theme = theme;
-            else if (!value.isEmpty())
-                qWarning().nospace().noquote() << settings->fileName() << ": unknown Material theme value: " << value;
 
-            value = settings->value(QStringLiteral("Primary")).toByteArray();
-            Color primary = toEnumValue<Color>(value, &ok);
-            if (ok) {
-                defaultPrimaryCustom = m_customPrimary = false;
-                defaultPrimary = m_primary = primary;
-            } else {
-                QColor color(value.constData());
-                if (color.isValid()) {
-                    defaultPrimaryCustom = m_customPrimary = true;
-                    defaultPrimary = m_primary = color.rgba();
-                } else if (!value.isEmpty()) {
-                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material primary value: " << value;
-                }
+        bool ok = false;
+        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
+        Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
+        if (ok)
+            defaultTheme = m_theme = themeEnum;
+        else if (!themeValue.isEmpty())
+            qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
+
+        QByteArray primaryValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
+        Color primaryEnum = toEnumValue<Color>(primaryValue, &ok);
+        if (ok) {
+            defaultPrimaryCustom = m_customPrimary = false;
+            defaultPrimary = m_primary = primaryEnum;
+        } else {
+            QColor color(primaryValue.constData());
+            if (color.isValid()) {
+                defaultPrimaryCustom = m_customPrimary = true;
+                defaultPrimary = m_primary = color.rgba();
+            } else if (!primaryValue.isEmpty()) {
+                qWarning().nospace().noquote() << "Material: unknown primary value: " << primaryValue;
             }
+        }
 
-            value = settings->value(QStringLiteral("Accent")).toByteArray();
-            Color accent = toEnumValue<Color>(value, &ok);
-            if (ok) {
-                defaultAccentCustom = m_customAccent = false;
-                defaultAccent = m_accent = accent;
+        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
+        Color accentEnum = toEnumValue<Color>(accentValue, &ok);
+        if (ok) {
+            defaultAccentCustom = m_customAccent = false;
+            defaultAccent = m_accent = accentEnum;
+        } else if (!accentValue.isEmpty()) {
+            QColor color(accentValue.constData());
+            if (color.isValid()) {
+                defaultAccentCustom = m_customAccent = true;
+                defaultAccent = m_accent = color.rgba();
             } else {
-                QColor color(value.constData());
-                if (color.isValid()) {
-                    defaultAccentCustom = m_customAccent = true;
-                    defaultAccent = m_accent = color.rgba();
-                } else if (!value.isEmpty()) {
-                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Material accent value: " << value;
-                }
+                qWarning().nospace().noquote() << "Material: unknown accent value: " << accentValue;
             }
         }
         defaultsInitialized = true;

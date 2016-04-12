@@ -63,8 +63,6 @@ QQuickProgressStrip::QQuickProgressStrip(QQuickItem *parent) :
     m_indeterminate(false)
 {
     setFlag(QQuickItem::ItemHasContents);
-    setImplicitWidth(116);
-    setImplicitHeight(6);
 }
 
 QQuickProgressStrip::~QQuickProgressStrip()
@@ -142,6 +140,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
     }
     Q_ASSERT(rootTransformNode->type() == QSGNode::TransformNodeType);
 
+    const qreal y = (height() - implicitHeight()) / 2;
     const QColor color(0x35, 0x36, 0x37);
     if (m_indeterminate) {
         if (rootTransformNode->childCount() != blocks) {
@@ -167,7 +166,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
             m.translate(blockStartX(i), 0);
             transformNode->setMatrix(m);
 
-            rectNode->setRect(QRectF(QPointF(), QSizeF(blockWidth, height())));
+            rectNode->setRect(QRectF(QPointF(0, y), QSizeF(blockWidth, implicitHeight())));
             rectNode->update();
 
             transformNode = static_cast<QSGTransformNode *>(transformNode->nextSibling());
@@ -185,7 +184,7 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
             rootTransformNode->appendChildNode(rectNode);
         }
 
-        rectNode->setRect(QRectF(QPointF(), QSizeF(m_progress * width(), height())));
+        rectNode->setRect(QRectF(QPointF(0, y), QSizeF(m_progress * width(), implicitHeight())));
         rectNode->update();
     }
 

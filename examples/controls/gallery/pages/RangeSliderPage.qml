@@ -64,5 +64,13 @@ Pane {
             width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
+        RangeSlider {
+            orientation: Qt.Vertical
+            first.value: 0.25
+            second.value: 0.75
+            height: itemWidth
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
     }
 }

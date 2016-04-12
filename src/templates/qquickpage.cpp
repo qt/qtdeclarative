@@ -48,13 +48,13 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPage
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-containers
     \brief A control that makes it convenient to add a header and footer to a page.
 
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.
 
-    \image qtlabscontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.png
 
     The following example snippet illustrates how to use a page-specific
     toolbar header and an application-wide tabbar footer.
@@ -93,6 +93,8 @@ public:
 
     void relayout();
 
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) override;
+    void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
@@ -123,6 +125,20 @@ void QQuickPagePrivate::relayout()
         footer->setY(q->height() - fh);
         footer->setWidth(q->width());
     }
+}
+
+void QQuickPagePrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+{
+    Q_UNUSED(item)
+    Q_UNUSED(newRect)
+    Q_UNUSED(oldRect)
+    relayout();
+}
+
+void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
+{
+    Q_UNUSED(item);
+    relayout();
 }
 
 void QQuickPagePrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -168,23 +184,25 @@ void QQuickPage::setHeader(QQuickItem *header)
         return;
 
     if (d->header) {
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->header->setParentItem(nullptr);
     }
     d->header = header;
     if (header) {
         header->setParentItem(this);
         QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(header->z()))
             header->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
             toolBar->setPosition(QQuickToolBar::Header);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
             tabBar->setPosition(QQuickTabBar::Header);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit headerChanged();
 }
 
@@ -212,23 +230,25 @@ void QQuickPage::setFooter(QQuickItem *footer)
         return;
 
     if (d->footer) {
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(this);
         QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-        p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
+                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
         if (qFuzzyIsNull(footer->z()))
             footer->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
             toolBar->setPosition(QQuickToolBar::Footer);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
             tabBar->setPosition(QQuickTabBar::Footer);
-        if (isComponentComplete())
-            d->relayout();
     }
+    if (isComponentComplete())
+        d->relayout();
     emit footerChanged();
 }
 

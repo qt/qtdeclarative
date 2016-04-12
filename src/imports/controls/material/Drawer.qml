@@ -35,19 +35,43 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Window 2.2
+import QtGraphicalEffects 1.0
 import Qt.labs.templates 1.0 as T
 import Qt.labs.controls.material 1.0
 
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay || Window.contentItem
-    width: parent ? parent.width : 0 // TODO: Window.width
-    height: parent ? parent.height : 0 // TODO: Window.height
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    // TODO: make this a proper transition
-    animation: SmoothedAnimation {
-        velocity: 5
+    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
+    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
+
+    //! [enter]
+    enter: Transition { SmoothedAnimation { velocity: 5 } }
+    //! [enter]
+
+    //! [exit]
+    exit: Transition { SmoothedAnimation { velocity: 5 } }
+    //! [exit]
+
+    //! [contentItem]
+    contentItem: Item { }
+    //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        color: control.Material.dialogColor
+
+        layer.enabled: control.position > 0
+        layer.effect: DropShadow {
+            horizontalOffset: control.edge === Qt.LeftEdge ? 1 : control.edge === Qt.RightEdge ? -1 : 0
+            verticalOffset: control.edge === Qt.TopEdge ? 1 : control.edge === Qt.BottomEdge ? -1 : 0
+            color: control.Material.dropShadowColor
+            samples: 15
+            spread: 0.5
+        }
     }
+    //! [background]
 }

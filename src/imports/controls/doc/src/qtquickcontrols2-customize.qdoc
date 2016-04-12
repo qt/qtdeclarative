@@ -1,0 +1,663 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtquickcontrols2-customize.html
+    \title Customizing Qt Quick Controls 2
+    \brief A set of UI controls to create user interfaces in Qt Quick
+
+    Qt Quick Controls 2 consist of a hierarchy (tree) of items. In order to
+    provide a custom look and feel, the default QML implementation of each
+    item can be replaced with a custom one. The following snippets present
+    the default implementations of various items. These can be used as a
+    starting point to implement a custom look and feel.
+
+    \section1 Customizing BusyIndicator
+
+        BusyIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{contentItem}.
+
+        \section3 Background
+
+            \image qtquickcontrols-busyindicator-background.png
+
+            BusyIndicator has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-busyindicator-contentItem.png
+
+            \snippet BusyIndicator.qml contentItem
+
+
+    \section1 Customizing Button
+
+        Button consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-button-background.png
+
+            \snippet Button.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-button-contentItem.png
+
+            \snippet Button.qml contentItem
+
+
+    \section1 Customizing CheckBox
+
+        CheckBox consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-checkbox-background.png
+
+            CheckBox has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-checkbox-contentItem.png
+
+            \snippet CheckBox.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-checkbox-indicator.png
+
+            \snippet CheckBox.qml indicator
+
+
+    \section1 Customizing CheckDelegate
+
+        CheckDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-checkdelegate-background.png
+
+            \snippet CheckDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-checkdelegate-contentItem.png
+
+            \snippet CheckDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-checkdelegate-indicator.png
+
+            \snippet CheckDelegate.qml indicator
+
+
+    \section1 Customizing ComboBox
+
+        ComboBox consists of \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \l {ComboBox::popup}{popup},
+        and \l {ComboBox::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtquickcontrols-combobox-background.png
+
+            \snippet ComboBox.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-combobox-contentItem.png
+
+            \snippet ComboBox.qml contentItem
+
+        \section3 Popup
+
+            \image qtquickcontrols-combobox-popup.png
+
+            \snippet ComboBox.qml popup
+
+        \section3 Delegate
+
+            \image qtquickcontrols-combobox-delegate.png
+
+            \snippet ComboBox.qml delegate
+
+
+    \section1 Customizing Dial
+
+        Dial consists of two visual items: \l {Control::background}{background}
+        and \l {Dial::handle}{handle}.
+
+        \section3 Background
+
+            \image qtquickcontrols-dial-background.png
+
+            \snippet Dial.qml background
+
+        \section3 Indicator
+
+            \image qtquickcontrols-dial-handle.png
+
+            \snippet Dial.qml handle
+
+
+    \section1 Customizing Drawer
+
+        Drawer can have a visual \l {Control::background}{background}
+        item.
+
+        \section3 Background
+
+            \snippet Drawer.qml background
+
+
+    \section1 Customizing Frame
+
+        Frame consists of one visual item: \l {Control::background}{background}.
+
+        \section3 Background
+
+            \image qtquickcontrols-frame-background.png
+
+            \snippet Frame.qml background
+
+
+    \section1 Customizing GroupBox
+
+        GroupBox consists of two visual items: \l {Control::background}{background}
+        and \l {GroupBox::label}{label}.
+
+        \section3 Background
+
+            \image qtquickcontrols-groupbox-background.png
+
+            \snippet GroupBox.qml background
+
+        \section3 Label
+
+            \image qtquickcontrols-groupbox-label.png
+
+            \snippet GroupBox.qml label
+
+
+    \section1 Customizing ItemDelegate
+
+        ItemDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
+        The indicator is only visible for \l {AbstractButton::checkable}{checkable} items.
+
+        \section3 Background
+
+            \image qtquickcontrols-itemdelegate-background.png
+
+            \snippet ItemDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-itemdelegate-contentItem.png
+
+            \snippet ItemDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-itemdelegate-indicator.png
+
+            \snippet ItemDelegate.qml indicator
+
+
+    \section1 Customizing Label
+
+        Label can have a visual \l {Label::background}{background} item.
+
+        \section3 Background
+
+            \image qtquickcontrols-label-background.png
+
+            Label has no background item by default.
+
+
+    \section1 Customizing Menu
+
+        Menu consists of a \l {Popup::}{contentItem}.
+
+        \section3 Content item
+
+            \image qtquickcontrols-menu-contentItem.png
+
+            \snippet Menu.qml contentItem
+
+
+    \section1 Customizing MenuItem
+
+        MenuItem can be customized in the same manner as
+        \l {Customizing Button}{Button}.
+
+
+    \section1 Customizing PageIndicator
+
+        PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtquickcontrols-pageindicator-background.png
+
+        PageIndicator has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-pageindicator-contentItem.png
+
+            \snippet PageIndicator.qml contentItem
+
+        \section3 Delegate
+
+            \image qtquickcontrols-pageindicator-delegate.png
+
+            \snippet PageIndicator.qml delegate
+
+
+
+    \section1 Customizing Pane
+
+        Pane consists of a \l {Control::background}{background}.
+
+        \section3 Background
+
+            \image qtquickcontrols-pane-background.png
+
+            \snippet Pane.qml background
+
+
+    \section1 Customizing ProgressBar
+
+        ProgressBar consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-progressbar-background.png
+
+            \snippet ProgressBar.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-progressbar-contentItem.png
+
+            \snippet ProgressBar.qml contentItem
+
+
+    \section1 Customizing RadioButton
+
+        RadioButton consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-radiobutton-background.png
+
+            RadioButton has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-radiobutton-contentItem.png
+
+            \snippet RadioButton.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-radiobutton-indicator.png
+
+            \snippet RadioButton.qml indicator
+
+
+    \section1 Customizing RadioDelegate
+
+        RadioDelegate consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-radiodelegate-background.png
+
+            \snippet RadioDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-radiodelegate-contentItem.png
+
+            \snippet RadioDelegate.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-radiodelegate-indicator.png
+
+            \snippet RadioDelegate.qml indicator
+
+
+    \section1 Customizing RangeSlider
+
+        RangeSlider consists of three visual items:
+        \l {Control::background}{background},
+        \l {RangeSlider::first}{first.handle} and
+        \l {RangeSlider::second.handle}{second.handle}.
+
+        \section3 Background
+
+            \image qtquickcontrols-rangeslider-background.png
+
+            \snippet RangeSlider.qml background
+
+        \section3 First Handle
+
+            \image qtquickcontrols-rangeslider-first-handle.png
+
+            \snippet RangeSlider.qml firstHandle
+
+        \section3 Second Handle
+
+            \image qtquickcontrols-rangeslider-second-handle.png
+
+            \snippet RangeSlider.qml secondHandle
+
+
+    \section1 Customizing ScrollBar
+
+        ScrollBar consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-scrollbar-background.png
+
+            ScrollBar has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-scrollbar-contentItem.png
+
+            \snippet ScrollBar.qml contentItem
+
+
+    \section1 Customizing ScrollIndicator
+
+        ScrollIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-scrollindicator-background.png
+
+            ScrollIndicator has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-scrollindicator-contentItem.png
+
+            \snippet ScrollIndicator.qml contentItem
+
+
+    \section1 Customizing Slider
+
+        Slider consists of two visual items: \l {Control::background}{background},
+        and \l {Slider::handle}{handle}.
+
+        \section3 Background
+
+            \image qtquickcontrols-slider-background.png
+
+            \snippet Slider.qml background
+
+        \section3 Handle
+
+            \image qtquickcontrols-slider-handle.png
+
+            \snippet Slider.qml handle
+
+
+    \section1 Customizing SpinBox
+
+        SpinBox consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, \l {SpinBox::up.indicator}{up indicator},
+        and \l {SpinBox::down.indicator}{down indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-spinbox-background.png
+
+            \snippet SpinBox.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-spinbox-contentItem.png
+
+            \snippet SpinBox.qml contentItem
+
+        \section3 Down indicator
+
+            \image qtquickcontrols-spinbox-down.png
+
+            \snippet SpinBox.qml down.indicator
+
+        \section3 Up indicator
+
+            \image qtquickcontrols-spinbox-up.png
+
+            \snippet SpinBox.qml up.indicator
+
+
+    \section1 Customizing StackView
+
+        StackView can have a visual \l {Control::background}{background}
+        item, and it allows customizing the transitions that are used for
+        push, pop, and replace operations.
+
+        \section3 Push enter
+
+            \snippet StackView.qml pushEnter
+
+        \section3 Push exit
+
+            \snippet StackView.qml pushExit
+
+        \section3 Pop enter
+
+            \snippet StackView.qml popEnter
+
+        \section3 Pop exit
+
+            \snippet StackView.qml popExit
+
+        \section3 Replace enter
+
+            \snippet StackView.qml replaceEnter
+
+        \section3 Replace exit
+
+            \snippet StackView.qml replaceExit
+
+    \section1 Customizing SwipeDelegate
+
+        SwipeDelegate consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \c exposure.left, and \c exposure.right.
+
+        \section3 Background
+
+            \image qtquickcontrols-swipedelegate-background.png
+
+            \snippet SwipeDelegate.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-swipedelegate-contentItem.png
+
+            \snippet SwipeDelegate.qml contentItem
+
+        \section3 Left, right, and behind
+
+            \image qtquickcontrols-swipedelegate.gif
+
+            By default, there are no left, right, or behind items defined.
+
+    \section1 Customizing SwipeView
+
+        SwipeView can have a visual \l {Control::background}{background}
+        item. The navigation is implemented by the \l {Control::contentItem}
+        {content item}.
+
+        \section3 Background
+
+        SwipeView has no background item by default.
+
+        \section3 Content item
+
+        \snippet SwipeView.qml contentItem
+
+    \section1 Customizing Switch
+
+        Switch consists of three visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols-switch-background.png
+
+            Switch has no background item by default.
+
+        \section3 Content item
+
+            \image qtquickcontrols-switch-contentItem.png
+
+            \snippet Switch.qml contentItem
+
+        \section3 Indicator
+
+            \image qtquickcontrols-switch-indicator.png
+
+            \snippet Switch.qml indicator
+
+    \section1 Customizing TabBar
+
+        TODO
+
+
+    \section1 Customizing TabButton
+
+        TODO
+
+
+    \section1 Customizing TextArea
+
+        TODO
+
+
+    \section1 Customizing TextField
+
+        TextField offers a customizable \l {TextField::background}{background} item.
+
+        \section3 Background
+
+            \image qtquickcontrols-textfield-background.png
+
+            \snippet TextField.qml background
+
+
+    \section1 Customizing ToolBar
+
+        ToolBar consists of one visual item: \l {Control::background}{background}.
+
+        \section3 Background
+
+            \image qtquickcontrols-toolbar-background.png
+
+            \snippet ToolBar.qml background
+
+
+    \section1 Customizing ToolButton
+
+        ToolButton consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-toolbutton-background.png
+
+            \snippet ToolButton.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-toolbutton-contentItem.png
+
+            \snippet ToolButton.qml contentItem
+
+
+    \section1 Customizing ToolTip
+
+        ToolTip consists of two visual items: \l {Popup::background}{background}
+        and \l {Popup::contentItem}{content item}.
+
+        \section3 Background
+
+            \image qtquickcontrols-tooltip-background.png
+
+            \snippet ToolTip.qml background
+
+        \section3 Content item
+
+            \image qtquickcontrols-tooltip-contentItem.png
+
+            \snippet ToolTip.qml contentItem
+
+
+    \section1 Customizing Tumbler
+
+        Tumbler consists of three visual items:
+        \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, and
+        \l {Tumbler::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtquickcontrols-tumbler-background.png
+
+            Tumbler has no background item by default.
+
+        \section3 Content Item
+
+            \image qtquickcontrols-tumbler-contentItem.png
+
+            \snippet Tumbler.qml contentItem
+
+        \section3 Delegate
+
+            \image qtquickcontrols-tumbler-delegate.png
+
+            \snippet Tumbler.qml delegate
+*/

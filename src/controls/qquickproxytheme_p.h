@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPROXYTHEME_H
-#define QQUICKPROXYTHEME_H
+#ifndef QQUICKPROXYTHEME_P_H
+#define QQUICKPROXYTHEME_P_H
 
 //
 //  W A R N I N G
@@ -49,15 +49,14 @@
 //
 
 #include <QtGui/qpa/qplatformtheme.h>
-#include <QtLabsControls/private/qtlabscontrolsglobal_p.h>
+#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSCONTROLS_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
+class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
 {
 public:
-    QQuickProxyTheme(QPlatformTheme *theme);
-
+    explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);
     ~QQuickProxyTheme();
 
     QPlatformTheme* theme() const;
@@ -96,4 +95,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPROXYTHEME_H
+#endif // QQUICKPROXYTHEME_P_H

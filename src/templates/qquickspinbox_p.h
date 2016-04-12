@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ class QQuickSpinButton;
 class QQuickSpinButtonPrivate;
 class QQuickSpinBoxPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int from READ from WRITE setFrom NOTIFY fromChanged FINAL)
@@ -130,6 +130,8 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
+    QFont defaultFont() const override;
+
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
 #endif
@@ -139,7 +141,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickSpinBox)
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickSpinButton : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)

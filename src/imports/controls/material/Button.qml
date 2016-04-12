@@ -77,7 +77,7 @@ T.Button {
         radius: 2
         color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
             (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
-            (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
+            (control.activeKeyFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
             (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
 
         Behavior on color {
@@ -90,7 +90,7 @@ T.Button {
             width: parent.width
             height: parent.height
             radius: parent.radius
-            visible: control.activeFocus
+            visible: control.activeKeyFocus
             color: control.Material.checkBoxUncheckedRippleColor
         }
 

@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickProgressBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
@@ -63,7 +63,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
-    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
     explicit QQuickProgressBar(QQuickItem *parent = nullptr);
@@ -83,9 +82,6 @@ public:
     bool isIndeterminate() const;
     void setIndeterminate(bool indeterminate);
 
-    QQuickItem *indicator() const;
-    void setIndicator(QQuickItem *indicator);
-
 Q_SIGNALS:
     void fromChanged();
     void toChanged();
@@ -93,7 +89,6 @@ Q_SIGNALS:
     void positionChanged();
     void visualPositionChanged();
     void indeterminateChanged();
-    void indicatorChanged();
 
 protected:
     void mirrorChange() override;

@@ -15,6 +15,8 @@ QML_FILES += \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
+    $$PWD/CheckDelegate.qml \
+    $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Drawer.qml \
@@ -30,6 +32,8 @@ QML_FILES += \
     $$PWD/Popup.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
+    $$PWD/RadioDelegate.qml \
+    $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
     $$PWD/Ripple.qml \
     $$PWD/ScrollBar.qml \
@@ -47,4 +51,5 @@ QML_FILES += \
     $$PWD/TextField.qml \
     $$PWD/ToolBar.qml \
     $$PWD/ToolButton.qml \
+    $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml

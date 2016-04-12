@@ -1,0 +1,70 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtQuickControls2
+description             = Qt Quick Controls Reference Documentation
+version                 = $QT_VERSION
+
+qhp.projects            = QtQuickControls2
+
+qhp.QtQuickControls2.file          = qtquickcontrols2.qhp
+qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
+qhp.QtQuickControls2.virtualFolder = qtquickcontrols2
+qhp.QtQuickControls2.indexTitle    = Qt Quick Controls 2
+qhp.QtQuickControls2.indexRoot     =
+
+qhp.QtQuickControls2.filterAttributes                  = qtquickcontrols2 $QT_VERSION qtrefdoc
+qhp.QtQuickControls2.customFilters.Qt.name             = QtQuickControls2 $QT_VERSION
+qhp.QtQuickControls2.customFilters.Qt.filterAttributes = qtquickcontrols2 $QT_VERSION
+
+qhp.QtQuickControls2.subprojects = qtquickcontrols2qmltypes
+
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.title      = Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.indexTitle = Qt Quick Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.selectors  = qmlclass
+qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.sortPages  = true
+
+depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qmake qtsql qtwidgets
+
+# Specify the install path under QT_INSTALL_EXAMPLES
+# Note: paths passed to \example command must contain the parent directory, e.g.
+# \example controls/tabs
+exampledirs += ../../../../examples/controls \
+               ../ \
+               ../../../templates \
+               ../../calendar \
+               ../../../../tests/auto/controls/data \
+               snippets
+
+examplesinstallpath = qtquickcontrols2/controls
+
+headerdirs += ../../../templates \
+              ../../calendar \
+              ../../../controls
+
+sourcedirs += ../../../templates \
+              ../../calendar \
+              ../../../controls
+
+imagedirs += images
+
+navigation.landingpage  = "Qt Quick Controls 2"
+navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
+
+tagfile                 = qtquickcontrols2.tags
+
+# \styleimport {Qt.labs.controls.universal 1.0}
+macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"
+
+# \styleproperty {Universal.accent} {enumeration} {html-target-id}
+# \target html-target-id
+# This property holds ...
+# (empty line)
+# \endstyleproperty
+macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\3\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
+macro.endstyleproperty = "\\br"
+
+macro.labs = "\\note \\e{Types in the Qt.labs module are not guaranteed to remain compatible in future versions.}"
+
+#Add output suffix to the html filenames
+outputsuffixes = QML
+outputsuffixes.QML = 2

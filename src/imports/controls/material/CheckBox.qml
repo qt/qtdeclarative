@@ -56,89 +56,10 @@ T.CheckBox {
     bottomPadding: 14
 
     //! [indicator]
-    indicator: Rectangle {
-        id: indicatorItem
+    indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        implicitWidth: 20
-        implicitHeight: 20
-        color: "transparent"
-        border.color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
-        border.width: control.checked ? width / 2 : 2
-        radius: 2
-
-        Behavior on border.width {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: 100
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Ripple {
-            width: parent.width
-            height: width
-            control: control
-            colored: control.checked
-            opacity: control.pressed || control.activeFocus ? 1 : 0
-        }
-
-        // TODO: This needs to be transparent
-        Image {
-            id: checkImage
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 16
-            height: 16
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
-            fillMode: Image.PreserveAspectFit
-
-            scale: control.checkState === Qt.Checked ? 1 : 0
-            Behavior on scale { NumberAnimation { duration: 100 } }
-        }
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 12
-            height: 3
-            visible: control.checkState === Qt.PartiallyChecked
-        }
-
-        states: [
-            State {
-                name: "checked"
-                when: control.checkState === Qt.Checked
-            },
-            State {
-                name: "partiallychecked"
-                when: control.checkState === Qt.PartiallyChecked
-            }
-        ]
-
-        transitions: Transition {
-            SequentialAnimation {
-                NumberAnimation {
-                    target: indicatorItem
-                    property: "scale"
-                    // Go down 2 pixels in size.
-                    to: 1 - 2 / indicatorItem.width
-                    duration: 120
-                }
-                NumberAnimation {
-                    target: indicatorItem
-                    property: "scale"
-                    to: 1
-                    duration: 120
-                }
-            }
-        }
+        control: control
     }
     //! [indicator]
 

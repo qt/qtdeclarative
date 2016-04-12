@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -404,32 +404,40 @@ static Enum toEnumValue(const QByteArray &value, bool *ok)
     return static_cast<Enum>(enumeration.keyToValue(value, ok));
 }
 
+static QByteArray resolveSetting(const QByteArray &env, const QSharedPointer<QSettings> &settings, const QString &name)
+{
+    QByteArray value = qgetenv(env);
+    if (value.isNull() && !settings.isNull())
+        value = settings->value(name).toByteArray();
+    return value;
+}
+
 void QQuickUniversalStyle::init()
 {
     static bool defaultsInitialized = false;
     if (!defaultsInitialized) {
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Universal"));
-        if (!settings.isNull()) {
-            bool ok = false;
-            QByteArray value = settings->value(QStringLiteral("Theme")).toByteArray();
-            Theme theme = toEnumValue<Theme>(value, &ok);
-            if (ok)
-                DefaultTheme = m_theme = theme;
-            else if (!value.isEmpty())
-                qWarning().nospace().noquote() << settings->fileName() << ": unknown Universal theme value: " << value;
 
-            value = settings->value(QStringLiteral("Accent")).toByteArray();
-            Accent accent = toEnumValue<Accent>(value, &ok);
-            if (ok) {
-                DefaultAccent = m_accent = qquickuniversal_accent_color(accent);
-            } else {
-                QColor color(value.constData());
-                if (color.isValid())
-                    DefaultAccent = m_accent = color.rgba();
-                else if (!value.isEmpty())
-                    qWarning().nospace().noquote() << settings->fileName() << ": unknown Universal accent value: " << value;
-            }
+        bool ok = false;
+        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
+        Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
+        if (ok)
+            DefaultTheme = m_theme = themeEnum;
+        else if (!themeValue.isEmpty())
+            qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
+
+        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
+        Accent accentEnum = toEnumValue<Accent>(accentValue, &ok);
+        if (ok) {
+            DefaultAccent = m_accent = qquickuniversal_accent_color(accentEnum);
+        } else if (!accentValue.isEmpty()) {
+            QColor color(accentValue.constData());
+            if (color.isValid())
+                DefaultAccent = m_accent = color.rgba();
+            else
+                qWarning().nospace().noquote() << "Universal: unknown accent value: " << accentValue;
         }
+
         defaultsInitialized = true;
     }
 

@@ -64,7 +64,7 @@ TestCase {
         compare(control.contentItem.children[0].text, "Sun")
 
         control.locale = Qt.locale("no_NO")
-        compare(control.contentItem.children[0].text, "ma.")
+        compare(control.contentItem.children[0].text, "man.")
 
         control.locale = Qt.locale("fi_FI")
         compare(control.contentItem.children[0].text, "ma")

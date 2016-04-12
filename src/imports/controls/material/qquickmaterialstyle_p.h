@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtLabsControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -100,6 +100,7 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -211,6 +212,7 @@ public:
     QColor dialogColor() const;
     QColor backgroundDimColor() const;
     QColor listHighlightColor() const;
+    QColor tooltipColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;

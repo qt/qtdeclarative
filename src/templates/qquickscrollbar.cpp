@@ -47,14 +47,14 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollBar
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief An interactive scroll bar control.
 
     ScrollBar is an interactive bar that can be used to scroll to a specific
     position. A scroll bar can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    \image qtlabscontrols-scrollbar.png
+    \image qtquickcontrols-scrollbar.png
 
     \code
     Flickable {
@@ -73,6 +73,28 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
+    Notice that ScrollBar does not filter key events of the Flickable it is
+    attached to. The following example illustrates how to implement scrolling
+    with up and down keys:
+
+    \code
+    Flickable {
+        focus: true
+
+        Keys.onUpPressed: scrollBar.decrease()
+        Keys.onDownPressed: scrollBar.increase()
+
+        ScrollBar.vertical: ScrollBar { id: scrollBar }
+    }
+    \endcode
+
+    Horizontal and vertical scroll bars do not share the \l active state with
+    each other by default. In order to keep both bars visible whilst scrolling
+    to either direction, establish a two-way binding between the active states
+    as presented by the following example:
+
+    \snippet qtquickcontrols-scrollbar-active.qml 1
+
     \labs
 
     \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
@@ -80,10 +102,12 @@ QT_BEGIN_NAMESPACE
 
 class QQuickScrollBarPrivate : public QQuickControlPrivate
 {
+    Q_DECLARE_PUBLIC(QQuickScrollBar)
+
 public:
-    QQuickScrollBarPrivate() : size(0), position(0), offset(0),
+    QQuickScrollBarPrivate() : size(0), position(0), stepSize(0), offset(0),
         active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical), handle(nullptr)
+        orientation(Qt::Vertical)
     {
     }
 
@@ -92,15 +116,43 @@ public:
         return bar->d_func();
     }
 
+    qreal positionAt(const QPoint &point) const;
+
+    void resizeContent() override;
+
     qreal size;
     qreal position;
+    qreal stepSize;
     qreal offset;
     bool active;
     bool pressed;
     bool moving;
     Qt::Orientation orientation;
-    QQuickItem *handle;
 };
+
+qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
+{
+    Q_Q(const QQuickScrollBar);
+    if (orientation == Qt::Horizontal)
+        return (point.x() - q->leftPadding()) / q->availableWidth();
+    else
+        return (point.y() - q->topPadding()) / q->availableHeight();
+}
+
+void QQuickScrollBarPrivate::resizeContent()
+{
+    Q_Q(QQuickScrollBar);
+    if (!contentItem)
+        return;
+
+    if (orientation == Qt::Horizontal) {
+        contentItem->setPosition(QPointF(q->leftPadding() + position * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * size, q->availableHeight()));
+    } else {
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
+    }
+}
 
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
     QQuickControl(*(new QQuickScrollBarPrivate), parent)
@@ -135,10 +187,13 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
+    size = qBound<qreal>(0.0, size, 1.0 - d->position);
     if (qFuzzyCompare(d->size, size))
         return;
 
     d->size = size;
+    if (isComponentComplete())
+        d->resizeContent();
     emit sizeChanged();
 }
 
@@ -158,11 +213,37 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
+    position = qBound<qreal>(0.0, position, 1.0 - d->size);
     if (qFuzzyCompare(d->position, position))
         return;
 
     d->position = position;
+    if (isComponentComplete())
+        d->resizeContent();
     emit positionChanged();
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::ScrollBar::stepSize
+
+    This property holds the step size. The default value is \c 0.0.
+
+    \sa increase(), decrease()
+*/
+qreal QQuickScrollBar::stepSize() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->stepSize;
+}
+
+void QQuickScrollBar::setStepSize(qreal step)
+{
+    Q_D(QQuickScrollBar);
+    if (qFuzzyCompare(d->stepSize, step))
+        return;
+
+    d->stepSize = step;
+    emit stepSizeChanged();
 }
 
 /*!
@@ -232,40 +313,48 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
         return;
 
     d->orientation = orientation;
+    if (isComponentComplete())
+        d->resizeContent();
     emit orientationChanged();
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::ScrollBar::handle
+    \qmlmethod void Qt.labs.controls::ScrollBar::increase()
 
-    This property holds the handle item.
+    Increases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
 
-    \sa {Customizing ScrollBar}
+    \sa stepSize
 */
-QQuickItem *QQuickScrollBar::handle() const
-{
-    Q_D(const QQuickScrollBar);
-    return d->handle;
-}
-
-void QQuickScrollBar::setHandle(QQuickItem *handle)
+void QQuickScrollBar::increase()
 {
     Q_D(QQuickScrollBar);
-    if (d->handle == handle)
-        return;
+    qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    setActive(true);
+    setPosition(d->position + step);
+    setActive(false);
+}
 
-    delete d->handle;
-    d->handle = handle;
-    if (handle && !handle->parentItem())
-        handle->setParentItem(this);
-    emit handleChanged();
+/*!
+    \qmlmethod void Qt.labs.controls::ScrollBar::decrease()
+
+    Decreases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
+
+    \sa stepSize
+*/
+void QQuickScrollBar::decrease()
+{
+    Q_D(QQuickScrollBar);
+    qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    setActive(true);
+    setPosition(d->position - step);
+    setActive(false);
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->offset = positionAt(event->pos()) - d->position;
+    d->offset = d->positionAt(event->pos()) - d->position;
     if (d->offset < 0 || d->offset > d->size)
         d->offset = d->size / 2;
     setPressed(true);
@@ -275,25 +364,16 @@ void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseMoveEvent(event);
-    setPosition(qBound<qreal>(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
+    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
 }
 
 void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseReleaseEvent(event);
-    setPosition(qBound<qreal>(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
+    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
     d->offset = 0.0;
     setPressed(false);
-}
-
-qreal QQuickScrollBar::positionAt(const QPoint &point) const
-{
-    Q_D(const QQuickScrollBar);
-    if (d->orientation == Qt::Horizontal)
-        return point.x() / width();
-    else
-        return point.y() / height();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

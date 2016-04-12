@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,15 +56,15 @@ class QQuickFlickable;
 class QQuickScrollBarAttached;
 class QQuickScrollBarPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
     explicit QQuickScrollBar(QQuickItem *parent = nullptr);
@@ -73,6 +73,9 @@ public:
 
     qreal size() const;
     qreal position() const;
+
+    qreal stepSize() const;
+    void setStepSize(qreal step);
 
     bool isActive() const;
     void setActive(bool active);
@@ -83,27 +86,24 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
-    QQuickItem *handle() const;
-    void setHandle(QQuickItem *handle);
-
 public Q_SLOTS:
+    void increase();
+    void decrease();
     void setSize(qreal size);
     void setPosition(qreal position);
 
 Q_SIGNALS:
     void sizeChanged();
     void positionChanged();
+    void stepSizeChanged();
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
-    void handleChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-
-    virtual qreal positionAt(const QPoint &point) const;
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
@@ -117,7 +117,7 @@ private:
 
 class QQuickScrollBarAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollBar *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

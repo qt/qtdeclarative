@@ -47,22 +47,22 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickSwitch
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-buttons
+    \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
-    \image qtlabscontrols-switch.gif
+    \image qtquickcontrols-switch.gif
 
     Switch is an option button that can be dragged or toggled on (checked) or
     off (unchecked). Switches are typically used to select between two states.
 
     \table
-    \row \li \image qtlabscontrols-switch-normal.png
+    \row \li \image qtquickcontrols-switch-normal.png
          \li A switch in its normal state.
-    \row \li \image qtlabscontrols-switch-checked.png
+    \row \li \image qtquickcontrols-switch-checked.png
          \li A switch that is checked.
-    \row \li \image qtlabscontrols-switch-focused.png
+    \row \li \image qtquickcontrols-switch-focused.png
          \li A switch that has active focus.
-    \row \li \image qtlabscontrols-switch-disabled.png
+    \row \li \image qtquickcontrols-switch-disabled.png
          \li A switch that is disabled.
     \endtable
 
@@ -90,6 +90,7 @@ public:
     QQuickSwitchPrivate() : position(0) { }
 
     void updatePosition();
+    qreal positionAt(const QPoint &point) const;
 
     bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
@@ -104,6 +105,15 @@ void QQuickSwitchPrivate::updatePosition()
 {
     Q_Q(QQuickSwitch);
     q->setPosition(checked ? 1.0 : 0.0);
+}
+
+qreal QQuickSwitchPrivate::positionAt(const QPoint &point) const
+{
+    Q_Q(const QQuickSwitch);
+    qreal pos = point.x() / indicator->width();
+    if (q->isMirrored())
+        return 1.0 - pos;
+    return pos;
 }
 
 bool QQuickSwitchPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *event)
@@ -122,7 +132,7 @@ bool QQuickSwitchPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *e
     if (!child->keepMouseGrab())
         child->setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().x() - pressPoint.x(), Qt::XAxis, event));
     if (child->keepMouseGrab()) {
-        q->setPosition(q->positionAt(event->pos()));
+        q->setPosition(positionAt(event->pos()));
         event->accept();
     }
     return true;
@@ -171,7 +181,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 
     This property holds the logical position of the thumb indicator.
 
-    The position is defined as a percentage of the control's size, scaled to
+    The position is defined as a percentage of the indicator's size, scaled to
     \c 0.0 - \c 1.0. The position can be used for example to determine whether
     the thumb has been dragged past the halfway. For visualizing a thumb
     indicator, the right-to-left aware \l visualPosition should be used instead.
@@ -202,7 +212,7 @@ void QQuickSwitch::setPosition(qreal position)
 
     This property holds the visual position of the thumb indicator.
 
-    The position is defined as a percentage of the control's size, scaled to
+    The position is defined as a percentage of the indicator's size, scaled to
     \c 0.0 - \c 1.0. When the control is \l {Control::mirrored}{mirrored}, the
     value is equal to \c {1.0 - position}. This makes the value suitable for
     visualizing the thumb indicator taking right-to-left support into account.
@@ -243,14 +253,6 @@ bool QQuickSwitch::childMouseEventFilter(QQuickItem *child, QEvent *event)
         }
     }
     return false;
-}
-
-qreal QQuickSwitch::positionAt(const QPoint &point) const
-{
-    qreal pos = point.x() / indicator()->width();
-    if (isMirrored())
-        return 1.0 - pos;
-    return pos;
 }
 
 QT_END_NAMESPACE

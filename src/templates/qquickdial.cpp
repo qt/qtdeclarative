@@ -38,7 +38,7 @@
 
 #include <QtCore/qmath.h>
 #include <QtQuick/private/qquickflickable_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickDial
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A circular dial that is rotated to set a value.
 
     The Dial is similar to a traditional dial knob that is found on devices

@@ -42,13 +42,13 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
-#include <QtLabsTemplates/private/qquickoverlay_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtLabsTemplates/private/qquicklabel_p.h>
-#include <QtLabsTemplates/private/qquicktextarea_p.h>
-#include <QtLabsTemplates/private/qquicktextfield_p.h>
-#include <QtLabsControls/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates/private/qquickoverlay_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquicklabel_p.h>
+#include <QtQuickTemplates/private/qquicktextarea_p.h>
+#include <QtQuickTemplates/private/qquicktextfield_p.h>
+#include <QtQuickControls/private/qquickproxytheme_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -505,7 +505,6 @@ class TestTheme :  public QQuickProxyTheme
 public:
     TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme), m_font("Courier")
     { QGuiApplicationPrivate::platform_theme = this; }
-    ~TestTheme() { QGuiApplicationPrivate::platform_theme = theme(); }
 
     const QFont *font(Font type = SystemFont) const override
     {

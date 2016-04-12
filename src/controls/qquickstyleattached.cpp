@@ -40,7 +40,7 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtLabsTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -147,14 +147,20 @@ static QList<QQuickStyleAttached *> findChildStyles(const QMetaObject *type, QOb
 
 QQuickStyleAttached::QQuickStyleAttached(QObject *parent) : QObject(parent)
 {
-    QQuickItem *item = parentItem();
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
+    if (!item) {
+        QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent);
+        if (popup)
+            item = popup->popupItem();
+    }
+
     if (item)
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
 }
 
 QQuickStyleAttached::~QQuickStyleAttached()
 {
-    QQuickItem *item = parentItem();
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
 
@@ -164,7 +170,7 @@ QQuickStyleAttached::~QQuickStyleAttached()
 QSharedPointer<QSettings> QQuickStyleAttached::settings(const QString &group)
 {
 #ifndef QT_NO_SETTINGS
-    const QString filePath = QStringLiteral(":/qtlabscontrols.conf");
+    const QString filePath = QStringLiteral(":/qtquickcontrols.conf");
     if (QFile::exists(filePath)) {
         QFileSelector selector;
         QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
@@ -174,17 +180,6 @@ QSharedPointer<QSettings> QQuickStyleAttached::settings(const QString &group)
     }
 #endif // QT_NO_SETTINGS
     return QSharedPointer<QSettings>();
-}
-
-QQuickItem *QQuickStyleAttached::parentItem() const
-{
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (!item) {
-        QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent());
-        if (popup)
-            item = popup->popupItem();
-    }
-    return item;
 }
 
 QList<QQuickStyleAttached *> QQuickStyleAttached::childStyles() const

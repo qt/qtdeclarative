@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickSwipeDelegatePrivate;
 class QQuickSwipeExposure;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSwipeDelegate : public QQuickAbstractButton
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeDelegate : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(QQuickSwipeExposure *exposure READ exposure CONSTANT)
@@ -84,7 +84,7 @@ private:
 
 class QQuickSwipeExposurePrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickSwipeExposure : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeExposure : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)

@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPanePrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPane : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickPane : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)

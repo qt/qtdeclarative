@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickMenuItem
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-menus
+    \ingroup qtquickcontrols2-menus
     \brief A menu item within a Menu.
 
     MenuItem is a convenience type that implements the AbstractButton API,

@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qquickbutton_p.h \
     $$PWD/qquickbuttongroup_p.h \
     $$PWD/qquickcheckbox_p.h \
+    $$PWD/qquickcheckdelegate_p.h \
     $$PWD/qquickcombobox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
@@ -31,9 +32,10 @@ HEADERS += \
     $$PWD/qquickpane_p_p.h \
     $$PWD/qquickpopup_p.h \
     $$PWD/qquickpopup_p_p.h \
-    $$PWD/qquickpressandholdhelper_p.h \
+    $$PWD/qquickpresshandler_p_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
+    $$PWD/qquickradiodelegate_p.h \
     $$PWD/qquickrangeslider_p.h \
     $$PWD/qquickscrollbar_p.h \
     $$PWD/qquickscrollindicator_p.h \
@@ -52,7 +54,9 @@ HEADERS += \
     $$PWD/qquicktextfield_p_p.h \
     $$PWD/qquicktoolbar_p.h \
     $$PWD/qquicktoolbutton_p.h \
-    $$PWD/qquicktumbler_p.h
+    $$PWD/qquicktooltip_p.h \
+    $$PWD/qquicktumbler_p.h \
+    $$PWD/qquickvelocitycalculator_p_p.h
 
 SOURCES += \
     $$PWD/qquickabstractbutton.cpp \
@@ -61,6 +65,7 @@ SOURCES += \
     $$PWD/qquickbutton.cpp \
     $$PWD/qquickbuttongroup.cpp \
     $$PWD/qquickcheckbox.cpp \
+    $$PWD/qquickcheckdelegate.cpp \
     $$PWD/qquickcombobox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
@@ -77,9 +82,10 @@ SOURCES += \
     $$PWD/qquickpageindicator.cpp \
     $$PWD/qquickpane.cpp \
     $$PWD/qquickpopup.cpp \
-    $$PWD/qquickpressandholdhelper.cpp \
+    $$PWD/qquickpresshandler.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \
+    $$PWD/qquickradiodelegate.cpp \
     $$PWD/qquickrangeslider.cpp \
     $$PWD/qquickscrollbar.cpp \
     $$PWD/qquickscrollindicator.cpp \
@@ -96,4 +102,6 @@ SOURCES += \
     $$PWD/qquicktextfield.cpp \
     $$PWD/qquicktoolbar.cpp \
     $$PWD/qquicktoolbutton.cpp \
-    $$PWD/qquicktumbler.cpp
+    $$PWD/qquicktooltip.cpp \
+    $$PWD/qquicktumbler.cpp \
+    $$PWD/qquickvelocitycalculator.cpp

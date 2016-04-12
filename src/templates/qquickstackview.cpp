@@ -48,11 +48,11 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickStackView
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-navigation
-    \ingroup qtlabscontrols-containers
+    \ingroup qtquickcontrols2-navigation
+    \ingroup qtquickcontrols2-containers
     \brief Provides a stack-based navigation model.
 
-    \image qtlabscontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.png
 
     StackView can be used with a set of inter-linked information pages. For
     example, an email application with separate views to list the latest emails,

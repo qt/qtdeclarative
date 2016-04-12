@@ -41,7 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
 #include "../shared/util.h"
@@ -132,6 +132,9 @@ void tst_focus::policy()
     QQuickControl *control = qobject_cast<QQuickControl *>(window->contentItem()->childItems().first());
     QVERIFY(control);
 
+    QVERIFY(!control->hasActiveFocus());
+    QVERIFY(!control->hasActiveKeyFocus());
+
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -146,14 +149,27 @@ void tst_focus::policy()
     QCOMPARE(control->focusPolicy(), Qt::TabFocus);
     QCOMPARE(control->activeFocusOnTab(), true);
 
+    // Qt::TabFocus
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+    QTest::keyClick(window.data(), Qt::Key_Tab);
+    QVERIFY(control->hasActiveFocus());
+    QVERIFY(control->hasActiveKeyFocus());
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
+
+    // reset
+    control->setFocus(false);
+    QVERIFY(!control->hasActiveFocus());
+
     // Qt::ClickFocus
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(!control->hasActiveFocus());
+    QVERIFY(!control->hasActiveKeyFocus());
 
     control->setFocusPolicy(Qt::ClickFocus);
     QCOMPARE(control->focusPolicy(), Qt::ClickFocus);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(control->hasActiveFocus());
+    QVERIFY(!control->hasActiveKeyFocus());
 
     // reset
     control->setFocus(false);
@@ -163,12 +179,14 @@ void tst_focus::policy()
     QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
     QGuiApplication::sendEvent(control, &wheelEvent);
     QVERIFY(!control->hasActiveFocus());
+    QVERIFY(!control->hasActiveKeyFocus());
 
     control->setFocusPolicy(Qt::WheelFocus);
     QCOMPARE(control->focusPolicy(), Qt::WheelFocus);
 
     QGuiApplication::sendEvent(control, &wheelEvent);
     QVERIFY(control->hasActiveFocus());
+    QVERIFY(!control->hasActiveKeyFocus());
 }
 
 void tst_focus::reason_data()
@@ -205,9 +223,25 @@ void tst_focus::reason()
     QVERIFY(control->hasActiveFocus());
     QCOMPARE(control->property("focusReason").toInt(), int(Qt::MouseFocusReason));
 
+    QEXPECT_FAIL("TextArea", "TODO: TextArea::activeKeyFocus?", Continue);
+    QEXPECT_FAIL("TextField", "TODO: TextField::activeKeyFocus?", Continue);
+    QCOMPARE(control->property("activeKeyFocus"), QVariant(false));
+
     window->contentItem()->forceActiveFocus(Qt::TabFocusReason);
     QVERIFY(!control->hasActiveFocus());
     QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
+
+    QEXPECT_FAIL("TextArea", "", Continue);
+    QEXPECT_FAIL("TextField", "", Continue);
+    QCOMPARE(control->property("activeKeyFocus"), QVariant(false));
+
+    control->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY(control->hasActiveFocus());
+    QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
+
+    QEXPECT_FAIL("TextArea", "", Continue);
+    QEXPECT_FAIL("TextField", "", Continue);
+    QCOMPARE(control->property("activeKeyFocus"), QVariant(true));
 }
 
 QTEST_MAIN(tst_focus)

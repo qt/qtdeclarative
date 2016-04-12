@@ -229,7 +229,7 @@ QQuickAnimatorJob *QQuickUniversalProgressStripAnimator::createJob() const
 }
 
 QQuickUniversalProgressStrip::QQuickUniversalProgressStrip(QQuickItem *parent)
-    : QQuickItem(parent), m_color(Qt::black)
+    : QQuickItem(parent), m_color(Qt::black), m_progress(0.0), m_indeterminate(false)
 {
     setFlag(ItemHasContents);
 }
@@ -246,21 +246,62 @@ void QQuickUniversalProgressStrip::setColor(const QColor &color)
 
     m_color = color;
     update();
-    emit colorChanged();
+}
+
+qreal QQuickUniversalProgressStrip::progress() const
+{
+    return m_progress;
+}
+
+void QQuickUniversalProgressStrip::setProgress(qreal progress)
+{
+    if (progress == m_progress)
+        return;
+
+    m_progress = progress;
+    update();
+}
+
+bool QQuickUniversalProgressStrip::isIndeterminate() const
+{
+    return m_indeterminate;
+}
+
+void QQuickUniversalProgressStrip::setIndeterminate(bool indeterminate)
+{
+    if (indeterminate == m_indeterminate)
+        return;
+
+    m_indeterminate = indeterminate;
+    update();
 }
 
 QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
 
-    if (!oldNode)
-        oldNode = new QSGSimpleRectNode(boundingRect(), Qt::transparent);
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(boundingRect());
+    QRectF bounds = boundingRect();
+    bounds.setHeight(implicitHeight());
+    bounds.moveTop((height() - bounds.height()) / 2.0);
+    if (!m_indeterminate)
+        bounds.setWidth(m_progress * bounds.width());
 
-    QSGTransformNode *gridNode = static_cast<QSGTransformNode *>(oldNode->firstChild());
+    QSGSimpleRectNode *geometryNode = static_cast<QSGSimpleRectNode *>(oldNode);
+    if (!geometryNode)
+        geometryNode = new QSGSimpleRectNode(bounds, Qt::transparent);
+    geometryNode->setRect(bounds);
+    geometryNode->setColor(m_indeterminate ? Qt::transparent : m_color);
+
+    if (!m_indeterminate) {
+        while (QSGNode *node = geometryNode->firstChild())
+            delete node;
+        return geometryNode;
+    }
+
+    QSGTransformNode *gridNode = static_cast<QSGTransformNode *>(geometryNode->firstChild());
     if (!gridNode) {
         gridNode = new QSGTransformNode;
-        oldNode->appendChildNode(gridNode);
+        geometryNode->appendChildNode(gridNode);
     }
     Q_ASSERT(gridNode->type() == QSGNode::TransformNodeType);
 
@@ -299,7 +340,7 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
         borderNode = borderNode->nextSibling();
     }
 
-    return oldNode;
+    return geometryNode;
 }
 
 QT_END_NAMESPACE

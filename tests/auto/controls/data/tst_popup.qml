@@ -51,6 +51,12 @@ TestCase {
     when: windowShown
     name: "Popup"
 
+    ApplicationWindow {
+        id: applicationWindow
+        width: 480
+        height: 360
+    }
+
     Component {
         id: popupTemplate
         T.Popup { }
@@ -281,6 +287,66 @@ TestCase {
         control.destroy()
     }
 
+    function test_margins() {
+        var control = popupControl.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        control.open()
+        verify(control.visible)
+
+        control.margins = 10
+        compare(control.margins, 10)
+        compare(control.topMargin, 10)
+        compare(control.leftMargin, 10)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 10)
+        compare(control.contentItem.parent.y, 10)
+
+        control.topMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 10)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 10)
+        compare(control.contentItem.parent.y, 20)
+
+        control.leftMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 10)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, 20)
+
+        control.x = testCase.width
+        control.y = testCase.height
+        compare(control.contentItem.parent.x, testCase.width - control.width - 10)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+
+        control.rightMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 20)
+        compare(control.bottomMargin, 10)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+
+        control.bottomMargin = 20
+        compare(control.margins, 10)
+        compare(control.topMargin, 20)
+        compare(control.leftMargin, 20)
+        compare(control.rightMargin, 20)
+        compare(control.bottomMargin, 20)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height - control.height - 20)
+
+        control.destroy()
+    }
+
     function test_background() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
@@ -343,38 +409,52 @@ TestCase {
     Component {
         id: component
         ApplicationWindow {
+            id: _window
             width: 400
             height: 400
             visible: true
             font.pixelSize: 40
             property alias pane: _pane
+            property alias popup: _popup
+            property SignalSpy fontspy: SignalSpy { target: _window; signalName: "fontChanged" }
             Pane {
                 id: _pane
-                property alias button: _button;
-                property alias popup: _popup;
-                property alias listview: _listview
+                property alias button: _button
                 font.pixelSize: 30
+                property SignalSpy fontspy: SignalSpy { target: _pane; signalName: "fontChanged" }
                 Column {
                     Button {
                         id: _button
                         text: "Button"
                         font.pixelSize: 20
-
+                        property SignalSpy fontspy: SignalSpy { target: _button; signalName: "fontChanged" }
                         Popup {
                             id: _popup
+                            property alias button: _button2
+                            property alias listview: _listview
                             y: _button.height
                             implicitHeight: Math.min(396, _listview.contentHeight)
-                            contentItem: ListView {
-                                id: _listview
-                                height: _button.height * 20
-                                model: 2
-                                delegate: Button {
-                                    objectName: "delegate"
-                                    width: _button.width
-                                    height: _button.height
-                                    text: "N: " + index
-                                    checkable: true
-                                    autoExclusive: true
+                            property SignalSpy fontspy: SignalSpy { target: _popup; signalName: "fontChanged" }
+                            contentItem: Column {
+                                Button {
+                                    id: _button2
+                                    text: "Button"
+                                    property SignalSpy fontspy: SignalSpy { target: _button2; signalName: "fontChanged" }
+                                }
+                                ListView {
+                                    id: _listview
+                                    height: _button.height * 20
+                                    model: 2
+                                    delegate: Button {
+                                        id: _button3
+                                        objectName: "delegate"
+                                        width: _button.width
+                                        height: _button.height
+                                        text: "N: " + index
+                                        checkable: true
+                                        autoExclusive: true
+                                        property SignalSpy fontspy: SignalSpy { target: _button3; signalName: "fontChanged" }
+                                    }
                                 }
                             }
                         }
@@ -388,43 +468,80 @@ TestCase {
         var window = component.createObject(testCase)
         verify(window)
 
-        window.requestActivate()
-        tryCompare(window, "active", true)
-
-        var control = window.pane
-        waitForRendering(control)
-
-        control.forceActiveFocus()
-        verify(control.activeFocus)
-
         compare(window.font.pixelSize, 40)
-        compare(control.font.pixelSize, 30)
-        compare(control.button.font.pixelSize, 20)
+        compare(window.pane.font.pixelSize, 30)
+        compare(window.pane.button.font.pixelSize, 20)
+        compare(window.popup.font.pixelSize, 40)
+        compare(window.popup.button.font.pixelSize, 40)
 
-        var popup = control.popup
-        popup.open()
+        var idx1 = getChild(window.popup.listview.contentItem, "delegate", -1)
+        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
+        var idx2 = getChild(window.popup.listview.contentItem, "delegate", idx1)
+        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
 
-        verify(popup.contentItem)
-
-        var listview = popup.contentItem
-        verify(listview.contentItem)
-        waitForRendering(listview)
-
-        var idx1 = getChild(listview.contentItem, "delegate", -1)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
-        var idx2 = getChild(listview.contentItem, "delegate", idx1)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
-
-        control.button.font.pixelSize = 30
-        compare(control.button.font.pixelSize, 30)
-        waitForRendering(listview)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 40)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 40)
+        window.pane.button.font.pixelSize = 30
+        compare(window.font.pixelSize, 40)
+        compare(window.fontspy.count, 0)
+        compare(window.pane.font.pixelSize, 30)
+        compare(window.pane.fontspy.count, 0)
+        compare(window.pane.button.font.pixelSize, 30)
+        compare(window.pane.button.fontspy.count, 1)
+        compare(window.popup.font.pixelSize, 40)
+        compare(window.popup.fontspy.count, 0)
+        compare(window.popup.button.font.pixelSize, 40)
+        compare(window.popup.button.fontspy.count, 0)
+        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
+        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 0)
+        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
+        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 0)
 
         window.font.pixelSize = 50
-        waitForRendering(listview)
-        compare(listview.contentItem.children[idx1].font.pixelSize, 50)
-        compare(listview.contentItem.children[idx2].font.pixelSize, 50)
+        compare(window.font.pixelSize, 50)
+        compare(window.fontspy.count, 1)
+        compare(window.pane.font.pixelSize, 30)
+        compare(window.pane.fontspy.count, 0)
+        compare(window.pane.button.font.pixelSize, 30)
+        compare(window.pane.button.fontspy.count, 1)
+        compare(window.popup.font.pixelSize, 50)
+        compare(window.popup.fontspy.count, 1)
+        compare(window.popup.button.font.pixelSize, 50)
+        compare(window.popup.button.fontspy.count, 1)
+        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
+        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
+        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
+        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+
+        window.popup.button.font.pixelSize = 10
+        compare(window.font.pixelSize, 50)
+        compare(window.fontspy.count, 1)
+        compare(window.pane.font.pixelSize, 30)
+        compare(window.pane.fontspy.count, 0)
+        compare(window.pane.button.font.pixelSize, 30)
+        compare(window.pane.button.fontspy.count, 1)
+        compare(window.popup.font.pixelSize, 50)
+        compare(window.popup.fontspy.count, 1)
+        compare(window.popup.button.font.pixelSize, 10)
+        compare(window.popup.button.fontspy.count, 2)
+        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
+        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
+        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
+        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+
+        window.popup.font.pixelSize = 60
+        compare(window.font.pixelSize, 50)
+        compare(window.fontspy.count, 1)
+        compare(window.pane.font.pixelSize, 30)
+        compare(window.pane.fontspy.count, 0)
+        compare(window.pane.button.font.pixelSize, 30)
+        compare(window.pane.button.fontspy.count, 1)
+        compare(window.popup.font.pixelSize, 60)
+        compare(window.popup.fontspy.count, 2)
+        compare(window.popup.button.font.pixelSize, 10)
+        compare(window.popup.button.fontspy.count, 2)
+        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 60)
+        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 2)
+        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 60)
+        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 2)
 
         window.destroy()
     }
@@ -432,11 +549,8 @@ TestCase {
     Component {
         id: localeComponent
         Pane {
-            id: panel
-            property alias button: _button;
-            property alias popup: _popup;
-            property alias button1: _button1;
-            property alias button2: _button2;
+            property alias button: _button
+            property alias popup: _popup
             locale: Qt.locale("en_US")
             Column {
                 Button {
@@ -445,17 +559,23 @@ TestCase {
                     locale: Qt.locale("nb_NO")
                     Popup {
                         id: _popup
+                        property alias button1: _button1
+                        property alias button2: _button2
                         y: _button.height
+                        locale: Qt.locale("fi_FI")
                         implicitHeight: Math.min(396, _column.contentHeight)
                         contentItem: Column {
                             id: _column
                             Button {
                                 id: _button1
                                 text: "Button 1"
+                                objectName: "1"
                             }
                             Button {
                                 id: _button2
                                 text: "Button 2"
+                                locale: Qt.locale("nb_NO")
+                                objectName: "2"
                             }
                         }
                     }
@@ -466,63 +586,65 @@ TestCase {
 
     function test_locale() { // QTBUG_50984
         // test looking up natural locale from ancestors
-        var control = localeComponent.createObject(testCase)
+        var control = localeComponent.createObject(applicationWindow.contentItem)
         verify(control)
-        verify(control.button)
-        verify(control.popup)
-        verify(control.button1)
-        verify(control.button2)
-
-        waitForRendering(control)
-
-        control.forceActiveFocus()
-        verify(control.activeFocus)
-
-        var popup = control.popup
-        popup.open()
 
         compare(control.locale.name, "en_US")
         compare(control.button.locale.name, "nb_NO")
-        compare(control.button1.locale.name, "nb_NO")
-        compare(control.button2.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
+        compare(control.popup.button1.locale.name, "fi_FI")
+        compare(control.popup.button2.locale.name, "nb_NO")
 
+        control.ApplicationWindow.window.locale = undefined
         control.destroy()
     }
 
     Component {
-        id: localeComponent2
+        id: localeChangeComponent
         Pane {
-            id: panel
-            property alias button: _button;
-            property alias popup: _popup;
-            property alias button1: _button1;
-            property alias button2: _button2;
-            property alias localespy: _lspy;
-            property alias mirroredspy: _mspy;
-            property alias localespy_1: _lspy_1;
-            property alias mirroredspy_1: _mspy_1;
-            property alias localespy_2: _lspy_2;
-            property alias mirroredspy_2: _mspy_2;
+            id: _pane
+            property alias button: _button
+            property alias popup: _popup
+            property SignalSpy localespy: SignalSpy {
+                target: _pane
+                signalName: "localeChanged"
+            }
+            property SignalSpy mirrorspy: SignalSpy {
+                target: _pane
+                signalName: "mirroredChanged"
+            }
             Column {
                 Button {
                     id: _button
                     text: "Button"
+                    property SignalSpy localespy: SignalSpy {
+                        target: _button
+                        signalName: "localeChanged"
+                    }
+                    property SignalSpy mirrorspy: SignalSpy {
+                        target: _button
+                        signalName: "mirroredChanged"
+                    }
                     Popup {
                         id: _popup
+                        property alias button1: _button1
+                        property alias button2: _button2
                         y: _button.height
                         implicitHeight: Math.min(396, _column.contentHeight)
+                        property SignalSpy localespy: SignalSpy {
+                            target: _popup
+                            signalName: "localeChanged"
+                        }
                         contentItem: Column {
                             id: _column
                             Button {
                                 id: _button1
                                 text: "Button 1"
-                                SignalSpy {
-                                    id: _lspy_1
+                                property SignalSpy localespy: SignalSpy {
                                     target: _button1
                                     signalName: "localeChanged"
                                 }
-                                SignalSpy {
-                                    id: _mspy_1
+                                property SignalSpy mirrorspy: SignalSpy {
                                     target: _button1
                                     signalName: "mirroredChanged"
                                 }
@@ -530,83 +652,190 @@ TestCase {
                             Button {
                                 id: _button2
                                 text: "Button 2"
-                                SignalSpy {
-                                    id: _lspy_2
+                                property SignalSpy localespy: SignalSpy {
                                     target: _button2
                                     signalName: "localeChanged"
                                 }
-                                SignalSpy {
-                                    id: _mspy_2
+                                property SignalSpy mirrorspy: SignalSpy {
                                     target: _button2
                                     signalName: "mirroredChanged"
                                 }
                             }
                         }
                     }
-                    SignalSpy {
-                        id: _lspy
-                        target: _button
-                        signalName: "localeChanged"
-                    }
-                    SignalSpy {
-                        id: _mspy
-                        target: _button
-                        signalName: "mirroredChanged"
-                    }
                 }
             }
         }
     }
 
-    function test_locale_2() { // QTBUG_50984
+    function test_locale_changes() { // QTBUG_50984
         // test default locale and locale inheritance
-        var control = localeComponent2.createObject(testCase)
+        var control = localeChangeComponent.createObject(applicationWindow.contentItem)
         verify(control)
-        verify(control.button)
-        verify(control.popup)
-        verify(control.button1)
-        verify(control.button2)
-
-        waitForRendering(control)
-
-        control.forceActiveFocus()
-        verify(control.activeFocus)
-
-        var popup = control.popup
-        popup.open()
 
         var defaultLocale = Qt.locale()
-
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, defaultLocale.name)
         compare(control.button.locale.name, defaultLocale.name)
-        compare(control.button1.locale.name, defaultLocale.name)
-        compare(control.button2.locale.name, defaultLocale.name)
+        compare(control.popup.locale.name, defaultLocale.name)
+        compare(control.popup.button1.locale.name, defaultLocale.name)
+        compare(control.popup.button2.locale.name, defaultLocale.name)
 
-        control.locale = Qt.locale("nb_NO")
-        control.localespy.wait()
-        compare(control.localespy.count, 1)
-        compare(control.mirroredspy.count, 0)
+        control.ApplicationWindow.window.locale = Qt.locale("nb_NO")
+        compare(control.ApplicationWindow.window.locale.name, "nb_NO")
         compare(control.locale.name, "nb_NO")
         compare(control.button.locale.name, "nb_NO")
-        compare(control.button1.locale.name, "nb_NO")
-        compare(control.button2.locale.name, "nb_NO")
-        compare(control.localespy_1.count, 1)
-        compare(control.mirroredspy_1.count, 0)
-        compare(control.localespy_2.count, 1)
-        compare(control.mirroredspy_2.count, 0)
+        compare(control.popup.locale.name, "nb_NO")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "nb_NO")
+        compare(control.localespy.count, 1)
+        compare(control.button.localespy.count, 1)
+        compare(control.popup.localespy.count, 1)
+        compare(control.popup.button1.localespy.count, 1)
+        compare(control.popup.button2.localespy.count, 1)
+
+        control.ApplicationWindow.window.locale = undefined
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.button.locale.name, defaultLocale.name)
+        compare(control.popup.locale.name, defaultLocale.name)
+        compare(control.popup.button1.locale.name, defaultLocale.name)
+        compare(control.popup.button2.locale.name, defaultLocale.name)
+        compare(control.localespy.count, 2)
+        compare(control.button.localespy.count, 2)
+        compare(control.popup.localespy.count, 2)
+        compare(control.popup.button1.localespy.count, 2)
+        compare(control.popup.button2.localespy.count, 2)
 
         control.locale = Qt.locale("ar_EG")
-        control.localespy.wait()
-        compare(control.localespy.count, 2)
-        compare(control.mirroredspy.count, 1)
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
         compare(control.locale.name, "ar_EG")
         compare(control.button.locale.name, "ar_EG")
-        compare(control.button1.locale.name, "ar_EG")
-        compare(control.button2.locale.name, "ar_EG")
-        compare(control.localespy_1.count, 2)
-        compare(control.mirroredspy_1.count, 1)
-        compare(control.localespy_2.count, 2)
-        compare(control.mirroredspy_2.count, 1)
+        compare(control.popup.locale.name, defaultLocale.name)
+        compare(control.popup.button1.locale.name, defaultLocale.name)
+        compare(control.popup.button2.locale.name, defaultLocale.name)
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 3)
+        compare(control.button.mirrorspy.count, 1)
+        compare(control.popup.localespy.count, 2)
+        compare(control.popup.button1.localespy.count, 2)
+        compare(control.popup.button2.localespy.count, 2)
+
+        control.ApplicationWindow.window.locale = Qt.locale("ar_EG")
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "ar_EG")
+        compare(control.popup.locale.name, "ar_EG")
+        compare(control.popup.button1.locale.name, "ar_EG")
+        compare(control.popup.button2.locale.name, "ar_EG")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 3)
+        compare(control.button.mirrorspy.count, 1)
+        compare(control.popup.localespy.count, 3)
+        compare(control.popup.button1.localespy.count, 3)
+        compare(control.popup.button1.mirrorspy.count, 1)
+        compare(control.popup.button2.localespy.count, 3)
+        compare(control.popup.button2.mirrorspy.count, 1)
+
+        control.button.locale = Qt.locale("nb_NO")
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
+        compare(control.popup.button1.locale.name, "ar_EG")
+        compare(control.popup.button2.locale.name, "ar_EG")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
+        compare(control.popup.button1.localespy.count, 3)
+        compare(control.popup.button2.localespy.count, 3)
+
+        control.locale = undefined
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
+        compare(control.popup.button1.locale.name, "ar_EG")
+        compare(control.popup.button2.locale.name, "ar_EG")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
+        compare(control.popup.button1.localespy.count, 3)
+        compare(control.popup.button2.localespy.count, 3)
+
+        control.popup.button1.locale = Qt.locale("nb_NO")
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "ar_EG")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "ar_EG")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 3)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 3)
+        compare(control.popup.button2.mirrorspy.count, 1)
+
+        control.popup.locale = Qt.locale("fi_FI")
+        compare(control.ApplicationWindow.window.locale.name, "ar_EG")
+        compare(control.locale.name, "ar_EG")
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "fi_FI")
+        compare(control.localespy.count, 3)
+        compare(control.mirrorspy.count, 1)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 4)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 4)
+        compare(control.popup.button2.mirrorspy.count, 2)
+
+        control.ApplicationWindow.window.locale = undefined
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, "fi_FI")
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, "fi_FI")
+        compare(control.localespy.count, 4)
+        compare(control.mirrorspy.count, 2)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 4)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 4)
+        compare(control.popup.button2.mirrorspy.count, 2)
+
+        control.popup.locale = undefined
+        compare(control.ApplicationWindow.window.locale.name, defaultLocale.name)
+        compare(control.locale.name, defaultLocale.name)
+        compare(control.button.locale.name, "nb_NO")
+        compare(control.popup.locale.name, defaultLocale.name)
+        compare(control.popup.button1.locale.name, "nb_NO")
+        compare(control.popup.button2.locale.name, defaultLocale.name)
+        compare(control.localespy.count, 4)
+        compare(control.mirrorspy.count, 2)
+        compare(control.button.localespy.count, 4)
+        compare(control.button.mirrorspy.count, 2)
+        compare(control.popup.localespy.count, 5)
+        compare(control.popup.button1.localespy.count, 4)
+        compare(control.popup.button1.mirrorspy.count, 2)
+        compare(control.popup.button2.localespy.count, 5)
+        compare(control.popup.button2.mirrorspy.count, 2)
 
         control.destroy()
     }
@@ -623,6 +852,74 @@ TestCase {
 
         compare(control.width, 200)
         compare(control.height, 200)
+
+        control.destroy()
+    }
+
+    // QTBUG-51989
+    function test_visible() {
+        var control = popupTemplate.createObject(testCase, {visible: true})
+        verify(control)
+
+        tryCompare(control, "visible", true)
+
+        control.destroy()
+    }
+
+    Component {
+        id: overlayTest
+        ApplicationWindow {
+            property alias popup1: popup1
+            property alias popup2: popup2
+            visible: true
+            Popup {
+                id: popup1
+                modal: true
+                exit: Transition { PauseAnimation { duration: 200 } }
+            }
+            Popup {
+                id: popup2
+                modal: true
+            }
+        }
+    }
+
+    function test_overlay() {
+        var window = overlayTest.createObject(testCase)
+        verify(window)
+
+        window.requestActivate()
+        tryCompare(window, "active", true)
+        compare(window.overlay.background.opacity, 0.0)
+
+        window.popup1.open()
+        compare(window.popup1.visible, true)
+        compare(window.popup2.visible, false)
+        tryCompare(window.overlay.background, "opacity", 1.0)
+
+        window.popup1.close()
+        window.popup2.open()
+        compare(window.popup2.visible, true)
+        tryCompare(window.popup1, "visible", false)
+        compare(window.overlay.background.opacity, 1.0)
+
+        window.destroy()
+    }
+
+    function test_attached_applicationwindow() {
+        var control = popupControl.createObject(applicationWindow.contentItem)
+        verify(control)
+
+        var child = rect.createObject(control.contentItem)
+
+        compare(control.ApplicationWindow.window, applicationWindow)
+        compare(control.contentItem.ApplicationWindow.window, applicationWindow)
+        compare(child.ApplicationWindow.window, applicationWindow)
+
+        control.parent = null
+        compare(control.ApplicationWindow.window, null)
+        compare(control.contentItem.ApplicationWindow.window, null)
+        compare(child.ApplicationWindow.window, null)
 
         control.destroy()
     }

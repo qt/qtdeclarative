@@ -53,10 +53,10 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickComboBox
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A combined button and popup list taking minimal space.
 
-    \image qtlabscontrols-combobox.png
+    \image qtquickcontrols-combobox.png
 
     ComboBox is a combined button and popup list. It provides a means of
     presenting a list of options to the user in a way that takes up the
@@ -107,7 +107,6 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void Qt.labs.controls::ComboBox::activated(int index)
 
     This signal is emitted when the item at \a index is activated by the user.
-    \a index is the activated model index. The corresponding handler is \c onActivated.
 
     \sa currentIndex
 */
@@ -141,7 +140,7 @@ QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
     if (model.userType() == QMetaType::QVariantList) {
         QVariant object = model.toList().value(index);
         if (object.userType() == QMetaType::QVariantMap) {
-            QVariantMap data = object.toMap();
+            const QVariantMap data = object.toMap();
             if (data.count() == 1 && role == QLatin1String("modelData"))
                 return data.first().toString();
             return data.value(role).toString();
@@ -166,7 +165,7 @@ public:
 
     void itemClicked();
 
-    void initItem(int index, QObject *object);
+    void createdItem(int index, QObject *object);
     void countChanged();
     void updateCurrentText();
     void increase();
@@ -236,7 +235,7 @@ void QQuickComboBoxPrivate::itemClicked()
     }
 }
 
-void QQuickComboBoxPrivate::initItem(int index, QObject *object)
+void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(object);
     if (button)
@@ -318,7 +317,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     if (oldModel) {
         disconnect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
         disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
-        disconnect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
+        disconnect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
     ownModel = false;
@@ -338,7 +337,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     if (delegateModel) {
         connect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
         connect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
-        connect(delegateModel, &QQmlInstanceModel::initItem, this, &QQuickComboBoxPrivate::initItem);
+        connect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
     emit q->delegateModelChanged();
@@ -709,7 +708,10 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 /*!
     \qmlmethod void Qt.labs.controls::ComboBox::increase()
 
-    Select next value.
+    Increases the current index of the combo box, or the highlighted
+    index if the popup list when it is visible.
+
+    \sa currentIndex, highlightedIndex
 */
 void QQuickComboBox::increase()
 {
@@ -720,7 +722,10 @@ void QQuickComboBox::increase()
 /*!
     \qmlmethod void Qt.labs.controls::ComboBox::decrease()
 
-    Select previous value.
+    Decreases the current index of the combo box, or the highlighted
+    index if the popup list when it is visible.
+
+    \sa currentIndex, highlightedIndex
 */
 void QQuickComboBox::decrease()
 {

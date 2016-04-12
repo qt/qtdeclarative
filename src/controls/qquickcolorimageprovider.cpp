@@ -54,10 +54,9 @@ QImage QQuickColorImageProvider::requestImage(const QString &id, QSize *size, co
     Q_UNUSED(requestedSize);
 
     int sep = id.indexOf(QLatin1Char('/'));
-    QString name = id.left(sep);
-    QString color = id.mid(sep + 1);
+    const QStringRef name = id.leftRef(sep);
     qreal dpr = qApp->primaryScreen()->devicePixelRatio();
-    QString file = qt_findAtNxFile(m_path + QLatin1Char('/') + name + QStringLiteral(".png"), dpr);
+    QString file = qt_findAtNxFile(m_path + QLatin1Char('/') + name + QLatin1String(".png"), dpr);
 
     QImage image(file);
     if (image.isNull()) {
@@ -68,6 +67,7 @@ QImage QQuickColorImageProvider::requestImage(const QString &id, QSize *size, co
     if (size)
         *size = image.size();
 
+    const QString color = id.mid(sep + 1);
     if (!color.isEmpty()) {
         QPainter painter(&image);
         painter.setCompositionMode(QPainter::CompositionMode_SourceIn);

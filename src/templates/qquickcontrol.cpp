@@ -65,10 +65,18 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.controls
     \brief The base type of user interface controls.
 
-    Control is the base type of user interface controls.
+    Control is the base type of user interface controls.  It receives input
+    events from the window system, and paints a representation of itself on
+    the screen.
 
+    \image qtquickcontrols-control.png
     \labs
 */
+
+static bool isKeyFocusReason(Qt::FocusReason reason)
+{
+    return reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason;
+}
 
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
@@ -289,12 +297,15 @@ void QQuickControlPrivate::inheritFont(const QFont &f)
 void QQuickControlPrivate::updateFont(const QFont &f)
 {
     Q_Q(QQuickControl);
-    const bool changed = resolvedFont != f;
+    QFont old = resolvedFont;
     resolvedFont = f;
+
+    if (old != f)
+        q->fontChange(f, old);
 
     QQuickControlPrivate::updateFontRecur(q, f);
 
-    if (changed)
+    if (old != f)
         emit q->fontChanged();
 }
 
@@ -373,10 +384,20 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        if (!d->hasLocale)
-            d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
+    switch (change) {
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            if (!d->hasLocale)
+                d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
+        }
+        break;
+    case ItemActiveFocusHasChanged:
+        if (isKeyFocusReason(d->focusReason))
+            emit activeKeyFocusChanged();
+        break;
+    default:
+        break;
     }
 }
 
@@ -626,6 +647,14 @@ void QQuickControl::resetSpacing()
     \qmlproperty Locale Qt.labs.controls::Control::locale
 
     This property holds the locale of the control.
+    It contains locale specific properties for formatting data and numbers.
+    Unless a special locale has been set, this is either the parent's locale
+    or the default locale.
+
+    Control propagates explicit locale properties from parent to children.
+    If you change a specific property on a control's locale, that property
+    propagates to all of the control's children, overriding any system defaults
+    for that property.
 
     \sa mirrored, {LayoutMirroring}{LayoutMirroring}
 */
@@ -650,22 +679,16 @@ void QQuickControl::resetLocale()
     if (!d->hasLocale)
         return;
 
+    d->hasLocale = false;
     d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
 }
 
-QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
+QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 {
-    QQuickItem *p = q;
+    const QQuickItem *p = item;
     while (p) {
-        if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(p)) {
-            if (const QQuickPopup *qp = qobject_cast<const QQuickPopup *>(qpi->parent())) {
-                p = qp->parentItem();
-                continue;
-            }
-        }
-
-        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
-            return qc->locale();
+        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
+            return control->locale();
 
         QVariant v = p->property("locale");
         if (v.isValid() && v.userType() == QMetaType::QLocale)
@@ -674,9 +697,9 @@ QLocale QQuickControlPrivate::calcLocale(QQuickItem *q)
         p = p->parentItem();
     }
 
-    if (q) {
-        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
-            return w->locale();
+    if (item) {
+        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
+            return window->locale();
     }
 
     return QLocale();
@@ -709,14 +732,6 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
             QQuickControlPrivate::get(control)->updateLocale(l, false);
         else
             updateLocaleRecur(child, l);
-    }
-
-    const auto children = item->children();
-    for (QObject *child : children) {
-        if (QQuickPopup *qp = qobject_cast<QQuickPopup *>(child)) {
-            if (QQuickPopupItem *qpi = qobject_cast<QQuickPopupItem *>(qp->popupItem()))
-                updateLocaleRecur(qpi, l);
-        }
     }
 }
 
@@ -786,7 +801,7 @@ void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
     \value Qt.MenuBarFocusReason       The menu bar took focus.
     \value Qt.OtherFocusReason         Another reason, usually application-specific.
 
-    \sa Item::activeFocus
+    \sa activeKeyFocus, Item::activeFocus
 */
 Qt::FocusReason QQuickControl::focusReason() const
 {
@@ -800,8 +815,31 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     if (d->focusReason == reason)
         return;
 
+    Qt::FocusReason oldReason = d->focusReason;
     d->focusReason = reason;
     emit focusReasonChanged();
+    if (d->activeFocus && isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+        emit activeKeyFocusChanged();
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Control::activeKeyFocus
+    \readonly
+
+    This property holds whether the control has active focus and the focus
+    reason is either \c Qt.TabFocusReason, \c Qt.BacktabFocusReason, or
+    \c Qt.ShortcutFocusReason.
+
+    In general, for visualizing key focus, this property is preferred over
+    \l Item::activeFocus. This ensures that key focus is only visualized when
+    interacting with keys - not when interacting via touch or mouse.
+
+    \sa focusReason, Item::activeFocus
+*/
+bool QQuickControl::hasActiveKeyFocus() const
+{
+    Q_D(const QQuickControl);
+    return d->activeFocus && isKeyFocusReason(d->focusReason);
 }
 
 /*!
@@ -1028,6 +1066,12 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
         emit availableWidthChanged();
     if (!qFuzzyCompare(newGeometry.height(), oldGeometry.height()))
         emit availableHeightChanged();
+}
+
+void QQuickControl::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_UNUSED(newFont);
+    Q_UNUSED(oldFont);
 }
 
 void QQuickControl::mirrorChange()

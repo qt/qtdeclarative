@@ -47,22 +47,22 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickRangeSlider
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-input
+    \ingroup qtquickcontrols2-input
     \brief A slider control used to select a range of values.
 
-    \image qtlabscontrols-rangeslider.gif
+    \image qtquickcontrols-rangeslider.gif
 
     RangeSlider is used to select a range specified by two values, by sliding
     each handle along a track.
 
     \table
-    \row \li \image qtlabscontrols-rangeslider-normal.png
+    \row \li \image qtquickcontrols-rangeslider-normal.png
          \li A range slider in its normal state.
-    \row \li \image qtlabscontrols-rangeslider-first-handle-focused.png
+    \row \li \image qtquickcontrols-rangeslider-first-handle-focused.png
          \li A range slider whose first handle has active focus.
-    \row \li \image qtlabscontrols-rangeslider-second-handle-focused.png
+    \row \li \image qtquickcontrols-rangeslider-second-handle-focused.png
          \li A range slider whose second handle has active focus.
-    \row \li \image qtlabscontrols-rangeslider-disabled.png
+    \row \li \image qtquickcontrols-rangeslider-disabled.png
          \li A range slider that is disabled.
     \endtable
 
@@ -302,8 +302,7 @@ public:
         first(nullptr),
         second(nullptr),
         orientation(Qt::Horizontal),
-        snapMode(QQuickRangeSlider::NoSnap),
-        track(nullptr)
+        snapMode(QQuickRangeSlider::NoSnap)
     {
     }
 
@@ -315,7 +314,6 @@ public:
     QPoint pressPoint;
     Qt::Orientation orientation;
     QQuickRangeSlider::SnapMode snapMode;
-    QQuickItem *track;
 };
 
 static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
@@ -612,32 +610,6 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 
     d->orientation = orientation;
     emit orientationChanged();
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::RangeSlider::track
-
-    This property holds the track item.
-
-    \sa {Customizing Slider}
-*/
-QQuickItem *QQuickRangeSlider::track() const
-{
-    Q_D(const QQuickRangeSlider);
-    return d->track;
-}
-
-void QQuickRangeSlider::setTrack(QQuickItem *track)
-{
-    Q_D(QQuickRangeSlider);
-    if (d->track == track)
-        return;
-
-    delete d->track;
-    d->track = track;
-    if (track && !track->parentItem())
-        track->setParentItem(this);
-    emit trackChanged();
 }
 
 /*!

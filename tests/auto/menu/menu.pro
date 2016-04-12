@@ -4,7 +4,7 @@ SOURCES += tst_menu.cpp
 
 osx:CONFIG -= app_bundle
 
-QT += core-private gui-private qml-private quick-private testlib labstemplates-private
+QT += core-private gui-private qml-private quick-private testlib quicktemplates-private
 
 include (../shared/util.pri)
 

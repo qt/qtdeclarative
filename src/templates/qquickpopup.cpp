@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \instantiates QQuickPopup
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-popups
+    \ingroup qtquickcontrols2-popups
     \brief The base type of popup-like user interface controls.
 
     Popup is the base type of popup-like user interface controls. It can be
@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
             height: 300
             modal: true
             focus: true
-            closePolicy: Popup.OnEscape | Popup.OnPressOutside
+            closePolicy: Popup.OnEscape | Popup.OnPressOutsideParent
         }
     }
     \endqml
@@ -120,7 +120,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , bottomMargin(0)
     , contentWidth(0)
     , contentHeight(0)
-    , closePolicy(QQuickPopup::OnEscape)
+    , closePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutside)
     , parentItem(nullptr)
     , enter(nullptr)
     , exit(nullptr)
@@ -145,14 +145,8 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
-        if (onOutsideParent) {
-            if (!popupItem->contains(item->mapToItem(popupItem, event->pos())) &&
-                    (!parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos())))) {
-                q->close();
-                return true;
-            }
-        } else if (onOutside) {
-            if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+        if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
+            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
                 q->close();
                 return true;
             }
@@ -181,7 +175,7 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 
     if (notify)
         emit q->aboutToShow();
-    visible = true;
+    visible = notify;
     popupItem->setVisible(true);
     positioner.setParentItem(parentItem);
     emit q->visibleChanged();
@@ -285,6 +279,8 @@ public:
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;
 
+    void resolveFont() override;
+
     QQuickPopup *popup;
 };
 
@@ -303,6 +299,12 @@ void QQuickPopupItemPrivate::implicitHeightChanged()
 {
     QQuickControlPrivate::implicitHeightChanged();
     emit popup->implicitHeightChanged();
+}
+
+void QQuickPopupItemPrivate::resolveFont()
+{
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
+        inheritFont(window->font());
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
@@ -387,11 +389,25 @@ void QQuickPopupItem::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
     d->popup->contentItemChange(newItem, oldItem);
 }
 
+void QQuickPopupItem::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::fontChange(newFont, oldFont);
+    d->popup->fontChange(newFont, oldFont);
+}
+
 void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopupItem);
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     d->popup->geometryChanged(newGeometry, oldGeometry);
+}
+
+void QQuickPopupItem::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->popup->localeChange(newLocale, oldLocale);
 }
 
 void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
@@ -406,6 +422,12 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     Q_D(QQuickPopupItem);
     QQuickControl::paddingChange(newPadding, oldPadding);
     d->popup->paddingChange(newPadding, oldPadding);
+}
+
+QFont QQuickPopupItem::defaultFont() const
+{
+    Q_D(const QQuickPopupItem);
+    return d->popup->defaultFont();
 }
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -468,10 +490,10 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
     addAncestorListeners(parent);
 }
 
-void QQuickPopupPositioner::itemChildRemoved(QQuickItem *, QQuickItem *child)
+void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
     if (isAncestor(child))
-        removeAncestorListeners(child);
+        removeAncestorListeners(item);
 }
 
 void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
@@ -499,7 +521,19 @@ void QQuickPopupPrivate::reposition()
 
         QQuickWindow *window = q->window();
         if (window) {
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(getMargins());
+            const QMarginsF margins = getMargins();
+            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
+
+            // push inside the margins
+            if (margins.top() > 0 && rect.top() < bounds.top())
+                rect.moveTop(margins.top());
+            if (margins.bottom() > 0 && rect.bottom() > bounds.bottom())
+                rect.moveBottom(bounds.bottom());
+            if (margins.left() > 0 && rect.left() < bounds.left())
+                rect.moveLeft(margins.left());
+            if (margins.right() > 0 && rect.right() > bounds.right())
+                rect.moveRight(bounds.right());
+
             if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
                 // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
                 const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
@@ -560,7 +594,7 @@ bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
     if (!m_parentItem)
         return false;
 
-    QQuickItem *parent = m_parentItem->parentItem();
+    QQuickItem *parent = m_parentItem;
     while (parent) {
         if (parent == item)
             return true;
@@ -1177,6 +1211,54 @@ void QQuickPopup::resetBottomPadding()
     d->popupItem->resetBottomPadding();
 }
 
+/*!
+    \qmlproperty Locale Qt.labs.controls::Popup::locale
+
+    This property holds the locale of the popup.
+
+    \sa {LayoutMirroring}{LayoutMirroring}
+*/
+QLocale QQuickPopup::locale() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->locale();
+}
+
+void QQuickPopup::setLocale(const QLocale &locale)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setLocale(locale);
+}
+
+void QQuickPopup::resetLocale()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetLocale();
+}
+
+/*!
+    \qmlproperty font Qt.labs.controls::Popup::font
+
+    This property holds the font currently set for the popup.
+*/
+QFont QQuickPopup::font() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->font();
+}
+
+void QQuickPopup::setFont(const QFont &font)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setFont(font);
+}
+
+void QQuickPopup::resetFont()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetFont();
+}
+
 QQuickWindow *QQuickPopup::window() const
 {
     Q_D(const QQuickPopup);
@@ -1209,12 +1291,22 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (d->parentItem == parent)
         return;
 
+    QQuickWindow *oldWindow = window();
+
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
-    if (parent)
-        QQuickControlPrivate::updateLocaleRecur(d->popupItem, QQuickControlPrivate::calcLocale(parent));
+    if (parent) {
+        QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
+        p->resolveFont();
+        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
+            p->updateLocale(window->locale(), false); // explicit=false
+    }
     emit parentChanged();
+
+    QQuickWindow *newWindow = window();
+    if (oldWindow != newWindow)
+        emit windowChanged(newWindow);
 }
 
 /*!
@@ -1384,10 +1476,17 @@ bool QQuickPopup::isVisible() const
 
 void QQuickPopup::setVisible(bool visible)
 {
-    if (visible)
-        open();
-    else
-        close();
+    Q_D(QQuickPopup);
+    if (d->visible == visible)
+        return;
+
+    d->visible = visible;
+    if (d->complete) {
+        if (visible)
+            d->transitionManager.transitionEnter();
+        else
+            d->transitionManager.transitionExit();
+    }
 }
 
 /*!
@@ -1442,7 +1541,7 @@ void QQuickPopup::setScale(qreal scale)
     \value Popup.OnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
 
-    The default value is \c Popup.OnEscape.
+    The default value is \c {Popup.OnEscape | Popup.OnPressOutside}.
 */
 QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 {
@@ -1467,7 +1566,7 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
     Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Popup.Center.
 
-    \image qtlabscontrols-popup-transformorigin.png
+    \image qtquickcontrols-popup-transformorigin.png
 
     \sa enter, exit, Item::transformOrigin
 */
@@ -1661,6 +1760,13 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     emit contentItemChanged();
 }
 
+void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_UNUSED(newFont);
+    Q_UNUSED(oldFont);
+    emit fontChanged();
+}
+
 void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopup);
@@ -1691,6 +1797,13 @@ void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     }
 }
 
+void QQuickPopup::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_UNUSED(newLocale);
+    Q_UNUSED(oldLocale);
+    emit localeChanged();
+}
+
 void QQuickPopup::marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins)
 {
     Q_D(QQuickPopup);
@@ -1719,6 +1832,11 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
         emit availableWidthChanged();
     if (tp || bp)
         emit availableHeightChanged();
+}
+
+QFont QQuickPopup::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

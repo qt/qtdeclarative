@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickCheckBoxPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickCheckBox : public QQuickAbstractButton
+class Q_QUICKTEMPLATES_EXPORT QQuickCheckBox : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)

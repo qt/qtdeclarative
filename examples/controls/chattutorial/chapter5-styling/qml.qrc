@@ -3,7 +3,7 @@
         <file>main.qml</file>
         <file>ContactPage.qml</file>
         <file>ConversationPage.qml</file>
-        <file>qtlabscontrols.conf</file>
+        <file>qtquickcontrols.conf</file>
         <file>ChatToolBar.qml</file>
         <file>+material/ChatToolBar.qml</file>
     </qresource>

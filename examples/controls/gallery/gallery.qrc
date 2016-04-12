@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>gallery.qml</file>
-        <file>qtlabscontrols.conf</file>
+        <file>qtquickcontrols.conf</file>
         <file>images/arrow.png</file>
         <file>images/arrow@2x.png</file>
         <file>images/arrow@3x.png</file>
@@ -46,6 +46,7 @@
         <file>pages/TabBarPage.qml</file>
         <file>pages/TextAreaPage.qml</file>
         <file>pages/TextFieldPage.qml</file>
+        <file>pages/ToolTipPage.qml</file>
         <file>pages/TumblerPage.qml</file>
         <file>pages/DelegatePage.qml</file>
     </qresource>

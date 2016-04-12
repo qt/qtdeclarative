@@ -49,7 +49,7 @@
 //
 
 #include <QtCore/qobject.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
@@ -59,7 +59,7 @@ class QQuickButtonGroupPrivate;
 class QQuickButtonGroupAttached;
 class QQuickButtonGroupAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickButtonGroup : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickButtonGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged)
@@ -89,7 +89,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickButtonGroup)
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickButtonGroupAttached : public QObject
+class Q_QUICKTEMPLATES_EXPORT QQuickButtonGroupAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickButtonGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)

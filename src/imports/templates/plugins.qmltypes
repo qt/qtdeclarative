@@ -436,7 +436,6 @@ Module {
         Property { name: "position"; type: "double"; isReadonly: true }
         Property { name: "visualPosition"; type: "double"; isReadonly: true }
         Property { name: "indeterminate"; type: "bool" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
     }
     Component {
         name: "QQuickRadioButton"
@@ -466,7 +465,6 @@ Module {
         Property { name: "stepSize"; type: "double" }
         Property { name: "snapMode"; type: "SnapMode" }
         Property { name: "orientation"; type: "Qt::Orientation" }
-        Property { name: "track"; type: "QQuickItem"; isPointer: true }
         Method {
             name: "setValues"
             Parameter { name: "firstValue"; type: "double" }
@@ -493,10 +491,12 @@ Module {
         attachedType: "QQuickScrollBarAttached"
         Property { name: "size"; type: "double" }
         Property { name: "position"; type: "double" }
+        Property { name: "stepSize"; type: "double" }
         Property { name: "active"; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "orientation"; type: "Qt::Orientation" }
-        Property { name: "handle"; type: "QQuickItem"; isPointer: true }
+        Method { name: "increase" }
+        Method { name: "decrease" }
         Method {
             name: "setSize"
             Parameter { name: "size"; type: "double" }
@@ -523,7 +523,6 @@ Module {
         Property { name: "position"; type: "double" }
         Property { name: "active"; type: "bool" }
         Property { name: "orientation"; type: "Qt::Orientation" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Method {
             name: "setSize"
             Parameter { name: "size"; type: "double" }
@@ -563,7 +562,6 @@ Module {
         Property { name: "pressed"; type: "bool" }
         Property { name: "orientation"; type: "Qt::Orientation" }
         Property { name: "handle"; type: "QQuickItem"; isPointer: true }
-        Property { name: "track"; type: "QQuickItem"; isPointer: true }
         Method { name: "increase" }
         Method { name: "decrease" }
     }

@@ -33,7 +33,7 @@
 
     The \l{Qt Labs Calendar} module provides QML types for creating
     calendars. These QML types work in conjunction with \l{Qt Quick} and
-    \l{Qt Labs Controls}.
+    \l{Qt Quick Controls 2}.
 
     The QML types can be imported into your application using the
     following import statement in your .qml file:
@@ -49,7 +49,7 @@
     \section1 Related Information
 
     \list
-        \li \l {Qt Labs Controls QML Types}
+        \li \l {Qt Quick Controls 2 QML Types}
     \endlist
 
     \noautolist

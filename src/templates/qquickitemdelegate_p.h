@@ -48,13 +48,11 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItemDelegatePrivate;
-
-class Q_LABSTEMPLATES_EXPORT QQuickItemDelegate : public QQuickAbstractButton
+class Q_QUICKTEMPLATES_EXPORT QQuickItemDelegate : public QQuickAbstractButton
 {
     Q_OBJECT
 
@@ -68,9 +66,8 @@ protected:
     QAccessible::Role accessibleRole() const override;
 #endif
 
-private:
-    Q_DISABLE_COPY(QQuickItemDelegate)
-    Q_DECLARE_PRIVATE(QQuickItemDelegate)
+protected:
+    QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
 };
 
 QT_END_NAMESPACE

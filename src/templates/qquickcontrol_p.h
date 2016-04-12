@@ -50,13 +50,13 @@
 
 #include <QtCore/qlocale.h>
 #include <QtQuick/qquickitem.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickControlPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
+class Q_QUICKTEMPLATES_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
@@ -72,6 +72,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    Q_PROPERTY(bool activeKeyFocus READ hasActiveKeyFocus NOTIFY activeKeyFocusChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL)
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
@@ -124,6 +125,8 @@ public:
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
+    bool hasActiveKeyFocus() const;
+
     bool isHovered() const;
     void setHovered(bool hovered);
 
@@ -153,6 +156,7 @@ Q_SIGNALS:
     void mirroredChanged();
     void focusPolicyChanged();
     void focusReasonChanged();
+    void activeKeyFocusChanged();
     void hoveredChanged();
     void hoverEnabledChanged();
     void wheelEnabledChanged();
@@ -180,6 +184,7 @@ protected:
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
+    virtual void fontChange(const QFont &newFont, const QFont &oldFont);
     virtual void mirrorChange();
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);

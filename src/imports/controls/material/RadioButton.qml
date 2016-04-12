@@ -56,33 +56,10 @@ T.RadioButton {
     bottomPadding: 14
 
     //! [indicator]
-    indicator: Rectangle {
+    indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        implicitWidth: 20
-        implicitHeight: 20
-        radius: width / 2
-        border.width: 2
-        border.color: control.checked || control.pressed ? control.Material.accentColor : control.Material.secondaryTextColor
-        color: "transparent"
-
-        Ripple {
-            width: parent.width
-            height: width
-            control: control
-            colored: control.checked
-            opacity: control.pressed || control.activeFocus ? 1 : 0
-        }
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 10
-            height: 10
-            radius: width / 2
-            color: parent.border.color
-            visible: control.checked || control.pressed
-        }
+        control: control
     }
     //! [indicator]
 

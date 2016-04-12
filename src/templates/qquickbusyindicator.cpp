@@ -44,10 +44,10 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickBusyIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-indicators
+    \ingroup qtquickcontrols2-indicators
     \brief Indicates activity while content is being loaded.
 
-    \image qtlabscontrols-busyindicator.gif
+    \image qtquickcontrols-busyindicator.gif
 
     The busy indicator should be used to indicate activity while content is
     being loaded or the UI is blocked waiting for a resource to become available.

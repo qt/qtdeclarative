@@ -53,10 +53,10 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickMenu
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-menus
+    \ingroup qtquickcontrols2-menus
     \brief A menu control that can be used as a context menu or popup menu.
 
-    \image qtlabscontrols-menu.png
+    \image qtquickcontrols-menu.png
 
     Menu has two main use cases:
     \list
