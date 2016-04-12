@@ -374,8 +374,7 @@ void QSGSoftwareRectangleNode::paintRectangle(QPainter *painter, const QRect &re
 
     }
 
-    int penWidth = qRound(m_penWidth);
-    QRectF brushRect = rect.marginsRemoved(QMargins(penWidth, penWidth, penWidth, penWidth));
+    QRectF brushRect = QRectF(rect).marginsRemoved(QMarginsF(m_penWidth, m_penWidth, m_penWidth, m_penWidth));
     if (brushRect.width() < 0)
         brushRect.setWidth(0);
     if (brushRect.height() < 0)
