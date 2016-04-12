@@ -64,7 +64,7 @@ T.SwipeDelegate {
         verticalAlignment: Text.AlignVCenter
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400
@@ -75,10 +75,10 @@ T.SwipeDelegate {
 
     //! [background]
     background: Rectangle {
-        color: control.pressed ? "#bdbebf" : "#eeeeee"
+        color: control.down ? "#bdbebf" : "#eeeeee"
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400

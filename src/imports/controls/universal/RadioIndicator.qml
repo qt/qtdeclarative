@@ -45,7 +45,7 @@ Rectangle {
     border.width: 2 // RadioButtonBorderThemeThickness
     border.color:  control.checked ? "transparent" :
                   !control.enabled ? control.Universal.baseLowColor :
-                   control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
+                   control.down ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
 
     property var control
 
@@ -59,7 +59,7 @@ Rectangle {
         color: "transparent"
         border.width: 2 // RadioButtonBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed ? control.Universal.baseMediumColor : control.Universal.accent
+                       control.down ? control.Universal.baseMediumColor : control.Universal.accent
     }
 
     Rectangle {
@@ -72,6 +72,6 @@ Rectangle {
         radius: width / 2
         opacity: control.checked ? 1 : 0
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
+                control.down ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
     }
 }

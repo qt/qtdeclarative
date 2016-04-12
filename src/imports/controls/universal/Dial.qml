@@ -67,7 +67,7 @@ T.Dial {
 
         radius: width / 2
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
+                control.down ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
 
         transform: [
             Translate {

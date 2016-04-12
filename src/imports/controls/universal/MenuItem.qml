@@ -75,7 +75,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.pressed ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
+        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
     }
     //! [indicator]
 
@@ -85,7 +85,7 @@ T.MenuItem {
         implicitHeight: 40
 
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 1; y: 1

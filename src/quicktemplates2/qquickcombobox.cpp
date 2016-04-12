@@ -112,6 +112,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \readonly
     \qmlsignal void Qt.labs.controls::ComboBox::highlighted(int index)
 
     This signal is emitted when the item at \a index in the popup list is highlighted by the user.
@@ -450,7 +451,6 @@ void QQuickComboBox::setPressed(bool pressed)
 }
 
 /*!
-    \readonly
     \qmlproperty int Qt.labs.controls::ComboBox::highlightedIndex
 
     This property holds the index of the highlighted item in the combo box popup list.

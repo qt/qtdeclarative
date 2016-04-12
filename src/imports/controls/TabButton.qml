@@ -54,7 +54,7 @@ T.TabButton {
         font: control.font
         elide: Text.ElideRight
         opacity: enabled ? 1 : 0.3
-        color: !control.checked ? "#ffffff" : control.pressed ? "#26282a" : "#353637"
+        color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -63,7 +63,7 @@ T.TabButton {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: control.pressed ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
+        color: control.down ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
     }
     //! [background]
 }

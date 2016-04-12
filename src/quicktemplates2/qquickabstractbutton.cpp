@@ -106,7 +106,8 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false), wasHeld(false),
+    down(false), explicitDown(false), pressed(false), checked(false), checkable(false),
+    highlighted(false), autoExclusive(false), autoRepeat(false), wasHeld(false),
     holdTimer(0), delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), indicator(nullptr), group(nullptr)
 {
 }
@@ -256,9 +257,51 @@ void QQuickAbstractButton::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::pressed
+    \qmlproperty bool Qt.labs.controls::AbstractButton::down
 
-    This property holds whether the button is pressed.
+    This property holds whether the button is visually down.
+
+    Unless explicitly set, this property follows the value of \l pressed. To
+    return to the default value, set this property to \c undefined.
+
+    \sa pressed
+*/
+bool QQuickAbstractButton::isDown() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->down;
+}
+
+void QQuickAbstractButton::setDown(bool down)
+{
+    Q_D(QQuickAbstractButton);
+    d->explicitDown = true;
+
+    if (d->down == down)
+        return;
+
+    d->down = down;
+    emit downChanged();
+}
+
+void QQuickAbstractButton::resetDown()
+{
+    Q_D(QQuickAbstractButton);
+    if (!d->explicitDown)
+        return;
+
+    setDown(d->pressed);
+    d->explicitDown = false;
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::pressed
+    \readonly
+
+    This property holds whether the button is physically pressed. A button can
+    be pressed by either touch or key events.
+
+    \sa down
 */
 bool QQuickAbstractButton::isPressed() const
 {
@@ -275,6 +318,11 @@ void QQuickAbstractButton::setPressed(bool isPressed)
     d->pressed = isPressed;
     setAccessibleProperty("pressed", isPressed);
     emit pressedChanged();
+
+    if (!d->explicitDown) {
+        setDown(d->pressed);
+        d->explicitDown = false;
+    }
 }
 
 /*!

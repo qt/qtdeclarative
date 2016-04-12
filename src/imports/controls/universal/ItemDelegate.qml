@@ -73,8 +73,8 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed || control.highlighted || control.activeKeyFocus
-        color: control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        visible: control.down || control.highlighted || control.activeKeyFocus
+        color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height

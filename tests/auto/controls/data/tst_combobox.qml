@@ -644,7 +644,7 @@ TestCase {
                         autoExclusive: true
                         checked: _combobox.currentIndex === index
                         highlighted: _combobox.highlightedIndex === index
-                        pressed: highlighted && _combobox.pressed
+                        down: highlighted && _combobox.pressed
                     }
                 }
             }

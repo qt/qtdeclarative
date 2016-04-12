@@ -76,7 +76,7 @@ T.Button {
         height: parent.height - 12
         radius: 2
         color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
-            (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
+            (control.down ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
             (control.activeKeyFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
             (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
 
@@ -98,7 +98,7 @@ T.Button {
         layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
-            samples: control.pressed ? 15 : 9
+            samples: control.down ? 15 : 9
             spread: 0.5
         }
     }

@@ -58,7 +58,8 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickAbstractButton : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool down READ isDown WRITE setDown NOTIFY downChanged RESET resetDown FINAL)
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
@@ -71,6 +72,10 @@ public:
 
     QString text() const;
     void setText(const QString &text);
+
+    bool isDown() const;
+    void setDown(bool down);
+    void resetDown();
 
     bool isPressed() const;
     void setPressed(bool pressed);
@@ -104,6 +109,7 @@ Q_SIGNALS:
     void pressAndHold();
     void doubleClicked();
     void textChanged();
+    void downChanged();
     void pressedChanged();
     void checkedChanged();
     void highlightedChanged();

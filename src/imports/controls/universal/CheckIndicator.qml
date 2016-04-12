@@ -43,10 +43,10 @@ Rectangle {
     implicitHeight: 20
 
     color: !control.enabled ? "transparent" :
-            control.pressed && control.checkState !== Qt.PartiallyChecked ? control.Universal.baseMediumColor :
+            control.down && control.checkState !== Qt.PartiallyChecked ? control.Universal.baseMediumColor :
             control.checkState === Qt.Checked ? control.Universal.accent : "transparent"
     border.color: !control.enabled ? control.Universal.baseLowColor :
-                   control.pressed ? control.Universal.baseMediumColor :
+                   control.down ? control.Universal.baseMediumColor :
                    control.checked ? control.Universal.accent : control.Universal.baseMediumHighColor
     border.width: 2 // CheckBoxBorderThemeThickness
 
@@ -68,6 +68,6 @@ Rectangle {
 
         visible: control.checkState === Qt.PartiallyChecked
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
+                control.down ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
     }
 }

@@ -79,6 +79,8 @@ public:
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
     QString text;
+    bool down;
+    bool explicitDown;
     bool pressed;
     bool checked;
     bool checkable;

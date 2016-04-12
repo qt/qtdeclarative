@@ -84,7 +84,7 @@ T.MenuItem {
             y: 1
             width: parent.width - 2
             height: parent.height - 2
-            color: control.activeKeyFocus || control.pressed ? "#eeeeee" : "transparent"
+            color: control.activeKeyFocus || control.down ? "#eeeeee" : "transparent"
         }
     }
     //! [background]

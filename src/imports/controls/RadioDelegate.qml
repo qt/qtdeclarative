@@ -78,8 +78,8 @@ T.RadioDelegate {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        visible: control.pressed || control.highlighted
-        color: control.pressed ? "#bdbebf" : "#eeeeee"
+        visible: control.down || control.highlighted
+        color: control.down ? "#bdbebf" : "#eeeeee"
     }
     //! [background]
 }

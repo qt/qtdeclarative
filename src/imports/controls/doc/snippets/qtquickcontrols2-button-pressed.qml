@@ -31,5 +31,5 @@ import Qt.labs.controls 1.0
 Button {
     width: 80
     text: "Pressed"
-    pressed: true
+    down: true
 }

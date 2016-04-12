@@ -71,7 +71,7 @@ T.SwipeDelegate {
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400
@@ -83,7 +83,7 @@ T.SwipeDelegate {
     //! [background]
     background: Rectangle {
         color: !control.enabled ? control.Universal.chromeDisabledHighColor :
-            (control.pressed ? control.Universal.chromeHighColor :
+            (control.down ? control.Universal.chromeHighColor :
             (control.activeKeyFocus || control.hovered ? control.Universal.chromeLowColor : control.Universal.chromeMediumColor))
 
         Rectangle {
@@ -95,7 +95,7 @@ T.SwipeDelegate {
         }
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400
