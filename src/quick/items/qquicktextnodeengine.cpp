@@ -737,7 +737,7 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
                 BinaryTreeNode *otherNode = nodes.at(j);
                 glyphIndexes += otherNode->glyphRun.glyphIndexes();
                 primaryNode->ranges += otherNode->ranges;
-                glyphBoundingRect = glyphBoundingRect.united(otherNode->glyphRun.boundingRect());
+                glyphBoundingRect = glyphBoundingRect.united(otherNode->boundingRect);
 
                 QVector<QPointF> otherPositions = otherNode->glyphRun.positions();
                 for (int k = 0; k < otherPositions.size(); ++k)
