@@ -90,22 +90,26 @@ void QSGSoftwareGlyphNode::paint(QPainter *painter)
     painter->setBrush(QBrush());
     QPointF pos = m_position - QPointF(0, m_glyphRun.rawFont().ascent());
 
+    qreal offset = 1.0;
+    if (painter->device()->devicePixelRatio() != 0)
+        offset = 1.0 / painter->device()->devicePixelRatio();
+
     switch (m_style) {
     case QQuickText::Normal: break;
     case QQuickText::Outline:
         painter->setPen(m_styleColor);
-        painter->drawGlyphRun(pos + QPointF(0, 1), m_glyphRun);
-        painter->drawGlyphRun(pos + QPointF(0, -1), m_glyphRun);
-        painter->drawGlyphRun(pos + QPointF(1, 0), m_glyphRun);
-        painter->drawGlyphRun(pos + QPointF(-1, 0), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(0, offset), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(0, -offset), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(offset, 0), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(-offset, 0), m_glyphRun);
         break;
     case QQuickText::Raised:
         painter->setPen(m_styleColor);
-        painter->drawGlyphRun(pos + QPointF(0, 1), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(0, offset), m_glyphRun);
         break;
     case QQuickText::Sunken:
         painter->setPen(m_styleColor);
-        painter->drawGlyphRun(pos + QPointF(0, -1), m_glyphRun);
+        painter->drawGlyphRun(pos + QPointF(0, -offset), m_glyphRun);
         break;
     }
 
