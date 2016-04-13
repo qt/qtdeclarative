@@ -54,7 +54,7 @@
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtquickcontrolsplugin);
+    Q_INIT_RESOURCE(qtquickcontrols2plugin);
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_Qt_labs_controls);
 #endif
@@ -62,23 +62,23 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickControlsPlugin: public QQmlExtensionPlugin
+class QtQuickControls2Plugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtQuickControlsPlugin(QObject *parent = nullptr);
+    QtQuickControls2Plugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
     void initializeEngine(QQmlEngine *engine, const char *uri);
 };
 
-QtQuickControlsPlugin::QtQuickControlsPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-void QtQuickControlsPlugin::registerTypes(const char *uri)
+void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
@@ -134,7 +134,7 @@ void QtQuickControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 1, 0, "Tumbler");
 }
 
-void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
     Q_UNUSED(uri);
@@ -153,4 +153,4 @@ void QtQuickControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri
 
 QT_END_NAMESPACE
 
-#include "qtquickcontrolsplugin.moc"
+#include "qtquickcontrols2plugin.moc"
