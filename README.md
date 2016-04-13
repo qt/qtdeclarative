@@ -1,13 +1,12 @@
 Qt Labs Controls
 ================
 
-The Qt Labs Controls module is a technology preview of the next generation
-user interface controls based on Qt Quick. In comparison to the desktop-
-oriented Qt Quick Controls 1, the experimental Qt Labs Controls are an order
-of magnitude simpler, lighter and faster, and are primarily targeting embedded
-and mobile platforms.
+The Qt Labs Controls module delivers the next generation user interface
+controls based on Qt Quick. In comparison to the desktop-oriented Qt Quick
+Controls 1, Qt Quick Controls 2 are an order of magnitude simpler, lighter and
+faster, and are primarily targeted towards embedded and mobile platforms.
 
-Qt Labs Controls are based on a flexible template system that enables rapid
+Qt Quick Controls 2 are based on a flexible template system that enables rapid
 development of entire custom styles and user experiences. Qt Labs Controls
 comes with a selection of built-in styles:
 

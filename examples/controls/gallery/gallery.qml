@@ -302,16 +302,16 @@ ApplicationWindow {
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "The Qt Quick Controls 2 module is a technology preview of the next generation user interface controls based on Qt Quick."
+                text: "The Qt Quick Controls 2 module delivers the next generation user interface controls based on Qt Quick."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "In comparison to the desktop oriented Qt Quick Controls 1, the experimental Qt Labs "
-                    + "Controls are an order of magnitude simpler, lighter and faster, and are primarily targeting embedded "
-                    + "and mobile platforms."
+                text: "In comparison to the desktop-oriented Qt Quick Controls 1, Qt Quick Controls 2 "
+                    + "are an order of magnitude simpler, lighter and faster, and are primarily targeted "
+                    + "towards embedded and mobile platforms."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
