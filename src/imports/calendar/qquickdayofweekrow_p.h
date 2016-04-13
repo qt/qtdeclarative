@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 

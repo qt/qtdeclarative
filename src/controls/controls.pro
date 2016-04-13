@@ -2,7 +2,7 @@ TARGET = QtQuickControls
 MODULE = quickcontrols
 
 QT += quick
-QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 

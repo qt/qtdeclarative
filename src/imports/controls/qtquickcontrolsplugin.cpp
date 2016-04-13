@@ -41,11 +41,11 @@
 #include <QtCore/private/qfileselector_p.h>
 
 #include <QtQuickControls/qquickstyle.h>
-#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
-#include <QtQuickTemplates/private/qquickbuttongroup_p.h>
-#include <QtQuickTemplates/private/qquickcontainer_p.h>
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
+#include <QtQuickTemplates2/private/qquickcontainer_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickControls/private/qquickpluginutils_p.h>
 #include <QtQuickControls/private/qquickstyleselector_p.h>
 

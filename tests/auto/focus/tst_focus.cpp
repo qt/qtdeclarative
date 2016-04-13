@@ -41,7 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
 #include "../shared/util.h"

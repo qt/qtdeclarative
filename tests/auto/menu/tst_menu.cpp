@@ -45,11 +45,11 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
-#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates/private/qquickoverlay_p.h>
-#include <QtQuickTemplates/private/qquickbutton_p.h>
-#include <QtQuickTemplates/private/qquickmenu_p.h>
-#include <QtQuickTemplates/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 
 using namespace QQuickVisualTestUtil;
 

@@ -37,7 +37,7 @@
 #include "qquickdayofweekrow_p.h"
 #include "qquickdayofweekmodel_p.h"
 
-#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

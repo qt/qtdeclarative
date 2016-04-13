@@ -42,7 +42,7 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 
-#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
 #include "util.h"
 
