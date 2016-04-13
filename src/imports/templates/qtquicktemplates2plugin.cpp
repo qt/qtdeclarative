@@ -89,22 +89,22 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickTemplatesPlugin: public QQmlExtensionPlugin
+class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtQuickTemplatesPlugin(QObject *parent = nullptr);
+    QtQuickTemplates2Plugin(QObject *parent = nullptr);
     void registerTypes(const char *uri);
 };
 
-QtQuickTemplatesPlugin::QtQuickTemplatesPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 }
 
-void QtQuickTemplatesPlugin::registerTypes(const char *uri)
+void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
@@ -166,4 +166,4 @@ void QtQuickTemplatesPlugin::registerTypes(const char *uri)
 
 QT_END_NAMESPACE
 
-#include "qtquicktemplatesplugin.moc"
+#include "qtquicktemplates2plugin.moc"

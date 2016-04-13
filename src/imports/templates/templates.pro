@@ -1,4 +1,4 @@
-TARGET = qtquicktemplatesplugin
+TARGET = qtquicktemplates2plugin
 TARGETPATH = Qt/labs/templates
 IMPORT_VERSION = 1.0
 
@@ -11,7 +11,7 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquicktemplatesplugin.cpp
+    $$PWD/qtquicktemplates2plugin.cpp
 
 CONFIG += no_cxx_module
 load(qml_plugin)
