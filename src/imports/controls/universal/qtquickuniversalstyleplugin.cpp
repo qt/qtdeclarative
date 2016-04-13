@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls/private/qquickstyleplugin_p.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
 #include "qquickuniversalfocusrectangle_p.h"
 #include "qquickuniversalprogressring_p.h"
@@ -42,8 +42,8 @@
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
 
-#include <QtQuickControls/private/qquickcolorimageprovider_p.h>
-#include <QtQuickControls/private/qquickpluginutils_p.h>
+#include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
+#include <QtQuickControls2/private/qquickpluginutils_p.h>
 
 static inline void initResources()
 {

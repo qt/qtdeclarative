@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCOLORIMAGEPROVIDER_P_H
-#define QQUICKCOLORIMAGEPROVIDER_P_H
+#ifndef QQUICKSTYLEATTACHED_P_H
+#define QQUICKSTYLEATTACHED_P_H
 
 //
 //  W A R N I N G
@@ -48,22 +48,45 @@
 // We mean it.
 //
 
-#include <QtQuick/qquickimageprovider.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQml/qqml.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
+#include <QtCore/qsharedpointer.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickColorImageProvider : public QQuickImageProvider
-{
-public:
-    QQuickColorImageProvider(const QString &path);
+class QSettings;
 
-    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
+{
+    Q_OBJECT
+
+public:
+    explicit QQuickStyleAttached(QObject *parent = nullptr);
+    ~QQuickStyleAttached();
+
+    static QSharedPointer<QSettings> settings(const QString &group = QString());
+
+protected:
+    void init();
+
+    QList<QQuickStyleAttached *> childStyles() const;
+
+    QQuickStyleAttached *parentStyle() const;
+    void setParentStyle(QQuickStyleAttached *style);
+
+    virtual void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent);
+
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
 private:
-    QString m_path;
+    QList<QQuickStyleAttached *> m_childStyles;
+    QPointer<QQuickStyleAttached> m_parentStyle;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKOCOLORIMAGEPROVIDER_P_H
+#endif // QQUICKSTYLEATTACHED_P_H

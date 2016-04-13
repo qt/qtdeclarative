@@ -34,15 +34,15 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls/private/qquickstyleplugin_p.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialtheme_p.h"
 #include "qquickmaterialprogressring_p.h"
 #include "qquickmaterialprogressstrip_p.h"
 
-#include <QtQuickControls/private/qquickstyleselector_p.h>
-#include <QtQuickControls/private/qquickpluginutils_p.h>
+#include <QtQuickControls2/private/qquickstyleselector_p.h>
+#include <QtQuickControls2/private/qquickpluginutils_p.h>
 
 static inline void initResources()
 {

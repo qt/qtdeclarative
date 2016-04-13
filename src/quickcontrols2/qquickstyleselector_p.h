@@ -49,13 +49,13 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyleSelectorPrivate;
 
-class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStyleSelector
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStyleSelector
 {
 public:
     QQuickStyleSelector();

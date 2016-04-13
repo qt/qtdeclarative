@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     quicktemplates2 \
-    controls \
+    quickcontrols2 \
     imports
 
-controls.depends = quicktemplates2
-imports.depends = controls quicktemplates2
+quickcontrols2.depends = quicktemplates2
+imports.depends = quickcontrols2 quicktemplates2

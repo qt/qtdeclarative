@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qfont.h>
-#include <QtQuickControls/private/qquickproxytheme_p.h>
+#include <QtQuickControls2/private/qquickproxytheme_p.h>
 
 QT_BEGIN_NAMESPACE
 

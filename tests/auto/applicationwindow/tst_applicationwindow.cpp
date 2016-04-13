@@ -48,7 +48,7 @@
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
-#include <QtQuickControls/private/qquickproxytheme_p.h>
+#include <QtQuickControls2/private/qquickproxytheme_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 

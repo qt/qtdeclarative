@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEATTACHED_P_H
-#define QQUICKSTYLEATTACHED_P_H
+#ifndef QQUICKPROXYTHEME_P_H
+#define QQUICKPROXYTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,45 +48,51 @@
 // We mean it.
 //
 
-#include <QtQml/qqml.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qpointer.h>
-#include <QtCore/qsharedpointer.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSettings;
-
-class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
 {
-    Q_OBJECT
-
 public:
-    explicit QQuickStyleAttached(QObject *parent = nullptr);
-    ~QQuickStyleAttached();
+    explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);
+    ~QQuickProxyTheme();
 
-    static QSharedPointer<QSettings> settings(const QString &group = QString());
+    QPlatformTheme* theme() const;
 
-protected:
-    void init();
+    QPlatformMenuItem* createPlatformMenuItem() const override;
+    QPlatformMenu* createPlatformMenu() const override;
+    QPlatformMenuBar* createPlatformMenuBar() const override;
+    void showPlatformMenuBar() override;
 
-    QList<QQuickStyleAttached *> childStyles() const;
+    bool usePlatformNativeDialog(DialogType type) const override;
+    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const override;
 
-    QQuickStyleAttached *parentStyle() const;
-    void setParentStyle(QQuickStyleAttached *style);
+#ifndef QT_NO_SYSTEMTRAYICON
+    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const override;
+#endif
 
-    virtual void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent);
+    const QPalette *palette(Palette type = SystemPalette) const override;
 
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
+    const QFont *font(Font type = SystemFont) const override;
+
+    QVariant themeHint(ThemeHint hint) const override;
+
+    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
+    QPixmap fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size,
+                                   QPlatformTheme::IconOptions iconOptions = 0) const override;
+
+    QIconEngine *createIconEngine(const QString &iconName) const override;
+
+    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
+
+    QString standardButtonText(int button) const override;
 
 private:
-    QList<QQuickStyleAttached *> m_childStyles;
-    QPointer<QQuickStyleAttached> m_parentStyle;
+    QPlatformTheme *m_theme;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTYLEATTACHED_P_H
+#endif // QQUICKPROXYTHEME_P_H

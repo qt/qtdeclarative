@@ -40,14 +40,14 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qfileselector_p.h>
 
-#include <QtQuickControls/qquickstyle.h>
+#include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include <QtQuickControls/private/qquickpluginutils_p.h>
-#include <QtQuickControls/private/qquickstyleselector_p.h>
+#include <QtQuickControls2/private/qquickpluginutils_p.h>
+#include <QtQuickControls2/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
 #include "qquickprogressstrip_p.h"

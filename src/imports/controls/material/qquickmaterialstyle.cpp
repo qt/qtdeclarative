@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtQuickControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 

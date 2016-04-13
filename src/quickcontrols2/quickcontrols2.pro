@@ -1,5 +1,5 @@
-TARGET = QtQuickControls
-MODULE = quickcontrols
+TARGET = QtQuickControls2
+MODULE = quickcontrols2
 
 QT += quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private
@@ -7,8 +7,8 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 HEADERS += \
-    $$PWD/qtquickcontrolsglobal.h
-    $$PWD/qtquickcontrolsglobal_p.h
+    $$PWD/qtquickcontrols2global.h
+    $$PWD/qtquickcontrols2global_p.h
 
-include(controls.pri)
+include(quickcontrols2.pri)
 load(qt_module)

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPROXYTHEME_P_H
-#define QQUICKPROXYTHEME_P_H
+#ifndef QQUICKPLUGINUTILS_H
+#define QQUICKPLUGINUTILS_H
 
 //
 //  W A R N I N G
@@ -48,51 +48,19 @@
 // We mean it.
 //
 
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtCore/qurl.h>
+#include <QtCore/qstring.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
+namespace QQuickPluginUtils
 {
-public:
-    explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);
-    ~QQuickProxyTheme();
-
-    QPlatformTheme* theme() const;
-
-    QPlatformMenuItem* createPlatformMenuItem() const override;
-    QPlatformMenu* createPlatformMenu() const override;
-    QPlatformMenuBar* createPlatformMenuBar() const override;
-    void showPlatformMenuBar() override;
-
-    bool usePlatformNativeDialog(DialogType type) const override;
-    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const override;
-
-#ifndef QT_NO_SYSTEMTRAYICON
-    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const override;
-#endif
-
-    const QPalette *palette(Palette type = SystemPalette) const override;
-
-    const QFont *font(Font type = SystemFont) const override;
-
-    QVariant themeHint(ThemeHint hint) const override;
-
-    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
-    QPixmap fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size,
-                                   QPlatformTheme::IconOptions iconOptions = 0) const override;
-
-    QIconEngine *createIconEngine(const QString &iconName) const override;
-
-    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
-
-    QString standardButtonText(int button) const override;
-
-private:
-    QPlatformTheme *m_theme;
-};
+    Q_QUICKCONTROLS2_PRIVATE_EXPORT QString pluginBasePath(const QQmlExtensionPlugin &plugin);
+    Q_QUICKCONTROLS2_PRIVATE_EXPORT QUrl pluginBaseUrl(const QQmlExtensionPlugin &plugin);
+}
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPROXYTHEME_P_H
+#endif // QQUICKPLUGINUTILS_H

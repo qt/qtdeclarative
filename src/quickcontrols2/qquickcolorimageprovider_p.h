@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEPLUGIN_P_H
-#define QQUICKSTYLEPLUGIN_P_H
+#ifndef QQUICKCOLORIMAGEPROVIDER_P_H
+#define QQUICKCOLORIMAGEPROVIDER_P_H
 
 //
 //  W A R N I N G
@@ -48,32 +48,22 @@
 // We mean it.
 //
 
-#include <QtCore/qscopedpointer.h>
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuick/qquickimageprovider.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickProxyTheme;
-
-class Q_QUICKCONTROLS_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickColorImageProvider : public QQuickImageProvider
 {
-    Q_OBJECT
-
 public:
-    explicit QQuickStylePlugin(QObject *parent = nullptr);
-    ~QQuickStylePlugin();
+    QQuickColorImageProvider(const QString &path);
 
-    void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
-
-    virtual QString name() const;
-    virtual QQuickProxyTheme *createTheme() const;
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
 private:
-    QScopedPointer<QQuickProxyTheme> m_theme;
+    QString m_path;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTYLEPLUGIN_P_H
+#endif // QQUICKOCOLORIMAGEPROVIDER_P_H

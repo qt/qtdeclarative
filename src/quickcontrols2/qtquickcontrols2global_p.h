@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTQUICKCONTROLSGLOBAL_P_H
-#define QTQUICKCONTROLSGLOBAL_P_H
+#ifndef QTQUICKCONTROLS2GLOBAL_P_H
+#define QTQUICKCONTROLS2GLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -48,8 +48,8 @@
 // We mean it.
 //
 
-#include <QtQuickControls/qtquickcontrolsglobal.h>
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
-#define Q_QUICKCONTROLS_PRIVATE_EXPORT Q_QUICKCONTROLS_EXPORT
+#define Q_QUICKCONTROLS2_PRIVATE_EXPORT Q_QUICKCONTROLS2_EXPORT
 
-#endif // QTQUICKCONTROLSGLOBAL_P_H
+#endif // QTQUICKCONTROLS2GLOBAL_P_H

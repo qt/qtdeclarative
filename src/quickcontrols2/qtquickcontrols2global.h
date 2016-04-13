@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Controls module of the Qt Toolkit.
@@ -34,33 +34,23 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLUGINUTILS_H
-#define QQUICKPLUGINUTILS_H
+#ifndef QTQUICKCONTROLS2GLOBAL_H
+#define QTQUICKCONTROLS2GLOBAL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qurl.h>
-#include <QtCore/qstring.h>
-#include <QtQml/qqmlextensionplugin.h>
-#include "qtquickcontrolsglobal_p.h"
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickPluginUtils
-{
-    Q_QUICKCONTROLS_PRIVATE_EXPORT QString pluginBasePath(const QQmlExtensionPlugin &plugin);
-    Q_QUICKCONTROLS_PRIVATE_EXPORT QUrl pluginBaseUrl(const QQmlExtensionPlugin &plugin);
-}
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QUICKCONTROLS2_LIB)
+#    define Q_QUICKCONTROLS2_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_QUICKCONTROLS2_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_QUICKCONTROLS2_EXPORT
+#endif
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPLUGINUTILS_H
+#endif // QTQUICKCONTROLS2GLOBAL_H
