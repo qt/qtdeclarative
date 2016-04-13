@@ -519,7 +519,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     p += TEXT_CB_SIZE_1;
 
     const float dpr = qsg_device_pixel_ratio(m_rc->engine());
-    if (m_lastDpr != dpr) {
+    if (state.isCachedMaterialDataDirty() || m_lastDpr != dpr) {
         m_lastDpr = dpr;
         memcpy(p, &dpr, TEXT_CB_SIZE_2);
         r |= UpdatedConstantBuffer;
