@@ -84,6 +84,7 @@ struct MathObject: Object
     static ReturnedValue method_pow(CallContext *context);
     static ReturnedValue method_random(CallContext *context);
     static ReturnedValue method_round(CallContext *context);
+    static ReturnedValue method_sign(CallContext *context);
     static ReturnedValue method_sin(CallContext *context);
     static ReturnedValue method_sqrt(CallContext *context);
     static ReturnedValue method_tan(CallContext *context);

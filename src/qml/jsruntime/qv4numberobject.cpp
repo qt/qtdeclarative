@@ -45,6 +45,7 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
+#include <limits>
 
 using namespace QV4;
 
@@ -99,11 +100,15 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
+    ctor->defineReadonlyProperty(QStringLiteral("EPSILON"), Primitive::fromDouble(std::numeric_limits<double>::epsilon()));
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_INTEL(239)
     ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
 QT_WARNING_POP
+
+    ctor->defineDefaultProperty(QStringLiteral("isFinite"), method_isFinite, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isNaN"), method_isNaN, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString);
@@ -132,6 +137,24 @@ inline double thisNumber(ExecutionContext *ctx)
     if (!n)
         return ctx->engine()->throwTypeError();
     return n->value();
+}
+
+ReturnedValue NumberPrototype::method_isFinite(CallContext *ctx)
+{
+    if (!ctx->argc())
+        return Encode(false);
+
+    double v = ctx->args()[0].toNumber();
+    return Encode(!std::isnan(v) && !qt_is_inf(v));
+}
+
+ReturnedValue NumberPrototype::method_isNaN(CallContext *ctx)
+{
+    if (!ctx->argc())
+        return Encode(false);
+
+    double v = ctx->args()[0].toNumber();
+    return Encode(std::isnan(v));
 }
 
 ReturnedValue NumberPrototype::method_toString(CallContext *ctx)

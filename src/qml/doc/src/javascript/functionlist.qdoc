@@ -231,6 +231,15 @@
     \li \l {Number::toLocaleString}{toLocaleString(locale, format, precision)}
     \endlist
 
+    \section2 The Number Object
+
+    \section3 Function Properties
+
+    \list
+    \li isFinite(x) // ECMAScript 6: Added in Qt 5.8
+    \li isNaN(x) // ECMAScript 6: Added in Qt 5.8
+    \endlist
+
     \section1 The Math Object
 
     \section2 Value Properties
@@ -264,6 +273,7 @@
     \li pow(x, y)
     \li random()
     \li round(x)
+    \li sign(x) // ECMAScript 6: Added in Qt 5.8
     \li sin(x)
     \li sqrt(x)
     \li tan(x)

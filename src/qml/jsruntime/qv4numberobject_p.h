@@ -87,6 +87,8 @@ struct NumberPrototype: NumberObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
+    static ReturnedValue method_isFinite(CallContext *ctx);
+    static ReturnedValue method_isNaN(CallContext *ctx);
     static ReturnedValue method_toString(CallContext *ctx);
     static ReturnedValue method_toLocaleString(CallContext *ctx);
     static ReturnedValue method_valueOf(CallContext *ctx);

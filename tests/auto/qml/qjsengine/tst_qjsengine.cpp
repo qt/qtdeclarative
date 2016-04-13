@@ -1024,11 +1024,14 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("Math.pow") << QString("Math.pow") << QString("pow");
     QTest::newRow("Math.random") << QString("Math.random") << QString("random");
     QTest::newRow("Math.round") << QString("Math.round") << QString("round");
+    QTest::newRow("Math.sign") << QString("Math.sign") << QString("sign");
     QTest::newRow("Math.sin") << QString("Math.sin") << QString("sin");
     QTest::newRow("Math.sqrt") << QString("Math.sqrt") << QString("sqrt");
     QTest::newRow("Math.tan") << QString("Math.tan") << QString("tan");
 
     QTest::newRow("Number") << QString("Number") << QString("Number");
+    QTest::newRow("Number.isFinite") << QString("Number.isFinite") << QString("isFinite");
+    QTest::newRow("Number.isNaN") << QString("Number.isNaN") << QString("isNaN");
     QTest::newRow("Number.prototype.toString") << QString("Number.prototype.toString") << QString("toString");
     QTest::newRow("Number.prototype.toLocaleString") << QString("Number.prototype.toLocaleString") << QString("toLocaleString");
     QTest::newRow("Number.prototype.valueOf") << QString("Number.prototype.valueOf") << QString("valueOf");
@@ -1920,6 +1923,7 @@ void tst_QJSEngine::jsNumberClass()
         QVERIFY(ctor.property("NaN").isNumber());
         QVERIFY(ctor.property("NEGATIVE_INFINITY").isNumber());
         QVERIFY(ctor.property("POSITIVE_INFINITY").isNumber());
+        QVERIFY(ctor.property("EPSILON").isNumber());
     }
     QCOMPARE(proto.toNumber(), qreal(0));
     QVERIFY(proto.property("constructor").strictlyEquals(ctor));
@@ -1956,6 +1960,50 @@ void tst_QJSEngine::jsNumberClass()
         QVERIFY(!ret.isNumber());
         QVERIFY(ret.isObject());
         QCOMPARE(ret.toNumber(), qreal(456));
+    }
+
+    QVERIFY(ctor.property("isFinite").isCallable());
+    {
+        QJSValue ret = eng.evaluate("Number.isFinite()");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isFinite(NaN)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isFinite(Infinity)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isFinite(-Infinity)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isFinite(123)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), true);
+    }
+
+    QVERIFY(ctor.property("isNaN").isCallable());
+    {
+        QJSValue ret = eng.evaluate("Number.isNaN()");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isNaN(NaN)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), true);
+    }
+    {
+        QJSValue ret = eng.evaluate("Number.isNaN(123)");
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), false);
     }
 
     QVERIFY(proto.property("toString").isCallable());

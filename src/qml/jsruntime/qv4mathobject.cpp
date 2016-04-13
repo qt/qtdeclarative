@@ -80,6 +80,7 @@ Heap::MathObject::MathObject()
     m->defineDefaultProperty(QStringLiteral("pow"), QV4::MathObject::method_pow, 2);
     m->defineDefaultProperty(QStringLiteral("random"), QV4::MathObject::method_random, 0);
     m->defineDefaultProperty(QStringLiteral("round"), QV4::MathObject::method_round, 1);
+    m->defineDefaultProperty(QStringLiteral("sign"), QV4::MathObject::method_sign, 1);
     m->defineDefaultProperty(QStringLiteral("sin"), QV4::MathObject::method_sin, 1);
     m->defineDefaultProperty(QStringLiteral("sqrt"), QV4::MathObject::method_sqrt, 1);
     m->defineDefaultProperty(QStringLiteral("tan"), QV4::MathObject::method_tan, 1);
@@ -297,6 +298,19 @@ ReturnedValue MathObject::method_round(CallContext *context)
     double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
     v = copySign(std::floor(v + 0.5), v);
     return Encode(v);
+}
+
+ReturnedValue MathObject::method_sign(CallContext *context)
+{
+    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+
+    if (std::isnan(v))
+        return Encode(qt_qnan());
+
+    if (qIsNull(v))
+        return v;
+
+    return Encode(std::signbit(v) ? -1 : 1);
 }
 
 ReturnedValue MathObject::method_sin(CallContext *context)
