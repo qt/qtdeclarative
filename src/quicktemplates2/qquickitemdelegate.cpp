@@ -54,8 +54,8 @@ QT_BEGIN_NAMESPACE
     in various views and controls, such as \l ListView and \l ComboBox.
 
     ItemDelegate inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text}, make items \l {AbstractButton::checkable}{checkable},
-    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
+    \l {AbstractButton::text}{text}, and react to \l {AbstractButton::clicked}{clicks}
+    using the AbstractButton API.
 
     \snippet qtquickcontrols2-itemdelegate.qml 1
 

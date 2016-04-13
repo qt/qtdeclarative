@@ -212,7 +212,6 @@
 
         ItemDelegate consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
-        The indicator is only visible for \l {AbstractButton::checkable}{checkable} items.
 
         \section3 Background
 
