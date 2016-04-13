@@ -52,6 +52,7 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         const QString family = font.family();
         systemFont.setFamily(family);
         buttonFont.setFamily(family);
+        toolTipFont.setFamily(family);
         itemViewFont.setFamily(family);
         listViewFont.setFamily(family);
         menuItemFont.setFamily(family);
@@ -63,6 +64,9 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     buttonFont.setPixelSize(14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
+
+    toolTipFont.setPixelSize(14);
+    toolTipFont.setWeight(QFont::Medium);
 
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
@@ -81,6 +85,8 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
     case QPlatformTheme::PushButtonFont:
     case QPlatformTheme::ToolButtonFont:
         return &buttonFont;
+    case QPlatformTheme::TipLabelFont:
+        return &toolTipFont;
     case QPlatformTheme::ItemViewFont:
         return &itemViewFont;
     case QPlatformTheme::ListViewFont:

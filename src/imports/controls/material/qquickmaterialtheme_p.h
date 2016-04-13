@@ -63,6 +63,7 @@ public:
 private:
     QFont systemFont;
     QFont buttonFont;
+    QFont toolTipFont;
     QFont itemViewFont;
     QFont listViewFont;
     QFont menuItemFont;

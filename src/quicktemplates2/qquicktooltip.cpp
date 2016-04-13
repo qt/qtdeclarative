@@ -36,6 +36,7 @@
 
 #include "qquicktooltip_p.h"
 #include "qquickpopup_p_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtCore/qbasictimer.h>
 #include <QtQml/qqmlinfo.h>
@@ -261,6 +262,11 @@ void QQuickToolTip::close()
     Q_D(QQuickToolTip);
     d->stopDelay();
     QQuickPopup::close();
+}
+
+QFont QQuickToolTip::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::TipLabelFont);
 }
 
 void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

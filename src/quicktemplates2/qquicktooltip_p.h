@@ -87,6 +87,8 @@ Q_SIGNALS:
     void timeoutChanged();
 
 protected:
+    QFont defaultFont() const override;
+
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
     void timerEvent(QTimerEvent *event) override;
 
