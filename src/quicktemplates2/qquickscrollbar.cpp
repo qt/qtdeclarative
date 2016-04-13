@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     position. A scroll bar can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    \image qtquickcontrols-scrollbar.png
+    \image qtquickcontrols2-scrollbar.png
 
     \code
     Flickable {
@@ -93,7 +93,7 @@ QT_BEGIN_NAMESPACE
     to either direction, establish a two-way binding between the active states
     as presented by the following example:
 
-    \snippet qtquickcontrols-scrollbar-active.qml 1
+    \snippet qtquickcontrols2-scrollbar-active.qml 1
 
     \labs
 

@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet tst_tumbler.qml contentItem
 
-    \image qtquickcontrols-tumbler-wrap.gif
+    \image qtquickcontrols2-tumbler-wrap.gif
 
     \labs
 

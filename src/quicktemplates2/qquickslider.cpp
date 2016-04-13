@@ -49,16 +49,16 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-input
     \brief Selects a value by sliding a handle along a track.
 
-    \image qtquickcontrols-slider.gif
+    \image qtquickcontrols2-slider.gif
 
     Slider is used to select a value by sliding a handle along a track.
 
     \table
-    \row \li \image qtquickcontrols-slider-normal.png
+    \row \li \image qtquickcontrols2-slider-normal.png
          \li A slider in its normal state.
-    \row \li \image qtquickcontrols-slider-focused.png
+    \row \li \image qtquickcontrols2-slider-focused.png
          \li A slider that has active focus.
-    \row \li \image qtquickcontrols-slider-disabled.png
+    \row \li \image qtquickcontrols2-slider-disabled.png
          \li A slider that is disabled.
     \endtable
 

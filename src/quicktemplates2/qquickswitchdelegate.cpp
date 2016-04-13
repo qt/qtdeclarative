@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-delegates
     \brief An item delegate that can be toggled on or off.
 
-    \image qtquickcontrols-switchdelegate.gif
+    \image qtquickcontrols2-switchdelegate.gif
 
     SwitchDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Switch delegates are typically used to select one or more

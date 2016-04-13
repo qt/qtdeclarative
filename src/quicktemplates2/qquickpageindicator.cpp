@@ -55,9 +55,9 @@ QT_BEGIN_NAMESPACE
     in a container of multiple pages. PageIndicator consists of
     delegate items that present pages.
 
-    \image qtquickcontrols-pageindicator.png
+    \image qtquickcontrols2-pageindicator.png
 
-    \snippet qtquickcontrols-pageindicator.qml 1
+    \snippet qtquickcontrols2-pageindicator.qml 1
 
     \labs
 

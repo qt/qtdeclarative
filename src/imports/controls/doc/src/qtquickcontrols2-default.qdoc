@@ -35,7 +35,7 @@
     performance for Qt Quick Controls 2. It is built with a minimal amount of Qt
     Quick primitives, and keeps animations and transitions to the minimum.
 
-    \image qtquickcontrols-default.png
+    \image qtquickcontrols2-default.png
 
     The style is selected by default when running Qt Quick Controls 2 applications.
     It is built into the module's resources, so by default it is shipped with

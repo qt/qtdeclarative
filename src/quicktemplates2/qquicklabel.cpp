@@ -61,9 +61,9 @@ QT_BEGIN_NAMESPACE
     inheritance. The default colors and font are style specific. Label
     can also have a visual \l background item.
 
-    \image qtquickcontrols-label.png
+    \image qtquickcontrols2-label.png
 
-    \snippet qtquickcontrols-label.qml 1
+    \snippet qtquickcontrols2-label.qml 1
 
     You can use the properties of Text to change the appearance of the text as desired:
 

@@ -35,17 +35,17 @@
     <div class="table"><table style="background:transparent; border:0px">
     <tr><td style="border:0px">
     \endraw
-    \image qtquickcontrols-gallery-welcome.png
+    \image qtquickcontrols2-gallery-welcome.png
     \caption Welcome Screen
     \raw HTML
     </td><td style="border:0px">
     \endraw
-    \image qtquickcontrols-gallery-drawer.png
+    \image qtquickcontrols2-gallery-drawer.png
     \caption Side Drawer
     \raw HTML
     </td><td style="border:0px">
     \endraw
-    \image qtquickcontrols-gallery-menu.png
+    \image qtquickcontrols2-gallery-menu.png
     \caption Options Menu
     \raw HTML
     </td></tr>

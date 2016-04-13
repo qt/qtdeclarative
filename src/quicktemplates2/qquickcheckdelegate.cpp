@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-delegates
     \brief An item delegate that can be checked or unchecked.
 
-    \image qtquickcontrols-checkdelegate.gif
+    \image qtquickcontrols2-checkdelegate.gif
 
     CheckDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Check delegates are typically used to select one or more

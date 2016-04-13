@@ -1566,7 +1566,7 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
     Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Popup.Center.
 
-    \image qtquickcontrols-popup-transformorigin.png
+    \image qtquickcontrols2-popup-transformorigin.png
 
     \sa enter, exit, Item::transformOrigin
 */

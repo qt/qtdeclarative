@@ -50,19 +50,19 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-input
     \brief A slider control used to select a range of values.
 
-    \image qtquickcontrols-rangeslider.gif
+    \image qtquickcontrols2-rangeslider.gif
 
     RangeSlider is used to select a range specified by two values, by sliding
     each handle along a track.
 
     \table
-    \row \li \image qtquickcontrols-rangeslider-normal.png
+    \row \li \image qtquickcontrols2-rangeslider-normal.png
          \li A range slider in its normal state.
-    \row \li \image qtquickcontrols-rangeslider-first-handle-focused.png
+    \row \li \image qtquickcontrols2-rangeslider-first-handle-focused.png
          \li A range slider whose first handle has active focus.
-    \row \li \image qtquickcontrols-rangeslider-second-handle-focused.png
+    \row \li \image qtquickcontrols2-rangeslider-second-handle-focused.png
          \li A range slider whose second handle has active focus.
-    \row \li \image qtquickcontrols-rangeslider-disabled.png
+    \row \li \image qtquickcontrols2-rangeslider-disabled.png
          \li A range slider that is disabled.
     \endtable
 

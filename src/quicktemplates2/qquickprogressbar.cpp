@@ -51,9 +51,9 @@ QT_BEGIN_NAMESPACE
     regularly. The range is defined by \l from and \l to, which both can contain any value.
 
     \table
-    \row \li \image qtquickcontrols-progressbar-normal.png
+    \row \li \image qtquickcontrols2-progressbar-normal.png
          \li A progress bar in its normal state.
-    \row \li \image qtquickcontrols-progressbar-disabled.png
+    \row \li \image qtquickcontrols2-progressbar-disabled.png
          \li A progress bar that is disabled.
     \endtable
 
@@ -216,7 +216,7 @@ qreal QQuickProgressBar::visualPosition() const
     doesn't show how much progress has been made.
 
     See below for an example:
-    \image qtquickcontrols-progressbar-indeterminate.png
+    \image qtquickcontrols2-progressbar-indeterminate.png
 
 */
 bool QQuickProgressBar::isIndeterminate() const

@@ -49,11 +49,11 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-navigation
     \brief A tab button control that can be found on a TabBar.
 
-    \image qtquickcontrols-tabbutton.png
+    \image qtquickcontrols2-tabbutton.png
 
     TabButton is used in conjunction with a \l TabBar.
 
-    \snippet qtquickcontrols-tabbutton.qml 1
+    \snippet qtquickcontrols2-tabbutton.qml 1
 
     \labs
 

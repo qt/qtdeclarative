@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-input
     \brief A combined button and popup list taking minimal space.
 
-    \image qtquickcontrols-combobox.png
+    \image qtquickcontrols2-combobox.png
 
     ComboBox is a combined button and popup list. It provides a means of
     presenting a list of options to the user in a way that takes up the

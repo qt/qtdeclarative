@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    \image qtquickcontrols-scrollindicator.png
+    \image qtquickcontrols2-scrollindicator.png
 
     \code
     Flickable {
@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     to either direction, establish a two-way binding between the active states as
     presented by the following example:
 
-    \snippet qtquickcontrols-scrollindicator-active.qml 1
+    \snippet qtquickcontrols2-scrollindicator-active.qml 1
 
     \labs
 

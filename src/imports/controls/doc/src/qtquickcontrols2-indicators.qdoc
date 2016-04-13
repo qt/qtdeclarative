@@ -39,20 +39,20 @@
 
     \section1 BusyIndicator Control
 
-    \image qtquickcontrols-busyindicator.png
+    \image qtquickcontrols2-busyindicator.png
 
     \l BusyIndicator should be used to indicate activity.
 
     \section1 PageIndicator Control
 
-    \image qtquickcontrols-pageindicator.png
+    \image qtquickcontrols2-pageindicator.png
 
     \l PageIndicator is used to indicate the currently active page in
     a container of multiple pages.
 
     \section1 ScrollBar Control
 
-    \image qtquickcontrols-scrollbar.png
+    \image qtquickcontrols2-scrollbar.png
 
     \l ScrollBar is an interactive bar that indicates the current scroll
     position, and can be used to scroll to a specific position in a
@@ -60,7 +60,7 @@
 
     \section1 ScrollIndicator Control
 
-    \image qtquickcontrols-scrollindicator.png
+    \image qtquickcontrols2-scrollindicator.png
 
     \l ScrollIndicator is a non-interactive indicator that indicates the
     current scroll position in a \l Flickable.

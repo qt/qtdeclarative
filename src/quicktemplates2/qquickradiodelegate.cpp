@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-delegates
     \brief An item delegate that can be checked or unchecked.
 
-    \image qtquickcontrols-radiodelegate.gif
+    \image qtquickcontrols2-radiodelegate.gif
 
     RadioDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Radio delegates are typically used to select one option

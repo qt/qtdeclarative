@@ -50,19 +50,19 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
-    \image qtquickcontrols-switch.gif
+    \image qtquickcontrols2-switch.gif
 
     Switch is an option button that can be dragged or toggled on (checked) or
     off (unchecked). Switches are typically used to select between two states.
 
     \table
-    \row \li \image qtquickcontrols-switch-normal.png
+    \row \li \image qtquickcontrols2-switch-normal.png
          \li A switch in its normal state.
-    \row \li \image qtquickcontrols-switch-checked.png
+    \row \li \image qtquickcontrols2-switch-checked.png
          \li A switch that is checked.
-    \row \li \image qtquickcontrols-switch-focused.png
+    \row \li \image qtquickcontrols2-switch-focused.png
          \li A switch that has active focus.
-    \row \li \image qtquickcontrols-switch-disabled.png
+    \row \li \image qtquickcontrols2-switch-disabled.png
          \li A switch that is disabled.
     \endtable
 

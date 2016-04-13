@@ -187,7 +187,7 @@ This line determines where the example will be copied to when running
 
 Now we can build and run the application:
 
-\image qtquickcontrols-chattutorial-chapter1.png
+\image qtquickcontrols2-chattutorial-chapter1.png
 
 \section1 Chapter 2: Lists
 
@@ -261,7 +261,7 @@ The image will be \c 40 pixels wide and \c 40 pixels high. We'll base the
 height of the delegate on the image's height, so that we don't have any empty
 vertical space.
 
-\image qtquickcontrols-chattutorial-chapter2.png
+\image qtquickcontrols2-chattutorial-chapter2.png
 
 \section1 Chapter 3: Navigation
 
@@ -312,7 +312,7 @@ In chapter 2, we added a ListView below the header. If you run the application
 for that chapter, you'll see that the contents of the view can be scrolled over
 the top of the header:
 
-\image qtquickcontrols-chattutorial-chapter2-listview-header.gif
+\image qtquickcontrols2-chattutorial-chapter2-listview-header.gif
 
 This is not that nice, especially if the text in the
 delegates is long enough that it reaches the text in the header. What we
@@ -332,7 +332,7 @@ usual, comes from the application style. Here it is in action:
 \printuntil }
 \printuntil }
 
-\image qtquickcontrols-chattutorial-chapter3-listview-header.gif
+\image qtquickcontrols2-chattutorial-chapter3-listview-header.gif
 
 It has no layout of its own, so we center the label within it ourselves.
 
@@ -436,7 +436,7 @@ the view. This gives us a nice alignment with the placeholder text in the
 \omit
 TODO: recreate image
 \endomit
-\image qtquickcontrols-chattutorial-chapter3-view-margins.png
+\image qtquickcontrols2-chattutorial-chapter3-view-margins.png
 
 Next, we set \l {ListView::}{displayMarginBeginning} and \l
 {ListView::}{displayMarginEnd}. These properties ensure that the delegates
@@ -488,7 +488,7 @@ does not go outside of the screen.
 
 Finally, the button is only enabled when there is actually a message to send.
 
-\image qtquickcontrols-chattutorial-chapter3.gif
+\image qtquickcontrols2-chattutorial-chapter3.gif
 
 \section1 Chapter 4: Models
 
@@ -666,7 +666,7 @@ timestamp that we want to display below every message:
 \printuntil }
 \printuntil }
 
-\image qtquickcontrols-chattutorial-chapter4-message-timestamp.png
+\image qtquickcontrols2-chattutorial-chapter4-message-timestamp.png
 
 Now that we have a proper model, we can use its \c recipient role in the
 expression for the \c sentByMe property.
@@ -688,7 +688,7 @@ smaller value. However, in the image below, the message text is quite long, so
 the smaller value (the width of the view) is chosen, ensuring that the text
 stops at the opposite edge of the screen:
 
-\image qtquickcontrols-chattutorial-chapter4-long-message.png
+\image qtquickcontrols2-chattutorial-chapter4-long-message.png
 
 In order to display the timestamp for each message that we discussed earlier,
 we use a Label. The date and time are formatted with
@@ -704,7 +704,7 @@ First, we call the invokable \c sendMessage() function of the model, which
 inserts a new row into the Conversations database table. Then, we clear the
 text field to make way for future input.
 
-\image qtquickcontrols-chattutorial-chapter4.gif
+\image qtquickcontrols2-chattutorial-chapter4.gif
 
 \section1 Chapter 5: Styling
 
@@ -717,12 +717,12 @@ So far, we've just been testing the application with the Default style. If we
 run it with the \l {Material Style}, for example, we'll immediately see some issues.
 Here is the Contacts page:
 
-\image qtquickcontrols-chattutorial-chapter5-contacts-material-test.png
+\image qtquickcontrols2-chattutorial-chapter5-contacts-material-test.png
 
 The header text is black on a dark blue background, which is very difficult to
 read. The same thing occurs with the Conversations page:
 
-\image qtquickcontrols-chattutorial-chapter5-conversations-material-test.png
+\image qtquickcontrols2-chattutorial-chapter5-conversations-material-test.png
 
 The solution is to tell the toolbar that it should use the \e "Dark" theme, so
 that this information is propagated to its children, allowing them to switch
@@ -792,13 +792,13 @@ We'll make the same changes to \c ConversationPage.qml:
 
 Now both pages look correct:
 
-\image qtquickcontrols-chattutorial-chapter5-contacts-material.png
-\image qtquickcontrols-chattutorial-chapter5-conversations-material.png
+\image qtquickcontrols2-chattutorial-chapter5-contacts-material.png
+\image qtquickcontrols2-chattutorial-chapter5-conversations-material.png
 
 Let's try out the Universal style:
 
-\image qtquickcontrols-chattutorial-chapter5-contacts-universal.png
-\image qtquickcontrols-chattutorial-chapter5-conversations-universal.png
+\image qtquickcontrols2-chattutorial-chapter5-contacts-universal.png
+\image qtquickcontrols2-chattutorial-chapter5-conversations-universal.png
 
 No issues there. For a relatively simple application such as this one, there
 should be very few adjustments necessary when switching styles.
@@ -817,8 +817,8 @@ Theme=Dark
 
 Once this is done, build and run the application. This is what you should see:
 
-\image qtquickcontrols-chattutorial-chapter5-contacts-material-dark.png
-\image qtquickcontrols-chattutorial-chapter5-conversations-material-dark.png
+\image qtquickcontrols2-chattutorial-chapter5-contacts-material-dark.png
+\image qtquickcontrols2-chattutorial-chapter5-conversations-material-dark.png
 
 Both pages look fine. Now add an entry for the Universal style:
 
@@ -829,8 +829,8 @@ Theme=Dark
 
 After building and running the application, you should see these results:
 
-\image qtquickcontrols-chattutorial-chapter5-contacts-universal-dark.png
-\image qtquickcontrols-chattutorial-chapter5-conversations-universal-dark.png
+\image qtquickcontrols2-chattutorial-chapter5-contacts-universal-dark.png
+\image qtquickcontrols2-chattutorial-chapter5-conversations-universal-dark.png
 
 \section1 Summary
 

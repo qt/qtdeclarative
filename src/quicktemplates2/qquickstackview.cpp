@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-containers
     \brief Provides a stack-based navigation model.
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols2-stackview-wireframe.png
 
     StackView can be used with a set of inter-linked information pages. For
     example, an email application with separate views to list the latest emails,

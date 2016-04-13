@@ -43,13 +43,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-busyindicator-background.png
+            \image qtquickcontrols2-busyindicator-background.png
 
             BusyIndicator has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-busyindicator-contentItem.png
+            \image qtquickcontrols2-busyindicator-contentItem.png
 
             \snippet BusyIndicator.qml contentItem
 
@@ -61,13 +61,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-button-background.png
+            \image qtquickcontrols2-button-background.png
 
             \snippet Button.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-button-contentItem.png
+            \image qtquickcontrols2-button-contentItem.png
 
             \snippet Button.qml contentItem
 
@@ -79,19 +79,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-checkbox-background.png
+            \image qtquickcontrols2-checkbox-background.png
 
             CheckBox has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-checkbox-contentItem.png
+            \image qtquickcontrols2-checkbox-contentItem.png
 
             \snippet CheckBox.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-checkbox-indicator.png
+            \image qtquickcontrols2-checkbox-indicator.png
 
             \snippet CheckBox.qml indicator
 
@@ -103,19 +103,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-checkdelegate-background.png
+            \image qtquickcontrols2-checkdelegate-background.png
 
             \snippet CheckDelegate.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-checkdelegate-contentItem.png
+            \image qtquickcontrols2-checkdelegate-contentItem.png
 
             \snippet CheckDelegate.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-checkdelegate-indicator.png
+            \image qtquickcontrols2-checkdelegate-indicator.png
 
             \snippet CheckDelegate.qml indicator
 
@@ -128,25 +128,25 @@
 
         \section3 Background
 
-            \image qtquickcontrols-combobox-background.png
+            \image qtquickcontrols2-combobox-background.png
 
             \snippet ComboBox.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-combobox-contentItem.png
+            \image qtquickcontrols2-combobox-contentItem.png
 
             \snippet ComboBox.qml contentItem
 
         \section3 Popup
 
-            \image qtquickcontrols-combobox-popup.png
+            \image qtquickcontrols2-combobox-popup.png
 
             \snippet ComboBox.qml popup
 
         \section3 Delegate
 
-            \image qtquickcontrols-combobox-delegate.png
+            \image qtquickcontrols2-combobox-delegate.png
 
             \snippet ComboBox.qml delegate
 
@@ -158,13 +158,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-dial-background.png
+            \image qtquickcontrols2-dial-background.png
 
             \snippet Dial.qml background
 
         \section3 Indicator
 
-            \image qtquickcontrols-dial-handle.png
+            \image qtquickcontrols2-dial-handle.png
 
             \snippet Dial.qml handle
 
@@ -185,7 +185,7 @@
 
         \section3 Background
 
-            \image qtquickcontrols-frame-background.png
+            \image qtquickcontrols2-frame-background.png
 
             \snippet Frame.qml background
 
@@ -197,13 +197,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-groupbox-background.png
+            \image qtquickcontrols2-groupbox-background.png
 
             \snippet GroupBox.qml background
 
         \section3 Label
 
-            \image qtquickcontrols-groupbox-label.png
+            \image qtquickcontrols2-groupbox-label.png
 
             \snippet GroupBox.qml label
 
@@ -216,13 +216,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-itemdelegate-background.png
+            \image qtquickcontrols2-itemdelegate-background.png
 
             \snippet ItemDelegate.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-itemdelegate-contentItem.png
+            \image qtquickcontrols2-itemdelegate-contentItem.png
 
             \snippet ItemDelegate.qml contentItem
 
@@ -237,7 +237,7 @@
 
         \section3 Background
 
-            \image qtquickcontrols-label-background.png
+            \image qtquickcontrols2-label-background.png
 
             Label has no background item by default.
 
@@ -248,7 +248,7 @@
 
         \section3 Content item
 
-            \image qtquickcontrols-menu-contentItem.png
+            \image qtquickcontrols2-menu-contentItem.png
 
             \snippet Menu.qml contentItem
 
@@ -265,19 +265,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-pageindicator-background.png
+            \image qtquickcontrols2-pageindicator-background.png
 
         PageIndicator has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-pageindicator-contentItem.png
+            \image qtquickcontrols2-pageindicator-contentItem.png
 
             \snippet PageIndicator.qml contentItem
 
         \section3 Delegate
 
-            \image qtquickcontrols-pageindicator-delegate.png
+            \image qtquickcontrols2-pageindicator-delegate.png
 
             \snippet PageIndicator.qml delegate
 
@@ -289,7 +289,7 @@
 
         \section3 Background
 
-            \image qtquickcontrols-pane-background.png
+            \image qtquickcontrols2-pane-background.png
 
             \snippet Pane.qml background
 
@@ -301,13 +301,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-progressbar-background.png
+            \image qtquickcontrols2-progressbar-background.png
 
             \snippet ProgressBar.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-progressbar-contentItem.png
+            \image qtquickcontrols2-progressbar-contentItem.png
 
             \snippet ProgressBar.qml contentItem
 
@@ -319,19 +319,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-radiobutton-background.png
+            \image qtquickcontrols2-radiobutton-background.png
 
             RadioButton has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-radiobutton-contentItem.png
+            \image qtquickcontrols2-radiobutton-contentItem.png
 
             \snippet RadioButton.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-radiobutton-indicator.png
+            \image qtquickcontrols2-radiobutton-indicator.png
 
             \snippet RadioButton.qml indicator
 
@@ -343,19 +343,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-radiodelegate-background.png
+            \image qtquickcontrols2-radiodelegate-background.png
 
             \snippet RadioDelegate.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-radiodelegate-contentItem.png
+            \image qtquickcontrols2-radiodelegate-contentItem.png
 
             \snippet RadioDelegate.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-radiodelegate-indicator.png
+            \image qtquickcontrols2-radiodelegate-indicator.png
 
             \snippet RadioDelegate.qml indicator
 
@@ -369,19 +369,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-rangeslider-background.png
+            \image qtquickcontrols2-rangeslider-background.png
 
             \snippet RangeSlider.qml background
 
         \section3 First Handle
 
-            \image qtquickcontrols-rangeslider-first-handle.png
+            \image qtquickcontrols2-rangeslider-first-handle.png
 
             \snippet RangeSlider.qml firstHandle
 
         \section3 Second Handle
 
-            \image qtquickcontrols-rangeslider-second-handle.png
+            \image qtquickcontrols2-rangeslider-second-handle.png
 
             \snippet RangeSlider.qml secondHandle
 
@@ -393,13 +393,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-scrollbar-background.png
+            \image qtquickcontrols2-scrollbar-background.png
 
             ScrollBar has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-scrollbar-contentItem.png
+            \image qtquickcontrols2-scrollbar-contentItem.png
 
             \snippet ScrollBar.qml contentItem
 
@@ -411,13 +411,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-scrollindicator-background.png
+            \image qtquickcontrols2-scrollindicator-background.png
 
             ScrollIndicator has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-scrollindicator-contentItem.png
+            \image qtquickcontrols2-scrollindicator-contentItem.png
 
             \snippet ScrollIndicator.qml contentItem
 
@@ -429,13 +429,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-slider-background.png
+            \image qtquickcontrols2-slider-background.png
 
             \snippet Slider.qml background
 
         \section3 Handle
 
-            \image qtquickcontrols-slider-handle.png
+            \image qtquickcontrols2-slider-handle.png
 
             \snippet Slider.qml handle
 
@@ -448,25 +448,25 @@
 
         \section3 Background
 
-            \image qtquickcontrols-spinbox-background.png
+            \image qtquickcontrols2-spinbox-background.png
 
             \snippet SpinBox.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-spinbox-contentItem.png
+            \image qtquickcontrols2-spinbox-contentItem.png
 
             \snippet SpinBox.qml contentItem
 
         \section3 Down indicator
 
-            \image qtquickcontrols-spinbox-down.png
+            \image qtquickcontrols2-spinbox-down.png
 
             \snippet SpinBox.qml down.indicator
 
         \section3 Up indicator
 
-            \image qtquickcontrols-spinbox-up.png
+            \image qtquickcontrols2-spinbox-up.png
 
             \snippet SpinBox.qml up.indicator
 
@@ -509,13 +509,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-swipedelegate-background.png
+            \image qtquickcontrols2-swipedelegate-background.png
 
             \snippet SwipeDelegate.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-swipedelegate-contentItem.png
+            \image qtquickcontrols2-swipedelegate-contentItem.png
 
             \snippet SwipeDelegate.qml contentItem
 
@@ -525,7 +525,7 @@
 
         \section3 Left, right, and behind
 
-            \image qtquickcontrols-swipedelegate.gif
+            \image qtquickcontrols2-swipedelegate.gif
 
             By default, there are no left, right, or behind items defined.
 
@@ -550,19 +550,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-switch-background.png
+            \image qtquickcontrols2-switch-background.png
 
             Switch has no background item by default.
 
         \section3 Content item
 
-            \image qtquickcontrols-switch-contentItem.png
+            \image qtquickcontrols2-switch-contentItem.png
 
             \snippet Switch.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-switch-indicator.png
+            \image qtquickcontrols2-switch-indicator.png
 
             \snippet Switch.qml indicator
 
@@ -573,19 +573,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-switchdelegate-background.png
+            \image qtquickcontrols2-switchdelegate-background.png
 
             \snippet SwitchDelegate.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-switchdelegate-contentItem.png
+            \image qtquickcontrols2-switchdelegate-contentItem.png
 
             \snippet SwitchDelegate.qml contentItem
 
         \section3 Indicator
 
-            \image qtquickcontrols-switchdelegate-indicator.png
+            \image qtquickcontrols2-switchdelegate-indicator.png
 
             \snippet SwitchDelegate.qml indicator
 
@@ -610,7 +610,7 @@
 
         \section3 Background
 
-            \image qtquickcontrols-textfield-background.png
+            \image qtquickcontrols2-textfield-background.png
 
             \snippet TextField.qml background
 
@@ -621,7 +621,7 @@
 
         \section3 Background
 
-            \image qtquickcontrols-toolbar-background.png
+            \image qtquickcontrols2-toolbar-background.png
 
             \snippet ToolBar.qml background
 
@@ -633,13 +633,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-toolbutton-background.png
+            \image qtquickcontrols2-toolbutton-background.png
 
             \snippet ToolButton.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-toolbutton-contentItem.png
+            \image qtquickcontrols2-toolbutton-contentItem.png
 
             \snippet ToolButton.qml contentItem
 
@@ -651,13 +651,13 @@
 
         \section3 Background
 
-            \image qtquickcontrols-tooltip-background.png
+            \image qtquickcontrols2-tooltip-background.png
 
             \snippet ToolTip.qml background
 
         \section3 Content item
 
-            \image qtquickcontrols-tooltip-contentItem.png
+            \image qtquickcontrols2-tooltip-contentItem.png
 
             \snippet ToolTip.qml contentItem
 
@@ -671,19 +671,19 @@
 
         \section3 Background
 
-            \image qtquickcontrols-tumbler-background.png
+            \image qtquickcontrols2-tumbler-background.png
 
             Tumbler has no background item by default.
 
         \section3 Content Item
 
-            \image qtquickcontrols-tumbler-contentItem.png
+            \image qtquickcontrols2-tumbler-contentItem.png
 
             \snippet Tumbler.qml contentItem
 
         \section3 Delegate
 
-            \image qtquickcontrols-tumbler-delegate.png
+            \image qtquickcontrols2-tumbler-delegate.png
 
             \snippet Tumbler.qml delegate
 */

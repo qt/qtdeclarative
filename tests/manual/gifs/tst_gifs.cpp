@@ -102,7 +102,7 @@ void tst_Gifs::tumblerWrap()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
-    gifRecorder.setQmlFileName("qtquickcontrols-tumbler-wrap.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-tumbler-wrap.qml");
 
     gifRecorder.start();
 
@@ -172,7 +172,7 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(5);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-slider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
 
     gifRecorder.start();
 
@@ -209,7 +209,7 @@ void tst_Gifs::rangeSlider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(7);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-rangeslider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-rangeslider.qml");
 
     gifRecorder.start();
 
@@ -258,7 +258,7 @@ void tst_Gifs::busyIndicator()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-busyindicator.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
 
     gifRecorder.start();
 
@@ -285,7 +285,7 @@ void tst_Gifs::switchGif()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols-switch.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-switch.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -303,7 +303,7 @@ void tst_Gifs::button()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols-button.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -317,7 +317,7 @@ void tst_Gifs::button()
 
 void tst_Gifs::tabBar()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols-tabbar.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols2-tabbar.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -346,7 +346,7 @@ void tst_Gifs::tabBar()
 
 void tst_Gifs::menu()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols-menu.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols2-menu.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -380,8 +380,8 @@ void tst_Gifs::menu()
 void tst_Gifs::swipeDelegate_data()
 {
     QTest::addColumn<QString>("qmlFileName");
-    QTest::newRow("qtquickcontrols-swipedelegate.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate.qml");
-    QTest::newRow("qtquickcontrols-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate-leading-trailing.qml");
+    QTest::newRow("qtquickcontrols2-swipedelegate.qml") << QString::fromLatin1("qtquickcontrols2-swipedelegate.qml");
+    QTest::newRow("qtquickcontrols2-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtquickcontrols2-swipedelegate-leading-trailing.qml");
 }
 
 void tst_Gifs::swipeDelegate()
@@ -433,7 +433,7 @@ void tst_Gifs::swipeDelegateBehind()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(14);
-    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols-swipedelegate-behind.qml"));
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols2-swipedelegate-behind.qml"));
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -490,7 +490,7 @@ void tst_Gifs::delegates()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(duration);
-    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols-%1.qml").arg(name));
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-%1.qml").arg(name));
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();

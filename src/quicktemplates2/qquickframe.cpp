@@ -60,9 +60,9 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtquickcontrols-frame.png
+    \image qtquickcontrols2-frame.png
 
-    \snippet qtquickcontrols-frame.qml 1
+    \snippet qtquickcontrols2-frame.qml 1
 
     \labs
 

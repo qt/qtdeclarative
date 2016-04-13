@@ -39,58 +39,58 @@
 
     \section1 ApplicationWindow Control
 
-    \image qtquickcontrols-applicationwindow-wireframe.png
+    \image qtquickcontrols2-applicationwindow-wireframe.png
 
     \l ApplicationWindow contains optional header and footer items.
 
     \section1 Frame Control
 
-    \image qtquickcontrols-frame.png
+    \image qtquickcontrols2-frame.png
 
     \l Frame is used to layout a logical group of controls together, within
     a visual frame.
 
     \section1 GroupBox Control
 
-    \image qtquickcontrols-groupbox.png
+    \image qtquickcontrols2-groupbox.png
 
     \l GroupBox is used to layout a logical group of controls together,
     within a titled visual frame.
 
     \section1 Page Control
 
-    \image qtquickcontrols-page-wireframe.png
+    \image qtquickcontrols2-page-wireframe.png
 
     \l Page provides page-specific header and footer items.
 
     \section1 Pane Control
 
-    \image qtquickcontrols-pane.png
+    \image qtquickcontrols2-pane.png
 
     \l Pane provides a background color that matches with the application
     style and theme.
 
     \section1 StackView Control
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols2-stackview-wireframe.png
 
     \l StackView organizes content pages into a stack.
 
     \section1 SwipeView Control
 
-    \image qtquickcontrols-swipeview-wireframe.png
+    \image qtquickcontrols2-swipeview-wireframe.png
 
     \l SwipeView organizes content pages into a swipable strip.
 
     \section1 TabBar Control
 
-    \image qtquickcontrols-tabbar-wireframe.png
+    \image qtquickcontrols2-tabbar-wireframe.png
 
     \l TabBar organizes content pages into tabs.
 
     \section1 ToolBar Control
 
-    \image qtquickcontrols-toolbar.png
+    \image qtquickcontrols2-toolbar.png
 
     \l ToolBar is a container of application-wide and context-sensitive
     actions and controls.

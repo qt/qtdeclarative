@@ -63,13 +63,13 @@ QT_BEGIN_NAMESPACE
     in a treeview, for example.
 
     \table
-    \row \li \image qtquickcontrols-checkbox-normal.png
+    \row \li \image qtquickcontrols2-checkbox-normal.png
          \li A check box in its normal state.
-    \row \li \image qtquickcontrols-checkbox-checked.png
+    \row \li \image qtquickcontrols2-checkbox-checked.png
          \li A check box that is checked.
-    \row \li \image qtquickcontrols-checkbox-focused.png
+    \row \li \image qtquickcontrols2-checkbox-focused.png
          \li A check box that has active focus.
-    \row \li \image qtquickcontrols-checkbox-disabled.png
+    \row \li \image qtquickcontrols2-checkbox-disabled.png
          \li A check box that is disabled.
     \endtable
 
