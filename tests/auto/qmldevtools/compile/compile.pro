@@ -12,3 +12,4 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_compile.cpp
 
+load(qt_common)
