@@ -523,7 +523,7 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     QVariantList variantList = customCurveVariant;
     if ((variantList.count() % 6) == 0) {
         bool allRealsOk = true;
-        QList<qreal> reals;
+        QVector<qreal> reals;
         const int variantListCount = variantList.count();
         reals.reserve(variantListCount);
         for (int i = 0; i < variantListCount; i++) {
