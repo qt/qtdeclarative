@@ -304,7 +304,7 @@ void QQuickDragAttached::setActive(bool active)
             else if (d->dragType == QQuickDrag::Automatic) {
                 // There are different semantics than start() since startDrag()
                 // may be called after an internal drag is already started.
-                active = true;
+                d->active = true;
                 emit activeChanged();
                 d->startDrag(d->supportedActions);
             }
