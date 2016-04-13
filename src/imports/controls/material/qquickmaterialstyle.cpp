@@ -498,27 +498,8 @@ void QQuickMaterialStyle::setPrimary(const QVariant &var)
 {
     QRgb primary = 0;
     bool custom = false;
-    if (var.type() == QVariant::Int) {
-        int val = var.toInt();
-        if (val > BlueGrey) {
-            qmlInfo(parent()) << "unknown Material.primary value: " << val;
-            return;
-        }
-        primary = val;
-    } else {
-        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
-        if (val != -1) {
-            primary = val;
-        } else {
-            QColor color(var.toString());
-            if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Material.primary value: " << var.toString();
-                return;
-            }
-            custom = true;
-            primary = color.rgba();
-        }
-    }
+    if (!variantToRgba(var, "primary", &primary, &custom))
+        return;
 
     m_explicitPrimary = true;
     if (m_primary == primary)
@@ -572,27 +553,8 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
 {
     QRgb accent = 0;
     bool custom = false;
-    if (var.type() == QVariant::Int) {
-        int val = var.toInt();
-        if (val > BlueGrey) {
-            qmlInfo(parent()) << "unknown Material.accent value: " << val;
-            return;
-        }
-        accent = val;
-    } else {
-        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
-        if (val != -1) {
-            accent = val;
-        } else {
-            QColor color(var.toString());
-            if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Material.accent value: " << var.toString();
-                return;
-            }
-            custom = true;
-            accent = color.rgba();
-        }
-    }
+    if (!variantToRgba(var, "accent", &accent, &custom))
+        return;
 
     m_explicitAccent = true;
     if (m_accent == accent)
@@ -1017,6 +979,33 @@ void QQuickMaterialStyle::init()
     }
 
     QQuickStyleAttached::init(); // TODO: lazy init?
+}
+
+bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const
+{
+    *custom = false;
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val > BlueGrey) {
+            qmlInfo(parent()) << "unknown Material." << name << " value: " << val;
+            return false;
+        }
+        *rgba = val;
+    } else {
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            *rgba = val;
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qmlInfo(parent()) << "unknown Material." << name << " value: " << var.toString();
+                return false;
+            }
+            *custom = true;
+            *rgba = color.rgba();
+        }
+    }
+    return true;
 }
 
 QT_END_NAMESPACE

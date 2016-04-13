@@ -228,6 +228,7 @@ protected:
 
 private:
     void init();
+    bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const;
 
     bool m_explicitTheme;
     bool m_explicitPrimary;
