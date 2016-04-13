@@ -56,9 +56,8 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgnodeupdater_p.h>
-#include <private/qdatabuffer_p.h>
-
 #include <private/qsgrendernode_p.h>
+#include <private/qdatabuffer_p.h>
 
 #include <QtCore/QBitArray>
 

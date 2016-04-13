@@ -169,4 +169,15 @@ void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
     renderer->renderScene(fbo);
 }
 
+QSGRendererInterface *QSGSoftwareContext::rendererInterface(QSGRenderContext *renderContext)
+{
+    Q_UNUSED(renderContext);
+    return this;
+}
+
+QSGRendererInterface::GraphicsAPI QSGSoftwareContext::graphicsAPI() const
+{
+    return Software;
+}
+
 QT_END_NAMESPACE

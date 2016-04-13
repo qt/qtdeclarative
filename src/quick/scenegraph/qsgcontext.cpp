@@ -296,6 +296,13 @@ QSize QSGContext::minimumFBOSize() const
     return QSize(1, 1);
 }
 
+QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderContext)
+{
+    Q_UNUSED(renderContext);
+    qWarning("QSGRendererInterface not implemented");
+    return nullptr;
+}
+
 QSGRenderContext::QSGRenderContext(QSGContext *context)
     : m_sg(context)
     , m_distanceFieldCacheManager(0)

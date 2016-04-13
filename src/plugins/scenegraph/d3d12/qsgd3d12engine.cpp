@@ -360,6 +360,16 @@ void QSGD3D12Engine::endLayer()
     d->endLayer();
 }
 
+void QSGD3D12Engine::invalidateCachedFrameState()
+{
+    d->invalidateCachedFrameState();
+}
+
+void QSGD3D12Engine::restoreFrameState(bool minimal)
+{
+    d->restoreFrameState(minimal);
+}
+
 void QSGD3D12Engine::finalizePipeline(const QSGD3D12PipelineState &pipelineState)
 {
     d->finalizePipeline(pipelineState);
@@ -493,6 +503,16 @@ void QSGD3D12Engine::releaseRenderTarget(uint id)
 void QSGD3D12Engine::activateRenderTargetAsTexture(uint id)
 {
     d->activateRenderTargetAsTexture(id);
+}
+
+QSGRendererInterface::GraphicsAPI QSGD3D12Engine::graphicsAPI() const
+{
+    return Direct3D12;
+}
+
+void *QSGD3D12Engine::getResource(Resource resource) const
+{
+    return d->getResource(resource);
 }
 
 static inline quint32 alignedSize(quint32 size, quint32 byteAlign)
@@ -1296,13 +1316,29 @@ void QSGD3D12EnginePrivate::beginDrawCalls()
 {
     frameCommandList->Reset(frameCommandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
     commandList = frameCommandList.Get();
+    invalidateCachedFrameState();
+}
 
+void QSGD3D12EnginePrivate::invalidateCachedFrameState()
+{
     tframeData.drawingMode = QSGGeometry::DrawingMode(-1);
     tframeData.currentIndexBuffer = 0;
     tframeData.drawCount = 0;
     tframeData.lastPso = nullptr;
     tframeData.lastRootSig = nullptr;
     tframeData.descHeapSet = false;
+}
+
+void QSGD3D12EnginePrivate::restoreFrameState(bool minimal)
+{
+    queueSetRenderTarget(currentRenderTarget);
+    if (!minimal) {
+        queueViewport(tframeData.viewport);
+        queueScissor(tframeData.scissor);
+        queueSetBlendFactor(tframeData.blendFactor);
+        queueSetStencilRef(tframeData.stencilRef);
+    }
+    finalizePipeline(tframeData.pipelineState);
 }
 
 void QSGD3D12EnginePrivate::beginFrameDraw()
@@ -1886,12 +1922,7 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
         // start a new one
         beginDrawCalls();
         // prepare for the upcoming drawcalls
-        queueSetRenderTarget(currentRenderTarget);
-        queueViewport(tframeData.viewport);
-        queueScissor(tframeData.scissor);
-        queueSetBlendFactor(tframeData.blendFactor);
-        queueSetStencilRef(tframeData.stencilRef);
-        finalizePipeline(tframeData.pipelineState);
+        restoreFrameState();
     }
 }
 
@@ -2735,6 +2766,21 @@ void QSGD3D12EnginePrivate::activateRenderTargetAsTexture(uint id)
     }
 
     tframeData.activeTextures.append(TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id));
+}
+
+void *QSGD3D12EnginePrivate::getResource(QSGRendererInterface::Resource resource) const
+{
+    switch (resource) {
+    case QSGRendererInterface::Device:
+        return device;
+    case QSGRendererInterface::CommandQueue:
+        return commandQueue.Get();
+    case QSGRendererInterface::CommandList:
+        return commandList;
+    default:
+        break;
+    }
+    return nullptr;
 }
 
 QT_END_NAMESPACE

@@ -69,6 +69,7 @@ public:
     QSGLayer *createLayer(QSGRenderContext *rc) override;
     QSize minimumFBOSize() const override;
     QSurfaceFormat defaultSurfaceFormat() const override;
+    QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 };
 
 QT_END_NAMESPACE

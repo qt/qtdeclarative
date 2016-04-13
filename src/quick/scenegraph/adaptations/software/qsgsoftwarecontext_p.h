@@ -53,6 +53,7 @@
 
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include "qsgrendererinterface.h"
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_COMPILATION)
@@ -79,7 +80,7 @@ public:
     bool m_initialized;
 };
 
-class QSGSoftwareContext : public QSGContext
+class QSGSoftwareContext : public QSGContext, public QSGRendererInterface
 {
     Q_OBJECT
 public:
@@ -93,6 +94,9 @@ public:
     QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
+    QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
+
+    GraphicsAPI graphicsAPI() const override;
 };
 
 QT_END_NAMESPACE

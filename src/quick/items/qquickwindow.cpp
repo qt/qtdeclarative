@@ -4345,6 +4345,22 @@ qreal QQuickWindow::effectiveDevicePixelRatio() const
     return w ? w->devicePixelRatio() : devicePixelRatio();
 }
 
+/*!
+    Returns the current renderer interface if there is one. Otherwise null is returned.
+
+    \sa QSGRenderNode, QSGRendererInterface
+    \since 5.8
+ */
+QSGRendererInterface *QQuickWindow::rendererInterface() const
+{
+    Q_D(const QQuickWindow);
+    if (!isSceneGraphInitialized()) {
+        qWarning("The QSGRendererInterface cannot be queried before the scenegraph is initialized");
+        return nullptr;
+    }
+    return d->context->sceneGraphContext()->rendererInterface(d->context);
+}
+
 #include "moc_qquickwindow.cpp"
 
 QT_END_NAMESPACE

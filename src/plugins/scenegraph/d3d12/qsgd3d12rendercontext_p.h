@@ -61,12 +61,13 @@ class QSGD3D12RenderContext : public QSGRenderContext
 {
 public:
     QSGD3D12RenderContext(QSGContext *ctx);
+    bool isValid() const override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer() override;
 
-    void setEngine(QSGD3D12Engine *engine) { m_engine = engine; }
+    void setEngine(QSGD3D12Engine *engine);
     QSGD3D12Engine *engine() { return m_engine; }
 
 private:

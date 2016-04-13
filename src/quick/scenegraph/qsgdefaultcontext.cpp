@@ -240,4 +240,15 @@ bool QSGDefaultContext::isDistanceFieldEnabled() const
     return !m_distanceFieldDisabled;
 }
 
+QSGRendererInterface *QSGDefaultContext::rendererInterface(QSGRenderContext *renderContext)
+{
+    Q_UNUSED(renderContext);
+    return this;
+}
+
+QSGRendererInterface::GraphicsAPI QSGDefaultContext::graphicsAPI() const
+{
+    return OpenGL;
+}
+
 QT_END_NAMESPACE

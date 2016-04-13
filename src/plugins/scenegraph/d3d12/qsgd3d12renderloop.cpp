@@ -331,8 +331,12 @@ bool QSGD3D12RenderThread::event(QEvent *e)
                 qDebug("RT - WM_TryRelease - invalidating rc");
             if (wme->window) {
                 QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
-                if (wme->destroying)
+                if (wme->destroying) {
+                    // QSGNode destruction may release graphics resources in use so wait first.
+                    engine->waitGPU();
+                    // Bye bye nodes...
                     wd->cleanupNodesOnShutdown();
+                }
                 rc->invalidate();
                 QCoreApplication::processEvents();
                 QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);

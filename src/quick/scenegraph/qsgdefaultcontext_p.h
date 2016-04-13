@@ -53,10 +53,11 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
+#include "qsgrendererinterface.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultContext : public QSGContext
+class QSGDefaultContext : public QSGContext, public QSGRendererInterface
 {
 public:
     QSGDefaultContext(QObject *parent = 0);
@@ -72,9 +73,12 @@ public:
     QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
+    QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
+
+    GraphicsAPI graphicsAPI() const override;
 
 private:
     QMutex m_mutex;

@@ -82,6 +82,7 @@ class QQuickTextureFactory;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGContext;
 class QQuickPaintedItem;
+class QSGRendererInterface;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -169,6 +170,8 @@ public:
 
     virtual QSize minimumFBOSize() const;
     virtual QSurfaceFormat defaultSurfaceFormat() const = 0;
+
+    virtual QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext);
 
     static QSGContext *createDefaultContext();
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);

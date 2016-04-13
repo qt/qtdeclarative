@@ -37,36 +37,57 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERNODE_P_H
-#define QSGRENDERNODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#ifndef QSGRENDERNODE_H
+#define QSGRENDERNODE_H
 
 #include <QtQuick/qsgnode.h>
-#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGRenderNodePrivate
+class QSGRenderNodePrivate;
+
+class Q_QUICK_EXPORT QSGRenderNode : public QSGNode
 {
 public:
-    QSGRenderNodePrivate();
+    enum StateFlag {
+        DepthState = 0x01,
+        StencilState = 0x02,
+        ScissorState = 0x04,
+        ColorState = 0x08,
+        BlendState = 0x10,
+        CullState = 0x20,
+        ViewportState = 0x40,
+        RenderTargetState = 0x80
+    };
+    Q_DECLARE_FLAGS(StateFlags, StateFlag)
 
-    static QSGRenderNodePrivate *get(QSGRenderNode *node) { return node->d; }
+    struct Q_QUICK_EXPORT RenderState {
+        virtual ~RenderState();
+        virtual const QMatrix4x4 *projectionMatrix() const = 0;
+        virtual QRect scissorRect() const = 0;
+        virtual bool scissorEnabled() const = 0;
+        virtual int stencilValue() const = 0;
+        virtual bool stencilEnabled() const = 0;
+        virtual void *get(const char *state) const;
+    };
 
-    const QMatrix4x4 *m_matrix;
-    const QSGClipNode *m_clip_list;
-    qreal m_opacity;
+    QSGRenderNode();
+    ~QSGRenderNode();
+
+    virtual StateFlags changedStates() const;
+    virtual void render(const RenderState *state) = 0;
+    virtual void releaseResources() = 0;
+
+    const QMatrix4x4 *matrix() const;
+    const QSGClipNode *clipList() const;
+    qreal inheritedOpacity() const;
+
+private:
+    QSGRenderNodePrivate *d;
+    friend class QSGRenderNodePrivate;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderNode::StateFlags)
 
 QT_END_NAMESPACE
 

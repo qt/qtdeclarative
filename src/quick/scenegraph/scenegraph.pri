@@ -14,7 +14,9 @@ HEADERS += \
     $$PWD/coreapi/qsgabstractrenderer.h \
     $$PWD/coreapi/qsgabstractrenderer_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
+    $$PWD/coreapi/qsgrendernode.h \
     $$PWD/coreapi/qsgrendernode_p.h \
+    $$PWD/coreapi/qsgrendererinterface.h \
     $$PWD/coreapi/qsggeometry_p.h
 
 SOURCES += \
@@ -24,7 +26,8 @@ SOURCES += \
     $$PWD/coreapi/qsgnode.cpp \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp \
-    $$PWD/coreapi/qsgrendernode.cpp
+    $$PWD/coreapi/qsgrendernode.cpp \
+    $$PWD/coreapi/qsgrendererinterface.cpp
 
 contains(QT_CONFIG, opengl(es1|es2)?) {
     HEADERS += \

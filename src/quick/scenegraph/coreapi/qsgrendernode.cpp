@@ -37,28 +37,51 @@
 **
 ****************************************************************************/
 
+#include "qsgrendernode.h"
 #include "qsgrendernode_p.h"
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \class QSGRenderNode
+    \brief The QSGMaterialShader class represents a set of custom rendering commands
+    targeting the graphics API that is in use by the scenegraph.
+    \inmodule QtQuick
+    \since 5.8
+ */
+
 QSGRenderNode::QSGRenderNode()
-    : QSGNode(RenderNodeType)
-    , m_matrix(0)
+    : QSGNode(RenderNodeType),
+      d(new QSGRenderNodePrivate)
+{
+}
+
+/*!
+    Destructs the render node. Derived classes are expected to perform cleanup
+    similar to releaseResources() in here.
+
+    When a low-level graphics API is in use, the scenegraph will make sure
+    there is a CPU-side wait for the GPU to complete all work submitted to the
+    scenegraph's graphics command queue before the scenegraph's nodes are
+    deleted. Therefore there is no need to issue additional waits here, unless
+    the render() implementation is using additional command queues.
+
+    \sa releaseResources()
+ */
+QSGRenderNode::~QSGRenderNode()
+{
+    delete d;
+}
+
+QSGRenderNodePrivate::QSGRenderNodePrivate()
+    : m_matrix(0)
     , m_clip_list(0)
     , m_opacity(1)
 {
 }
 
-void QSGRenderNode::setInheritedOpacity(qreal opacity)
-{
-    Q_ASSERT(opacity >= 0 && opacity <= 1);
-    m_opacity = opacity;
-}
-
 /*!
-    \fn QSGRenderNode::StateFlags QSGRenderNode::changedStates()
-
-    This function should return a mask where each bit represents OpenGL states changed by
+    This function should return a mask where each bit represents graphics states changed by
     the \l render() function:
     \list
     \li DepthState - depth write mask, depth test enabled, depth comparison function
@@ -69,30 +92,72 @@ void QSGRenderNode::setInheritedOpacity(qreal opacity)
     \li BlendState - blend enabled, blend function
     \li CullState - front face, cull face enabled
     \li ViewportState - viewport
+    \li RenderTargetState - render target
     \endlist
 
-    The function is called by the renderer so it can reset the OpenGL states after rendering this
-    node.
+    The function is called by the renderer so it can reset the states after
+    rendering this node. This makes the implementation of render() simpler
+    since it does not have to query and restore these states.
 
-    \internal
+    The default implementation returns 0, meaning no relevant state was changed
+    in render().
+
+    With APIs other than OpenGL the relevant states are only those that are set
+    via the command list (for example, OMSetRenderTargets, RSSetViewports,
+    RSSetScissorRects, OMSetBlendFactor, OMSetStencilRef in case of D3D12), and
+    only when such commands were added to the scenegraph's command list queried
+    via the QSGRendererInterface::CommandList resource enum. States set in
+    pipeline state objects do not need to be reported here. Similarly, draw
+    call related settings (root signature, descriptor heaps, etc.) are always
+    set again by the scenegraph so render() can freely change them.
+
+    \note This function may be called before render().
   */
+QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
+{
+    return 0;
+}
 
 /*!
-    \fn void QSGRenderNode::render(const RenderState &state)
+    \fn void QSGRenderNode::render(const RenderState *state)
 
-    This function is called by the renderer and should paint this node with OpenGL commands.
+    This function is called by the renderer and should paint this node with
+    directly invoking commands in the graphics API (OpenGL, Direct3D, etc.)
+    currently in use.
 
-    The states necessary for clipping has already been set before the function is called.
-    The clip is a combination of a stencil clip and scissor clip. Information about the clip is
-    found in \a state.
+    The states necessary for clipping has already been set before the function
+    is called. The clip is a combination of a stencil clip and scissor clip.
+    Information about the clip is found in \a state.
+
+    \note This means that setting viewport, scissor rectangle, stencil
+    reference value, and similar is not necessary in render() since the
+    corresponding commands are on the command list (or, in case of OpenGL, the
+    context) already. However, for APIs other than OpenGL stencil-based
+    clipping will need enabling stencil testing in the pipeline state that is
+    used by render().
 
     The effective opacity can be retrieved with \l inheritedOpacity().
 
-    The projection matrix is available through \a state, while the model-view matrix can be
-    fetched with \l matrix(). The combined matrix is then the projection matrix times the
-    model-view matrix.
+    The projection matrix is available through \a state, while the model-view
+    matrix can be fetched with \l matrix(). The combined matrix is then the
+    projection matrix times the model-view matrix. The correct stacking of the
+    items in the scene is ensured by the projection matrix.
 
-    The following states are set before this function is called:
+    When using the provided matrices, the coordinate system for vertex data
+    follows the usual QQuickItem conventions: top-left is (0, 0), bottom-right
+    is the corresponding QQuickItem's width() and height() minus one. For
+    example, assuming a two float (x-y) per vertex coordinate layout, a
+    triangle covering half of the item can be specified as (width - 1, height - 1),
+    (0, 0), (0, height - 1) using counter-clockwise direction.
+
+    \note QSGRenderNode is provided as a means to implement custom 2D or 2.5D
+    Qt Quick items. It is not intended for integrating true 3D content into the
+    Qt Quick scene. That use case is better supported by
+    QQuickFramebufferObject, QQuickWindow::beforeRendering(), or the
+    equivalents of those for APIs other than OpenGL.
+
+    For OpenGL the following states are set on the render thread's context
+    before this function is called:
     \list
     \li glDepthMask(false)
     \li glDisable(GL_DEPTH_TEST)
@@ -107,14 +172,128 @@ void QSGRenderNode::setInheritedOpacity(qreal opacity)
     \li glDisable(GL_CULL_FACE)
     \endlist
 
-    States that are not listed above, but are included in \l StateFlags, can have arbitrary
-    values.
+    States that are not listed above, but are included in \l StateFlags, can
+    have arbitrary values.
 
-    \l changedStates() should return which states this function has changed. If a state is not
-    covered by \l StateFlags, the state should be set to the default value according to the
-    OpenGL specification.
+    \l changedStates() should return which states this function changes. If a
+    state is not covered by \l StateFlags, the state should be set to the
+    default value according to the OpenGL specification. For other APIs, see
+    the documentation for changedStates() for more information.
 
-    \internal
+    For APIs other than OpenGL, it will likely be necessary to query certain
+    API-specific resources (for example, the graphics device or the command
+    list/buffer to add the commands to). This is done via QSGRendererInterface.
+
+    \sa QSGRendererInterface, QQuickWindow::rendererInterface()
   */
+
+/*!
+    \fn void QSGRenderNode::releaseResources()
+
+    This function is called when all custom graphics resources allocated by
+    this node have to be freed immediately. In case the node does not directly
+    allocate graphics resources (buffers, textures, render targets, fences,
+    etc.) through the graphics API that is in use, there is nothing to do here.
+
+    Failing to release all custom resources can lead to incorrect behavior in
+    graphics device loss scenarios on some systems since subsequent
+    reinitialization of the graphics system may fail.
+
+    \note Some scenegraph backends may choose not to call this function.
+    Therefore it is expected that QSGRenderNode implementations perform cleanup
+    both in their destructor and in releaseResources().
+
+    Unlike with the destructor, it is expected that render() can reinitialize
+    all resources it needs when called after a call to releaseResources().
+
+    With OpenGL, the scenegraph's OpenGL context will be current both when
+    calling the destructor and this function.
+ */
+
+/*!
+    \return pointer to the current model-view matrix.
+ */
+const QMatrix4x4 *QSGRenderNode::matrix() const
+{
+    return d->m_matrix;
+}
+
+/*!
+    \return the current clip list.
+ */
+const QSGClipNode *QSGRenderNode::clipList() const
+{
+    return d->m_clip_list;
+}
+
+/*!
+    \return the current effective opacity.
+ */
+qreal QSGRenderNode::inheritedOpacity() const
+{
+    return d->m_opacity;
+}
+
+QSGRenderNode::RenderState::~RenderState()
+{
+}
+
+/*!
+    \fn const QMatrix4x4 *QSGRenderNode::RenderState::projectionMatrix() const
+
+    \return pointer to the current projection matrix.
+
+    The model-view matrix can be retrieved with QSGRenderNode::matrix().
+    Typically \c{projection * modelview} is the matrix that is then used in the
+    vertex shader to transform the vertices.
+ */
+
+/*!
+    \fn const QMatrix4x4 *QSGRenderNode::RenderState::scissorRect() const
+
+    \return the current scissor rectangle when clipping is active.
+
+    \note Be aware of the differences between graphics APIs: for some the
+    scissor rect is only active when scissoring is enabled (for example,
+    OpenGL), while for others the scissor rect is equal to the viewport rect
+    when there is no need to scissor away anything (for example, Direct3D 12).
+ */
+
+/*!
+    \fn const QMatrix4x4 *QSGRenderNode::RenderState::scissorEnabled() const
+
+    \return the current state of scissoring.
+
+    \note Only relevant for graphics APIs that have a dedicated on/off state of
+    scissoring.
+ */
+
+/*!
+    \fn const QMatrix4x4 *QSGRenderNode::RenderState::stencilValue() const
+
+    \return the current stencil reference value when clipping is active.
+ */
+
+/*!
+    \fn const QMatrix4x4 *QSGRenderNode::RenderState::stencilEnabled() const
+
+    \return the current state of stencil testing.
+
+    \note With graphics APIs where stencil testing is enabled in pipeline state
+    objects, instead of individual state-setting commands, it is up to the
+    implementation of render() to enable stencil testing with operations
+    \c KEEP, comparison function \c EQUAL, and a read and write mask of \c 0xFF.
+ */
+
+/*!
+    \return pointer to a \a state value.
+
+    Reserved for future use.
+ */
+void *QSGRenderNode::RenderState::get(const char *state) const
+{
+    Q_UNUSED(state);
+    return nullptr;
+}
 
 QT_END_NAMESPACE

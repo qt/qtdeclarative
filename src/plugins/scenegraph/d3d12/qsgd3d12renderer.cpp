@@ -40,6 +40,7 @@
 #include "qsgd3d12renderer_p.h"
 #include "qsgd3d12rendercontext_p.h"
 #include <private/qsgnodeupdater_p.h>
+#include <private/qsgrendernode_p.h>
 
 #include "vs_stencilclip.hlslh"
 #include "ps_stencilclip.hlslh"
@@ -206,6 +207,11 @@ void QSGD3D12Renderer::buildRenderList(QSGNode *node, QSGClipNode *clip)
         gn->setClipList(clip);
         if (node->type() == QSGNode::ClipNodeType)
             clip = static_cast<QSGClipNode *>(node);
+    } else if (node->type() == QSGNode::RenderNodeType) {
+        QSGRenderNode *rn = static_cast<QSGRenderNode *>(node);
+        Element e;
+        e.node = rn;
+        m_renderList.add(e);
     }
 
     QSGNODE_TRAVERSE(node)
@@ -316,6 +322,7 @@ void QSGD3D12Renderer::render()
                 if (gn->inheritedOpacity() > 0.999f && ((gn->activeMaterial()->flags() & QSGMaterial::Blending) == 0))
                     m_opaqueElements.setBit(i);
             }
+            // QSGRenderNodes are always treated as non-opaque
         }
     }
 
@@ -432,15 +439,36 @@ void QSGD3D12Renderer::renderElements()
 
     // ...then the alpha ones
     for (int i = 0; i < m_renderList.size(); ++i) {
-        if (m_renderList.at(i).node->type() == QSGNode::GeometryNodeType && !m_opaqueElements.testBit(i))
+        if ((m_renderList.at(i).node->type() == QSGNode::GeometryNodeType && !m_opaqueElements.testBit(i))
+                || m_renderList.at(i).node->type() == QSGNode::RenderNodeType)
             renderElement(i);
     }
 }
 
+struct RenderNodeState : public QSGRenderNode::RenderState
+{
+    const QMatrix4x4 *projectionMatrix() const override { return m_projectionMatrix; }
+    QRect scissorRect() const { return m_scissorRect; }
+    bool scissorEnabled() const { return m_scissorEnabled; }
+    int stencilValue() const { return m_stencilValue; }
+    bool stencilEnabled() const { return m_stencilEnabled; }
+
+    const QMatrix4x4 *m_projectionMatrix;
+    QRect m_scissorRect;
+    bool m_scissorEnabled;
+    int m_stencilValue;
+    bool m_stencilEnabled;
+};
+
 void QSGD3D12Renderer::renderElement(int elementIndex)
 {
     Element &e = m_renderList.at(elementIndex);
-    Q_ASSERT(e.node->type() == QSGNode::GeometryNodeType);
+    Q_ASSERT(e.node->type() == QSGNode::GeometryNodeType || e.node->type() == QSGNode::RenderNodeType);
+
+    if (e.node->type() == QSGNode::RenderNodeType) {
+        renderRenderNode(static_cast<QSGRenderNode *>(e.node), elementIndex);
+        return;
+    }
 
     if (e.vboOffset < 0)
         return;
@@ -508,7 +536,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
 
     m_lastMaterialType = m->type();
 
-    setupClipping(gn, elementIndex);
+    setupClipping(gn->clipList(), elementIndex);
 
     // ### Lines and points with sizes other than 1 have to be implemented in some other way. Just ignore for now.
     if (g->drawingMode() == QSGGeometry::DrawLineStrip || g->drawingMode() == QSGGeometry::DrawLines) {
@@ -575,16 +603,10 @@ void QSGD3D12Renderer::queueDrawCall(const QSGGeometry *g, const QSGD3D12Rendere
     m_engine->queueDraw(dp);
 }
 
-void QSGD3D12Renderer::setupClipping(const QSGGeometryNode *gn, int elementIndex)
+void QSGD3D12Renderer::setupClipping(const QSGClipNode *clip, int elementIndex)
 {
-    const QSGClipNode *clip = gn->clipList();
-
     const QRect devRect = deviceRect();
     QRect scissorRect;
-    enum ClipType {
-        ClipScissor = 0x1,
-        ClipStencil = 0x2
-    };
     int clipTypes = 0;
     quint32 stencilValue = 0;
 
@@ -647,9 +669,13 @@ void QSGD3D12Renderer::setupClipping(const QSGGeometryNode *gn, int elementIndex
     if (clipTypes & ClipStencil) {
         m_pipelineState.stencilEnable = true;
         m_engine->queueSetStencilRef(stencilValue);
+        m_currentStencilValue = stencilValue;
     } else {
         m_pipelineState.stencilEnable = false;
+        m_currentStencilValue = 0;
     }
+
+    m_currentClipTypes = clipTypes;
 }
 
 void QSGD3D12Renderer::setScissor(const QRect &r)
@@ -705,6 +731,54 @@ void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementInd
     queueDrawCall(g, ce);
 
     ++stencilValue;
+}
+
+void QSGD3D12Renderer::renderRenderNode(QSGRenderNode *node, int elementIndex)
+{
+    QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(node);
+    RenderNodeState state;
+
+    setupClipping(rd->m_clip_list, elementIndex);
+
+    QMatrix4x4 pm = projectionMatrix();
+    state.m_projectionMatrix = &pm;
+    state.m_scissorEnabled = m_currentClipTypes & ClipScissor;
+    state.m_stencilEnabled = m_currentClipTypes & ClipStencil;
+    state.m_scissorRect = m_activeScissorRect;
+    state.m_stencilValue = m_currentStencilValue;
+
+    // ### rendernodes do not have the QSGBasicGeometryNode infrastructure
+    // for storing combined matrices, opacity and such, but perhaps they should.
+    QSGNode *xform = node->parent();
+    QSGNode *root = rootNode();
+    QMatrix4x4 modelview;
+    while (xform != root) {
+        if (xform->type() == QSGNode::TransformNodeType) {
+            modelview *= static_cast<QSGTransformNode *>(xform)->combinedMatrix();
+            break;
+        }
+        xform = xform->parent();
+    }
+    rd->m_matrix = &modelview;
+
+    QSGNode *opacity = node->parent();
+    rd->m_opacity = 1.0;
+    while (opacity != rootNode()) {
+        if (opacity->type() == QSGNode::OpacityNodeType) {
+            rd->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
+            break;
+        }
+        opacity = opacity->parent();
+    }
+
+    node->render(&state);
+
+    m_engine->invalidateCachedFrameState();
+    // For simplicity, reset viewport, scissor, blend factor, stencil ref when
+    // any of them got changed. This will likely be rare so skip these otherwise.
+    // Render target, pipeline state, draw call related stuff will be reset always.
+    const bool restoreMinimal = node->changedStates() == 0;
+    m_engine->restoreFrameState(restoreMinimal);
 }
 
 QT_END_NAMESPACE

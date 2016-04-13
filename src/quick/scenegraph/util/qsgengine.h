@@ -49,6 +49,7 @@ class QOpenGLContext;
 class QSGAbstractRenderer;
 class QSGEnginePrivate;
 class QSGTexture;
+class QSGRendererInterface;
 
 class Q_QUICK_EXPORT QSGEngine : public QObject
 {
@@ -72,6 +73,7 @@ public:
     QSGAbstractRenderer *createRenderer() const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
+    QSGRendererInterface *rendererInterface() const;
 };
 
 QT_END_NAMESPACE

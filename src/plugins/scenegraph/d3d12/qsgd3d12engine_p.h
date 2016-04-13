@@ -55,6 +55,7 @@
 #include <QImage>
 #include <QVector4D>
 #include <qsggeometry.h>
+#include <qsgrendererinterface.h>
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
@@ -260,7 +261,7 @@ inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
             + key.topologyType;
 }
 
-class QSGD3D12Engine
+class QSGD3D12Engine : public QSGRendererInterface
 {
 public:
     QSGD3D12Engine();
@@ -278,6 +279,8 @@ public:
     void endFrame();
     void beginLayer();
     void endLayer();
+    void invalidateCachedFrameState();
+    void restoreFrameState(bool minimal = false);
 
     uint genBuffer();
     void releaseBuffer(uint id);
@@ -343,6 +346,10 @@ public:
     void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
     void releaseRenderTarget(uint id);
     void activateRenderTargetAsTexture(uint id);
+
+    // QSGRendererInterface
+    GraphicsAPI graphicsAPI() const override;
+    void *getResource(Resource resource) const override;
 
 private:
     QSGD3D12EnginePrivate *d;

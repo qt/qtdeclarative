@@ -97,4 +97,14 @@ QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
     return QSurfaceFormat::defaultFormat();
 }
 
+QSGRendererInterface *QSGD3D12Context::rendererInterface(QSGRenderContext *renderContext)
+{
+    QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
+    if (!rc->engine()) {
+        qWarning("No D3D12 engine available yet (no render thread due to window not exposed?)");
+        return nullptr;
+    }
+    return rc->engine();
+}
+
 QT_END_NAMESPACE

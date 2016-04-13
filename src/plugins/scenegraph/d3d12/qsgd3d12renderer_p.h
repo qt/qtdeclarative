@@ -59,6 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGRenderNode;
+
 class QSGD3D12Renderer : public QSGRenderer
 {
 public:
@@ -78,12 +80,13 @@ private:
     void renderElements();
     void renderElement(int elementIndex);
     void setInputLayout(const QSGGeometry *g, QSGD3D12PipelineState *pipelineState);
-    void setupClipping(const QSGGeometryNode *gn, int elementIndex);
+    void setupClipping(const QSGClipNode *clip, int elementIndex);
     void setScissor(const QRect &r);
     void renderStencilClip(const QSGClipNode *clip, int elementIndex, const QMatrix4x4 &m, quint32 &stencilValue);
+    void renderRenderNode(QSGRenderNode *node, int elementIndex);
 
     struct Element {
-        QSGBasicGeometryNode *node = nullptr;
+        QSGNode *node = nullptr;
         qint32 vboOffset = -1;
         qint32 iboOffset = -1;
         quint32 iboStride = 0;
@@ -121,6 +124,12 @@ private:
     bool m_projectionChangedDueToDeviceSize;
 
     uint m_renderTarget = 0;
+    quint32 m_currentStencilValue;
+    enum ClipType {
+        ClipScissor = 0x1,
+        ClipStencil = 0x2
+    };
+    int m_currentClipTypes;
 };
 
 QT_END_NAMESPACE

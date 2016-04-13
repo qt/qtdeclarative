@@ -79,8 +79,8 @@ public:
         OpacityNodeType,
 #ifndef qdoc
         RootNodeType,
-        RenderNodeType
 #endif
+        RenderNodeType
     };
 
     enum Flag {

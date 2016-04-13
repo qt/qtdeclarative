@@ -56,6 +56,14 @@ QSGD3D12RenderContext::QSGD3D12RenderContext(QSGContext *ctx)
 {
 }
 
+bool QSGD3D12RenderContext::isValid() const
+{
+    // The render thread sets an engine when it starts up and resets when it
+    // quits. The rc is initialized and functional between those two points,
+    // regardless of any calls to invalidate(). See setEngine().
+    return m_engine != nullptr;
+}
+
 void QSGD3D12RenderContext::invalidate()
 {
     if (Q_UNLIKELY(debug_render()))
@@ -96,6 +104,17 @@ QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags
 void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
 {
     static_cast<QSGD3D12Renderer *>(renderer)->renderScene(fbo);
+}
+
+void QSGD3D12RenderContext::setEngine(QSGD3D12Engine *engine)
+{
+    if (m_engine == engine)
+        return;
+
+    m_engine = engine;
+
+    if (m_engine)
+        emit initialized();
 }
 
 QT_END_NAMESPACE

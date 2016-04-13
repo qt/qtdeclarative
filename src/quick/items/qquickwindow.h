@@ -60,6 +60,7 @@ class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
 class QQuickRenderControl;
+class QSGRendererInterface;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -152,6 +153,8 @@ public:
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
     qreal effectiveDevicePixelRatio() const;
+
+    QSGRendererInterface *rendererInterface() const;
 
 Q_SIGNALS:
     void frameSwapped();

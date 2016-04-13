@@ -37,35 +37,37 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERNODE_P_H
-#define QSGRENDERNODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#ifndef QSGRENDERERINTERFACE_H
+#define QSGRENDERERINTERFACE_H
 
 #include <QtQuick/qsgnode.h>
-#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGRenderNodePrivate
+class Q_QUICK_EXPORT QSGRendererInterface
 {
 public:
-    QSGRenderNodePrivate();
+    enum GraphicsAPI {
+        Unknown,
+        Software,
+        OpenGL,
+        Direct3D12,
+        Vulkan,
+        Metal
+    };
 
-    static QSGRenderNodePrivate *get(QSGRenderNode *node) { return node->d; }
+    enum Resource {
+        Device,
+        CommandQueue,
+        CommandList
+    };
 
-    const QMatrix4x4 *m_matrix;
-    const QSGClipNode *m_clip_list;
-    qreal m_opacity;
+    virtual ~QSGRendererInterface();
+
+    virtual GraphicsAPI graphicsAPI() const = 0;
+
+    virtual void *getResource(Resource resource) const;
+    virtual void *getResource(const char *resource) const;
 };
 
 QT_END_NAMESPACE

@@ -142,6 +142,8 @@ public:
     void endFrame();
     void beginLayer();
     void endLayer();
+    void invalidateCachedFrameState();
+    void restoreFrameState(bool minimal = false);
 
     uint genBuffer();
     void releaseBuffer(uint id);
@@ -175,6 +177,8 @@ public:
     void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
     void releaseRenderTarget(uint id);
     void activateRenderTargetAsTexture(uint id);
+
+    void *getResource(QSGRendererInterface::Resource resource) const;
 
     // the device is intentionally hidden here. all resources have to go
     // through the engine and, unlike with GL, cannot just be created in random
