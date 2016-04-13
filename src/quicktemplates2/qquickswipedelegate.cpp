@@ -842,7 +842,7 @@ void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
 
 QFont QQuickSwipeDelegate::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

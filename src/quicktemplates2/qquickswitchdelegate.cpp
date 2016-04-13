@@ -148,6 +148,11 @@ qreal QQuickSwitchDelegate::visualPosition() const
     return d->position;
 }
 
+QFont QQuickSwitchDelegate::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
+}
+
 void QQuickSwitchDelegate::mirrorChange()
 {
     QQuickItemDelegate::mirrorChange();

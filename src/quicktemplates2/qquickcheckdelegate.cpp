@@ -157,6 +157,11 @@ void QQuickCheckDelegate::setCheckState(Qt::CheckState state)
         emit checkedChanged();
 }
 
+QFont QQuickCheckDelegate::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
+}
+
 void QQuickCheckDelegate::checkStateSet()
 {
     setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);

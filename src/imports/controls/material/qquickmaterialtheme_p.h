@@ -64,6 +64,7 @@ private:
     QFont systemFont;
     QFont buttonFont;
     QFont itemViewFont;
+    QFont listViewFont;
     QFont menuItemFont;
     QFont editorFont;
 };

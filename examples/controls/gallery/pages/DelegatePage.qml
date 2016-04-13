@@ -81,6 +81,7 @@ Pane {
                     height: parent.height
 
                     Label {
+                        font.pixelSize: swipeDelegate.font.pixelSize
                         text: "Remove"
                         color: "white"
                         anchors.centerIn: parent

@@ -74,6 +74,8 @@ Q_SIGNALS:
     void checkStateChanged();
 
 protected:
+    QFont defaultFont() const override;
+
     void checkStateSet() override;
     void nextCheckState() override;
 

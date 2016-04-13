@@ -403,6 +403,18 @@ TestCase {
             {tag: "ItemDelegate:weight", type: "ItemDelegate", attribute: "weight", value: Font.Medium, window: Font.Black, pane: Font.Bold},
             {tag: "ItemDelegate:capitalization", type: "ItemDelegate", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
 
+            {tag: "CheckDelegate:pixelSize", type: "CheckDelegate", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "CheckDelegate:weight", type: "CheckDelegate", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "CheckDelegate:capitalization", type: "CheckDelegate", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
+            {tag: "RadioDelegate:pixelSize", type: "RadioDelegate", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "RadioDelegate:weight", type: "RadioDelegate", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "RadioDelegate:capitalization", type: "RadioDelegate", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
+            {tag: "SwitchDelegate:pixelSize", type: "SwitchDelegate", attribute: "pixelSize", value: 16, window: 20, pane: 10},
+            {tag: "SwitchDelegate:weight", type: "SwitchDelegate", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
+            {tag: "SwitchDelegate:capitalization", type: "SwitchDelegate", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},
+
             {tag: "Label:pixelSize", type: "Label", attribute: "pixelSize", value: 14, window: 20, pane: 10},
             {tag: "Label:weight", type: "Label", attribute: "weight", value: Font.Normal, window: Font.Black, pane: Font.Bold},
             {tag: "Label:capitalization", type: "Label", attribute: "capitalization", value: Font.MixedCase, window: Font.Capitalize, pane: Font.AllLowercase},

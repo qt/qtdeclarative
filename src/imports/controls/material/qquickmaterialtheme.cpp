@@ -53,6 +53,7 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         systemFont.setFamily(family);
         buttonFont.setFamily(family);
         itemViewFont.setFamily(family);
+        listViewFont.setFamily(family);
         menuItemFont.setFamily(family);
         editorFont.setFamily(family);
     }
@@ -65,6 +66,8 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
 
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
+
+    listViewFont.setPixelSize(16);
 
     menuItemFont.setPixelSize(16);
 
@@ -80,6 +83,8 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
         return &buttonFont;
     case QPlatformTheme::ItemViewFont:
         return &itemViewFont;
+    case QPlatformTheme::ListViewFont:
+        return &listViewFont;
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
         return &menuItemFont;

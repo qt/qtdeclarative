@@ -73,6 +73,7 @@ Q_SIGNALS:
     void visualPositionChanged();
 
 protected:
+    QFont defaultFont() const override;
     void mirrorChange() override;
 
 private:

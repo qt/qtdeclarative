@@ -85,6 +85,11 @@ QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent) :
     setAutoExclusive(true);
 }
 
+QFont QQuickRadioDelegate::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
+}
+
 #ifndef QT_NO_ACCESSIBILITY
 QAccessible::Role QQuickRadioDelegate::accessibleRole() const
 {
