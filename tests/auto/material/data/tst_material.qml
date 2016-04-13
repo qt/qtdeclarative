@@ -63,6 +63,8 @@ TestCase {
             Material.theme: Material.Dark
             Material.primary: Material.DeepOrange
             Material.accent: Material.DeepPurple
+            Material.background: Material.Green
+            Material.foreground: Material.Blue
         }
     }
 
@@ -77,6 +79,8 @@ TestCase {
             Material.theme: Material.Dark
             Material.primary: Material.Brown
             Material.accent: Material.Green
+            Material.background: Material.Yellow
+            Material.foreground: Material.Grey
         }
     }
 
@@ -144,6 +148,8 @@ TestCase {
         verify(control.Material)
         compare(control.Material.primary, Material.color(Material.Indigo))
         compare(control.Material.accent, Material.color(Material.Pink))
+        compare(control.Material.foreground, "#dd000000")
+        compare(control.Material.background, "#fafafa")
         compare(control.Material.theme, Material.Light)
         control.destroy()
     }
@@ -153,9 +159,13 @@ TestCase {
         verify(control)
         control.Material.primary = Material.Green
         control.Material.accent = Material.Brown
+        control.Material.background = Material.Red
+        control.Material.foreground = Material.Blue
         control.Material.theme = Material.Dark
         compare(control.Material.primary, Material.color(Material.Green))
         compare(control.Material.accent, Material.color(Material.Brown))
+        compare(control.Material.background, Material.color(Material.Red))
+        compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
         control.destroy()
     }
@@ -165,12 +175,18 @@ TestCase {
         verify(control)
         compare(control.Material.primary, Material.color(Material.DeepOrange))
         compare(control.Material.accent, Material.color(Material.DeepPurple))
+        compare(control.Material.background, Material.color(Material.Green))
+        compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
         control.Material.primary = undefined
         control.Material.accent = undefined
+        control.Material.background = undefined
+        control.Material.foreground = undefined
         control.Material.theme = undefined
         compare(control.Material.primary, testCase.Material.primary)
         compare(control.Material.accent, testCase.Material.accent)
+        compare(control.Material.background, testCase.Material.background)
+        compare(control.Material.foreground, testCase.Material.foreground)
         compare(control.Material.theme, testCase.Material.theme)
         control.destroy()
     }
@@ -179,6 +195,8 @@ TestCase {
         return [
             { tag: "primary", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
             { tag: "accent", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
+            { tag: "background", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
+            { tag: "foreground", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
             { tag: "theme", value1: Material.Dark, value2: Material.Light },
         ]
     }
@@ -233,16 +251,22 @@ TestCase {
         var control = button.createObject(parent.contentItem)
         compare(control.Material.primary, parent.Material.primary)
         compare(control.Material.accent, parent.Material.accent)
+        compare(control.Material.background, parent.Material.background)
+        compare(control.Material.foreground, parent.Material.foreground)
         compare(control.Material.theme, parent.Material.theme)
 
         var styledChild = styledWindow.createObject(window)
         verify(styledChild.Material.primary !== parent.Material.primary)
         verify(styledChild.Material.accent !== parent.Material.accent)
+        verify(styledChild.Material.background !== parent.Material.background)
+        verify(styledChild.Material.foreground !== parent.Material.foreground)
         verify(styledChild.Material.theme !== parent.Material.theme)
 
         var unstyledChild = window.createObject(window)
         compare(unstyledChild.Material.primary, parent.Material.primary)
         compare(unstyledChild.Material.accent, parent.Material.accent)
+        compare(unstyledChild.Material.background, parent.Material.background)
+        compare(unstyledChild.Material.foreground, parent.Material.foreground)
         compare(unstyledChild.Material.theme, parent.Material.theme)
 
         parent.Material.primary = Material.Lime
@@ -255,6 +279,16 @@ TestCase {
         verify(styledChild.Material.accent !== Material.color(Material.Cyan))
         // ### TODO: compare(unstyledChild.Material.accent, Material.color(Material.Cyan))
 
+        parent.Material.background = Material.Indigo
+        compare(control.Material.background, Material.color(Material.Indigo))
+        verify(styledChild.Material.background !== Material.color(Material.Indigo))
+        // ### TODO: compare(unstyledChild.Material.background, Material.color(Material.Indigo))
+
+        parent.Material.foreground = Material.Pink
+        compare(control.Material.foreground, Material.color(Material.Pink))
+        verify(styledChild.Material.foreground !== Material.color(Material.Pink))
+        // ### TODO: compare(unstyledChild.Material.foreground, Material.color(Material.Pink))
+
         parent.destroy()
     }
 
@@ -262,19 +296,31 @@ TestCase {
         var control = loader.createObject(testCase)
         control.Material.primary = Material.Yellow
         control.Material.accent = Material.Lime
+        control.Material.background = Material.LightGreen
+        control.Material.foreground = Material.LightBlue
         control.active = true
         compare(control.item.Material.primary, Material.color(Material.Yellow))
         compare(control.item.Material.accent, Material.color(Material.Lime))
+        compare(control.item.Material.background, Material.color(Material.LightGreen))
+        compare(control.item.Material.foreground, Material.color(Material.LightBlue))
         control.Material.primary = Material.Red
         control.Material.accent = Material.Pink
+        control.Material.background = Material.Blue
+        control.Material.foreground = Material.Green
         compare(control.item.Material.primary, Material.color(Material.Red))
         compare(control.item.Material.accent, Material.color(Material.Pink))
+        compare(control.item.Material.background, Material.color(Material.Blue))
+        compare(control.item.Material.foreground, Material.color(Material.Green))
         control.active = false
         control.Material.primary = Material.Orange
         control.Material.accent = Material.Brown
+        control.Material.background = Material.Red
+        control.Material.foreground = Material.Pink
         control.active = true
         compare(control.item.Material.primary, Material.color(Material.Orange))
         compare(control.item.Material.accent, Material.color(Material.Brown))
+        compare(control.item.Material.background, Material.color(Material.Red))
+        compare(control.item.Material.foreground, Material.color(Material.Pink))
         control.destroy()
     }
 
@@ -336,7 +382,7 @@ TestCase {
 
     function test_colors_data() {
         return [
-            { tag: "primary" }, { tag: "accent" }
+            { tag: "primary" }, { tag: "accent" }, { tag: "background" }, { tag: "foreground" }
         ]
     }
 

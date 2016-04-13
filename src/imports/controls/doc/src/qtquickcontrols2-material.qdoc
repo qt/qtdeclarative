@@ -38,6 +38,8 @@
 
     \list
         \li \l {accent-attached-prop}{\b accent} : color
+        \li \l {background-attached-prop}{\b background} : color
+        \li \l {foreground-attached-prop}{\b foreground} : color
         \li \l {primary-attached-prop}{\b primary} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
@@ -60,9 +62,13 @@
 
     \section2 Customization
 
-    The Material style allows customizing three attributes, \l {theme-attached-prop}{theme},
-    \l {primary-attached-prop}{primary} and \l {accent-attached-prop}{accent}. The following
-    example illustrates how to create a red \e stop button with light text:
+    The Material style allows customizing five attributes, \l {theme-attached-prop}{theme},
+    \l {primary-attached-prop}{primary}, \l {accent-attached-prop}{accent},
+    \l {foreground-attached-prop}{foreground}, and \l {background-attached-prop}{background}.
+
+    \image qtquickcontrols2-material-attributes.png
+
+    The following example illustrates how to create a red \e stop button with light text:
 
     \table
         \row
@@ -84,7 +90,7 @@
                 \image qtquickcontrols2-material-button.png
     \endtable
 
-    Both attributes can be specified for any window or item, and they automatically
+    All attributes can be specified for any window or item, and they automatically
     propagate to children in the same manner as \l {Control::font}{fonts}. In the
     following example, the window and all three radio buttons appear in the dark
     theme using a purple accent color:
@@ -140,6 +146,15 @@
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the \l {Pre-defined Colors}{pre-defined colors}, for example
                 for example \c "BlueGrey".
+        \row
+            \li \c QT_LABS_CONTROLS_MATERIAL_FOREGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {Pre-defined Colors}{pre-defined colors}.
+
+        \row
+            \li \c QT_LABS_CONTROLS_MATERIAL_BACKGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {Pre-defined Colors}{pre-defined colors}.
     \endtable
 
     \section2 Dependency
@@ -198,6 +213,24 @@
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined colors} that have been designed
     to work well with the rest of the Material style palette.
+
+    \endstyleproperty
+
+    \styleproperty {Material.background} {color} {background-attached-prop}
+    \target background-attached-prop
+    This attached property holds the background color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
+
+    \endstyleproperty
+
+    \styleproperty {Material.foreground} {color} {foreground-attached-prop}
+    \target foreground-attached-prop
+    This attached property holds the foreground color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
 
     \endstyleproperty
 

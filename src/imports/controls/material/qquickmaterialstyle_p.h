@@ -61,10 +61,12 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
     Q_PROPERTY(QVariant primary READ primary WRITE setPrimary RESET resetPrimary NOTIFY primaryChanged FINAL)
     Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
+    Q_PROPERTY(QVariant foreground READ foreground WRITE setForeground RESET resetForeground NOTIFY foregroundChanged FINAL)
+    Q_PROPERTY(QVariant background READ background WRITE setBackground RESET resetBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
-    Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY foregroundChanged FINAL)  // TODO: rename to foregroundColor()?
     Q_PROPERTY(QColor primaryHighlightedTextColor READ primaryHighlightedTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor secondaryTextColor READ secondaryTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor hintTextColor READ hintTextColor NOTIFY paletteChanged FINAL)
@@ -173,6 +175,18 @@ public:
     void propagateAccent();
     void resetAccent();
 
+    QVariant foreground() const;
+    void setForeground(const QVariant &foreground);
+    void inheritForeground(uint foreground, bool custom, bool has);
+    void propagateForeground();
+    void resetForeground();
+
+    QVariant background() const;
+    void setBackground(const QVariant &background);
+    void inheritBackground(uint background, bool custom, bool has);
+    void propagateBackground();
+    void resetBackground();
+
     QColor primaryColor() const;
     QColor accentColor() const;
     QColor backgroundColor() const;
@@ -221,6 +235,8 @@ Q_SIGNALS:
     void themeChanged();
     void primaryChanged();
     void accentChanged();
+    void foregroundChanged();
+    void backgroundChanged();
     void paletteChanged();
 
 protected:
@@ -233,11 +249,19 @@ private:
     bool m_explicitTheme;
     bool m_explicitPrimary;
     bool m_explicitAccent;
+    bool m_explicitForeground;
+    bool m_explicitBackground;
     bool m_customPrimary;
     bool m_customAccent;
+    bool m_customForeground;
+    bool m_customBackground;
+    bool m_hasForeground;
+    bool m_hasBackground;
     Theme m_theme;
     uint m_primary;
     uint m_accent;
+    uint m_foreground;
+    uint m_background;
 };
 
 QT_END_NAMESPACE

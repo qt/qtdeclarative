@@ -372,8 +372,13 @@ static const QRgb colors[][14] = {
 static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
 static uint defaultPrimary = QQuickMaterialStyle::Indigo;
 static uint defaultAccent = QQuickMaterialStyle::Pink;
+static uint defaultForeground = 0xDD000000; // primaryTextColorLight
+static uint defaultBackground = 0xFFFAFAFA; // backgroundColorLight
 static bool defaultPrimaryCustom = false;
 static bool defaultAccentCustom = false;
+static bool defaultForegroundCustom = true;
+static bool defaultBackgroundCustom = true;
+
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
@@ -427,11 +432,19 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(
     m_explicitTheme(false),
     m_explicitPrimary(false),
     m_explicitAccent(false),
+    m_explicitForeground(false),
+    m_explicitBackground(false),
     m_customPrimary(defaultPrimaryCustom),
     m_customAccent(defaultAccentCustom),
+    m_customForeground(defaultForegroundCustom),
+    m_customBackground(defaultBackgroundCustom),
+    m_hasForeground(false),
+    m_hasBackground(false),
     m_theme(defaultTheme),
     m_primary(defaultPrimary),
-    m_accent(defaultAccent)
+    m_accent(defaultAccent),
+    m_foreground(defaultForeground),
+    m_background(defaultBackground)
 {
     init();
 }
@@ -456,6 +469,10 @@ void QQuickMaterialStyle::setTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_hasBackground)
+        emit backgroundChanged();
+    if (!m_hasForeground)
+        emit foregroundChanged();
 }
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
@@ -467,6 +484,10 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_hasBackground)
+        emit backgroundChanged();
+    if (!m_hasForeground)
+        emit foregroundChanged();
 }
 
 void QQuickMaterialStyle::propagateTheme()
@@ -599,6 +620,120 @@ void QQuickMaterialStyle::resetAccent()
     inheritAccent(material ? material->m_accent : defaultAccent, true);
 }
 
+QVariant QQuickMaterialStyle::foreground() const
+{
+    return primaryTextColor();
+}
+
+void QQuickMaterialStyle::setForeground(const QVariant &var)
+{
+    QRgb foreground = 0;
+    bool custom = false;
+    if (!variantToRgba(var, "foreground", &foreground, &custom))
+        return;
+
+    m_hasForeground = true;
+    m_explicitForeground = true;
+    if (m_foreground == foreground)
+        return;
+
+    m_customForeground = custom;
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool has)
+{
+    if (m_explicitForeground || m_foreground == foreground)
+        return;
+
+    m_hasForeground = has;
+    m_customForeground = custom;
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickMaterialStyle::propagateForeground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritForeground(m_foreground, m_customForeground, m_hasForeground);
+    }
+}
+
+void QQuickMaterialStyle::resetForeground()
+{
+    if (!m_explicitForeground)
+        return;
+
+    m_hasForeground = false;
+    m_customForeground = false;
+    m_explicitForeground = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritForeground(material ? material->m_foreground : defaultForeground, true, material ? material->m_hasForeground : false);
+}
+
+QVariant QQuickMaterialStyle::background() const
+{
+    return backgroundColor();
+}
+
+void QQuickMaterialStyle::setBackground(const QVariant &var)
+{
+    QRgb background = 0;
+    bool custom = false;
+    if (!variantToRgba(var, "background", &background, &custom))
+        return;
+
+    m_hasBackground = true;
+    m_explicitBackground = true;
+    if (m_background == background)
+        return;
+
+    m_customBackground = custom;
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+}
+
+void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
+{
+    if (m_explicitBackground || m_background == background)
+        return;
+
+    m_hasBackground = has;
+    m_customBackground = custom;
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+}
+
+void QQuickMaterialStyle::propagateBackground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritBackground(m_background, m_customBackground, m_hasBackground);
+    }
+}
+
+void QQuickMaterialStyle::resetBackground()
+{
+    if (!m_explicitBackground)
+        return;
+
+    m_hasBackground = false;
+    m_customBackground = false;
+    m_explicitBackground = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritBackground(material ? material->m_background : defaultBackground, true, material ? material->m_hasBackground : false);
+}
+
 QColor QQuickMaterialStyle::primaryColor() const
 {
     if (m_customPrimary)
@@ -619,12 +754,24 @@ QColor QQuickMaterialStyle::accentColor() const
 
 QColor QQuickMaterialStyle::backgroundColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
+    if (!m_hasBackground)
+        return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
+    if (m_customBackground)
+        return QColor::fromRgba(m_background);
+    if (m_background > BlueGrey)
+        return QColor();
+    return colors[m_background][Shade500];
 }
 
 QColor QQuickMaterialStyle::primaryTextColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
+    if (!m_hasForeground)
+        return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
+    if (m_customForeground)
+        return QColor::fromRgba(m_foreground);
+    if (m_foreground > BlueGrey)
+        return QColor();
+    return colors[m_foreground][Shade500];
 }
 
 QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
@@ -913,6 +1060,8 @@ void QQuickMaterialStyle::parentStyleChange(QQuickStyleAttached *newParent, QQui
     if (material) {
         inheritPrimary(material->m_primary, material->m_customPrimary);
         inheritAccent(material->m_accent, material->m_customAccent);
+        inheritForeground(material->m_foreground, material->m_customForeground, material->m_hasForeground);
+        inheritBackground(material->m_background, material->m_customBackground, material->m_hasBackground);
         inheritTheme(material->theme());
     }
 }
@@ -975,6 +1124,37 @@ void QQuickMaterialStyle::init()
                 qWarning().nospace().noquote() << "Material: unknown accent value: " << accentValue;
             }
         }
+
+        QByteArray foregroundValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+        Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
+        if (ok) {
+            defaultForegroundCustom = m_customForeground = false;
+            defaultForeground = m_foreground = foregroundEnum;
+        } else if (!foregroundValue.isEmpty()) {
+            QColor color(foregroundValue.constData());
+            if (color.isValid()) {
+                defaultForegroundCustom = m_customForeground = true;
+                defaultForeground = m_foreground = color.rgba();
+            } else {
+                qWarning().nospace().noquote() << "Material: unknown foreground value: " << foregroundValue;
+            }
+        }
+
+        QByteArray backgroundValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_BACKGROUND", settings, QStringLiteral("Background"));
+        Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
+        if (ok) {
+            defaultBackgroundCustom = m_customBackground = false;
+            defaultBackground = m_background = backgroundEnum;
+        } else if (!backgroundValue.isEmpty()) {
+            QColor color(backgroundValue.constData());
+            if (color.isValid()) {
+                defaultBackgroundCustom = m_customBackground = true;
+                defaultBackground = m_background = color.rgba();
+            } else {
+                qWarning().nospace().noquote() << "Material: unknown background value: " << backgroundValue;
+            }
+        }
+
         defaultsInitialized = true;
     }
 
