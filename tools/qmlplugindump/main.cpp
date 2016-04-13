@@ -75,6 +75,12 @@
 
 static const uint qtQmlMajorVersion = 2;
 static const uint qtQmlMinorVersion = 2;
+static const uint qtQuickMajorVersion = 2;
+static const uint qtQuickMinorVersion = 7;
+
+const QString qtQuickQualifiedName = QString::fromLatin1("QtQuick %1.%2")
+        .arg(qtQuickMajorVersion)
+        .arg(qtQuickMinorVersion);
 
 QString pluginImportPath;
 bool verbose = false;
@@ -730,7 +736,7 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     std::cerr << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] module.uri version [module/import/path]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] [-noforceqtquick] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
@@ -738,7 +744,8 @@ void printUsage(const QString &appName)
 }
 
 static bool readDependenciesData(QString dependenciesFile, const QByteArray &fileData,
-                                 QStringList *dependencies, const QStringList &urisToSkip) {
+                                 QStringList *dependencies, const QStringList &urisToSkip,
+                                 bool forceQtQuickDependency = true) {
     if (verbose) {
         std::cerr << "parsing "
                   << qPrintable( dependenciesFile ) << " skipping";
@@ -793,8 +800,8 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
     // qmlplugindump used to import QtQuick, so all types defined in QtQuick used to be skipped when dumping.
     // Now that it imports only Qt, it is no longer the case: if no dependency is found all the types defined
     // in QtQuick will be dumped, causing conflicts.
-    if (dependencies->isEmpty())
-        dependencies->push_back(QLatin1String("QtQuick 2.0"));
+    if (forceQtQuickDependency && dependencies->isEmpty())
+        dependencies->push_back(qtQuickQualifiedName);
     return true;
 }
 
@@ -812,11 +819,12 @@ static bool readDependenciesFile(const QString &dependenciesFile, QStringList *d
         return false;
     }
     QByteArray fileData = f.readAll();
-    return readDependenciesData(dependenciesFile, fileData, dependencies, urisToSkip);
+    return readDependenciesData(dependenciesFile, fileData, dependencies, urisToSkip, false);
 }
 
 static bool getDependencies(const QQmlEngine &engine, const QString &pluginImportUri,
-                            const QString &pluginImportVersion, QStringList *dependencies)
+                            const QString &pluginImportVersion, QStringList *dependencies,
+                            bool forceQtQuickDependency)
 {
     QFileInfo selfExe(QCoreApplication::applicationFilePath());
     QString command = selfExe.absoluteDir().filePath(QLatin1String("qmlimportscanner")
@@ -849,7 +857,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     }
     QByteArray depencenciesData = importScanner.readAllStandardOutput();
     if (!readDependenciesData(QLatin1String("<outputOfQmlimportscanner>"), depencenciesData,
-                             dependencies, QStringList(pluginImportUri))) {
+                             dependencies, QStringList(pluginImportUri), forceQtQuickDependency)) {
         std::cerr << "failed to proecess output of qmlimportscanner" << std::endl;
         return false;
     }
@@ -986,6 +994,7 @@ int main(int argc, char *argv[])
     bool relocatable = true;
     QString dependenciesFile;
     QString mergeFile;
+    bool forceQtQuickDependency = true;
     enum Action { Uri, Path, Builtins };
     Action action = Uri;
     {
@@ -1030,6 +1039,9 @@ int main(int argc, char *argv[])
                 action = Builtins;
             } else if (arg == QLatin1String("-v")) {
                 verbose = true;
+            } else if (arg == QLatin1String("--noforceqtquick")
+                       || arg == QLatin1String("-noforceqtquick")){
+                forceQtQuickDependency = false;
             } else if (arg == QLatin1String("--defaultplatform")
                        || arg == QLatin1String("-defaultplatform")) {
                 continue;
@@ -1098,8 +1110,11 @@ int main(int argc, char *argv[])
         calculateDependencies = !readDependenciesFile(dependenciesFile, &dependencies,
                                                       QStringList(pluginImportUri)) && calculateDependencies;
     if (calculateDependencies)
-        getDependencies(engine, pluginImportUri, pluginImportVersion, &dependencies);
+        getDependencies(engine, pluginImportUri, pluginImportVersion, &dependencies,
+                        forceQtQuickDependency);
+
     compactDependencies(&dependencies);
+
 
     QString qtQmlImportString = QString::fromLatin1("import QtQml %1.%2")
         .arg(qtQmlMajorVersion)
