@@ -57,7 +57,7 @@ TestCase {
 
             property SignalSequenceSpy spy: SignalSequenceSpy {
                 target: control
-                signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged"]
+                signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "checkedChanged"]
             }
         }
     }
@@ -238,13 +238,30 @@ TestCase {
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
 
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
         mouseClick(control)
         verify(!control.checked)
 
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        ["checkedChanged", { "checked": true }],
+                                        "released",
+                                        "clicked"]
         control.checkable = true
         mouseClick(control)
         verify(control.checked)
 
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        ["checkedChanged", { "checked": false }],
+                                        "released",
+                                        "clicked"]
         mouseClick(control)
         verify(!control.checked)
 
