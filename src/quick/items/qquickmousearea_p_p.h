@@ -86,6 +86,7 @@ public:
     bool doubleClick : 1;
     bool preventStealing : 1;
     bool propagateComposedEvents : 1;
+    bool overThreshold : 1;
     Qt::MouseButtons pressed;
 #ifndef QT_NO_DRAGANDDROP
     QQuickDrag *drag;
