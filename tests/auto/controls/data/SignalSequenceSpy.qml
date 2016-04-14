@@ -86,7 +86,7 @@ QtObject {
             return;
 
         if (sequenceIndex >= expectedSequence.length) {
-            console.warn("ControlSpy: Received unexpected signal '" + signalName + "' (none expected).")
+            console.warn("SignalSequenceSpy: Received unexpected signal '" + signalName + "' (none expected).")
             sequenceFailure = true
             return
         }
@@ -104,7 +104,7 @@ QtObject {
                 var expectedValues = expectedSignalData[1]
                 for (var p in expectedValues) {
                     if (target[p] != expectedValues[p]) {
-                        console.warn("ControlSpy: Value mismatch for property '" + p + "' after '" + signalName + "' signal." +
+                        console.warn("SignalSequenceSpy: Value mismatch for property '" + p + "' after '" + signalName + "' signal." +
                                      __mismatchValuesFormat(target[p], expectedValues[p]))
                         sequenceFailure = true
                         return
@@ -114,7 +114,7 @@ QtObject {
                 return
             }
         }
-        console.warn("ControlSpy: Received unexpected signal." +
+        console.warn("SignalSequenceSpy: Received unexpected signal." +
                      __mismatchValuesFormat(signalName, expectedSignal))
         sequenceFailure = true
     }

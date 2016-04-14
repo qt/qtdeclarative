@@ -55,7 +55,7 @@ TestCase {
         RadioButton {
             id: control
 
-            property ControlSpy spy: ControlSpy {
+            property SignalSequenceSpy spy: SignalSequenceSpy {
                 target: control
                 signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged"]
             }

@@ -214,8 +214,8 @@ TestCase {
         control.destroy();
     }
 
-    ControlSpy {
-        id: mouseEventControlSpy
+    SignalSequenceSpy {
+        id: mouseSignalSequenceSpy
         signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged"]
     }
 
@@ -225,13 +225,13 @@ TestCase {
 
         var overDragDistance = dragDistance * 1.1;
 
-        mouseEventControlSpy.target = control;
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         compare(control.exposure.position, 0.0);
         verify(!control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         verify(!control.exposure.leftItem);
         verify(!control.exposure.rightItem);
 
@@ -280,12 +280,12 @@ TestCase {
         verify(control.exposure.rightItem);
         verify(!control.exposure.rightItem.visible);
 
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
         compare(control.exposure.position, 1.0);
         verify(control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         verify(control.exposure.leftItem);
         verify(control.exposure.leftItem.visible);
         verify(control.exposure.rightItem);
@@ -293,47 +293,47 @@ TestCase {
         tryCompare(control.contentItem, "x", control.width + control.leftPadding);
 
         // Swiping from the right and releasing early should return position to 1.0.
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         compare(control.exposure.position, 1.0);
         // exposed should still be true, because we haven't moved yet, and hence
         // haven't started grabbing behind's mouse events.
         verify(control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
         mouseMove(control, control.width / 2 - overDragDistance, control.height / 2);
         verify(control.pressed);
         verify(!control.exposure.active);
         compare(control.exposure.position, 1.0 - overDragDistance / control.width);
 
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
         mouseRelease(control, control.width * 0.4, control.height / 2);
         verify(!control.pressed);
         compare(control.exposure.position, 1.0);
         verify(control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         tryCompare(control.contentItem, "x", control.width + control.leftPadding);
 
         // Swiping from the right and releasing should return contents to default position.
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         compare(control.exposure.position, 1.0);
         verify(control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
         mouseMove(control, control.width * -0.1, control.height / 2);
         verify(control.pressed);
         verify(!control.exposure.active);
         compare(control.exposure.position, 0.4);
 
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
         mouseRelease(control, control.width * -0.1, control.height / 2);
         verify(!control.pressed);
         compare(control.exposure.position, 0.0);
         verify(!control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         tryCompare(control.contentItem, "x", control.leftPadding);
 
         control.destroy();
@@ -358,13 +358,13 @@ TestCase {
 
         distance *= data.direction;
 
-        mouseEventControlSpy.target = control;
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         compare(control.exposure.position, 0.0);
         verify(!control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         verify(!control.exposure.leftItem);
         verify(!control.exposure.rightItem);
 
@@ -397,14 +397,14 @@ TestCase {
         compare(expectedVisibleItem.objectName, expectedVisibleObjectName);
         verify(!expectedHiddenItem);
 
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
         // Add a delay to ensure that the release event doesn't happen too quickly,
         // and hence that the second timestamp isn't zero (can happen with e.g. release builds).
         mouseRelease(control, control.width / 2 + distance, control.height / 2, Qt.LeftButton, Qt.NoModifier, 30);
         verify(!control.pressed);
         compare(control.exposure.position, data.direction);
         verify(control.exposure.active);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
         verify(expectedVisibleItem);
         verify(expectedVisibleItem.visible);
         verify(!expectedHiddenItem);
@@ -464,29 +464,29 @@ TestCase {
         verify(control);
 
         // click
-        mouseEventControlSpy.target = control;
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
         compare(control.pressed, true);
 
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
-        mouseEventControlSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton);
         compare(control.pressed, false);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
         // right button
-        mouseEventControlSpy.expectedSequence = [];
+        mouseSignalSequenceSpy.expectedSequence = [];
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton);
         compare(control.pressed, false);
 
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton);
         compare(control.pressed, false);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
         // double click
-        mouseEventControlSpy.expectedSequence = [
+        mouseSignalSequenceSpy.expectedSequence = [
             ["pressedChanged", { "pressed": true }],
             "pressed",
             ["pressedChanged", { "pressed": false }],
@@ -500,7 +500,7 @@ TestCase {
             "clicked"
         ];
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        verify(mouseEventControlSpy.success);
+        verify(mouseSignalSequenceSpy.success);
 
         control.destroy();
     }
