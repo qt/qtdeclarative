@@ -1,13 +1,13 @@
-Qt Labs Controls
-================
+Qt Quick Controls 2
+===================
 
-The Qt Labs Controls module delivers the next generation user interface
+The Qt Quick Controls 2 module delivers the next generation user interface
 controls based on Qt Quick. In comparison to the desktop-oriented Qt Quick
 Controls 1, Qt Quick Controls 2 are an order of magnitude simpler, lighter and
 faster, and are primarily targeted towards embedded and mobile platforms.
 
 Qt Quick Controls 2 are based on a flexible template system that enables rapid
-development of entire custom styles and user experiences. Qt Labs Controls
+development of entire custom styles and user experiences. Qt Quick Controls 2
 comes with a selection of built-in styles:
 
 - Default style - a simple and minimal all-round style that offers the maximum performance
@@ -32,7 +32,7 @@ If you have problems or questions, don't hesitate to:
 The MINIMUM REQUIREMENT for building this project is to use the same branch
 of Qt 5. The dependencies are *qtbase*, *qtxmlpatterns* and *qtdeclarative*.
 Other optional dependencies include *qtgraphicaleffects* for the Material
-style and *qtquickcontrols* for the Qt Quick Layouts.
+style.
 
 To install the controls into your Qt directory (```QTDIR/qml```):
 
@@ -45,4 +45,4 @@ If you are compiling against a system Qt on Linux, you might have to use
 
 ## Usage
 
-Please refer to the "Getting Started with Qt Labs Controls" documentation.
+Please refer to the "Getting Started with Qt Quick Controls 2" documentation.
