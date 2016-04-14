@@ -65,6 +65,10 @@ TestCase {
         SignalSpy { }
     }
 
+    QtObject {
+        id: object
+    }
+
     function test_properties_data() {
         return [
             {tag: "text", property: "text", defaultValue: "", setValue: "Hello", signalName: "textChanged"},
@@ -152,5 +156,10 @@ TestCase {
         tryCompare(control, "visible", false)
 
         control.destroy()
+    }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_tooltip.qml") + ":68:5: QML QtObject: ToolTip must be attached to an Item")
+        object.ToolTip.text = ""
     }
 }

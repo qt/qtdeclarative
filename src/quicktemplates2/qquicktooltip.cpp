@@ -38,6 +38,7 @@
 #include "qquickpopup_p_p.h"
 
 #include <QtCore/qbasictimer.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
@@ -323,10 +324,8 @@ void QQuickToolTip::setTimeout(int timeout)
 QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (!item) {
-        qWarning() << "ToolTip must be attached to an Item" << object;
-        return nullptr;
-    }
+    if (!item)
+        qmlInfo(object) << "ToolTip must be attached to an Item";
 
     return new QQuickToolTipAttached(item);
 }
@@ -402,13 +401,15 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
     if (!tip && create) {
         // TODO: a cleaner way to create the instance? QQml(Meta)Type?
         QQmlContext *context = qmlContext(parent);
-        QQmlComponent component(context->engine());
-        component.setData("import Qt.labs.controls 1.0; ToolTip { }", QUrl());
+        if (context) {
+            QQmlComponent component(context->engine());
+            component.setData("import Qt.labs.controls 1.0; ToolTip { }", QUrl());
 
-        QObject *object = component.create(context);
-        tip = qobject_cast<QQuickToolTip *>(object);
-        if (!tip)
-            delete object;
+            QObject *object = component.create(context);
+            tip = qobject_cast<QQuickToolTip *>(object);
+            if (!tip)
+                delete object;
+        }
     }
     return tip;
 }
@@ -439,7 +440,8 @@ void QQuickToolTipAttached::setText(const QString &text)
     d->text = text;
     emit textChanged();
 
-    d->instance(true)->setText(text);
+    if (QQuickToolTip *tip = d->instance(true))
+        tip->setText(text);
 }
 
 /*!
@@ -533,6 +535,9 @@ void QQuickToolTipAttached::show(const QString &text, int ms)
 {
     Q_D(QQuickToolTipAttached);
     QQuickToolTip *tip = d->instance(true);
+    if (!tip)
+        return;
+
     tip->resetWidth();
     tip->resetHeight();
     tip->setParentItem(qobject_cast<QQuickItem *>(parent()));
