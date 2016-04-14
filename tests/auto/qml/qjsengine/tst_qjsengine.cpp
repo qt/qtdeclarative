@@ -142,6 +142,7 @@ private slots:
     void functionDeclarationsInConditionals();
 
     void arrayPop_QTBUG_35979();
+    void array_unshift_QTBUG_52065();
 
     void regexpLastMatch();
     void indexedAccesses();
@@ -2997,6 +2998,20 @@ void tst_QJSEngine::arrayPop_QTBUG_35979()
             "x[1] = 3\n"
             "x.toString()\n");
     QCOMPARE(result.toString(), QString("1,3"));
+}
+
+void tst_QJSEngine::array_unshift_QTBUG_52065()
+{
+    QJSEngine eng;
+    QJSValue result = eng.evaluate("[1, 2, 3, 4, 5, 6, 7, 8, 9]");
+    QJSValue unshift = result.property(QStringLiteral("unshift"));
+    unshift.callWithInstance(result, QJSValueList() << QJSValue(0));
+
+    int len = result.property(QStringLiteral("length")).toInt();
+    QCOMPARE(len, 10);
+
+    for (int i = 0; i < len; ++i)
+        QCOMPARE(result.property(i).toInt(), i);
 }
 
 void tst_QJSEngine::regexpLastMatch()

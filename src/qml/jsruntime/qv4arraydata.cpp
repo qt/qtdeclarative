@@ -281,7 +281,13 @@ void SimpleArrayData::push_front(Object *o, const Value *values, uint n)
         Q_ASSERT(o->d()->arrayData->type == Heap::ArrayData::Simple);
         dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     }
-    dd->offset = (dd->offset - n) % dd->alloc;
+    if (n <= dd->offset) {
+        dd->offset -= n; // there is enough space left in front
+    } else {
+         // we need to wrap around, so:
+        dd->offset = dd->alloc - // start at the back, but subtract:
+                (n - dd->offset); // the number of items we can put in the free space at the start of the allocated array
+    }
     dd->len += n;
     for (uint i = 0; i < n; ++i)
         dd->data(i) = values[i].asReturnedValue();
