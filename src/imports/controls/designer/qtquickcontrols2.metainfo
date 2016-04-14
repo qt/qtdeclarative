@@ -5,7 +5,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Busy Indicator"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/busyindicator-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -18,7 +18,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Button"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/button-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -33,7 +33,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Check Box"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/checkbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -48,7 +48,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Check Delegate"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/checkbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -63,7 +63,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Combo Box"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/combobox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -76,7 +76,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Dial"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/dial-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -89,7 +89,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Frame"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/frame-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -105,7 +105,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Group Box"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/groupbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -122,7 +122,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Item Delegate"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/itemdelegate-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -137,7 +137,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Label"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/label-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -152,7 +152,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Page Indicator"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/pageindicator-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -167,7 +167,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Pane"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/pane-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -183,7 +183,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Progress Bar"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/progressbar-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -198,7 +198,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Radio Button"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/radiobutton-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -213,7 +213,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Radio Delegate"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/radiobutton-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -228,7 +228,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Slider"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/slider-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -243,7 +243,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Spin Box"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/spinbox-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -256,7 +256,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Switch"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/switch-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -271,7 +271,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Text Area"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/textarea-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -286,7 +286,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Text Field"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/textfield-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -301,7 +301,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Tool Button"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/toolbutton-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -316,7 +316,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Tool Bar"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/toolbar-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
@@ -331,7 +331,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Tumbler"
-            category: "Qt Labs - Controls"
+            category: "Qt Quick - Controls 2"
             libraryIcon: "images/tumbler-icon.png"
             version: "1.0"
             requiredImport: "Qt.labs.controls"
