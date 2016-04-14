@@ -316,6 +316,8 @@ Q_SIGNALS:
 
     void aboutToShow();
     void aboutToHide();
+    void opened();
+    void closed();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

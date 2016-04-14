@@ -93,6 +93,22 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
+/*!
+    \qmlsignal void Qt.labs.controls::Popup::opened()
+
+    This signal is emitted when the popup is opened.
+
+    \sa closed
+*/
+
+/*!
+    \qmlsignal void Qt.labs.controls::Popup::closed()
+
+    This signal is emitted when the popup is closed.
+
+    \sa opened
+*/
+
 static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPrivate::Geometry
                                                                   | QQuickItemPrivate::Parent
                                                                   | QQuickItemPrivate::Children;
@@ -179,6 +195,7 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
     popupItem->setVisible(true);
     positioner.setParentItem(parentItem);
     emit q->visibleChanged();
+    emit q->opened();
 }
 
 void QQuickPopupPrivate::prepareExitTransition()
@@ -209,6 +226,7 @@ void QQuickPopupPrivate::finalizeExitTransition(bool hide)
 
     visible = false;
     emit q->visibleChanged();
+    emit q->closed();
 }
 
 QMarginsF QQuickPopupPrivate::getMargins() const

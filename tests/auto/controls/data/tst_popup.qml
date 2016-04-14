@@ -923,4 +923,34 @@ TestCase {
 
         control.destroy()
     }
+
+    SignalSpy {
+        id: openedSpy
+        signalName: "opened"
+    }
+
+    SignalSpy {
+        id: closedSpy
+        signalName: "closed"
+    }
+
+    function test_openedClosed() {
+        var control = popupControl.createObject(testCase)
+        verify(control)
+
+        openedSpy.target = control
+        closedSpy.target = control
+
+        control.open()
+        verify(control.visible)
+        compare(openedSpy.count, 1)
+        compare(closedSpy.count, 0)
+
+        control.close()
+        verify(!control.visible)
+        compare(openedSpy.count, 1)
+        compare(closedSpy.count, 1)
+
+        control.destroy()
+    }
 }
