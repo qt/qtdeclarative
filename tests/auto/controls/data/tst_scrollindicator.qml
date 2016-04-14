@@ -138,4 +138,9 @@ TestCase {
 
         container.destroy()
     }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_scrollindicator.qml") + ":45:1: QML TestCase: ScrollIndicator must be attached to a Flickable")
+        testCase.ScrollIndicator.vertical = null
+    }
 }

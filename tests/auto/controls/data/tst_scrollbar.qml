@@ -266,4 +266,9 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_scrollbar.qml") + ":45:1: QML TestCase: ScrollBar must be attached to a Flickable")
+        testCase.ScrollBar.vertical = null
+    }
 }
