@@ -209,7 +209,7 @@ QQuickButtonGroupAttached *QQuickButtonGroup::qmlAttachedProperties(QObject *obj
 }
 
 /*!
-    \qmlproperty AbstractButton Qt.labs.controls::ButtonGroup::current
+    \qmlproperty AbstractButton Qt.labs.controls::ButtonGroup::checkedButton
 
     This property holds the currently selected button, or \c null if there is none.
 
