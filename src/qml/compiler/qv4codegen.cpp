@@ -1981,7 +1981,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     } else {
         if (!_env->isStrict) {
-            foreach (const QString &inheritedLocal, inheritedLocals) {
+            for (const QString &inheritedLocal : qAsConst(inheritedLocals)) {
                 function->LOCAL(inheritedLocal);
                 unsigned tempIndex = entryBlock->newTemp();
                 Environment::Member member = { Environment::UndefinedMember,
@@ -2023,7 +2023,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _function->RECEIVE(it->name.toString());
     }
 
-    foreach (const Environment::Member &member, _env->members) {
+    for (const Environment::Member &member : qAsConst(_env->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
@@ -2857,7 +2857,7 @@ QList<QQmlError> Codegen::qmlErrors() const
     qmlErrors.reserve(_errors.size());
 
     QUrl url(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
-    foreach (const QQmlJS::DiagnosticMessage &msg, _errors) {
+    for (const QQmlJS::DiagnosticMessage &msg: qAsConst(_errors)) {
         QQmlError e;
         e.setUrl(url);
         e.setLine(msg.loc.startLine);
