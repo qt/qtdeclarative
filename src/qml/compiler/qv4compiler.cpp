@@ -382,8 +382,10 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *ir
 
     // write QML dependencies
     quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
-    foreach (int id, irFunction->idObjectDependencies)
-        *writtenDeps++ = id;
+    for (int id : irFunction->idObjectDependencies) {
+        Q_ASSERT(id >= 0);
+        *writtenDeps++ = static_cast<quint32>(id);
+    }
 
     writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
     for (auto property : irFunction->contextObjectPropertyDependencies) {

@@ -1193,6 +1193,20 @@ private:
     unsigned _isRemoved : 1;
 };
 
+template <typename T>
+class SmallSet: public QVarLengthArray<T, 8>
+{
+public:
+    void insert(int value)
+    {
+        for (auto it : *this) {
+            if (it == value)
+                return;
+        }
+        this->append(value);
+    }
+};
+
 // Map from meta property index (existence implies dependency) to notify signal index
 struct KeyValuePair
 {
@@ -1266,7 +1280,7 @@ struct Function {
     int column;
 
     // Qml extension:
-    QSet<int> idObjectDependencies;
+    SmallSet<int> idObjectDependencies;
     PropertyDependencyMap contextObjectPropertyDependencies;
     PropertyDependencyMap scopeObjectPropertyDependencies;
 
