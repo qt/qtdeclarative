@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
@@ -99,6 +100,9 @@ public:
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
+    bool wrap() const;
+    void setWrap(bool wrap);
+
     bool isPressed() const;
     void setPressed(bool pressed);
 
@@ -117,6 +121,7 @@ Q_SIGNALS:
     void angleChanged();
     void stepSizeChanged();
     void snapModeChanged();
+    void wrapChanged();
     void pressedChanged();
     void handleChanged();
 

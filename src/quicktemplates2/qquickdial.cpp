@@ -94,6 +94,7 @@ public:
         stepSize(0),
         pressed(false),
         snapMode(QQuickDial::NoSnap),
+        wrap(true),
         handle(nullptr)
     {
     }
@@ -103,6 +104,7 @@ public:
     qreal positionAt(const QPoint &point) const;
     void setPosition(qreal position);
     void updatePosition();
+    bool isLargeChange(const QPoint &eventPos, qreal proposedPosition) const;
 
     qreal from;
     qreal to;
@@ -113,6 +115,7 @@ public:
     bool pressed;
     QPoint pressPoint;
     QQuickDial::SnapMode snapMode;
+    bool wrap;
     QQuickItem *handle;
 };
 
@@ -162,6 +165,11 @@ void QQuickDialPrivate::updatePosition()
     if (!qFuzzyCompare(from, to))
         pos = (value - from) / (to - from);
     setPosition(pos);
+}
+
+bool QQuickDialPrivate::isLargeChange(const QPoint &eventPos, qreal proposedPosition) const
+{
+    return qAbs(proposedPosition - position) >= 0.5 && eventPos.y() >= height / 2;
 }
 
 QQuickDial::QQuickDial(QQuickItem *parent) :
@@ -349,6 +357,33 @@ void QQuickDial::setSnapMode(SnapMode mode)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::Dial::wrap
+
+    This property holds whether the dial wraps when dragged.
+
+    For example, when this property is set to \c true, dragging the dial past
+    the \e "zero" position will result in the handle being positioned at the
+    opposite side, and vice versa.
+
+    The default value is \c true.
+*/
+bool QQuickDial::wrap() const
+{
+    Q_D(const QQuickDial);
+    return d->wrap;
+}
+
+void QQuickDial::setWrap(bool wrap)
+{
+    Q_D(QQuickDial);
+    if (d->wrap == wrap)
+        return;
+
+    d->wrap = wrap;
+    emit wrapChanged();
+}
+
+/*!
     \qmlproperty bool Qt.labs.controls::Dial::pressed
 
     This property holds whether the dial is pressed.
@@ -508,7 +543,9 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
-        d->setPosition(pos);
+
+        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos)))
+            d->setPosition(pos);
     }
 }
 
@@ -516,15 +553,20 @@ void QQuickDial::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickDial);
     QQuickControl::mouseReleaseEvent(event);
-    d->pressPoint = QPoint();
+
     if (keepMouseGrab()) {
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
-        setValue(d->valueAt(pos));
+
+        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos)))
+            setValue(d->valueAt(pos));
+
         setKeepMouseGrab(false);
     }
+
     setPressed(false);
+    d->pressPoint = QPoint();
 }
 
 void QQuickDial::mouseUngrabEvent()
