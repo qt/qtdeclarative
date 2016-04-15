@@ -85,17 +85,18 @@ Heap::MathObject::MathObject()
     m->defineDefaultProperty(QStringLiteral("tan"), QV4::MathObject::method_tan, 1);
 }
 
-/* copies the sign from y to x and returns the result */
-static double copySign(double x, double y)
+#ifdef Q_OS_ANDROID
+// C++11's std::copysign is missing in the std namespace, so get it from the root namespace (math.h)
+static Q_ALWAYS_INLINE double copySign(double x, double y)
 {
-    uchar *xch = (uchar *)&x;
-    uchar *ych = (uchar *)&y;
-    if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
-        xch[0] = (xch[0] & 0x7f) | (ych[0] & 0x80);
-    else
-        xch[7] = (xch[7] & 0x7f) | (ych[7] & 0x80);
-    return x;
+    return ::copysign(x, y);
 }
+#else // Ok, we have a proper C++11 standard library
+static Q_ALWAYS_INLINE double copySign(double x, double y)
+{
+    return std::copysign(x, y);
+}
+#endif
 
 ReturnedValue MathObject::method_abs(CallContext *context)
 {
