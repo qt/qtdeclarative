@@ -202,26 +202,8 @@ QVariant QQuickUniversalStyle::accent() const
 void QQuickUniversalStyle::setAccent(const QVariant &var)
 {
     QRgb accent = 0;
-    if (var.type() == QVariant::Int) {
-        int val = var.toInt();
-        if (val < Lime || val > Taupe) {
-            qmlInfo(parent()) << "unknown Universal.accent value: " << val;
-            return;
-        }
-        accent = qquickuniversal_accent_color(static_cast<Color>(val));
-    } else {
-        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
-        if (val != -1) {
-            accent = qquickuniversal_accent_color(static_cast<Color>(val));
-        } else {
-            QColor color(var.toString());
-            if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Universal.accent value: " << var.toString();
-                return;
-            }
-            accent = color.rgba();
-        }
-    }
+    if (!variantToRgba(var, "accent", &accent))
+        return;
 
     m_explicitAccent = true;
     if (m_accent == accent)
@@ -447,6 +429,31 @@ void QQuickUniversalStyle::init()
     }
 
     QQuickStyleAttached::init(); // TODO: lazy init?
+}
+
+bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const
+{
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val < Lime || val > Taupe) {
+            qmlInfo(parent()) << "unknown Universal." << name << " value: " << val;
+            return false;
+        }
+        *rgba = qquickuniversal_accent_color(static_cast<Color>(val));
+    } else {
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            *rgba = qquickuniversal_accent_color(static_cast<Color>(val));
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qmlInfo(parent()) << "unknown Universal." << name << " value: " << var.toString();
+                return false;
+            }
+            *rgba = color.rgba();
+        }
+    }
+    return true;
 }
 
 QT_END_NAMESPACE
