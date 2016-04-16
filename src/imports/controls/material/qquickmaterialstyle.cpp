@@ -776,6 +776,8 @@ QColor QQuickMaterialStyle::primaryTextColor() const
 
 QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
 {
+    if (m_explicitForeground)
+        return primaryTextColor();
     return QColor::fromRgba(primaryTextColorDark);
 }
 
