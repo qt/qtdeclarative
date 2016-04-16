@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static QColor qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role)
+static QRgb qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role)
 {
     static const QRgb colors[] = {
         0xFFFFFFFF, // SystemAltHighColor
@@ -71,10 +71,10 @@ static QColor qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role
         0x19000000, // SystemListLowColor
         0x33000000  // SystemListMediumColor
     };
-    return QColor::fromRgba(colors[role]);
+    return colors[role];
 }
 
-static QColor qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
+static QRgb qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
 {
     static const QRgb colors[] = {
         0xFF000000, // SystemAltHighColor
@@ -102,7 +102,7 @@ static QColor qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
         0x19FFFFFF, // SystemListLowColor
         0x33FFFFFF  // SystemListMediumColor
     };
-    return QColor::fromRgba(colors[role]);
+    return colors[role];
 }
 
 static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
@@ -384,7 +384,7 @@ QColor QQuickUniversalStyle::listMediumColor() const
 
 QColor QQuickUniversalStyle::getColor(SystemColor role) const
 {
-    return m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role);
+    return QColor::fromRgba(m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role));
 }
 
 void QQuickUniversalStyle::parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent)
