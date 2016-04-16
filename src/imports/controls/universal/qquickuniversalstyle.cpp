@@ -262,6 +262,11 @@ void QQuickUniversalStyle::resetAccent()
     inheritAccent(universal ? universal->m_accent : DefaultAccent);
 }
 
+QColor QQuickUniversalStyle::color(Color color) const
+{
+    return qquickuniversal_accent_color(color);
+}
+
 QColor QQuickUniversalStyle::altHighColor() const
 {
     return systemColor(AltHigh);

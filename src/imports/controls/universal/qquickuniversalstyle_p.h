@@ -130,6 +130,8 @@ public:
     void propagateAccent();
     void resetAccent();
 
+    Q_INVOKABLE QColor color(Color color) const;
+
     QColor altHighColor() const;
     QColor altLowColor() const;
     QColor altMediumColor() const;
