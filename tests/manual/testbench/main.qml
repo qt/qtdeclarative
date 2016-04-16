@@ -452,7 +452,7 @@ ApplicationWindow {
                         implicitHeight: normalComboBox.implicitHeight
 
                         ComboBox {
-                            down: true
+                            pressed: true
                             model: ListModel {
                                 ListElement { text: "Pressed" }
                             }
