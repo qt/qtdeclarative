@@ -182,7 +182,7 @@ public:
         ListMedium
     };
 
-    QColor getColor(SystemColor role) const;
+    QColor systemColor(SystemColor role) const;
 
 Q_SIGNALS:
     void themeChanged();

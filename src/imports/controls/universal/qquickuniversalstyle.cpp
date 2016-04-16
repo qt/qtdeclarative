@@ -264,125 +264,125 @@ void QQuickUniversalStyle::resetAccent()
 
 QColor QQuickUniversalStyle::altHighColor() const
 {
-    return getColor(AltHigh);
+    return systemColor(AltHigh);
 }
 
 QColor QQuickUniversalStyle::altLowColor() const
 {
-    return getColor(AltLow);
+    return systemColor(AltLow);
 }
 
 QColor QQuickUniversalStyle::altMediumColor() const
 {
-    return getColor(AltMedium);
+    return systemColor(AltMedium);
 }
 
 QColor QQuickUniversalStyle::altMediumHighColor() const
 {
-    return getColor(AltMediumHigh);
+    return systemColor(AltMediumHigh);
 }
 
 QColor QQuickUniversalStyle::altMediumLowColor() const
 {
-    return getColor(AltMediumLow);
+    return systemColor(AltMediumLow);
 }
 
 QColor QQuickUniversalStyle::baseHighColor() const
 {
-    return getColor(BaseHigh);
+    return systemColor(BaseHigh);
 }
 
 QColor QQuickUniversalStyle::baseLowColor() const
 {
-    return getColor(BaseLow);
+    return systemColor(BaseLow);
 }
 
 QColor QQuickUniversalStyle::baseMediumColor() const
 {
-    return getColor(BaseMedium);
+    return systemColor(BaseMedium);
 }
 
 QColor QQuickUniversalStyle::baseMediumHighColor() const
 {
-    return getColor(BaseMediumHigh);
+    return systemColor(BaseMediumHigh);
 }
 
 QColor QQuickUniversalStyle::baseMediumLowColor() const
 {
-    return getColor(BaseMediumLow);
+    return systemColor(BaseMediumLow);
 }
 
 QColor QQuickUniversalStyle::chromeAltLowColor() const
 {
-    return getColor(ChromeAltLow);
+    return systemColor(ChromeAltLow);
 }
 
 QColor QQuickUniversalStyle::chromeBlackHighColor() const
 {
-    return getColor(ChromeBlackHigh);
+    return systemColor(ChromeBlackHigh);
 }
 
 QColor QQuickUniversalStyle::chromeBlackLowColor() const
 {
-    return getColor(ChromeBlackLow);
+    return systemColor(ChromeBlackLow);
 }
 
 QColor QQuickUniversalStyle::chromeBlackMediumLowColor() const
 {
-    return getColor(ChromeBlackMediumLow);
+    return systemColor(ChromeBlackMediumLow);
 }
 
 QColor QQuickUniversalStyle::chromeBlackMediumColor() const
 {
-    return getColor(ChromeBlackMedium);
+    return systemColor(ChromeBlackMedium);
 }
 
 QColor QQuickUniversalStyle::chromeDisabledHighColor() const
 {
-    return getColor(ChromeDisabledHigh);
+    return systemColor(ChromeDisabledHigh);
 }
 
 QColor QQuickUniversalStyle::chromeDisabledLowColor() const
 {
-    return getColor(ChromeDisabledLow);
+    return systemColor(ChromeDisabledLow);
 }
 
 QColor QQuickUniversalStyle::chromeHighColor() const
 {
-    return getColor(ChromeHigh);
+    return systemColor(ChromeHigh);
 }
 
 QColor QQuickUniversalStyle::chromeLowColor() const
 {
-    return getColor(ChromeLow);
+    return systemColor(ChromeLow);
 }
 
 QColor QQuickUniversalStyle::chromeMediumColor() const
 {
-    return getColor(ChromeMedium);
+    return systemColor(ChromeMedium);
 }
 
 QColor QQuickUniversalStyle::chromeMediumLowColor() const
 {
-    return getColor(ChromeMediumLow);
+    return systemColor(ChromeMediumLow);
 }
 
 QColor QQuickUniversalStyle::chromeWhiteColor() const
 {
-    return getColor(ChromeWhite);
+    return systemColor(ChromeWhite);
 }
 
 QColor QQuickUniversalStyle::listLowColor() const
 {
-    return getColor(ListLow);
+    return systemColor(ListLow);
 }
 
 QColor QQuickUniversalStyle::listMediumColor() const
 {
-    return getColor(ListMedium);
+    return systemColor(ListMedium);
 }
 
-QColor QQuickUniversalStyle::getColor(SystemColor role) const
+QColor QQuickUniversalStyle::systemColor(SystemColor role) const
 {
     return QColor::fromRgba(m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role));
 }
