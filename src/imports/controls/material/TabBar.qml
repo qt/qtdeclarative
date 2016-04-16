@@ -75,4 +75,10 @@ T.TabBar {
         }
     }
     //! [contentItem]
+
+    //! [background]
+    background: Rectangle {
+        color: control.Material.backgroundColor
+    }
+    //! [background]
 }
