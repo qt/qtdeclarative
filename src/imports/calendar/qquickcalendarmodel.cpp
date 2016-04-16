@@ -183,7 +183,7 @@ void QQuickCalendarModel::setTo(const QDate &to)
         if (d->complete)
             d->populate(d->from, to);
         d->to = to;
-        emit fromChanged();
+        emit toChanged();
     }
 }
 
