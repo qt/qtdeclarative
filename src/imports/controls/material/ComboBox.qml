@@ -58,7 +58,6 @@ T.ComboBox {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
-        down: highlighted && control.down
     }
     //! [delegate]
 
@@ -92,7 +91,7 @@ T.ComboBox {
         layer.effect: DropShadow {
             verticalOffset: 1
             color: control.Material.dropShadowColor
-            samples: control.down ? 15 : 9
+            samples: control.pressed ? 15 : 9
             spread: 0.5
         }
 

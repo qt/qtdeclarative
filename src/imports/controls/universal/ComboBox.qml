@@ -60,7 +60,6 @@ T.ComboBox {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
-        down: highlighted && control.down
     }
     //! [delegate]
 
@@ -83,9 +82,9 @@ T.ComboBox {
 
         border.width: 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.down || popup.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
+                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.down || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.pressed || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 2

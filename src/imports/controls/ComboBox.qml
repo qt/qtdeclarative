@@ -60,7 +60,6 @@ T.ComboBox {
         autoExclusive: true
         checked: control.currentIndex === index
         highlighted: control.highlightedIndex === index
-        down: highlighted && control.down
     }
     //! [delegate]
 
@@ -85,7 +84,7 @@ T.ComboBox {
             width: parent.width
             height: parent.height
             opacity: control.enabled ? 1.0 : 0.2
-            color: control.down || popup.visible ? "#585A5C" : "#353637"
+            color: control.pressed || popup.visible ? "#585A5C" : "#353637"
         }
 
         Image {
