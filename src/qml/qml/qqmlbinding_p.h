@@ -61,7 +61,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QMetaProperty>
 
-#include <private/qpointervaluepair_p.h>
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 

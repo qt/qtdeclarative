@@ -57,7 +57,6 @@
 #include <private/qfieldlist_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qdeletewatcher_p.h>
-#include <private/qpointervaluepair_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE

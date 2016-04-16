@@ -55,7 +55,6 @@
 #include <QtCore/qshareddata.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlproperty_p.h>
-#include <private/qpointervaluepair_p.h>
 
 QT_BEGIN_NAMESPACE
 
