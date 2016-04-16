@@ -100,7 +100,7 @@ public:
     void propagateTheme();
     void resetTheme();
 
-    enum Accent {
+    enum Color {
         Lime,
         Green,
         Emerald,
@@ -122,7 +122,7 @@ public:
         Mauve,
         Taupe
     };
-    Q_ENUM(Accent)
+    Q_ENUM(Color)
 
     QVariant accent() const;
     void setAccent(const QVariant &accent);

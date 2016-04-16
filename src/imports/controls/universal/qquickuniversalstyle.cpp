@@ -105,7 +105,7 @@ static QRgb qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
     return colors[role];
 }
 
-static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
+static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Color accent)
 {
     static const QRgb colors[] = {
         0xFFA4C400, // Lime
@@ -208,11 +208,11 @@ void QQuickUniversalStyle::setAccent(const QVariant &var)
             qmlInfo(parent()) << "unknown Universal.accent value: " << val;
             return;
         }
-        accent = qquickuniversal_accent_color(static_cast<Accent>(val));
+        accent = qquickuniversal_accent_color(static_cast<Color>(val));
     } else {
-        int val = QMetaEnum::fromType<Accent>().keyToValue(var.toByteArray());
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
         if (val != -1) {
-            accent = qquickuniversal_accent_color(static_cast<Accent>(val));
+            accent = qquickuniversal_accent_color(static_cast<Color>(val));
         } else {
             QColor color(var.toString());
             if (!color.isValid()) {
@@ -427,7 +427,7 @@ void QQuickUniversalStyle::init()
             qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
 
         QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
-        Accent accentEnum = toEnumValue<Accent>(accentValue, &ok);
+        Color accentEnum = toEnumValue<Color>(accentValue, &ok);
         if (ok) {
             DefaultAccent = m_accent = qquickuniversal_accent_color(accentEnum);
         } else if (!accentValue.isEmpty()) {

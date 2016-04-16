@@ -306,11 +306,11 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
 
-        // Universal.Accent - enum
+        // Universal.Color - enum
         control.Universal.accent = Universal.Red
         compare(control.Universal.accent, "#e51400")
 
-        // Universal.Accent - string
+        // Universal.Color - string
         control.Universal.accent = "Emerald"
         compare(control.Universal.accent, "#008a00")
 
