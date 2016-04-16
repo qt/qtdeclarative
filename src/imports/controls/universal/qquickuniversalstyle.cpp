@@ -289,7 +289,7 @@ QColor QQuickUniversalStyle::altMediumLowColor() const
 
 QColor QQuickUniversalStyle::baseHighColor() const
 {
-    return getColor(BaseHighColor);
+    return getColor(BaseHigh);
 }
 
 QColor QQuickUniversalStyle::baseLowColor() const

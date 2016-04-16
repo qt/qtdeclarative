@@ -161,7 +161,7 @@ public:
         AltMedium,
         AltMediumHigh,
         AltMediumLow,
-        BaseHighColor,
+        BaseHigh,
         BaseLow,
         BaseMedium,
         BaseMediumHigh,
