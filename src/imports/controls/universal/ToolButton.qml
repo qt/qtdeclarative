@@ -55,10 +55,12 @@ T.ToolButton {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? control.Universal.baseHighColor : control.Universal.baseLowColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 

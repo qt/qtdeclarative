@@ -42,7 +42,7 @@ import Qt.labs.controls.universal.impl 1.0
 T.ApplicationWindow {
     id: window
 
-    color: Universal.altHighColor
+    color: Universal.background
 
     overlay.background: Rectangle {
         color: window.Universal.baseLowColor

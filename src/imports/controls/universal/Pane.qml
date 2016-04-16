@@ -55,7 +55,7 @@ T.Pane {
 
     //! [background]
     background: Rectangle {
-        color: control.Universal.altHighColor
+        color: control.Universal.background
     }
     //! [background]
 }

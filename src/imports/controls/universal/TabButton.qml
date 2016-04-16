@@ -54,9 +54,11 @@ T.TabButton {
         text: control.text
         font: control.font
         elide: Text.ElideRight
-        color: control.checked || control.down ? control.Universal.baseHighColor : control.Universal.baseLowColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+
+        opacity: control.checked || control.down ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 }

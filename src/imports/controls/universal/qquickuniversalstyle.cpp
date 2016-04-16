@@ -134,9 +134,13 @@ static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Color accent)
 
 static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
 static QRgb DefaultAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
+static QRgb DefaultForeground = qquickuniversal_light_color(QQuickUniversalStyle::BaseHigh);
+static QRgb DefaultBackground = qquickuniversal_light_color(QQuickUniversalStyle::AltHigh);
 
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyleAttached(parent),
-    m_explicitTheme(false), m_explicitAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
+    m_explicitTheme(false), m_explicitAccent(false), m_explicitForeground(false), m_explicitBackground(false),
+    m_hasForeground(false), m_hasBackground(false), m_theme(DefaultTheme),
+    m_accent(DefaultAccent), m_foreground(DefaultForeground), m_background(DefaultBackground)
 {
     init();
 }
@@ -242,6 +246,116 @@ void QQuickUniversalStyle::resetAccent()
     m_explicitAccent = false;
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
     inheritAccent(universal ? universal->m_accent : DefaultAccent);
+}
+
+QVariant QQuickUniversalStyle::foreground() const
+{
+    if (m_hasForeground)
+        return QColor::fromRgba(m_foreground);
+    return baseHighColor();
+}
+
+void QQuickUniversalStyle::setForeground(const QVariant &var)
+{
+    QRgb foreground = 0;
+    if (!variantToRgba(var, "foreground", &foreground))
+        return;
+
+    m_hasForeground = true;
+    m_explicitForeground = true;
+    if (m_foreground == foreground)
+        return;
+
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickUniversalStyle::inheritForeground(QRgb foreground, bool has)
+{
+    if (m_explicitForeground || m_foreground == foreground)
+        return;
+
+    m_hasForeground = has;
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickUniversalStyle::propagateForeground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
+        if (universal)
+            universal->inheritForeground(m_foreground, m_hasForeground);
+    }
+}
+
+void QQuickUniversalStyle::resetForeground()
+{
+    if (!m_explicitForeground)
+        return;
+
+    m_hasForeground = false;
+    m_explicitForeground = false;
+    QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
+    inheritForeground(universal ? universal->m_foreground : DefaultForeground, universal ? universal->m_hasForeground : false);
+}
+
+QVariant QQuickUniversalStyle::background() const
+{
+    if (m_hasBackground)
+        return QColor::fromRgba(m_background);
+    return altHighColor();
+}
+
+void QQuickUniversalStyle::setBackground(const QVariant &var)
+{
+    QRgb background = 0;
+    if (!variantToRgba(var, "background", &background))
+        return;
+
+    m_hasBackground = true;
+    m_explicitBackground = true;
+    if (m_background == background)
+        return;
+
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+}
+
+void QQuickUniversalStyle::inheritBackground(QRgb background, bool has)
+{
+    if (m_explicitBackground || m_background == background)
+        return;
+
+    m_hasBackground = has;
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+}
+
+void QQuickUniversalStyle::propagateBackground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
+        if (universal)
+            universal->inheritBackground(m_background, m_hasBackground);
+    }
+}
+
+void QQuickUniversalStyle::resetBackground()
+{
+    if (!m_explicitBackground)
+        return;
+
+    m_hasBackground = false;
+    m_explicitBackground = false;
+    QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
+    inheritBackground(universal ? universal->m_background : DefaultBackground, universal ? universal->m_hasBackground : false);
 }
 
 QColor QQuickUniversalStyle::color(Color color) const
@@ -381,6 +495,8 @@ void QQuickUniversalStyle::parentStyleChange(QQuickStyleAttached *newParent, QQu
     if (universal) {
         inheritTheme(universal->theme());
         inheritAccent(universal->m_accent);
+        inheritForeground(universal->m_foreground, universal->m_hasForeground);
+        inheritBackground(universal->m_background, universal->m_hasBackground);
     }
 }
 
@@ -423,6 +539,30 @@ void QQuickUniversalStyle::init()
                 DefaultAccent = m_accent = color.rgba();
             else
                 qWarning().nospace().noquote() << "Universal: unknown accent value: " << accentValue;
+        }
+
+        QByteArray foregroundValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+        Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
+        if (ok) {
+            DefaultForeground = m_foreground = qquickuniversal_accent_color(foregroundEnum);
+        } else if (!foregroundValue.isEmpty()) {
+            QColor color(foregroundValue.constData());
+            if (color.isValid())
+                DefaultForeground = m_foreground = color.rgba();
+            else
+                qWarning().nospace().noquote() << "Universal: unknown foreground value: " << foregroundValue;
+        }
+
+        QByteArray backgroundValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
+        Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
+        if (ok) {
+            DefaultBackground = m_background = qquickuniversal_accent_color(backgroundEnum);
+        } else if (!backgroundValue.isEmpty()) {
+            QColor color(backgroundValue.constData());
+            if (color.isValid())
+                DefaultBackground = m_background = color.rgba();
+            else
+                qWarning().nospace().noquote() << "Universal: unknown background value: " << backgroundValue;
         }
 
         defaultsInitialized = true;

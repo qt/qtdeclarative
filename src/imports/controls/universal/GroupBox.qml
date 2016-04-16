@@ -64,10 +64,12 @@ T.GroupBox {
 
         text: control.title
         font: control.font
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
+
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [label]
 

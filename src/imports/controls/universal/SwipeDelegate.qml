@@ -68,7 +68,8 @@ T.SwipeDelegate {
         verticalAlignment: Text.AlignVCenter
         renderType: Text.NativeRendering
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
 
         Behavior on x {
             enabled: !control.down

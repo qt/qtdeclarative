@@ -41,6 +41,7 @@ import Qt.labs.controls.universal 1.0
 T.Label {
     id: control
 
-    color: !control.enabled ? Universal.baseLowColor : Universal.baseHighColor
+    opacity: enabled ? 1.0 : 0.2
+    color: control.Universal.foreground
     linkColor: Universal.accent
 }

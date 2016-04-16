@@ -62,7 +62,8 @@ T.Button {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 

@@ -67,11 +67,13 @@ T.ComboBox {
     contentItem: Text {
         text: control.displayText
         font: control.font
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
         rightPadding: 12 + control.spacing
+
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 

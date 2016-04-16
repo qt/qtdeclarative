@@ -48,9 +48,9 @@ T.Tumbler {
     //! [delegate]
     delegate: Text {
         text: modelData
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         font: control.font
-        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
+        color: control.Universal.foreground
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * (control.enabled ? 0.6 : 0.2)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
