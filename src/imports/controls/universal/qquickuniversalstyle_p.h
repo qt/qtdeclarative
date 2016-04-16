@@ -195,8 +195,8 @@ protected:
 private:
     void init();
 
-    bool m_hasTheme;
-    bool m_hasAccent;
+    bool m_explicitTheme;
+    bool m_explicitAccent;
     QQuickUniversalStyle::Theme m_theme;
     QRgb m_accent;
 };

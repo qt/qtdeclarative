@@ -136,7 +136,7 @@ static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
 static QRgb DefaultAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyleAttached(parent),
-    m_hasTheme(false), m_hasAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
+    m_explicitTheme(false), m_explicitAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
 {
     init();
 }
@@ -153,7 +153,7 @@ QQuickUniversalStyle::Theme QQuickUniversalStyle::theme() const
 
 void QQuickUniversalStyle::setTheme(Theme theme)
 {
-    m_hasTheme = true;
+    m_explicitTheme = true;
     if (m_theme == theme)
         return;
 
@@ -165,7 +165,7 @@ void QQuickUniversalStyle::setTheme(Theme theme)
 
 void QQuickUniversalStyle::inheritTheme(Theme theme)
 {
-    if (m_hasTheme || m_theme == theme)
+    if (m_explicitTheme || m_theme == theme)
         return;
 
     m_theme = theme;
@@ -186,10 +186,10 @@ void QQuickUniversalStyle::propagateTheme()
 
 void QQuickUniversalStyle::resetTheme()
 {
-    if (!m_hasTheme)
+    if (!m_explicitTheme)
         return;
 
-    m_hasTheme = false;
+    m_explicitTheme = false;
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
     inheritTheme(universal ? universal->theme() : DefaultTheme);
 }
@@ -223,7 +223,7 @@ void QQuickUniversalStyle::setAccent(const QVariant &var)
         }
     }
 
-    m_hasAccent = true;
+    m_explicitAccent = true;
     if (m_accent == accent)
         return;
 
@@ -234,7 +234,7 @@ void QQuickUniversalStyle::setAccent(const QVariant &var)
 
 void QQuickUniversalStyle::inheritAccent(QRgb accent)
 {
-    if (m_hasAccent || m_accent == accent)
+    if (m_explicitAccent || m_accent == accent)
         return;
 
     m_accent = accent;
@@ -254,10 +254,10 @@ void QQuickUniversalStyle::propagateAccent()
 
 void QQuickUniversalStyle::resetAccent()
 {
-    if (!m_hasAccent)
+    if (!m_explicitAccent)
         return;
 
-    m_hasAccent = false;
+    m_explicitAccent = false;
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(parentStyle());
     inheritAccent(universal ? universal->m_accent : DefaultAccent);
 }
