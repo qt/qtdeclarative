@@ -792,4 +792,14 @@ TestCase {
 
         loader.destroy()
     }
+
+    // QTBUG-52615
+    function test_currentIndex() {
+        var control = comboBox.createObject(testCase, {currentIndex: -1, model: 3})
+        verify(control)
+
+        compare(control.currentIndex, -1)
+
+        control.destroy()
+    }
 }

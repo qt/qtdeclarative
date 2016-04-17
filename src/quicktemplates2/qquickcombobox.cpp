@@ -154,7 +154,7 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
 public:
-    QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false),
+    QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false), hasCurrentIndex(false),
         highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
         delegate(nullptr), popup(nullptr) { }
 
@@ -177,6 +177,7 @@ public:
     bool pressed;
     bool ownModel;
     bool hasDisplayText;
+    bool hasCurrentIndex;
     int highlightedIndex;
     int currentIndex;
     QVariant model;
@@ -479,6 +480,7 @@ int QQuickComboBox::currentIndex() const
 void QQuickComboBox::setCurrentIndex(int index)
 {
     Q_D(QQuickComboBox);
+    d->hasCurrentIndex = true;
     if (d->currentIndex == index)
         return;
 
@@ -857,7 +859,7 @@ void QQuickComboBox::componentComplete()
         static_cast<QQmlDelegateModel *>(d->delegateModel)->componentComplete();
 
     if (count() > 0) {
-        if (d->currentIndex == -1)
+        if (!d->hasCurrentIndex && d->currentIndex == -1)
             setCurrentIndex(0);
         else
             d->updateCurrentText();
