@@ -160,7 +160,7 @@ class DocumentImpl : public QQmlRefCount, public NodeImpl
 public:
     DocumentImpl() : root(0) { type = Document; }
     virtual ~DocumentImpl() {
-        if (root) delete root;
+        delete root;
     }
 
     QString version;
