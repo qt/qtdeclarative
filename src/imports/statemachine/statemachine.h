@@ -48,8 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlOpenMetaObject;
-
 class StateMachine : public QStateMachine, public QQmlParserStatus
 {
     Q_OBJECT
