@@ -179,25 +179,25 @@
     to work well with the rest of the Material style palette:
 
     Available pre-defined colors:
-    \value Material.Red Red (#F44336)
-    \value Material.Pink Pink (#E91E63)
-    \value Material.Purple Purple (#9C27B0)
-    \value Material.DeepPurple Deep Purple (#673AB7)
-    \value Material.Indigo Indigo (#3F51B5)
-    \value Material.Blue Blue (#2196F3)
-    \value Material.LightBlue Light Blue (#03A9F4)
-    \value Material.Cyan Cyan (#00BCD4)
-    \value Material.Teal Teal (#009688)
-    \value Material.Green Green (#4CAF50)
-    \value Material.LightGreen Light Green (#8BC34A)
-    \value Material.Lime Lime (#CDDC39)
-    \value Material.Yellow Yellow (#FFEB3B)
-    \value Material.Amber Amber (#FFC107)
-    \value Material.Orange Orange (#FF9800)
-    \value Material.DeepOrange Deep Orange (#FF5722)
-    \value Material.Brown Brown (#795548)
-    \value Material.Grey Grey (#9E9E9E)
-    \value Material.BlueGrey Blue Grey (#607D8B)
+    \value Material.Red \stylecolor {#F44336} {}
+    \value Material.Pink \stylecolor {#E91E63} {(default accent)}
+    \value Material.Purple \stylecolor {#9C27B0} {}
+    \value Material.DeepPurple \stylecolor {#673AB7} {}
+    \value Material.Indigo \stylecolor {#3F51B5} {(default primary)}
+    \value Material.Blue \stylecolor {#2196F3} {}
+    \value Material.LightBlue \stylecolor {#03A9F4} {}
+    \value Material.Cyan \stylecolor {#00BCD4} {}
+    \value Material.Teal \stylecolor {#009688} {}
+    \value Material.Green \stylecolor {#4CAF50} {}
+    \value Material.LightGreen \stylecolor {#8BC34A} {}
+    \value Material.Lime \stylecolor {#CDDC39} {}
+    \value Material.Yellow \stylecolor {#FFEB3B} {}
+    \value Material.Amber \stylecolor {#FFC107} {}
+    \value Material.Orange \stylecolor {#FF9800} {}
+    \value Material.DeepOrange \stylecolor {#FF5722} {}
+    \value Material.Brown \stylecolor {#795548} {}
+    \value Material.Grey \stylecolor {#9E9E9E} {}
+    \value Material.BlueGrey \stylecolor {#607D8B} {}
 
     \labs
 
@@ -208,7 +208,7 @@
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
-    The default value is \c Material.Teal.
+    The default value is \c Material.Pink.
 
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined colors} that have been designed
@@ -239,7 +239,7 @@
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
-    The default value is \c Material.BlueGray.
+    The default value is \c Material.Indigo.
 
     \note Even though the primary can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined colors} that have been designed

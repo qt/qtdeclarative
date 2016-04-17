@@ -165,26 +165,26 @@
     recommended to use one of the pre-defined accents that have been designed
     to work well with the rest of the Universal style palette:
 
-    \value Universal.Lime Lime (#A4C400)
-    \value Universal.Green Green (#60A917)
-    \value Universal.Emerald Emerald (#008A00)
-    \value Universal.Teal Teal (#00ABA9)
-    \value Universal.Cyan Cyan (#1BA1E2)
-    \value Universal.Cobalt Cobalt (#3E65FF, default)
-    \value Universal.Indigo Indigo (#6A00FF)
-    \value Universal.Violet Violet (#AA00FF)
-    \value Universal.Pink Pink (#F472D0)
-    \value Universal.Magenta Magenta (#D80073)
-    \value Universal.Crimson Crimson (#A20025)
-    \value Universal.Red Red (#E51400)
-    \value Universal.Orange Orange (#FA6800)
-    \value Universal.Amber Amber (#F0A30A)
-    \value Universal.Yellow Yellow (#E3C800)
-    \value Universal.Brown Brown (#825A2C)
-    \value Universal.Olive Olive (#6D8764)
-    \value Universal.Steel Steel (#647687)
-    \value Universal.Mauve Mauve (#76608A)
-    \value Universal.Taupe Taupe (#87794E)
+    \value Universal.Lime \stylecolor {#A4C400} {}
+    \value Universal.Green \stylecolor {#60A917} {}
+    \value Universal.Emerald \stylecolor {#008A00} {}
+    \value Universal.Teal \stylecolor {#00ABA9} {}
+    \value Universal.Cyan \stylecolor {#1BA1E2} {}
+    \value Universal.Cobalt \stylecolor {#3E65FF} {(default accent)}
+    \value Universal.Indigo \stylecolor {#6A00FF} {}
+    \value Universal.Violet \stylecolor {#AA00FF} {}
+    \value Universal.Pink \stylecolor {#F472D0} {}
+    \value Universal.Magenta \stylecolor {#D80073} {}
+    \value Universal.Crimson \stylecolor {#A20025} {}
+    \value Universal.Red \stylecolor {#E51400} {}
+    \value Universal.Orange \stylecolor {#FA6800} {}
+    \value Universal.Amber \stylecolor {#F0A30A} {}
+    \value Universal.Yellow \stylecolor {#E3C800} {}
+    \value Universal.Brown \stylecolor {#825A2C} {}
+    \value Universal.Olive \stylecolor {#6D8764} {}
+    \value Universal.Steel \stylecolor {#647687} {}
+    \value Universal.Mauve \stylecolor {#76608A} {}
+    \value Universal.Taupe \stylecolor {#87794E} {}
 
     \endstyleproperty
 
