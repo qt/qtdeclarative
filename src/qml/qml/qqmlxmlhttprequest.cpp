@@ -117,10 +117,8 @@ class NodeImpl
 public:
     NodeImpl() : type(Element), document(0), parent(0) {}
     virtual ~NodeImpl() {
-        for (int ii = 0; ii < children.count(); ++ii)
-            delete children.at(ii);
-        for (int ii = 0; ii < attributes.count(); ++ii)
-            delete attributes.at(ii);
+        qDeleteAll(children);
+        qDeleteAll(attributes);
     }
 
     // These numbers are copied from the Node IDL definition
