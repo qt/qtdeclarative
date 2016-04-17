@@ -111,6 +111,26 @@ TestCase {
     }
 
     Component {
+        id: popupComponent
+        ApplicationWindow {
+            Material.primary: Material.Blue
+            Material.accent: Material.Red
+            visible: true
+            property alias popup: popupInstance
+            property alias label: labelInstance
+            Popup {
+                id: popupInstance
+                Label {
+                    id: labelInstance
+                    text: "test"
+                    color: popupInstance.Material.textSelectionColor
+                }
+                Component.onCompleted: open()
+            }
+        }
+    }
+
+    Component {
         id: comboBox
         ApplicationWindow {
             width: 200
@@ -225,6 +245,33 @@ TestCase {
         compare(grandGrandGrandChild1.Material[prop], data.value2)
 
         parent.destroy()
+    }
+
+    function test_inheritance_popup_data() {
+        return [
+            { tag: "primary", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
+            { tag: "accent", value1: Material.color(Material.Amber), value2: Material.color(Material.Indigo) },
+            { tag: "theme", value1: Material.Dark, value2: Material.Light },
+        ]
+    }
+
+    function test_inheritance_popup(data) {
+        var prop = data.tag
+        var popupObject = popupComponent.createObject(testCase)
+        compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+
+        popupObject.Material[prop] = data.value1
+        compare(popupObject.Material[prop], data.value1)
+        compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+
+        popupObject.Material[prop] = data.value2
+        compare(popupObject.Material[prop], data.value2)
+        compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+
+        popupObject.destroy()
     }
 
     function test_window() {
