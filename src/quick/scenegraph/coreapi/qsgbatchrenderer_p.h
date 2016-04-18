@@ -521,7 +521,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager(QSGRenderContext *ctx) : blitProgram(0), visualizeProgram(0), context(ctx) { }
+    ShaderManager(QSGRenderContext *ctx) : visualizeProgram(0), blitProgram(0), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);
@@ -534,11 +534,13 @@ public:
     Shader *prepareMaterial(QSGMaterial *material);
     Shader *prepareMaterialNoRewrite(QSGMaterial *material);
 
+    QOpenGLShaderProgram *visualizeProgram;
+
+private:
     QHash<QSGMaterialType *, Shader *> rewrittenShaders;
     QHash<QSGMaterialType *, Shader *> stockShaders;
 
     QOpenGLShaderProgram *blitProgram;
-    QOpenGLShaderProgram *visualizeProgram;
     QSGRenderContext *context;
 };
 
