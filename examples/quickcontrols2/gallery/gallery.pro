@@ -11,5 +11,5 @@ OTHER_FILES += \
 RESOURCES += \
     gallery.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtlabscontrols/gallery
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/gallery
 INSTALLS += target
