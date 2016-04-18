@@ -284,8 +284,6 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.vert"));
         s.sourceCode[Key::VertexShader] = builder.source() + s.sourceCode[Key::VertexShader];
 
-        s.className = metaObject()->className();
-
         material->setProgramSource(s);
         material->attributes = m_common.attributes;
         foreach (QQuickShaderEffectNode* node, m_nodes)
