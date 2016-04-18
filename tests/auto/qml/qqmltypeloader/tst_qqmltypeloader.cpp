@@ -35,6 +35,9 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmltypeloader_p.h>
+#include <QtQml/private/qqmlcompiler_p.h>
 #include "../../shared/util.h"
 
 class tst_QQMLTypeLoader : public QQmlDataTest
@@ -44,6 +47,7 @@ class tst_QQMLTypeLoader : public QQmlDataTest
 private slots:
     void testLoadComplete();
     void loadComponentSynchronously();
+    void trimCache();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -71,6 +75,32 @@ void tst_QQMLTypeLoader::loadComponentSynchronously()
     QQmlComponent component(&engine, testFileUrl("load_synchronous.qml"));
     QObject *o = component.create();
     QVERIFY(o);
+}
+
+void tst_QQMLTypeLoader::trimCache()
+{
+    QQmlEngine engine;
+    QQmlTypeLoader &loader = QQmlEnginePrivate::get(&engine)->typeLoader;
+    for (int i = 0; i < 256; ++i) {
+        QUrl url = testFileUrl("trim_cache.qml");
+        url.setQuery(QString::number(i));
+
+        QQmlTypeData *data = loader.getType(url);
+        if (i % 5 == 0) // keep references to some of them so that they aren't trimmed
+            data->compiledData()->addref();
+
+        data->release();
+    }
+
+    for (int i = 0; i < 256; ++i) {
+        QUrl url = testFileUrl("trim_cache.qml");
+        url.setQuery(QString::number(i));
+        if (i % 5 == 0)
+            QVERIFY(loader.isTypeLoaded(url));
+        else if (i < 128)
+            QVERIFY(!loader.isTypeLoaded(url));
+        // The cache is free to keep the others.
+    }
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

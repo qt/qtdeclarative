@@ -1113,6 +1113,7 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
 }
 
 #define DATALOADER_MAXIMUM_REDIRECT_RECURSION 16
+#define TYPELOADER_MINIMUM_TRIM_THRESHOLD 64
 
 void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
 {
@@ -1592,7 +1593,8 @@ bool QQmlTypeLoader::QmldirContent::designerSupported() const
 Constructs a new type loader that uses the given \a engine.
 */
 QQmlTypeLoader::QQmlTypeLoader(QQmlEngine *engine)
-    : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this))
+    : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this)),
+      m_typeCacheTrimThreshold(TYPELOADER_MINIMUM_TRIM_THRESHOLD)
 {
 }
 
@@ -1629,6 +1631,10 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     QQmlTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
+        // Trim before adding the new type, so that we don't immediately trim it away
+        if (m_typeCache.size() >= m_typeCacheTrimThreshold)
+            trimCache();
+
         typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
@@ -1933,10 +1939,20 @@ void QQmlTypeLoader::clearCache()
     qDeleteAll(m_importQmlDirCache);
 
     m_typeCache.clear();
+    m_typeCacheTrimThreshold = TYPELOADER_MINIMUM_TRIM_THRESHOLD;
     m_scriptCache.clear();
     m_qmldirCache.clear();
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
+}
+
+void QQmlTypeLoader::updateTypeCacheTrimThreshold()
+{
+    int size = m_typeCache.size();
+    if (size > m_typeCacheTrimThreshold)
+        m_typeCacheTrimThreshold = size * 2;
+    if (size < m_typeCacheTrimThreshold / 2)
+        m_typeCacheTrimThreshold = qMax(size * 2, TYPELOADER_MINIMUM_TRIM_THRESHOLD);
 }
 
 void QQmlTypeLoader::trimCache()
@@ -1962,6 +1978,8 @@ void QQmlTypeLoader::trimCache()
             m_typeCache.erase(iter);
         }
     }
+
+    updateTypeCacheTrimThreshold();
 
     // TODO: release any scripts which are no longer referenced by any types
 }

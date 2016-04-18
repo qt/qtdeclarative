@@ -358,6 +358,7 @@ private:
     QQmlTypeLoaderThread *m_thread;
     NetworkReplies m_networkReplies;
     TypeCache m_typeCache;
+    int m_typeCacheTrimThreshold;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;
     ImportDirCache m_importDirCache;
@@ -365,6 +366,7 @@ private:
 
     template<typename Loader>
     void doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode);
+    void updateTypeCacheTrimThreshold();
 
     friend struct PlainLoader;
     friend struct CachedLoader;
