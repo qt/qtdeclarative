@@ -329,7 +329,7 @@ class Q_AUTOTEST_EXPORT QQuickPathPercent : public QQuickPathElement
     Q_OBJECT
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
 public:
-    QQuickPathPercent(QObject *parent=0) : QQuickPathElement(parent) {}
+    QQuickPathPercent(QObject *parent=0) : QQuickPathElement(parent), _value(0) {}
 
     qreal value() const;
     void setValue(qreal value);
