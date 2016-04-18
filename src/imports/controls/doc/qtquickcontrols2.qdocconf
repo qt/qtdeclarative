@@ -16,12 +16,18 @@ qhp.QtQuickControls2.filterAttributes                  = qtquickcontrols2 $QT_VE
 qhp.QtQuickControls2.customFilters.Qt.name             = QtQuickControls2 $QT_VERSION
 qhp.QtQuickControls2.customFilters.Qt.filterAttributes = qtquickcontrols2 $QT_VERSION
 
-qhp.QtQuickControls2.subprojects = qtquickcontrols2qmltypes
-
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.title      = Controls 2 QML Types
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.indexTitle = Qt Quick Controls 2 QML Types
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.selectors  = qmlclass
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.sortPages  = true
+qhp.QtQuickControls2.subprojects = qmltypes classes examples
+qhp.QtQuickControls2.subprojects.qmltypes.title = QML Types
+qhp.QtQuickControls2.subprojects.qmltypes.indexTitle = Qt Quick Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQuickControls2.subprojects.qmltypes.sortPages = true
+qhp.QtQuickControls2.subprojects.classes.title = C++ Classes
+qhp.QtQuickControls2.subprojects.classes.indexTitle = Qt Quick Controls 2 C++ Classes
+qhp.QtQuickControls2.subprojects.classes.selectors = class fake:headerfile
+qhp.QtQuickControls2.subprojects.classes.sortPages = true
+qhp.QtQuickControls2.subprojects.examples.title = Examples
+qhp.QtQuickControls2.subprojects.examples.indexTitle = Qt Quick Controls 2 Examples
+qhp.QtQuickControls2.subprojects.examples.selectors = fake:example
 
 depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qmake qtsql qtwidgets
 
@@ -50,6 +56,7 @@ imagedirs += images
 
 navigation.landingpage  = "Qt Quick Controls 2"
 navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
+navigation.cppclassespage = "Qt Quick Controls 2 C++ Classes"
 
 tagfile                 = qtquickcontrols2.tags
 
