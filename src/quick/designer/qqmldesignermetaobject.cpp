@@ -134,9 +134,13 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
 
-    //create cache
-    cache = m_cache = QQmlEnginePrivate::get(engine)->cache(this);
-    cache->addref();
+    m_cache = QQmlEnginePrivate::get(engine)->cache(this);
+
+    if (m_cache != cache) {
+        m_cache->addref();
+        cache->release();
+        cache = m_cache;
+    }
 
     //If our parent is not a VMEMetaObject we just se the flag to false again
     if (constructedMetaData(metaData))
@@ -160,17 +164,16 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
     if (ddata && ddata->propertyCache) {
         cache->setParent(ddata->propertyCache);
         cache->invalidate(engine, this);
+        ddata->propertyCache->release();
         ddata->propertyCache = m_cache;
+        m_cache->addref();
     }
 
 }
 
 QQmlDesignerMetaObject::~QQmlDesignerMetaObject()
 {
-    if (cache->count() > 1) // qml is crashing because the property cache is not removed from the engine
-        cache->release();
-    else
-        m_type->release();
+    m_type->release();
 
     nodeInstanceMetaObjectList.remove(this);
 }
