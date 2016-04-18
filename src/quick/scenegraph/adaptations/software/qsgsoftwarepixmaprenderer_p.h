@@ -64,7 +64,7 @@ public:
     void renderScene(uint fboId = 0) final;
     void render() final;
 
-    void render(QPixmap *target);
+    void render(QPaintDevice *target);
     void setProjectionRect(const QRect &projectionRect);
 
 private:

@@ -44,9 +44,7 @@
 #include "qsgsoftwarecontext_p.h"
 #include "qsgsoftwarerenderablenode_p.h"
 
-#include <QtGui/QWindow>
-#include <QtQuick/QSGSimpleRectNode>
-
+#include <QtGui/QPaintDevice>
 #include <QElapsedTimer>
 
 Q_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
@@ -62,6 +60,16 @@ QSGSoftwareRenderer::~QSGSoftwareRenderer()
 {
 }
 
+void QSGSoftwareRenderer::setCurrentPaintDevice(QPaintDevice *device)
+{
+    m_paintDevice = device;
+}
+
+QRegion QSGSoftwareRenderer::flushRegion() const
+{
+    return m_flushRegion;
+}
+
 void QSGSoftwareRenderer::renderScene(uint)
 {
     class B : public QSGBindable
@@ -74,32 +82,15 @@ void QSGSoftwareRenderer::renderScene(uint)
 
 void QSGSoftwareRenderer::render()
 {
+    if (!m_paintDevice)
+        return;
+
     QElapsedTimer renderTimer;
 
-    QWindow *currentWindow = static_cast<QSGSoftwareRenderContext*>(m_context)->currentWindow;
-    if (!m_backingStore)
-        m_backingStore.reset(new QBackingStore(currentWindow));
-
-    if (m_backingStore->size() != currentWindow->size()) {
-        m_backingStore->resize(currentWindow->size());
-    }
-
     setBackgroundColor(clearColor());
-    setBackgroundSize(currentWindow->size());
+    setBackgroundSize(QSize(m_paintDevice->width(), m_paintDevice->height()));
 
-    const QRect rect(0, 0, currentWindow->width(), currentWindow->height());
-    m_backingStore->beginPaint(rect);
-
-    QPaintDevice *device = m_backingStore->paintDevice();
-#ifndef QTQUICK2D_DEBUG_FLUSH
-    QPainter painter(device);
-#else
-    if (m_outputBuffer.size() != m_backingStore->size()) {
-        m_outputBuffer = QImage(m_backingStore->size(), QImage::Format_ARGB32_Premultiplied);
-        m_outputBuffer.fill(Qt::transparent);
-    }
-    QPainter painter(&m_outputBuffer);
-#endif
+    QPainter painter(m_paintDevice);
     painter.setRenderHint(QPainter::Antialiasing);
 
     // Build Renderlist
@@ -125,34 +116,10 @@ void QSGSoftwareRenderer::render()
     qint64 optimizeRenderListTime = renderTimer.restart();
 
     // Render the contents Renderlist
-    QRegion dirtyRegion = renderNodes(&painter);
+    m_flushRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
 
-    qCDebug(lcRenderer) << "render" << dirtyRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
-
-#ifdef QTQUICK2D_DEBUG_FLUSH
-    // Keep up with the last 5 flushes
-    if (m_previousFlushes.count() == 5)
-        m_previousFlushes.pop_front();
-    m_previousFlushes.append(dirtyRegion);
-
-    QPainter backingStorePainter(device);
-    backingStorePainter.drawImage(QRect(0, 0, m_backingStore->size().width(), m_backingStore->size().height()), m_outputBuffer, m_outputBuffer.rect());
-    QPen pen(Qt::NoPen);
-    QBrush brush(QColor(255, 0, 0, 50));
-    backingStorePainter.setPen(pen);
-    backingStorePainter.setBrush(brush);
-    for (auto region : qAsConst(m_previousFlushes)) {
-        backingStorePainter.drawRects(region.rects());
-    }
-    m_backingStore->endPaint();
-
-    m_backingStore->flush(rect);
-#else
-    m_backingStore->endPaint();
-    // Flush the updated regions to the window
-    m_backingStore->flush(dirtyRegion);
-#endif
+    qCDebug(lcRenderer) << "render" << m_flushRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
 }
 
 QT_END_NAMESPACE

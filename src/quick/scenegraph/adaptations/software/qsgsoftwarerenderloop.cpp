@@ -49,6 +49,8 @@
 #include <private/qsgsoftwarerenderer_p.h>
 #include <qpa/qplatformbackingstore.h>
 
+#include <QtGui/QBackingStore>
+
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderLoop::QSGSoftwareRenderLoop()
@@ -70,6 +72,10 @@ void QSGSoftwareRenderLoop::show(QQuickWindow *window)
     data.grabOnly = false;
     m_windows[window] = data;
 
+    if (m_backingStores[window] == nullptr) {
+        m_backingStores[window] = new QBackingStore(window);
+    }
+
     maybeUpdate(window);
 }
 
@@ -82,6 +88,8 @@ void QSGSoftwareRenderLoop::hide(QQuickWindow *window)
 void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
 {
     m_windows.remove(window);
+    delete m_backingStores[window];
+    m_backingStores.remove(window);
     hide(window);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
@@ -101,9 +109,13 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
 
+    //Resize the backing store if necessary
+    if (m_backingStores[window]->size() != window->size()) {
+        m_backingStores[window]->resize(window->size());
+    }
+
     // ### create QPainter and set up pointer to current window/painter
     QSGSoftwareRenderContext *ctx = static_cast<QSGSoftwareRenderContext*>(cd->context);
-    ctx->currentWindow = window;
     ctx->initializeIfNeeded();
 
     bool alsoSwap = data.updatePending;
@@ -137,18 +149,27 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
         syncTime = renderTimer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
+    //Tell the renderer about the windows backing store
+    auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
+    if (softwareRenderer)
+        softwareRenderer->setCurrentPaintDevice(m_backingStores[window]->paintDevice());
+
+    m_backingStores[window]->beginPaint(QRect(0, 0, window->width(), window->height()));
     cd->renderSceneGraph(window->size());
+    m_backingStores[window]->endPaint();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
-        grabContent = static_cast<QSGSoftwareRenderer*>(cd->renderer)->backingStore()->handle()->toImage();
+        grabContent = m_backingStores[window]->handle()->toImage();
         data.grabOnly = false;
     }
 
     if (alsoSwap && window->isVisible()) {
+        //Flush backingstore to window
+        m_backingStores[window]->flush(softwareRenderer->flushRegion());
         cd->fireFrameSwapped();
     }
 

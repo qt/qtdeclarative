@@ -89,7 +89,6 @@ QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
-    , currentWindow(0)
     , m_initialized(false)
 {
 }

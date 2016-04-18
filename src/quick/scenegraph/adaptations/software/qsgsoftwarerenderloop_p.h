@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QBackingStore;
+
 class QSGSoftwareRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
@@ -90,6 +92,7 @@ public:
     };
 
     QHash<QQuickWindow *, WindowData> m_windows;
+    QHash<QQuickWindow *, QBackingStore *> m_backingStores;
 
     QSGContext *sg;
     QSGRenderContext *rc;

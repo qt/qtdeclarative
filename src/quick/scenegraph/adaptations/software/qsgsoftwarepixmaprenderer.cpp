@@ -73,12 +73,12 @@ void QSGSoftwarePixmapRenderer::render()
 
 }
 
-void QSGSoftwarePixmapRenderer::render(QPixmap *target)
+void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
 {
     QElapsedTimer renderTimer;
 
     // Setup background item
-    setBackgroundSize(target->size());
+    setBackgroundSize(QSize(target->width(), target->height()));
     setBackgroundColor(clearColor());
 
     QPainter painter(target);

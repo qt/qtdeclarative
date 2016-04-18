@@ -76,7 +76,6 @@ public:
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
     QSGRenderer *createRenderer() override;
 
-    QWindow *currentWindow;
     bool m_initialized;
 };
 
