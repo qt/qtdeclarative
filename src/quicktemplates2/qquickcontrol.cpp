@@ -78,6 +78,10 @@ static bool isKeyFocusReason(Qt::FocusReason reason)
     return reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason;
 }
 
+QQuickControlPrivate::ExtraData::ExtraData()
+{
+}
+
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
@@ -280,8 +284,8 @@ void QQuickControlPrivate::resolveFont()
 void QQuickControlPrivate::inheritFont(const QFont &f)
 {
     Q_Q(QQuickControl);
-    QFont parentFont = font.resolve(f);
-    parentFont.resolve(font.resolve() | f.resolve());
+    QFont parentFont = extra.isAllocated() ? extra->font.resolve(f) : f;
+    parentFont.resolve(extra.isAllocated() ? extra->font.resolve() | f.resolve() : f.resolve());
 
     const QFont defaultFont = q->defaultFont();
     const QFont resolvedFont = parentFont.resolve(defaultFont);
@@ -430,10 +434,10 @@ QFont QQuickControl::font() const
 void QQuickControl::setFont(const QFont &font)
 {
     Q_D(QQuickControl);
-    if (d->font.resolve() == font.resolve() && d->font == font)
+    if (d->extra.value().font.resolve() == font.resolve() && d->extra.value().font == font)
         return;
 
-    d->font = font;
+    d->extra.value().font = font;
     d->resolveFont();
 }
 

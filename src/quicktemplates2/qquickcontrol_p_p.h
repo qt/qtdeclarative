@@ -51,6 +51,7 @@
 #include "qquickcontrol_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQml/private/qlazilyallocated_p.h>
 #include <qpa/qplatformtheme.h>
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -108,8 +109,12 @@ public:
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
 
-    // TODO: QLazilyAllocated<ExtraData>
-    QFont font;
+    struct ExtraData {
+        ExtraData();
+        QFont font;
+    };
+    QLazilyAllocated<ExtraData> extra;
+
     QFont resolvedFont;
     bool hasTopPadding;
     bool hasLeftPadding;
