@@ -159,10 +159,6 @@ public:
         qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
     }
-
-    void initializeEngine(QQmlEngine *, const char *)
-    {
-    }
 };
 
 QT_END_NAMESPACE
