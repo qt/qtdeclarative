@@ -1,13 +1,13 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtQuickControls2
-description             = Qt Quick Controls Reference Documentation
+description             = Qt Quick Controls 2 Reference Documentation
 version                 = $QT_VERSION
 
 qhp.projects            = QtQuickControls2
 
 qhp.QtQuickControls2.file          = qtquickcontrols2.qhp
-qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
+qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols2.$QT_VERSION_TAG
 qhp.QtQuickControls2.virtualFolder = qtquickcontrols2
 qhp.QtQuickControls2.indexTitle    = Qt Quick Controls 2
 qhp.QtQuickControls2.indexRoot     =
