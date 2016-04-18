@@ -61,7 +61,7 @@ public:
     {
         initResources();
     }
-    virtual void registerTypes(const char *uri)
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Layouts"));
         Q_UNUSED(uri);

@@ -761,7 +761,7 @@ public:
     {
         initResources();
     }
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE
     {
         Q_ASSERT(QLatin1String(uri) == "QtQuick.LocalStorage");
         qmlRegisterSingletonType<QQuickLocalStorage>(uri, 2, 0, "LocalStorage", module_api_factory);

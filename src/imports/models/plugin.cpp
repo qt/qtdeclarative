@@ -78,7 +78,7 @@ class QtQmlModelsPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 public:
     QtQmlModelsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    virtual void registerTypes(const char *uri)
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
         Q_UNUSED(uri);

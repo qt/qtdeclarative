@@ -57,7 +57,7 @@ class QtQuick2Plugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 public:
     QtQuick2Plugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    virtual void registerTypes(const char *uri)
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
