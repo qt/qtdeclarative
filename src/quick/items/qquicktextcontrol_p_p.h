@@ -97,6 +97,7 @@ public:
     void _q_updateCursorPosChanged(const QTextCursor &someCursor);
 
     void setBlinkingCursorEnabled(bool enable);
+    void updateCursorFlashTime();
 
     void extendWordwiseSelection(int suggestedNewPosition, qreal mouseXPosition);
     void extendBlockwiseSelection(int suggestedNewPosition);
@@ -156,6 +157,7 @@ public:
     bool overwriteMode : 1;
     bool acceptRichText : 1;
     bool cursorVisible : 1; // used to hide the cursor in the preedit area
+    bool cursorBlinkingEnabled : 1;
     bool hasFocus : 1;
     bool hadSelectionOnMousePress : 1;
     bool wordSelectionEnabled : 1;
