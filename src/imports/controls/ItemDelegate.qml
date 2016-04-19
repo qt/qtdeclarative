@@ -69,8 +69,8 @@ T.ItemDelegate {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        visible: control.down || control.highlighted
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        visible: control.down || control.highlighted || control.activeKeyFocus
+        color: control.activeKeyFocus ? (control.pressed ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#eeeeee")
     }
     //! [background]
 }
