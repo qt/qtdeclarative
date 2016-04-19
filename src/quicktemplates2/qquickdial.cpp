@@ -75,7 +75,9 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Dial}, {Input Controls}
 */
 
+static const qreal startAngleRadians = (M_PI * 2.0) * (4.0 / 6.0);
 static const qreal startAngle = -140;
+static const qreal endAngleRadians = (M_PI * 2.0) * (5.0 / 6.0);
 static const qreal endAngle = 140;
 
 class QQuickDialPrivate : public QQuickControlPrivate
@@ -135,7 +137,7 @@ qreal QQuickDialPrivate::positionAt(const QPoint &point) const
     if (angle < M_PI / -2)
         angle = angle + M_PI * 2;
 
-    qreal normalizedAngle = (M_PI * 4 / 3 - angle) / (M_PI * 10 / 6);
+    qreal normalizedAngle = (startAngleRadians - angle) / endAngleRadians;
     return normalizedAngle;
 }
 
