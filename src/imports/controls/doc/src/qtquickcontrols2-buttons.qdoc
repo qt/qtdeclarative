@@ -31,7 +31,7 @@
 
     Qt Quick Controls 2 offers a selection of button-like controls.
 
-    \annotatedlist qtlabscontrols-buttons
+    \annotatedlist qtquickcontrols2-buttons
 
     Each type of button has its own specific target use case. The following
     sections offer guidelines for choosing the appropriate type of button,

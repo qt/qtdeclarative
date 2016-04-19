@@ -29,7 +29,7 @@
     \page qtquickcontrols2-menus.html
     \title Menu Controls
 
-    \annotatedlist qtlabscontrols-menus
+    \annotatedlist qtquickcontrols2-menus
 
     Each type of menu control has its own specific target use case. The
     following sections offer guidelines for choosing the appropriate type

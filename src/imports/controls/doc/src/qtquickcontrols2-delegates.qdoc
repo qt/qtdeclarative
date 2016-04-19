@@ -32,7 +32,7 @@
     Qt Quick Controls 2 offers a selection of controls that are used as
     delegates in views.
 
-    \annotatedlist qtlabscontrols-delegates
+    \annotatedlist qtquickcontrols2-delegates
 
     Each type of delegate has its own specific target use case. The following
     sections offer guidelines for choosing the appropriate type of delegate,

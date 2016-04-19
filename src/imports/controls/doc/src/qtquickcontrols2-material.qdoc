@@ -123,7 +123,7 @@
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a \l {qtlabscontrols-conf}
+    specify them via environment variables or in a \l {qtquickcontrols2-conf}
     {configuration file}.
 
     \section3 Environment Variables

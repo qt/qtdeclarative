@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits ItemDelegate
     \instantiates QQuickCheckDelegate
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-delegates
+    \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be checked or unchecked.
 
     \image qtquickcontrols2-checkdelegate.gif

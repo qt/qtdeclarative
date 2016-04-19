@@ -31,7 +31,7 @@
 
     Qt Quick Controls 2 offers a selection of container-like controls.
 
-    \annotatedlist qtlabscontrols-containers
+    \annotatedlist qtquickcontrols2-containers
 
     Each type of container can be used to group a set of controls together.
     The following sections offer guidelines for choosing the appropriate type

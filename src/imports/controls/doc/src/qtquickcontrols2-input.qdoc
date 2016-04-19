@@ -32,7 +32,7 @@
     Qt Quick Controls 2 offers a variety of input controls for both numeric
     and textual input.
 
-    \annotatedlist qtlabscontrols-input
+    \annotatedlist qtquickcontrols2-input
 
     Each type of input control has its own specific target use case. The
     following sections offer guidelines for choosing the appropriate type

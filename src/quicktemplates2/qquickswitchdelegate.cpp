@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \inherits ItemDelegate
     \instantiates QQuickSwitchDelegate
     \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-delegates
+    \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be toggled on or off.
 
     \image qtquickcontrols2-switchdelegate.gif

@@ -31,7 +31,7 @@
 
     Qt Quick Controls 2 offers a selection of indicator-like controls.
 
-    \annotatedlist qtlabscontrols-indicators
+    \annotatedlist qtquickcontrols2-indicators
 
     Each type of indicator has its own specific target use case. The following
     sections offer guidelines for choosing the appropriate type of indicator,
