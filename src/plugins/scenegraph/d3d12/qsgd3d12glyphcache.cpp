@@ -77,7 +77,7 @@ void QSGD3D12GlyphCache::createTextureData(int width, int height)
 
     const QImage::Format imageFormat =
             m_format == QFontEngine::Format_A8 ? QImage::Format_Alpha8 : QImage::Format_ARGB32_Premultiplied;
-    m_engine->createTexture(m_id, m_size, imageFormat, QSGD3D12Engine::CreateWithAlpha);
+    m_engine->createTexture(m_id, m_size, imageFormat, QSGD3D12Engine::TextureWithAlpha);
 }
 
 void QSGD3D12GlyphCache::resizeTextureData(int width, int height)

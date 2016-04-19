@@ -298,14 +298,14 @@ QSGD3D12Engine::~QSGD3D12Engine()
     delete d;
 }
 
-bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr, int samples)
+bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples)
 {
     if (d->isInitialized()) {
         qWarning("QSGD3D12Engine: Cannot attach active engine to window");
         return false;
     }
 
-    d->initialize(window, size, dpr, samples);
+    d->initialize(window, size, dpr, surfaceFormatSamples);
     return d->isInitialized();
 }
 
@@ -338,6 +338,11 @@ QSize QSGD3D12Engine::windowSize() const
 float QSGD3D12Engine::windowDevicePixelRatio() const
 {
     return d->currentWindowDpr();
+}
+
+uint QSGD3D12Engine::windowSamples() const
+{
+    return d->currentWindowSamples();
 }
 
 void QSGD3D12Engine::beginFrame()
@@ -490,7 +495,7 @@ uint QSGD3D12Engine::genRenderTarget()
     return d->genRenderTarget();
 }
 
-void QSGD3D12Engine::createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples)
+void QSGD3D12Engine::createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples)
 {
     d->createRenderTarget(id, size, clearColor, samples);
 }
@@ -650,7 +655,7 @@ void QSGD3D12EnginePrivate::releaseResources()
     // 'window' must be kept, may just be a device loss
 }
 
-void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int samples)
+void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples)
 {
     if (initialized)
         return;
@@ -658,7 +663,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     window = w;
     windowSize = size;
     windowDpr = dpr;
-    windowSamples = qMax(1, samples);
+    windowSamples = qMax(1, surfaceFormatSamples); // may be -1 or 0, whereas windowSamples is uint and >= 1
 
     HWND hwnd = reinterpret_cast<HWND>(w);
 
@@ -812,7 +817,7 @@ bool QSGD3D12EnginePrivate::createCbvSrvUavHeap(int pframeIndex, int descriptorC
     return true;
 }
 
-DXGI_SAMPLE_DESC QSGD3D12EnginePrivate::makeSampleDesc(DXGI_FORMAT format, int samples)
+DXGI_SAMPLE_DESC QSGD3D12EnginePrivate::makeSampleDesc(DXGI_FORMAT format, uint samples)
 {
     DXGI_SAMPLE_DESC sampleDesc;
     sampleDesc.Count = 1;
@@ -838,7 +843,7 @@ DXGI_SAMPLE_DESC QSGD3D12EnginePrivate::makeSampleDesc(DXGI_FORMAT format, int s
 }
 
 ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size,
-                                                         const QVector4D &clearColor, int samples)
+                                                         const QVector4D &clearColor, uint samples)
 {
     D3D12_CLEAR_VALUE clearValue = {};
     clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -872,7 +877,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
     return resource;
 }
 
-ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples)
+ID3D12Resource *QSGD3D12EnginePrivate::createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, uint samples)
 {
     D3D12_CLEAR_VALUE depthClearValue = {};
     depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -2157,8 +2162,8 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
     Q_ASSERT(idx < textures.count() && textures[idx].entryInUse());
     Texture &t(textures[idx]);
 
-    syncEntryFlags(&t, Texture::Alpha, createFlags & QSGD3D12Engine::CreateWithAlpha);
-    syncEntryFlags(&t, Texture::MipMap, createFlags & QSGD3D12Engine::CreateWithMipMaps);
+    syncEntryFlags(&t, Texture::Alpha, createFlags & QSGD3D12Engine::TextureWithAlpha);
+    syncEntryFlags(&t, Texture::MipMap, createFlags & QSGD3D12Engine::TextureWithMipMaps);
 
     const QSize adjustedSize = !t.mipmap() ? size : QSGD3D12Engine::mipMapAdjustedSourceSize(size);
 
@@ -2658,7 +2663,7 @@ uint QSGD3D12EnginePrivate::genRenderTarget()
     return newId(&renderTargets);
 }
 
-void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples)
+void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples)
 {
     Q_ASSERT(id);
     const int idx = id - 1;
@@ -2669,7 +2674,6 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
     rt.dsv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     rt.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    samples = qMax(1, samples);
     ID3D12Resource *res = createColorBuffer(rt.rtv, size, clearColor, samples);
     if (res)
         rt.color.Attach(res);

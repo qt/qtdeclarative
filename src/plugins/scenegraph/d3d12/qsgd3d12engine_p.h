@@ -267,13 +267,14 @@ public:
     QSGD3D12Engine();
     ~QSGD3D12Engine();
 
-    bool attachToWindow(WId window, const QSize &size, float dpr, int samples);
+    bool attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples);
     void releaseResources();
     bool hasResources() const;
     void setWindowSize(const QSize &size, float dpr);
     WId window() const;
     QSize windowSize() const;
     float windowDevicePixelRatio() const;
+    uint windowSamples() const;
 
     void beginFrame();
     void endFrame();
@@ -328,8 +329,8 @@ public:
     static QSize mipMapAdjustedSourceSize(const QSize &size);
 
     enum TextureCreateFlag {
-        CreateWithAlpha = 0x1,
-        CreateWithMipMaps = 0x2
+        TextureWithAlpha = 0x1,
+        TextureWithMipMaps = 0x2
     };
     Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
 
@@ -343,7 +344,7 @@ public:
     void activateTexture(uint id);
 
     uint genRenderTarget();
-    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
+    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples);
     void releaseRenderTarget(uint id);
     void activateRenderTargetAsTexture(uint id);
 

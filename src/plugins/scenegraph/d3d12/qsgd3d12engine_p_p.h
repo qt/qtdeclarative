@@ -130,13 +130,14 @@ struct QSGD3D12CPUWaitableFence
 class QSGD3D12EnginePrivate : public QSGD3D12DeviceManager::DeviceLossObserver
 {
 public:
-    void initialize(WId w, const QSize &size, float dpr, int samples);
+    void initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples);
     bool isInitialized() const { return initialized; }
     void releaseResources();
     void setWindowSize(const QSize &size, float dpr);
     WId currentWindow() const { return window; }
     QSize currentWindowSize() const { return windowSize; }
     float currentWindowDpr() const { return windowDpr; }
+    uint currentWindowSamples() const { return windowSamples; }
 
     void beginFrame();
     void endFrame();
@@ -174,7 +175,7 @@ public:
     void activateTexture(uint id);
 
     uint genRenderTarget();
-    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, int samples);
+    void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples);
     void releaseRenderTarget(uint id);
     void activateRenderTargetAsTexture(uint id);
 
@@ -191,10 +192,10 @@ private:
     void setDescriptorHeaps(bool force = false);
     void ensureGPUDescriptorHeap(int cbvSrvUavDescriptorCount);
 
-    DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
+    DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, uint samples);
     ID3D12Resource *createColorBuffer(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size,
-                                      const QVector4D &clearColor, int samples);
-    ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
+                                      const QVector4D &clearColor, uint samples);
+    ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, uint samples);
 
     QSGD3D12CPUWaitableFence *createCPUWaitableFence() const;
     void waitForGPU(QSGD3D12CPUWaitableFence *f) const;
@@ -261,7 +262,7 @@ private:
     WId window = 0;
     QSize windowSize;
     float windowDpr;
-    int windowSamples;
+    uint windowSamples;
     int swapChainBufferCount;
     int frameInFlightCount;
     int waitableSwapChainMaxLatency;

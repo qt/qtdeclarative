@@ -298,14 +298,25 @@ void QSGD3D12Layer::updateContent()
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
     if (!m_rt || m_rtSize != m_size) {
-        // ### recursive, multisample
+        QSGD3D12Engine *engine = m_rc->engine();
+        // ### recursive
 
         if (m_rt)
             resetRenderTarget();
 
-        m_rt = m_rc->engine()->genRenderTarget();
+        m_rt = engine->genRenderTarget();
         m_rtSize = m_size;
-        m_rc->engine()->createRenderTarget(m_rt, m_rtSize, QVector4D(0, 0, 0, 0), 0);
+        const uint sampleCount = engine->windowSamples();
+        const QVector4D clearColor;
+
+        if (Q_UNLIKELY(debug_render()))
+            qDebug("new render target for layer %p, size=%dx%d, samples=%d",
+                   this, m_size.width(), m_size.height(), sampleCount);
+
+        engine->createRenderTarget(m_rt, m_rtSize, clearColor, sampleCount);
+
+        // For multisampling the resolving via an extra non-ms color buffer is
+        // handled internally in the engine, no need to worry about it here.
     }
 
     m_dirtyTexture = false;
@@ -319,7 +330,7 @@ void QSGD3D12Layer::updateContent()
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
-    // ### recursive, multisample
+    // ### recursive
     m_renderer->renderScene(m_rt);
 
     if (m_recursive)

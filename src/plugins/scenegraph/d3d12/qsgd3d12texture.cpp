@@ -109,11 +109,11 @@ void QSGD3D12Texture::bind()
 
         QSGD3D12Engine::TextureCreateFlags createFlags = 0;
         if (m_alphaWanted)
-            createFlags |= QSGD3D12Engine::CreateWithAlpha;
+            createFlags |= QSGD3D12Engine::TextureWithAlpha;
 
         m_createdWithMipMaps = hasMipmaps();
         if (m_createdWithMipMaps)
-            createFlags |= QSGD3D12Engine::CreateWithMipMaps;
+            createFlags |= QSGD3D12Engine::TextureWithMipMaps;
 
         m_engine->createTexture(m_id, m_image.size(), m_image.format(), createFlags);
         m_engine->queueTextureUpload(m_id, m_image);
