@@ -218,11 +218,9 @@ QSGTexture *QSGEngine::createTextureFromId(uint id, const QSize &size, CreateTex
 QSGRendererInterface *QSGEngine::rendererInterface() const
 {
     Q_D(const QSGEngine);
-    if (!d->sgRenderContext->isValid()) {
-        qWarning("The QSGRendererInterface cannot be queried before the scenegraph is initialized");
-        return nullptr;
-    }
-    return d->sgRenderContext->sceneGraphContext()->rendererInterface(d->sgRenderContext.data());
+    return d->sgRenderContext->isValid()
+            ? d->sgRenderContext->sceneGraphContext()->rendererInterface(d->sgRenderContext.data())
+            : nullptr;
 }
 
 QT_END_NAMESPACE
