@@ -938,7 +938,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
         pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
         pixelData->d()->image.fill(0x00000000);
     } else {
-        Q_ASSERT(image.width() == int(w) && image.height() == int(h));
+        Q_ASSERT(image.width() == qRound(w) && image.height() == qRound(h));
         pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
