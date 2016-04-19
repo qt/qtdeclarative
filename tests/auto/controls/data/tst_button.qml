@@ -254,31 +254,40 @@ TestCase {
         verify(!control.checkable)
 
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
                                         "released",
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
+        verify(control.spy.success)
 
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
                                         ["checkedChanged", { "checked": true }],
                                         "released",
                                         "clicked"]
         control.checkable = true
         mouseClick(control)
         verify(control.checked)
+        verify(control.spy.success)
 
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
                                         ["checkedChanged", { "checked": false }],
                                         "released",
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
+        verify(control.spy.success)
 
         control.destroy()
     }
