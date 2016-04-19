@@ -42,7 +42,6 @@
 #include "qquickmaterialprogressstrip_p.h"
 
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
-#include <QtQuickControls2/private/qquickpluginutils_p.h>
 
 static inline void initResources()
 {
@@ -83,17 +82,15 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
 
-    const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
-
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/Ripple.qml")), import, 1, 0, "Ripple");
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SliderHandle.qml")), import, 1, 0, "SliderHandle");
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("Ripple.qml")), import, 1, 0, "Ripple");
+    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 1, 0, "SliderHandle");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
 }
 
 QString QtQuickMaterialStylePlugin::name() const

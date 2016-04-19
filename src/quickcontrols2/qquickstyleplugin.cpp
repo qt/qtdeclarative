@@ -78,4 +78,20 @@ QQuickProxyTheme *QQuickStylePlugin::createTheme() const
     return nullptr;
 }
 
+/*
+    Returns either a file system path if Qt was built as shared libraries,
+    or a QRC path if Qt was built statically.
+*/
+QUrl QQuickStylePlugin::typeUrl(const QString &name) const
+{
+#ifdef QT_STATIC
+    QString url = QLatin1String("qrc") + baseUrl().path();
+#else
+    QString url = baseUrl().toString();
+#endif
+    if (!name.isEmpty())
+        url += QLatin1Char('/') + name;
+    return QUrl(url);
+}
+
 QT_END_NAMESPACE

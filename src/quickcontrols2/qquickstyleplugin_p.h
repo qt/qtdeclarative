@@ -70,6 +70,8 @@ public:
     virtual QString name() const;
     virtual QQuickProxyTheme *createTheme() const;
 
+    QUrl typeUrl(const QString &name = QString()) const;
+
 private:
     QScopedPointer<QQuickProxyTheme> m_theme;
 };

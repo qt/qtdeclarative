@@ -46,7 +46,7 @@
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include <QtQuickControls2/private/qquickpluginutils_p.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 
 #include "qquickbusyindicatorring_p.h"
@@ -62,7 +62,7 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickControls2Plugin: public QQmlExtensionPlugin
+class QtQuickControls2Plugin: public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -73,7 +73,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri);
 };
 
-QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
 }
@@ -87,7 +87,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
 
     QQuickStyleSelector selector;
-    selector.setBaseUrl(QQuickPluginUtils::pluginBaseUrl(*this));
+    selector.setBaseUrl(typeUrl());
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
@@ -145,10 +145,9 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickProgressAnimator>(import, 1, 0, "ProgressStripAnimator");
 
-    const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
-    qmlRegisterType(pluginBasePath + QStringLiteral("/CheckIndicator.qml"), import, 1, 0, "CheckIndicator");
-    qmlRegisterType(pluginBasePath + QStringLiteral("/RadioIndicator.qml"), import, 1, 0, "RadioIndicator");
-    qmlRegisterType(pluginBasePath + QStringLiteral("/SwitchIndicator.qml"), import, 1, 0, "SwitchIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 1, 0, "RadioIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
 }
 
 QT_END_NAMESPACE

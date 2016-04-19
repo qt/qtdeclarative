@@ -43,7 +43,6 @@
 #include "qquickuniversaltheme_p.h"
 
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
-#include <QtQuickControls2/private/qquickpluginutils_p.h>
 
 static inline void initResources()
 {
@@ -93,9 +92,8 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
     qmlRegisterType<QQuickUniversalProgressStrip>(import, 1, 0, "ProgressStrip");
     qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 1, 0, "ProgressStripAnimator");
 
-    const QString pluginBasePath = QQuickPluginUtils::pluginBasePath(*this);
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/RadioIndicator.qml")), import, 1, 0, "RadioIndicator");
-    qmlRegisterType(QUrl(pluginBasePath + QStringLiteral("/SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 1, 0, "RadioIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
 }
 
 QString QtQuickUniversalStylePlugin::name() const
