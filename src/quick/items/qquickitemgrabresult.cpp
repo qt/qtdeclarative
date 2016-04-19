@@ -52,6 +52,7 @@ class QQuickItemGrabResultPrivate : public QObjectPrivate
 public:
     QQuickItemGrabResultPrivate()
         : cacheEntry(0)
+        , qmlEngine(0)
         , texture(0)
     {
     }
