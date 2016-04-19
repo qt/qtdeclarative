@@ -134,6 +134,9 @@ public:
     bool fakeHidden;
 
     int requestedSamples;
+
+    bool useSoftwareRenderer;
+    QImage softwareImage;
 };
 
 QT_END_NAMESPACE

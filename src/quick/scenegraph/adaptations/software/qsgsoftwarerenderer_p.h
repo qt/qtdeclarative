@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QPaintDevice;
 
-class QSGSoftwareRenderer : public QSGAbstractSoftwareRenderer
+class Q_QUICK_PRIVATE_EXPORT QSGSoftwareRenderer : public QSGAbstractSoftwareRenderer
 {
 public:
     QSGSoftwareRenderer(QSGRenderContext *context);
