@@ -48,6 +48,7 @@
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
+#include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 
 #include "qquickbusyindicatorring_p.h"
 #include "qquickdialring_p.h"
@@ -137,8 +138,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_UNUSED(engine);
     Q_UNUSED(uri);
+
+    engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/images")));
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickBusyIndicatorRing>(import, 1, 0, "BusyRing");

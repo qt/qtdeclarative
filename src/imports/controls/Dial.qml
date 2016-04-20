@@ -61,7 +61,7 @@ T.Dial {
         y: background.y + background.height / 2 - handle.height / 2
         width: 14
         height: 10
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/dial-indicator" + (control.activeKeyFocus ? "-focus.png" : ".png")
+        source: "image://default/dial-indicator/" + (control.activeKeyFocus ? "#0066ff" : "#353637")
         antialiasing: true
         opacity: control.enabled ? 1 : 0.3
         transform: [

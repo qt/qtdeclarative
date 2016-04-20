@@ -51,7 +51,7 @@ Rectangle {
     Image {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check" + (control.activeFocus ? "-focus.png" : ".png")
+        source: "image://default/check/" + (control.activeKeyFocus ? "#0066ff" : "#353637")
         visible: control.checkState === Qt.Checked
     }
 

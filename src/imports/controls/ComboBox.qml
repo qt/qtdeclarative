@@ -87,8 +87,7 @@ T.ComboBox {
         Image {
             x: parent.width - width - 4
             y: (parent.height - height) / 2
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/double-arrow"
-                + (control.activeKeyFocus ? "-focus" : "") + ".png"
+            source: "image://default/double-arrow/" + (control.activeKeyFocus ? "#0066ff" : "#353637")
         }
     }
     //! [background]
