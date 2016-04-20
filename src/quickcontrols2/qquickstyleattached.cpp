@@ -170,7 +170,7 @@ QQuickStyleAttached::~QQuickStyleAttached()
 QSharedPointer<QSettings> QQuickStyleAttached::settings(const QString &group)
 {
 #ifndef QT_NO_SETTINGS
-    const QString filePath = QStringLiteral(":/qtquickcontrols.conf");
+    const QString filePath = QStringLiteral(":/qtquickcontrols2.conf");
     if (QFile::exists(filePath)) {
         QFileSelector selector;
         QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);

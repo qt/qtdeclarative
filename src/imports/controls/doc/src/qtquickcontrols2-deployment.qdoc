@@ -45,9 +45,9 @@
     resources.qrc
     main.qml
     +windows/MyPage.qml
-    +windows/qtquickcontrols.conf
+    +windows/qtquickcontrols2.conf
     +android/MyPage.qml
-    +android/qtquickcontrols.conf
+    +android/qtquickcontrols2.conf
     \endcode
 
     In the project above, \c main.qml would import \c Qt.labs.controls, for
@@ -55,7 +55,7 @@
     that is style-specific is moved out into separate files; just as we've done
     for \c MyPage.qml.
 
-    The \c +windows/qtquickcontrols.conf file would contain configuration
+    The \c +windows/qtquickcontrols2.conf file would contain configuration
     options specific to the Universal style:
 
     \code
@@ -67,7 +67,7 @@
     Accent=Red
     \endcode
 
-    The \c +android/qtquickcontrols.conf file would contain configuration
+    The \c +android/qtquickcontrols2.conf file would contain configuration
     options specific to the Material style:
 
     \code
