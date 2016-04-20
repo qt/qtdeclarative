@@ -760,12 +760,8 @@ void QQuickTextInput::setCursorVisible(bool on)
     d->cursorVisible = on;
     if (on && isComponentComplete())
         QQuickTextUtil::createCursor(d);
-    if (!d->cursorItem) {
-        d->setCursorBlinkPeriod(on ? QGuiApplication::styleHints()->cursorFlashTime() : 0);
-        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
-        polish();
-        update();
-    }
+    if (!d->cursorItem)
+        d->updateCursorBlinking();
     emit cursorVisibleChanged(d->cursorVisible);
 }
 
@@ -1782,7 +1778,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node = new QQuickTextNode(this);
     d->textNode = node;
 
-    const bool showCursor = !isReadOnly() && d->cursorItem == 0 && d->cursorVisible && (d->m_blinkStatus || d->m_blinkPeriod == 0);
+    const bool showCursor = !isReadOnly() && d->cursorItem == 0 && d->cursorVisible && d->m_blinkStatus;
 
     if (!d->textLayoutDirty && oldNode != 0) {
         if (showCursor)
@@ -2518,8 +2514,10 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
 {
     Q_Q(QQuickTextInput);
     bool focus = event->gotFocus();
-    if (!m_readOnly)
+    if (!m_readOnly) {
         q->setCursorVisible(focus);
+        setBlinkingCursorEnabled(focus);
+    }
     if (focus) {
         q->q_updateAlignment();
 #ifndef QT_NO_IM
@@ -4219,26 +4217,39 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
 }
 
 
-void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
+void QQuickTextInputPrivate::setBlinkingCursorEnabled(bool enable)
+{
+    if (enable == m_blinkEnabled)
+        return;
+
+    m_blinkEnabled = enable;
+    updateCursorBlinking();
+
+    if (enable)
+        connect(qApp->styleHints(), &QStyleHints::cursorFlashTimeChanged, this, &QQuickTextInputPrivate::updateCursorBlinking);
+    else
+        disconnect(qApp->styleHints(), &QStyleHints::cursorFlashTimeChanged, this, &QQuickTextInputPrivate::updateCursorBlinking);
+}
+
+void QQuickTextInputPrivate::updateCursorBlinking()
 {
     Q_Q(QQuickTextInput);
-    if (msec == m_blinkPeriod)
-        return;
+
     if (m_blinkTimer) {
         q->killTimer(m_blinkTimer);
-    }
-    if (msec) {
-        m_blinkTimer = q->startTimer(msec / 2);
-        m_blinkStatus = 1;
-    } else {
         m_blinkTimer = 0;
-        if (m_blinkStatus == 1) {
-            updateType = UpdatePaintNode;
-            q->polish();
-            q->update();
-        }
     }
-    m_blinkPeriod = msec;
+
+    if (m_blinkEnabled && cursorVisible && !cursorItem && !m_readOnly) {
+        int flashTime = QGuiApplication::styleHints()->cursorFlashTime();
+        if (flashTime >= 2)
+            m_blinkTimer = q->startTimer(flashTime / 2);
+    }
+
+    m_blinkStatus = 1;
+    updateType = UpdatePaintNode;
+    q->polish();
+    q->update();
 }
 
 void QQuickTextInput::timerEvent(QTimerEvent *event)
@@ -4275,20 +4286,8 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         return;
     }
 
-    if (m_blinkPeriod > 0) {
-        if (m_blinkTimer)
-            q->killTimer(m_blinkTimer);
-
-        m_blinkTimer = q->startTimer(m_blinkPeriod / 2);
-
-        if (m_blinkStatus == 0) {
-            m_blinkStatus = 1;
-
-            updateType = UpdatePaintNode;
-            q->polish();
-            q->update();
-        }
-    }
+    if (m_blinkEnabled)
+        updateCursorBlinking();
 
     if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit
         && !m_passwordEchoEditing
