@@ -73,6 +73,8 @@ private slots:
     void itemtests_qml_data();
     void itemtests_qml();
 
+    void anchors_heightChange();
+
 private:
     QQmlEngine engine;
 };
@@ -376,6 +378,24 @@ void tst_creation::itemtests_qml()
 
     delete component.create();
     QBENCHMARK { delete component.create(); }
+}
+
+void tst_creation::anchors_heightChange()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nItem { Item { anchors.bottom: parent.bottom } }", QUrl());
+
+    QObject *obj = component.create();
+    auto item = qobject_cast<QQuickItem *>(obj);
+    Q_ASSERT(item);
+    int height = 1;
+
+    QBENCHMARK {
+        item->setHeight(height);
+        height += 1;
+    }
+
+    delete obj;
 }
 
 QTEST_MAIN(tst_creation)

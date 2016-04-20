@@ -33,19 +33,48 @@
 
 #include "qquickanchors_p_p.h"
 
-#include "qquickitem.h"
 #include "qquickitem_p.h"
 
 #include <qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
+static Q_ALWAYS_INLINE QQuickItem *readParentItem(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->parentItem;
+}
+
+static Q_ALWAYS_INLINE qreal readX(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->x;
+}
+
+static Q_ALWAYS_INLINE qreal readY(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->y;
+}
+
+static Q_ALWAYS_INLINE qreal readWidth(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->width;
+}
+
+static Q_ALWAYS_INLINE qreal readHeight(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->height;
+}
+
+static Q_ALWAYS_INLINE qreal readBaselineOffset(QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->baselineOffset;
+}
+
 //TODO: should we cache relationships, so we don't have to check each time (parent-child or sibling)?
 //TODO: support non-parent, non-sibling (need to find lowest common ancestor)
 
 static inline qreal hcenter(QQuickItem *item)
 {
-    qreal width = item->width();
+    qreal width = readWidth(item);
     if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
         if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
             return width / 2;
@@ -59,7 +88,7 @@ static inline qreal hcenter(QQuickItem *item)
 
 static inline qreal vcenter(QQuickItem *item)
 {
-    qreal height = item->height();
+    qreal height = readHeight(item);
     if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
         if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
             return height / 2;
@@ -78,25 +107,25 @@ static qreal position(QQuickItem *item, QQuickAnchorLine::AnchorLine anchorLine)
     qreal ret = 0.0;
     switch (anchorLine) {
     case QQuickAnchorLine::Left:
-        ret = item->x();
+        ret = readX(item);
         break;
     case QQuickAnchorLine::Right:
-        ret = item->x() + item->width();
+        ret = readX(item) + readWidth(item);
         break;
     case QQuickAnchorLine::Top:
-        ret = item->y();
+        ret = readY(item);
         break;
     case QQuickAnchorLine::Bottom:
-        ret = item->y() + item->height();
+        ret = readY(item) + readHeight(item);
         break;
     case QQuickAnchorLine::HCenter:
-        ret = item->x() + hcenter(item);
+        ret = readX(item) + hcenter(item);
         break;
     case QQuickAnchorLine::VCenter:
-        ret = item->y() + vcenter(item);
+        ret = readY(item) + vcenter(item);
         break;
     case QQuickAnchorLine::Baseline:
-        ret = item->y() + item->baselineOffset();
+        ret = readY(item) + readBaselineOffset(item);
         break;
     default:
         break;
@@ -106,7 +135,7 @@ static qreal position(QQuickItem *item, QQuickAnchorLine::AnchorLine anchorLine)
 }
 
 //position when origin is 0,0
-static qreal adjustedPosition(QQuickItem *item, QQuickAnchorLine::AnchorLine anchorLine)
+static inline qreal adjustedPosition(QQuickItem *item, QQuickAnchorLine::AnchorLine anchorLine)
 {
     qreal ret = 0.0;
     switch (anchorLine) {
@@ -114,13 +143,13 @@ static qreal adjustedPosition(QQuickItem *item, QQuickAnchorLine::AnchorLine anc
         ret = 0.0;
         break;
     case QQuickAnchorLine::Right:
-        ret = item->width();
+        ret = readWidth(item);
         break;
     case QQuickAnchorLine::Top:
         ret = 0.0;
         break;
     case QQuickAnchorLine::Bottom:
-        ret = item->height();
+        ret = readHeight(item);
         break;
     case QQuickAnchorLine::HCenter:
         ret = hcenter(item);
@@ -129,7 +158,7 @@ static qreal adjustedPosition(QQuickItem *item, QQuickAnchorLine::AnchorLine anc
         ret = vcenter(item);
         break;
     case QQuickAnchorLine::Baseline:
-        ret = item->baselineOffset();
+        ret = readBaselineOffset(item);
         break;
     default:
         break;
@@ -169,12 +198,13 @@ void QQuickAnchorsPrivate::fillChanged()
 
         qreal horizontalMargin = q->mirrored() ? rightMargin : leftMargin;
 
-        if (fill == item->parentItem()) {                         //child-parent
+        if (fill == readParentItem(item)) {                         //child-parent
             setItemPos(QPointF(horizontalMargin, topMargin));
-        } else if (fill->parentItem() == item->parentItem()) {   //siblings
-            setItemPos(QPointF(fill->x()+horizontalMargin, fill->y()+topMargin));
+        } else if (readParentItem(fill) == readParentItem(item)) {   //siblings
+            setItemPos(QPointF(readX(fill)+horizontalMargin, readY(fill) + topMargin));
         }
-        setItemSize(QSizeF(fill->width()-leftMargin-rightMargin, fill->height()-topMargin-bottomMargin));
+        setItemSize(QSizeF(readWidth(fill) - leftMargin - rightMargin,
+                           readHeight(fill) - topMargin - bottomMargin));
 
         --updatingFill;
     } else {
@@ -194,12 +224,12 @@ void QQuickAnchorsPrivate::centerInChanged()
         ++updatingCenterIn;
 
         qreal effectiveHCenterOffset = q->mirrored() ? -hCenterOffset : hCenterOffset;
-        if (centerIn == item->parentItem()) {
-            QPointF p(hcenter(item->parentItem()) - hcenter(item) + effectiveHCenterOffset,
-                      vcenter(item->parentItem()) - vcenter(item) + vCenterOffset);
+        if (centerIn == readParentItem(item)) {
+            QPointF p(hcenter(readParentItem(item)) - hcenter(item) + effectiveHCenterOffset,
+                      vcenter(readParentItem(item)) - vcenter(item) + vCenterOffset);
             setItemPos(p);
 
-        } else if (centerIn->parentItem() == item->parentItem()) {
+        } else if (readParentItem(centerIn) == readParentItem(item)) {
             QPointF p(centerIn->x() + hcenter(centerIn) - hcenter(item) + effectiveHCenterOffset,
                       centerIn->y() + vcenter(centerIn) - vcenter(item) + vCenterOffset);
             setItemPos(p);
@@ -258,7 +288,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         return dependency;
 
     if (fill == controlItem) {
-        if (controlItem == item->parentItem())
+        if (controlItem == readParentItem(item))
             dependency |= QQuickItemPrivate::SizeChange;
         else    //sibling
             dependency |= QQuickItemPrivate::GeometryChange;
@@ -266,7 +296,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
     }
 
     if (centerIn == controlItem) {
-        if (controlItem == item->parentItem())
+        if (controlItem == readParentItem(item))
             dependency |= QQuickItemPrivate::SizeChange;
         else    //sibling
             dependency |= QQuickItemPrivate::GeometryChange;
@@ -276,7 +306,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
     if ((usedAnchors & QQuickAnchors::LeftAnchor && left.item == controlItem) ||
         (usedAnchors & QQuickAnchors::RightAnchor && right.item == controlItem) ||
         (usedAnchors & QQuickAnchors::HCenterAnchor && hCenter.item == controlItem)) {
-        if (controlItem == item->parentItem())
+        if (controlItem == readParentItem(item))
             dependency |= QQuickItemPrivate::WidthChange;
         else    //sibling
             dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::XChange | QQuickItemPrivate::WidthChange);
@@ -286,7 +316,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         (usedAnchors & QQuickAnchors::BottomAnchor && bottom.item == controlItem) ||
         (usedAnchors & QQuickAnchors::VCenterAnchor && vCenter.item == controlItem) ||
         (usedAnchors & QQuickAnchors::BaselineAnchor && baseline.item == controlItem)) {
-        if (controlItem == item->parentItem())
+        if (controlItem == readParentItem(item))
             dependency |= QQuickItemPrivate::HeightChange;
         else    //sibling
             dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::YChange | QQuickItemPrivate::HeightChange);
@@ -442,22 +472,36 @@ void QQuickAnchorsPrivate::updateOnComplete()
 
 void QQuickAnchorsPrivate::update()
 {
-    fillChanged();
-    centerInChanged();
-    if (usedAnchors & QQuickAnchorLine::Horizontal_Mask)
-        updateHorizontalAnchors();
-    if (usedAnchors & QQuickAnchorLine::Vertical_Mask)
-        updateVerticalAnchors();
+    if (!isItemComplete())
+        return;
+
+    if (fill) {
+        fillChanged();
+    } else if (centerIn) {
+        centerInChanged();
+    } else {
+        if (usedAnchors & QQuickAnchorLine::Horizontal_Mask)
+            updateHorizontalAnchors();
+        if (usedAnchors & QQuickAnchorLine::Vertical_Mask)
+            updateVerticalAnchors();
+    }
 }
 
 void QQuickAnchorsPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newG, const QRectF &oldG)
 {
-    fillChanged();
-    centerInChanged();
-    if ((usedAnchors & QQuickAnchorLine::Horizontal_Mask) && (newG.x() != oldG.x() || newG.width() != oldG.width()))
-        updateHorizontalAnchors();
-    if ((usedAnchors & QQuickAnchorLine::Vertical_Mask) && (newG.y() != oldG.y() || newG.height() != oldG.height()))
-        updateVerticalAnchors();
+    if (!isItemComplete())
+        return;
+
+    if (fill) {
+        fillChanged();
+    } else if (centerIn) {
+        centerInChanged();
+    } else {
+        if ((usedAnchors & QQuickAnchorLine::Horizontal_Mask) && (newG.x() != oldG.x() || newG.width() != oldG.width()))
+            updateHorizontalAnchors();
+        if ((usedAnchors & QQuickAnchorLine::Vertical_Mask) && (newG.y() != oldG.y() || newG.height() != oldG.height()))
+            updateVerticalAnchors();
+    }
 }
 
 QQuickItem *QQuickAnchors::fill() const
@@ -479,7 +523,7 @@ void QQuickAnchors::setFill(QQuickItem *f)
         emit fillChanged();
         return;
     }
-    if (f != d->item->parentItem() && f->parentItem() != d->item->parentItem()){
+    if (f != readParentItem(d->item) && readParentItem(f) != readParentItem(d->item)){
         qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
@@ -515,7 +559,7 @@ void QQuickAnchors::setCenterIn(QQuickItem* c)
         emit centerInChanged();
         return;
     }
-    if (c != d->item->parentItem() && c->parentItem() != d->item->parentItem()){
+    if (c != readParentItem(d->item) && readParentItem(c) != readParentItem(d->item)){
         qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
@@ -539,10 +583,10 @@ bool QQuickAnchorsPrivate::calcStretch(const QQuickAnchorLine &edge1,
                                     QQuickAnchorLine::AnchorLine line,
                                     qreal &stretch)
 {
-    bool edge1IsParent = (edge1.item == item->parentItem());
-    bool edge2IsParent = (edge2.item == item->parentItem());
-    bool edge1IsSibling = (edge1.item->parentItem() == item->parentItem());
-    bool edge2IsSibling = (edge2.item->parentItem() == item->parentItem());
+    bool edge1IsParent = (edge1.item == readParentItem(item));
+    bool edge2IsParent = (edge2.item == readParentItem(item));
+    bool edge1IsSibling = (readParentItem(edge1.item) == readParentItem(item));
+    bool edge2IsSibling = (readParentItem(edge2.item) == readParentItem(item));
 
     bool invalid = false;
     if ((edge2IsParent && edge1IsParent) || (edge2IsSibling && edge1IsSibling)) {
@@ -550,10 +594,10 @@ bool QQuickAnchorsPrivate::calcStretch(const QQuickAnchorLine &edge1,
                     - (position(edge1.item, edge1.anchorLine) + offset1);
     } else if (edge2IsParent && edge1IsSibling) {
         stretch = (position(edge2.item, edge2.anchorLine) + offset2)
-                    - (position(item->parentItem(), line)
+                    - (position(readParentItem(item), line)
                     + position(edge1.item, edge1.anchorLine) + offset1);
     } else if (edge2IsSibling && edge1IsParent) {
-        stretch = (position(item->parentItem(), line) + position(edge2.item, edge2.anchorLine) + offset2)
+        stretch = (position(readParentItem(item), line) + position(edge2.item, edge2.anchorLine) + offset2)
                     - (position(edge1.item, edge1.anchorLine) + offset1);
     } else
         invalid = true;
@@ -582,9 +626,9 @@ void QQuickAnchorsPrivate::updateVerticalAnchors()
                 setItemHeight(height);
 
             //Handle top
-            if (top.item == item->parentItem()) {
+            if (top.item == readParentItem(item)) {
                 setItemY(adjustedPosition(top.item, top.anchorLine) + topMargin);
-            } else if (top.item->parentItem() == item->parentItem()) {
+            } else if (readParentItem(top.item) == readParentItem(item)) {
                 setItemY(position(top.item, top.anchorLine) + topMargin);
             }
         } else if (usedAnchors & QQuickAnchors::BottomAnchor) {
@@ -598,27 +642,29 @@ void QQuickAnchorsPrivate::updateVerticalAnchors()
             }
 
             //Handle bottom
-            if (bottom.item == item->parentItem()) {
-                setItemY(adjustedPosition(bottom.item, bottom.anchorLine) - item->height() - bottomMargin);
-            } else if (bottom.item->parentItem() == item->parentItem()) {
-                setItemY(position(bottom.item, bottom.anchorLine) - item->height() - bottomMargin);
+            if (bottom.item == readParentItem(item)) {
+                setItemY(adjustedPosition(bottom.item, bottom.anchorLine) - readHeight(item) - bottomMargin);
+            } else if (readParentItem(bottom.item) == readParentItem(item)) {
+                setItemY(position(bottom.item, bottom.anchorLine) - readHeight(item) - bottomMargin);
             }
         } else if (usedAnchors & QQuickAnchors::VCenterAnchor) {
             //(stetching handled above)
 
             //Handle vCenter
-            if (vCenter.item == item->parentItem()) {
+            if (vCenter.item == readParentItem(item)) {
                 setItemY(adjustedPosition(vCenter.item, vCenter.anchorLine)
                               - vcenter(item) + vCenterOffset);
-            } else if (vCenter.item->parentItem() == item->parentItem()) {
+            } else if (readParentItem(vCenter.item) == readParentItem(item)) {
                 setItemY(position(vCenter.item, vCenter.anchorLine) - vcenter(item) + vCenterOffset);
             }
         } else if (usedAnchors & QQuickAnchors::BaselineAnchor) {
             //Handle baseline
-            if (baseline.item == item->parentItem()) {
-                setItemY(adjustedPosition(baseline.item, baseline.anchorLine) - item->baselineOffset() + baselineOffset);
-            } else if (baseline.item->parentItem() == item->parentItem()) {
-                setItemY(position(baseline.item, baseline.anchorLine) - item->baselineOffset() + baselineOffset);
+            if (baseline.item == readParentItem(item)) {
+                setItemY(adjustedPosition(baseline.item, baseline.anchorLine)
+                         - readBaselineOffset(item) + baselineOffset);
+            } else if (readParentItem(baseline.item) == readParentItem(item)) {
+                setItemY(position(baseline.item, baseline.anchorLine)
+                         - readBaselineOffset(item) + baselineOffset);
             }
         }
         --updatingVerticalAnchor;
@@ -687,9 +733,9 @@ void QQuickAnchorsPrivate::updateHorizontalAnchors()
                 setItemWidth(width);
 
             //Handle left
-            if (effectiveLeft.item == item->parentItem()) {
+            if (effectiveLeft.item == readParentItem(item)) {
                 setItemX(adjustedPosition(effectiveLeft.item, effectiveLeft.anchorLine) + effectiveLeftMargin);
-            } else if (effectiveLeft.item->parentItem() == item->parentItem()) {
+            } else if (readParentItem(effectiveLeft.item) == readParentItem(item)) {
                 setItemX(position(effectiveLeft.item, effectiveLeft.anchorLine) + effectiveLeftMargin);
             }
         } else if (usedAnchors & effectiveRightAnchor) {
@@ -703,16 +749,18 @@ void QQuickAnchorsPrivate::updateHorizontalAnchors()
             }
 
             //Handle right
-            if (effectiveRight.item == item->parentItem()) {
-                setItemX(adjustedPosition(effectiveRight.item, effectiveRight.anchorLine) - item->width() - effectiveRightMargin);
-            } else if (effectiveRight.item->parentItem() == item->parentItem()) {
-                setItemX(position(effectiveRight.item, effectiveRight.anchorLine) - item->width() - effectiveRightMargin);
+            if (effectiveRight.item == readParentItem(item)) {
+                setItemX(adjustedPosition(effectiveRight.item, effectiveRight.anchorLine)
+                         - readWidth(item) - effectiveRightMargin);
+            } else if (readParentItem(effectiveRight.item) == readParentItem(item)) {
+                setItemX(position(effectiveRight.item, effectiveRight.anchorLine)
+                         - readWidth(item) - effectiveRightMargin);
             }
         } else if (usedAnchors & QQuickAnchors::HCenterAnchor) {
             //Handle hCenter
-            if (effectiveHorizontalCenter.item == item->parentItem()) {
+            if (effectiveHorizontalCenter.item == readParentItem(item)) {
                 setItemX(adjustedPosition(effectiveHorizontalCenter.item, effectiveHorizontalCenter.anchorLine) - hcenter(item) + effectiveHorizontalCenterOffset);
-            } else if (effectiveHorizontalCenter.item->parentItem() == item->parentItem()) {
+            } else if (readParentItem(effectiveHorizontalCenter.item) == readParentItem(item)) {
                 setItemX(position(effectiveHorizontalCenter.item, effectiveHorizontalCenter.anchorLine) - hcenter(item) + effectiveHorizontalCenterOffset);
             }
         }
@@ -1248,7 +1296,7 @@ bool QQuickAnchorsPrivate::checkHAnchorValid(QQuickAnchorLine anchor) const
     } else if (anchor.anchorLine & QQuickAnchorLine::Vertical_Mask) {
         qmlInfo(item) << QQuickAnchors::tr("Cannot anchor a horizontal edge to a vertical edge.");
         return false;
-    } else if (anchor.item != item->parentItem() && anchor.item->parentItem() != item->parentItem()){
+    } else if (anchor.item != readParentItem(item) && readParentItem(anchor.item) != readParentItem(item)){
         qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
         return false;
     } else if (anchor.item == item) {
@@ -1285,7 +1333,7 @@ bool QQuickAnchorsPrivate::checkVAnchorValid(QQuickAnchorLine anchor) const
     } else if (anchor.anchorLine & QQuickAnchorLine::Horizontal_Mask) {
         qmlInfo(item) << QQuickAnchors::tr("Cannot anchor a vertical edge to a horizontal edge.");
         return false;
-    } else if (anchor.item != item->parentItem() && anchor.item->parentItem() != item->parentItem()){
+    } else if (anchor.item != readParentItem(item) && readParentItem(anchor.item) != readParentItem(item)){
         qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
         return false;
     } else if (anchor.item == item){
