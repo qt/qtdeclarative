@@ -4188,43 +4188,43 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 QQuickAnchorLine QQuickItemPrivate::left() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Left);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::LeftAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::right() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Right);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::RightAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::horizontalCenter() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::HCenter);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::HCenterAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::top() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Top);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::TopAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::bottom() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Bottom);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::BottomAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::verticalCenter() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::VCenter);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::VCenterAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::baseline() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Baseline);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::BaselineAnchor);
 }
 
 /*!

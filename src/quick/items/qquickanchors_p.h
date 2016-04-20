@@ -90,6 +90,7 @@ public:
     virtual ~QQuickAnchors();
 
     enum Anchor {
+        InvalidAnchor = 0x0,
         LeftAnchor = 0x01,
         RightAnchor = 0x02,
         TopAnchor = 0x04,
