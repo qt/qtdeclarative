@@ -389,13 +389,13 @@ static const QRgb secondaryTextColorLight = 0x89000000;
 static const QRgb secondaryTextColorDark = 0xB2FFFFFF;
 static const QRgb hintTextColorLight = 0x60000000;
 static const QRgb hintTextColorDark = 0x4CFFFFFF;
-static const QRgb dividerTextColorLight = 0x1E000000;
-static const QRgb dividerTextColorDark = 0x1EFFFFFF;
+static const QRgb dividerColorLight = 0x1E000000;
+static const QRgb dividerColorDark = 0x1EFFFFFF;
 static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
 // TODO: find out actual value
 static const QRgb raisedButtonPressColorLight = 0xFFCCCDCD;
-static const QRgb raisedButtonDisabledColorLight = dividerTextColorLight;
-static const QRgb raisedButtonDisabledColorDark = dividerTextColorDark;
+static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
+static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
 static const QRgb flatButtonPressColorLight = 0x66999999;
 static const QRgb flatButtonPressColorDark = 0x3FCCCCCC;
 static const QRgb flatButtonFocusColorLight = 0x33CCCCCC;
@@ -805,7 +805,7 @@ QColor QQuickMaterialStyle::dropShadowColor() const
 
 QColor QQuickMaterialStyle::dividerColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? dividerTextColorLight : dividerTextColorDark);
+    return QColor::fromRgba(m_theme == Light ? dividerColorLight : dividerColorDark);
 }
 
 QColor QQuickMaterialStyle::raisedButtonColor() const
@@ -943,7 +943,7 @@ QColor QQuickMaterialStyle::scrollBarPressedColor() const
 
 QColor QQuickMaterialStyle::drawerBackgroundColor() const
 {
-    return QColor::fromRgba(dividerTextColorLight);
+    return QColor::fromRgba(dividerColorLight);
 }
 
 QColor QQuickMaterialStyle::dialogColor() const
