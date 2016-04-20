@@ -79,49 +79,59 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
 {
 }
 
-QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &dstRect)
+bool QQuickGridMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
 {
-    int vmesh = m_resolution.height();
-    int hmesh = m_resolution.width();
-    int attrCount = attributes.count();
-
+    const int attrCount = attributes.count();
     int positionIndex = attributes.indexOf(qtPositionAttributeName());
     int texCoordIndex = attributes.indexOf(qtTexCoordAttributeName());
 
-    if (!geometry) {
-        switch (attrCount) {
-        case 0:
-            m_log = QLatin1String("Error: No attributes specified.");
-            return 0;
-        case 1:
-            if (positionIndex != 0) {
+    switch (attrCount) {
+    case 0:
+        m_log = QLatin1String("Error: No attributes specified.");
+        return false;
+    case 1:
+        if (positionIndex != 0) {
+            m_log = QLatin1String("Error: Missing \'");
+            m_log += QLatin1String(qtPositionAttributeName());
+            m_log += QLatin1String("\' attribute.\n");
+            return false;
+        }
+        break;
+    case 2:
+        if (positionIndex == -1 || texCoordIndex == -1) {
+            m_log.clear();
+            if (positionIndex == -1) {
                 m_log = QLatin1String("Error: Missing \'");
                 m_log += QLatin1String(qtPositionAttributeName());
                 m_log += QLatin1String("\' attribute.\n");
-                return 0;
             }
-            break;
-        case 2:
-            if (positionIndex == -1 || texCoordIndex == -1) {
-                m_log.clear();
-                if (positionIndex == -1) {
-                    m_log = QLatin1String("Error: Missing \'");
-                    m_log += QLatin1String(qtPositionAttributeName());
-                    m_log += QLatin1String("\' attribute.\n");
-                }
-                if (texCoordIndex == -1) {
-                    m_log += QLatin1String("Error: Missing \'");
-                    m_log += QLatin1String(qtTexCoordAttributeName());
-                    m_log += QLatin1String("\' attribute.\n");
-                }
-                return 0;
+            if (texCoordIndex == -1) {
+                m_log += QLatin1String("Error: Missing \'");
+                m_log += QLatin1String(qtTexCoordAttributeName());
+                m_log += QLatin1String("\' attribute.\n");
             }
-            break;
-        default:
-            m_log = QLatin1String("Error: Too many attributes specified.");
-            return 0;
+            return false;
         }
+        break;
+    default:
+        m_log = QLatin1String("Error: Too many attributes specified.");
+        return false;
+    }
 
+    if (posIndex)
+        *posIndex = positionIndex;
+
+    return true;
+}
+
+QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                            const QRectF &srcRect, const QRectF &dstRect)
+{
+    int vmesh = m_resolution.height();
+    int hmesh = m_resolution.width();
+
+    if (!geometry) {
+        Q_ASSERT(attrCount == 1 || attrCount == 2);
         geometry = new QSGGeometry(attrCount == 1
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
@@ -141,7 +151,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
         for (int ix = 0; ix <= hmesh; ++ix) {
             float fx = ix / float(hmesh);
             for (int ia = 0; ia < attrCount; ++ia) {
-                if (ia == positionIndex) {
+                if (ia == posIndex) {
                     vdata->x = float(dstRect.left()) + fx * float(dstRect.width());
                     vdata->y = y;
                     ++vdata;

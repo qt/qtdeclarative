@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGCONTEXTPLUGIN_H
-#define QSGCONTEXTPLUGIN_H
+#ifndef QSGD3D12SHADEREFFECTNODE_P_H
+#define QSGD3D12SHADEREFFECTNODE_P_H
 
 //
 //  W A R N I N G
@@ -51,51 +51,42 @@
 // We mean it.
 //
 
-#include <private/qtquickglobal_p.h>
-#include <QtQuick/qquickimageprovider.h>
-#include <QtCore/qplugin.h>
-#include <QtCore/qfactoryinterface.h>
+#include <private/qsgadaptationlayer_p.h>
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
+class QSGD3D12RenderContext;
+class QSGD3D12GuiThreadShaderEffectManager;
 
-class QSGRenderLoop;
-
-struct Q_QUICK_PRIVATE_EXPORT QSGContextFactoryInterface : public QFactoryInterface
+class QSGD3D12ShaderEffectNode : public QSGShaderEffectNode
 {
-    enum Flag {
-        SupportsShaderEffectNode = 0x01
-    };
-    Q_DECLARE_FLAGS(Flags, Flag)
+public:
+    QSGD3D12ShaderEffectNode(QSGD3D12RenderContext *rc, QSGD3D12GuiThreadShaderEffectManager *mgr);
 
-    virtual QSGContext *create(const QString &key) const = 0;
-    virtual Flags flags(const QString &key) const = 0;
+    QRectF normalizedTextureSubRect() const override;
+    void sync(SyncData *syncData) override;
 
-    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image) = 0;
-    virtual QSGRenderLoop *createWindowManager() = 0;
+private:
+    QSGD3D12RenderContext *m_rc;
+    QSGD3D12GuiThreadShaderEffectManager *m_mgr;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGContextFactoryInterface::Flags)
-
-#define QSGContextFactoryInterface_iid \
-        "org.qt-project.Qt.QSGContextFactoryInterface"
-Q_DECLARE_INTERFACE(QSGContextFactoryInterface, QSGContextFactoryInterface_iid)
-
-class Q_QUICK_PRIVATE_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
+class QSGD3D12GuiThreadShaderEffectManager : public QSGGuiThreadShaderEffectManager
 {
-    Q_OBJECT
-    Q_INTERFACES(QSGContextFactoryInterface:QFactoryInterface)
 public:
-    explicit QSGContextPlugin(QObject *parent = 0);
-    virtual ~QSGContextPlugin();
+    ShaderType shaderType() const override;
+    int shaderCompilationType() const override;
+    int shaderSourceType() const override;
 
-    virtual QStringList keys() const = 0;
+    bool hasSeparateSamplerAndTextureObjects() const override;
 
-    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
-    virtual QSGRenderLoop *createWindowManager() { return 0; }
+    QString log() const override;
+    Status status() const override;
+
+    bool reflect(const QByteArray &src, ShaderInfo *result) override;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGCONTEXTPLUGIN_H
+#endif // QSGD3D12SHADEREFFECTNODE_P_H

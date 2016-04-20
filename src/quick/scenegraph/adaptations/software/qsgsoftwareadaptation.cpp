@@ -65,7 +65,10 @@ QSGContext *QSGSoftwareAdaptation::create(const QString &) const
 
 QSGContextFactoryInterface::Flags QSGSoftwareAdaptation::flags(const QString &) const
 {
-    return QSGContextFactoryInterface::SupportsShaderEffectV2;
+    // Claim we support adaptable shader effects, then return null for the
+    // shader effect node. The result is shader effects not being rendered,
+    // with the application working fine in all other respects.
+    return QSGContextFactoryInterface::SupportsShaderEffectNode;
 }
 
 QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()

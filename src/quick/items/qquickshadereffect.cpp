@@ -54,10 +54,17 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-effects
     \brief Applies custom shaders to a rectangle
 
-    The ShaderEffect type applies a custom OpenGL
-    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
+    The ShaderEffect type applies a custom
+    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment (pixel)} shader to a
     rectangle. It allows you to write effects such as drop shadow, blur,
     colorize and page curl directly in QML.
+
+    \note Depending on the Qt Quick scenegraph backend in use, the ShaderEffect
+    type may not be supported (for example, with the software backend), or may
+    use a different shading language with rules and expectations different from
+    OpenGL and GLSL.
+
+    \section1 OpenGL and GLSL
 
     There are two types of input to the \l vertexShader:
     uniform variables and attributes. Some are predefined:
@@ -158,9 +165,161 @@ QT_BEGIN_NAMESPACE
         \endqml
     \endtable
 
-    By default, the ShaderEffect consists of four vertices, one for each
-    corner. For non-linear vertex transformations, like page curl, you can
-    specify a fine grid of vertices by specifying a \l mesh resolution.
+    \note Scene Graph textures have origin in the top-left corner rather than
+    bottom-left which is common in OpenGL.
+
+    For information about the GLSL version being used, see \l QtQuick::OpenGLInfo.
+
+    \section1 Direct3D and HLSL
+
+    Direct3D backends provide ShaderEffect support with HLSL. The Direct3D 12
+    backend requires using at least Shader Model 5.0 both for vertex and pixel
+    shaders. When necessary, the \l shaderType property can be used to decide
+    at runtime what kind of value to assign to \l fragmentShader or
+    \l vertexShader.
+
+    All concepts described above for OpenGL and GLSL apply to Direct3D and HLSL
+    as well. There are however a number of notable practical differences, which
+    are the following:
+
+    Instead of uniforms, HLSL shaders are expected to use a single constant
+    buffer, assigned to register \c b0. The special names \c qt_Matrix,
+    \c qt_Opacity, and \c qt_SubRect_<name> function the same way as with GLSL.
+    All other members of the buffer are expected to map to properties in the
+    ShaderEffect item.
+
+    \note The buffer layout must be compatible for both shaders. This means
+    that application-provided shaders must make sure \c qt_Matrix and
+    \c qt_Opacity are included in the buffer, starting at offset 0, when custom
+    code is provided for one type of shader only, leading to ShaderEffect
+    providing the other shader. This is due to ShaderEffect's built-in shader code
+    declaring a constant buffer containing \c{float4x4 qt_Matrix; float qt_Opacity;}.
+
+    Unlike GLSL's attributes, no names are used for vertex input elements.
+    Therefore qt_Vertex and qt_MultiTexCoord0 are not relevant. Instead, the
+    standard Direct3D semantics, \c POSITION and \c TEXCOORD (or \c TEXCOORD0)
+    are used for identifying the correct input layout.
+
+    Unlike GLSL's samplers, texture and sampler objects are separate in HLSL.
+    Shaders are expected to expect 2D, non-array, non-multisample textures.
+    Both the texture and sampler binding points are expected to be sequential
+    and start from 0 (meaning registers \c{t0, t1, ...}, and \c{s0, s1, ...},
+    respectively). Unlike with OpenGL, samplers are not mapped to Qt Quick item
+    properties and therefore the name of the sampler is not relevant. Instead,
+    it is the textures that map to properties referencing \l Image or
+    \l ShaderEffectSource items.
+
+    Unlike with OpenGL, runtime compilation of shader source code may not be
+    supported. Backends for modern APIs are likely to prefer offline
+    compilation and shipping pre-compiled bytecode with applications instead of
+    inlined shader source strings. See the \l shaderSourceType and
+    \l shaderCompilationType properties.
+
+    \table 70%
+    \row
+    \li \image declarative-shadereffectitem.png
+    \li \qml
+        import QtQuick 2.8
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img;
+                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffect {
+                    width: 100; height: 100
+                    property variant src: img
+                    fragmentShader: "qrc:/effect_ps.cso"
+                }
+            }
+        }
+        \endqml
+    \row
+    \li where \c effect_ps.cso is the compiled bytecode for the following HLSL shader:
+        \code
+        cbuffer ConstantBuffer : register(b0)
+        {
+            float4x4 qt_Matrix;
+            float qt_Opacity;
+        };
+        Texture2D src : register(t0);
+        SamplerState srcSampler : register(s0);
+        float4 ExamplePixelShader(float4 position : SV_POSITION, float2 coord : TEXCOORD0) : SV_TARGET
+        {
+            float4 tex = src.Sample(srcSampler, coord);
+            float3 col = dot(tex.rgb, float3(0.344, 0.5, 0.156));
+            return float4(col, tex.a) * qt_Opacity;
+        }
+        \endcode
+    \endtable
+
+    The above is equivalent to the OpenGL example presented earlier. The vertex
+    shader is provided implicitly by ShaderEffect. Note that the output of the
+    pixel shader is using premultiplied alpha and that \c qt_Matrix is present
+    in the constant buffer at offset 0, even though the pixel shader does not
+    use the value.
+
+    Some effects will want to provide a vertex shader as well. Below is a
+    similar effect with both the vertex and fragment shader provided by the
+    application. This time the colorization factor is provided by the QML item
+    instead of hardcoding it in the shader. This can allow, among others,
+    animating the value using QML's and Qt Quick's standard facilities.
+
+    \table 70%
+    \row
+    \li \image declarative-shadereffectitem.png
+    \li \qml
+        import QtQuick 2.8
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img;
+                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffect {
+                    width: 100; height: 100
+                    property variant src: img
+                    property variant color: Qt.vector3d(0.344, 0.5, 0.156)
+                    vertexShader: "qrc:/effect_vs.cso"
+                    fragmentShader: "qrc:/effect_ps.cso"
+                }
+            }
+        }
+        \endqml
+    \row
+    \li where \c effect_vs.cso and \c effect_ps.cso are the compiled bytecode
+    for \c ExampleVertexShader and \c ExamplePixelShader. The source code is
+    presented as one snippet here, the shaders can however be placed in
+    separate source files as well.
+        \code
+        cbuffer ConstantBuffer : register(b0)
+        {
+            float4x4 qt_Matrix;
+            float qt_Opacity;
+            float3 color;
+        };
+        Texture2D src : register(t0);
+        SamplerState srcSampler : register(s0);
+        struct PSInput
+        {
+            float4 position : SV_POSITION;
+            float2 coord : TEXCOORD0;
+        };
+        PSInput ExampleVertexShader(float4 position : POSITION, float2 coord : TEXCOORD0)
+        {
+            PSInput result;
+            result.position = mul(qt_Matrix, position);
+            result.coord = coord;
+            return result;
+        }
+        float4 ExamplePixelShader(PSInput input) : SV_TARGET
+        {
+            float4 tex = src.Sample(srcSampler, coord);
+            float3 col = dot(tex.rgb, color);
+            return float4(col, tex.a) * qt_Opacity;
+        }
+        \endcode
+    \endtable
 
     \section1 ShaderEffect and Item Layers
 
@@ -183,13 +342,14 @@ QT_BEGIN_NAMESPACE
       \li \snippet qml/opacitymask.qml 1
     \endtable
 
+    \section1 Other notes
+
+    By default, the ShaderEffect consists of four vertices, one for each
+    corner. For non-linear vertex transformations, like page curl, you can
+    specify a fine grid of vertices by specifying a \l mesh resolution.
+
     The \l {Qt Graphical Effects} module contains several ready-made effects
     for using with Qt Quick applications.
-
-    \note Scene Graph textures have origin in the top-left corner rather than
-    bottom-left which is common in OpenGL.
-
-    For information about the GLSL version being used, see \l QtQuick::OpenGLInfo.
 
     \sa {Item Layers}
 */
@@ -204,7 +364,7 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     setFlag(QQuickItem::ItemHasContents);
 
 #ifndef QT_NO_OPENGL
-    if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectV2))
+    if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectNode))
         m_glImpl = new QQuickOpenGLShaderEffect(this, this);
 #endif
     if (!m_glImpl)
@@ -214,10 +374,23 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
 /*!
     \qmlproperty string QtQuick::ShaderEffect::fragmentShader
 
-    This property holds the fragment shader's GLSL source code.
-    The default shader expects the texture coordinate to be passed from the
-    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
-    sampler2D named "source".
+    This property holds the fragment (pixel) shader's source code or a
+    reference to the pre-compiled bytecode. Some APIs, like OpenGL, always
+    support runtime compilation and therefore the traditional Qt Quick way of
+    inlining shader source strings is functional. Qt Quick backends for other
+    APIs may however limit support to pre-compiled bytecode like SPIR-V or D3D
+    shader bytecode. There the string is simply a filename, which may be a file
+    in the filesystem or bundled with the executable via Qt's resource system.
+
+    With GLSL the default shader expects the texture coordinate to be passed
+    from the vertex shader as \c{varying highp vec2 qt_TexCoord0}, and it
+    samples from a sampler2D named \c source. With HLSL the texture is named
+    \c source, while the vertex shader is expected to provide
+    \c{float2 coord : TEXCOORD0} in its output in addition to
+    \c{float4 position : SV_POSITION} (names can differ since linking is done
+    based on the semantics).
+
+    \sa vertexShader, shaderType, shaderCompilationType, shaderSourceType
 */
 
 QByteArray QQuickShaderEffect::fragmentShader() const
@@ -243,9 +416,20 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
 /*!
     \qmlproperty string QtQuick::ShaderEffect::vertexShader
 
-    This property holds the vertex shader's GLSL source code.
-    The default shader passes the texture coordinate along to the fragment
-    shader as "varying highp vec2 qt_TexCoord0".
+    This property holds the vertex shader's source code or a reference to the
+    pre-compiled bytecode. Some APIs, like OpenGL, always support runtime
+    compilation and therefore the traditional Qt Quick way of inlining shader
+    source strings is functional. Qt Quick backends for other APIs may however
+    limit support to pre-compiled bytecode like SPIR-V or D3D shader bytecode.
+    There the string is simply a filename, which may be a file in the
+    filesystem or bundled with the executable via Qt's resource system.
+
+    With GLSL the default shader passes the texture coordinate along to the
+    fragment shader as \c{varying highp vec2 qt_TexCoord0}. With HLSL it is
+    enough to use the standard \c TEXCOORD0 semantic, for example
+    \c{float2 coord : TEXCOORD0}.
+
+    \sa fragmentShader, shaderType, shaderCompilationType, shaderSourceType
 */
 
 QByteArray QQuickShaderEffect::vertexShader() const
@@ -416,9 +600,17 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
     \li ShaderEffect.Error - the shader program failed to compile or link.
     \endlist
 
-    When setting the fragment or vertex shader source code, the status will become Uncompiled.
-    The first time the ShaderEffect is rendered with new shader source code, the shaders are
-    compiled and linked, and the status is updated to Compiled or Error.
+    When setting the fragment or vertex shader source code, the status will
+    become Uncompiled. The first time the ShaderEffect is rendered with new
+    shader source code, the shaders are compiled and linked, and the status is
+    updated to Compiled or Error.
+
+    When runtime compilation is not in use and the shader properties refer to
+    files with bytecode, the status is always Compiled. The contents of the
+    shader is not examined (apart from basic reflection to discover vertex
+    input elements and constant buffer data) until later in the rendering
+    pipeline so potential errors (like layout or root signature mismatches)
+    will only be detected at a later point.
 
     \sa log
 */
@@ -426,9 +618,9 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 /*!
     \qmlproperty string QtQuick::ShaderEffect::log
 
-    This property holds a log of warnings and errors from the latest attempt at compiling and
-    linking the OpenGL shader program. It is updated at the same time \l status is set to Compiled
-    or Error.
+    This property holds a log of warnings and errors from the latest attempt at
+    compiling and linking the OpenGL shader program. It is updated at the same
+    time \l status is set to Compiled or Error.
 
     \sa status
 */
@@ -449,6 +641,81 @@ QQuickShaderEffect::Status QQuickShaderEffect::status() const
         return m_glImpl->status();
 #endif
     return m_impl->status();
+}
+
+/*!
+    \qmlproperty QtQuick::ShaderEffect::ShaderType QtQuick::ShaderEffect::shaderType
+
+    This property contains the shading language supported by the current Qt
+    Quick backend the application is using.
+
+    With OpenGL the value is GLSL.
+
+    \since 5.8
+    \since QtQuick 2.8
+
+    \sa shaderCompilationType, shaderSourceType, vertexShader, fragmentShader
+*/
+
+QQuickShaderEffect::ShaderType QQuickShaderEffect::shaderType() const
+{
+#ifndef QT_NO_OPENGL
+    if (m_glImpl)
+        return GLSL;
+#endif
+    return m_impl->shaderType();
+}
+
+/*!
+    \qmlproperty QtQuick::ShaderEffect::ShaderCompilationType QtQuick::ShaderEffect::shaderCompilationType
+
+    This property contains a bitmask of the shader compilation approaches
+    supported by the current Qt Quick backend the application is using.
+
+    With OpenGL the value is RuntimeCompilation, which corresponds to the
+    traditional way of using ShaderEffect. Non-OpenGL backends are expected to
+    focus more on OfflineCompilation, however.
+
+    \since 5.8
+    \since QtQuick 2.8
+
+    \sa shaderType, shaderSourceType, vertexShader, fragmentShader
+*/
+
+QQuickShaderEffect::ShaderCompilationType QQuickShaderEffect::shaderCompilationType() const
+{
+#ifndef QT_NO_OPENGL
+    if (m_glImpl)
+        return RuntimeCompilation;
+#endif
+    return m_impl->shaderCompilationType();
+}
+
+/*!
+    \qmlproperty QtQuick::ShaderEffect::ShaderSourceType QtQuick::ShaderEffect::shaderSourceType
+
+    This property contains a bitmask of the supported ways of providing shader
+    sources.
+
+    With OpenGL the value is ShaderSourceString, which corresponds to the
+    traditional way of inlining GLSL source code into QML. Other, non-OpenGL Qt
+    Quick backends may however decide not to support inlined shader sources, or
+    even shader sources at all. In this case shaders are expected to be
+    pre-compiled into formats like SPIR-V or D3D shader bytecode.
+
+    \since 5.8
+    \since QtQuick 2.8
+
+    \sa shaderType, shaderCompilationType, vertexShader, fragmentShader
+*/
+
+QQuickShaderEffect::ShaderSourceType QQuickShaderEffect::shaderSourceType() const
+{
+#ifndef QT_NO_OPENGL
+    if (m_glImpl)
+        return ShaderSourceString;
+#endif
+    return m_impl->shaderSourceType();
 }
 
 bool QQuickShaderEffect::event(QEvent *e)
@@ -516,13 +783,13 @@ bool QQuickShaderEffect::isComponentComplete() const
     return QQuickItem::isComponentComplete();
 }
 
-QString QQuickShaderEffect::parseLog()
+QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
 {
 #ifndef QT_NO_OPENGL
     if (m_glImpl)
         return m_glImpl->parseLog();
 #endif
-    return m_impl->parseLog();
+    return QString();
 }
 
 QT_END_NAMESPACE

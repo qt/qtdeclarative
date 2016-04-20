@@ -66,7 +66,10 @@ public:
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
     QSGNinePatchNode *createNinePatchNode() override;
-    QSGLayer *createLayer(QSGRenderContext *rc) override;
+    QSGLayer *createLayer(QSGRenderContext *renderContext) override;
+    QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager() override;
+    QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
+                                                QSGGuiThreadShaderEffectManager *mgr) override;
     QSize minimumFBOSize() const override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;

@@ -53,10 +53,13 @@
 
 #include <QtQuick/qquickitem.h>
 #include <private/qtquickglobal_p.h>
+#include <private/qsgadaptationlayer_p.h>
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 
 QT_BEGIN_NAMESPACE
+
+class QSignalMapper;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickGenericShaderEffect : public QObject
 {
@@ -66,11 +69,11 @@ public:
     QQuickGenericShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
     ~QQuickGenericShaderEffect();
 
-    QByteArray fragmentShader() const { return QByteArray(); }
-    void setFragmentShader(const QByteArray &code);
+    QByteArray fragmentShader() const { return m_fragShader; }
+    void setFragmentShader(const QByteArray &src);
 
-    QByteArray vertexShader() const { return QByteArray(); }
-    void setVertexShader(const QByteArray &code);
+    QByteArray vertexShader() const { return m_vertShader; }
+    void setVertexShader(const QByteArray &src);
 
     bool blending() const { return m_blending; }
     void setBlending(bool enable);
@@ -81,11 +84,15 @@ public:
     QQuickShaderEffect::CullMode cullMode() const { return m_cullMode; }
     void setCullMode(QQuickShaderEffect::CullMode face);
 
-    QString log() const { return m_log; }
-    QQuickShaderEffect::Status status() const { return m_status; }
+    QString log() const;
+    QQuickShaderEffect::Status status() const;
 
     bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
     void setSupportsAtlasTextures(bool supports);
+
+    QQuickShaderEffect::ShaderType shaderType() const;
+    QQuickShaderEffect::ShaderCompilationType shaderCompilationType() const;
+    QQuickShaderEffect::ShaderSourceType shaderSourceType() const;
 
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
@@ -93,19 +100,45 @@ public:
     void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
 
-    QString parseLog() { return QString(); }
+private slots:
+    void propertyChanged(int mappedId);
+    void sourceDestroyed(QObject *object);
+    void markGeometryDirtyAndUpdate();
+    void markGeometryDirtyAndUpdateIfSupportsAtlas();
 
 private:
+    QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
+
+    enum Shader {
+        Vertex,
+        Fragment,
+
+        NShader
+    };
+    void updateShader(Shader which, const QByteArray &src);
+    void disconnectSignals(Shader which);
+    bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
+
     QQuickShaderEffect *m_item;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
     QQuickShaderEffect::CullMode m_cullMode;
-    QString m_log;
-    QQuickShaderEffect::Status m_status;
+    bool m_blending;
+    bool m_supportsAtlasTextures;
+    mutable QSGGuiThreadShaderEffectManager *m_mgr;
+    QByteArray m_fragShader;
+    QByteArray m_vertShader;
 
-    uint m_blending : 1;
-    uint m_supportsAtlasTextures : 1;
+    QSGShaderEffectNode::ShaderData m_shaders[NShader];
+    QSGShaderEffectNode::DirtyShaderFlags m_dirty;
+
+    struct SignalMapper {
+        SignalMapper() : mapper(nullptr), active(false) { }
+        QSignalMapper *mapper;
+        bool active;
+    };
+    QVector<SignalMapper> m_signalMappers[NShader];
 };
 
 QT_END_NAMESPACE

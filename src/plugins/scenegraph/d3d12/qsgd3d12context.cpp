@@ -43,6 +43,7 @@
 #include "qsgd3d12imagenode_p.h"
 #include "qsgd3d12glyphnode_p.h"
 #include "qsgd3d12layer_p.h"
+#include "qsgd3d12shadereffectnode_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -82,9 +83,23 @@ QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
     return nullptr;
 }
 
-QSGLayer *QSGD3D12Context::createLayer(QSGRenderContext *rc)
+QSGLayer *QSGD3D12Context::createLayer(QSGRenderContext *renderContext)
 {
-    return new QSGD3D12Layer(static_cast<QSGD3D12RenderContext *>(rc));
+    QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
+    return new QSGD3D12Layer(rc);
+}
+
+QSGGuiThreadShaderEffectManager *QSGD3D12Context::createGuiThreadShaderEffectManager()
+{
+    return new QSGD3D12GuiThreadShaderEffectManager;
+}
+
+QSGShaderEffectNode *QSGD3D12Context::createShaderEffectNode(QSGRenderContext *renderContext,
+                                                             QSGGuiThreadShaderEffectManager *mgr)
+{
+    QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
+    QSGD3D12GuiThreadShaderEffectManager *dmgr = static_cast<QSGD3D12GuiThreadShaderEffectManager *>(mgr);
+    return new QSGD3D12ShaderEffectNode(rc, dmgr);
 }
 
 QSize QSGD3D12Context::minimumFBOSize() const

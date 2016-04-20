@@ -223,6 +223,139 @@ Q_SIGNALS:
     void scheduledUpdateCompleted();
 };
 
+class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
+{
+    Q_OBJECT
+
+public:
+    // Enum values must match ShaderEffect.
+    enum ShaderType {
+        GLSL,
+        HLSL,
+        Metal
+    };
+    enum ShaderCompilationType {
+        RuntimeCompilation = 0x01,
+        OfflineCompilation = 0x02
+    };
+    enum ShaderSourceType {
+        ShaderSourceString = 0x01,
+        ShaderSourceFile = 0x02,
+        ShaderByteCode = 0x04
+    };
+    enum Status {
+        Compiled,
+        Uncompiled,
+        Error
+    };
+
+    virtual ShaderType shaderType() const = 0;
+    virtual int shaderCompilationType() const = 0;
+    virtual int shaderSourceType() const = 0;
+
+    virtual bool hasSeparateSamplerAndTextureObjects() const = 0;
+
+    virtual QString log() const = 0;
+    virtual Status status() const = 0;
+
+    struct ShaderInfo {
+        enum Type {
+            TypeVertex,
+            TypeFragment,
+            TypeOther
+        };
+        enum VariableType {
+            Constant, // cbuffer members or uniforms
+            Sampler,
+            Texture // for APIs with separate texture and sampler objects
+        };
+        struct InputParameter {
+            InputParameter() : semanticIndex(0) { }
+            // Semantics use the D3D keys (POSITION, TEXCOORD).
+            // Attribute name based APIs can map based on pre-defined names.
+            QByteArray semanticName;
+            int semanticIndex;
+        };
+        struct Variable {
+            Variable() : type(Constant), offset(0), size(0), bindPoint(0) { }
+            VariableType type;
+            QByteArray name;
+            uint offset; // for cbuffer members
+            uint size; // for cbuffer members
+            int bindPoint; // for textures and samplers; for register-based APIs
+        };
+
+        QByteArray blob; // source or bytecode
+        Type type;
+        QVector<InputParameter> inputParameters;
+        QVector<Variable> variables;
+    };
+
+    virtual bool reflect(const QByteArray &src, ShaderInfo *result) = 0;
+
+Q_SIGNALS:
+    void textureChanged();
+    void logAndStatusChanged();
+};
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p);
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v);
+#endif
+
+class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QSGVisitableNode
+{
+public:
+    enum DirtyShaderFlag {
+        DirtyShaderVertex = 0x01,
+        DirtyShaderFragment = 0x02,
+        DirtyShaderConstant = 0x04,
+        DirtyShaderTexture = 0x08,
+        DirtyShaderGeometry = 0x10,
+        DirtyShaderMesh = 0x20
+    };
+    Q_DECLARE_FLAGS(DirtyShaderFlags, DirtyShaderFlag)
+
+    enum CullMode { // must match ShaderEffect
+        NoCulling,
+        BackFaceCulling,
+        FrontFaceCulling
+    };
+
+    struct VariableData {
+        enum SpecialType { None, Unused, SubRect, Opacity, Matrix, Source };
+
+        QVariant value;
+        SpecialType specialType;
+    };
+
+    struct ShaderData {
+        ShaderData() : valid(false) { }
+        bool valid;
+        QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
+        QVector<VariableData> varData;
+    };
+
+    struct SyncData {
+        DirtyShaderFlags dirty;
+        CullMode cullMode;
+        bool blending;
+        bool supportsAtlasTextures;
+        ShaderData *vertexShader;
+        ShaderData *fragmentShader;
+    };
+
+    // Each ShaderEffect item has one node (render thread) and one manager (gui thread).
+    QSGShaderEffectNode(QSGGuiThreadShaderEffectManager *) { }
+
+    virtual QRectF normalizedTextureSubRect() const = 0;
+    virtual void sync(SyncData *syncData) = 0;
+
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGShaderEffectNode::DirtyShaderFlags)
+
 class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {
 public:

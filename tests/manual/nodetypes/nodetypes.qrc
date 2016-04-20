@@ -7,8 +7,11 @@
         <file>Text.qml</file>
         <file>Animators.qml</file>
         <file>Layers.qml</file>
+        <file>Effects.qml</file>
         <file>qt.png</file>
         <file>face-smile.png</file>
         <file>shadow.png</file>
+        <file>vs_wobble.cso</file>
+        <file>ps_wobble.cso</file>
     </qresource>
 </RCC>

@@ -22,7 +22,8 @@ SOURCES += \
     $$PWD/qsgd3d12imagenode.cpp \
     $$PWD/qsgd3d12glyphnode.cpp \
     $$PWD/qsgd3d12glyphcache.cpp \
-    $$PWD/qsgd3d12layer.cpp
+    $$PWD/qsgd3d12layer.cpp \
+    $$PWD/qsgd3d12shadereffectnode.cpp
 
 NO_PCH_SOURCES += \
     $$PWD/qsgd3d12engine.cpp
@@ -42,9 +43,10 @@ HEADERS += \
     $$PWD/qsgd3d12imagenode_p.h \
     $$PWD/qsgd3d12glyphnode_p.h \
     $$PWD/qsgd3d12glyphcache_p.h \
-    $$PWD/qsgd3d12layer_p.h
+    $$PWD/qsgd3d12layer_p.h \
+    $$PWD/qsgd3d12shadereffectnode_p.h
 
-LIBS += -ldxgi -ld3d12
+LIBS += -ldxgi -ld3d12 -ld3dcompiler
 
 include($$PWD/shaders/shaders.pri)
 

@@ -83,6 +83,8 @@ class QSGDistanceFieldGlyphCacheManager;
 class QSGContext;
 class QQuickPaintedItem;
 class QSGRendererInterface;
+class QSGShaderEffectNode;
+class QSGGuiThreadShaderEffectManager;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -166,6 +168,9 @@ public:
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
     virtual QSGNinePatchNode *createNinePatchNode() = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
+    virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
+    virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
+                                                        QSGGuiThreadShaderEffectManager *mgr);
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;

@@ -68,5 +68,8 @@ Item {
 
         if (event.key === Qt.Key_L)
             loader.source = "qrc:/Layers.qml";
+
+        if (event.key === Qt.Key_E)
+            loader.source = "qrc:/Effects.qml";
     }
 }

@@ -519,4 +519,30 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
     }
 }
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p)
+{
+    debug << p.semanticName << p.semanticIndex;
+    return debug;
+}
+QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v)
+{
+    debug << v.name;
+    switch (v.type) {
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Constant:
+        debug << "cvar" << "offset" << v.offset << "size" << v.size;
+        break;
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler:
+        debug << "sampler" << "bindpoint" << v.bindPoint;
+        break;
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Texture:
+        debug << "texture" << "bindpoint" << v.bindPoint;
+        break;
+    default:
+        break;
+    }
+    return debug;
+}
+#endif
+
 QT_END_NAMESPACE

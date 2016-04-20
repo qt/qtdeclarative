@@ -292,6 +292,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
 
+    qmlRegisterType<QQuickShaderEffect, 2>(uri, 2, 8, "ShaderEffect");
+
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 }
 

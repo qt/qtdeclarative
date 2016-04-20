@@ -87,6 +87,11 @@ QSGRendererInterface::~QSGRendererInterface()
     \fn QSGRenderNode::GraphicsAPI QSGRenderNode::graphicsAPI() const
 
     Returns the graphics API that is in use by the Qt Quick scenegraph.
+
+    \note This function can be called on any thread. However, the renderer
+    interface's lifetime may be tied to the render thread and therefore calling
+    this function from other threads during the process of application shutdown
+    or QQuickWindow closing is likely to become invalid.
  */
 
 /*!
@@ -98,6 +103,8 @@ QSGRendererInterface::~QSGRendererInterface()
     pointer to an opaque handle that needs to be dereferenced first (for
     example, \c{VkDevice dev = *static_cast<VkDevice *>(result)}). The latter
     is necessary since such handles may have sizes different from a pointer.
+
+    \note This function must only be called on the render thread.
  */
 void *QSGRendererInterface::getResource(Resource resource) const
 {
@@ -109,6 +116,8 @@ void *QSGRendererInterface::getResource(Resource resource) const
     Queries a graphics resource. \a resource is a backend-specific key. This
     allows supporting any future resources that are not listed in the
     Resource enum.
+
+    \note This function must only be called on the render thread.
  */
 void *QSGRendererInterface::getResource(const char *resource) const
 {

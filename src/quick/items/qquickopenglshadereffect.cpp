@@ -631,7 +631,7 @@ void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)
                 }
             }
             if (!ok)
-                qWarning("ShaderEffect: mesh property must be size or object deriving from QQuickOpenGLShaderEffectMesh.");
+                qWarning("ShaderEffect: mesh property must be size or object deriving from QQuickShaderEffectMesh.");
         }
         m_defaultMesh.setResolution(m_meshResolution);
     }
@@ -822,8 +822,8 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
         QRectF rect(0, 0, m_item->width(), m_item->height());
         QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
 
-        geometry = mesh->updateGeometry(geometry, m_common.attributes, srcRect, rect);
-        if (!geometry) {
+        int posIndex = 0;
+        if (!mesh->validateAttributes(m_common.attributes, &posIndex)) {
             QString log = mesh->log();
             if (!log.isNull()) {
                 m_log = parseLog();
@@ -836,6 +836,8 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
             delete node;
             return 0;
         }
+
+        geometry = mesh->updateGeometry(geometry, m_common.attributes.count(), posIndex, srcRect, rect);
 
         node->setGeometry(geometry);
         node->setFlag(QSGNode::OwnsGeometry, true);

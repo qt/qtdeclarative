@@ -277,11 +277,29 @@ QSGRectangleNode *QSGContext::createRectangleNode(const QRectF &rect, const QCol
     return node;
 }
 
+/*!
+    Creates a new shader effect helper instance. This function is called on the
+    gui thread, unlike the others. This is necessary in order to provide
+    adaptable, backend-specific shader effect functionality to the gui thread too.
+ */
+QSGGuiThreadShaderEffectManager *QSGContext::createGuiThreadShaderEffectManager()
+{
+    return nullptr;
+}
+
+/*!
+    Creates a new shader effect node. The default of returning nullptr is
+    valid as long as the backend does not claim SupportsShaderEffectNode or
+    ignoring ShaderEffect elements is acceptable.
+ */
+QSGShaderEffectNode *QSGContext::createShaderEffectNode(QSGRenderContext *, QSGGuiThreadShaderEffectManager *)
+{
+    return nullptr;
+}
 
 /*!
     Creates a new animation driver.
  */
-
 QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 {
     return new QSGAnimationDriver(parent);
@@ -296,6 +314,12 @@ QSize QSGContext::minimumFBOSize() const
     return QSize(1, 1);
 }
 
+/*!
+    Returns a pointer to the (presumably) global renderer interface.
+
+    \note This function may be called on the gui thread in order to get access
+    to QSGRendererInterface::graphicsAPI().
+ */
 QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderContext)
 {
     Q_UNUSED(renderContext);

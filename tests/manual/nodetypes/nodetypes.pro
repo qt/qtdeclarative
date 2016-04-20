@@ -4,4 +4,5 @@ SOURCES += nodetypes.cpp
 
 RESOURCES += nodetypes.qrc
 
-OTHER_FILES += main.qml Rects.qml LotsOfRects.qml Images.qml Text.qml Animators.qml Layers.qml
+OTHER_FILES += main.qml Rects.qml LotsOfRects.qml \
+               Images.qml Text.qml Animators.qml Layers.qml Effects.qml effects.hlsl
