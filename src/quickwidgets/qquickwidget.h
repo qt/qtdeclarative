@@ -87,7 +87,7 @@ public:
 
     QList<QQmlError> errors() const;
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
     QSize initialSize() const;
 
     void setFormat(const QSurfaceFormat &format);

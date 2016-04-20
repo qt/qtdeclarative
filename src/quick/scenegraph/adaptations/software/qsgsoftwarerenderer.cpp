@@ -88,7 +88,8 @@ void QSGSoftwareRenderer::render()
     QElapsedTimer renderTimer;
 
     setBackgroundColor(clearColor());
-    setBackgroundSize(QSize(m_paintDevice->width(), m_paintDevice->height()));
+    setBackgroundSize(QSize(m_paintDevice->width() / m_paintDevice->devicePixelRatio(),
+                            m_paintDevice->height() / m_paintDevice->devicePixelRatio()));
 
     QPainter painter(m_paintDevice);
     painter.setRenderHint(QPainter::Antialiasing);

@@ -227,7 +227,6 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
     QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
 }
 
-// Is never called when using the software renderer
 void QQuickWidgetPrivate::render(bool needsSync)
 {
     if (!useSoftwareRenderer) {
@@ -272,6 +271,8 @@ void QQuickWidgetPrivate::render(bool needsSync)
         if (softwareRenderer) {
             softwareRenderer->setCurrentPaintDevice(&softwareImage);
             renderControl->render();
+
+            updateRegion += softwareRenderer->flushRegion();
         }
     }
 }
@@ -301,7 +302,12 @@ void QQuickWidgetPrivate::renderSceneGraph()
         QWidgetPrivate::nearestGraphicsProxyWidget(q)->update();
     else
 #endif
-        q->update(); // schedule composition
+    {
+        if (!useSoftwareRenderer)
+            q->update(); // schedule composition
+        else if (!updateRegion.isEmpty())
+            q->update(updateRegion);
+    }
 }
 
 QImage QQuickWidgetPrivate::grabFramebuffer()
@@ -418,7 +424,6 @@ QQuickWidget::QQuickWidget(QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
-    setAttribute(Qt::WA_OpaquePaintEvent, true);
     d_func()->init();
 }
 
@@ -432,7 +437,6 @@ QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
-    setAttribute(Qt::WA_OpaquePaintEvent, true);
     d_func()->init();
     setSource(source);
 }
@@ -451,7 +455,6 @@ QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
-    setAttribute(Qt::WA_OpaquePaintEvent, true);
     Q_ASSERT(engine);
     d_func()->init(engine);
 }
@@ -1478,9 +1481,20 @@ QT_END_NAMESPACE
 
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
+    Q_UNUSED(event)
     Q_D(QQuickWidget);
     if (d->useSoftwareRenderer) {
         QPainter painter(this);
-        painter.drawImage(rect(), d->softwareImage);
+        if (d->updateRegion.isNull()) {
+            //Paint everything
+            painter.drawImage(rect(), d->softwareImage);
+        } else {
+            //Paint only the updated areas
+            for (auto targetRect : d->updateRegion.rects()) {
+                auto sourceRect = QRect(targetRect.topLeft() * devicePixelRatio(), targetRect.size() * devicePixelRatio());
+                painter.drawImage(targetRect, d->softwareImage, sourceRect);
+            }
+            d->updateRegion = QRegion();
+        }
     }
 }

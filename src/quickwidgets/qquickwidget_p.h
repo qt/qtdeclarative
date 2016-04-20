@@ -137,6 +137,7 @@ public:
 
     bool useSoftwareRenderer;
     QImage softwareImage;
+    QRegion updateRegion;
 };
 
 QT_END_NAMESPACE
