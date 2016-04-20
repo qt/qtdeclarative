@@ -56,7 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QGlyphs;
 class QSGTextMaskMaterial;
 class QSGDefaultGlyphNode: public QSGGlyphNode
 {
