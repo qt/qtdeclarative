@@ -63,8 +63,8 @@ QT_BEGIN_NAMESPACE
     The Qt Labs Calendar module uses 0-based month numbers to be consistent
     with the JavaScript Date type, that is used by the QML language. This
     means that \c Date::getMonth() can be passed to the methods as is. When
-    dealing with dealing with month numbers directly, it is highly recommended
-    to use the following enumeration values to avoid confusion.
+    dealing with month numbers directly, it is highly recommended to use the
+    following enumeration values to avoid confusion.
 
     \value Calendar.January January (0)
     \value Calendar.February February (1)
@@ -183,7 +183,7 @@ void QQuickCalendarModel::setTo(const QDate &to)
         if (d->complete)
             d->populate(d->from, to);
         d->to = to;
-        emit fromChanged();
+        emit toChanged();
     }
 }
 
