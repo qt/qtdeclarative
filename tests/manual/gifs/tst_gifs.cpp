@@ -62,10 +62,14 @@ private slots:
     void swipeDelegateBehind();
     void delegates_data();
     void delegates();
+    void dial_data();
+    void dial();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
         QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint, int movementDelay = 15);
+    void moveSmoothlyAlongArc(QQuickWindow *window, QPoint arcCenter, qreal distanceFromCenter,
+        qreal startAngleRadians, qreal endAngleRadians, QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint);
 
     QString dataDirPath;
     QDir outputDir;
@@ -93,6 +97,29 @@ void tst_Gifs::moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoi
             from.x() + curve.valueForProgress(movement / qreal(qAbs(xDifference))) * xDifference,
             from.y() + curve.valueForProgress(movement / qreal(qAbs(yDifference))) * yDifference);
         QTest::mouseMove(window, pos, movementDelay);
+    }
+}
+
+QPoint posAlongArc(QPoint arcCenter, qreal startAngleRadians, qreal endAngleRadians,
+    qreal distanceFromCenter, qreal progress, QEasingCurve::Type easingCurveType)
+{
+    QEasingCurve curve(easingCurveType);
+    const qreal angle = startAngleRadians + curve.valueForProgress(progress) * (endAngleRadians - startAngleRadians);
+    return (arcCenter - QTransform().rotateRadians(angle).map(QPointF(0, distanceFromCenter))).toPoint();
+}
+
+void tst_Gifs::moveSmoothlyAlongArc(QQuickWindow *window, QPoint arcCenter, qreal distanceFromCenter,
+    qreal startAngleRadians, qreal endAngleRadians, QEasingCurve::Type easingCurveType)
+{
+    QEasingCurve curve(easingCurveType);
+    const qreal angleSpan = endAngleRadians - startAngleRadians;
+    const int movements = qAbs(angleSpan) * 20 + 20;
+
+    for (int movement = 0; movement < movements; ++movement) {
+        const qreal progress = movement / qreal(movements);
+        const QPoint pos = posAlongArc(arcCenter, startAngleRadians, endAngleRadians,
+            distanceFromCenter, progress, easingCurveType);
+        QTest::mouseMove(window, pos, 15);
     }
 }
 
@@ -506,6 +533,65 @@ void tst_Gifs::delegates()
         QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, i == 0 ? 200 : 1000);
         QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
     }
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::dial_data()
+{
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("dial-wrap") << "wrap";
+    QTest::newRow("dial-no-wrap") << "no-wrap";
+}
+
+void tst_Gifs::dial()
+{
+    QFETCH(QString, name);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(10);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-dial-%1.qml").arg(name));
+    gifRecorder.setHighQuality(false);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *dial = window->property("dial").value<QQuickItem*>();
+    QVERIFY(dial);
+
+    const QPoint arcCenter = dial->mapToScene(QPoint(dial->width() / 2, dial->height() / 2)).toPoint();
+    const qreal distanceFromCenter = dial->height() * 0.25;
+    // Go a bit past the actual min/max to ensure that we get the full range.
+    const qreal minAngle = qDegreesToRadians(-170.0);
+    const qreal maxAngle = qDegreesToRadians(170.0);
+    // Drag from start to end.
+    qreal startAngle = minAngle;
+    qreal endAngle = maxAngle;
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, posAlongArc(
+        arcCenter, startAngle, endAngle, distanceFromCenter, 0, QEasingCurve::InOutQuad), 30);
+
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Come back from the end a bit.
+    startAngle = endAngle;
+    endAngle -= qDegreesToRadians(50.0);
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Try to drag over max to show what happens with different wrap settings.
+    startAngle = endAngle;
+    endAngle = qDegreesToRadians(270.0);
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Go back to the start so that it loops nicely.
+    startAngle = endAngle;
+    endAngle = minAngle;
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, posAlongArc(
+        arcCenter, startAngle, endAngle, distanceFromCenter, 1, QEasingCurve::InOutQuad), 30);
 
     gifRecorder.waitForFinish();
 }

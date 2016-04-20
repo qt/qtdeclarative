@@ -55,7 +55,8 @@ QT_BEGIN_NAMESPACE
     value within a range.
 
     The value of the dial is set with the \l value property. The range is
-    set with the \l from and \l to properties.
+    set with the \l from and \l to properties. To enable or disable wrapping,
+    use the \l wrap property.
 
     The dial can be manipulated with a keyboard. It supports the following
     actions:
@@ -362,8 +363,15 @@ void QQuickDial::setSnapMode(SnapMode mode)
     This property holds whether the dial wraps when dragged.
 
     For example, when this property is set to \c true, dragging the dial past
-    the \e "zero" position will result in the handle being positioned at the
-    opposite side, and vice versa.
+    the \l to position will result in the handle being positioned at the
+    \l from position, and vice versa:
+
+    \image qtquickcontrols2-dial-wrap.gif
+
+    When this property is \c false, it's not possible to drag the dial across
+    the from and to values.
+
+    \image qtquickcontrols2-dial-no-wrap.gif
 
     The default value is \c true.
 */
