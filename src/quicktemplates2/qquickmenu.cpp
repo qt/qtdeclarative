@@ -266,7 +266,7 @@ QQuickMenu::QQuickMenu(QObject *parent) :
     QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     setFocus(true);
-    setClosePolicy(OnEscape | OnPressOutside | OnReleaseOutside);
+    setClosePolicy(CloseOnEscape | CloseOnPressOutside | CloseOnReleaseOutside);
 }
 
 /*!

@@ -238,11 +238,11 @@ public:
 
     enum ClosePolicyFlag {
         NoAutoClose = 0x00,
-        OnPressOutside = 0x01,
-        OnPressOutsideParent = 0x02,
-        OnReleaseOutside = 0x04,
-        OnReleaseOutsideParent = 0x08,
-        OnEscape = 0x10
+        CloseOnPressOutside = 0x01,
+        CloseOnPressOutsideParent = 0x02,
+        CloseOnReleaseOutside = 0x04,
+        CloseOnReleaseOutsideParent = 0x08,
+        CloseOnEscape = 0x10
     };
     Q_DECLARE_FLAGS(ClosePolicy, ClosePolicyFlag)
     Q_FLAG(ClosePolicy)

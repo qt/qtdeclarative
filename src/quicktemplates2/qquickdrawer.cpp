@@ -329,7 +329,7 @@ QQuickDrawer::QQuickDrawer(QObject *parent) :
     setFocus(true);
     setModal(true);
     setFiltersChildMouseEvents(true);
-    setClosePolicy(OnEscape | OnReleaseOutside);
+    setClosePolicy(CloseOnEscape | CloseOnReleaseOutside);
 }
 
 /*!

@@ -623,7 +623,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 
     delete d->popup;
     if (popup)
-        popup->setClosePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutsideParent);
+        popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
     d->popup = popup;
     emit popupChanged();
 }

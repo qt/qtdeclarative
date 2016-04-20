@@ -51,7 +51,7 @@ T.ToolTip {
 
     padding: 6
 
-    closePolicy: T.Popup.OnEscape | T.Popup.OnPressOutsideParent | T.Popup.OnReleaseOutsideParent
+    closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 
     //! [contentItem]
     contentItem: Text {

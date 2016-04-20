@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
             height: 300
             modal: true
             focus: true
-            closePolicy: Popup.OnEscape | Popup.OnPressOutsideParent
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
         }
     }
     \endqml
@@ -136,7 +136,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , bottomMargin(0)
     , contentWidth(0)
     , contentHeight(0)
-    , closePolicy(QQuickPopup::OnEscape | QQuickPopup::OnPressOutside)
+    , closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside)
     , parentItem(nullptr)
     , enter(nullptr)
     , exit(nullptr)
@@ -158,8 +158,8 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickPopup);
     const bool isPress = event->type() == QEvent::MouseButtonPress;
-    const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutside : QQuickPopup::OnReleaseOutside);
-    const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::OnPressOutsideParent : QQuickPopup::OnReleaseOutsideParent);
+    const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutside : QQuickPopup::CloseOnReleaseOutside);
+    const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutsideParent : QQuickPopup::CloseOnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
         if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
@@ -1552,14 +1552,14 @@ void QQuickPopup::setScale(qreal scale)
 
     The available values are:
     \value Popup.NoAutoClose The popup will only close when manually instructed to do so.
-    \value Popup.OnPressOutside The popup will close when the mouse is pressed outside of it.
-    \value Popup.OnPressOutsideParent The popup will close when the mouse is pressed outside of its parent.
-    \value Popup.OnReleaseOutside The popup will close when the mouse is released outside of it.
-    \value Popup.OnReleaseOutsideParent The popup will close when the mouse is released outside of its parent.
-    \value Popup.OnEscape The popup will close when the escape key is pressed while the popup
+    \value Popup.CloseOnPressOutside The popup will close when the mouse is pressed outside of it.
+    \value Popup.CloseOnPressOutsideParent The popup will close when the mouse is pressed outside of its parent.
+    \value Popup.CloseOnReleaseOutside The popup will close when the mouse is released outside of it.
+    \value Popup.CloseOnReleaseOutsideParent The popup will close when the mouse is released outside of its parent.
+    \value Popup.CloseOnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
 
-    The default value is \c {Popup.OnEscape | Popup.OnPressOutside}.
+    The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
 */
 QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 {
@@ -1709,7 +1709,7 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
     if (event->key() != Qt::Key_Escape)
         return;
 
-    if (d->closePolicy.testFlag(OnEscape))
+    if (d->closePolicy.testFlag(CloseOnEscape))
         close();
 }
 
