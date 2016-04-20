@@ -485,9 +485,9 @@ SIZE_T QSGD3D12Engine::textureSRV(uint id) const
     return d->textureSRV(id);
 }
 
-void QSGD3D12Engine::activateTexture(uint id)
+void QSGD3D12Engine::useTexture(uint id)
 {
-    d->activateTexture(id);
+    d->useTexture(id);
 }
 
 uint QSGD3D12Engine::genRenderTarget()
@@ -505,9 +505,14 @@ void QSGD3D12Engine::releaseRenderTarget(uint id)
     d->releaseRenderTarget(id);
 }
 
-void QSGD3D12Engine::activateRenderTargetAsTexture(uint id)
+void QSGD3D12Engine::useRenderTargetAsTexture(uint id)
 {
-    d->activateRenderTargetAsTexture(id);
+    d->useRenderTargetAsTexture(id);
+}
+
+uint QSGD3D12Engine::activeRenderTarget() const
+{
+    return d->activeRenderTarget();
 }
 
 QSGRendererInterface::GraphicsAPI QSGD3D12Engine::graphicsAPI() const
@@ -2464,7 +2469,7 @@ SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
     return textures[idx].srv.ptr;
 }
 
-void QSGD3D12EnginePrivate::activateTexture(uint id)
+void QSGD3D12EnginePrivate::useTexture(uint id)
 {
     if (!inFrame) {
         qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);
@@ -2748,7 +2753,7 @@ void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
     rt.flags &= ~RenderTarget::EntryInUse;
 }
 
-void QSGD3D12EnginePrivate::activateRenderTargetAsTexture(uint id)
+void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
 {
     if (!inFrame) {
         qWarning("%s: Cannot be called outside begin/endFrame", __FUNCTION__);

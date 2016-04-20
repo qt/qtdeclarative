@@ -98,6 +98,7 @@ private:
 
     QSGD3D12RenderContext *m_rc;
     uint m_rt = 0;
+    uint m_secondaryRT = 0;
     QSize m_rtSize;
     QSize m_size;
     QRectF m_rect;

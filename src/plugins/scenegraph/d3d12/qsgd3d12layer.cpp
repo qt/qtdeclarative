@@ -105,9 +105,16 @@ void QSGD3D12Layer::bind()
     if (Q_UNLIKELY(debug_render()))
         qDebug("layer %p bind rt=%u", this, m_rt);
 
-    // ###
+    QSGD3D12Engine *engine = m_rc->engine();
+    Q_ASSERT(m_rt);
 
-    m_rc->engine()->activateRenderTargetAsTexture(m_rt);
+#ifndef QT_NO_DEBUG
+    // Should not use the color buffer as a texture while it is the current render target.
+    if (!m_recursive && engine->activeRenderTarget() == m_rt && engine->windowSamples() == 1)
+        qWarning("ShaderEffectSource: \'recursive\' must be set to true when rendering recursively.");
+#endif
+
+    engine->useRenderTargetAsTexture(m_rt);
 }
 
 // QSGDynamicTexture
@@ -268,6 +275,11 @@ void QSGD3D12Layer::resetRenderTarget()
 
     m_rc->engine()->releaseRenderTarget(m_rt);
     m_rt = 0;
+
+    if (m_secondaryRT) {
+        m_rc->engine()->releaseRenderTarget(m_secondaryRT);
+        m_secondaryRT = 0;
+    }
 }
 
 void QSGD3D12Layer::updateContent()
@@ -297,17 +309,16 @@ void QSGD3D12Layer::updateContent()
     m_renderer->setDevicePixelRatio(m_dpr);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
-    if (!m_rt || m_rtSize != m_size) {
-        QSGD3D12Engine *engine = m_rc->engine();
-        // ### recursive
+    QSGD3D12Engine *engine = m_rc->engine();
+    const uint sampleCount = engine->windowSamples();
+    const QVector4D clearColor;
 
+    if (!m_rt || m_rtSize != m_size) {
         if (m_rt)
             resetRenderTarget();
 
         m_rt = engine->genRenderTarget();
         m_rtSize = m_size;
-        const uint sampleCount = engine->windowSamples();
-        const QVector4D clearColor;
 
         if (Q_UNLIKELY(debug_render()))
             qDebug("new render target for layer %p, size=%dx%d, samples=%d",
@@ -317,6 +328,11 @@ void QSGD3D12Layer::updateContent()
 
         // For multisampling the resolving via an extra non-ms color buffer is
         // handled internally in the engine, no need to worry about it here.
+    }
+
+    if (m_recursive && !m_secondaryRT && sampleCount == 1) {
+        m_secondaryRT = engine->genRenderTarget();
+        engine->createRenderTarget(m_secondaryRT, m_rtSize, clearColor, sampleCount);
     }
 
     m_dirtyTexture = false;
@@ -330,8 +346,12 @@ void QSGD3D12Layer::updateContent()
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
-    // ### recursive
-    m_renderer->renderScene(m_rt);
+    if (!m_recursive || sampleCount > 1) {
+        m_renderer->renderScene(m_rt);
+    } else {
+        m_renderer->renderScene(m_secondaryRT);
+        qSwap(m_rt, m_secondaryRT);
+    }
 
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.

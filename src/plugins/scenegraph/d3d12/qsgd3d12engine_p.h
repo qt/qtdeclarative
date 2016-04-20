@@ -341,12 +341,13 @@ public:
     void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
     SIZE_T textureSRV(uint id) const;
-    void activateTexture(uint id);
+    void useTexture(uint id);
 
     uint genRenderTarget();
     void createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples);
     void releaseRenderTarget(uint id);
-    void activateRenderTargetAsTexture(uint id);
+    void useRenderTargetAsTexture(uint id);
+    uint activeRenderTarget() const;
 
     // QSGRendererInterface
     GraphicsAPI graphicsAPI() const override;

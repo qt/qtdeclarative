@@ -122,7 +122,7 @@ void QSGD3D12Texture::bind()
     // Here we know that the texture is going to be used in the current frame
     // by the next draw call. Notify the engine so that it can wait for
     // possible pending uploads and set up the pipeline accordingly.
-    m_engine->activateTexture(m_id);
+    m_engine->useTexture(m_id);
 }
 
 SIZE_T QSGD3D12Texture::srv() const

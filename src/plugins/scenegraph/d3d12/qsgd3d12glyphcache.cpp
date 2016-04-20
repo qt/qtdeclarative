@@ -173,7 +173,7 @@ int QSGD3D12GlyphCache::maxTextureHeight() const
 void QSGD3D12GlyphCache::activateTexture()
 {
     if (m_id)
-        m_engine->activateTexture(m_id);
+        m_engine->useTexture(m_id);
 }
 
 QSize QSGD3D12GlyphCache::currentSize() const
