@@ -396,7 +396,6 @@ public:
     quint32 flags:5;
     bool widthValid:1;
     bool heightValid:1;
-    bool baselineOffsetValid:1;
     bool componentComplete:1;
     bool keepMouse:1;
     bool keepTouch:1;
@@ -405,8 +404,8 @@ public:
     bool antialiasing:1;
     bool focus:1;
     bool activeFocus:1;
-    // Bit 16
     bool notifiedFocus:1;
+    // Bit 16
     bool notifiedActiveFocus:1;
     bool filtersChildMouseEvents:1;
     bool explicitVisible:1;
@@ -422,8 +421,8 @@ public:
     bool isAccessible:1;
     bool culled:1;
     bool hasCursor:1;
-    // Bit 32
     bool hasCursorInChild:1;
+    // Bit 32
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
