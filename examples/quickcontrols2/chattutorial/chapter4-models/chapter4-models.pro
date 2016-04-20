@@ -16,5 +16,5 @@ RESOURCES += \
     qml.qrc \
     ../shared/shared.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtlabscontrols/chattutorial/chapter4-models
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/chattutorial/chapter4-models
 INSTALLS += target

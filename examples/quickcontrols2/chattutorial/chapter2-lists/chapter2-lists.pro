@@ -8,5 +8,5 @@ SOURCES += main.cpp
 RESOURCES += qml.qrc \
     ../shared/shared.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtlabscontrols/chattutorial/chapter2-lists
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/chattutorial/chapter2-lists
 INSTALLS += target
