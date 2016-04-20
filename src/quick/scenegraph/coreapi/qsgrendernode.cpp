@@ -188,8 +188,6 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
   */
 
 /*!
-    \fn void QSGRenderNode::releaseResources()
-
     This function is called when all custom graphics resources allocated by
     this node have to be freed immediately. In case the node does not directly
     allocate graphics resources (buffers, textures, render targets, fences,
@@ -209,6 +207,9 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     With OpenGL, the scenegraph's OpenGL context will be current both when
     calling the destructor and this function.
  */
+void QSGRenderNode::releaseResources()
+{
+}
 
 /*!
     \return pointer to the current model-view matrix.

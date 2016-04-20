@@ -76,7 +76,7 @@ public:
 
     virtual StateFlags changedStates() const;
     virtual void render(const RenderState *state) = 0;
-    virtual void releaseResources() = 0;
+    virtual void releaseResources();
 
     const QMatrix4x4 *matrix() const;
     const QSGClipNode *clipList() const;
