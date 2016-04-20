@@ -65,7 +65,7 @@ void tst_CreationTime::init()
     engine.clearComponentCache();
 }
 
-static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QStringList &skiplist = QStringList())
+static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList())
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
@@ -78,7 +78,7 @@ static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QSt
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
     foreach (const QFileInfo &entry, entries) {
         QString name = entry.baseName();
         if (!skiplist.contains(name)) {
@@ -121,7 +121,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::material()
@@ -133,7 +133,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::universal()
@@ -145,7 +145,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::calendar()
@@ -157,7 +157,7 @@ void tst_CreationTime::calendar()
 void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "calendar");
+    addTestRows(&engine, "calendar", "calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)
