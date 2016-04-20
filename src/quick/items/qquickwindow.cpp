@@ -98,6 +98,7 @@ void QQuickWindowPrivate::updateFocusItemTransform()
         QQuickItemPrivate *focusPrivate = QQuickItemPrivate::get(focus);
         QGuiApplication::inputMethod()->setInputItemTransform(focusPrivate->itemToWindowTransform());
         QGuiApplication::inputMethod()->setInputItemRectangle(QRectF(0, 0, focusPrivate->width, focusPrivate->height));
+        focus->updateInputMethod(Qt::ImInputItemClipRectangle);
     }
 #endif
 }

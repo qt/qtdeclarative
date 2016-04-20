@@ -1842,6 +1842,9 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property, QVarian
     case Qt::ImHints:
         v = (int)d->effectiveInputMethodHints();
         break;
+    case Qt::ImInputItemClipRectangle:
+        v = QQuickItem::inputMethodQuery(property);
+        break;
     default:
         if (property == Qt::ImCursorPosition && !argument.isNull())
             argument = QVariant(argument.toPointF() - QPointF(d->xoff, d->yoff));

@@ -4160,6 +4160,23 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
         if (d->extra.isAllocated() && d->extra->enterKeyAttached)
             v = d->extra->enterKeyAttached->type();
         break;
+    case Qt::ImInputItemClipRectangle:
+        if (!(!window() ||!isVisible() || qFuzzyIsNull(opacity()))) {
+            QRectF rect = QRectF(0,0, width(), height());
+            const QQuickItem *par = this;
+            while (QQuickItem *parpar = par->parentItem()) {
+                rect = parpar->mapRectFromItem(par, rect);
+                if (parpar->clip())
+                    rect = rect.intersected(parpar->clipRect());
+                par = parpar;
+            }
+            rect = par->mapRectToScene(rect);
+            // once we have the rect in scene coordinates, clip to window
+            rect = rect.intersected(QRectF(QPoint(0,0), window()->size()));
+            // map it back to local coordinates
+            v = mapRectFromScene(rect);
+        }
+        break;
     default:
         break;
     }
