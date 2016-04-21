@@ -89,9 +89,9 @@ Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
     ScopedString str(scope);
     ScopedValue v(scope);
-    for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
+    for (int ii = 0, eii = qtMetaObject->enumeratorCount(); ii < eii; ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
-        for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
+        for (int jj = 0, ejj = enumerator.keyCount(); jj < ejj; ++jj) {
             o->put((str = scope.engine->newString(QString::fromUtf8(enumerator.key(jj)))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
         }
     }
