@@ -88,8 +88,6 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-swipedelegate-behind.gif
 
-    \labs
-
     \sa {Customizing SwipeDelegate}
 */
 

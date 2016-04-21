@@ -158,8 +158,6 @@
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
-    \labs
-
     \section1 Attached Property Documentation
 
     \styleproperty {Universal.accent} {color} {accent-attached-prop}

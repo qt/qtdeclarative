@@ -68,8 +68,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \labs
-
     \sa {Customizing Slider}, {Input Controls}
 */
 

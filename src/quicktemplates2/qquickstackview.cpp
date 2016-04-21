@@ -263,8 +263,6 @@ QT_BEGIN_NAMESPACE
           only applies to the root of the item. Using anchors for its children
           works as expected.
 
-    \labs
-
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
 */
 

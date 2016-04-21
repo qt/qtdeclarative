@@ -63,8 +63,6 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     implementations, leaving them to the types that derive from it.
 
     TODO: ButtonGroup usage
-
-    \labs
 */
 
 /*!

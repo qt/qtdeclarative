@@ -74,8 +74,6 @@ QT_BEGIN_NAMESPACE
           this only applies to the root of the item. Specifying width and height,
           or using anchors for its children works as expected.
 
-    \labs
-
     \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls}
 */
 

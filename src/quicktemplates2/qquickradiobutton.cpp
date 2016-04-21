@@ -84,8 +84,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \labs
-
     \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}
 */
 

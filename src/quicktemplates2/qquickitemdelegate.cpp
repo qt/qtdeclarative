@@ -59,8 +59,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-itemdelegate.qml 1
 
-    \labs
-
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 

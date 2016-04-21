@@ -64,8 +64,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-frame.qml 1
 
-    \labs
-
     \sa {Customizing Frame}, {Container Controls}
 */
 

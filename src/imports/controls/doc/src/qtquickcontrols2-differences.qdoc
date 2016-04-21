@@ -164,7 +164,7 @@
     \section3 Preparing for Migration
 
     With this in mind, a good way to prepare for a migration to Qt Quick
-    Labs is to place each control that you have a custom style for in its
+    Controls 2 is to place each control that you have a custom style for in its
     own QML file. For example, the Qt Quick Controls button above could be moved to a
     file named Button.qml, and used in the following manner:
 

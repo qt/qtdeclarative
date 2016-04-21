@@ -111,8 +111,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tooltip-slider.qml 1
 
-    \labs
-
     \sa {Customizing ToolTip}
 */
 

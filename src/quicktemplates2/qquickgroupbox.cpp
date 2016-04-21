@@ -79,8 +79,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-groupbox-checkable.qml 1
 
-    \labs
-
     \sa CheckBox, {Customizing GroupBox}, {Container Controls}
 */
 

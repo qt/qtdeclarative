@@ -73,8 +73,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \labs
-
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
 

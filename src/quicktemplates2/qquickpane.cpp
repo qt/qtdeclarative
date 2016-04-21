@@ -64,8 +64,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-pane.qml 1
 
-    \labs
-
     \sa {Customizing Pane}, {Container Controls}
 */
 

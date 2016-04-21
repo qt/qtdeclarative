@@ -60,8 +60,6 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \labs
-
     \sa {Customizing BusyIndicator}, {Indicator Controls}
 */
 

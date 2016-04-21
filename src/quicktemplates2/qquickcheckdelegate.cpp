@@ -74,8 +74,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \labs
-
     \sa {Customizing CheckDelegate}, {Delegate Controls}
 */
 

@@ -66,8 +66,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \labs
-
     \sa {Customizing SwitchDelegate}, {Delegate Controls}
 */
 

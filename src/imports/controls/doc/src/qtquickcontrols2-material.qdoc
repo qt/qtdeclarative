@@ -199,8 +199,6 @@
     \value Material.Grey \stylecolor {#9E9E9E} {}
     \value Material.BlueGrey \stylecolor {#607D8B} {}
 
-    \labs
-
     \section1 Attached Property Documentation
 
     \styleproperty {Material.accent} {color} {accent-attached-prop}

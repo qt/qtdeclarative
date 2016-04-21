@@ -81,8 +81,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-scrollindicator-active.qml 1
 
-    \labs
-
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */
 

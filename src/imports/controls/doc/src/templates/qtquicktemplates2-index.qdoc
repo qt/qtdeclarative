@@ -30,7 +30,7 @@
     \title Qt Quick Templates 2
     \brief A set of templates to create user interface controls in Qt Quick
 
-    Qt Labs Templates are the foundations of \l {Qt Quick Controls 2}. Templates
+    Qt Quick Templates are the foundations of \l {Qt Quick Controls 2}. Templates
     are non-visual implementations of controls' logic and behavior. They offer
     an interface to visualize the controls in QML using \l {Qt Quick}.
 

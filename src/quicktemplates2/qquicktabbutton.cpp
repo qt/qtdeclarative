@@ -55,8 +55,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tabbutton.qml 1
 
-    \labs
-
     \sa TabBar, {Customizing TabButton}, {Navigation Controls}
 */
 

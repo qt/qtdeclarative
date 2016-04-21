@@ -89,8 +89,6 @@ QT_BEGIN_NAMESPACE
     In order to ensure that a popup is displayed above other items in the
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
-
-    \labs
 */
 
 /*!
@@ -1293,7 +1291,7 @@ QQuickItem *QQuickPopup::popupItem() const
 }
 
 /*!
-    \qmlproperty Item Qt.labs.popups::Popup::parent
+    \qmlproperty Item QtQuick.Controls::Popup::parent
 
     This property holds the parent item.
 */
@@ -1328,7 +1326,7 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.popups::Popup::background
+    \qmlproperty Item QtQuick.Controls::Popup::background
 
     This property holds the background item.
 

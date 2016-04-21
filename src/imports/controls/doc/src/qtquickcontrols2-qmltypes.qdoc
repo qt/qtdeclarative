@@ -49,8 +49,6 @@
     import Qt.labs.calendar 1.0
     \endcode
 
-    \labs
-
     \section1 QML Types
 
     \section2 QtQuick.Controls Module

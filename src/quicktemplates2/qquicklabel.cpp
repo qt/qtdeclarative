@@ -75,8 +75,6 @@ QT_BEGIN_NAMESPACE
      }
     \endqml
 
-    \labs
-
     \sa {Customizing Label}
 */
 

@@ -39,6 +39,8 @@
 
     \generatelist {qmltypesbymodule Qt.labs.calendar}
 
+    \labs
+
     \section1 Related Information
 
     \list
