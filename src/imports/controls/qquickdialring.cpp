@@ -92,6 +92,7 @@ void QQuickDialRing::paint(QPainter *painter)
     const QRectF bounds = boundingRect();
     const qreal smallest = qMin(bounds.width(), bounds.height());
     QRectF rect = QRectF(pen.widthF() / 2.0 + 1, pen.widthF() / 2.0 + 1, smallest - pen.widthF() - 2, smallest - pen.widthF() - 2);
+    rect.moveCenter(bounds.center());
 
     // Make sure the arc is aligned to whole pixels.
     if (rect.x() - int(rect.x()) > 0)
@@ -112,10 +113,10 @@ void QQuickDialRing::paint(QPainter *painter)
     path.arcTo(rect, startAngle, spanAngle);
     painter->drawPath(path);
 
+    rect.adjust(-pen.widthF() / 2.0, -pen.widthF() / 2.0, pen.widthF() / 2.0, pen.widthF() / 2.0);
     pen.setWidth(1);
     painter->setPen(pen);
 
-    rect = QRectF(1, 1, width() - 2, height() - 2);
     path = QPainterPath();
     path.arcMoveTo(rect, 0);
     path.arcTo(rect, 0, 360);

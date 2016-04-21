@@ -66,7 +66,7 @@ T.Dial {
         opacity: control.enabled ? 1 : 0.3
         transform: [
             Translate {
-                y: -background.height * 0.4 + handle.height / 2
+                y: -Math.min(background.width, background.height) * 0.4 + handle.height / 2
             },
             Rotation {
                 angle: control.angle
