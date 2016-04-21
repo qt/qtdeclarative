@@ -150,7 +150,7 @@ QString QQuickStyle::path()
 }
 
 /*!
-    Sets the application style.
+    Sets the application style to \a style.
 
     \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
           It is not possible to change the style after the QML types have been registered.
