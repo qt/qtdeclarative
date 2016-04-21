@@ -15,6 +15,7 @@ SUBDIRS =   quick-accessibility \
             scenegraph \
             shadereffects \
             text \
+            textureprovider \
             threading \
             touchinteraction \
             tutorials \
