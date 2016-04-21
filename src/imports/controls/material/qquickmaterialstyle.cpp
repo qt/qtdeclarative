@@ -1090,14 +1090,14 @@ void QQuickMaterialStyle::init()
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
 
         bool ok = false;
-        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
+        QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
         Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
         if (ok)
             defaultTheme = m_theme = themeEnum;
         else if (!themeValue.isEmpty())
             qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
 
-        QByteArray primaryValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
+        QByteArray primaryValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
         Color primaryEnum = toEnumValue<Color>(primaryValue, &ok);
         if (ok) {
             defaultPrimaryCustom = m_customPrimary = false;
@@ -1112,7 +1112,7 @@ void QQuickMaterialStyle::init()
             }
         }
 
-        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
+        QByteArray accentValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
         Color accentEnum = toEnumValue<Color>(accentValue, &ok);
         if (ok) {
             defaultAccentCustom = m_customAccent = false;
@@ -1127,7 +1127,7 @@ void QQuickMaterialStyle::init()
             }
         }
 
-        QByteArray foregroundValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+        QByteArray foregroundValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND", settings, QStringLiteral("Foreground"));
         Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
         if (ok) {
             defaultForegroundCustom = m_customForeground = false;
@@ -1142,7 +1142,7 @@ void QQuickMaterialStyle::init()
             }
         }
 
-        QByteArray backgroundValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_BACKGROUND", settings, QStringLiteral("Background"));
+        QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND", settings, QStringLiteral("Background"));
         Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
         if (ok) {
             defaultBackgroundCustom = m_customBackground = false;

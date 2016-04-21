@@ -133,26 +133,26 @@
             \li Variable
             \li Description
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_THEME
+            \li \c QT_QUICK_CONTROLS_MATERIAL_THEME
             \li The value can be one of the available \l {theme-attached-prop}{themes},
                 for example \c "Dark".
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_ACCENT
+            \li \c QT_QUICK_CONTROLS_MATERIAL_ACCENT
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the \l {Pre-defined Colors}{pre-defined colors}, for example
                 for example \c "Teal".
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_PRIMARY
+            \li \c QT_QUICK_CONTROLS_MATERIAL_PRIMARY
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the \l {Pre-defined Colors}{pre-defined colors}, for example
                 for example \c "BlueGrey".
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_FOREGROUND
+            \li \c QT_QUICK_CONTROLS_MATERIAL_FOREGROUND
             \li The value can be any \l {colorbasictypedocs}{color}, or one of the
                 \l {Pre-defined Colors}{pre-defined colors}.
 
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_BACKGROUND
+            \li \c QT_QUICK_CONTROLS_MATERIAL_BACKGROUND
             \li The value can be any \l {colorbasictypedocs}{color}, or one of the
                 \l {Pre-defined Colors}{pre-defined colors}.
     \endtable

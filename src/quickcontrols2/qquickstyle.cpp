@@ -109,7 +109,7 @@ struct QQuickStyleSpec
     {
         style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
-            style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
+            style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
         if (style.isEmpty()) {
             QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
             if (settings)

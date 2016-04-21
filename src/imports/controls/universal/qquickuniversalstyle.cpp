@@ -522,14 +522,14 @@ void QQuickUniversalStyle::init()
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Universal"));
 
         bool ok = false;
-        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
+        QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
         Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
         if (ok)
             DefaultTheme = m_theme = themeEnum;
         else if (!themeValue.isEmpty())
             qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
 
-        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
+        QByteArray accentValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
         Color accentEnum = toEnumValue<Color>(accentValue, &ok);
         if (ok) {
             DefaultAccent = m_accent = qquickuniversal_accent_color(accentEnum);
@@ -541,7 +541,7 @@ void QQuickUniversalStyle::init()
                 qWarning().nospace().noquote() << "Universal: unknown accent value: " << accentValue;
         }
 
-        QByteArray foregroundValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+        QByteArray foregroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND", settings, QStringLiteral("Foreground"));
         Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
         if (ok) {
             DefaultForeground = m_foreground = qquickuniversal_accent_color(foregroundEnum);
@@ -553,7 +553,7 @@ void QQuickUniversalStyle::init()
                 qWarning().nospace().noquote() << "Universal: unknown foreground value: " << foregroundValue;
         }
 
-        QByteArray backgroundValue = resolveSetting("QT_LABS_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
+        QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
         Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
         if (ok) {
             DefaultBackground = m_background = qquickuniversal_accent_color(backgroundEnum);

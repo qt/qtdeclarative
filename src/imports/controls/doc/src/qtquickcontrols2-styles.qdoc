@@ -82,13 +82,13 @@
 
     \section2 Environment variable
 
-    Setting the \c QT_LABS_CONTROLS_STYLE environment variable can be used to set
+    Setting the \c QT_QUICK_CONTROLS_STYLE environment variable can be used to set
     a system-wide style preference. It takes precedence over the configuration file
     mentioned below. The following example runs a Qt Quick Controls 2 application with
     the Universal style:
 
     \code
-    QT_LABS_CONTROLS_STYLE=universal ./app
+    QT_QUICK_CONTROLS_STYLE=universal ./app
     \endcode
 
     \section2 Configuration file
