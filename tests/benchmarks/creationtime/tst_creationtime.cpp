@@ -84,7 +84,7 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
         if (!skiplist.contains(name)) {
             foreach (const QString &importPath, engine->importPathList()) {
                 QString name = entry.dir().dirName() + "/" + entry.fileName();
-                QString filePath = importPath + "/Qt/labs/" + targetPath + "/" + entry.fileName();
+                QString filePath = importPath + "/" + targetPath + "/" + entry.fileName();
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
@@ -121,7 +121,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "Qt/labs/controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::material()
@@ -133,7 +133,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "Qt/labs/controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::universal()
@@ -145,7 +145,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", "controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", "Qt/labs/controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::calendar()
@@ -157,7 +157,7 @@ void tst_CreationTime::calendar()
 void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "calendar", "calendar");
+    addTestRows(&engine, "calendar", "Qt/labs/calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)
