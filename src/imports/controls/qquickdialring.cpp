@@ -86,6 +86,7 @@ void QQuickDialRing::paint(QPainter *painter)
 
     QPen pen(m_color);
     pen.setWidth(8);
+    pen.setCapStyle(Qt::FlatCap);
     painter->setPen(pen);
 
     const QRectF bounds = boundingRect();
@@ -104,13 +105,21 @@ void QQuickDialRing::paint(QPainter *painter)
 
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const qreal startAngle = (140 + 90) * 16;
-    const qreal spanAngle = (m_progress * 280) * -16;
-    painter->drawArc(rect, startAngle, spanAngle);
+    const qreal startAngle = (140 + 90);
+    const qreal spanAngle = (m_progress * 280) * -1;
+    QPainterPath path;
+    path.arcMoveTo(rect, startAngle);
+    path.arcTo(rect, startAngle, spanAngle);
+    painter->drawPath(path);
 
     pen.setWidth(1);
     painter->setPen(pen);
-    painter->drawArc(QRect(1, 1, width() - 2, height() - 2), 0, 360 * 16);
+
+    rect = QRectF(1, 1, width() - 2, height() - 2);
+    path = QPainterPath();
+    path.arcMoveTo(rect, 0);
+    path.arcTo(rect, 0, 360);
+    painter->drawPath(path);
 }
 
 QT_END_NAMESPACE
