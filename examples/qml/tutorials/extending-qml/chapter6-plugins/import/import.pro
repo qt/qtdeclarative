@@ -20,6 +20,8 @@ qmldir.files=$$PWD/qmldir
 qmldir.path=$$DESTPATH
 INSTALLS += target qmldir
 
+CONFIG += install_ok  # Do not cargo-cult this!
+
 OTHER_FILES += qmldir
 
 # Copy the qmldir file to the same folder as the plugin binary

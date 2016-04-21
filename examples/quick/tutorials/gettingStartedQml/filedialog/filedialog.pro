@@ -18,9 +18,11 @@ SOURCES += \
         file.cpp \
         dialogPlugin.cpp
 
-OTHER_FILES += qmldir
+EXAMPLE_FILES += qmldir
 
 # Copy the qmldir file to the same folder as the plugin binary
 cpqmldir.files = $$PWD/qmldir
 cpqmldir.path = $$DESTDIR
 COPIES += cpqmldir
+
+CONFIG += install_ok  # Do not cargo-cult this!
