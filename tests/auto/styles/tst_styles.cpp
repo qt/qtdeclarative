@@ -38,7 +38,7 @@
 #include <QtCore/qprocess.h>
 #include <QtQuickTest/quicktest.h>
 
-static const char* styles[] = { "material", "universal" };
+static const char* styles[] = { "Material", "Universal" };
 
 int main(int argc, char *argv[])
 {
