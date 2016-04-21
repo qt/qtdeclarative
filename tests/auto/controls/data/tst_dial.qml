@@ -179,6 +179,7 @@ TestCase {
     }
 
     function test_dragging(data) {
+        dial.wrap = true;
         verify(dial.wrap);
         dial.from = data.from;
         dial.to = data.to;
@@ -212,7 +213,7 @@ TestCase {
     }
 
     function test_nonWrapping() {
-        dial.wrap = false;
+        compare(dial.wrap, false);
         dial.value = 0;
 
         // Ensure that dragging from bottom left to bottom right doesn't work.

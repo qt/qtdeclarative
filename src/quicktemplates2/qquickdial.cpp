@@ -95,7 +95,7 @@ public:
         stepSize(0),
         pressed(false),
         snapMode(QQuickDial::NoSnap),
-        wrap(true),
+        wrap(false),
         handle(nullptr)
     {
     }
@@ -373,7 +373,7 @@ void QQuickDial::setSnapMode(SnapMode mode)
 
     \image qtquickcontrols2-dial-no-wrap.gif
 
-    The default value is \c true.
+    The default value is \c false.
 */
 bool QQuickDial::wrap() const
 {

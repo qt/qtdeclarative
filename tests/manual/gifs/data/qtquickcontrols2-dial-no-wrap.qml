@@ -51,7 +51,6 @@ Window {
 
     Dial {
         id: dial
-        wrap: false
         anchors.centerIn: parent
     }
 }
