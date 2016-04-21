@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule Qt.labs.templates 1.0
+    \qmlmodule QtQuick.Templates 2.0
     \title Qt Quick Templates 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for templates (Qt Labs Templates).
@@ -38,7 +38,7 @@
     \c .qml file:
 
     \badcode
-    import Qt.labs.templates 1.0 as T
+    import QtQuick.Templates 2.0 as T
     \endcode
 
     \labs
