@@ -5,12 +5,12 @@
 /lib
 /mkspecs
 
-/examples/controls/chattutorial/chapter1-settingup/chapter1-settingup
-/examples/controls/chattutorial/chapter2-lists/chapter2-lists
-/examples/controls/chattutorial/chapter3-navigation/chapter3-navigation
-/examples/controls/chattutorial/chapter4-models/chapter4-models
-/examples/controls/chattutorial/chapter5-styling/chapter5-styling
-/examples/controls/gallery/gallery
+/examples/quickcontrols2/chattutorial/chapter1-settingup/chapter1-settingup
+/examples/quickcontrols2/chattutorial/chapter2-lists/chapter2-lists
+/examples/quickcontrols2/chattutorial/chapter3-navigation/chapter3-navigation
+/examples/quickcontrols2/chattutorial/chapter4-models/chapter4-models
+/examples/quickcontrols2/chattutorial/chapter5-styling/chapter5-styling
+/examples/quickcontrols2/gallery/gallery
 
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/applicationwindow/tst_applicationwindow
