@@ -48,7 +48,7 @@ static inline void initResources()
 {
     Q_INIT_RESOURCE(qtquickuniversalstyleplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_controls_universal);
+    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Universal);
 #endif
 }
 
@@ -76,7 +76,7 @@ QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQui
 
 void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 1, 0, "Universal", tr("Universal is an attached property"));
+    qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
 }
 
 void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -86,14 +86,14 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
     engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterType<QQuickUniversalFocusRectangle>(import, 1, 0, "FocusRectangle");
-    qmlRegisterType<QQuickUniversalProgressRing>(import, 1, 0, "ProgressRing");
-    qmlRegisterType<QQuickUniversalProgressRingAnimator>(import, 1, 0, "ProgressRingAnimator");
-    qmlRegisterType<QQuickUniversalProgressStrip>(import, 1, 0, "ProgressStrip");
-    qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 1, 0, "ProgressStripAnimator");
+    qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");
+    qmlRegisterType<QQuickUniversalProgressRing>(import, 2, 0, "ProgressRing");
+    qmlRegisterType<QQuickUniversalProgressRingAnimator>(import, 2, 0, "ProgressRingAnimator");
+    qmlRegisterType<QQuickUniversalProgressStrip>(import, 2, 0, "ProgressStrip");
+    qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 2, 0, "ProgressStripAnimator");
 
-    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 1, 0, "RadioIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QString QtQuickUniversalStylePlugin::name() const

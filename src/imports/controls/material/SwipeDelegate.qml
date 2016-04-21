@@ -36,8 +36,8 @@
 
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
+import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 T.SwipeDelegate {
     id: control

@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls.material 1.0
+import QtQuick.Controls.Material 2.0
 
 Rectangle {
     property Item control

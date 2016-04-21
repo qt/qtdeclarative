@@ -48,7 +48,7 @@ static inline void initResources()
 {
     Q_INIT_RESOURCE(qtquickmaterialstyleplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_controls_material);
+    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Material);
 #endif
 }
 
@@ -76,7 +76,7 @@ QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQuick
 
 void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", tr("Material is an attached property"));
+    qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
 }
 
 void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -84,15 +84,15 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterType<QQuickPaddedRectangle>(import, 1, 0, "PaddedRectangle");
-    qmlRegisterType<QQuickMaterialProgressRing>(import, 1, 0, "ProgressRing");
-    qmlRegisterType<QQuickMaterialProgressStrip>(import, 1, 0, "ProgressStrip");
-    qmlRegisterType<QQuickMaterialRingAnimator>(import, 1, 0, "RingAnimator");
-    qmlRegisterType<QQuickMaterialStripAnimator>(import, 1, 0, "StripAnimator");
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 1, 0, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("Ripple.qml")), import, 1, 0, "Ripple");
-    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 1, 0, "SliderHandle");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 1, 0, "SwitchIndicator");
+    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
+    qmlRegisterType<QQuickMaterialProgressRing>(import, 2, 0, "ProgressRing");
+    qmlRegisterType<QQuickMaterialProgressStrip>(import, 2, 0, "ProgressStrip");
+    qmlRegisterType<QQuickMaterialRingAnimator>(import, 2, 0, "RingAnimator");
+    qmlRegisterType<QQuickMaterialStripAnimator>(import, 2, 0, "StripAnimator");
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("Ripple.qml")), import, 2, 0, "Ripple");
+    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QString QtQuickMaterialStylePlugin::name() const

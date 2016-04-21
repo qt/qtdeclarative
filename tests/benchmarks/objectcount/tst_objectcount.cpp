@@ -84,7 +84,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import Qt.labs.controls 1.0; Item { Button {} }", QUrl());
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.0; Item { Button {} }", QUrl());
     delete component.create();
 }
 
@@ -110,7 +110,7 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
     // dir would be added as an "implicit" import path overriding the actual import
-    // path (qtbase/qml/Qt/labs/controls/material). => The QML engine fails to load
+    // path (qtbase/qml/QtQuick/Controls.2/Material). => The QML engine fails to load
     // the style C++ plugin from the implicit import path (the source dir).
     //
     // Therefore we only use the source tree for finding out the set of QML files that
@@ -177,7 +177,7 @@ void tst_ObjectCount::controls()
 void tst_ObjectCount::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "Qt/labs/controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_ObjectCount::material()
@@ -189,7 +189,7 @@ void tst_ObjectCount::material()
 void tst_ObjectCount::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "Qt/labs/controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_ObjectCount::universal()
@@ -201,7 +201,7 @@ void tst_ObjectCount::universal()
 void tst_ObjectCount::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", "Qt/labs/controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_ObjectCount)

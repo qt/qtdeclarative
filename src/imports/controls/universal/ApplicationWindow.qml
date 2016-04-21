@@ -36,8 +36,8 @@
 
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
-import Qt.labs.controls.universal 1.0
-import Qt.labs.controls.universal.impl 1.0
+import QtQuick.Controls.Universal 2.0
+import QtQuick.Controls.Universal.impl 2.0
 
 T.ApplicationWindow {
     id: window

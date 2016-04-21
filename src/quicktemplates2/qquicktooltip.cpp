@@ -403,7 +403,7 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
         QQmlContext *context = qmlContext(parent);
         if (context) {
             QQmlComponent component(context->engine());
-            component.setData("import Qt.labs.controls 1.0; ToolTip { }", QUrl());
+            component.setData("import QtQuick.Controls 2.0; ToolTip { }", QUrl());
 
             QObject *object = component.create(context);
             tip = qobject_cast<QQuickToolTip *>(object);

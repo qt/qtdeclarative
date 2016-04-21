@@ -1,6 +1,6 @@
 TARGET = qtquickmaterialstyleplugin
-TARGETPATH = Qt/labs/controls/material
-IMPORT_VERSION = 1.0
+TARGETPATH = QtQuick/Controls.2/Material
+IMPORT_VERSION = 2.0
 
 QT += qml quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private

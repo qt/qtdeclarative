@@ -39,7 +39,7 @@
     using the following import statement in your .qml file:
 
     \badcode
-    import Qt.labs.controls 1.0
+    import QtQuick.Controls 2.0
     \endcode
 
     The calendar related QML types can be imported using the

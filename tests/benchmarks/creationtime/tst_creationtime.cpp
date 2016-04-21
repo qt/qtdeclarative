@@ -70,7 +70,7 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
     // dir would be added as an "implicit" import path overriding the actual import
-    // path (qtbase/qml/Qt/labs/controls/material). => The QML engine fails to load
+    // path (qtbase/qml/QtQuick/Controls.2/Material). => The QML engine fails to load
     // the style C++ plugin from the implicit import path (the source dir).
     //
     // Therefore we only use the source tree for finding out the set of QML files that
@@ -121,7 +121,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "Qt/labs/controls", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::material()
@@ -133,7 +133,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "Qt/labs/controls/material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::universal()
@@ -145,7 +145,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", "Qt/labs/controls/universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::calendar()

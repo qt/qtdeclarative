@@ -35,9 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 import QtQuick.Templates 2.0 as T
-import Qt.labs.controls.material 1.0
+import QtQuick.Controls.Material 2.0
 
 T.Tumbler {
     id: control

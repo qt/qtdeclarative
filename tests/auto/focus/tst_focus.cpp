@@ -124,7 +124,7 @@ void tst_focus::policy()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import Qt.labs.controls 1.0; ApplicationWindow { width: 100; height: 100; Button { anchors.fill: parent } }", QUrl());
+    component.setData("import QtQuick.Controls 2.0; ApplicationWindow { width: 100; height: 100; Button { anchors.fill: parent } }", QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window);
@@ -206,7 +206,7 @@ void tst_focus::reason()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import Qt.labs.controls 1.0; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Controls 2.0; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window.data());

@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls.universal 1.0
+import QtQuick.Controls.Universal 2.0
 
 Rectangle {
     implicitWidth: 20

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.5
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 Item {
     id: main
