@@ -942,12 +942,12 @@ TestCase {
         closedSpy.target = control
 
         control.open()
-        verify(control.visible)
+        tryCompare(control, "visible", true)
         compare(openedSpy.count, 1)
         compare(closedSpy.count, 0)
 
         control.close()
-        verify(!control.visible)
+        tryCompare(control, "visible", false)
         compare(openedSpy.count, 1)
         compare(closedSpy.count, 1)
 
