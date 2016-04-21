@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 SUBDIRS += \
         customgeometry \
+        graph \
         openglunderqml \
         sgengine \
         simplematerial \
