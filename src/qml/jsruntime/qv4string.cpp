@@ -46,6 +46,7 @@
 #include "qv4stringobject_p.h"
 #endif
 #include <QtCore/QHash>
+#include <QtCore/private/qnumeric_p.h>
 
 using namespace QV4;
 
@@ -69,11 +70,8 @@ static inline uint toArrayIndex(const T *ch, const T *end)
         uint x = toUInt(ch) - '0';
         if (x > 9)
             return UINT_MAX;
-        uint n = i*10 + x;
-        if (n < i)
-            // overflow
+        if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i))
             return UINT_MAX;
-        i = n;
         ++ch;
     }
     return i;
