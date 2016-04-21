@@ -4,6 +4,7 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    drawer \
     material \
     menu \
     popup \

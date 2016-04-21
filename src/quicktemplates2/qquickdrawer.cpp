@@ -116,15 +116,19 @@ public:
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickDrawer);
+    QQuickWindow *window = q->window();
+    if (!window)
+        return 0;
+
     switch (edge) {
     case Qt::TopEdge:
         return point.y() / q->height();
     case Qt::LeftEdge:
         return point.x() / q->width();
     case Qt::RightEdge:
-        return (q->width() - point.x()) / popupItem->width();
+        return (window->width() - point.x()) / q->width();
     case Qt::BottomEdge:
-        return (q->height() - point.y()) / popupItem->height();
+        return (window->height() - point.y()) / q->height();
     default:
         return 0;
     }

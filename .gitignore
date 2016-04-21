@@ -16,6 +16,7 @@
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/tst_controls
+/tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/material/tst_material
 /tests/auto/menu/tst_menu
