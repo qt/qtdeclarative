@@ -119,7 +119,7 @@ tst_librarymetrics_performance::~tst_librarymetrics_performance()
 
 static QUrl testFileUrl(const char * filename)
 {
-    return QUrl::fromLocalFile(QString(QLatin1String(filename)));
+    return QUrl(QLatin1String("qrc:///") + QLatin1String(filename));
 }
 
 void tst_librarymetrics_performance::metrics_data()
