@@ -429,11 +429,13 @@ InternalClass *InternalClass::propertiesFrozen() const
 
 void InternalClass::destroy()
 {
-    QList<InternalClass *> destroyStack;
-    destroyStack.append(this);
+    std::vector<InternalClass *> destroyStack;
+    destroyStack.reserve(64);
+    destroyStack.push_back(this);
 
-    while (!destroyStack.isEmpty()) {
-        InternalClass *next = destroyStack.takeLast();
+    while (!destroyStack.empty()) {
+        InternalClass *next = destroyStack.back();
+        destroyStack.pop_back();
         if (!next->engine)
             continue;
         next->engine = 0;
@@ -441,13 +443,13 @@ void InternalClass::destroy()
         next->nameMap.~SharedInternalClassData<Identifier *>();
         next->propertyData.~SharedInternalClassData<PropertyAttributes>();
         if (next->m_sealed)
-            destroyStack.append(next->m_sealed);
+            destroyStack.push_back(next->m_sealed);
         if (next->m_frozen)
-            destroyStack.append(next->m_frozen);
+            destroyStack.push_back(next->m_frozen);
 
         for (size_t i = 0; i < next->transitions.size(); ++i) {
             Q_ASSERT(next->transitions.at(i).lookup);
-            destroyStack.append(next->transitions.at(i).lookup);
+            destroyStack.push_back(next->transitions.at(i).lookup);
         }
 
         next->transitions.~vector<Transition>();
