@@ -59,6 +59,7 @@ TestCase {
         var control = drawer.createObject(testCase)
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
+        compare(control.dragMargin, Qt.styleHints.startDragDistance)
         control.destroy()
     }
 

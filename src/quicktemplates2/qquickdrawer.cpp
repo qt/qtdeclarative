@@ -92,7 +92,8 @@ class QQuickDrawerPrivate : public QQuickPopupPrivate, public QQuickItemChangeLi
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
 public:
-    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0) { }
+    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0),
+        dragMargin(QGuiApplication::styleHints()->startDragDistance()) { }
 
     qreal positionAt(const QPointF &point) const;
     void reposition() override;
@@ -109,6 +110,7 @@ public:
     Qt::Edge edge;
     qreal offset;
     qreal position;
+    qreal dragMargin;
     QPointF pressPoint;
     QQuickVelocityCalculator velocityCalculator;
 };
@@ -175,16 +177,16 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
         // only accept pressing at drag margins when fully closed
         switch (edge) {
         case Qt::LeftEdge:
-            event->setAccepted(!dragOverThreshold(event->windowPos().x(), Qt::XAxis, event));
+            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, dragMargin));
             break;
         case Qt::RightEdge:
-            event->setAccepted(!dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event));
+            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event, dragMargin));
             break;
         case Qt::TopEdge:
-            event->setAccepted(!dragOverThreshold(event->windowPos().y(), Qt::YAxis, event));
+            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, dragMargin));
             break;
         case Qt::BottomEdge:
-            event->setAccepted(!dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event));
+            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event, dragMargin));
             break;
         }
     } else {
@@ -389,6 +391,36 @@ void QQuickDrawer::setPosition(qreal position)
     if (isComponentComplete())
         d->reposition();
     emit positionChanged();
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::Drawer::dragMargin
+
+    This property holds the distance from the screen edge within which
+    drag actions will open the drawer. Setting the value to \c 0 or less
+    prevents opening the drawer by dragging.
+
+    The default value is \c Qt.styleHints.startDragDistance.
+*/
+qreal QQuickDrawer::dragMargin() const
+{
+    Q_D(const QQuickDrawer);
+    return d->dragMargin;
+}
+
+void QQuickDrawer::setDragMargin(qreal margin)
+{
+    Q_D(QQuickDrawer);
+    if (qFuzzyCompare(d->dragMargin, margin))
+        return;
+
+    d->dragMargin = margin;
+    emit dragMarginChanged();
+}
+
+void QQuickDrawer::resetDragMargin()
+{
+    setDragMargin(QGuiApplication::styleHints()->startDragDistance());
 }
 
 bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)

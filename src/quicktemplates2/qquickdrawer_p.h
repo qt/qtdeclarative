@@ -59,6 +59,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickDrawer : public QQuickPopup
     Q_OBJECT
     Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin RESET resetDragMargin NOTIFY dragMarginChanged FINAL)
 
 public:
     explicit QQuickDrawer(QObject *parent = nullptr);
@@ -69,9 +70,14 @@ public:
     qreal position() const;
     void setPosition(qreal position);
 
+    qreal dragMargin() const;
+    void setDragMargin(qreal margin);
+    void resetDragMargin();
+
 Q_SIGNALS:
     void edgeChanged();
     void positionChanged();
+    void dragMarginChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;

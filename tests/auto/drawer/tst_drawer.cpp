@@ -39,6 +39,8 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 
@@ -51,6 +53,9 @@ class tst_Drawer : public QQmlDataTest
 private slots:
     void position_data();
     void position();
+
+    void dragMargin_data();
+    void dragMargin();
 };
 
 void tst_Drawer::position_data()
@@ -88,6 +93,61 @@ void tst_Drawer::position()
     QTest::mouseMove(window, to);
     QCOMPARE(drawer->position(), position);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+}
+
+void tst_Drawer::dragMargin_data()
+{
+    QTest::addColumn<Qt::Edge>("edge");
+    QTest::addColumn<qreal>("dragMargin");
+    QTest::addColumn<qreal>("dragFromLeft");
+    QTest::addColumn<qreal>("dragFromRight");
+
+    QTest::newRow("left:0") << Qt::LeftEdge << qreal(0) << qreal(0) << qreal(0);
+    QTest::newRow("left:-1") << Qt::LeftEdge << qreal(-1) << qreal(0) << qreal(0);
+    QTest::newRow("left:startDragDistance") << Qt::LeftEdge << qreal(QGuiApplication::styleHints()->startDragDistance()) << qreal(0.25) << qreal(0);
+    QTest::newRow("left:startDragDistance*2") << Qt::LeftEdge << qreal(QGuiApplication::styleHints()->startDragDistance() * 2) << qreal(0.25) << qreal(0);
+
+    QTest::newRow("right:0") << Qt::RightEdge << qreal(0) << qreal(0) << qreal(0);
+    QTest::newRow("right:-1") << Qt::RightEdge << qreal(-1) << qreal(0) << qreal(0);
+    QTest::newRow("right:startDragDistance") << Qt::RightEdge << qreal(QGuiApplication::styleHints()->startDragDistance()) << qreal(0) << qreal(0.75);
+    QTest::newRow("right:startDragDistance*2") << Qt::RightEdge << qreal(QGuiApplication::styleHints()->startDragDistance() * 2) << qreal(0) << qreal(0.75);
+}
+
+void tst_Drawer::dragMargin()
+{
+    QFETCH(Qt::Edge, edge);
+    QFETCH(qreal, dragMargin);
+    QFETCH(qreal, dragFromLeft);
+    QFETCH(qreal, dragFromRight);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    drawer->setEdge(edge);
+    drawer->setDragMargin(dragMargin);
+
+    // drag from the left
+    int leftX = qMax<int>(0, dragMargin);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftX, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(drawer->width() * 0.25, drawer->height() / 2));
+    QCOMPARE(drawer->position(), dragFromLeft);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(drawer->width() * 0.25, drawer->height() / 2));
+
+    drawer->close();
+    QTRY_COMPARE(drawer->position(), qreal(0.0));
+
+    // drag from the right
+    int rightX = qMin<int>(window->width() - 1, window->width() - dragMargin);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(rightX, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(window->width() - drawer->width() * 0.75, drawer->height() / 2));
+    QCOMPARE(drawer->position(), dragFromRight);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - drawer->width() * 0.75, drawer->height() / 2));
 }
 
 QTEST_MAIN(tst_Drawer)
