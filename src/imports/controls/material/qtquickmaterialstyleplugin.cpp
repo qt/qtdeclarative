@@ -48,7 +48,7 @@ static inline void initResources()
 {
     Q_INIT_RESOURCE(qtquickmaterialstyleplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Material);
+    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Material_2);
 #endif
 }
 

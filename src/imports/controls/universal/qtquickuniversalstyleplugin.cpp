@@ -48,7 +48,7 @@ static inline void initResources()
 {
     Q_INIT_RESOURCE(qtquickuniversalstyleplugin);
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Universal);
+    Q_INIT_RESOURCE(qmake_QtQuick_Controls_Universal_2);
 #endif
 }
 
