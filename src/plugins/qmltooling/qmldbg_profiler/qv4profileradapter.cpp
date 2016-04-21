@@ -61,29 +61,35 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QVector<QV4::Profiling::FunctionCallProperties>,
+    connect(engine->profiler, SIGNAL(dataReady(QV4::Profiling::FunctionLocationHash,
+                                               QVector<QV4::Profiling::FunctionCallProperties>,
                                                QVector<QV4::Profiling::MemoryAllocationProperties>)),
-            this, SLOT(receiveData(QVector<QV4::Profiling::FunctionCallProperties>,
+            this, SLOT(receiveData(QV4::Profiling::FunctionLocationHash,
+                                   QVector<QV4::Profiling::FunctionCallProperties>,
                                    QVector<QV4::Profiling::MemoryAllocationProperties>)));
 }
 
 qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages,
                                               QQmlDebugPacket &d)
 {
-    while (m_memoryData.length() > m_memoryPos && m_memoryData[m_memoryPos].timestamp <= until) {
-        QV4::Profiling::MemoryAllocationProperties &props = m_memoryData[m_memoryPos];
+    // Make it const, so that we cannot accidentally detach it.
+    const QVector<QV4::Profiling::MemoryAllocationProperties> &memoryData = m_memoryData;
+
+    while (memoryData.length() > m_memoryPos && memoryData[m_memoryPos].timestamp <= until) {
+        const QV4::Profiling::MemoryAllocationProperties &props = memoryData[m_memoryPos];
         d << props.timestamp << MemoryAllocation << props.type << props.size;
         ++m_memoryPos;
         messages.append(d.squeezedData());
         d.clear();
     }
-    return m_memoryData.length() == m_memoryPos ? -1 : m_memoryData[m_memoryPos].timestamp;
+    return memoryData.length() == m_memoryPos ? -1 : memoryData[m_memoryPos].timestamp;
 }
 
 qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &messages,
                                             qint64 callNext, QQmlDebugPacket &d)
 {
     if (callNext == -1) {
+        m_functionLocations.clear();
         m_functionCallData.clear();
         m_functionCallPos = 0;
     }
@@ -102,10 +108,15 @@ qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &mes
 qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     QQmlDebugPacket d;
+
+    // Make it const, so that we cannot accidentally detach it.
+    const QVector<QV4::Profiling::FunctionCallProperties> &functionCallData = m_functionCallData;
+    const QV4::Profiling::FunctionLocationHash &functionLocations = m_functionLocations;
+
     while (true) {
         while (!m_stack.isEmpty() &&
-               (m_functionCallPos == m_functionCallData.length() ||
-                m_stack.top() <= m_functionCallData[m_functionCallPos].start)) {
+               (m_functionCallPos == functionCallData.length() ||
+                m_stack.top() <= functionCallData[m_functionCallPos].start)) {
             if (m_stack.top() > until || messages.length() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, m_stack.top(), d);
 
@@ -114,39 +125,46 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             messages.append(d.squeezedData());
             d.clear();
         }
-        while (m_functionCallPos != m_functionCallData.length() &&
-               (m_stack.empty() || m_functionCallData[m_functionCallPos].start < m_stack.top())) {
+        while (m_functionCallPos != functionCallData.length() &&
+               (m_stack.empty() || functionCallData[m_functionCallPos].start < m_stack.top())) {
             const QV4::Profiling::FunctionCallProperties &props =
-                    m_functionCallData[m_functionCallPos];
+                    functionCallData[m_functionCallPos];
             if (props.start > until || messages.length() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, props.start, d);
 
             appendMemoryEvents(props.start, messages, d);
+            auto location = functionLocations.constFind(props.id);
+            Q_ASSERT(location != functionLocations.constEnd());
 
             d << props.start << RangeStart << Javascript;
             messages.push_back(d.squeezedData());
             d.clear();
-            d << props.start << RangeLocation << Javascript << props.file << props.line
-              << props.column;
+            d << props.start << RangeLocation << Javascript << location->file << location->line
+              << location->column;
             messages.push_back(d.squeezedData());
             d.clear();
-            d << props.start << RangeData << Javascript << props.name;
+            d << props.start << RangeData << Javascript << location->name;
             messages.push_back(d.squeezedData());
             d.clear();
             m_stack.push(props.end);
             ++m_functionCallPos;
         }
-        if (m_stack.empty() && m_functionCallPos == m_functionCallData.length())
+        if (m_stack.empty() && m_functionCallPos == functionCallData.length())
             return finalizeMessages(until, messages, -1, d);
     }
 }
 
 void QV4ProfilerAdapter::receiveData(
+        const QV4::Profiling::FunctionLocationHash &locations,
         const QVector<QV4::Profiling::FunctionCallProperties> &functionCallData,
         const QVector<QV4::Profiling::MemoryAllocationProperties> &memoryData)
 {
     // In rare cases it could be that another flush or stop event is processed while data from
     // the previous one is still pending. In that case we just append the data.
+    if (m_functionLocations.isEmpty())
+        m_functionLocations = locations;
+    else
+        m_functionLocations.unite(locations);
 
     if (m_functionCallData.isEmpty())
         m_functionCallData = functionCallData;
