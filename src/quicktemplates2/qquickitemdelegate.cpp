@@ -64,11 +64,13 @@ QT_BEGIN_NAMESPACE
 
 QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) : QQuickAbstractButton(parent)
 {
+    setFocusPolicy(Qt::NoFocus);
 }
 
 QQuickItemDelegate::QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent) :
     QQuickAbstractButton(dd, parent)
 {
+    setFocusPolicy(Qt::NoFocus);
 }
 
 QFont QQuickItemDelegate::defaultFont() const

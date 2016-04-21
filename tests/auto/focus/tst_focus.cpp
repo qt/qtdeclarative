@@ -124,7 +124,7 @@ void tst_focus::policy()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.0; ApplicationWindow { width: 100; height: 100; Button { anchors.fill: parent } }", QUrl());
+    component.setData("import QtQuick.Controls 2.0; ApplicationWindow { width: 100; height: 100; Control { anchors.fill: parent } }", QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window);
@@ -161,6 +161,7 @@ void tst_focus::policy()
     QVERIFY(!control->hasActiveFocus());
 
     // Qt::ClickFocus
+    control->setAcceptedMouseButtons(Qt::LeftButton);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(!control->hasActiveFocus());
     QVERIFY(!control->hasActiveKeyFocus());

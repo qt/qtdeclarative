@@ -210,6 +210,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
     QQuickControl(*(new QQuickAbstractButtonPrivate), parent)
 {
     setActiveFocusOnTab(true);
+    setFocusPolicy(Qt::StrongFocus);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
@@ -217,6 +218,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
     QQuickControl(dd, parent)
 {
     setActiveFocusOnTab(true);
+    setFocusPolicy(Qt::StrongFocus);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
