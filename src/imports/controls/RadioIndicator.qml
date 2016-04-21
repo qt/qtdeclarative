@@ -41,9 +41,9 @@ Rectangle {
     implicitHeight: 28
 
     radius: width / 2
-    color: control.down ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
-    border.width: control.activeFocus ? 2 : 1
-    border.color: control.activeFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
+    color: control.down ? (control.activeKeyFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
+    border.width: control.activeKeyFocus ? 2 : 1
+    border.color: control.activeKeyFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
 
     property Item control
 

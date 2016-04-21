@@ -82,12 +82,12 @@ T.CheckDelegate {
 
     //! [background]
     background: Rectangle {
-        visible: control.down || control.highlighted || control.activeFocus
+        visible: control.down || control.highlighted || control.activeKeyFocus
         color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.activeFocus || control.highlighted
+            visible: control.activeKeyFocus || control.highlighted
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

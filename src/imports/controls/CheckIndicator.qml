@@ -44,9 +44,9 @@ Rectangle {
     implicitWidth: 28
     implicitHeight: 28
 
-    color: control.enabled ? (control.down ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
-    border.width: control.activeFocus ? 2 : 1
-    border.color: control.enabled ? (control.activeFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")) : "transparent"
+    color: control.enabled ? (control.down ? (control.activeKeyFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
+    border.width: control.activeKeyFocus ? 2 : 1
+    border.color: control.enabled ? (control.activeKeyFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")) : "transparent"
 
     Image {
         x: (parent.width - width) / 2
@@ -60,7 +60,7 @@ Rectangle {
         y: (parent.height - height) / 2
         width: 16
         height: 3
-        color: control.activeFocus ? "#0066ff" : "#353637"
+        color: control.activeKeyFocus ? "#0066ff" : "#353637"
         visible: control.checkState === Qt.PartiallyChecked
     }
 }

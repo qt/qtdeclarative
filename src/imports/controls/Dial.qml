@@ -48,7 +48,7 @@ T.Dial {
     background: DialRing {
         width: control.availableWidth
         height: control.availableHeight
-        color: control.activeFocus ? "#0066ff" : "#353637"
+        color: control.activeKeyFocus ? "#0066ff" : "#353637"
         progress: control.position
         opacity: control.enabled ? 1 : 0.3
     }

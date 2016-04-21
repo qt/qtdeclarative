@@ -54,7 +54,7 @@ Rectangle {
         height: width
         control: control
         colored: control.checked
-        opacity: control.down || control.activeFocus ? 1 : 0
+        opacity: control.down || control.activeKeyFocus ? 1 : 0
     }
 
     Rectangle {
