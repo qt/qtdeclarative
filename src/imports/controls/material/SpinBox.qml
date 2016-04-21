@@ -36,7 +36,7 @@
 
 import QtQuick 2.6
 import QtGraphicalEffects 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 import Qt.labs.controls.material 1.0
 import Qt.labs.controls.material.impl 1.0
 

@@ -83,7 +83,7 @@
 static inline void initResources()
 {
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_templates);
+    Q_INIT_RESOURCE(qmake_QtQuick_Templates_2);
 #endif
 }
 
@@ -106,62 +106,62 @@ QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensio
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
-    qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
+    qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
+    qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "ApplicationWindow");
     qmlRegisterType<QQuickApplicationWindowAttached>();
-    qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
-    qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
-    qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
-    qmlRegisterType<QQuickCheckDelegate>(uri, 1, 0, "CheckDelegate");
-    qmlRegisterType<QQuickComboBox>(uri, 1, 0, "ComboBox");
-    qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
-    qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
-    qmlRegisterType<QQuickDial>(uri, 1, 0, "Dial");
-    qmlRegisterType<QQuickDrawer>(uri, 1, 0, "Drawer");
-    qmlRegisterType<QQuickFrame>(uri, 1, 0, "Frame");
-    qmlRegisterType<QQuickGroupBox>(uri, 1, 0, "GroupBox");
-    qmlRegisterType<QQuickItemDelegate>(uri, 1, 0, "ItemDelegate");
-    qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
-    qmlRegisterType<QQuickMenu>(uri, 1, 0, "Menu");
-    qmlRegisterType<QQuickMenuItem>(uri, 1, 0, "MenuItem");
+    qmlRegisterType<QQuickBusyIndicator>(uri, 2, 0, "BusyIndicator");
+    qmlRegisterType<QQuickButton>(uri, 2, 0, "Button");
+    qmlRegisterType<QQuickCheckBox>(uri, 2, 0, "CheckBox");
+    qmlRegisterType<QQuickCheckDelegate>(uri, 2, 0, "CheckDelegate");
+    qmlRegisterType<QQuickComboBox>(uri, 2, 0, "ComboBox");
+    qmlRegisterType<QQuickContainer>(uri, 2, 0, "Container");
+    qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
+    qmlRegisterType<QQuickDial>(uri, 2, 0, "Dial");
+    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "Drawer");
+    qmlRegisterType<QQuickFrame>(uri, 2, 0, "Frame");
+    qmlRegisterType<QQuickGroupBox>(uri, 2, 0, "GroupBox");
+    qmlRegisterType<QQuickItemDelegate>(uri, 2, 0, "ItemDelegate");
+    qmlRegisterType<QQuickLabel>(uri, 2, 0, "Label");
+    qmlRegisterType<QQuickMenu>(uri, 2, 0, "Menu");
+    qmlRegisterType<QQuickMenuItem>(uri, 2, 0, "MenuItem");
     qmlRegisterType<QQuickOverlay>();
-    qmlRegisterType<QQuickPage>(uri, 1, 0, "Page");
-    qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
-    qmlRegisterType<QQuickPane>(uri, 1, 0, "Pane");
-    qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");
-    qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
-    qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
-    qmlRegisterType<QQuickRadioDelegate>(uri, 1, 0, "RadioDelegate");
-    qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");
+    qmlRegisterType<QQuickPage>(uri, 2, 0, "Page");
+    qmlRegisterType<QQuickPageIndicator>(uri, 2, 0, "PageIndicator");
+    qmlRegisterType<QQuickPane>(uri, 2, 0, "Pane");
+    qmlRegisterType<QQuickPopup>(uri, 2, 0, "Popup");
+    qmlRegisterType<QQuickProgressBar>(uri, 2, 0, "ProgressBar");
+    qmlRegisterType<QQuickRadioButton>(uri, 2, 0, "RadioButton");
+    qmlRegisterType<QQuickRadioDelegate>(uri, 2, 0, "RadioDelegate");
+    qmlRegisterType<QQuickRangeSlider>(uri, 2, 0, "RangeSlider");
     qmlRegisterType<QQuickRangeSliderNode>();
-    qmlRegisterType<QQuickScrollBar>(uri, 1, 0, "ScrollBar");
-    qmlRegisterType<QQuickScrollIndicator>(uri, 1, 0, "ScrollIndicator");
-    qmlRegisterType<QQuickSlider>(uri, 1, 0, "Slider");
-    qmlRegisterType<QQuickSpinBox>(uri, 1, 0, "SpinBox");
+    qmlRegisterType<QQuickScrollBar>(uri, 2, 0, "ScrollBar");
+    qmlRegisterType<QQuickScrollIndicator>(uri, 2, 0, "ScrollIndicator");
+    qmlRegisterType<QQuickSlider>(uri, 2, 0, "Slider");
+    qmlRegisterType<QQuickSpinBox>(uri, 2, 0, "SpinBox");
     qmlRegisterType<QQuickSpinButton>();
-    qmlRegisterType<QQuickStackView>(uri, 1, 0, "StackView");
-    qmlRegisterType<QQuickSwipeDelegate>(uri, 1, 0, "SwipeDelegate");
+    qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
+    qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipeExposure>();
     qmlRegisterType<QQuickSwipeViewAttached>();
-    qmlRegisterType<QQuickSwipeView>(uri, 1, 0, "SwipeView");
-    qmlRegisterType<QQuickSwitch>(uri, 1, 0, "Switch");
-    qmlRegisterType<QQuickSwitchDelegate>(uri, 1, 0, "SwitchDelegate");
-    qmlRegisterType<QQuickTabBar>(uri, 1, 0, "TabBar");
-    qmlRegisterType<QQuickTabButton>(uri, 1, 0, "TabButton");
-    qmlRegisterType<QQuickTextArea>(uri, 1, 0, "TextArea");
-    qmlRegisterType<QQuickTextField>(uri, 1, 0, "TextField");
-    qmlRegisterType<QQuickToolBar>(uri, 1, 0, "ToolBar");
-    qmlRegisterType<QQuickToolButton>(uri, 1, 0, "ToolButton");
+    qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "SwipeView");
+    qmlRegisterType<QQuickSwitch>(uri, 2, 0, "Switch");
+    qmlRegisterType<QQuickSwitchDelegate>(uri, 2, 0, "SwitchDelegate");
+    qmlRegisterType<QQuickTabBar>(uri, 2, 0, "TabBar");
+    qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
+    qmlRegisterType<QQuickTextArea>(uri, 2, 0, "TextArea");
+    qmlRegisterType<QQuickTextField>(uri, 2, 0, "TextField");
+    qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");
+    qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
     qmlRegisterType<QQuickToolTipAttached>();
-    qmlRegisterType<QQuickToolTip>(uri, 1, 0, "ToolTip");
+    qmlRegisterType<QQuickToolTip>(uri, 2, 0, "ToolTip");
     qmlRegisterType<QQuickTumblerAttached>();
-    qmlRegisterType<QQuickTumbler>(uri, 1, 0, "Tumbler");
+    qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
 
-    qmlRegisterRevision<QQuickItem, 2>(uri, 1, 0);
-    qmlRegisterRevision<QQuickWindow, 2>(uri, 1, 0);
-    qmlRegisterRevision<QQuickText, 6>(uri, 1, 0);
-    qmlRegisterRevision<QQuickTextInput, 6>(uri, 1, 0);
-    qmlRegisterRevision<QQuickTextEdit, 6>(uri, 1, 0);
+    qmlRegisterRevision<QQuickItem, 2>(uri, 2, 0);
+    qmlRegisterRevision<QQuickWindow, 2>(uri, 2, 0);
+    qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
+    qmlRegisterRevision<QQuickTextInput, 6>(uri, 2, 0);
+    qmlRegisterRevision<QQuickTextEdit, 6>(uri, 2, 0);
 }
 
 QT_END_NAMESPACE
