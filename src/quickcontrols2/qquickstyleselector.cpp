@@ -95,7 +95,7 @@ static QStringList allSelectors(bool includeStyle)
     if (includeStyle) {
         QString style = QQuickStyle::name();
         if (!style.isEmpty())
-            selectors.prepend(style.toLower());
+            selectors.prepend(style);
     }
     return selectors;
 }
