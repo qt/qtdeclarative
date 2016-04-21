@@ -49,9 +49,15 @@
 
 using namespace QV4;
 
-static uint toArrayIndex(const QChar *ch, const QChar *end)
+static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
+#ifndef V4_BOOTSTRAP
+static inline uint toUInt(const char *ch) { return *ch; }
+#endif
+
+template <typename T>
+static inline uint toArrayIndex(const T *ch, const T *end)
 {
-    uint i = ch->unicode() - '0';
+    uint i = toUInt(ch) - '0';
     if (i > 9)
         return UINT_MAX;
     ++ch;
@@ -60,7 +66,7 @@ static uint toArrayIndex(const QChar *ch, const QChar *end)
         return UINT_MAX;
 
     while (ch < end) {
-        uint x = ch->unicode() - '0';
+        uint x = toUInt(ch) - '0';
         if (x > 9)
             return UINT_MAX;
         uint n = i*10 + x;
@@ -75,30 +81,26 @@ static uint toArrayIndex(const QChar *ch, const QChar *end)
 
 #ifndef V4_BOOTSTRAP
 
-static uint toArrayIndex(const char *ch, const char *end)
+template <typename T>
+static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
 {
-    uint i = *ch - '0';
-    if (i > 9)
-        return UINT_MAX;
-    ++ch;
-    // reject "01", "001", ...
-    if (i == 0 && ch != end)
-        return UINT_MAX;
+    // array indices get their number as hash value
+    uint h = ::toArrayIndex(ch, end);
+    if (h != UINT_MAX) {
+        if (subtype)
+            *subtype = Heap::String::StringType_ArrayIndex;
+        return h;
+    }
 
     while (ch < end) {
-        uint x = *ch - '0';
-        if (x > 9)
-            return UINT_MAX;
-        uint n = i*10 + x;
-        if (n < i)
-            // overflow
-            return UINT_MAX;
-        i = n;
+        h = 31 * h + toUInt(ch);
         ++ch;
     }
-    return i;
-}
 
+    if (subtype)
+        *subtype = Heap::String::StringType_Regular;
+    return h;
+}
 
 DEFINE_MANAGED_VTABLE(String);
 
@@ -198,31 +200,6 @@ void Heap::String::simplifyString() const
     mm->growUnmanagedHeapSizeUsage(size_t(text->size) * sizeof(QChar));
 }
 
-void Heap::String::createHashValue() const
-{
-    if (largestSubLength)
-        simplifyString();
-    Q_ASSERT(!largestSubLength);
-    const QChar *ch = reinterpret_cast<const QChar *>(text->data());
-    const QChar *end = ch + text->size;
-
-    // array indices get their number as hash value
-    stringHash = ::toArrayIndex(ch, end);
-    if (stringHash != UINT_MAX) {
-        subtype = Heap::String::StringType_ArrayIndex;
-        return;
-    }
-
-    uint h = 0xffffffff;
-    while (ch < end) {
-        h = 31 * h + ch->unicode();
-        ++ch;
-    }
-
-    stringHash = h;
-    subtype = Heap::String::StringType_Regular;
-}
-
 void Heap::String::append(const String *data, QChar *ch)
 {
     std::vector<const String *> worklist;
@@ -243,45 +220,26 @@ void Heap::String::append(const String *data, QChar *ch)
     }
 }
 
-
-
-
-uint String::createHashValue(const QChar *ch, int length)
+void Heap::String::createHashValue() const
 {
-    const QChar *end = ch + length;
-
-    // array indices get their number as hash value
-    uint stringHash = ::toArrayIndex(ch, end);
-    if (stringHash != UINT_MAX)
-        return stringHash;
-
-    uint h = 0xffffffff;
-    while (ch < end) {
-        h = 31 * h + ch->unicode();
-        ++ch;
-    }
-
-    return h;
+    if (largestSubLength)
+        simplifyString();
+    Q_ASSERT(!largestSubLength);
+    const QChar *ch = reinterpret_cast<const QChar *>(text->data());
+    const QChar *end = ch + text->size;
+    stringHash = calculateHashValue(ch, end, &subtype);
 }
 
-uint String::createHashValue(const char *ch, int length)
+uint String::createHashValue(const QChar *ch, int length, uint *subtype)
+{
+    const QChar *end = ch + length;
+    return calculateHashValue(ch, end, subtype);
+}
+
+uint String::createHashValue(const char *ch, int length, uint *subtype)
 {
     const char *end = ch + length;
-
-    // array indices get their number as hash value
-    uint stringHash = ::toArrayIndex(ch, end);
-    if (stringHash != UINT_MAX)
-        return stringHash;
-
-    uint h = 0xffffffff;
-    while (ch < end) {
-        if ((uchar)(*ch) >= 0x80)
-            return UINT_MAX;
-        h = 31 * h + *ch;
-        ++ch;
-    }
-
-    return h;
+    return calculateHashValue(ch, end, subtype);
 }
 
 uint String::getLength(const Managed *m)
