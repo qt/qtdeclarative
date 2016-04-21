@@ -140,7 +140,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 {
     Q_UNUSED(uri);
 
-    engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/images")));
+    engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/images")));
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickBusyIndicatorRing>(import, 2, 0, "BusyRing");

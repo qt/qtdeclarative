@@ -83,7 +83,7 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
 
-    engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/Qt/labs/controls/universal/images")));
+    engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/Universal/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");

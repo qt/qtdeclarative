@@ -99,7 +99,7 @@ T.ComboBox {
             x: parent.width - width - control.rightPadding
             y: (parent.height - height) / 2
             opacity: !control.enabled ? 0.5 : 1.0
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/drop-indicator.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
         }
 
         Rectangle {

@@ -78,7 +78,7 @@ Rectangle {
         y: (parent.height - height) / 2
         width: 16
         height: 16
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/check.png"
         fillMode: Image.PreserveAspectFit
 
         scale: control.checked ? 1 : 0

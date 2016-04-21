@@ -22,7 +22,7 @@ include(controls.pri)
 !static: include(designer/designer.pri)
 
 qtquickcompiler {
-    qmlfiles.prefix = /qt-project.org/imports/Qt/labs/controls
+    qmlfiles.prefix = /qt-project.org/imports/QtQuick/Controls.2
     qmlfiles.files += $$QML_CONTROLS
     RESOURCES += qmlfiles
 }
