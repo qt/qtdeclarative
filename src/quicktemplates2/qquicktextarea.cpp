@@ -40,9 +40,11 @@
 #include "qquickcontrol_p_p.h"
 
 #include <QtGui/qguiapplication.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
+#include <QtQuick/private/qquickflickable_p.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -61,11 +63,36 @@ QT_BEGIN_NAMESPACE
     TextArea is a multi-line text editor. TextArea extends TextEdit with
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
+    \image qtquickcontrols2-textarea.png
+
     \code
     TextArea {
         placeholderText: qsTr("Enter description")
     }
     \endcode
+
+    TextArea is not scrollable by itself. Especially on screen-size constrained
+    platforms, it is often preferable to make entire application pages scrollable.
+    On such a scrollable page, a non-scrollable TextArea might behave better than
+    nested scrollable controls. Notice, however, that in such a scenario, the background
+    decoration of the TextArea scrolls together with the rest of the scrollable
+    content.
+
+    If you want to make a TextArea scrollable, for example, when it covers
+    an entire application page, attach it to a \l Flickable and combine with a
+    \l ScrollBar or \l ScrollIndicator.
+
+    \image qtquickcontrols2-textarea-flickable.png
+
+    \snippet qtquickcontrols2-textarea-flickable.qml 1
+
+    A TextArea that is attached to a Flickable does the following:
+
+    \list
+    \li Sets the content size automatically
+    \li Ensures that the background decoration stays in place
+    \li Clips the content
+    \endlist
 
     \sa TextField, {Customizing TextArea}, {Input Controls}
 */
@@ -79,7 +106,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr)
+    : background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -99,14 +126,131 @@ void QQuickTextAreaPrivate::resizeBackground()
     if (background) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
         if (!p->widthValid && qFuzzyIsNull(background->x())) {
-            background->setWidth(q->width());
+            if (flickable)
+                background->setWidth(flickable->width());
+            else
+                background->setWidth(q->width());
             p->widthValid = false;
         }
         if (!p->heightValid && qFuzzyIsNull(background->y())) {
-            background->setHeight(q->height());
+            if (flickable)
+                background->setHeight(flickable->height());
+            else
+                background->setHeight(q->height());
             p->heightValid = false;
         }
     }
+}
+
+void QQuickTextAreaPrivate::attachFlickable(QQuickFlickable *item)
+{
+    Q_Q(QQuickTextArea);
+    flickable = item;
+    q->setParentItem(flickable->contentItem());
+
+    if (background)
+        background->setParentItem(flickable);
+
+    QObjectPrivate::connect(q, &QQuickTextArea::contentSizeChanged, this, &QQuickTextAreaPrivate::resizeFlickableContent);
+    QObjectPrivate::connect(q, &QQuickTextEdit::cursorRectangleChanged, this, &QQuickTextAreaPrivate::ensureCursorVisible);
+
+    QObject::connect(flickable, &QQuickFlickable::contentXChanged, q, &QQuickItem::update);
+    QObject::connect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
+
+    QQuickItemPrivate::get(flickable)->updateOrAddGeometryChangeListener(this, QQuickItemPrivate::SizeChange);
+    QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
+    QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
+
+    resizeFlickableControl();
+}
+
+void QQuickTextAreaPrivate::detachFlickable()
+{
+    Q_Q(QQuickTextArea);
+    q->setParentItem(nullptr);
+    if (background && background->parentItem() == flickable)
+        background->setParentItem(q);
+
+    QObjectPrivate::disconnect(q, &QQuickTextArea::contentSizeChanged, this, &QQuickTextAreaPrivate::resizeFlickableContent);
+    QObjectPrivate::disconnect(q, &QQuickTextEdit::cursorRectangleChanged, this, &QQuickTextAreaPrivate::ensureCursorVisible);
+
+    QObject::disconnect(flickable, &QQuickFlickable::contentXChanged, q, &QQuickItem::update);
+    QObject::disconnect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
+
+    QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickItemPrivate::SizeChange);
+    QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
+    QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
+
+    flickable = nullptr;
+}
+
+void QQuickTextAreaPrivate::ensureCursorVisible()
+{
+    Q_Q(QQuickTextArea);
+    if (!flickable)
+        return;
+
+    const qreal cx = flickable->contentX();
+    const qreal cy = flickable->contentY();
+    const qreal w = flickable->width();
+    const qreal h = flickable->height();
+
+    const qreal tp = q->topPadding();
+    const qreal lp = q->leftPadding();
+    const QRectF cr = q->cursorRectangle();
+
+    if (cr.left() <= cx + lp) {
+        flickable->setContentX(cr.left() - lp);
+    } else {
+        // calculate the rectangle of the next character and ensure that
+        // it's visible if it's on the same line with the cursor
+        const qreal rp = q->rightPadding();
+        const QRectF nr = q->cursorPosition() < q->length() ? q->positionToRectangle(q->cursorPosition() + 1) : QRectF();
+        if (qFuzzyCompare(nr.y(), cr.y()) && nr.right() >= cx + lp + w - rp)
+            flickable->setContentX(nr.right() - w + rp);
+        else if (cr.right() >= cx + lp + w - rp)
+            flickable->setContentX(cr.right() - w + rp);
+    }
+
+    if (cr.top() <= cy + tp) {
+        flickable->setContentY(cr.top() - tp);
+    } else {
+        const qreal bp = q->bottomPadding();
+        if (cr.bottom() >= cy + tp + h - bp)
+            flickable->setContentY(cr.bottom() - h + bp);
+    }
+}
+
+void QQuickTextAreaPrivate::resizeFlickableControl()
+{
+    Q_Q(QQuickTextArea);
+    if (!flickable)
+        return;
+
+    const qreal w = wrapMode == QQuickTextArea::NoWrap ? qMax(flickable->width(), flickable->contentWidth()) : flickable->width();
+    const qreal h = qMax(flickable->height(), flickable->contentHeight());
+    q->setSize(QSizeF(w, h));
+
+    resizeBackground();
+}
+
+void QQuickTextAreaPrivate::resizeFlickableContent()
+{
+    Q_Q(QQuickTextArea);
+    if (!flickable)
+        return;
+
+    flickable->setContentWidth(q->contentWidth() + q->leftPadding() + q->rightPadding());
+    flickable->setContentHeight(q->contentHeight() + q->topPadding() + q->bottomPadding());
+}
+
+void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_UNUSED(item);
+    Q_UNUSED(newGeometry);
+    Q_UNUSED(oldGeometry);
+
+    resizeFlickableControl();
 }
 
 qreal QQuickTextAreaPrivate::getImplicitWidth() const
@@ -146,6 +290,11 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
 
 QQuickTextArea::~QQuickTextArea()
 {
+}
+
+QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickTextAreaAttached(object);
 }
 
 /*!
@@ -345,16 +494,28 @@ void QQuickTextArea::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 
 QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
+    Q_D(QQuickTextArea);
     QQuickDefaultClipNode *clipNode = static_cast<QQuickDefaultClipNode *>(oldNode);
     if (!clipNode)
         clipNode = new QQuickDefaultClipNode(QRectF());
 
-    clipNode->setRect(clipRect().adjusted(leftPadding(), topPadding(), -rightPadding(), -bottomPadding()));
+    QQuickItem *clipper = this;
+    if (d->flickable)
+        clipper = d->flickable;
+
+    const QRectF cr = clipper->clipRect().adjusted(leftPadding(), topPadding(), -rightPadding(), -bottomPadding());
+    clipNode->setRect(!d->flickable ? cr : cr.translated(d->flickable->contentX(), d->flickable->contentY()));
     clipNode->update();
 
     QSGNode *textNode = QQuickTextEdit::updatePaintNode(clipNode->firstChild(), data);
     if (!textNode->parent())
         clipNode->appendChildNode(textNode);
+
+    if (d->cursorItem) {
+        QQuickDefaultClipNode *cursorNode = QQuickItemPrivate::get(d->cursorItem)->clipNode();
+        if (cursorNode)
+            cursorNode->setClipRect(d->cursorItem->mapRectFromItem(clipper, cr));
+    }
 
     return clipNode;
 }
@@ -418,6 +579,61 @@ void QQuickTextArea::timerEvent(QTimerEvent *event)
     } else {
         QQuickTextEdit::timerEvent(event);
     }
+}
+
+class QQuickTextAreaAttachedPrivate : public QObjectPrivate
+{
+public:
+    QQuickTextAreaAttachedPrivate() : control(nullptr) { }
+
+    QQuickTextArea *control;
+};
+
+QQuickTextAreaAttached::QQuickTextAreaAttached(QObject *parent) :
+    QObject(*(new QQuickTextAreaAttachedPrivate), parent)
+{
+}
+
+QQuickTextAreaAttached::~QQuickTextAreaAttached()
+{
+}
+
+/*!
+    \qmlattachedproperty TextArea QtQuick.Controls::TextArea::flickable
+
+    This property attaches a text area to a \l Flickable.
+
+    \snippet qtquickcontrols2-textarea-flickable.qml 1
+
+    \sa ScrollBar, ScrollIndicator
+*/
+QQuickTextArea *QQuickTextAreaAttached::flickable() const
+{
+    Q_D(const QQuickTextAreaAttached);
+    return d->control;
+}
+
+void QQuickTextAreaAttached::setFlickable(QQuickTextArea *control)
+{
+    Q_D(QQuickTextAreaAttached);
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(parent());
+    if (!flickable) {
+        qmlInfo(parent()) << "TextArea must be attached to a Flickable";
+        return;
+    }
+
+    if (d->control == control)
+        return;
+
+    if (d->control)
+        QQuickTextAreaPrivate::get(d->control)->detachFlickable();
+
+    d->control = control;
+
+    if (control)
+        QQuickTextAreaPrivate::get(control)->attachFlickable(flickable);
+
+    emit flickableChanged();
 }
 
 QT_END_NAMESPACE

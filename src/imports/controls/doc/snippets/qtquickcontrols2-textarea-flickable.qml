@@ -28,6 +28,23 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.0
 
-TextArea {
-    placeholderText: qsTr("Enter description")
+Item {
+    width: 100
+    height: 100
+
+    Binding { target: flickable.ScrollBar.vertical; property: "active"; value: true }
+
+    //! [1]
+    Flickable {
+        id: flickable
+        anchors.fill: parent
+
+        TextArea.flickable: TextArea {
+            text: "TextArea\n...\n...\n...\n...\n...\n...\n"
+            wrapMode: TextArea.Wrap
+        }
+
+        ScrollBar.vertical: ScrollBar { }
+    }
+    //! [1]
 }

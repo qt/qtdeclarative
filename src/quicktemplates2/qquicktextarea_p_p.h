@@ -49,6 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextedit_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 
 #include "qquicktextarea_p.h"
@@ -59,9 +60,10 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickFlickable;
 class QQuickAccessibleAttached;
 
-class QQuickTextAreaPrivate : public QQuickTextEditPrivate
+class QQuickTextAreaPrivate : public QQuickTextEditPrivate, public QQuickItemChangeListener
 #ifndef QT_NO_ACCESSIBILITY
     , public QAccessible::ActivationObserver
 #endif
@@ -78,6 +80,14 @@ public:
     void resizeBackground();
     void resolveFont();
     void inheritFont(const QFont &f);
+
+    void attachFlickable(QQuickFlickable *flickable);
+    void detachFlickable();
+    void ensureCursorVisible();
+    void resizeFlickableControl();
+    void resizeFlickableContent();
+
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;
@@ -98,6 +108,7 @@ public:
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
     QQuickAccessibleAttached *accessibleAttached;
+    QQuickFlickable *flickable;
 };
 
 QT_END_NAMESPACE

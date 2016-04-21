@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickText;
 class QQuickTextAreaPrivate;
+class QQuickTextAreaAttached;
 class QQuickMouseEvent;
 
 class Q_QUICKTEMPLATES2_EXPORT QQuickTextArea : public QQuickTextEdit
@@ -70,6 +71,8 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickTextArea : public QQuickTextEdit
 public:
     explicit QQuickTextArea(QQuickItem *parent = nullptr);
     ~QQuickTextArea();
+
+    static QQuickTextAreaAttached *qmlAttachedProperties(QObject *object);
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -111,8 +114,31 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextArea)
 };
 
+class QQuickTextAreaAttachedPrivate;
+
+class Q_QUICKTEMPLATES2_EXPORT QQuickTextAreaAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickTextArea *flickable READ flickable WRITE setFlickable NOTIFY flickableChanged FINAL)
+
+public:
+    explicit QQuickTextAreaAttached(QObject *parent);
+    ~QQuickTextAreaAttached();
+
+    QQuickTextArea *flickable() const;
+    void setFlickable(QQuickTextArea *control);
+
+Q_SIGNALS:
+    void flickableChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickTextAreaAttached)
+    Q_DECLARE_PRIVATE(QQuickTextAreaAttached)
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextArea)
+QML_DECLARE_TYPEINFO(QQuickTextArea, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKTEXTAREA_P_H

@@ -148,6 +148,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwitchDelegate>(uri, 2, 0, "SwitchDelegate");
     qmlRegisterType<QQuickTabBar>(uri, 2, 0, "TabBar");
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
+    qmlRegisterType<QQuickTextAreaAttached>();
     qmlRegisterType<QQuickTextArea>(uri, 2, 0, "TextArea");
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "TextField");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");

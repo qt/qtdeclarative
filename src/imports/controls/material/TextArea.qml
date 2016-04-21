@@ -56,6 +56,7 @@ T.TextArea {
     selectedTextColor: Material.primaryHighlightedTextColor
     cursorDelegate: Rectangle {
         id: cursor
+        clip: true // TODO
         color: control.Material.accentColor
         width: 2
         visible: control.activeFocus && control.selectionStart === control.selectionEnd
@@ -99,7 +100,7 @@ T.TextArea {
 
     //! [background]
     background: Rectangle {
-        y: control.height - height - control.bottomPadding / 2
+        y: parent.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
