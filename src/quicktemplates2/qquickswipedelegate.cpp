@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype SwipeDelegate
-    \inherits AbstractButton
+    \inherits ItemDelegate
     \instantiates QQuickSwipeDelegate
     \inqmlmodule Qt.labs.controls
     \brief A swipable item delegate.
@@ -697,7 +697,7 @@ void QQuickSwipeDelegatePrivate::resizeContent()
 }
 
 QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickSwipeDelegatePrivate(this)), parent)
+    QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
     setFiltersChildMouseEvents(true);
 }
@@ -809,7 +809,7 @@ bool QQuickSwipeDelegate::childMouseEventFilter(QQuickItem *child, QEvent *event
         // Make sure that the control gets release events if it has created child
         // items that are stealing events from it.
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        QQuickAbstractButton::mouseReleaseEvent(mouseEvent);
+        QQuickItemDelegate::mouseReleaseEvent(mouseEvent);
         return d->handleMouseReleaseEvent(child, mouseEvent);
     } default:
         return false;
@@ -821,7 +821,7 @@ bool QQuickSwipeDelegate::childMouseEventFilter(QQuickItem *child, QEvent *event
 void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
-    QQuickAbstractButton::mousePressEvent(event);
+    QQuickItemDelegate::mousePressEvent(event);
     QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&d->exposure);
     exposurePrivate->positionBeforePress = exposurePrivate->position;
     exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
@@ -836,7 +836,7 @@ void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
 void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
-    QQuickAbstractButton::mouseReleaseEvent(event);
+    QQuickItemDelegate::mouseReleaseEvent(event);
     d->handleMouseReleaseEvent(this, event);
 }
 
