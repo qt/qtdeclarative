@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ToolTip
     \inherits Popup
     \instantiates QQuickToolTip
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-popups
     \brief Provides tool tips for any control.
 
@@ -250,7 +250,7 @@ QQuickToolTip::QQuickToolTip(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::ToolTip::text
+    \qmlproperty string QtQuick.Controls::ToolTip::text
 
     This property holds the text shown on the tool tip.
 */
@@ -271,7 +271,7 @@ void QQuickToolTip::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::ToolTip::delay
+    \qmlproperty int QtQuick.Controls::ToolTip::delay
 
     This property holds the delay (milliseconds) after which the tool tip is
     shown. A tooltip with a negative delay is shown immediately. The default
@@ -294,7 +294,7 @@ void QQuickToolTip::setDelay(int delay)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::ToolTip::timeout
+    \qmlproperty int QtQuick.Controls::ToolTip::timeout
 
     This property holds the timeout (milliseconds) after which the tool tip is
     hidden. A tooltip with a negative timeout does not hide automatically. The
@@ -420,7 +420,7 @@ QQuickToolTipAttached::QQuickToolTipAttached(QQuickItem *item) :
 }
 
 /*!
-    \qmlattachedproperty string Qt.labs.controls::ToolTip::text
+    \qmlattachedproperty string QtQuick.Controls::ToolTip::text
 
     This attached property holds the text of the shared tool tip instance.
     The property can be attached to any item.
@@ -445,7 +445,7 @@ void QQuickToolTipAttached::setText(const QString &text)
 }
 
 /*!
-    \qmlattachedproperty int Qt.labs.controls::ToolTip::delay
+    \qmlattachedproperty int QtQuick.Controls::ToolTip::delay
 
     This attached property holds the delay (milliseconds) of the shared tool tip.
     The property can be attached to any item.
@@ -467,7 +467,7 @@ void QQuickToolTipAttached::setDelay(int delay)
 }
 
 /*!
-    \qmlattachedproperty int Qt.labs.controls::ToolTip::timeout
+    \qmlattachedproperty int QtQuick.Controls::ToolTip::timeout
 
     This attached property holds the timeout (milliseconds) of the shared tool tip.
     The property can be attached to any item.
@@ -489,7 +489,7 @@ void QQuickToolTipAttached::setTimeout(int timeout)
 }
 
 /*!
-    \qmlattachedproperty bool Qt.labs.controls::ToolTip::visible
+    \qmlattachedproperty bool QtQuick.Controls::ToolTip::visible
 
     This attached property holds whether the shared tool tip is visible.
     The property can be attached to any item.
@@ -514,7 +514,7 @@ void QQuickToolTipAttached::setVisible(bool visible)
 }
 
 /*!
-    \qmlattachedproperty ToolTip Qt.labs.controls::ToolTip::toolTip
+    \qmlattachedproperty ToolTip QtQuick.Controls::ToolTip::toolTip
 
     This attached property holds the shared tool tip instance. The property
     can be attached to any item.
@@ -526,7 +526,7 @@ QQuickToolTip *QQuickToolTipAttached::toolTip() const
 }
 
 /*!
-    \qmlattachedmethod void Qt.labs.controls::ToolTip::show(string text, int timeout = -1)
+    \qmlattachedmethod void QtQuick.Controls::ToolTip::show(string text, int timeout = -1)
 
     This attached method shows the shared tooltip with \a text and \a timeout (milliseconds).
     The method can be attached to any item.
@@ -548,7 +548,7 @@ void QQuickToolTipAttached::show(const QString &text, int ms)
 }
 
 /*!
-    \qmlattachedmethod void Qt.labs.controls::ToolTip::hide()
+    \qmlattachedmethod void QtQuick.Controls::ToolTip::hide()
 
     This attached method hides the shared tooltip. The method can be attached to any item.
 */

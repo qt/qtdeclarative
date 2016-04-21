@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Page
     \inherits Control
     \instantiates QQuickPage
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-containers
     \brief A control that makes it convenient to add a header and footer to a page.
 
@@ -161,7 +161,7 @@ QQuickPage::QQuickPage(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Page::header
+    \qmlproperty Item QtQuick.Controls::Page::header
 
     This property holds the page header item. The header item is positioned to
     the top, and resized to the width of the page. The default value is \c null.
@@ -207,7 +207,7 @@ void QQuickPage::setHeader(QQuickItem *header)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Page::footer
+    \qmlproperty Item QtQuick.Controls::Page::footer
 
     This property holds the page footer item. The footer item is positioned to
     the bottom, and resized to the width of the page. The default value is \c null.
@@ -253,7 +253,7 @@ void QQuickPage::setFooter(QQuickItem *footer)
 }
 
 /*!
-    \qmlproperty list<Object> Qt.labs.controls::Page::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Page::contentData
     \default
 
     This property holds the list of content data.
@@ -271,7 +271,7 @@ QQmlListProperty<QObject> QQuickPage::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> Qt.labs.controls::Page::contentChildren
+    \qmlproperty list<Item> QtQuick.Controls::Page::contentChildren
 
     This property holds the list of content children.
 

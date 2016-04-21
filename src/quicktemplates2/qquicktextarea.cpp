@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextArea
     \inherits TextEdit
     \instantiates QQuickTextArea
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-input
     \brief A multi line text input control.
 
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::TextArea::pressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick.Controls::TextArea::pressAndHold(MouseEvent mouse)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -228,7 +228,7 @@ void QQuickTextArea::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::TextArea::background
+    \qmlproperty Item QtQuick.Controls::TextArea::background
 
     This property holds the background item.
 
@@ -263,7 +263,7 @@ void QQuickTextArea::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::TextArea::placeholderText
+    \qmlproperty string QtQuick.Controls::TextArea::placeholderText
 
     This property holds the short hint that is displayed in the text area before
     the user enters a value.
@@ -289,7 +289,7 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::TextArea::focusReason
+    \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
 
     This property holds the reason of the last focus change.
 

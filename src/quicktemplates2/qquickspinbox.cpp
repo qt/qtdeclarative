@@ -54,7 +54,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \qmltype SpinBox
     \inherits Control
     \instantiates QQuickSpinBox
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup input
     \brief A spinbox control that allows the user to select from a set of preset values.
 
@@ -250,7 +250,7 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::SpinBox::from
+    \qmlproperty int QtQuick.Controls::SpinBox::from
 
     This property holds the starting value for the range. The default value is \c 0.
 
@@ -275,7 +275,7 @@ void QQuickSpinBox::setFrom(int from)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::SpinBox::to
+    \qmlproperty int QtQuick.Controls::SpinBox::to
 
     This property holds the end value for the range. The default value is \c 99.
 
@@ -300,7 +300,7 @@ void QQuickSpinBox::setTo(int to)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::SpinBox::value
+    \qmlproperty int QtQuick.Controls::SpinBox::value
 
     This property holds the value in the range \c from - \c to. The default value is \c 0.
 */
@@ -324,7 +324,7 @@ void QQuickSpinBox::setValue(int value)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::SpinBox::stepSize
+    \qmlproperty int QtQuick.Controls::SpinBox::stepSize
 
     This property holds the step size. The default value is \c 1.
 
@@ -347,7 +347,7 @@ void QQuickSpinBox::setStepSize(int step)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::SpinBox::editable
+    \qmlproperty bool QtQuick.Controls::SpinBox::editable
 
     This property holds whether the spinbox is editable. The default value is \c false.
 
@@ -370,7 +370,7 @@ void QQuickSpinBox::setEditable(bool editable)
 }
 
 /*!
-    \qmlproperty Validator Qt.labs.controls::SpinBox::validator
+    \qmlproperty Validator QtQuick.Controls::SpinBox::validator
 
     This property holds the input text validator for editable spinboxes. By
     default, SpinBox uses \l IntValidator to accept input of integer numbers.
@@ -396,7 +396,7 @@ void QQuickSpinBox::setValidator(QValidator *validator)
 }
 
 /*!
-    \qmlproperty function Qt.labs.controls::SpinBox::textFromValue
+    \qmlproperty function QtQuick.Controls::SpinBox::textFromValue
 
     This property holds a callback function that is called whenever
     an integer value needs to be converted to display text.
@@ -437,7 +437,7 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
 }
 
 /*!
-    \qmlproperty function Qt.labs.controls::SpinBox::valueFromText
+    \qmlproperty function QtQuick.Controls::SpinBox::valueFromText
 
     This property holds a callback function that is called whenever
     input text needs to be converted to an integer value.
@@ -478,9 +478,9 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::SpinBox::up
-    \qmlproperty bool Qt.labs.controls::SpinBox::up.pressed
-    \qmlproperty Item Qt.labs.controls::SpinBox::up.indicator
+    \qmlpropertygroup QtQuick.Controls::SpinBox::up
+    \qmlproperty bool QtQuick.Controls::SpinBox::up.pressed
+    \qmlproperty Item QtQuick.Controls::SpinBox::up.indicator
 
     These properties hold the up indicator item and whether it is pressed.
 
@@ -493,9 +493,9 @@ QQuickSpinButton *QQuickSpinBox::up() const
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::SpinBox::down
-    \qmlproperty bool Qt.labs.controls::SpinBox::down.pressed
-    \qmlproperty Item Qt.labs.controls::SpinBox::down.indicator
+    \qmlpropertygroup QtQuick.Controls::SpinBox::down
+    \qmlproperty bool QtQuick.Controls::SpinBox::down.pressed
+    \qmlproperty Item QtQuick.Controls::SpinBox::down.indicator
 
     These properties hold the down indicator item and whether it is pressed.
 
@@ -508,7 +508,7 @@ QQuickSpinButton *QQuickSpinBox::down() const
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::SpinBox::increase()
+    \qmlmethod void QtQuick.Controls::SpinBox::increase()
 
     Increases the value by \l stepSize.
 
@@ -521,7 +521,7 @@ void QQuickSpinBox::increase()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::SpinBox::decrease()
+    \qmlmethod void QtQuick.Controls::SpinBox::decrease()
 
     Decreases the value by \l stepSize.
 

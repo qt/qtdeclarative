@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ItemDelegate
     \inherits AbstractButton
     \instantiates QQuickItemDelegate
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \brief  A standard view item that can be used in various views and controls.
 
     \image qtquickcontrols2-itemdelegate.gif

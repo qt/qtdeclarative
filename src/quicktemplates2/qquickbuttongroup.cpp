@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ButtonGroup
     \inherits QtObject
     \instantiates QQuickButtonGroup
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup utilities
     \brief A mutually-exclusive group of checkable controls.
 
@@ -209,7 +209,7 @@ QQuickButtonGroupAttached *QQuickButtonGroup::qmlAttachedProperties(QObject *obj
 }
 
 /*!
-    \qmlproperty AbstractButton Qt.labs.controls::ButtonGroup::checkedButton
+    \qmlproperty AbstractButton QtQuick.Controls::ButtonGroup::checkedButton
 
     This property holds the currently selected button, or \c null if there is none.
 
@@ -236,7 +236,7 @@ void QQuickButtonGroup::setCheckedButton(QQuickAbstractButton *checkedButton)
 }
 
 /*!
-    \qmlproperty list<AbstractButton> Qt.labs.controls::ButtonGroup::buttons
+    \qmlproperty list<AbstractButton> QtQuick.Controls::ButtonGroup::buttons
     \default
 
     This property holds the list of buttons.
@@ -273,7 +273,7 @@ QQmlListProperty<QQuickAbstractButton> QQuickButtonGroup::buttons()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ButtonGroup::addButton(AbstractButton button)
+    \qmlmethod void QtQuick.Controls::ButtonGroup::addButton(AbstractButton button)
 
     Adds a \a button to the button group.
 
@@ -300,7 +300,7 @@ void QQuickButtonGroup::addButton(QQuickAbstractButton *button)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ButtonGroup::removeButton(AbstractButton button)
+    \qmlmethod void QtQuick.Controls::ButtonGroup::removeButton(AbstractButton button)
 
     Removes a \a button from the button group.
 
@@ -340,7 +340,7 @@ QQuickButtonGroupAttached::QQuickButtonGroupAttached(QObject *parent) :
 }
 
 /*!
-    \qmlattachedproperty ButtonGroup Qt.labs.controls::ButtonGroup::group
+    \qmlattachedproperty ButtonGroup QtQuick.Controls::ButtonGroup::group
 
     This property attaches a button to a button group.
 

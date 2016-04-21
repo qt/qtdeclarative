@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ComboBox
     \inherits Control
     \instantiates QQuickComboBox
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-input
     \brief A combined button and popup list taking minimal space.
 
@@ -104,7 +104,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void Qt.labs.controls::ComboBox::activated(int index)
+    \qmlsignal void QtQuick.Controls::ComboBox::activated(int index)
 
     This signal is emitted when the item at \a index is activated by the user.
 
@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void Qt.labs.controls::ComboBox::highlighted(int index)
+    \qmlsignal void QtQuick.Controls::ComboBox::highlighted(int index)
 
     This signal is emitted when the item at \a index in the popup list is highlighted by the user.
 
@@ -364,7 +364,7 @@ QQuickComboBox::~QQuickComboBox()
 
 /*!
     \readonly
-    \qmlproperty int Qt.labs.controls::ComboBox::count
+    \qmlproperty int QtQuick.Controls::ComboBox::count
 
     This property holds the number of items in the combo box.
 */
@@ -375,7 +375,7 @@ int QQuickComboBox::count() const
 }
 
 /*!
-    \qmlproperty model Qt.labs.controls::ComboBox::model
+    \qmlproperty model QtQuick.Controls::ComboBox::model
 
     This property holds the model providing data for the combo box.
 
@@ -419,7 +419,7 @@ void QQuickComboBox::setModel(const QVariant& m)
 
 /*!
     \internal
-    \qmlproperty model Qt.labs.controls::ComboBox::delegateModel
+    \qmlproperty model QtQuick.Controls::ComboBox::delegateModel
 
     This property holds the model providing delegate instances for the combo box.
 */
@@ -430,7 +430,7 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::ComboBox::pressed
+    \qmlproperty bool QtQuick.Controls::ComboBox::pressed
 
     This property holds whether the combo box button is pressed.
 */
@@ -452,7 +452,7 @@ void QQuickComboBox::setPressed(bool pressed)
 
 /*!
     \readonly
-    \qmlproperty int Qt.labs.controls::ComboBox::highlightedIndex
+    \qmlproperty int QtQuick.Controls::ComboBox::highlightedIndex
 
     This property holds the index of the highlighted item in the combo box popup list.
 
@@ -465,7 +465,7 @@ int QQuickComboBox::highlightedIndex() const
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::ComboBox::currentIndex
+    \qmlproperty int QtQuick.Controls::ComboBox::currentIndex
 
     This property holds the index of the current item in the combo box.
 
@@ -492,7 +492,7 @@ void QQuickComboBox::setCurrentIndex(int index)
 
 /*!
     \readonly
-    \qmlproperty string Qt.labs.controls::ComboBox::currentText
+    \qmlproperty string QtQuick.Controls::ComboBox::currentText
 
     This property holds the text of the current item in the combo box.
 
@@ -505,7 +505,7 @@ QString QQuickComboBox::currentText() const
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::ComboBox::displayText
+    \qmlproperty string QtQuick.Controls::ComboBox::displayText
 
     This property holds the text that is displayed on the combo box button.
 
@@ -551,7 +551,7 @@ void QQuickComboBox::resetDisplayText()
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::ComboBox::textRole
+    \qmlproperty string QtQuick.Controls::ComboBox::textRole
 
     This property holds the model role used for populating the combo box.
 
@@ -576,7 +576,7 @@ void QQuickComboBox::setTextRole(const QString &role)
 }
 
 /*!
-    \qmlproperty Component Qt.labs.controls::ComboBox::delegate
+    \qmlproperty Component QtQuick.Controls::ComboBox::delegate
 
     This property holds a delegate that presents an item in the combo box popup.
 
@@ -603,7 +603,7 @@ void QQuickComboBox::setDelegate(QQmlComponent* delegate)
 }
 
 /*!
-    \qmlproperty Popup Qt.labs.controls::ComboBox::popup
+    \qmlproperty Popup QtQuick.Controls::ComboBox::popup
 
     This property holds the popup.
 
@@ -629,7 +629,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 }
 
 /*!
-    \qmlmethod string Qt.labs.controls::ComboBox::textAt(int index)
+    \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
     Returns the text for the specified \a index, or an empty string
     if the index is out of bounds.
@@ -645,7 +645,7 @@ QString QQuickComboBox::textAt(int index) const
 }
 
 /*!
-    \qmlmethod int Qt.labs.controls::ComboBox::find(string text, flags = Qt.MatchExactly)
+    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, flags = Qt.MatchExactly)
 
     Returns the index of the specified \a text, or \c -1 if no match is found.
 
@@ -708,7 +708,7 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ComboBox::increase()
+    \qmlmethod void QtQuick.Controls::ComboBox::increase()
 
     Increases the current index of the combo box, or the highlighted
     index if the popup list when it is visible.
@@ -722,7 +722,7 @@ void QQuickComboBox::increase()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ComboBox::decrease()
+    \qmlmethod void QtQuick.Controls::ComboBox::decrease()
 
     Decreases the current index of the combo box, or the highlighted
     index if the popup list when it is visible.

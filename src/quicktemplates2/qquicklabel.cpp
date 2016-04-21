@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Label
     \inherits Text
     \instantiates QQuickLabel
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup text
     \brief A text label with inherited styling and font.
 
@@ -184,7 +184,7 @@ void QQuickLabel::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Label::background
+    \qmlproperty Item QtQuick.Controls::Label::background
 
     This property holds the background item.
 

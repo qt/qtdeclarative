@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Button
     \inherits AbstractButton
     \instantiates QQuickButton
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-buttons
     \brief A push-button control that can be clicked by the user.
 
@@ -97,7 +97,7 @@ QQuickButton::QQuickButton(QQuickItem *parent) : QQuickAbstractButton(parent)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Button::checkable
+    \qmlproperty bool QtQuick.Controls::Button::checkable
 
     This property holds whether the button is checkable.
 */

@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Pane
     \inherits Control
     \instantiates QQuickPane
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-containers
     \brief Provides a background matching with the application style and theme.
 
@@ -88,7 +88,7 @@ QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Pane::contentWidth
+    \qmlproperty real QtQuick.Controls::Pane::contentWidth
 
     This property holds the content width. It is used for calculating the
     total implicit width of the pane.
@@ -113,7 +113,7 @@ void QQuickPane::setContentWidth(qreal width)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Pane::contentHeight
+    \qmlproperty real QtQuick.Controls::Pane::contentHeight
 
     This property holds the content height. It is used for calculating the
     total implicit height of the pane.
@@ -138,7 +138,7 @@ void QQuickPane::setContentHeight(qreal height)
 }
 
 /*!
-    \qmlproperty list<Object> Qt.labs.controls::Pane::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Pane::contentData
     \default
 
     This property holds the list of content data.
@@ -156,7 +156,7 @@ QQmlListProperty<QObject> QQuickPane::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> Qt.labs.controls::Pane::contentChildren
+    \qmlproperty list<Item> QtQuick.Controls::Pane::contentChildren
 
     This property holds the list of content children.
 

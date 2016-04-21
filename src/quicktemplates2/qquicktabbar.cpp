@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TabBar
     \inherits Container
     \instantiates QQuickTabBar
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
     \brief A bar with icons allowing to switch between different views or subtasks.
@@ -126,7 +126,7 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::TabBar::position
+    \qmlproperty enumeration QtQuick.Controls::TabBar::position
 
     This property holds the position of the tab bar.
 

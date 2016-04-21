@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype CheckDelegate
     \inherits ItemDelegate
     \instantiates QQuickCheckDelegate
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be checked or unchecked.
 
@@ -100,7 +100,7 @@ QQuickCheckDelegate::QQuickCheckDelegate(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::CheckDelegate::tristate
+    \qmlproperty bool QtQuick.Controls::CheckDelegate::tristate
 
     This property determines whether the check delegate has three states.
 
@@ -123,7 +123,7 @@ void QQuickCheckDelegate::setTristate(bool tristate)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::CheckDelegate::checkState
+    \qmlproperty enumeration QtQuick.Controls::CheckDelegate::checkState
 
     This property determines the check state of the check delegate.
 

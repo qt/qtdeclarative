@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype RangeSlider
     \inherits Control
     \instantiates QQuickRangeSlider
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-input
     \brief A slider control used to select a range of values.
 
@@ -367,7 +367,7 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::RangeSlider::from
+    \qmlproperty real QtQuick.Controls::RangeSlider::from
 
     This property holds the starting value for the range. The default value is \c 0.0.
 
@@ -395,7 +395,7 @@ void QQuickRangeSlider::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::RangeSlider::to
+    \qmlproperty real QtQuick.Controls::RangeSlider::to
 
     This property holds the end value for the range. The default value is \c 1.0.
 
@@ -423,12 +423,12 @@ void QQuickRangeSlider::setTo(qreal to)
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::RangeSlider::first
-    \qmlproperty real Qt.labs.controls::RangeSlider::first.value
-    \qmlproperty real Qt.labs.controls::RangeSlider::first.position
-    \qmlproperty real Qt.labs.controls::RangeSlider::first.visualPosition
-    \qmlproperty Item Qt.labs.controls::RangeSlider::first.handle
-    \qmlproperty bool Qt.labs.controls::RangeSlider::first.pressed
+    \qmlpropertygroup QtQuick.Controls::RangeSlider::first
+    \qmlproperty real QtQuick.Controls::RangeSlider::first.value
+    \qmlproperty real QtQuick.Controls::RangeSlider::first.position
+    \qmlproperty real QtQuick.Controls::RangeSlider::first.visualPosition
+    \qmlproperty Item QtQuick.Controls::RangeSlider::first.handle
+    \qmlproperty bool QtQuick.Controls::RangeSlider::first.pressed
 
     \table
     \header
@@ -480,12 +480,12 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::RangeSlider::second
-    \qmlproperty real Qt.labs.controls::RangeSlider::second.value
-    \qmlproperty real Qt.labs.controls::RangeSlider::second.position
-    \qmlproperty real Qt.labs.controls::RangeSlider::second.visualPosition
-    \qmlproperty Item Qt.labs.controls::RangeSlider::second.handle
-    \qmlproperty bool Qt.labs.controls::RangeSlider::second.pressed
+    \qmlpropertygroup QtQuick.Controls::RangeSlider::second
+    \qmlproperty real QtQuick.Controls::RangeSlider::second.value
+    \qmlproperty real QtQuick.Controls::RangeSlider::second.position
+    \qmlproperty real QtQuick.Controls::RangeSlider::second.visualPosition
+    \qmlproperty Item QtQuick.Controls::RangeSlider::second.handle
+    \qmlproperty bool QtQuick.Controls::RangeSlider::second.pressed
 
     \table
     \header
@@ -537,7 +537,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::second() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::RangeSlider::stepSize
+    \qmlproperty real QtQuick.Controls::RangeSlider::stepSize
 
     This property holds the step size. The default value is \c 0.0.
 
@@ -560,7 +560,7 @@ void QQuickRangeSlider::setStepSize(qreal step)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::RangeSlider::snapMode
+    \qmlproperty enumeration QtQuick.Controls::RangeSlider::snapMode
 
     This property holds the snap mode.
 
@@ -588,7 +588,7 @@ void QQuickRangeSlider::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::RangeSlider::orientation
+    \qmlproperty enumeration QtQuick.Controls::RangeSlider::orientation
 
     This property holds the orientation.
 
@@ -613,7 +613,7 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::RangeSlider::setValues(real firstValue, real secondValue)
+    \qmlmethod void QtQuick.Controls::RangeSlider::setValues(real firstValue, real secondValue)
 
     Sets \l first.value and \l second.value with the given arguments.
 
@@ -886,7 +886,7 @@ void QQuickRangeSlider::componentComplete()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::RangeSlider::first.increase()
+    \qmlmethod void QtQuick.Controls::RangeSlider::first.increase()
 
     Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
 
@@ -894,7 +894,7 @@ void QQuickRangeSlider::componentComplete()
 */
 
 /*!
-    \qmlmethod void Qt.labs.controls::RangeSlider::first.decrease()
+    \qmlmethod void QtQuick.Controls::RangeSlider::first.decrease()
 
     Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
 
@@ -902,7 +902,7 @@ void QQuickRangeSlider::componentComplete()
 */
 
 /*!
-    \qmlmethod void Qt.labs.controls::RangeSlider::second.increase()
+    \qmlmethod void QtQuick.Controls::RangeSlider::second.increase()
 
     Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
 
@@ -910,7 +910,7 @@ void QQuickRangeSlider::componentComplete()
 */
 
 /*!
-    \qmlmethod void Qt.labs.controls::RangeSlider::second.decrease()
+    \qmlmethod void QtQuick.Controls::RangeSlider::second.decrease()
 
     Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
 

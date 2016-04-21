@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Drawer
     \inherits Popup
     \instantiates QQuickDrawer
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
     \brief Provides a swipe-based side panel.
@@ -339,7 +339,7 @@ QQuickDrawer::QQuickDrawer(QObject *parent) :
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Drawer::edge
+    \qmlproperty enumeration QtQuick.Controls::Drawer::edge
 
     This property holds the edge of the content item at which the drawer will
     open from. The acceptable values are:
@@ -368,7 +368,7 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Drawer::position
+    \qmlproperty real QtQuick.Controls::Drawer::position
 
     This property holds the position of the drawer relative to its final
     destination. That is, the position will be \c 0 when the drawer
@@ -394,7 +394,7 @@ void QQuickDrawer::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Drawer::dragMargin
+    \qmlproperty real QtQuick.Controls::Drawer::dragMargin
 
     This property holds the distance from the screen edge within which
     drag actions will open the drawer. Setting the value to \c 0 or less

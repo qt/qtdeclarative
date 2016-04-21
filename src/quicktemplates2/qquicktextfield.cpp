@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextField
     \inherits TextInput
     \instantiates QQuickTextField
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-input
     \brief A single line text input control.
 
@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::TextField::pressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick.Controls::TextField::pressAndHold(MouseEvent mouse)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -253,7 +253,7 @@ void QQuickTextField::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::TextField::background
+    \qmlproperty Item QtQuick.Controls::TextField::background
 
     This property holds the background item.
 
@@ -288,7 +288,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::TextField::placeholderText
+    \qmlproperty string QtQuick.Controls::TextField::placeholderText
 
     This property holds the hint that is displayed in the TextField before the user
     enters text.
@@ -314,7 +314,7 @@ void QQuickTextField::setPlaceholderText(const QString &text)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::TextField::focusReason
+    \qmlproperty enumeration QtQuick.Controls::TextField::focusReason
 
     This property holds the reason of the last focus change.
 

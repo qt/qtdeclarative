@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TabButton
     \inherits AbstractButton
     \instantiates QQuickTabButton
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-navigation
     \brief A tab button control that can be found on a TabBar.
 

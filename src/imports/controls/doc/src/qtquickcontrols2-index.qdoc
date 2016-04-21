@@ -64,8 +64,8 @@
 
     \section1 QML Types
 
-    \section2 Qt.labs.controls Module
-    \generatelist {qmltypesbymodule Qt.labs.controls}
+    \section2 QtQuick.Controls Module
+    \generatelist {qmltypesbymodule QtQuick.Controls}
 
     \section1 Important Concepts in Qt Quick Controls 2
 

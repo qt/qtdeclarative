@@ -50,8 +50,8 @@
     +android/qtquickcontrols2.conf
     \endcode
 
-    In the project above, \c main.qml would import \c Qt.labs.controls, for
-    example, but shouldn't import, say, \c Qt.labs.controls.material. Any code
+    In the project above, \c main.qml would import \c QtQuick.Controls, for
+    example, but shouldn't import, say, \c QtQuick.Controls.Material. Any code
     that is style-specific is moved out into separate files; just as we've done
     for \c MyPage.qml.
 

@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ProgressBar
     \inherits Control
     \instantiates QQuickProgressBar
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-indicators
     \brief Indicates the progress of an operation.
 
@@ -87,7 +87,7 @@ QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ProgressBar::from
+    \qmlproperty real QtQuick.Controls::ProgressBar::from
 
     This property holds the starting value for the progress. The default value is \c 0.0.
 
@@ -114,7 +114,7 @@ void QQuickProgressBar::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ProgressBar::to
+    \qmlproperty real QtQuick.Controls::ProgressBar::to
 
     This property holds the end value for the progress. The default value is \c 1.0.
 
@@ -141,7 +141,7 @@ void QQuickProgressBar::setTo(qreal to)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ProgressBar::value
+    \qmlproperty real QtQuick.Controls::ProgressBar::value
 
     This property holds the progress value. The default value is \c 0.0.
 
@@ -169,7 +169,7 @@ void QQuickProgressBar::setValue(qreal value)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ProgressBar::position
+    \qmlproperty real QtQuick.Controls::ProgressBar::position
     \readonly
 
     This property holds the logical position of the progress.
@@ -189,7 +189,7 @@ qreal QQuickProgressBar::position() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ProgressBar::visualPosition
+    \qmlproperty real QtQuick.Controls::ProgressBar::visualPosition
     \readonly
 
     This property holds the visual position of the progress.
@@ -209,7 +209,7 @@ qreal QQuickProgressBar::visualPosition() const
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::ProgressBar::indeterminate
+    \qmlproperty bool QtQuick.Controls::ProgressBar::indeterminate
 
     This property holds whether the progress bar is in indeterminate mode.
     A progress bar in indeterminate mode displays that an operation is in progress, but it

@@ -53,7 +53,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \qmltype AbstractButton
     \inherits Control
     \instantiates QQuickAbstractButton
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-buttons
     \brief Base type of all button controls.
 
@@ -68,19 +68,19 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::pressed()
+    \qmlsignal QtQuick.Controls::AbstractButton::pressed()
 
     This signal is emitted when the button is interactively pressed by the user.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::released()
+    \qmlsignal QtQuick.Controls::AbstractButton::released()
 
     This signal is emitted when the button is interactively released by the user.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::canceled()
+    \qmlsignal QtQuick.Controls::AbstractButton::canceled()
 
     This signal is emitted when the button loses mouse grab
     while being pressed, or when it would emit the \l released
@@ -88,19 +88,19 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::clicked()
+    \qmlsignal QtQuick.Controls::AbstractButton::clicked()
 
     This signal is emitted when the button is interactively clicked by the user.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::pressAndHold()
+    \qmlsignal QtQuick.Controls::AbstractButton::pressAndHold()
 
     This signal is emitted when the button is interactively perssed and held down by the user.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked()
+    \qmlsignal QtQuick.Controls::AbstractButton::doubleClicked()
 
     This signal is emitted when the button is interactively double clicked by the user.
 */
@@ -230,7 +230,7 @@ QQuickAbstractButton::~QQuickAbstractButton()
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::AbstractButton::text
+    \qmlproperty string QtQuick.Controls::AbstractButton::text
 
     This property holds a textual description of the button.
 
@@ -257,7 +257,7 @@ void QQuickAbstractButton::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::down
+    \qmlproperty bool QtQuick.Controls::AbstractButton::down
 
     This property holds whether the button is visually down.
 
@@ -295,7 +295,7 @@ void QQuickAbstractButton::resetDown()
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::pressed
+    \qmlproperty bool QtQuick.Controls::AbstractButton::pressed
     \readonly
 
     This property holds whether the button is physically pressed. A button can
@@ -326,7 +326,7 @@ void QQuickAbstractButton::setPressed(bool isPressed)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::checked
+    \qmlproperty bool QtQuick.Controls::AbstractButton::checked
 
     This property holds whether the button is checked.
 */
@@ -374,7 +374,7 @@ void QQuickAbstractButton::setCheckable(bool checkable)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::highlighted
+    \qmlproperty bool QtQuick.Controls::AbstractButton::highlighted
 
     This property holds whether the button is highlighted.
 
@@ -400,7 +400,7 @@ void QQuickAbstractButton::setHighlighted(bool highlighted)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::autoExclusive
+    \qmlproperty bool QtQuick.Controls::AbstractButton::autoExclusive
 
     This property holds whether auto-exclusivity is enabled.
 
@@ -430,7 +430,7 @@ void QQuickAbstractButton::setAutoExclusive(bool exclusive)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::AbstractButton::autoRepeat
+    \qmlproperty bool QtQuick.Controls::AbstractButton::autoRepeat
 
     This property holds whether the button repeats pressed(), released()
     and clicked() signals while the button is pressed and held down.
@@ -455,7 +455,7 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::AbstractButton::indicator
+    \qmlproperty Item QtQuick.Controls::AbstractButton::indicator
 
     This property holds the indicator item.
 */
@@ -482,7 +482,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Button::toggle()
+    \qmlmethod void QtQuick.Controls::Button::toggle()
 
     Toggles the checked state of the button.
 */

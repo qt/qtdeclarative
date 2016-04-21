@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype BusyIndicator
     \inherits Control
     \instantiates QQuickBusyIndicator
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-indicators
     \brief Indicates activity while content is being loaded.
 
@@ -79,7 +79,7 @@ QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::BusyIndicator::running
+    \qmlproperty bool QtQuick.Controls::BusyIndicator::running
 
     This property holds whether the busy indicator is currently indicating
     activity.

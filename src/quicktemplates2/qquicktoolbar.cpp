@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ToolBar
     \inherits Frame
     \instantiates QQuickToolBar
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-containers
     \brief A container with context-sensitive controls.
 
@@ -106,7 +106,7 @@ QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::ToolBar::position
+    \qmlproperty enumeration QtQuick.Controls::ToolBar::position
 
     This property holds the position of the toolbar.
 

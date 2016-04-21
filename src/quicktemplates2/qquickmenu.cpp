@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Menu
     \inherits Popup
     \instantiates QQuickMenu
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-menus
     \brief A menu control that can be used as a context menu or popup menu.
 
@@ -270,7 +270,7 @@ QQuickMenu::QQuickMenu(QObject *parent) :
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::Menu::itemAt(int index)
+    \qmlmethod Item QtQuick.Controls::Menu::itemAt(int index)
 
     Returns the item at \a index, or \c null if it does not exist.
 */
@@ -281,7 +281,7 @@ QQuickItem *QQuickMenu::itemAt(int index) const
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Menu::addItem(Item item)
+    \qmlmethod void QtQuick.Controls::Menu::addItem(Item item)
 
     Adds \a item to the end of the list of items.
 */
@@ -292,7 +292,7 @@ void QQuickMenu::addItem(QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Menu::insertItem(int index, Item item)
+    \qmlmethod void QtQuick.Controls::Menu::insertItem(int index, Item item)
 
     Inserts \a item at \a index.
 */
@@ -317,7 +317,7 @@ void QQuickMenu::insertItem(int index, QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Menu::moveItem(int from, int to)
+    \qmlmethod void QtQuick.Controls::Menu::moveItem(int from, int to)
 
     Moves an item \a from one index \a to another.
 */
@@ -335,7 +335,7 @@ void QQuickMenu::moveItem(int from, int to)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Menu::removeItem(int index)
+    \qmlmethod void QtQuick.Controls::Menu::removeItem(int index)
 
     Removes an item at \a index.
 
@@ -354,7 +354,7 @@ void QQuickMenu::removeItem(int index)
 }
 
 /*!
-    \qmlproperty model Qt.labs.controls::Menu::contentModel
+    \qmlproperty model QtQuick.Controls::Menu::contentModel
     \readonly
 
     This property holds the model used to display menu items.
@@ -369,7 +369,7 @@ QVariant QQuickMenu::contentModel() const
 }
 
 /*!
-    \qmlproperty list<Object> Qt.labs.controls::Menu::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Menu::contentData
     \default
 
     This property holds the list of content data.
@@ -387,7 +387,7 @@ QQmlListProperty<QObject> QQuickMenu::contentData()
 }
 
 /*!
-    \qmlproperty string Qt.labs.controls::Menu::title
+    \qmlproperty string QtQuick.Controls::Menu::title
 
     Title for the menu as a submenu or in a menubar.
 

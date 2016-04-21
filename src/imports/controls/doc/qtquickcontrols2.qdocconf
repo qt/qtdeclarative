@@ -60,7 +60,7 @@ navigation.cppclassespage = "Qt Quick Controls 2 C++ Classes"
 
 tagfile                 = qtquickcontrols2.tags
 
-# \styleimport {Qt.labs.controls.universal 1.0}
+# \styleimport {QtQuick.Controls.Universal 2.0}
 macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"
 
 # \styleproperty {Universal.accent} {enumeration} {html-target-id}

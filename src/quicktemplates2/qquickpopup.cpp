@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Popup
     \inherits QtObject
     \instantiates QQuickPopup
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-popups
     \brief The base type of popup-like user interface controls.
 
@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void Qt.labs.controls::Popup::opened()
+    \qmlsignal void QtQuick.Controls::Popup::opened()
 
     This signal is emitted when the popup is opened.
 
@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void Qt.labs.controls::Popup::closed()
+    \qmlsignal void QtQuick.Controls::Popup::closed()
 
     This signal is emitted when the popup is closed.
 
@@ -680,7 +680,7 @@ QQuickPopup::~QQuickPopup()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Popup::open()
+    \qmlmethod void QtQuick.Controls::Popup::open()
 
     Opens the popup.
 */
@@ -695,7 +695,7 @@ void QQuickPopup::open()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Popup::close()
+    \qmlmethod void QtQuick.Controls::Popup::close()
 
     Closes the popup.
 */
@@ -710,7 +710,7 @@ void QQuickPopup::close()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::x
+    \qmlproperty real QtQuick.Controls::Popup::x
 
     This property holds the x-coordinate of the popup.
 */
@@ -733,7 +733,7 @@ void QQuickPopup::setX(qreal x)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::y
+    \qmlproperty real QtQuick.Controls::Popup::y
 
     This property holds the y-coordinate of the popup.
 */
@@ -780,7 +780,7 @@ void QQuickPopup::setPosition(const QPointF &pos)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::z
+    \qmlproperty real QtQuick.Controls::Popup::z
 
     This property holds the z-value of the popup. Z-value determines
     the stacking order of popups. The default z-value is \c 0.
@@ -801,7 +801,7 @@ void QQuickPopup::setZ(qreal z)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::width
+    \qmlproperty real QtQuick.Controls::Popup::width
 
     This property holds the width of the popup.
 */
@@ -824,7 +824,7 @@ void QQuickPopup::resetWidth()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::height
+    \qmlproperty real QtQuick.Controls::Popup::height
 
     This property holds the height of the popup.
 */
@@ -847,7 +847,7 @@ void QQuickPopup::resetHeight()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::implicitWidth
+    \qmlproperty real QtQuick.Controls::Popup::implicitWidth
 
     This property holds the implicit width of the popup.
 */
@@ -864,7 +864,7 @@ void QQuickPopup::setImplicitWidth(qreal width)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::implicitHeight
+    \qmlproperty real QtQuick.Controls::Popup::implicitHeight
 
     This property holds the implicit height of the popup.
 */
@@ -881,7 +881,7 @@ void QQuickPopup::setImplicitHeight(qreal height)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::contentWidth
+    \qmlproperty real QtQuick.Controls::Popup::contentWidth
 
     This property holds the content width. It is used for calculating the
     total implicit width of the Popup.
@@ -906,7 +906,7 @@ void QQuickPopup::setContentWidth(qreal width)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::contentHeight
+    \qmlproperty real QtQuick.Controls::Popup::contentHeight
 
     This property holds the content height. It is used for calculating the
     total implicit height of the Popup.
@@ -931,7 +931,7 @@ void QQuickPopup::setContentHeight(qreal height)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::availableWidth
+    \qmlproperty real QtQuick.Controls::Popup::availableWidth
     \readonly
 
     This property holds the width available after deducting horizontal padding.
@@ -945,7 +945,7 @@ qreal QQuickPopup::availableWidth() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::availableHeight
+    \qmlproperty real QtQuick.Controls::Popup::availableHeight
     \readonly
 
     This property holds the height available after deducting vertical padding.
@@ -959,7 +959,7 @@ qreal QQuickPopup::availableHeight() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::margins
+    \qmlproperty real QtQuick.Controls::Popup::margins
 
     This property holds the default margins around the popup.
 
@@ -997,7 +997,7 @@ void QQuickPopup::resetMargins()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::topMargin
+    \qmlproperty real QtQuick.Controls::Popup::topMargin
 
     This property holds the top margin around the popup.
 
@@ -1024,7 +1024,7 @@ void QQuickPopup::resetTopMargin()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::leftMargin
+    \qmlproperty real QtQuick.Controls::Popup::leftMargin
 
     This property holds the left margin around the popup.
 
@@ -1051,7 +1051,7 @@ void QQuickPopup::resetLeftMargin()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::rightMargin
+    \qmlproperty real QtQuick.Controls::Popup::rightMargin
 
     This property holds the right margin around the popup.
 
@@ -1078,7 +1078,7 @@ void QQuickPopup::resetRightMargin()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::bottomMargin
+    \qmlproperty real QtQuick.Controls::Popup::bottomMargin
 
     This property holds the bottom margin around the popup.
 
@@ -1105,7 +1105,7 @@ void QQuickPopup::resetBottomMargin()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::padding
+    \qmlproperty real QtQuick.Controls::Popup::padding
 
     This property holds the default padding.
 
@@ -1130,7 +1130,7 @@ void QQuickPopup::resetPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::topPadding
+    \qmlproperty real QtQuick.Controls::Popup::topPadding
 
     This property holds the top padding.
 
@@ -1155,7 +1155,7 @@ void QQuickPopup::resetTopPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::leftPadding
+    \qmlproperty real QtQuick.Controls::Popup::leftPadding
 
     This property holds the left padding.
 
@@ -1180,7 +1180,7 @@ void QQuickPopup::resetLeftPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::rightPadding
+    \qmlproperty real QtQuick.Controls::Popup::rightPadding
 
     This property holds the right padding.
 
@@ -1205,7 +1205,7 @@ void QQuickPopup::resetRightPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::bottomPadding
+    \qmlproperty real QtQuick.Controls::Popup::bottomPadding
 
     This property holds the bottom padding.
 
@@ -1230,7 +1230,7 @@ void QQuickPopup::resetBottomPadding()
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.controls::Popup::locale
+    \qmlproperty Locale QtQuick.Controls::Popup::locale
 
     This property holds the locale of the popup.
 
@@ -1255,7 +1255,7 @@ void QQuickPopup::resetLocale()
 }
 
 /*!
-    \qmlproperty font Qt.labs.controls::Popup::font
+    \qmlproperty font QtQuick.Controls::Popup::font
 
     This property holds the font currently set for the popup.
 */
@@ -1353,7 +1353,7 @@ void QQuickPopup::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Popup::contentItem
+    \qmlproperty Item QtQuick.Controls::Popup::contentItem
 
     This property holds the content item of the popup.
 
@@ -1375,7 +1375,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty list<Object> Qt.labs.controls::Popup::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Popup::contentData
     \default
 
     This property holds the list of content data.
@@ -1393,7 +1393,7 @@ QQmlListProperty<QObject> QQuickPopup::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> Qt.labs.controls::Popup::contentChildren
+    \qmlproperty list<Item> QtQuick.Controls::Popup::contentChildren
 
     This property holds the list of content children.
 
@@ -1410,7 +1410,7 @@ QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Popup::clip
+    \qmlproperty bool QtQuick.Controls::Popup::clip
 
     This property holds whether clipping is enabled. The default value is \c false.
 */
@@ -1430,7 +1430,7 @@ void QQuickPopup::setClip(bool clip)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Popup::focus
+    \qmlproperty bool QtQuick.Controls::Popup::focus
 
     This property holds whether the popup has focus. The default value is \c false.
 */
@@ -1450,7 +1450,7 @@ void QQuickPopup::setFocus(bool focus)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Popup::activeFocus
+    \qmlproperty bool QtQuick.Controls::Popup::activeFocus
     \readonly
 
     This property holds whether the popup has active focus.
@@ -1462,7 +1462,7 @@ bool QQuickPopup::hasActiveFocus() const
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Popup::modal
+    \qmlproperty bool QtQuick.Controls::Popup::modal
 
     This property holds whether the popup is modal. The default value is \c false.
 */
@@ -1482,7 +1482,7 @@ void QQuickPopup::setModal(bool modal)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Popup::visible
+    \qmlproperty bool QtQuick.Controls::Popup::visible
 
     This property holds whether the popup is visible. The default value is \c false.
 */
@@ -1508,7 +1508,7 @@ void QQuickPopup::setVisible(bool visible)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::opacity
+    \qmlproperty real QtQuick.Controls::Popup::opacity
 
     This property holds the opacity of the popup. The default value is \c 1.0.
 */
@@ -1525,7 +1525,7 @@ void QQuickPopup::setOpacity(qreal opacity)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Popup::scale
+    \qmlproperty real QtQuick.Controls::Popup::scale
 
     This property holds the scale factor of the popup. The default value is \c 1.0.
 */
@@ -1545,7 +1545,7 @@ void QQuickPopup::setScale(qreal scale)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Popup::closePolicy
+    \qmlproperty enumeration QtQuick.Controls::Popup::closePolicy
 
     This property determines the circumstances under which the popup closes.
     The flags can be combined to allow several ways of closing the popup.
@@ -1577,7 +1577,7 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Popup::transformOrigin
+    \qmlproperty enumeration QtQuick.Controls::Popup::transformOrigin
 
     This property holds the origin point for transformations in enter and exit transitions.
 
@@ -1601,7 +1601,7 @@ void QQuickPopup::setTransformOrigin(TransformOrigin origin)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Popup::enter
+    \qmlproperty Transition QtQuick.Controls::Popup::enter
 
     This property holds the transition that is applied to the content item
     when the popup is opened and enters the screen.
@@ -1622,7 +1622,7 @@ void QQuickPopup::setEnter(QQuickTransition *transition)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Popup::exit
+    \qmlproperty Transition QtQuick.Controls::Popup::exit
 
     This property holds the transition that is applied to the content item
     when the popup is closed and exits the screen.

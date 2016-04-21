@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Tumbler
     \inherits Control
     \instantiates QQuickTumbler
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-input
     \brief A spinnable wheel of items that can be selected.
 
@@ -200,7 +200,7 @@ QQuickTumbler::~QQuickTumbler()
 }
 
 /*!
-    \qmlproperty variant Qt.labs.controls::Tumbler::model
+    \qmlproperty variant QtQuick.Controls::Tumbler::model
 
     This property holds the model that provides data for this tumbler.
 */
@@ -221,7 +221,7 @@ void QQuickTumbler::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::Tumbler::count
+    \qmlproperty int QtQuick.Controls::Tumbler::count
     \readonly
 
     This property holds the number of items in the model.
@@ -233,7 +233,7 @@ int QQuickTumbler::count() const
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::Tumbler::currentIndex
+    \qmlproperty int QtQuick.Controls::Tumbler::currentIndex
 
     This property holds the index of the current item.
 */
@@ -250,7 +250,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Tumbler::currentItem
+    \qmlproperty Item QtQuick.Controls::Tumbler::currentItem
     \readonly
 
     This property holds the item at the current index.
@@ -262,7 +262,7 @@ QQuickItem *QQuickTumbler::currentItem() const
 }
 
 /*!
-    \qmlproperty component Qt.labs.controls::Tumbler::delegate
+    \qmlproperty component QtQuick.Controls::Tumbler::delegate
 
     This property holds the delegate used to display each item.
 */
@@ -283,7 +283,7 @@ void QQuickTumbler::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::Tumbler::visibleItemCount
+    \qmlproperty int QtQuick.Controls::Tumbler::visibleItemCount
 
     This property holds the number of items visible in the tumbler. It must be
     an odd number, as the current item is always vertically centered.

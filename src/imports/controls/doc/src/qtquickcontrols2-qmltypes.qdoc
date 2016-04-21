@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule Qt.labs.controls 1.0
+    \qmlmodule QtQuick.Controls 2.0
     \title Qt Quick Controls 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for user interfaces (Qt Quick Controls 2).
@@ -53,8 +53,8 @@
 
     \section1 QML Types
 
-    \section2 Qt.labs.controls Module
-    \generatelist {qmltypesbymodule Qt.labs.controls}
+    \section2 QtQuick.Controls Module
+    \generatelist {qmltypesbymodule QtQuick.Controls}
     \noautolist
 
     For more information on the Qt Quick Controls 2 module, see the

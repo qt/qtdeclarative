@@ -32,7 +32,7 @@
     The Universal Style is based on the Microsoft Universal Design Guidelines.
     \l {detailed-description}{More...}
 
-    \styleimport {Qt.labs.controls.universal 1.0}
+    \styleimport {QtQuick.Controls.Universal 2.0}
 
     \section1 Attached Properties
 

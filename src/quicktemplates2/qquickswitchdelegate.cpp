@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \qmltype SwitchDelegate
     \inherits ItemDelegate
     \instantiates QQuickSwitchDelegate
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be toggled on or off.
 
@@ -111,7 +111,7 @@ QQuickSwitchDelegate::QQuickSwitchDelegate(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::SwitchDelegate::position
+    \qmlproperty real QtQuick.Controls::SwitchDelegate::position
     \readonly
 
     \input includes/qquickswitch.qdocinc position
@@ -135,7 +135,7 @@ void QQuickSwitchDelegate::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::SwitchDelegate::visualPosition
+    \qmlproperty real QtQuick.Controls::SwitchDelegate::visualPosition
     \readonly
 
     \input includes/qquickswitch.qdocinc visualPosition

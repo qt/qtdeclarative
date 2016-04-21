@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ScrollBar
     \inherits Control
     \instantiates QQuickScrollBar
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-indicators
     \brief An interactive scroll bar control.
 
@@ -172,7 +172,7 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ScrollBar::size
+    \qmlproperty real QtQuick.Controls::ScrollBar::size
 
     This property holds the size of the scroll bar, scaled to \c {0.0 - 1.0}.
 
@@ -198,7 +198,7 @@ void QQuickScrollBar::setSize(qreal size)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ScrollBar::position
+    \qmlproperty real QtQuick.Controls::ScrollBar::position
 
     This property holds the position of the scroll bar, scaled to \c {0.0 - 1.0}.
 
@@ -224,7 +224,7 @@ void QQuickScrollBar::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::ScrollBar::stepSize
+    \qmlproperty real QtQuick.Controls::ScrollBar::stepSize
 
     This property holds the step size. The default value is \c 0.0.
 
@@ -247,7 +247,7 @@ void QQuickScrollBar::setStepSize(qreal step)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::ScrollBar::active
+    \qmlproperty bool QtQuick.Controls::ScrollBar::active
 
     This property holds whether the scroll bar is active, i.e. when it's \l pressed
     or the attached Flickable is \l {Flickable::moving}{moving}.
@@ -269,7 +269,7 @@ void QQuickScrollBar::setActive(bool active)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::ScrollBar::pressed
+    \qmlproperty bool QtQuick.Controls::ScrollBar::pressed
 
     This property holds whether the scroll bar is pressed.
 */
@@ -292,7 +292,7 @@ void QQuickScrollBar::setPressed(bool pressed)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::ScrollBar::orientation
+    \qmlproperty enumeration QtQuick.Controls::ScrollBar::orientation
 
     This property holds the orientation of the scroll bar.
 
@@ -319,7 +319,7 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ScrollBar::increase()
+    \qmlmethod void QtQuick.Controls::ScrollBar::increase()
 
     Increases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
 
@@ -335,7 +335,7 @@ void QQuickScrollBar::increase()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::ScrollBar::decrease()
+    \qmlmethod void QtQuick.Controls::ScrollBar::decrease()
 
     Decreases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
 
@@ -506,7 +506,7 @@ QQuickScrollBarAttached::~QQuickScrollBarAttached()
 }
 
 /*!
-    \qmlattachedproperty ScrollBar Qt.labs.controls::ScrollBar::horizontal
+    \qmlattachedproperty ScrollBar QtQuick.Controls::ScrollBar::horizontal
 
     This property attaches a horizontal scroll bar to a \l Flickable.
 
@@ -564,7 +564,7 @@ void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
 }
 
 /*!
-    \qmlattachedproperty ScrollBar Qt.labs.controls::ScrollBar::vertical
+    \qmlattachedproperty ScrollBar QtQuick.Controls::ScrollBar::vertical
 
     This property attaches a vertical scroll bar to a \l Flickable.
 

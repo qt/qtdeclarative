@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype CheckBox
     \inherits AbstractButton
     \instantiates QQuickCheckBox
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be checked or unchecked.
 
@@ -115,7 +115,7 @@ QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::CheckBox::tristate
+    \qmlproperty bool QtQuick.Controls::CheckBox::tristate
 
     This property holds whether the checkbox is a tri-state checkbox.
 
@@ -138,7 +138,7 @@ void QQuickCheckBox::setTristate(bool tristate)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::CheckBox::checkState
+    \qmlproperty enumeration QtQuick.Controls::CheckBox::checkState
 
     This property holds the check state of the checkbox.
 

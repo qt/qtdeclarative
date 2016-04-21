@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \qmltype SwipeDelegate
     \inherits ItemDelegate
     \instantiates QQuickSwipeDelegate
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \brief A swipable item delegate.
 
     SwipeDelegate presents a view item that can be swiped left or right to
@@ -703,15 +703,15 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::SwipeDelegate::exposure
-    \qmlproperty real Qt.labs.controls::SwipeDelegate::exposure.position
-    \qmlproperty bool Qt.labs.controls::SwipeDelegate::exposure.active
-    \qmlproperty Component Qt.labs.controls::SwipeDelegate::exposure.left
-    \qmlproperty Component Qt.labs.controls::SwipeDelegate::exposure.behind
-    \qmlproperty Component Qt.labs.controls::SwipeDelegate::exposure.right
-    \qmlproperty Item Qt.labs.controls::SwipeDelegate::exposure.leftItem
-    \qmlproperty Item Qt.labs.controls::SwipeDelegate::exposure.behindItem
-    \qmlproperty Item Qt.labs.controls::SwipeDelegate::exposure.rightItem
+    \qmlpropertygroup QtQuick.Controls::SwipeDelegate::exposure
+    \qmlproperty real QtQuick.Controls::SwipeDelegate::exposure.position
+    \qmlproperty bool QtQuick.Controls::SwipeDelegate::exposure.active
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.left
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.behind
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.right
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.leftItem
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.behindItem
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.rightItem
 
     \table
     \header

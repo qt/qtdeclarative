@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype MenuItem
     \inherits Control
     \instantiates QQuickMenuItem
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-menus
     \brief A menu item within a Menu.
 
@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void Qt.labs.controls::MenuItem::triggered()
+    \qmlsignal void QtQuick.Controls::MenuItem::triggered()
 
     This signal is emitted when the menu item is triggered by the user.
 */
@@ -93,7 +93,7 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::MenuItem::checkable
+    \qmlproperty bool QtQuick.Controls::MenuItem::checkable
 
     This property holds whether the menu item is checkable.
 */

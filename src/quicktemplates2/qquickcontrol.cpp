@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Control
     \inherits Item
     \instantiates QQuickControl
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \brief The base type of user interface controls.
 
     Control is the base type of user interface controls.  It receives input
@@ -406,7 +406,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 }
 
 /*!
-    \qmlproperty font Qt.labs.controls::Control::font
+    \qmlproperty font QtQuick.Controls::Control::font
 
     This property holds the font currently set for the control.
 
@@ -447,7 +447,7 @@ void QQuickControl::resetFont()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::availableWidth
+    \qmlproperty real QtQuick.Controls::Control::availableWidth
     \readonly
 
     This property holds the width available after deducting horizontal padding.
@@ -460,7 +460,7 @@ qreal QQuickControl::availableWidth() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::availableHeight
+    \qmlproperty real QtQuick.Controls::Control::availableHeight
     \readonly
 
     This property holds the height available after deducting vertical padding.
@@ -473,7 +473,7 @@ qreal QQuickControl::availableHeight() const
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::padding
+    \qmlproperty real QtQuick.Controls::Control::padding
 
     This property holds the default padding.
 
@@ -515,7 +515,7 @@ void QQuickControl::resetPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::topPadding
+    \qmlproperty real QtQuick.Controls::Control::topPadding
 
     This property holds the top padding.
 
@@ -542,7 +542,7 @@ void QQuickControl::resetTopPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::leftPadding
+    \qmlproperty real QtQuick.Controls::Control::leftPadding
 
     This property holds the left padding.
 
@@ -569,7 +569,7 @@ void QQuickControl::resetLeftPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::rightPadding
+    \qmlproperty real QtQuick.Controls::Control::rightPadding
 
     This property holds the right padding.
 
@@ -596,7 +596,7 @@ void QQuickControl::resetRightPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::bottomPadding
+    \qmlproperty real QtQuick.Controls::Control::bottomPadding
 
     This property holds the bottom padding.
 
@@ -623,7 +623,7 @@ void QQuickControl::resetBottomPadding()
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Control::spacing
+    \qmlproperty real QtQuick.Controls::Control::spacing
 
     This property holds the spacing.
 */
@@ -648,7 +648,7 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.controls::Control::locale
+    \qmlproperty Locale QtQuick.Controls::Control::locale
 
     This property holds the locale of the control.
     It contains locale specific properties for formatting data and numbers.
@@ -740,7 +740,7 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Control::mirrored
+    \qmlproperty bool QtQuick.Controls::Control::mirrored
     \readonly
 
     This property holds whether the control is mirrored.
@@ -757,7 +757,7 @@ bool QQuickControl::isMirrored() const
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Control::focusPolicy
+    \qmlproperty enumeration QtQuick.Controls::Control::focusPolicy
 
     This property determines the way the control accepts focus.
 
@@ -788,7 +788,7 @@ void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Control::focusReason
+    \qmlproperty enumeration QtQuick.Controls::Control::focusReason
     \readonly
 
     This property holds the reason of the last focus change.
@@ -827,7 +827,7 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Control::activeKeyFocus
+    \qmlproperty bool QtQuick.Controls::Control::activeKeyFocus
     \readonly
 
     This property holds whether the control has active focus and the focus
@@ -847,7 +847,7 @@ bool QQuickControl::hasActiveKeyFocus() const
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Control::hovered
+    \qmlproperty bool QtQuick.Controls::Control::hovered
     \readonly
 
     This property holds whether the control is hovered.
@@ -871,7 +871,7 @@ void QQuickControl::setHovered(bool hovered)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Control::hoverEnabled
+    \qmlproperty bool QtQuick.Controls::Control::hoverEnabled
 
     This property determines whether the control accepts hover events. The default value is \c false.
 
@@ -894,7 +894,7 @@ void QQuickControl::setHoverEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Control::wheelEnabled
+    \qmlproperty bool QtQuick.Controls::Control::wheelEnabled
 
     This property determines whether the control handles wheel events. The default value is \c false.
 */
@@ -915,7 +915,7 @@ void QQuickControl::setWheelEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Control::background
+    \qmlproperty Item QtQuick.Controls::Control::background
 
     This property holds the background item.
 
@@ -948,7 +948,7 @@ void QQuickControl::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Control::contentItem
+    \qmlproperty Item QtQuick.Controls::Control::contentItem
 
     This property holds the visual content item.
 

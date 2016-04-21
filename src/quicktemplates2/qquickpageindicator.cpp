@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype PageIndicator
     \inherits Control
     \instantiates QQuickPageIndicator
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-indicators
     \brief Indicates the currently active page.
 
@@ -152,7 +152,7 @@ QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::PageIndicator::count
+    \qmlproperty int QtQuick.Controls::PageIndicator::count
 
     This property holds the number of pages.
 */
@@ -173,7 +173,7 @@ void QQuickPageIndicator::setCount(int count)
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::PageIndicator::currentIndex
+    \qmlproperty int QtQuick.Controls::PageIndicator::currentIndex
 
     This property holds the index of the current page.
 */
@@ -194,7 +194,7 @@ void QQuickPageIndicator::setCurrentIndex(int index)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::PageIndicator::interactive
+    \qmlproperty bool QtQuick.Controls::PageIndicator::interactive
 
     This property holds whether the control is interactive. An interactive page indicator
     reacts to presses and automatically changes the \l {currentIndex}{current index}
@@ -220,7 +220,7 @@ void QQuickPageIndicator::setInteractive(bool interactive)
 }
 
 /*!
-    \qmlproperty Component Qt.labs.controls::PageIndicator::delegate
+    \qmlproperty Component QtQuick.Controls::PageIndicator::delegate
 
     This property holds a delegate that presents a page.
 

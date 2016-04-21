@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ApplicationWindow
     \inherits Window
     \instantiates QQuickApplicationWindow
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-containers
     \brief Provides a top-level application window.
 
@@ -268,7 +268,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::background
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::background
 
     This property holds the background item.
 
@@ -304,7 +304,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::header
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::header
 
     This property holds the window header item. The header item is positioned to
     the top, and resized to the width of the window. The default value is \c null.
@@ -350,7 +350,7 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::footer
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::footer
 
     This property holds the window footer item. The footer item is positioned to
     the bottom, and resized to the width of the window. The default value is \c null.
@@ -396,7 +396,7 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 }
 
 /*!
-    \qmlproperty list<Object> Qt.labs.controls::ApplicationWindow::contentData
+    \qmlproperty list<Object> QtQuick.Controls::ApplicationWindow::contentData
     \default
 
     This default property holds the list of all objects declared as children of
@@ -410,7 +410,7 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::contentItem
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::contentItem
     \readonly
 
     This property holds the window content item.
@@ -426,7 +426,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
 }
 
 /*!
-    \qmlproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+    \qmlproperty Control QtQuick.Controls::ApplicationWindow::activeFocusControl
     \readonly
 
     This property holds the control that currently has active focus, or \c null if there is
@@ -446,9 +446,9 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.controls::ApplicationWindow::overlay
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::overlay
-    \qmlproperty Item Qt.labs.controls::ApplicationWindow::overlay.background
+    \qmlpropertygroup QtQuick.Controls::ApplicationWindow::overlay
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.background
 
     This property holds the window overlay item and its background that implements the
     background dimming when any modal popups are open. Popups are automatically
@@ -467,7 +467,7 @@ QQuickOverlay *QQuickApplicationWindow::overlay() const
 }
 
 /*!
-    \qmlproperty font Qt.labs.controls::ApplicationWindow::font
+    \qmlproperty font QtQuick.Controls::ApplicationWindow::font
 
     This property holds the font currently set for the window.
 
@@ -659,7 +659,7 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
 }
 
 /*!
-    \qmlattachedproperty ApplicationWindow Qt.labs.controls::ApplicationWindow::window
+    \qmlattachedproperty ApplicationWindow QtQuick.Controls::ApplicationWindow::window
     \readonly
 
     This attached property holds the application window. The property can be attached
@@ -672,7 +672,7 @@ QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 }
 
 /*!
-    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::contentItem
+    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::contentItem
     \readonly
 
     This attached property holds the window content item. The property can be attached
@@ -685,7 +685,7 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 }
 
 /*!
-    \qmlattachedproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+    \qmlattachedproperty Control QtQuick.Controls::ApplicationWindow::activeFocusControl
     \readonly
 
     This attached property holds the control that currently has active focus, or \c null
@@ -702,7 +702,7 @@ QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 }
 
 /*!
-    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::header
+    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::header
     \readonly
 
     This attached property holds the window header item. The property can be attached
@@ -716,7 +716,7 @@ QQuickItem *QQuickApplicationWindowAttached::header() const
 }
 
 /*!
-    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::footer
+    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::footer
     \readonly
 
     This attached property holds the window footer item. The property can be attached
@@ -730,7 +730,7 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 }
 
 /*!
-    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::overlay
+    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::overlay
     \readonly
 
     This attached property holds the window overlay item. The property can be attached

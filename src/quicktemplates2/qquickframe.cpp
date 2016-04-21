@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Frame
     \inherits Pane
     \instantiates QQuickFrame
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-containers
     \brief A logical group of controls within a visual frame.
 

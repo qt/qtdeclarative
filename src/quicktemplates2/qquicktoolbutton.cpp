@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ToolButton
     \inherits Button
     \instantiates QQuickToolButton
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-buttons
     \brief A button with a layout suitable for a ToolBar.
 

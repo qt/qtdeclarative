@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Switch
     \inherits AbstractButton
     \instantiates QQuickSwitch
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
@@ -176,7 +176,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Switch::position
+    \qmlproperty real QtQuick.Controls::Switch::position
     \readonly
 
     \input includes/qquickswitch.qdocinc position
@@ -200,7 +200,7 @@ void QQuickSwitch::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real Qt.labs.controls::Switch::visualPosition
+    \qmlproperty real QtQuick.Controls::Switch::visualPosition
     \readonly
 
     \input includes/qquickswitch.qdocinc visualPosition

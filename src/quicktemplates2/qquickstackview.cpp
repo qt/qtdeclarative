@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype StackView
     \inherits Control
     \instantiates QQuickStackView
-    \inqmlmodule Qt.labs.controls
+    \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
     \brief Provides a stack-based navigation model.
@@ -296,7 +296,7 @@ QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::StackView::busy
+    \qmlproperty bool QtQuick.Controls::StackView::busy
     \readonly
     This property holds whether a transition is running.
 */
@@ -307,7 +307,7 @@ bool QQuickStackView::isBusy() const
 }
 
 /*!
-    \qmlproperty int Qt.labs.controls::StackView::depth
+    \qmlproperty int QtQuick.Controls::StackView::depth
     \readonly
     This property holds the number of items currently pushed onto the stack.
 */
@@ -318,7 +318,7 @@ int QQuickStackView::depth() const
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::StackView::currentItem
+    \qmlproperty Item QtQuick.Controls::StackView::currentItem
     \readonly
     This property holds the current top-most item in the stack.
 */
@@ -329,7 +329,7 @@ QQuickItem *QQuickStackView::currentItem() const
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::get(index, behavior)
+    \qmlmethod Item QtQuick.Controls::StackView::get(index, behavior)
 
     Returns the item at position \a index in the stack, or \c null if the index
     is out of bounds.
@@ -351,7 +351,7 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::find(callback, behavior)
+    \qmlmethod Item QtQuick.Controls::StackView::find(callback, behavior)
 
     Search for a specific item inside the stack. The \a callback function is called
     for each item in the stack (with the item and index as arguments) until the callback
@@ -390,7 +390,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::push(item, properties, operation)
+    \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation)
 
     Pushes an \a item onto the stack using the specified \a operation, and
     optionally applies a set of \a properties on the item. The item can be
@@ -477,7 +477,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::pop(item, operation)
+    \qmlmethod Item QtQuick.Controls::StackView::pop(item, operation)
 
     Pops one or more items off the stack. Returns the last item removed from the stack.
 
@@ -560,7 +560,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::replace(target, item, properties, operation)
+    \qmlmethod Item QtQuick.Controls::StackView::replace(target, item, properties, operation)
 
     Replaces one or more items on the stack with the specified \a item and
     \a operation, and optionally applies a set of \a properties on the
@@ -660,7 +660,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::StackView::clear()
+    \qmlmethod void QtQuick.Controls::StackView::clear()
 
     Removes all items from the stack. No animations are applied.
 */
@@ -674,7 +674,7 @@ void QQuickStackView::clear()
 }
 
 /*!
-    \qmlproperty var Qt.labs.controls::StackView::initialItem
+    \qmlproperty var QtQuick.Controls::StackView::initialItem
 
     This property holds the initial item that should be shown when the StackView
     is created. The initial item can be an \l Item, \l Component, or a \l [QML] url.
@@ -698,7 +698,7 @@ void QQuickStackView::setInitialItem(const QVariant &item)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::popEnter
+    \qmlproperty Transition QtQuick.Controls::StackView::popEnter
 
     This property holds the transition that is applied to the item that
     enters the stack when another item is popped off of it.
@@ -725,7 +725,7 @@ void QQuickStackView::setPopEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::popExit
+    \qmlproperty Transition QtQuick.Controls::StackView::popExit
 
     This property holds the transition that is applied to the item that
     exits the stack when the item is popped off of it.
@@ -752,7 +752,7 @@ void QQuickStackView::setPopExit(QQuickTransition *exit)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::pushEnter
+    \qmlproperty Transition QtQuick.Controls::StackView::pushEnter
 
     This property holds the transition that is applied to the item that
     enters the stack when the item is pushed onto it.
@@ -779,7 +779,7 @@ void QQuickStackView::setPushEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::pushExit
+    \qmlproperty Transition QtQuick.Controls::StackView::pushExit
 
     This property holds the transition that is applied to the item that
     exits the stack when another item is pushed onto it.
@@ -806,7 +806,7 @@ void QQuickStackView::setPushExit(QQuickTransition *exit)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::replaceEnter
+    \qmlproperty Transition QtQuick.Controls::StackView::replaceEnter
 
     This property holds the transition that is applied to the item that
     enters the stack when another item is replaced by it.
@@ -833,7 +833,7 @@ void QQuickStackView::setReplaceEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::StackView::replaceExit
+    \qmlproperty Transition QtQuick.Controls::StackView::replaceExit
 
     This property holds the transition that is applied to the item that
     exits the stack when it is replaced by another item.
@@ -942,7 +942,7 @@ QQuickStackAttached::~QQuickStackAttached()
 }
 
 /*!
-    \qmlattachedproperty int Qt.labs.controls::StackView::index
+    \qmlattachedproperty int QtQuick.Controls::StackView::index
     \readonly
 
     This attached property holds the stack index of the item it's
@@ -955,7 +955,7 @@ int QQuickStackAttached::index() const
 }
 
 /*!
-    \qmlattachedproperty StackView Qt.labs.controls::StackView::view
+    \qmlattachedproperty StackView QtQuick.Controls::StackView::view
     \readonly
 
     This attached property holds the stack view of the item it's
@@ -968,7 +968,7 @@ QQuickStackView *QQuickStackAttached::view() const
 }
 
 /*!
-    \qmlattachedproperty enumeration Qt.labs.controls::StackView::status
+    \qmlattachedproperty enumeration QtQuick.Controls::StackView::status
     \readonly
 
     This attached property holds the stack status of the item it's
