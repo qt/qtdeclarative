@@ -32,11 +32,15 @@
 
     Qt Quick Controls 2 consist of a hierarchy (tree) of items. In order to
     provide a custom look and feel, the default QML implementation of each
-    item can be replaced with a custom one. The following snippets present
-    the default implementations of various items. These can be used as a
-    starting point to implement a custom look and feel.
+    item can be replaced with a custom one.
 
-    \section1 Customizing BusyIndicator
+    \section1 Customization Reference
+
+    The following snippets present the default implementations of various
+    items. These can be used as a starting point to implement a custom look and
+    feel.
+
+    \section2 Customizing BusyIndicator
 
         BusyIndicator consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{contentItem}.
@@ -54,7 +58,7 @@
             \snippet BusyIndicator.qml contentItem
 
 
-    \section1 Customizing Button
+    \section2 Customizing Button
 
         Button consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{content item}.
@@ -72,7 +76,7 @@
             \snippet Button.qml contentItem
 
 
-    \section1 Customizing CheckBox
+    \section2 Customizing CheckBox
 
         CheckBox consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
@@ -96,7 +100,7 @@
             \snippet CheckBox.qml indicator
 
 
-    \section1 Customizing CheckDelegate
+    \section2 Customizing CheckDelegate
 
         CheckDelegate consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
@@ -120,7 +124,7 @@
             \snippet CheckDelegate.qml indicator
 
 
-    \section1 Customizing ComboBox
+    \section2 Customizing ComboBox
 
         ComboBox consists of \l {Control::background}{background},
         \l {Control::contentItem}{content item}, \l {ComboBox::popup}{popup},
@@ -151,7 +155,7 @@
             \snippet ComboBox.qml delegate
 
 
-    \section1 Customizing Dial
+    \section2 Customizing Dial
 
         Dial consists of two visual items: \l {Control::background}{background}
         and \l {Dial::handle}{handle}.
@@ -169,7 +173,7 @@
             \snippet Dial.qml handle
 
 
-    \section1 Customizing Drawer
+    \section2 Customizing Drawer
 
         Drawer can have a visual \l {Control::background}{background}
         item.
@@ -179,7 +183,7 @@
             \snippet Drawer.qml background
 
 
-    \section1 Customizing Frame
+    \section2 Customizing Frame
 
         Frame consists of one visual item: \l {Control::background}{background}.
 
@@ -190,7 +194,7 @@
             \snippet Frame.qml background
 
 
-    \section1 Customizing GroupBox
+    \section2 Customizing GroupBox
 
         GroupBox consists of two visual items: \l {Control::background}{background}
         and \l {GroupBox::label}{label}.
@@ -208,7 +212,7 @@
             \snippet GroupBox.qml label
 
 
-    \section1 Customizing ItemDelegate
+    \section2 Customizing ItemDelegate
 
         ItemDelegate consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
@@ -230,7 +234,7 @@
             ItemDelegate has no indicator item by default.
 
 
-    \section1 Customizing Label
+    \section2 Customizing Label
 
         Label can have a visual \l {Label::background}{background} item.
 
@@ -241,7 +245,7 @@
             Label has no background item by default.
 
 
-    \section1 Customizing Menu
+    \section2 Customizing Menu
 
         Menu consists of a \l {Popup::}{contentItem}.
 
@@ -252,13 +256,13 @@
             \snippet Menu.qml contentItem
 
 
-    \section1 Customizing MenuItem
+    \section2 Customizing MenuItem
 
         MenuItem can be customized in the same manner as
         \l {Customizing Button}{Button}.
 
 
-    \section1 Customizing PageIndicator
+    \section2 Customizing PageIndicator
 
         PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.
 
@@ -282,7 +286,7 @@
 
 
 
-    \section1 Customizing Pane
+    \section2 Customizing Pane
 
         Pane consists of a \l {Control::background}{background}.
 
@@ -293,7 +297,7 @@
             \snippet Pane.qml background
 
 
-    \section1 Customizing ProgressBar
+    \section2 Customizing ProgressBar
 
         ProgressBar consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{content item}.
@@ -311,7 +315,7 @@
             \snippet ProgressBar.qml contentItem
 
 
-    \section1 Customizing RadioButton
+    \section2 Customizing RadioButton
 
         RadioButton consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
@@ -335,7 +339,7 @@
             \snippet RadioButton.qml indicator
 
 
-    \section1 Customizing RadioDelegate
+    \section2 Customizing RadioDelegate
 
         RadioDelegate consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
@@ -359,7 +363,7 @@
             \snippet RadioDelegate.qml indicator
 
 
-    \section1 Customizing RangeSlider
+    \section2 Customizing RangeSlider
 
         RangeSlider consists of three visual items:
         \l {Control::background}{background},
@@ -385,7 +389,7 @@
             \snippet RangeSlider.qml secondHandle
 
 
-    \section1 Customizing ScrollBar
+    \section2 Customizing ScrollBar
 
         ScrollBar consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{content item}.
@@ -403,7 +407,7 @@
             \snippet ScrollBar.qml contentItem
 
 
-    \section1 Customizing ScrollIndicator
+    \section2 Customizing ScrollIndicator
 
         ScrollIndicator consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{content item}.
@@ -421,7 +425,7 @@
             \snippet ScrollIndicator.qml contentItem
 
 
-    \section1 Customizing Slider
+    \section2 Customizing Slider
 
         Slider consists of two visual items: \l {Control::background}{background},
         and \l {Slider::handle}{handle}.
@@ -439,7 +443,7 @@
             \snippet Slider.qml handle
 
 
-    \section1 Customizing SpinBox
+    \section2 Customizing SpinBox
 
         SpinBox consists of four visual items: \l {Control::background}{background},
         \l {Control::contentItem}{contentItem}, \l {SpinBox::up.indicator}{up indicator},
@@ -470,7 +474,7 @@
             \snippet SpinBox.qml up.indicator
 
 
-    \section1 Customizing StackView
+    \section2 Customizing StackView
 
         StackView can have a visual \l {Control::background}{background}
         item, and it allows customizing the transitions that are used for
@@ -500,7 +504,7 @@
 
             \snippet StackView.qml replaceExit
 
-    \section1 Customizing SwipeDelegate
+    \section2 Customizing SwipeDelegate
 
         SwipeDelegate consists of five visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item}, \l {AbstractButton::indicator}{indicator},
@@ -528,7 +532,7 @@
 
             By default, there are no left, right, or behind items defined.
 
-    \section1 Customizing SwipeView
+    \section2 Customizing SwipeView
 
         SwipeView can have a visual \l {Control::background}{background}
         item. The navigation is implemented by the \l {Control::contentItem}
@@ -542,7 +546,7 @@
 
         \snippet SwipeView.qml contentItem
 
-    \section1 Customizing Switch
+    \section2 Customizing Switch
 
         Switch consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
@@ -565,7 +569,7 @@
 
             \snippet Switch.qml indicator
 
-    \section1 Customizing SwitchDelegate
+    \section2 Customizing SwitchDelegate
 
         SwitchDelegate consists of three visual items: \l {Control::background}{background},
         \l {Control::contentItem}{contentItem} and \l {AbstractButton::indicator}{indicator}.
@@ -588,22 +592,22 @@
 
             \snippet SwitchDelegate.qml indicator
 
-    \section1 Customizing TabBar
+    \section2 Customizing TabBar
 
         TODO
 
 
-    \section1 Customizing TabButton
+    \section2 Customizing TabButton
 
         TODO
 
 
-    \section1 Customizing TextArea
+    \section2 Customizing TextArea
 
         TODO
 
 
-    \section1 Customizing TextField
+    \section2 Customizing TextField
 
         TextField offers a customizable \l {TextField::background}{background} item.
 
@@ -614,7 +618,7 @@
             \snippet TextField.qml background
 
 
-    \section1 Customizing ToolBar
+    \section2 Customizing ToolBar
 
         ToolBar consists of one visual item: \l {Control::background}{background}.
 
@@ -625,7 +629,7 @@
             \snippet ToolBar.qml background
 
 
-    \section1 Customizing ToolButton
+    \section2 Customizing ToolButton
 
         ToolButton consists of two visual items: \l {Control::background}{background}
         and \l {Control::contentItem}{content item}.
@@ -643,7 +647,7 @@
             \snippet ToolButton.qml contentItem
 
 
-    \section1 Customizing ToolTip
+    \section2 Customizing ToolTip
 
         ToolTip consists of two visual items: \l {Popup::background}{background}
         and \l {Popup::contentItem}{content item}.
@@ -661,7 +665,7 @@
             \snippet ToolTip.qml contentItem
 
 
-    \section1 Customizing Tumbler
+    \section2 Customizing Tumbler
 
         Tumbler consists of three visual items:
         \l {Control::background}{background},
