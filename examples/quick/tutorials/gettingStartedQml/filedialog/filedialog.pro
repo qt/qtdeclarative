@@ -21,5 +21,6 @@ SOURCES += \
 OTHER_FILES += qmldir
 
 # Copy the qmldir file to the same folder as the plugin binary
-QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$PWD/qmldir)) \
-                                $$shell_quote($$shell_path($$DESTDIR)) $$escape_expand(\\n\\t)
+cpqmldir.files = $$PWD/qmldir
+cpqmldir.path = $$DESTDIR
+COPIES += cpqmldir
