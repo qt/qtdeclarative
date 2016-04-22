@@ -423,7 +423,7 @@ void QQmlDebugServerImpl::parseArguments()
             //: Please preserve the line breaks and formatting
             << tr("Sends qDebug() and similar messages over the QML debug\n"
                "\t\t  connection. QtCreator uses this for showing debug\n"
-               "\t\t  messages in the JavaScript console.") << '\n'
+               "\t\t  messages in the debugger console.") << '\n'
            << tr("Other services offered by qmltooling plugins that implement "
                  "QQmlDebugServiceFactory and which can be found in the standard plugin "
                  "paths will also be available and can be specified. If no \"services\" "
