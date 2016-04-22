@@ -285,7 +285,6 @@
             \snippet PageIndicator.qml delegate
 
 
-
     \section2 Customizing Pane
 
         Pane consists of a \l {Control::background}{background}.
@@ -504,6 +503,7 @@
 
             \snippet StackView.qml replaceExit
 
+
     \section2 Customizing SwipeDelegate
 
         SwipeDelegate consists of five visual items: \l {Control::background}{background},
@@ -532,6 +532,7 @@
 
             By default, there are no left, right, or behind items defined.
 
+
     \section2 Customizing SwipeView
 
         SwipeView can have a visual \l {Control::background}{background}
@@ -545,6 +546,7 @@
         \section3 Content item
 
         \snippet SwipeView.qml contentItem
+
 
     \section2 Customizing Switch
 
@@ -569,6 +571,7 @@
 
             \snippet Switch.qml indicator
 
+
     \section2 Customizing SwitchDelegate
 
         SwitchDelegate consists of three visual items: \l {Control::background}{background},
@@ -591,6 +594,7 @@
             \image qtquickcontrols2-switchdelegate-indicator.png
 
             \snippet SwitchDelegate.qml indicator
+
 
     \section2 Customizing TabBar
 
