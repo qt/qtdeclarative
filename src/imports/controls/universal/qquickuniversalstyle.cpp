@@ -165,6 +165,8 @@ void QQuickUniversalStyle::setTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    emit foregroundChanged();
+    emit backgroundChanged();
 }
 
 void QQuickUniversalStyle::inheritTheme(Theme theme)
@@ -176,6 +178,8 @@ void QQuickUniversalStyle::inheritTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    emit foregroundChanged();
+    emit backgroundChanged();
 }
 
 void QQuickUniversalStyle::propagateTheme()
