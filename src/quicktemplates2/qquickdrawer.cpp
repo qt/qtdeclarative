@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickDrawer
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-navigation
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-popups
     \brief Provides a swipe-based side panel.
 
     Drawer provides a swipe-based side panel, similar to those often used in
@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
     If you would like the application's contents to stay where they are when
     the drawer is opened, don't apply a translation.
 
-    \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Container Controls}
+    \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
 class QQuickDrawerPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener

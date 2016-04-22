@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickMenu
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-menus
+    \ingroup qtquickcontrols2-popups
     \brief A menu control that can be used as a context menu or popup menu.
 
     \image qtquickcontrols2-menu.png
@@ -87,7 +88,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Menu}, {Menu Controls}
+    \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
 */
 
 QQuickMenuPrivate::QQuickMenuPrivate() :

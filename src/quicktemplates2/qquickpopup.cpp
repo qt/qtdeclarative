@@ -89,6 +89,8 @@ QT_BEGIN_NAMESPACE
     In order to ensure that a popup is displayed above other items in the
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
+
+    \sa {Popup Controls}
 */
 
 /*!
