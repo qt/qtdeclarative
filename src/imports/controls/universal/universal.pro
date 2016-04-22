@@ -1,4 +1,4 @@
-TARGET = qtquickuniversalstyleplugin
+TARGET = qtquickcontrols2universalstyleplugin
 TARGETPATH = QtQuick/Controls.2/Universal
 IMPORT_VERSION = 2.0
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquickuniversalstyleplugin.cpp
+    $$PWD/qtquickcontrols2universalstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtquickuniversalstyleplugin.qrc
+    $$PWD/qtquickcontrols2universalstyleplugin.qrc
 
 include(universal.pri)
 

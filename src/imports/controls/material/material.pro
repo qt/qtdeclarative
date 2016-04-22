@@ -1,4 +1,4 @@
-TARGET = qtquickmaterialstyleplugin
+TARGET = qtquickcontrols2materialstyleplugin
 TARGETPATH = QtQuick/Controls.2/Material
 IMPORT_VERSION = 2.0
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquickmaterialstyleplugin.cpp
+    $$PWD/qtquickcontrols2materialstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtquickmaterialstyleplugin.qrc
+    $$PWD/qtquickcontrols2materialstyleplugin.qrc
 
 include(material.pri)
 

@@ -46,7 +46,7 @@
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtquickmaterialstyleplugin);
+    Q_INIT_RESOURCE(qtquickcontrols2materialstyleplugin);
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_QtQuick_Controls_Material_2);
 #endif
@@ -54,13 +54,13 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickMaterialStylePlugin : public QQuickStylePlugin
+class QtQuickControls2MaterialStylePlugin : public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtQuickMaterialStylePlugin(QObject *parent = nullptr);
+    QtQuickControls2MaterialStylePlugin(QObject *parent = nullptr);
 
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
@@ -69,17 +69,17 @@ public:
     QQuickProxyTheme *createTheme() const override;
 };
 
-QtQuickMaterialStylePlugin::QtQuickMaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
+QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
 }
 
-void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
 }
 
-void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
 
@@ -95,16 +95,16 @@ void QtQuickMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
-QString QtQuickMaterialStylePlugin::name() const
+QString QtQuickControls2MaterialStylePlugin::name() const
 {
     return QStringLiteral("material");
 }
 
-QQuickProxyTheme *QtQuickMaterialStylePlugin::createTheme() const
+QQuickProxyTheme *QtQuickControls2MaterialStylePlugin::createTheme() const
 {
     return new QQuickMaterialTheme;
 }
 
 QT_END_NAMESPACE
 
-#include "qtquickmaterialstyleplugin.moc"
+#include "qtquickcontrols2materialstyleplugin.moc"

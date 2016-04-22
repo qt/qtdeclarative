@@ -46,7 +46,7 @@
 
 static inline void initResources()
 {
-    Q_INIT_RESOURCE(qtquickuniversalstyleplugin);
+    Q_INIT_RESOURCE(qtquickcontrols2universalstyleplugin);
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_QtQuick_Controls_Universal_2);
 #endif
@@ -54,13 +54,13 @@ static inline void initResources()
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickUniversalStylePlugin: public QQuickStylePlugin
+class QtQuickControls2UniversalStylePlugin: public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtQuickUniversalStylePlugin(QObject *parent = nullptr);
+    QtQuickControls2UniversalStylePlugin(QObject *parent = nullptr);
 
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
@@ -69,17 +69,17 @@ public:
     QQuickProxyTheme *createTheme() const override;
 };
 
-QtQuickUniversalStylePlugin::QtQuickUniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
+QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
 }
 
-void QtQuickUniversalStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
 }
 
-void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
 
@@ -96,16 +96,16 @@ void QtQuickUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const cha
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
-QString QtQuickUniversalStylePlugin::name() const
+QString QtQuickControls2UniversalStylePlugin::name() const
 {
     return QStringLiteral("universal");
 }
 
-QQuickProxyTheme *QtQuickUniversalStylePlugin::createTheme() const
+QQuickProxyTheme *QtQuickControls2UniversalStylePlugin::createTheme() const
 {
     return new QQuickUniversalTheme;
 }
 
 QT_END_NAMESPACE
 
-#include "qtquickuniversalstyleplugin.moc"
+#include "qtquickcontrols2universalstyleplugin.moc"
