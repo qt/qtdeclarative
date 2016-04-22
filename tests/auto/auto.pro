@@ -9,6 +9,7 @@ SUBDIRS += \
     menu \
     popup \
     pressandhold \
+    qquickstyle \
     sanity \
     snippets \
     styles \

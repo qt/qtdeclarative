@@ -37,9 +37,11 @@
 #include "qquickstyle.h"
 #include "qquickstyleattached_p.h"
 
+#include <QtCore/qdir.h>
 #include <QtCore/qsettings.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
@@ -102,12 +104,14 @@ struct QQuickStyleSpec
     void setStyle(const QString &s)
     {
         style = s;
-        resolved = !s.isEmpty();
+        resolved = false;
+        resolve();
     }
 
     void resolve()
     {
-        style = QGuiApplicationPrivate::styleOverride;
+        if (style.isEmpty())
+            style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
             style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
         if (style.isEmpty()) {
@@ -115,7 +119,53 @@ struct QQuickStyleSpec
             if (settings)
                 style = settings->value(QStringLiteral("Style")).toString();
         }
-        resolved = QGuiApplication::instance();
+
+        if (QGuiApplication::instance()) {
+            if (!style.contains(QLatin1Char('/'))) {
+                const QString targetPath = QStringLiteral("QtQuick/Controls.2");
+                const QStringList importPaths = QQmlEngine().importPathList();
+
+                // do a case-sensitive lookup first...
+                for (const QString &importPath : importPaths) {
+                    QDir importDir(importPath);
+                    if (importDir.cd(targetPath)) {
+                        if (style.isEmpty()) {
+                            style = importDir.absolutePath() + QLatin1Char('/');
+                            resolved = true;
+                            break;
+                        }
+#ifndef Q_OS_WIN
+                        // only on case-sensitive file systems
+                        else if (importDir.exists(style)) {
+                            style = importDir.absoluteFilePath(style);
+                            resolved = true;
+                            break;
+                        }
+#endif // Q_OS_WIN
+                    }
+                }
+
+                // ... and fallback to a case-insensitive lookup
+                if (!resolved) {
+                    for (const QString &importPath : importPaths) {
+                        QDir importDir(importPath);
+                        if (importDir.cd(targetPath)) {
+                            const QStringList entries = importDir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
+                            for (const QString &entry : entries) {
+                                if (entry.compare(style, Qt::CaseInsensitive) == 0) {
+                                    style = importDir.absoluteFilePath(entry);
+                                    resolved = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (resolved)
+                            break;
+                    }
+                }
+            }
+            resolved = true;
+        }
     }
 
     bool resolved;
