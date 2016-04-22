@@ -157,11 +157,13 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
 
-    qmlRegisterRevision<QQuickItem, 2>(uri, 2, 0);
+    // NOTE: register the latest revisions of all template/control base classes to
+    // make revisioned properties available to their subclasses (synced with Qt 5.7)
+    qmlRegisterRevision<QQuickItem, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickWindow, 2>(uri, 2, 0);
     qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
-    qmlRegisterRevision<QQuickTextInput, 6>(uri, 2, 0);
-    qmlRegisterRevision<QQuickTextEdit, 6>(uri, 2, 0);
+    qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
+    qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
 }
 
 QT_END_NAMESPACE
