@@ -35,7 +35,7 @@
     \l {Universal Style}{Universal} and \l {Material Style}{Material} styles
     offer an appealing design, but require more system resources.
 
-    \section1 Usage
+    \section1 Using Styles in Qt Quick Controls 2
 
     In order to run an application with a specific style, either configure the
     style using \l QQuickStyle in C++, pass a command line argument, or set an
