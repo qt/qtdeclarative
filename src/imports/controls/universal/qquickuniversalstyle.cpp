@@ -132,6 +132,15 @@ static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Color accent)
     return colors[accent];
 }
 
+extern bool qt_is_dark_system_theme();
+
+static QQuickUniversalStyle::Theme qquickuniversal_effective_theme(QQuickUniversalStyle::Theme theme)
+{
+    if (theme == QQuickUniversalStyle::System)
+        theme = qt_is_dark_system_theme() ? QQuickUniversalStyle::Dark : QQuickUniversalStyle::Light;
+    return theme;
+}
+
 static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
 static QRgb DefaultAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 static QRgb DefaultForeground = qquickuniversal_light_color(QQuickUniversalStyle::BaseHigh);
@@ -157,6 +166,7 @@ QQuickUniversalStyle::Theme QQuickUniversalStyle::theme() const
 
 void QQuickUniversalStyle::setTheme(Theme theme)
 {
+    theme = qquickuniversal_effective_theme(theme);
     m_explicitTheme = true;
     if (m_theme == theme)
         return;
@@ -529,7 +539,7 @@ void QQuickUniversalStyle::init()
         QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
         Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
         if (ok)
-            DefaultTheme = m_theme = themeEnum;
+            DefaultTheme = m_theme = qquickuniversal_effective_theme(themeEnum);
         else if (!themeValue.isEmpty())
             qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
 

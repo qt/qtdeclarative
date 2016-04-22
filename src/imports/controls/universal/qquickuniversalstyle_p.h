@@ -93,7 +93,7 @@ public:
 
     static QQuickUniversalStyle *qmlAttachedProperties(QObject *object);
 
-    enum Theme { Light, Dark };
+    enum Theme { Light, Dark, System };
     Q_ENUM(Theme)
 
     Theme theme() const;

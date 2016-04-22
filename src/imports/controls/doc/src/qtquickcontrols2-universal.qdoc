@@ -217,6 +217,11 @@
     Available themes:
     \value Universal.Light Light theme (default)
     \value Universal.Dark Dark theme
+    \value Universal.System System theme
+
+    Setting the theme to \c System chooses either the light or dark theme based
+    on the system theme colors. However, when reading the value of the theme
+    property, the value is never \c System, but the actual theme.
 
     \endstyleproperty
 

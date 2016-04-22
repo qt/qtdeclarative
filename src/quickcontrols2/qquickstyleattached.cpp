@@ -39,11 +39,32 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
+#include <QtGui/qcolor.h>
+#include <QtGui/qpalette.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
+
+static bool isDarkSystemTheme()
+{
+    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
+        if (const QPalette *systemPalette = theme->palette(QPlatformTheme::SystemPalette)) {
+            const QColor textColor = systemPalette->color(QPalette::WindowText);
+            return textColor.red() > 128 && textColor.blue() > 128 && textColor.green() > 128;
+        }
+    }
+    return false;
+}
+
+Q_QUICKCONTROLS2_PRIVATE_EXPORT bool qt_is_dark_system_theme()
+{
+    static bool dark = isDarkSystemTheme();
+    return dark;
+}
 
 static QQuickStyleAttached *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
 {

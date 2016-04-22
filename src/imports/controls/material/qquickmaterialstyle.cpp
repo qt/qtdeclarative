@@ -426,6 +426,15 @@ static QColor alphaBlend(const QColor &bg, const QColor &fg)
     return result;
 }
 
+extern bool qt_is_dark_system_theme();
+
+static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
+{
+    if (theme == QQuickMaterialStyle::System)
+        theme = qt_is_dark_system_theme() ? QQuickMaterialStyle::Dark : QQuickMaterialStyle::Light;
+    return theme;
+}
+
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_explicitTheme(false),
     m_explicitPrimary(false),
@@ -460,6 +469,9 @@ QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
+    if (theme == System)
+        theme = qt_is_dark_system_theme() ? Dark : Light;
+
     m_explicitTheme = true;
     if (m_theme == theme)
         return;
@@ -1195,7 +1207,7 @@ void QQuickMaterialStyle::init()
         QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
         Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
         if (ok)
-            defaultTheme = m_theme = themeEnum;
+            defaultTheme = m_theme = effectiveTheme(themeEnum);
         else if (!themeValue.isEmpty())
             qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
 

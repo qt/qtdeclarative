@@ -101,15 +101,15 @@
     of the methods described earlier) and certain style-specific attributes. The following
     example specifies that the preferred style is the Material style. Furthermore, when the
     application is run with the Material style, its theme is light and the accent color is
-    brown. However, if the application is run with the Universal style instead, the theme
-    is dark and the accent color is red.
+    brown. However, if the application is run with the Universal style instead, the accent
+    color is red and the appropriate theme is chosen based on the system theme colors.
 
     \code
     [Controls]
     Style=Material
 
     [Universal]
-    Theme=Dark
+    Theme=System
     Accent=Red
 
     [Material]

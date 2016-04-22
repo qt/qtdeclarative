@@ -108,7 +108,8 @@ class QQuickMaterialStyle : public QQuickStyleAttached
 public:
     enum Theme {
         Light,
-        Dark
+        Dark,
+        System
     };
 
     enum Color {
