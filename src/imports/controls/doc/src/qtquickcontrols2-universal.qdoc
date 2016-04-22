@@ -30,7 +30,7 @@
     \title Universal Style
 
     The Universal Style is based on the Microsoft Universal Design Guidelines.
-    \l {detailed-description}{More...}
+    \l {detailed-desc-universal}{More...}
 
     \styleimport {QtQuick.Controls.Universal 2.0}
 
@@ -44,6 +44,7 @@
     \endlist
 
     \section1 Detailed Description
+    \target detailed-desc-universal
 
     The Universal style is a device-agnostic style based on the
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines}.

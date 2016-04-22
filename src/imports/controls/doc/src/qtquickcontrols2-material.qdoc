@@ -30,7 +30,7 @@
     \title Material Style
 
     The Material Style is based on the Google Material Design Guidelines.
-    \l {detailed-description}{More...}
+    \l{detailed-desc-material}{More...}
 
     \styleimport {QtQuick.Controls.Material 2.0}
 
@@ -45,6 +45,7 @@
     \endlist
 
     \section1 Detailed Description
+    \target detailed-desc-material
 
     The Material style is based on the \l {https://www.google.com/design/spec/material-design/introduction.html}
     {Google Material Design Guidelines}. It allows for a unified experience
