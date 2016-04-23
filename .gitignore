@@ -23,6 +23,7 @@
 /tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/qquickstyle/tst_qquickstyle
+/tests/auto/qquickstyleselector/tst_qquickstyleselector
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
 /tests/auto/styles/tst_styles

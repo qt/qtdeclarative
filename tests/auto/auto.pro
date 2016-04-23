@@ -10,6 +10,7 @@ SUBDIRS += \
     popup \
     pressandhold \
     qquickstyle \
+    qquickstyleselector \
     sanity \
     snippets \
     styles \

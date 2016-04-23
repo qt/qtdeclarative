@@ -144,11 +144,15 @@ QString QQuickStyleSelector::select(const QString &fileName) const
             const QString selectedPath = selectionHelper(stylePath, fileName, allSelectors(false));
             if (selectedPath.startsWith(QLatin1Char(':')))
                 return QLatin1String("qrc") + selectedPath;
-            return QUrl::fromLocalFile(selectedPath).toString();
+            return QUrl::fromLocalFile(QFileInfo(selectedPath).absoluteFilePath()).toString();
         }
     }
 
-    QUrl url(d->baseUrl.toString() + QLatin1Char('/') + fileName);
+    QString base = d->baseUrl.toString();
+    if (!base.isEmpty() && !base.endsWith(QLatin1Char('/')))
+        base += QLatin1Char('/');
+
+    QUrl url(base + fileName);
     if (isLocalScheme(url.scheme())) {
         QString equivalentPath = QLatin1Char(':') + url.path();
         QString selectedPath = d->select(equivalentPath);
