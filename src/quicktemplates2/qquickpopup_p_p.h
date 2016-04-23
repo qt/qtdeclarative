@@ -182,6 +182,8 @@ public:
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
+    bool allowVerticalFlip;
+    bool allowHorizontalFlip;
     qreal x;
     qreal y;
     qreal margins;

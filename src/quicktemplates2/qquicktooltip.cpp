@@ -127,8 +127,6 @@ public:
     void startTimeout();
     void stopTimeout();
 
-    void reposition() override;
-
     int delay;
     int timeout;
     QString text;
@@ -160,91 +158,12 @@ void QQuickToolTipPrivate::stopTimeout()
     timeoutTimer.stop();
 }
 
-void QQuickToolTipPrivate::reposition()
-{
-    Q_Q(QQuickToolTip);
-    const qreal w = popupItem->width();
-    const qreal h = popupItem->height();
-    const qreal iw = popupItem->implicitWidth();
-    const qreal ih = popupItem->implicitHeight();
-
-    bool widthAdjusted = false;
-    bool heightAdjusted = false;
-
-    QRectF rect(x, y, iw > 0 ? iw : w, ih > 0 ? ih : h);
-    if (parentItem) {
-        rect = parentItem->mapRectToScene(rect);
-
-        QQuickWindow *window = q->window();
-        if (window) {
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(getMargins());
-
-            if (rect.left() < bounds.left() || rect.right() > bounds.right()) {
-                // if the tooltip doesn't fit inside the window, try flipping it around (left <-> right)
-                const QRectF flipped = parentItem->mapRectToScene(QRectF(parentItem->width() - x - rect.width(), y, rect.width(), rect.height()));
-
-                if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
-                    rect.moveLeft(flipped.left());
-
-                if (iw > 0) {
-                    // neither the flipped around geometry fits inside the window, choose
-                    // whichever side (left vs. right) fits larger part of the popup
-                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
-                        rect.moveLeft(bounds.left());
-                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
-                        rect.moveRight(bounds.right());
-
-                    // as a last resort, adjust width to fit the window
-                    if (rect.left() < bounds.left()) {
-                        rect.setLeft(bounds.left());
-                        widthAdjusted = true;
-                    }
-                    if (rect.right() > bounds.right()) {
-                        rect.setRight(bounds.right());
-                        widthAdjusted = true;
-                    }
-                }
-            }
-
-            if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
-                // if the tooltip doesn't fit inside the window, try flipping it around (above <-> below)
-                const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
-
-                if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
-                    rect.moveTop(flipped.top());
-
-                if (ih > 0) {
-                    // neither the flipped around geometry fits inside the window, choose
-                    // whichever side (above vs. below) fits larger part of the popup
-                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
-                        rect.moveTop(bounds.top());
-                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
-                        rect.moveBottom(bounds.bottom());
-
-                    // as a last resort, adjust height to fit the window
-                    if (rect.top() < bounds.top()) {
-                        rect.setTop(bounds.top());
-                        heightAdjusted = true;
-                    }
-                    if (rect.bottom() > bounds.bottom()) {
-                        rect.setBottom(bounds.bottom());
-                        heightAdjusted = true;
-                    }
-                }
-            }
-        }
-    }
-
-    popupItem->setPosition(rect.topLeft());
-    if (widthAdjusted && rect.width() > 0)
-        popupItem->setWidth(rect.width());
-    if (heightAdjusted && rect.height() > 0)
-        popupItem->setHeight(rect.height());
-}
-
 QQuickToolTip::QQuickToolTip(QQuickItem *parent) :
     QQuickPopup(*(new QQuickToolTipPrivate), parent)
 {
+    Q_D(QQuickToolTip);
+    d->allowVerticalFlip = true;
+    d->allowHorizontalFlip = true;
 }
 
 /*!

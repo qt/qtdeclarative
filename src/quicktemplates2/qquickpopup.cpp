@@ -127,6 +127,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasLeftMargin(false)
     , hasRightMargin(false)
     , hasBottomMargin(false)
+    , allowVerticalFlip(false)
+    , allowHorizontalFlip(false)
     , x(0)
     , y(0)
     , margins(0)
@@ -532,7 +534,9 @@ void QQuickPopupPrivate::reposition()
     const qreal iw = popupItem->implicitWidth();
     const qreal ih = popupItem->implicitHeight();
 
-    bool adjusted = false;
+    bool widthAdjusted = false;
+    bool heightAdjusted = false;
+
     QRectF rect(x, y, iw > 0 ? iw : w, ih > 0 ? ih : h);
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
@@ -552,33 +556,70 @@ void QQuickPopupPrivate::reposition()
             if (margins.right() > 0 && rect.right() > bounds.right())
                 rect.moveRight(bounds.right());
 
+            if (rect.left() < bounds.left() || rect.right() > bounds.right()) {
+                if (allowHorizontalFlip) {
+                    // if the tooltip doesn't fit inside the window, try flipping it around (left <-> right)
+                    const QRectF flipped = parentItem->mapRectToScene(QRectF(parentItem->width() - x - rect.width(), y, rect.width(), rect.height()));
+
+                    if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
+                        rect.moveLeft(flipped.left());
+                }
+
+                if (iw > 0) {
+                    // neither the flipped around geometry fits inside the window, choose
+                    // whichever side (left vs. right) fits larger part of the popup
+                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
+                        rect.moveLeft(bounds.left());
+                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
+                        rect.moveRight(bounds.right());
+
+                    // as a last resort, adjust width to fit the window
+                    if (rect.left() < bounds.left()) {
+                        rect.setLeft(bounds.left());
+                        widthAdjusted = true;
+                    }
+                    if (rect.right() > bounds.right()) {
+                        rect.setRight(bounds.right());
+                        widthAdjusted = true;
+                    }
+                }
+            }
+
             if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
-                // if the popup doesn't fit inside the window, try flipping it around (below <-> above)
-                const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
-                if (flipped.top() >= bounds.top() && flipped.bottom() < bounds.bottom()) {
-                    adjusted = true;
-                    rect = flipped;
-                } else if (ih > 0) {
+                if (allowVerticalFlip) {
+                    // if the tooltip doesn't fit inside the window, try flipping it around (above <-> below)
+                    const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
+
+                    if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
+                        rect.moveTop(flipped.top());
+                }
+
+                if (ih > 0) {
                     // neither the flipped around geometry fits inside the window, choose
                     // whichever side (above vs. below) fits larger part of the popup
-                    const QRectF primary = rect.intersected(bounds);
-                    const QRectF secondary = flipped.intersected(bounds);
+                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
+                        rect.moveTop(bounds.top());
+                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
+                        rect.moveBottom(bounds.bottom());
 
-                    if (primary.height() > secondary.height()) {
-                        rect.setY(primary.y());
-                        rect.setHeight(primary.height());
-                    } else {
-                        rect.setY(secondary.y());
-                        rect.setHeight(secondary.height());
+                    // as a last resort, adjust height to fit the window
+                    if (rect.top() < bounds.top()) {
+                        rect.setTop(bounds.top());
+                        heightAdjusted = true;
                     }
-                    adjusted = true;
+                    if (rect.bottom() > bounds.bottom()) {
+                        rect.setBottom(bounds.bottom());
+                        heightAdjusted = true;
+                    }
                 }
             }
         }
     }
 
     popupItem->setPosition(rect.topLeft());
-    if (adjusted && ih > 0)
+    if (widthAdjusted && rect.width() > 0)
+        popupItem->setWidth(rect.width());
+    if (heightAdjusted && rect.height() > 0)
         popupItem->setHeight(rect.height());
 }
 

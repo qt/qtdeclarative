@@ -37,7 +37,7 @@
 #include "qquickcombobox_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickabstractbutton_p.h"
-#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 
 #include <QtCore/qregexp.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -620,8 +620,10 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         return;
 
     delete d->popup;
-    if (popup)
+    if (popup) {
+        QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
+    }
     d->popup = popup;
     emit popupChanged();
 }
