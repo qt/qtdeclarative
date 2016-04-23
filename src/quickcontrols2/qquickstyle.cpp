@@ -125,7 +125,6 @@ struct QQuickStyleSpec
                 const QString targetPath = QStringLiteral("QtQuick/Controls.2");
                 const QStringList importPaths = QQmlEngine().importPathList();
 
-                // do a case-sensitive lookup first...
                 for (const QString &importPath : importPaths) {
                     QDir importDir(importPath);
                     if (importDir.cd(targetPath)) {
@@ -134,34 +133,17 @@ struct QQuickStyleSpec
                             resolved = true;
                             break;
                         }
-#ifndef Q_OS_WIN
-                        // only on case-sensitive file systems
-                        else if (importDir.exists(style)) {
-                            style = importDir.absoluteFilePath(style);
-                            resolved = true;
-                            break;
-                        }
-#endif // Q_OS_WIN
-                    }
-                }
-
-                // ... and fallback to a case-insensitive lookup
-                if (!resolved) {
-                    for (const QString &importPath : importPaths) {
-                        QDir importDir(importPath);
-                        if (importDir.cd(targetPath)) {
-                            const QStringList entries = importDir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
-                            for (const QString &entry : entries) {
-                                if (entry.compare(style, Qt::CaseInsensitive) == 0) {
-                                    style = importDir.absoluteFilePath(entry);
-                                    resolved = true;
-                                    break;
-                                }
+                        const QStringList entries = importDir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
+                        for (const QString &entry : entries) {
+                            if (entry.compare(style, Qt::CaseInsensitive) == 0) {
+                                style = importDir.absoluteFilePath(entry);
+                                resolved = true;
+                                break;
                             }
                         }
-                        if (resolved)
-                            break;
                     }
+                    if (resolved)
+                        break;
                 }
             }
             resolved = true;
