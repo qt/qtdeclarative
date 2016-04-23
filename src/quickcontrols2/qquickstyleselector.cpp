@@ -42,6 +42,7 @@
 #include <QtCore/qsysinfo.h>
 #include <QtCore/qlocale.h>
 
+#include <QtCore/private/qfileselector_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -55,42 +56,10 @@ static bool isLocalScheme(const QString &scheme)
     return local;
 }
 
-// similar, but not identical to QSysInfo::osType
-static QStringList platformSelectors()
-{
-    static QStringList selectors;
-    if (!selectors.isEmpty())
-        return selectors;
-
-#if defined(Q_OS_WIN)
-    // can't fall back to QSysInfo because we need both "winphone" and "winrt" for the Windows Phone case
-    selectors << QStringLiteral("windows");
-    selectors << QSysInfo::kernelType();  // "wince" and "winnt"
-#  if defined(Q_OS_WINRT)
-    selectors << QStringLiteral("winrt");
-#    if defined(Q_OS_WINPHONE)
-    selectors << QStringLiteral("winphone");
-#    endif
-#  endif
-#elif defined(Q_OS_UNIX)
-    selectors << QStringLiteral("unix");
-#  if !defined(Q_OS_ANDROID) && !defined(Q_OS_BLACKBERRY)
-    // we don't want "linux" for Android or "qnx" for Blackberry here
-    selectors << QSysInfo::kernelType();
-#     ifdef Q_OS_MAC
-    selectors << QStringLiteral("mac"); // compatibility, since kernelType() is "darwin"
-#     endif
-#  endif
-    QString productName = QSysInfo::productType();
-    if (productName != QLatin1String("unknown"))
-        selectors << productName; // "opensuse", "fedora", "osx", "ios", "blackberry", "android"
-#endif
-    return selectors;
-}
-
 static QStringList allSelectors(bool includeStyle)
 {
-    QStringList selectors = platformSelectors();
+    static const QStringList platformSelectors = QFileSelectorPrivate::platformSelectors();
+    QStringList selectors = platformSelectors;
     selectors += QLocale().name();
     if (includeStyle) {
         QString style = QQuickStyle::name();
