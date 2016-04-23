@@ -56,6 +56,7 @@ public:
     QString select(const QString &filePath) const;
 
     QUrl baseUrl;
+    QString style;
 };
 
 QT_END_NAMESPACE

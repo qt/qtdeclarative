@@ -56,16 +56,13 @@ static bool isLocalScheme(const QString &scheme)
     return local;
 }
 
-static QStringList allSelectors(bool includeStyle)
+static QStringList allSelectors(const QString &style = QString())
 {
     static const QStringList platformSelectors = QFileSelectorPrivate::platformSelectors();
     QStringList selectors = platformSelectors;
     selectors += QLocale().name();
-    if (includeStyle) {
-        QString style = QQuickStyle::name();
-        if (!style.isEmpty())
-            selectors.prepend(style);
-    }
+    if (!style.isEmpty())
+        selectors.prepend(style);
     return selectors;
 }
 
@@ -105,7 +102,7 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 
     const QString path = fi.path();
     const QString ret = selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
-                                        fi.fileName(), allSelectors(true));
+                                        fi.fileName(), allSelectors(style));
 
     if (!ret.isEmpty())
         return ret;
@@ -114,6 +111,8 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 
 QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
+    Q_D(QQuickStyleSelector);
+    d->style = QQuickStyle::name();
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
@@ -137,11 +136,11 @@ QString QQuickStyleSelector::select(const QString &fileName) const
     Q_D(const QQuickStyleSelector);
     const QString overridePath = QQuickStyle::path();
     if (!overridePath.isEmpty()) {
-        const QString stylePath = overridePath + QQuickStyle::name() + QLatin1Char('/');
+        const QString stylePath = overridePath + d->style + QLatin1Char('/');
         if (QFile::exists(stylePath + fileName)) {
             // the style name is included to the path, so exclude it from the selectors.
             // the rest of the selectors (os, locale) are still valid, though.
-            const QString selectedPath = selectionHelper(stylePath, fileName, allSelectors(false));
+            const QString selectedPath = selectionHelper(stylePath, fileName, allSelectors());
             if (selectedPath.startsWith(QLatin1Char(':')))
                 return QLatin1String("qrc") + selectedPath;
             return QUrl::fromLocalFile(QFileInfo(selectedPath).absoluteFilePath()).toString();
