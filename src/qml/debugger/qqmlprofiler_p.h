@@ -77,33 +77,33 @@ QT_BEGIN_NAMESPACE
 // independently when converting to QByteArrays. Thus you can only pack
 // messages if their data doesn't overlap. It's up to you to figure that
 // out.
-struct Q_AUTOTEST_EXPORT QQmlProfilerData
+struct Q_AUTOTEST_EXPORT QQmlProfilerData : public QQmlProfilerDefinitions
 {
     QQmlProfilerData() {}
 
-    QQmlProfilerData(qint64 time, int messageType, int detailType, const QUrl &url,
+    QQmlProfilerData(qint64 time, int messageType, RangeType detailType, const QUrl &url,
                      int x = 0, int y = 0) :
         time(time), messageType(messageType), detailType(detailType), detailUrl(url),
         x(x), y(y) {}
 
-    QQmlProfilerData(qint64 time, int messageType, int detailType, const QString &str,
+    QQmlProfilerData(qint64 time, int messageType, RangeType detailType, const QString &str,
                      int x = 0, int y = 0) :
         time(time), messageType(messageType), detailType(detailType),detailString(str),
         x(x), y(y) {}
 
-    QQmlProfilerData(qint64 time, int messageType, int detailType, const QString &str,
+    QQmlProfilerData(qint64 time, int messageType, RangeType detailType, const QString &str,
                      const QUrl &url, int x = 0, int y = 0) :
         time(time), messageType(messageType), detailType(detailType), detailString(str),
         detailUrl(url), x(x), y(y) {}
 
 
-    QQmlProfilerData(qint64 time, int messageType, int detailType) :
+    QQmlProfilerData(qint64 time, int messageType, RangeType detailType) :
         time(time), messageType(messageType), detailType(detailType) {}
 
 
     qint64 time;
     int messageType;        //bit field of QQmlProfilerService::Message
-    int detailType;
+    RangeType detailType;
 
     // RangeData prefers detailString; RangeLocation prefers detailUrl.
     QString detailString;   //used by RangeData and possibly by RangeLocation
@@ -121,7 +121,7 @@ public:
     void startBinding(const QQmlSourceLocation &location)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
-                                       (1 << RangeStart | 1 << RangeLocation), 1 << Binding,
+                                       (1 << RangeStart | 1 << RangeLocation), Binding,
                                        location.sourceFile, qmlSourceCoordinate(location.line), qmlSourceCoordinate(location.column)));
     }
 
@@ -131,39 +131,39 @@ public:
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
-                                       1 << Compiling, url, 1, 1));
+                                       Compiling, url, 1, 1));
     }
 
     void startHandlingSignal(const QQmlSourceLocation &location)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
-                                       (1 << RangeStart | 1 << RangeLocation), 1 << HandlingSignal,
+                                       (1 << RangeStart | 1 << RangeLocation), HandlingSignal,
                                        location.sourceFile, location.line, location.column));
     }
 
     void startCreating()
     {
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeStart, 1 << Creating));
+        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeStart, Creating));
     }
 
     void startCreating(const QString &typeName, const QUrl &fileName, int line, int column)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
-                                       1 << Creating, typeName, fileName, line, column));
+                                       Creating, typeName, fileName, line, column));
     }
 
     void updateCreating(const QString &typeName, const QUrl &fileName, int line, int column)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeLocation | 1 << RangeData),
-                                       1 << Creating, typeName, fileName, line, column));
+                                       Creating, typeName, fileName, line, column));
     }
 
     template<RangeType Range>
     void endRange()
     {
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeEnd, 1 << Range));
+        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeEnd, Range));
     }
 
     QQmlProfiler();
