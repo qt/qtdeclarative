@@ -168,7 +168,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         return;
     }
 
-    QQmlBindingProfiler prof(ep->profiler, f);
+    QQmlBindingProfiler prof(ep->profiler, this, f);
     setUpdatingFlag(true);
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);

@@ -58,14 +58,18 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QVector<QQmlProfilerData>)),
-            this, SLOT(receiveData(QVector<QQmlProfilerData>)));
+    connect(engine->profiler,
+            SIGNAL(dataReady(QVector<QQmlProfilerData>,QQmlProfiler::LocationHash)),
+            this,
+            SLOT(receiveData(QVector<QQmlProfilerData>,QQmlProfiler::LocationHash)));
 }
 
 // convert to QByteArrays that can be sent to the debug client
 // use of QDataStream can skew results
 //     (see tst_qqmldebugtrace::trace() benchmark)
-static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d, QList<QByteArray> &messages)
+static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
+                                         const QQmlProfiler::LocationHash &locations,
+                                         QList<QByteArray> &messages)
 {
     QQmlDebugPacket ds;
     Q_ASSERT_X((d.messageType & (1 << 31)) == 0, Q_FUNC_INFO,
@@ -78,15 +82,18 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d, QList<QByteA
         //### using QDataStream is relatively expensive
         ds << d.time << decodedMessageType << static_cast<quint32>(d.detailType);
 
+        QQmlProfiler::Location l = locations.value(d.locationId);
+
         switch (decodedMessageType) {
         case QQmlProfilerDefinitions::RangeStart:
         case QQmlProfilerDefinitions::RangeEnd:
             break;
         case QQmlProfilerDefinitions::RangeData:
-            ds << (d.detailString.isEmpty() ? d.detailUrl.toString() : d.detailString);
+            ds << (l.location.sourceFile.isEmpty() ? l.url.toString() : l.location.sourceFile);
             break;
         case QQmlProfilerDefinitions::RangeLocation:
-            ds << (d.detailUrl.isEmpty() ? d.detailString : d.detailUrl.toString()) << d.x << d.y;
+            ds << (l.url.isEmpty() ? l.location.sourceFile : l.url.toString())
+               << static_cast<qint32>(l.location.line) << static_cast<qint32>(l.location.column);
             break;
         default:
             Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
@@ -103,21 +110,29 @@ qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messag
         const QQmlProfilerData &nextData = data.at(next);
         if (nextData.time > until || messages.length() > s_numMessagesPerBatch)
             return nextData.time;
-        qQmlProfilerDataToByteArrays(nextData, messages);
+        qQmlProfilerDataToByteArrays(nextData, locations, messages);
         ++next;
     }
 
     next = 0;
     data.clear();
+    locations.clear();
     return -1;
 }
 
-void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data)
+void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data,
+                                      const QQmlProfiler::LocationHash &new_locations)
 {
     if (data.isEmpty())
         data = new_data;
     else
         data.append(new_data);
+
+    if (locations.isEmpty())
+        locations = new_locations;
+    else
+        locations.unite(new_locations);
+
     service->dataReady(this);
 }
 
