@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype MenuItem
-    \inherits Control
+    \inherits AbstractButton
     \instantiates QQuickMenuItem
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-menus
