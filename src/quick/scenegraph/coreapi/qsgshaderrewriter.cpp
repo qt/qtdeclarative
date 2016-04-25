@@ -89,9 +89,6 @@ void Tokenizer::initialize(const char *input)
     identifier = input;
 }
 
-#define foo
-
-
 Tokenizer::Token Tokenizer::next()
 {
     while (*pos != 0) {
