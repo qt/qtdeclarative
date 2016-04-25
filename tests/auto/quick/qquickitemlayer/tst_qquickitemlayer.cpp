@@ -102,6 +102,7 @@ void tst_QQuickItemLayer::initTestCase()
 {
     QQmlDataTest::initTestCase();
     QWindow window;
+#ifndef QT_NO_OPENGL
     QOpenGLContext context;
     window.setSurfaceType(QWindow::OpenGLSurface);
     window.create();
@@ -129,6 +130,9 @@ void tst_QQuickItemLayer::initTestCase()
             m_mesaVersion = QT_VERSION_CHECK(major, minor, patch);
         }
     }
+#else
+    window.create();
+#endif
 }
 
 // The test draws a red and a blue box next to each other and tests that the

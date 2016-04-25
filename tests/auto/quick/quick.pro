@@ -2,10 +2,19 @@ TEMPLATE = subdirs
 
 PUBLICTESTS += \
     geometry \
-    rendernode \
     qquickpixmapcache
 
-qtHaveModule(widgets): PUBLICTESTS += nodes
+contains(QT_CONFIG, opengl(es1|es2)?) {
+    PUBLICTESTS += \
+        rendernode
+    qtHaveModule(widgets): PUBLICTESTS += nodes
+
+    QUICKTESTS += \
+        qquickanimatedsprite \
+        qquickframebufferobject \
+        qquickopenglinfo \
+        qquickspritesequence
+}
 
 !cross_compile: PRIVATETESTS += examples
 
@@ -39,7 +48,6 @@ QUICKTESTS =  \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
-    qquickanimatedsprite \
     qquickdynamicpropertyanimation \
     qquickborderimage \
     qquickwindow \
@@ -48,7 +56,6 @@ QUICKTESTS =  \
     qquickflickable \
     qquickflipable \
     qquickfocusscope \
-    qquickframebufferobject \
     qquickgridview \
     qquickimage \
     qquickitem \
@@ -58,7 +65,6 @@ QUICKTESTS =  \
     qquickloader \
     qquickmousearea \
     qquickmultipointtoucharea \
-    qquickopenglinfo \
     qquickpainteditem \
     qquickpathview \
     qquickpincharea \
@@ -68,7 +74,6 @@ QUICKTESTS =  \
     qquickrepeater \
     qquickshadereffect \
     qquickshortcut \
-    qquickspritesequence \
     qquicktext \
     qquicktextdocument \
     qquicktextedit \
