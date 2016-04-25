@@ -52,26 +52,9 @@ QT_BEGIN_NAMESPACE
     ToolButton is functionally similar to \l Button, but provides a look that
     is more suitable within a \l ToolBar.
 
-    ### TODO: screenshot
+    \image qtquickcontrols2-toolbar.png
 
-    \code
-    ToolBar {
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: qsTr("< %1").arg(Qt.application.name)
-                enabled: stack.depth > 1
-                onClicked: stack.pop()
-            }
-            Item { Layout.fillWidth: true }
-            ToolButton {
-                text: qsTr("< %1").arg(Qt.application.name)
-                enabled: stack.depth > 1
-                onClicked: stack.pop()
-            }
-        }
-    }
-    \endcode
+    \snippet qtquickcontrols2-toolbar.qml 1
 
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
