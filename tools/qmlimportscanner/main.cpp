@@ -157,24 +157,46 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
 // Search for a given qml import in g_qmlImportPaths.
 QString resolveImportPath(const QString &uri, const QString &version)
 {
-    // Create path from uri (QtQuick.Controls -> QtQuick/Controls)
-    QString path = uri;
-    path.replace(QLatin1Char('.'), QLatin1Char('/'));
-    // search for the most spesifc version first
-    QString versionedName = path + QLatin1Char('.') + version;
+    const QLatin1Char dot('.');
+    const QLatin1Char slash('/');
+    const QStringList parts = uri.split(dot, QString::SkipEmptyParts);
+
+    QString ver = version;
     while (true) {
-        // look in all g_qmlImportPaths
         foreach (const QString &qmlImportPath, g_qmlImportPaths) {
-            QString candidatePath = QDir::cleanPath(qmlImportPath + QLatin1Char('/') + versionedName);
-            if (QDir(candidatePath).exists())
-                return candidatePath; // import found
+            // Search for the most specific version first, and search
+            // also for the version in parent modules. For example:
+            // - qml/QtQml/Models.2.0
+            // - qml/QtQml.2.0/Models
+            // - qml/QtQml/Models.2
+            // - qml/QtQml.2/Models
+            // - qml/QtQml/Models
+            if (ver.isEmpty()) {
+                const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + parts.join(slash));
+                if (QDir(candidatePath).exists())
+                    return candidatePath; // import found
+            } else {
+                for (int index = parts.count() - 1; index >= 0; --index) {
+                    const QString candidatePath = QDir::cleanPath(qmlImportPath + slash
+                                                                                + parts.mid(0, index + 1).join(slash)
+                                                                                + dot + ver + slash
+                                                                                + parts.mid(index + 1).join(slash));
+
+                    if (QDir(candidatePath).exists())
+                        return candidatePath; // import found
+                }
+            }
         }
 
         // remove the last version digit; stop if there are none left
-        int lastDot = versionedName.lastIndexOf(QLatin1Char('.'));
-        if (lastDot == -1)
+        if (ver.isEmpty())
             break;
-        versionedName = versionedName.mid(0, lastDot);
+
+        int lastDot = ver.lastIndexOf(dot);
+        if (lastDot == -1)
+            ver.clear();
+        else
+            ver = ver.mid(0, lastDot);
     }
 
     return QString(); // not found
