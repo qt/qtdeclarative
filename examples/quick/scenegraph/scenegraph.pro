@@ -1,10 +1,15 @@
 TEMPLATE = subdirs
+
+contains(QT_CONFIG, opengl(es1|es2)?) {
+    SUBDIRS += \
+            simplematerial \
+            sgengine \
+            textureinsgnode \
+            openglunderqml \
+            textureinthread \
+            twotextureproviders
+}
+
 SUBDIRS += \
         customgeometry \
-        openglunderqml \
-        sgengine \
-        simplematerial \
-        textureinsgnode \
-        textureinthread \
-        threadedanimation \
-        twotextureproviders
+        threadedanimation

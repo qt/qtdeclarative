@@ -24,8 +24,12 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
-            demos \
-            rendercontrol
+            demos
+
+#OpenGL Support Required
+contains(QT_CONFIG, opengl(es1|es2)?) {
+    SUBDIRS += rendercontrol
+}
 
 # Widget dependent examples
 qtHaveModule(widgets) {

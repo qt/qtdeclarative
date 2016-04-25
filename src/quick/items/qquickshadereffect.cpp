@@ -364,7 +364,9 @@ QSGContextFactoryInterface::Flags qsg_backend_flags();
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     : QQuickItem(parent),
+#ifndef QT_NO_OPENGL
       m_glImpl(nullptr),
+#endif
       m_impl(nullptr)
 {
     setFlag(QQuickItem::ItemHasContents);
@@ -372,8 +374,9 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
 #ifndef QT_NO_OPENGL
     if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectNode))
         m_glImpl = new QQuickOpenGLShaderEffect(this, this);
-#endif
+
     if (!m_glImpl)
+#endif
         m_impl = new QQuickGenericShaderEffect(this, this);
 }
 

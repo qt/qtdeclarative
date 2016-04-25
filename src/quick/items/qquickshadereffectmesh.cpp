@@ -136,7 +136,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                    (vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2),
-                                   GL_UNSIGNED_SHORT);
+                                   QSGGeometry::TypeUnsignedShort);
 
     } else {
         geometry->allocate((vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2));

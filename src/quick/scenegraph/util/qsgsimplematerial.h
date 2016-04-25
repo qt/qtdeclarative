@@ -50,7 +50,7 @@ class QSGSimpleMaterialShader : public QSGMaterialShader
 public:
     void initialize() {
         QSGMaterialShader::initialize();
-
+#ifndef QT_NO_OPENGL
         m_id_matrix = program()->uniformLocation(uniformMatrixName());
         if (m_id_matrix < 0) {
             qFatal("QSGSimpleMaterialShader does not implement 'uniform highp mat4 %s;' in its vertex shader",
@@ -67,7 +67,7 @@ public:
         } else {
             m_id_opacity = -1;
         }
-
+#endif
         resolveUniforms();
     }
 
@@ -197,11 +197,14 @@ QSGMaterialType QSGSimpleMaterial<State>::m_type;
 template <typename State>
 Q_INLINE_TEMPLATE void QSGSimpleMaterialShader<State>::updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
+#ifndef QT_NO_OPENGL
     if (state.isMatrixDirty())
         program()->setUniformValue(m_id_matrix, state.combinedMatrix());
     if (state.isOpacityDirty() && m_id_opacity >= 0)
         program()->setUniformValue(m_id_opacity, state.opacity());
-
+#else
+    Q_UNUSED(state)
+#endif
     State *ns = static_cast<QSGSimpleMaterial<State> *>(newMaterial)->state();
     State *old = 0;
     if (oldMaterial)

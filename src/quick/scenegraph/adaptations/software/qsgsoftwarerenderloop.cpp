@@ -163,7 +163,10 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
+#ifndef QT_NO_OPENGL
+        // QPlatformBackingStore::toImage() only with OpenGL for some reason
         grabContent = m_backingStores[window]->handle()->toImage();
+#endif
         data.grabOnly = false;
     }
 
