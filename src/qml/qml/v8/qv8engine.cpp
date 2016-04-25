@@ -155,8 +155,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
 QV8Engine::~QV8Engine()
 {
-    for (int ii = 0; ii < m_extensionData.count(); ++ii)
-        delete m_extensionData[ii];
+    qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
