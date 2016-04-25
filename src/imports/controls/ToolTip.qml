@@ -56,7 +56,7 @@ T.ToolTip {
     //! [contentItem]
     contentItem: Text {
         text: control.text
-        // TODO: font: control.font
+        font: control.font
         // TODO: wrapMode: Label.Wrap
     }
     //! [contentItem]
