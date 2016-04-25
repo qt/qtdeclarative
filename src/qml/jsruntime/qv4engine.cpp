@@ -105,84 +105,6 @@ static ReturnedValue throwTypeError(CallContext *ctx)
     return ctx->engine()->throwTypeError();
 }
 
-const int MinimumStackSize = 256; // in kbytes
-
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_MSVC(4172) // MSVC 2015: warning C4172: returning address of local variable or temporary: dummy
-
-quintptr getStackLimit()
-{
-    quintptr stackLimit;
-#if USE(PTHREADS) && !OS(QNX)
-#  if OS(DARWIN)
-    pthread_t thread_self = pthread_self();
-    void *stackTop = pthread_get_stackaddr_np(thread_self);
-    stackLimit = reinterpret_cast<quintptr>(stackTop);
-    quintptr size = 0;
-    if (pthread_main_np()) {
-        rlimit limit;
-        getrlimit(RLIMIT_STACK, &limit);
-        size = limit.rlim_cur;
-    } else
-        size = pthread_get_stacksize_np(thread_self);
-    stackLimit -= size;
-#  elif defined(__hppa)
-    // On some architectures the stack grows upwards. All of these are rather exotic, so simply assume
-    // everything is fine there.
-    // Known examples:
-    // -HP PA-RISC
-    stackLimit = 0;
-
-#  else
-    pthread_attr_t attr;
-#if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
-    // on FreeBSD pthread_attr_init() must be called otherwise getting the attrs crashes
-    if (pthread_attr_init(&attr) == 0 && pthread_attr_get_np(pthread_self(), &attr) == 0) {
-#else
-    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
-#endif
-        void *stackBottom = Q_NULLPTR;
-        size_t stackSize = 0;
-
-        pthread_attr_getstack(&attr, &stackBottom, &stackSize);
-        pthread_attr_destroy(&attr);
-
-#        if defined(Q_OS_ANDROID)
-        // Bionic pretends that the main thread has a tiny stack; work around it
-        if (gettid() == getpid()) {
-            rlimit limit;
-            getrlimit(RLIMIT_STACK, &limit);
-            stackBottom = reinterpret_cast<void*>(reinterpret_cast<quintptr>(stackBottom) + stackSize - limit.rlim_cur);
-        }
-#       endif
-
-        stackLimit = reinterpret_cast<quintptr>(stackBottom);
-    } else {
-        int dummy;
-        // this is inexact, as part of the stack is used when being called here,
-        // but let's simply default to 1MB from where the stack is right now
-        stackLimit = reinterpret_cast<qintptr>(&dummy) - 1024*1024;
-    }
-
-#  endif
-// This is wrong. StackLimit is the currently committed stack size, not the real end.
-// only way to get that limit is apparently by using VirtualQuery (Yuck)
-//#elif OS(WINDOWS)
-//    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
-//    stackLimit = static_cast<quintptr>(tib->StackLimit);
-#else
-    int dummy;
-    // this is inexact, as part of the stack is used when being called here,
-    // but let's simply default to 1MB from where the stack is right now
-    // (Note: triggers warning C4172 as of MSVC 2015, returning address of local variable)
-    stackLimit = reinterpret_cast<qintptr>(&dummy) - 1024*1024;
-#endif
-
-    // 256k slack
-    return stackLimit + MinimumStackSize*1024;
-}
-
-QT_WARNING_POP
 
 QJSEngine *ExecutionEngine::jsEngine() const
 {
@@ -194,9 +116,12 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
     return v8Engine->engine();
 }
 
+qint32 ExecutionEngine::maxCallDepth = -1;
+
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
     , hasException(false)
+    , callDepth(0)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
@@ -213,6 +138,15 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
 {
+    if (maxCallDepth == -1) {
+        bool ok = false;
+        maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
+        if (!ok || maxCallDepth <= 0) {
+            maxCallDepth = 1234;
+        }
+    }
+    Q_ASSERT(maxCallDepth > 0);
+
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
@@ -251,9 +185,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
-    cStackLimit = getStackLimit();
-    if (!recheckCStackLimits())
-        qFatal("Fatal: Not enough stack space available for QML. Please increase the process stack size to more than %d KBytes.", MinimumStackSize);
 
     identifierTable = new IdentifierTable(this);
 
@@ -1116,22 +1047,6 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
         error.setDescription(exception->toQStringNoThrow());
     return error;
 }
-
-bool ExecutionEngine::recheckCStackLimits()
-{
-    int dummy;
-#ifdef Q_OS_WIN
-    // ### this is only required on windows, where we currently use heuristics to get the stack limit
-    if (cStackLimit - reinterpret_cast<quintptr>(&dummy) > 128*1024)
-        // we're more then 128k away from our stack limit, assume the thread has changed, and
-        // call getStackLimit
-#endif
-    // this can happen after a thread change
-    cStackLimit = getStackLimit();
-
-    return (reinterpret_cast<quintptr>(&dummy) >= cStackLimit);
-}
-
 
 // Variant conversion code
 
