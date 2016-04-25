@@ -529,12 +529,37 @@ QQuickTumblerAttached::~QQuickTumblerAttached()
 {
 }
 
+/*!
+    \qmlattachedproperty Tumbler QtQuick.Controls::Tumbler::tumbler
+    \readonly
+
+    This attached property holds the tumbler. The property can be attached to
+    a tumbler delegate. The value is \c null if the item is not a tumbler delegate.
+*/
 QQuickTumbler *QQuickTumblerAttached::tumbler() const
 {
     Q_D(const QQuickTumblerAttached);
     return d->tumbler;
 }
 
+/*!
+    \qmlattachedproperty real QtQuick.Controls::Tumbler::displacement
+    \readonly
+
+    This attached property holds a value from \c {-visibleItemCount / 2} to
+    \c {visibleItemCount / 2}, which represents how far away this item is from
+    being the current item, with \c 0 being completely current.
+
+    For example, the item below will be 40% opaque when it is not the current item,
+    and transition to 100% opacity when it becomes the current item:
+
+    \code
+    delegate: Text {
+        text: modelData
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
+    }
+    \endcode
+*/
 qreal QQuickTumblerAttached::displacement() const
 {
     Q_D(const QQuickTumblerAttached);
