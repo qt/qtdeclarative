@@ -51,12 +51,13 @@ T.ComboBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 6
-    padding: 12
+    padding: 16
 
     //! [delegate]
     delegate: MenuItem {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
+        Material.foreground: control.currentIndex === index ? control.Material.accent : control.Material.foreground
         highlighted: control.highlightedIndex === index
     }
     //! [delegate]
@@ -76,7 +77,7 @@ T.ComboBox {
     //! [background]
     background: Rectangle {
         implicitWidth: 120
-        implicitHeight: 32
+        implicitHeight: 48
 
         radius: 2
         color: control.Material.dialogColor
@@ -114,7 +115,6 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
-        y: control.height
         implicitWidth: control.width
         implicitHeight: listview.contentHeight
         transformOrigin: Item.Top
