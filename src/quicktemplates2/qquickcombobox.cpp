@@ -237,8 +237,10 @@ void QQuickComboBoxPrivate::itemClicked()
 void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(object);
-    if (button)
+    if (button) {
+        button->setFocusPolicy(Qt::NoFocus);
         connect(button, &QQuickAbstractButton::clicked, this, &QQuickComboBoxPrivate::itemClicked);
+    }
 
     if (index == currentIndex)
         updateCurrentText();
