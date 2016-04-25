@@ -869,17 +869,24 @@ TestCase {
     Component {
         id: overlayTest
         ApplicationWindow {
-            property alias popup1: popup1
-            property alias popup2: popup2
+            property alias modalPopup: modalPopup
+            property alias modelessPopup: modelessPopup
+            property alias plainPopup: plainPopup
             visible: true
             Popup {
-                id: popup1
+                id: modalPopup
                 modal: true
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
             Popup {
-                id: popup2
-                modal: true
+                id: modelessPopup
+                dim: true
+                exit: Transition { PauseAnimation { duration: 200 } }
+            }
+            Popup {
+                id: plainPopup
+                enter: Transition { PauseAnimation { duration: 200 } }
+                exit: Transition { PauseAnimation { duration: 200 } }
             }
         }
     }
@@ -890,18 +897,32 @@ TestCase {
 
         window.requestActivate()
         tryCompare(window, "active", true)
-        compare(window.overlay.background.opacity, 0.0)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
 
-        window.popup1.open()
-        compare(window.popup1.visible, true)
-        compare(window.popup2.visible, false)
-        tryCompare(window.overlay.background, "opacity", 1.0)
+        window.modalPopup.open()
+        compare(window.modalPopup.visible, true)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
 
-        window.popup1.close()
-        window.popup2.open()
-        compare(window.popup2.visible, true)
-        tryCompare(window.popup1, "visible", false)
-        compare(window.overlay.background.opacity, 1.0)
+        window.modelessPopup.open()
+        compare(window.modelessPopup.visible, true)
+        tryCompare(window.overlay.modeless, "opacity", 1.0)
+
+        window.modelessPopup.close()
+        tryCompare(window.modelessPopup, "visible", false)
+        tryCompare(window.overlay.modeless, "opacity", 0.0)
+
+        compare(window.modalPopup.visible, true)
+        compare(window.overlay.modal.opacity, 1.0)
+
+        window.modalPopup.close()
+        tryCompare(window.modalPopup, "visible", false)
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.plainPopup.open()
+        tryCompare(window.plainPopup, "visible", true)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
 
         window.destroy()
     }

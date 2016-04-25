@@ -105,6 +105,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickPopup : public QObject, public QQmlParserSt
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged FINAL)
+    Q_PROPERTY(bool dim READ dim WRITE setDim RESET resetDim NOTIFY dimChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged FINAL)
@@ -227,6 +228,10 @@ public:
     bool isModal() const;
     void setModal(bool modal);
 
+    bool dim() const;
+    void setDim(bool dim);
+    void resetDim();
+
     bool isVisible() const;
     void setVisible(bool visible);
 
@@ -306,6 +311,7 @@ Q_SIGNALS:
     void focusChanged();
     void activeFocusChanged();
     void modalChanged();
+    void dimChanged();
     void visibleChanged();
     void opacityChanged();
     void scaleChanged();

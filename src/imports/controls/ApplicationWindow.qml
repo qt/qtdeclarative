@@ -43,7 +43,11 @@ T.ApplicationWindow {
 
     color: "#ffffff"
 
-    overlay.background: Rectangle {
+    overlay.modal: Rectangle {
         color: "#7f28282a"
+    }
+
+    overlay.modeless: Rectangle {
+        color: "#1f28282a"
     }
 }

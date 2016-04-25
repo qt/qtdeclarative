@@ -44,7 +44,11 @@ T.ApplicationWindow {
 
     color: Universal.background
 
-    overlay.background: Rectangle {
+    overlay.modal: Rectangle {
+        color: window.Universal.baseLowColor
+    }
+
+    overlay.modeless: Rectangle {
         color: window.Universal.baseLowColor
     }
 

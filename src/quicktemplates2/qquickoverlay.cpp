@@ -53,9 +53,10 @@ public:
     void popupAboutToShow();
     void popupAboutToHide();
     void drawerPositionChange();
-    void resizeBackground();
+    void resizeOverlay(QQuickItem *overlay);
 
-    QQuickItem *background;
+    QQuickItem *modal;
+    QQuickItem *modeless;
     QVector<QQuickDrawer *> drawers;
     QVector<QQuickPopup *> popups;
     QPointer<QQuickPopup> mouseGrabberPopup;
@@ -65,52 +66,71 @@ public:
 void QQuickOverlayPrivate::popupAboutToShow()
 {
     Q_Q(QQuickOverlay);
-    if (!background)
-        return;
-
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->isModal())
+    if (!popup)
         return;
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    QQmlProperty::write(background, QStringLiteral("opacity"), 1.0);
+    if (popup->isModal()) {
+        if (modal) {
+            modal->setZ(popup->z());
+            modal->stackBefore(popup->popupItem());
+            QQmlProperty::write(modal, QStringLiteral("opacity"), 1.0);
+        }
+    } else if (popup->dim()) {
+        if (modeless) {
+            modeless->setZ(popup->z());
+            modeless->stackBefore(popup->popupItem());
+            QQmlProperty::write(modeless, QStringLiteral("opacity"), 1.0);
+        }
+    }
 }
 
 void QQuickOverlayPrivate::popupAboutToHide()
 {
     Q_Q(QQuickOverlay);
-    if (!background || modalPopups > 1)
-        return;
-
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->isModal())
+    if (!popup)
         return;
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    QQmlProperty::write(background, QStringLiteral("opacity"), 0.0);
+    if (popup->isModal()) {
+        if (modal && modalPopups <= 1)
+            QQmlProperty::write(modal, QStringLiteral("opacity"), 0.0);
+    } else if (popup->dim()) {
+        if (modeless)
+            QQmlProperty::write(modeless, QStringLiteral("opacity"), 0.0);
+    }
 }
 
 void QQuickOverlayPrivate::drawerPositionChange()
 {
     Q_Q(QQuickOverlay);
     QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(q->sender());
-    if (!background || !drawer || !drawer->isModal())
+    if (!drawer)
         return;
 
     // call QQuickItem::setOpacity() directly to avoid triggering QML Behaviors
     // which would make the fading feel laggy compared to the drawer movement
-    background->setOpacity(drawer->position());
+    if (drawer->isModal()) {
+        if (modal)
+            modal->setOpacity(drawer->position());
+    } else if (drawer->dim()) {
+        if (modeless)
+            modeless->setOpacity(drawer->position());
+    }
 }
 
-void QQuickOverlayPrivate::resizeBackground()
+void QQuickOverlayPrivate::resizeOverlay(QQuickItem *overlay)
 {
     Q_Q(QQuickOverlay);
-    background->setWidth(q->width());
-    background->setHeight(q->height());
+    overlay->setWidth(q->width());
+    overlay->setHeight(q->height());
 }
 
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
-    background(nullptr),
+    modal(nullptr),
+    modeless(nullptr),
     modalPopups(0)
 {
 }
@@ -123,30 +143,50 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     setVisible(false);
 }
 
-
-QQuickItem *QQuickOverlay::background() const
+QQuickItem *QQuickOverlay::modal() const
 {
     Q_D(const QQuickOverlay);
-    return d->background;
+    return d->modal;
 }
 
-void QQuickOverlay::setBackground(QQuickItem *background)
+void QQuickOverlay::setModal(QQuickItem *modal)
 {
     Q_D(QQuickOverlay);
-    if (d->background == background)
+    if (d->modal == modal)
         return;
 
-    delete d->background;
-    d->background = background;
-    if (background) {
-        background->setOpacity(0.0);
-        background->setParentItem(this);
-        if (qFuzzyIsNull(background->z()))
-            background->setZ(-1);
+    delete d->modal;
+    d->modal = modal;
+    if (modal) {
+        modal->setOpacity(0.0);
+        modal->setParentItem(this);
         if (isComponentComplete())
-            d->resizeBackground();
+            d->resizeOverlay(modal);
     }
-    emit backgroundChanged();
+    emit modalChanged();
+}
+
+QQuickItem *QQuickOverlay::modeless() const
+{
+    Q_D(const QQuickOverlay);
+    return d->modeless;
+}
+
+void QQuickOverlay::setModeless(QQuickItem *modeless)
+{
+    Q_D(QQuickOverlay);
+    if (d->modeless == modeless)
+        return;
+
+    delete d->modeless;
+    d->modeless = modeless;
+    if (modeless) {
+        modeless->setOpacity(0.0);
+        modeless->setParentItem(this);
+        if (isComponentComplete())
+            d->resizeOverlay(modeless);
+    }
+    emit modelessChanged();
 }
 
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
@@ -197,8 +237,10 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
 {
     Q_D(QQuickOverlay);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
-    if (d->background)
-        d->resizeBackground();
+    if (d->modal)
+        d->resizeOverlay(d->modal);
+    if (d->modeless)
+        d->resizeOverlay(d->modeless);
 }
 
 bool QQuickOverlay::event(QEvent *event)

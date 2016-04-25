@@ -491,7 +491,8 @@ Module {
         name: "QQuickOverlay"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        Property { name: "background"; type: "QQuickItem"; isPointer: true }
+        Property { name: "modal"; type: "QQuickItem"; isPointer: true }
+        Property { name: "modeless"; type: "QQuickItem"; isPointer: true }
         Signal { name: "pressed" }
         Signal { name: "released" }
     }
@@ -591,6 +592,7 @@ Module {
         Property { name: "focus"; type: "bool" }
         Property { name: "activeFocus"; type: "bool"; isReadonly: true }
         Property { name: "modal"; type: "bool" }
+        Property { name: "dim"; type: "bool" }
         Property { name: "visible"; type: "bool" }
         Property { name: "opacity"; type: "double" }
         Property { name: "scale"; type: "double" }

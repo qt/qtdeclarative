@@ -446,13 +446,30 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 /*!
     \qmlpropertygroup QtQuick.Controls::ApplicationWindow::overlay
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.background
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.modal
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.modeless
 
-    This property holds the window overlay item and its background that implements the
-    background dimming when any modal popups are open. Popups are automatically
+    This property holds the window overlay item. Popups are automatically
     reparented to the overlay.
 
-    \sa Popup
+    \table
+    \header
+        \li Property
+        \li Description
+    \row
+        \li overlay.modal
+        \li This property holds a visual item that implements background
+            dimming for modal popups. It is stacked below the top-most open
+            modal popup, or hidden when there are no modal popups open.
+    \row
+        \li overlay.modeless
+        \li This property holds a visual item that implements background
+            dimming for modeless popups. It is stacked below the top-most
+            open modeless dimming popup, or hidden when there are no modeless
+            dimming popups open.
+    \endtable
+
+    \sa Popup::modal, Popup::dim
 */
 QQuickOverlay *QQuickApplicationWindow::overlay() const
 {

@@ -121,6 +121,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
     , modal(false)
+    , dim(false)
+    , hasDim(false)
     , visible(false)
     , complete(false)
     , hasTopMargin(false)
@@ -1520,6 +1522,49 @@ void QQuickPopup::setModal(bool modal)
         return;
     d->modal = modal;
     emit modalChanged();
+
+    if (!d->hasDim) {
+        setDim(modal);
+        d->hasDim = false;
+    }
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::Popup::dim
+
+    This property holds whether the popup dims the background.
+
+    Unless explicitly set, this property follows the value of \l modal. To
+    return to the default value, set this property to \c undefined.
+
+    \sa modal
+*/
+bool QQuickPopup::dim() const
+{
+    Q_D(const QQuickPopup);
+    return d->dim;
+}
+
+void QQuickPopup::setDim(bool dim)
+{
+    Q_D(QQuickPopup);
+    d->hasDim = true;
+
+    if (d->dim == dim)
+        return;
+
+    d->dim = dim;
+    emit dimChanged();
+}
+
+void QQuickPopup::resetDim()
+{
+    Q_D(QQuickPopup);
+    if (!d->hasDim)
+        return;
+
+    setDim(d->modal);
+    d->hasDim = false;
 }
 
 /*!

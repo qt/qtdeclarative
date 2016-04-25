@@ -44,7 +44,12 @@ T.ApplicationWindow {
 
     color: Material.backgroundColor
 
-    overlay.background: Rectangle {
+    overlay.modal: Rectangle {
+        color: window.Material.backgroundDimColor
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
+
+    overlay.modeless: Rectangle {
         color: window.Material.backgroundDimColor
         Behavior on opacity { NumberAnimation { duration: 150 } }
     }

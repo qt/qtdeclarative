@@ -176,6 +176,8 @@ public:
 
     bool focus;
     bool modal;
+    bool dim;
+    bool hasDim;
     bool visible;
     bool complete;
     bool hasTopMargin;

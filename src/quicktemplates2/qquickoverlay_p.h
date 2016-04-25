@@ -58,16 +58,21 @@ class QQuickOverlayPrivate;
 class Q_QUICKTEMPLATES2_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(QQuickItem *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
+    Q_PROPERTY(QQuickItem *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = nullptr);
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
+    QQuickItem *modal() const;
+    void setModal(QQuickItem *modal);
+
+    QQuickItem *modeless() const;
+    void setModeless(QQuickItem *modeless);
 
 Q_SIGNALS:
-    void backgroundChanged();
+    void modalChanged();
+    void modelessChanged();
     void pressed();
     void released();
 
