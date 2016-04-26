@@ -68,6 +68,8 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
+        implicitHeight: 48
+
         visible: control.down || control.highlighted
         color: control.down ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
     }
