@@ -484,16 +484,15 @@ void QQuickTumblerAttachedPrivate::_q_calculatePosition()
     if (contentType == UnsupportedContentItemType)
         return;
 
-    qreal offset = 0;
+    const int halfVisibleItems = tumbler->visibleItemCount() / 2;
 
     if (contentType == PathViewContentItem) {
-        offset = tumbler->contentItem()->property("offset").toReal();
+        qreal offset = tumbler->contentItem()->property("offset").toReal();
 
         position = count - index - offset;
-        int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
-        if (position > halfVisibleItems)
+        if (position > halfVisibleItems + 1)
             position -= count;
-        else if (position < -halfVisibleItems)
+        else if (position < -halfVisibleItems - 1)
             position += count;
     } else {
         const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
@@ -503,6 +502,8 @@ void QQuickTumblerAttachedPrivate::_q_calculatePosition()
         const qreal reversePosition = (contentY + preferredHighlightBegin) / delegateH;
         position = reversePosition - index;
     }
+
+    position /= halfVisibleItems;
 
     Q_Q(QQuickTumblerAttached);
     if (position != previousPosition)
@@ -546,19 +547,26 @@ QQuickTumbler *QQuickTumblerAttached::tumbler() const
     \qmlattachedproperty real QtQuick.Controls::Tumbler::position
     \readonly
 
-    This attached property holds a value from \c {-visibleItemCount / 2} to
-    \c {visibleItemCount / 2}, which represents how far away this item is from
-    being the current item, with \c 0 being completely current.
+    This attached property holds a value that describes the logical position
+    of a delegate item.
 
-    For example, the item below will be 40% opaque when it is not the current item,
-    and transition to 100% opacity when it becomes the current item:
+    The logical position is a percentage describing how far away an item is from
+    being the current item; that is, how far the item is from the vertical center
+    of the tumbler. The following image presents a tumbler with five visible items
+    that each print their index, and the respective logical position in parentheses:
 
-    \code
-    delegate: Text {
-        text: modelData
-        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.position)) * 0.6
-    }
-    \endcode
+    \image qtquickcontrols2-tumbler-position.png
+
+    The logical position is convenient for applying effects on delegate items.
+    For example, adding the line below to a tumbler delegate makes the item 100%
+    opaque when it is at the center of the tumbler, and 20% opaque when it is at
+    the top or bottom of the tumbler.
+
+    \snippet qtquickcontrols2-tumbler-position.qml 1
+
+    \note When the tumbler is being interacted with, the logical position can be
+          outside the range \c [-1.0..1.0] when an item moves past the position of
+          the first or last stationary visible item.
 */
 qreal QQuickTumblerAttached::position() const
 {
