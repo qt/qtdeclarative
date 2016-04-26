@@ -403,7 +403,7 @@ public:
     QQuickTumblerAttachedPrivate(QQuickItem *delegateItem) :
         tumbler(nullptr),
         index(-1),
-        displacement(1)
+        position(1)
     {
         if (!delegateItem->parentItem()) {
             qWarning() << "Tumbler: attached properties must be accessed from within a delegate item that has a parent";
@@ -434,29 +434,29 @@ public:
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
-    void _q_calculateDisplacement();
+    void _q_calculatePosition();
 
-    // The Tumbler that contains the delegate. Required to calculated the displacement.
+    // The Tumbler that contains the delegate. Required to calculated the position.
     QQuickTumbler *tumbler;
-    // The index of the delegate. Used to calculate the displacement.
+    // The index of the delegate. Used to calculate the position.
     int index;
-    // The displacement for our delegate.
-    qreal displacement;
+    // The position for our delegate.
+    qreal position;
 };
 
 void QQuickTumblerAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    _q_calculateDisplacement();
+    _q_calculatePosition();
 }
 
 void QQuickTumblerAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
 {
-    _q_calculateDisplacement();
+    _q_calculatePosition();
 }
 
 void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
-    _q_calculateDisplacement();
+    _q_calculatePosition();
 
     if (parent == child) {
         // The child that was removed from the contentItem was the delegate
@@ -470,10 +470,10 @@ void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem
     }
 }
 
-void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
+void QQuickTumblerAttachedPrivate::_q_calculatePosition()
 {
-    const int previousDisplacement = displacement;
-    displacement = 0;
+    const int previousPosition = position;
+    position = 0;
 
     const int count = tumbler->count();
     // This can happen in tests, so it may happen in normal usage too.
@@ -489,24 +489,24 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     if (contentType == PathViewContentItem) {
         offset = tumbler->contentItem()->property("offset").toReal();
 
-        displacement = count - index - offset;
+        position = count - index - offset;
         int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
-        if (displacement > halfVisibleItems)
-            displacement -= count;
-        else if (displacement < -halfVisibleItems)
-            displacement += count;
+        if (position > halfVisibleItems)
+            position -= count;
+        else if (position < -halfVisibleItems)
+            position += count;
     } else {
         const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
         const qreal delegateH = delegateHeight(tumbler);
         const qreal preferredHighlightBegin = tumbler->contentItem()->property("preferredHighlightBegin").toReal();
-        // Tumbler's displacement goes from negative at the top to positive towards the bottom, so we must switch this around.
-        const qreal reverseDisplacement = (contentY + preferredHighlightBegin) / delegateH;
-        displacement = reverseDisplacement - index;
+        // Tumbler's position goes from negative at the top to positive towards the bottom, so we must switch this around.
+        const qreal reversePosition = (contentY + preferredHighlightBegin) / delegateH;
+        position = reversePosition - index;
     }
 
     Q_Q(QQuickTumblerAttached);
-    if (displacement != previousDisplacement)
-        emit q->displacementChanged();
+    if (position != previousPosition)
+        emit q->positionChanged();
 }
 
 QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
@@ -521,7 +521,7 @@ QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
 
         const char *contentItemSignal = contentType == PathViewContentItem
             ? SIGNAL(offsetChanged()) : SIGNAL(contentYChanged());
-        connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculateDisplacement()));
+        connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculatePosition()));
     }
 }
 
@@ -543,7 +543,7 @@ QQuickTumbler *QQuickTumblerAttached::tumbler() const
 }
 
 /*!
-    \qmlattachedproperty real QtQuick.Controls::Tumbler::displacement
+    \qmlattachedproperty real QtQuick.Controls::Tumbler::position
     \readonly
 
     This attached property holds a value from \c {-visibleItemCount / 2} to
@@ -556,14 +556,14 @@ QQuickTumbler *QQuickTumblerAttached::tumbler() const
     \code
     delegate: Text {
         text: modelData
-        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.position)) * 0.6
     }
     \endcode
 */
-qreal QQuickTumblerAttached::displacement() const
+qreal QQuickTumblerAttached::position() const
 {
     Q_D(const QQuickTumblerAttached);
-    return d->displacement;
+    return d->position;
 }
 
 QT_END_NAMESPACE

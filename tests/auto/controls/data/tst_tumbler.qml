@@ -234,55 +234,55 @@ TestCase {
         tryCompare(tumbler.dayTumbler, "currentIndex", 27);
     }
 
-    function test_displacement_data() {
+    function test_position_data() {
         var data = [
             // At 0 offset, the first item is current.
-            { index: 0, offset: 0, expectedDisplacement: 0 },
-            { index: 1, offset: 0, expectedDisplacement: -1 },
-            { index: 5, offset: 0, expectedDisplacement: 1 },
+            { index: 0, offset: 0, expectedPosition: 0 },
+            { index: 1, offset: 0, expectedPosition: -1 },
+            { index: 5, offset: 0, expectedPosition: 1 },
             // When we start to move the first item down, the second item above it starts to become current.
-            { index: 0, offset: 0.25, expectedDisplacement: -0.25 },
-            { index: 1, offset: 0.25, expectedDisplacement: -1.25 },
-            { index: 5, offset: 0.25, expectedDisplacement: 0.75 },
-            { index: 0, offset: 0.5, expectedDisplacement: -0.5 },
-            { index: 1, offset: 0.5, expectedDisplacement: -1.5 },
-            { index: 5, offset: 0.5, expectedDisplacement: 0.5 },
-            // By this stage, the delegate at index 1 is destroyed, so we can't test its displacement.
-            { index: 0, offset: 0.75, expectedDisplacement: -0.75 },
-            { index: 5, offset: 0.75, expectedDisplacement: 0.25 },
-            { index: 0, offset: 4.75, expectedDisplacement: 1.25 },
-            { index: 1, offset: 4.75, expectedDisplacement: 0.25 },
-            { index: 0, offset: 4.5, expectedDisplacement: 1.5 },
-            { index: 1, offset: 4.5, expectedDisplacement: 0.5 },
-            { index: 0, offset: 4.25, expectedDisplacement: 1.75 },
-            { index: 1, offset: 4.25, expectedDisplacement: 0.75 }
+            { index: 0, offset: 0.25, expectedPosition: -0.25 },
+            { index: 1, offset: 0.25, expectedPosition: -1.25 },
+            { index: 5, offset: 0.25, expectedPosition: 0.75 },
+            { index: 0, offset: 0.5, expectedPosition: -0.5 },
+            { index: 1, offset: 0.5, expectedPosition: -1.5 },
+            { index: 5, offset: 0.5, expectedPosition: 0.5 },
+            // By this stage, the delegate at index 1 is destroyed, so we can't test its position.
+            { index: 0, offset: 0.75, expectedPosition: -0.75 },
+            { index: 5, offset: 0.75, expectedPosition: 0.25 },
+            { index: 0, offset: 4.75, expectedPosition: 1.25 },
+            { index: 1, offset: 4.75, expectedPosition: 0.25 },
+            { index: 0, offset: 4.5, expectedPosition: 1.5 },
+            { index: 1, offset: 4.5, expectedPosition: 0.5 },
+            { index: 0, offset: 4.25, expectedPosition: 1.75 },
+            { index: 1, offset: 4.25, expectedPosition: 0.75 }
         ];
         for (var i = 0; i < data.length; ++i) {
             var row = data[i];
-            row.tag = "delegate" + row.index + " offset=" + row.offset + " expectedDisplacement=" + row.expectedDisplacement;
+            row.tag = "delegate" + row.index + " offset=" + row.offset + " expectedPosition=" + row.expectedPosition;
         }
         return data;
     }
 
-    property Component displacementDelegate: Text {
+    property Component positionDelegate: Text {
         objectName: "delegate" + index
         text: modelData
-        opacity: 0.2 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.8
+        opacity: 0.2 + Math.max(0, 1 - Math.abs(Tumbler.position)) * 0.8
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
         Text {
-            text: parent.displacement.toFixed(2)
+            text: parent.position.toFixed(2)
             anchors.right: parent.right
         }
 
-        property real displacement: Tumbler.displacement
+        property real position: Tumbler.position
     }
 
-    function test_displacement(data) {
+    function test_position(data) {
         // TODO: test setting these in the opposite order (delegate after model
         // doesn't seem to cause a change in delegates in PathView)
-        tumbler.delegate = displacementDelegate;
+        tumbler.delegate = positionDelegate;
         tumbler.model = 6;
         compare(tumbler.count, 6);
 
@@ -290,9 +290,9 @@ TestCase {
         verify(delegate);
 
         tumbler.contentItem.offset = data.offset;
-        compare(delegate.displacement, data.expectedDisplacement);
+        compare(delegate.position, data.expectedPosition);
 
-        // test displacement after adding and removing items
+        // test position after adding and removing items
     }
 
     Component {
@@ -316,34 +316,34 @@ TestCase {
         //! [contentItem]
     }
 
-    function test_displacementListView_data() {
+    function test_positionListView_data() {
         var offset = defaultListViewTumblerOffset;
 
         var data = [
             // At 0 contentY, the first item is current.
-            { contentY: offset, expectedDisplacements: [
-                { index: 0, displacement: 0 },
-                { index: 1, displacement: -1 },
-                { index: 2, displacement: -2 } ]
+            { contentY: offset, expectedPositions: [
+                { index: 0, position: 0 },
+                { index: 1, position: -1 },
+                { index: 2, position: -2 } ]
             },
             // When we start to move the first item down, the second item above it starts to become current.
-            { contentY: offset + defaultImplicitDelegateHeight * 0.25, expectedDisplacements: [
-                { index: 0, displacement: 0.25 },
-                { index: 1, displacement: -0.75 },
-                { index: 2, displacement: -1.75 } ]
+            { contentY: offset + defaultImplicitDelegateHeight * 0.25, expectedPositions: [
+                { index: 0, position: 0.25 },
+                { index: 1, position: -0.75 },
+                { index: 2, position: -1.75 } ]
             },
-            { contentY: offset + defaultImplicitDelegateHeight * 0.5, expectedDisplacements: [
-                { index: 0, displacement: 0.5 },
-                { index: 1, displacement: -0.5 },
-                { index: 2, displacement: -1.5 } ]
+            { contentY: offset + defaultImplicitDelegateHeight * 0.5, expectedPositions: [
+                { index: 0, position: 0.5 },
+                { index: 1, position: -0.5 },
+                { index: 2, position: -1.5 } ]
             },
-            { contentY: offset + defaultImplicitDelegateHeight * 0.75, expectedDisplacements: [
-                { index: 0, displacement: 0.75 },
-                { index: 1, displacement: -0.25 } ]
+            { contentY: offset + defaultImplicitDelegateHeight * 0.75, expectedPositions: [
+                { index: 0, position: 0.75 },
+                { index: 1, position: -0.25 } ]
             },
-            { contentY: offset + defaultImplicitDelegateHeight * 3.5, expectedDisplacements: [
-                { index: 3, displacement: 0.5 },
-                { index: 4, displacement: -0.5 } ]
+            { contentY: offset + defaultImplicitDelegateHeight * 3.5, expectedPositions: [
+                { index: 3, position: 0.5 },
+                { index: 4, position: -0.5 } ]
             }
         ];
         for (var i = 0; i < data.length; ++i) {
@@ -353,7 +353,7 @@ TestCase {
         return data;
     }
 
-    function test_displacementListView(data) {
+    function test_positionListView(data) {
         tumbler.destroy();
         // Sanity check that they're aren't any children at this stage.
         tryCompare(testCase.children, "length", 0);
@@ -361,7 +361,7 @@ TestCase {
         tumbler = listViewTumblerComponent.createObject(testCase);
         verify(tumbler);
 
-        tumbler.delegate = displacementDelegate;
+        tumbler.delegate = positionDelegate;
         tumbler.model = 5;
         compare(tumbler.count, 5);
         // Ensure assumptions about the tumbler used in our data() function are correct.
@@ -384,12 +384,12 @@ TestCase {
         //
         // Even after the last item above, QQuickFlickable wouldn't consider it a drag.
         // It seems that overThreshold is set too late, and because the drag distance is quite small
-        // to begin with, nothing changes (the displacement was always very close to 0 in the end).
+        // to begin with, nothing changes (the position was always very close to 0 in the end).
 
         // Ensure that we at least cover the distance required to reach the desired contentY.
         var distanceToReachContentY = data.contentY - defaultListViewTumblerOffset;
         var distance = Math.abs(distanceToReachContentY) + tumbler.height / 2;
-        // If distanceToReachContentY is 0, we're testing 0 displacement, so we don't need to do anything.
+        // If distanceToReachContentY is 0, we're testing 0 position, so we don't need to do anything.
         if (distanceToReachContentY != 0) {
             mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
 
@@ -399,15 +399,15 @@ TestCase {
             }
         }
 
-        for (var i = 0; i < data.expectedDisplacements.length; ++i) {
-            var delegate = findChild(listViewContentItem, "delegate" + data.expectedDisplacements[i].index);
+        for (var i = 0; i < data.expectedPositions.length; ++i) {
+            var delegate = findChild(listViewContentItem, "delegate" + data.expectedPositions[i].index);
             verify(delegate);
             compare(delegate.height, defaultImplicitDelegateHeight);
             // Due to the way we must perform this test, we can't expect high precision.
-            var expectedDisplacement = data.expectedDisplacements[i].displacement;
-            fuzzyCompare(delegate.displacement, expectedDisplacement, 0.1,
-                "Delegate of ListView-based Tumbler at index " + data.expectedDisplacements[i].index
-                    + " has displacement of " + delegate.displacement + " when it should be " + expectedDisplacement);
+            var expectedPosition = data.expectedPositions[i].position;
+            fuzzyCompare(delegate.position, expectedPosition, 0.1,
+                "Delegate of ListView-based Tumbler at index " + data.expectedPositions[i].index
+                    + " has position of " + delegate.position + " when it should be " + expectedPosition);
         }
 
         if (distanceToReachContentY != 0)
@@ -416,7 +416,7 @@ TestCase {
 
     function test_listViewFlickAboveBounds_data() {
         // Tests that flicking above the bounds when already at the top of the
-        // tumbler doesn't result in an incorrect displacement.
+        // tumbler doesn't result in an incorrect position.
         var data = [];
         // Less than two items doesn't make sense. The default visibleItemCount
         // is 3, so we test a bit more than double that.
@@ -432,7 +432,7 @@ TestCase {
         tumbler = listViewTumblerComponent.createObject(testCase);
         verify(tumbler);
 
-        tumbler.delegate = displacementDelegate;
+        tumbler.delegate = positionDelegate;
         tumbler.model = data.model;
 
         mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
@@ -455,10 +455,10 @@ TestCase {
                     var delegate = findChild(listView.contentItem, "delegate" + delegateIndex);
                     verify(delegate);
 
-                    verify(delegate.displacement <= -delegateIndex, "Delegate at index " + delegateIndex + " has a displacement of "
-                        + delegate.displacement + " when it should be less than or equal to " + -delegateIndex);
-                    verify(delegate.displacement > -delegateIndex - 0.1, "Delegate at index 0 has a displacement of "
-                        + delegate.displacement + " when it should be greater than ~ " + -delegateIndex - 0.1);
+                    verify(delegate.position <= -delegateIndex, "Delegate at index " + delegateIndex + " has a position of "
+                        + delegate.position + " when it should be less than or equal to " + -delegateIndex);
+                    verify(delegate.position > -delegateIndex - 0.1, "Delegate at index 0 has a position of "
+                        + delegate.position + " when it should be greater than ~ " + -delegateIndex - 0.1);
                 }
 
                 changed = true;
@@ -512,16 +512,16 @@ TestCase {
     }
 
     property Component wrongDelegateTypeComponent: QtObject {
-        property real displacement: Tumbler.displacement
+        property real position: Tumbler.position
     }
 
     property Component noParentDelegateComponent: Item {
-        property real displacement: Tumbler.displacement
+        property real position: Tumbler.position
     }
 
     property Component gridViewComponent: GridView {}
-    property Component simpleDisplacementDelegate: Text {
-        property real displacement: Tumbler.displacement
+    property Component simplePositionDelegate: Text {
+        property real position: Tumbler.position
         property int index: -1
     }
 
@@ -530,7 +530,7 @@ TestCase {
 //        tumbler.model = 5;
 //        tumbler.delegate = wrongDelegateTypeComponent;
 //        ignoreWarning("Attached properties of Tumbler must be accessed from within a delegate item");
-//        // Cause displacement to be changed. The warning isn't triggered if we don't do this.
+//        // Cause position to be changed. The warning isn't triggered if we don't do this.
 //        tumbler.contentItem.offset += 1;
 
         ignoreWarning("Tumbler: attached properties must be accessed from within a delegate item that has a parent");
@@ -542,7 +542,7 @@ TestCase {
 
         // Should not be any warnings from this, as ListView, for example, doesn't produce warnings for the same code.
         var gridView = gridViewComponent.createObject(testCase);
-        object = simpleDisplacementDelegate.createObject(gridView);
+        object = simplePositionDelegate.createObject(gridView);
         object.destroy();
         gridView.destroy();
     }
