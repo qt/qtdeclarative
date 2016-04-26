@@ -41,6 +41,7 @@
 #include "qsgd3d12engine_p.h"
 #include "qsgd3d12context_p.h"
 #include "qsgd3d12rendercontext_p.h"
+#include "qsgd3d12shadereffectnode_p.h"
 #include <private/qsgrenderer_p.h>
 #include <private/qquickwindow_p.h>
 #include <private/qquickprofiler_p.h>
@@ -336,6 +337,7 @@ bool QSGD3D12RenderThread::event(QEvent *e)
                     engine->waitGPU();
                     // Bye bye nodes...
                     wd->cleanupNodesOnShutdown();
+                    QSGD3D12ShaderEffectNode::cleanupMaterialTypeCache();
                 }
                 rc->invalidate();
                 QCoreApplication::processEvents();
@@ -486,6 +488,7 @@ void QSGD3D12RenderThread::sync(bool inExpose)
         if (Q_UNLIKELY(debug_loop()))
             qDebug("RT - sync - device was lost, resetting scenegraph");
         QQuickWindowPrivate::get(exposedWindow)->cleanupNodesOnShutdown();
+        QSGD3D12ShaderEffectNode::cleanupMaterialTypeCache();
         rc->invalidate();
     }
 

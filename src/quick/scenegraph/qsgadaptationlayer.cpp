@@ -522,11 +522,16 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p)
 {
-    debug << p.semanticName << p.semanticIndex;
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << p.semanticName << "semindex" << p.semanticIndex;
     return debug;
 }
+
 QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v)
 {
+    QDebugStateSaver saver(debug);
+    debug.space();
     debug << v.name;
     switch (v.type) {
     case QSGGuiThreadShaderEffectManager::ShaderInfo::Constant:
@@ -541,6 +546,14 @@ QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInf
     default:
         break;
     }
+    return debug;
+}
+
+QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd)
+{
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << vd.specialType;
     return debug;
 }
 #endif

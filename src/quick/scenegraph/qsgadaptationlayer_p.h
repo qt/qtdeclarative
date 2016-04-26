@@ -289,6 +289,7 @@ public:
         Type type;
         QVector<InputParameter> inputParameters;
         QVector<Variable> variables;
+        uint constantDataSize;
     };
 
     virtual bool reflect(const QByteArray &src, ShaderInfo *result) = 0;
@@ -307,12 +308,13 @@ class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QSGVisitableNode
 {
 public:
     enum DirtyShaderFlag {
-        DirtyShaderVertex = 0x01,
-        DirtyShaderFragment = 0x02,
-        DirtyShaderConstant = 0x04,
-        DirtyShaderTexture = 0x08,
-        DirtyShaderGeometry = 0x10,
-        DirtyShaderMesh = 0x20
+        DirtyShaders = 0x01,
+        DirtyShaderConstant = 0x02,
+        DirtyShaderTexture = 0x04,
+        DirtyShaderGeometry = 0x08,
+        DirtyShaderMesh = 0x10,
+
+        DirtyShaderAll = 0xFF
     };
     Q_DECLARE_FLAGS(DirtyShaderFlags, DirtyShaderFlag)
 
@@ -323,7 +325,7 @@ public:
     };
 
     struct VariableData {
-        enum SpecialType { None, Unused, SubRect, Opacity, Matrix, Source };
+        enum SpecialType { None, Unused, Source, SubRect, Opacity, Matrix };
 
         QVariant value;
         SpecialType specialType;
@@ -341,8 +343,13 @@ public:
         CullMode cullMode;
         bool blending;
         bool supportsAtlasTextures;
-        ShaderData *vertexShader;
-        ShaderData *fragmentShader;
+        struct ShaderSyncData {
+            const ShaderData *shader;
+            const QSet<int> *dirtyConstants;
+            const QSet<int> *dirtyTextures;
+        };
+        ShaderSyncData vertex;
+        ShaderSyncData fragment;
     };
 
     // Each ShaderEffect item has one node (render thread) and one manager (gui thread).
@@ -355,6 +362,10 @@ public:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGShaderEffectNode::DirtyShaderFlags)
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd);
+#endif
 
 class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {

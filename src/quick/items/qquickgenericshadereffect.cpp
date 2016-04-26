@@ -80,7 +80,7 @@ void QQuickGenericShaderEffect::setFragmentShader(const QByteArray &src)
         return;
 
     m_fragShader = src;
-    m_dirty |= QSGShaderEffectNode::DirtyShaderFragment;
+    m_dirty |= QSGShaderEffectNode::DirtyShaders;
 
     if (m_item->isComponentComplete())
         updateShader(Fragment, src);
@@ -95,7 +95,7 @@ void QQuickGenericShaderEffect::setVertexShader(const QByteArray &src)
         return;
 
     m_vertShader = src;
-    m_dirty |= QSGShaderEffectNode::DirtyShaderVertex;
+    m_dirty |= QSGShaderEffectNode::DirtyShaders;
 
     if (m_item->isComponentComplete())
         updateShader(Vertex, src);
@@ -264,9 +264,7 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
     if (!node) {
         QSGRenderContext *rc = QQuickWindowPrivate::get(m_item->window())->context;
         node = rc->sceneGraphContext()->createShaderEffectNode(rc, mgr);
-        m_dirty = QSGShaderEffectNode::DirtyShaderVertex | QSGShaderEffectNode::DirtyShaderFragment
-                | QSGShaderEffectNode::DirtyShaderConstant | QSGShaderEffectNode::DirtyShaderTexture
-                | QSGShaderEffectNode::DirtyShaderGeometry | QSGShaderEffectNode::DirtyShaderMesh;
+        m_dirty = QSGShaderEffectNode::DirtyShaderAll;
     }
 
     // Dirty mesh and geometry are handled here, the rest is passed on to the node.
@@ -295,12 +293,20 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
     sd.cullMode = QSGShaderEffectNode::CullMode(m_cullMode);
     sd.blending = m_blending;
     sd.supportsAtlasTextures = m_supportsAtlasTextures;
-    sd.vertexShader = (m_dirty & QSGShaderEffectNode::DirtyShaderVertex) ? &m_shaders[Vertex] : nullptr;
-    sd.fragmentShader = (m_dirty & QSGShaderEffectNode::DirtyShaderFragment) ? &m_shaders[Fragment] : nullptr;
+    sd.vertex.shader = &m_shaders[Vertex];
+    sd.vertex.dirtyConstants = &m_dirtyConstants[Vertex];
+    sd.vertex.dirtyTextures = &m_dirtyTextures[Vertex];
+    sd.fragment.shader = &m_shaders[Fragment];
+    sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
+    sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
 
     node->sync(&sd);
 
     m_dirty = 0;
+    for (int i = 0; i < NShader; ++i) {
+        m_dirtyConstants[i].clear();
+        m_dirtyTextures[i].clear();
+    }
 
     return node;
 }
@@ -396,6 +402,7 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
     // For file-based shader source/bytecode this is where the data is pulled
     // in from the file.
     QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
+    // ### this will need some sort of caching mechanism
     if (!mgr->reflect(src, &shaderInfo)) {
         qWarning("ShaderEffect: shader reflection failed for %s", src.constData());
         m_shaders[shaderType].valid = false;
@@ -416,7 +423,7 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
     const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
 
     // Hook up the signals to get notified about changes for properties that
-    // correspond to variables in the shader.
+    // correspond to variables in the shader. Store also the values.
     for (int i = 0; i < varCount; ++i) {
         const auto &v(shaderInfo.variables.at(i));
         QSGShaderEffectNode::VariableData &vd(m_shaders[shaderType].varData[i]);
@@ -433,7 +440,7 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
 
         // The value of a property corresponding to a sampler is the source
         // item ref, unless there are separate texture objects in which case
-        // the sampler is ignored.
+        // the sampler is ignored (here).
         if (v.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler) {
             if (texturesSeparate) {
                 vd.specialType = QSGShaderEffectNode::VariableData::Unused;
@@ -532,10 +539,12 @@ void QQuickGenericShaderEffect::propertyChanged(int mappedId)
         }
 
         m_dirty |= QSGShaderEffectNode::DirtyShaderTexture;
+        m_dirtyTextures[type].insert(idx);
 
      } else {
         vd.value = m_item->property(v.name.constData());
         m_dirty |= QSGShaderEffectNode::DirtyShaderConstant;
+        m_dirtyConstants[type].insert(idx);
     }
 
     m_item->update();

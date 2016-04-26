@@ -52,24 +52,96 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include "qsgd3d12builtinmaterials_p.h"
+#include "qsgd3d12material_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QSGD3D12RenderContext;
 class QSGD3D12GuiThreadShaderEffectManager;
+class QSGD3D12ShaderEffectNode;
 
-class QSGD3D12ShaderEffectNode : public QSGShaderEffectNode
+class QSGD3D12ShaderLinker
 {
+public:
+    void reset(const QByteArray &vertBlob, const QByteArray &fragBlob);
+
+    void feedVertexInput(const QSGShaderEffectNode::ShaderData &shader);
+    void feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);
+    void feedSamplers(const QSGShaderEffectNode::ShaderData &shader);
+    void feedTextures(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);
+
+    void dump();
+
+    struct Constant {
+        uint size;
+        QSGShaderEffectNode::VariableData::SpecialType specialType;
+        QVariant value;
+        bool operator==(const Constant &other) const {
+            return size == other.size && specialType == other.specialType
+                    && (specialType == QSGShaderEffectNode::VariableData::None ? value == other.value : true);
+        }
+    };
+
+    bool error;
+    QByteArray vs;
+    QByteArray fs;
+    uint constantBufferSize;
+    QHash<uint, Constant> constants; // offset -> Constant
+    QSet<int> samplers; // bindpoint
+    QHash<int, QVariant> textures; // bindpoint -> value (source ref)
+};
+
+QDebug operator<<(QDebug debug, const QSGD3D12ShaderLinker::Constant &c);
+
+class QSGD3D12ShaderEffectMaterial : public QSGD3D12Material
+{
+public:
+    QSGD3D12ShaderEffectMaterial(QSGD3D12ShaderEffectNode *node);
+
+    QSGMaterialType *type() const override;
+    int compare(const QSGMaterial *other) const override;
+
+    int constantBufferSize() const override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
+    UpdateResults updatePipeline(const RenderState &state,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
+                                 quint8 *constantBuffer) override;
+
+    void updateTextureProviders(bool layoutChange);
+
+    QSGD3D12ShaderEffectNode *node;
+    bool valid = false;
+    QSGShaderEffectNode::CullMode cullMode = QSGShaderEffectNode::NoCulling;
+    bool hasCustomVertexShader = false;
+    bool hasCustomFragmentShader = false;
+    QSGD3D12ShaderLinker linker;
+    QSGMaterialType *mtype = nullptr;
+    QVector<QSGTextureProvider *> textureProviders;
+};
+
+class QSGD3D12ShaderEffectNode : public QObject, public QSGShaderEffectNode
+{
+    Q_OBJECT
+
 public:
     QSGD3D12ShaderEffectNode(QSGD3D12RenderContext *rc, QSGD3D12GuiThreadShaderEffectManager *mgr);
 
     QRectF normalizedTextureSubRect() const override;
     void sync(SyncData *syncData) override;
 
+    static void cleanupMaterialTypeCache();
+
+    void preprocess() override;
+
+private Q_SLOTS:
+    void handleTextureChange();
+    void handleTextureProviderDestroyed(QObject *object);
+
 private:
     QSGD3D12RenderContext *m_rc;
     QSGD3D12GuiThreadShaderEffectManager *m_mgr;
+    QSGD3D12ShaderEffectMaterial m_material;
 };
 
 class QSGD3D12GuiThreadShaderEffectManager : public QSGGuiThreadShaderEffectManager

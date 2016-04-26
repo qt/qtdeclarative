@@ -66,7 +66,7 @@ public:
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
-    virtual int constantBufferSize() const override;
+    int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
                                  QSGD3D12PipelineState *pipelineState,
@@ -84,7 +84,7 @@ public:
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
-    virtual int constantBufferSize() const override;
+    int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
                                  QSGD3D12PipelineState *pipelineState,
@@ -101,7 +101,7 @@ public:
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
-    virtual int constantBufferSize() const override;
+    int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
                                  QSGD3D12PipelineState *pipelineState,
@@ -141,7 +141,7 @@ public:
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
-    virtual int constantBufferSize() const override;
+    int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
                                  QSGD3D12PipelineState *pipelineState,
@@ -189,7 +189,7 @@ public:
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
-    virtual int constantBufferSize() const override;
+    int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
     UpdateResults updatePipeline(const RenderState &state,
                                  QSGD3D12PipelineState *pipelineState,

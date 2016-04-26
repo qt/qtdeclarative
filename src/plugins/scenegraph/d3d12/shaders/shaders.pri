@@ -88,6 +88,16 @@ outlinedtext_pshader.header = ps_outlinedtext.hlslh
 outlinedtext_pshader.entry = PS_OutlinedText
 outlinedtext_pshader.type = ps_5_0
 
+shadereffectdefault_VSPS = $$PWD/shadereffectdefault.hlsl
+shadereffectdefault_vshader.input = shadereffectdefault_VSPS
+shadereffectdefault_vshader.header = vs_shadereffectdefault.hlslh
+shadereffectdefault_vshader.entry = VS_DefaultShaderEffect
+shadereffectdefault_vshader.type = vs_5_0
+shadereffectdefault_pshader.input = shadereffectdefault_VSPS
+shadereffectdefault_pshader.header = ps_shadereffectdefault.hlslh
+shadereffectdefault_pshader.entry = PS_DefaultShaderEffect
+shadereffectdefault_pshader.type = ps_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
@@ -96,6 +106,7 @@ HLSL_SHADERS = \
     smoothtexture_vshader smoothtexture_pshader \
     mipmapgen_cshader \
     textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8 \
-    styledtext_vshader styledtext_pshader outlinedtext_vshader outlinedtext_pshader
+    styledtext_vshader styledtext_pshader outlinedtext_vshader outlinedtext_pshader \
+    shadereffectdefault_vshader shadereffectdefault_pshader
 
 load(hlsl_bytecode_header)

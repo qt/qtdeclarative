@@ -132,6 +132,8 @@ private:
 
     QSGShaderEffectNode::ShaderData m_shaders[NShader];
     QSGShaderEffectNode::DirtyShaderFlags m_dirty;
+    QSet<int> m_dirtyConstants[NShader];
+    QSet<int> m_dirtyTextures[NShader];
 
     struct SignalMapper {
         SignalMapper() : mapper(nullptr), active(false) { }
