@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.7
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Universal 2.0
 
@@ -56,6 +56,7 @@ T.TabBar {
 
         interactive: false
         snapMode: PathView.SnapToItem
+        movementDirection: PathView.Positive
         highlightMoveDuration: 100
 
         path: Path {
