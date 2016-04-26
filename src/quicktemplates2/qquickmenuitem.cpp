@@ -78,6 +78,21 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing MenuItem}, {Menu Controls}
 */
 
+class QQuickMenuItemPrivate : public QQuickAbstractButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickMenuItem)
+
+public:
+    QQuickMenuItemPrivate();
+
+    bool highlighted;
+};
+
+QQuickMenuItemPrivate::QQuickMenuItemPrivate() :
+    highlighted(false)
+{
+}
+
 /*!
     \qmlsignal void QtQuick.Controls::MenuItem::triggered()
 
@@ -85,7 +100,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
-    QQuickAbstractButton(parent)
+    QQuickAbstractButton(*(new QQuickMenuItemPrivate), parent)
 {
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
 }
@@ -104,6 +119,32 @@ void QQuickMenuItem::checkableChange()
 QFont QQuickMenuItem::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::MenuItem::highlighted
+
+    This property holds whether the menu item is highlighted.
+
+    A menu item can be highlighted in order to draw the user's attention
+    towards it. It has no effect on keyboard interaction.
+
+    The default value is \c false.
+*/
+bool QQuickMenuItem::isHighlighted() const
+{
+    Q_D(const QQuickMenuItem);
+    return d->highlighted;
+}
+
+void QQuickMenuItem::setHighlighted(bool highlighted)
+{
+    Q_D(QQuickMenuItem);
+    if (highlighted == d->highlighted)
+        return;
+
+    d->highlighted = highlighted;
+    emit highlightedChanged();
 }
 
 #ifndef QT_NO_ACCESSIBILITY

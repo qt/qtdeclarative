@@ -61,4 +61,15 @@ TestCase {
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
+
+    function test_highlighted() {
+        var control = itemDelegate.createObject(testCase)
+        verify(control)
+        verify(!control.highlighted)
+
+        control.highlighted = true
+        verify(control.highlighted)
+
+        control.destroy()
+    }
 }

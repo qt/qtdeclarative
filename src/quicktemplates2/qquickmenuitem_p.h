@@ -58,13 +58,18 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractBut
 {
     Q_OBJECT
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
+    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
 
 public:
     explicit QQuickMenuItem(QQuickItem *parent = nullptr);
 
+    bool isHighlighted() const;
+    void setHighlighted(bool highlighted);
+
 Q_SIGNALS:
     void checkableChanged();
     void triggered();
+    void highlightedChanged();
 
 protected:
     void checkableChange() override;

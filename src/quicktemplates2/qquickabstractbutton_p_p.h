@@ -84,7 +84,6 @@ public:
     bool pressed;
     bool checked;
     bool checkable;
-    bool highlighted;
     bool autoExclusive;
     bool autoRepeat;
     bool wasHeld;

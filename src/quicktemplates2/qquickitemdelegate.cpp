@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickitemdelegate_p.h"
+#include "qquickitemdelegate_p_p.h"
 #include "qquickcontrol_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
@@ -62,15 +63,47 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 
-QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) : QQuickAbstractButton(parent)
+QQuickItemDelegatePrivate::QQuickItemDelegatePrivate() :
+    highlighted(false)
+{
+}
+
+QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) :
+    QQuickAbstractButton(*(new QQuickItemDelegatePrivate), parent)
 {
     setFocusPolicy(Qt::NoFocus);
 }
 
-QQuickItemDelegate::QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent) :
+QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem *parent) :
     QQuickAbstractButton(dd, parent)
 {
     setFocusPolicy(Qt::NoFocus);
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::ItemDelegate::highlighted
+
+    This property holds whether the delegate is highlighted.
+
+    A delegate can be highlighted in order to draw the user's attention towards
+    it. It has no effect on keyboard interaction.
+
+    The default value is \c false.
+*/
+bool QQuickItemDelegate::isHighlighted() const
+{
+    Q_D(const QQuickItemDelegate);
+    return d->highlighted;
+}
+
+void QQuickItemDelegate::setHighlighted(bool highlighted)
+{
+    Q_D(QQuickItemDelegate);
+    if (highlighted == d->highlighted)
+        return;
+
+    d->highlighted = highlighted;
+    emit highlightedChanged();
 }
 
 QFont QQuickItemDelegate::defaultFont() const

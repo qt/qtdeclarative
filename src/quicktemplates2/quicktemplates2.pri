@@ -20,6 +20,7 @@ HEADERS += \
     $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \
     $$PWD/qquickitemdelegate_p.h \
+    $$PWD/qquickitemdelegate_p_p.h \
     $$PWD/qquicklabel_p.h \
     $$PWD/qquicklabel_p_p.h \
     $$PWD/qquickmenu_p.h \

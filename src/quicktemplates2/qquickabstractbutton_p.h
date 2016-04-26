@@ -61,7 +61,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool down READ isDown WRITE setDown NOTIFY downChanged RESET resetDown FINAL)
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
-    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
@@ -84,9 +83,6 @@ public:
 
     bool isCheckable() const;
     void setCheckable(bool checkable);
-
-    bool isHighlighted() const;
-    void setHighlighted(bool highlighted);
 
     bool autoExclusive() const;
     void setAutoExclusive(bool exclusive);
@@ -111,7 +107,6 @@ Q_SIGNALS:
     void downChanged();
     void pressedChanged();
     void checkedChanged();
-    void highlightedChanged();
     void autoExclusiveChanged();
     void indicatorChanged();
 

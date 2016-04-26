@@ -36,7 +36,7 @@
 
 #include "qquickswipedelegate_p.h"
 #include "qquickcontrol_p_p.h"
-#include "qquickabstractbutton_p_p.h"
+#include "qquickitemdelegate_p_p.h"
 #include "qquickvelocitycalculator_p_p.h"
 
 #include <QtGui/qstylehints.h>
@@ -521,7 +521,7 @@ void QQuickSwipeExposure::setActive(bool active)
     emit activeChanged();
 }
 
-class QQuickSwipeDelegatePrivate : public QQuickAbstractButtonPrivate
+class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwipeDelegate)
 

@@ -36,7 +36,7 @@
 
 #include "qquickswitchdelegate_p.h"
 
-#include "qquickabstractbutton_p_p.h"
+#include "qquickitemdelegate_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing SwitchDelegate}, {Delegate Controls}
 */
 
-class QQuickSwitchDelegatePrivate : public QQuickAbstractButtonPrivate
+class QQuickSwitchDelegatePrivate : public QQuickItemDelegatePrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwitchDelegate)
 

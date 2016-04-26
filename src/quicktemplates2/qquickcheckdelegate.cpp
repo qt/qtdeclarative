@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickcheckdelegate_p.h"
-#include "qquickabstractbutton_p_p.h"
+#include "qquickitemdelegate_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing CheckDelegate}, {Delegate Controls}
 */
 
-class QQuickCheckDelegatePrivate : public QQuickAbstractButtonPrivate
+class QQuickCheckDelegatePrivate : public QQuickItemDelegatePrivate
 {
     Q_DECLARE_PUBLIC(QQuickCheckDelegate)
 

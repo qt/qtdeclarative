@@ -90,7 +90,23 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Button}, {Button Controls}
 */
 
-QQuickButton::QQuickButton(QQuickItem *parent) : QQuickAbstractButton(parent)
+class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickButton)
+
+public:
+    QQuickButtonPrivate();
+
+    bool highlighted;
+};
+
+QQuickButtonPrivate::QQuickButtonPrivate() :
+    highlighted(false)
+{
+}
+
+QQuickButton::QQuickButton(QQuickItem *parent) :
+    QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
 {
 }
 
@@ -122,6 +138,32 @@ void QQuickButton::autoRepeatChange()
 QFont QQuickButton::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::Button::highlighted
+
+    This property holds whether the button is highlighted.
+
+    A button can be highlighted in order to draw the user's attention towards
+    it. It has no effect on keyboard interaction.
+
+    The default value is \c false.
+*/
+bool QQuickButton::isHighlighted() const
+{
+    Q_D(const QQuickButton);
+    return d->highlighted;
+}
+
+void QQuickButton::setHighlighted(bool highlighted)
+{
+    Q_D(QQuickButton);
+    if (highlighted == d->highlighted)
+        return;
+
+    d->highlighted = highlighted;
+    emit highlightedChanged();
 }
 
 QT_END_NAMESPACE

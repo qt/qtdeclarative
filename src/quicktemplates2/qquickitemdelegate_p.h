@@ -52,12 +52,21 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickItemDelegatePrivate;
+
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickItemDelegate : public QQuickAbstractButton
 {
     Q_OBJECT
+    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
 
 public:
     explicit QQuickItemDelegate(QQuickItem *parent = nullptr);
+
+    bool isHighlighted() const;
+    void setHighlighted(bool highlighted);
+
+Q_SIGNALS:
+    void highlightedChanged();
 
 protected:
     QFont defaultFont() const override;
@@ -67,7 +76,11 @@ protected:
 #endif
 
 protected:
-    QQuickItemDelegate(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
+    QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem *parent);
+
+private:
+    Q_DISABLE_COPY(QQuickItemDelegate)
+    Q_DECLARE_PRIVATE(QQuickItemDelegate)
 };
 
 QT_END_NAMESPACE

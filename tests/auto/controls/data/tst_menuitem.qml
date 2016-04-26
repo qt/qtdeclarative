@@ -80,4 +80,15 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_highlighted() {
+        var control = menuItem.createObject(testCase)
+        verify(control)
+        verify(!control.highlighted)
+
+        control.highlighted = true
+        verify(control.highlighted)
+
+        control.destroy()
+    }
 }

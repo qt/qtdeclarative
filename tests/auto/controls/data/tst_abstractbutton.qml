@@ -67,13 +67,4 @@ TestCase {
 
         control.destroy();
     }
-
-    function test_highlighted() {
-        var control = button.createObject(testCase)
-        verify(control)
-        compare(control.highlighted, false)
-
-        control.highlighted = true
-        compare(control.highlighted, true)
-    }
 }
