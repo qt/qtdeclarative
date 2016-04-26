@@ -54,8 +54,8 @@ T.SwipeDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
-        rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width + control.spacing : 0) : 0
+        rightPadding: control.mirrored ? (control.indicator ? control.indicator.width + control.spacing : 0) : 0
 
         text: control.text
         font: control.font
