@@ -196,7 +196,9 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
     defineDefaultProperty(QStringLiteral("charCodeAt"), method_charCodeAt, 1);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("endsWith"), method_endsWith, 1);
     defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(QStringLiteral("includes"), method_includes, 1);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
     defineDefaultProperty(QStringLiteral("match"), method_match, 1);
@@ -204,6 +206,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("search"), method_search, 1);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
     defineDefaultProperty(QStringLiteral("split"), method_split, 2);
+    defineDefaultProperty(QStringLiteral("startsWith"), method_startsWith, 1);
     defineDefaultProperty(QStringLiteral("substr"), method_substr, 2);
     defineDefaultProperty(QStringLiteral("substring"), method_substring, 2);
     defineDefaultProperty(QStringLiteral("toLowerCase"), method_toLowerCase);
@@ -293,6 +296,30 @@ ReturnedValue StringPrototype::method_concat(CallContext *context)
     return context->d()->engine->newString(value)->asReturnedValue();
 }
 
+ReturnedValue StringPrototype::method_endsWith(CallContext *context)
+{
+    QString value = getThisString(context);
+    if (context->d()->engine->hasException)
+        return Encode::undefined();
+
+    QString searchString;
+    if (context->argc()) {
+        if (context->args()[0].as<RegExpObject>())
+            return context->engine()->throwTypeError();
+        searchString = context->args()[0].toQString();
+    }
+
+    int pos = value.length();
+    if (context->argc() > 1)
+        pos = (int) context->args()[1].toInteger();
+
+    if (pos == value.length())
+        return Encode(value.endsWith(searchString));
+
+    QStringRef stringToSearch = value.leftRef(pos);
+    return Encode(stringToSearch.endsWith(searchString));
+}
+
 ReturnedValue StringPrototype::method_indexOf(CallContext *context)
 {
     QString value = getThisString(context);
@@ -312,6 +339,35 @@ ReturnedValue StringPrototype::method_indexOf(CallContext *context)
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
     return Encode(index);
+}
+
+ReturnedValue StringPrototype::method_includes(CallContext *context)
+{
+    QString value = getThisString(context);
+    if (context->d()->engine->hasException)
+        return Encode::undefined();
+
+    QString searchString;
+    if (context->argc()) {
+        if (context->args()[0].as<RegExpObject>())
+            return context->engine()->throwTypeError();
+        searchString = context->args()[0].toQString();
+    }
+
+    int pos = 0;
+    if (context->argc() > 1) {
+        Scope scope(context);
+        ScopedValue posArg(scope, context->argument(1));
+        pos = (int) posArg->toInteger();
+        if (!posArg->isInteger() && posArg->isNumber() && qIsInf(posArg->toNumber()))
+            pos = value.length();
+    }
+
+    if (pos == 0)
+        return Encode(value.contains(searchString));
+
+    QStringRef stringToSearch = value.midRef(pos);
+    return Encode(stringToSearch.contains(searchString));
 }
 
 ReturnedValue StringPrototype::method_lastIndexOf(CallContext *context)
@@ -714,6 +770,30 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
             array->push_back((s = ctx->d()->engine->newString(text.mid(start))));
     }
     return array.asReturnedValue();
+}
+
+ReturnedValue StringPrototype::method_startsWith(CallContext *context)
+{
+    QString value = getThisString(context);
+    if (context->d()->engine->hasException)
+        return Encode::undefined();
+
+    QString searchString;
+    if (context->argc()) {
+        if (context->args()[0].as<RegExpObject>())
+            return context->engine()->throwTypeError();
+        searchString = context->args()[0].toQString();
+    }
+
+    int pos = 0;
+    if (context->argc() > 1)
+        pos = (int) context->args()[1].toInteger();
+
+    if (pos == 0)
+        return Encode(value.startsWith(searchString));
+
+    QStringRef stringToSearch = value.midRef(pos);
+    return Encode(stringToSearch.startsWith(searchString));
 }
 
 ReturnedValue StringPrototype::method_substr(CallContext *context)

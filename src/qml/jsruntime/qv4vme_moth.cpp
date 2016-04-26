@@ -519,6 +519,26 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         STOREVALUE(instr.result, engine->runtime.getQmlQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadQObjectProperty)
 
+    MOTH_BEGIN_INSTR(LoadQRealQObjectPropertyDirectly)
+            STOREVALUE(instr.result, engine->runtime.accessQObjectQRealProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
+    MOTH_END_INSTR(LoadQRealQObjectPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadQObjectQObjectPropertyDirectly)
+            STOREVALUE(instr.result, engine->runtime.accessQObjectQObjectProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
+    MOTH_END_INSTR(LoadQObjectQObjectPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadIntQObjectPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQObjectIntProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
+    MOTH_END_INSTR(LoadIntQObjectPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadBoolQObjectPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQObjectBoolProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
+    MOTH_END_INSTR(LoadQRealQObjectPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadQStringQObjectPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQObjectQStringProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
+    MOTH_END_INSTR(LoadQStringQObjectPropertyDirectly)
+
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
         engine->runtime.setQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
         CHECK_EXCEPTION;
@@ -527,6 +547,26 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
         STOREVALUE(instr.result, engine->runtime.getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadScopeObjectProperty)
+
+    MOTH_BEGIN_INSTR(LoadScopeObjectQRealPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQRealProperty(VALUE(instr.base), instr.accessors));
+    MOTH_END_INSTR(LoadScopeObjectQRealPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadScopeObjectQObjectPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQObjectProperty(VALUE(instr.base), instr.accessors));
+    MOTH_END_INSTR(LoadScopeObjectQObjectPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadScopeObjectIntPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectIntProperty(VALUE(instr.base), instr.accessors));
+    MOTH_END_INSTR(LoadScopeObjectIntPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadScopeObjectBoolPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectBoolProperty(VALUE(instr.base), instr.accessors));
+    MOTH_END_INSTR(LoadScopeObjectBoolPropertyDirectly)
+
+    MOTH_BEGIN_INSTR(LoadScopeObjectQStringPropertyDirectly)
+        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQStringProperty(engine, VALUE(instr.base), instr.accessors));
+    MOTH_END_INSTR(LoadScopeObjectQStringPropertyDirectly)
 
     MOTH_BEGIN_INSTR(StoreContextObjectProperty)
         engine->runtime.setQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));

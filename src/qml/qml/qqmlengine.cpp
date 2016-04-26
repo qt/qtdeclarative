@@ -1900,28 +1900,16 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
         dumpwarning(error);
 }
 
-/*
-   This function should be called after evaluation of the js expression is
-   complete, and so the scarce resources may be freed safely.
- */
-void QQmlEnginePrivate::dereferenceScarceResources()
+void QQmlEnginePrivate::cleanupScarceResources()
 {
-    Q_ASSERT(scarceResourcesRefCount > 0);
-    scarceResourcesRefCount -= 1;
-
-    // if the refcount is zero, then evaluation of the "top level"
-    // expression must have completed.  We can safely release the
-    // scarce resources.
-    if (Q_UNLIKELY(scarceResourcesRefCount == 0)) {
-        // iterate through the list and release them all.
-        // note that the actual SRD is owned by the JS engine,
-        // so we cannot delete the SRD; but we can free the
-        // memory used by the variant in the SRD.
-        QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
-        while (QV4::ExecutionEngine::ScarceResourceData *sr = engine->scarceResources.first()) {
-            sr->data = QVariant();
-            engine->scarceResources.remove(sr);
-        }
+    // iterate through the list and release them all.
+    // note that the actual SRD is owned by the JS engine,
+    // so we cannot delete the SRD; but we can free the
+    // memory used by the variant in the SRD.
+    QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
+    while (QV4::ExecutionEngine::ScarceResourceData *sr = engine->scarceResources.first()) {
+        sr->data = QVariant();
+        engine->scarceResources.remove(sr);
     }
 }
 

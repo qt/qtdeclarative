@@ -927,12 +927,16 @@ void IRPrinter::visitMember(Member *e)
         e->base->accept(this);
     *out << '.' << *e->name;
 #ifndef V4_BOOTSTRAP
-    if (e->property)
+    if (e->property) {
         *out << " (meta-property " << e->property->coreIndex
-            << " <" << QMetaType::typeName(e->property->propType)
-            << ">)";
-    else if (e->kind == Member::MemberOfIdObjectsArray)
+            << " <" << QMetaType::typeName(e->property->propType) << ">";
+        if (e->property->hasAccessors() && e->property->isFullyResolved()) {
+            *out << ", accessible";
+        }
+        *out << ")";
+    } else if (e->kind == Member::MemberOfIdObjectsArray) {
         *out << "(id object " << e->idIndex << ")";
+    }
 #endif
 }
 

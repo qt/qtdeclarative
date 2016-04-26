@@ -85,7 +85,7 @@ private:
         void execute(QV4::ExecutionEngine *engine) const;
 
         QV4::PersistentValue m_function;
-        QList<QV4::PersistentValue> m_args;
+        QV4::PersistentValue m_args;
         QQmlGuard<QObject> m_objectGuard;
         bool m_guarded;
     };

@@ -115,7 +115,9 @@ struct StringPrototype: StringObject
     static ReturnedValue method_charAt(CallContext *context);
     static ReturnedValue method_charCodeAt(CallContext *context);
     static ReturnedValue method_concat(CallContext *context);
+    static ReturnedValue method_endsWith(CallContext *ctx);
     static ReturnedValue method_indexOf(CallContext *context);
+    static ReturnedValue method_includes(CallContext *context);
     static ReturnedValue method_lastIndexOf(CallContext *context);
     static ReturnedValue method_localeCompare(CallContext *context);
     static ReturnedValue method_match(CallContext *context);
@@ -123,6 +125,7 @@ struct StringPrototype: StringObject
     static ReturnedValue method_search(CallContext *ctx);
     static ReturnedValue method_slice(CallContext *ctx);
     static ReturnedValue method_split(CallContext *ctx);
+    static ReturnedValue method_startsWith(CallContext *ctx);
     static ReturnedValue method_substr(CallContext *context);
     static ReturnedValue method_substring(CallContext *context);
     static ReturnedValue method_toLowerCase(CallContext *ctx);

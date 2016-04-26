@@ -134,8 +134,8 @@ protected:
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex);
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex);
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target);
-    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target);
+    virtual void getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
     virtual void getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target);
     virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex);
     virtual void copyValue(IR::Expr *source, IR::Expr *target);

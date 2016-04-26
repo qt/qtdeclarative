@@ -46,6 +46,8 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlengine_p.h>
+#include "qml/qqmlaccessors_p.h"
+#include "qml/qqmlpropertycache_p.h"
 
 #undef USE_TYPE_INFO
 
@@ -737,8 +739,51 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     addInstruction(store);
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind,
+                                                 QQmlPropertyData *property, int index,
+                                                 IR::Expr *target)
 {
+    if (property && property->hasAccessors() && property->isFullyResolved()) {
+        if (kind == IR::Member::MemberOfQmlScopeObject) {
+            if (property->propType == QMetaType::QReal) {
+                Instruction::LoadScopeObjectQRealPropertyDirectly load;
+                load.base = getParam(source);
+                load.accessors = property->accessors;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->isQObject()) {
+                Instruction::LoadScopeObjectQObjectPropertyDirectly load;
+                load.base = getParam(source);
+                load.accessors = property->accessors;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::Int) {
+                Instruction::LoadScopeObjectIntPropertyDirectly load;
+                load.base = getParam(source);
+                load.accessors = property->accessors;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::Bool) {
+                Instruction::LoadScopeObjectBoolPropertyDirectly load;
+                load.base = getParam(source);
+                load.accessors = property->accessors;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::QString) {
+                Instruction::LoadScopeObjectQStringPropertyDirectly load;
+                load.base = getParam(source);
+                load.accessors = property->accessors;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            }
+        }
+    }
+
     if (kind == IR::Member::MemberOfQmlScopeObject) {
         Instruction::LoadScopeObjectProperty load;
         load.base = getParam(source);
@@ -762,8 +807,59 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::M
     }
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
 {
+    if (property && property->hasAccessors() && property->isFullyResolved()) {
+        if (!attachedPropertiesId && !isSingletonProperty) {
+            if (property->propType == QMetaType::QReal) {
+                Instruction::LoadQRealQObjectPropertyDirectly load;
+                load.base = getParam(base);
+                load.accessors = property->accessors;
+                load.coreIndex = property->coreIndex;
+                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->isQObject()) {
+                Instruction::LoadQObjectQObjectPropertyDirectly load;
+                load.base = getParam(base);
+                load.accessors = property->accessors;
+                load.coreIndex = property->coreIndex;
+                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::Int) {
+                Instruction::LoadIntQObjectPropertyDirectly load;
+                load.base = getParam(base);
+                load.accessors = property->accessors;
+                load.coreIndex = property->coreIndex;
+                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::Bool) {
+                Instruction::LoadBoolQObjectPropertyDirectly load;
+                load.base = getParam(base);
+                load.accessors = property->accessors;
+                load.coreIndex = property->coreIndex;
+                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            } else if (property->propType == QMetaType::QString) {
+                Instruction::LoadQStringQObjectPropertyDirectly load;
+                load.base = getParam(base);
+                load.accessors = property->accessors;
+                load.coreIndex = property->coreIndex;
+                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
+                load.result = getResultParam(target);
+                addInstruction(load);
+                return;
+            }
+        }
+    }
+    const int propertyIndex = property->coreIndex;
     if (attachedPropertiesId != 0) {
         Instruction::LoadAttachedQObjectProperty load;
         load.propertyIndex = propertyIndex;

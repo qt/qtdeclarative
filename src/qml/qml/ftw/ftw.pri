@@ -11,7 +11,6 @@ HEADERS +=  \
     $$PWD/qdeletewatcher_p.h \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
-    $$PWD/qpointervaluepair_p.h \
     $$PWD/qlazilyallocated_p.h \
     $$PWD/qqmlnullablevalue_p.h \
 

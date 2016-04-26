@@ -1057,6 +1057,8 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("String.prototype.charAt") << QString("String.prototype.charAt") << QString("charAt");
     QTest::newRow("String.prototype.charCodeAt") << QString("String.prototype.charCodeAt") << QString("charCodeAt");
     QTest::newRow("String.prototype.concat") << QString("String.prototype.concat") << QString("concat");
+    QTest::newRow("String.prototype.endsWith") << QString("String.prototype.endsWith") << QString("endsWith");
+    QTest::newRow("String.prototype.includes") << QString("String.prototype.includes") << QString("includes");
     QTest::newRow("String.prototype.indexOf") << QString("String.prototype.indexOf") << QString("indexOf");
     QTest::newRow("String.prototype.lastIndexOf") << QString("String.prototype.lastIndexOf") << QString("lastIndexOf");
     QTest::newRow("String.prototype.localeCompare") << QString("String.prototype.localeCompare") << QString("localeCompare");
@@ -1065,6 +1067,7 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("String.prototype.search") << QString("String.prototype.search") << QString("search");
     QTest::newRow("String.prototype.slice") << QString("String.prototype.slice") << QString("slice");
     QTest::newRow("String.prototype.split") << QString("String.prototype.split") << QString("split");
+    QTest::newRow("String.prototype.startsWith") << QString("String.prototype.startsWith") << QString("startsWith");
     QTest::newRow("String.prototype.substring") << QString("String.prototype.substring") << QString("substring");
     QTest::newRow("String.prototype.toLowerCase") << QString("String.prototype.toLowerCase") << QString("toLowerCase");
     QTest::newRow("String.prototype.toLocaleLowerCase") << QString("String.prototype.toLocaleLowerCase") << QString("toLocaleLowerCase");

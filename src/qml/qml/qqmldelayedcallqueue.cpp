@@ -62,12 +62,13 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
 
         QV4::Scope scope(engine);
 
-        const int argCount = m_args.count();
+        QV4::ArrayObject *array = m_args.as<QV4::ArrayObject>();
+        const int argCount = array ? array->getLength() : 0;
         QV4::ScopedCallData callData(scope, argCount);
         callData->thisObject = QV4::Encode::undefined();
 
         for (int i = 0; i < argCount; i++) {
-            callData->args[i] = m_args[i].value();
+            callData->args[i] = array->getIndexed(i);
         }
 
         const QV4::FunctionObject *callback = m_function.as<QV4::FunctionObject>();
@@ -175,11 +176,18 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::CallCon
 
 void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, const QV4::CallData *callData, int offset, QV4::ExecutionEngine *engine)
 {
-    dfc.m_args.clear();
-    dfc.m_args.reserve(callData->argc - offset);
-    for (int j = offset; j < callData->argc; j++) {
-        dfc.m_args.append(QV4::PersistentValue(engine, callData->args[j]));
+    const int length = callData->argc - offset;
+    if (length == 0) {
+        dfc.m_args.clear();
+        return;
     }
+    QV4::Scope scope(engine);
+    QV4::ScopedArrayObject array(scope, engine->newArrayObject(length));
+    int i = 0;
+    for (int j = offset; j < callData->argc; ++i, ++j) {
+        array->putIndexed(i, callData->args[j]);
+    }
+    dfc.m_args.set(engine, array);
 }
 
 void QQmlDelayedCallQueue::executeAllExpired_Later()

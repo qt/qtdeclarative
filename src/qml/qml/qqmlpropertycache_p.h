@@ -162,6 +162,8 @@ public:
                                       overrideIndex >= 0; }
     bool hasRevision() const { return !(flags & HasAccessors) && revision != 0; }
 
+    bool isFullyResolved() const { return !(flags & NotFullyResolved); }
+
     // Returns -1 if not a value type virtual property
     inline int getValueTypeCoreIndex() const;
 
