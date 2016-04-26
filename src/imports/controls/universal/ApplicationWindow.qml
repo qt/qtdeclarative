@@ -52,6 +52,6 @@ T.ApplicationWindow {
         parent: window.activeFocusControl
         width: parent ? parent.width : 0
         height: parent ? parent.height : 0
-        visible: parent && !!parent.useSystemFocusVisuals && !!parent.activeKeyFocus
+        visible: parent && !!parent.useSystemFocusVisuals && !!parent.visualFocus
     }
 }

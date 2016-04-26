@@ -397,7 +397,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         break;
     case ItemActiveFocusHasChanged:
         if (isKeyFocusReason(d->focusReason))
-            emit activeKeyFocusChanged();
+            emit visualFocusChanged();
         break;
     default:
         break;
@@ -804,7 +804,7 @@ void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
     \value Qt.MenuBarFocusReason       The menu bar took focus.
     \value Qt.OtherFocusReason         Another reason, usually application-specific.
 
-    \sa activeKeyFocus, Item::activeFocus
+    \sa visualFocus, Item::activeFocus
 */
 Qt::FocusReason QQuickControl::focusReason() const
 {
@@ -822,16 +822,16 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     d->focusReason = reason;
     emit focusReasonChanged();
     if (d->activeFocus && isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
-        emit activeKeyFocusChanged();
+        emit visualFocusChanged();
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::Control::activeKeyFocus
+    \qmlproperty bool QtQuick.Controls::Control::visualFocus
     \readonly
 
-    This property holds whether the control has active focus and the focus
-    reason is either \c Qt.TabFocusReason, \c Qt.BacktabFocusReason, or
-    \c Qt.ShortcutFocusReason.
+    This property holds whether the control has visual focus. This property
+    is \c true when the control has active focus and the focus reason is either
+    \c Qt.TabFocusReason, \c Qt.BacktabFocusReason, or \c Qt.ShortcutFocusReason.
 
     In general, for visualizing key focus, this property is preferred over
     \l Item::activeFocus. This ensures that key focus is only visualized when
@@ -839,7 +839,7 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
 
     \sa focusReason, Item::activeFocus
 */
-bool QQuickControl::hasActiveKeyFocus() const
+bool QQuickControl::hasVisualFocus() const
 {
     Q_D(const QQuickControl);
     return d->activeFocus && isKeyFocusReason(d->focusReason);

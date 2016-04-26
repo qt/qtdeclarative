@@ -94,7 +94,7 @@ T.ComboBox {
             width: parent.width - 4
             height: parent.height - 4
 
-            visible: control.activeKeyFocus
+            visible: control.visualFocus
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

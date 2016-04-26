@@ -47,9 +47,9 @@ Item {
         width: 56
         height: 16
         radius: 8
-        color: control.checked ? (control.activeKeyFocus ? "#0066ff" : "#353637") : "#ffffff"
-        border.width: control.activeKeyFocus ? 2 : 1
-        border.color: control.checked ? "transparent" : (control.activeKeyFocus ? "#0066ff" : "#353637")
+        color: control.checked ? (control.visualFocus ? "#0066ff" : "#353637") : "#ffffff"
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.checked ? "transparent" : (control.visualFocus ? "#0066ff" : "#353637")
     }
 
     Rectangle {
@@ -58,9 +58,9 @@ Item {
         width: 28
         height: 28
         radius: 16
-        color: control.pressed ? (control.activeKeyFocus ? "#cce0ff" : "#e4e4e4") : (control.activeKeyFocus ? "#f0f6ff" : "#f6f6f6")
-        border.width: control.activeKeyFocus ? 2 : 1
-        border.color: control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+        color: control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
         Behavior on x {
             enabled: !control.pressed

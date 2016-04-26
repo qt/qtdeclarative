@@ -66,7 +66,7 @@ T.ComboBox {
     contentItem: Text {
         text: control.displayText
         font: control.font
-        color: control.activeKeyFocus ? "#0066ff" : "#353637"
+        color: control.visualFocus ? "#0066ff" : "#353637"
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -79,22 +79,22 @@ T.ComboBox {
         implicitWidth: 120
         implicitHeight: 40
 
-        color: control.activeKeyFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
+        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
             (control.pressed || popup.visible ? "#d6d6d6" : "#f6f6f6")
-        border.color: control.activeKeyFocus ? "#0066ff" : "#353637"
-        border.width: control.activeKeyFocus ? 2 : 1
+        border.color: control.visualFocus ? "#0066ff" : "#353637"
+        border.width: control.visualFocus ? 2 : 1
 
         Image {
             x: parent.width - width - 4
             y: (parent.height - height) / 2
-            source: "image://default/double-arrow/" + (control.activeKeyFocus ? "#0066ff" : "#353637")
+            source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
         }
     }
     //! [background]
 
     //! [popup]
     popup: T.Popup {
-        y: control.height - (control.activeKeyFocus ? 0 : 1)
+        y: control.height - (control.visualFocus ? 0 : 1)
         implicitWidth: control.width
         implicitHeight: listview.contentHeight
         topMargin: 6

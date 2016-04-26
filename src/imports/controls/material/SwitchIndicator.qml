@@ -52,7 +52,7 @@ Item {
         width: handle.width
         height: width
         colored: control.checked
-        opacity: control.pressed || control.activeKeyFocus ? 1 : 0
+        opacity: control.pressed || control.visualFocus ? 1 : 0
     }
 
     Rectangle {

@@ -72,7 +72,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
-    Q_PROPERTY(bool activeKeyFocus READ hasActiveKeyFocus NOTIFY activeKeyFocusChanged FINAL)
+    Q_PROPERTY(bool visualFocus READ hasVisualFocus NOTIFY visualFocusChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL)
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
@@ -125,7 +125,7 @@ public:
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
-    bool hasActiveKeyFocus() const;
+    bool hasVisualFocus() const;
 
     bool isHovered() const;
     void setHovered(bool hovered);
@@ -156,7 +156,7 @@ Q_SIGNALS:
     void mirroredChanged();
     void focusPolicyChanged();
     void focusReasonChanged();
-    void activeKeyFocusChanged();
+    void visualFocusChanged();
     void hoveredChanged();
     void hoverEnabledChanged();
     void wheelEnabledChanged();
