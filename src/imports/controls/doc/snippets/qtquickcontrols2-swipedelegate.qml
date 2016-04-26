@@ -32,6 +32,7 @@ ListView {
     id: listView
     width: 100
     height: 120
+    clip: true
 
     model: ListModel {
         ListElement { name: "Apple" }
@@ -72,6 +73,7 @@ ListView {
                 color: rootDelegate.exposed && rootDelegate.pressed ? "#333" : "#444"
                 width: parent.width
                 height: parent.height
+                clip: true
 
                 Label {
                     text: "Remove"

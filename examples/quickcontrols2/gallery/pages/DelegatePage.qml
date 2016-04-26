@@ -79,6 +79,7 @@ Pane {
                     color: swipeDelegate.exposed && swipeDelegate.pressed ? "#333" : "#444"
                     width: parent.width
                     height: parent.height
+                    clip: true
 
                     Label {
                         font.pixelSize: swipeDelegate.font.pixelSize
