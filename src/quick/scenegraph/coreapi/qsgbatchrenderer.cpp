@@ -489,11 +489,6 @@ void Updater::visitGeometryNode(Node *n)
             if (e->batch)
                 renderer->invalidateBatchAndOverlappingRenderOrders(e->batch);
         }
-        if (n->dirtyState & QSGNode::DirtyMaterial) {
-            Element *e = n->element();
-            if (e->batch && e->batch->isMaterialCompatible(e) == BatchBreaksOnCompare)
-                renderer->invalidateBatchAndOverlappingRenderOrders(e->batch);
-        }
     }
 
     SHADOWNODE_TRAVERSE(n) visitNode(*child);
@@ -1213,7 +1208,10 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
             if (e->isMaterialBlended != blended) {
                 m_rebuild |= Renderer::FullRebuild;
                 e->isMaterialBlended = blended;
-            } else if (!e->batch) {
+            } else if (e->batch) {
+                if (e->batch->isMaterialCompatible(e) == BatchBreaksOnCompare)
+                    invalidateBatchAndOverlappingRenderOrders(e->batch);
+            } else {
                 m_rebuild |= Renderer::BuildBatches;
             }
         }
