@@ -588,6 +588,7 @@ void tst_QQmlProfilerService::scenegraphData()
     checkTraceReceived();
     checkJsHeap();
 
+
     // check that at least one frame was rendered
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
     // (though we can't be sure to get the SGRenderLoopFrame in the threaded renderer)
@@ -597,7 +598,7 @@ void tst_QQmlProfilerService::scenegraphData()
     // if the clocks are acting up.
     qint64 contextFrameTime = -1;
     qint64 renderFrameTime = -1;
-
+#ifndef QT_NO_OPENGL //Software renderer doesn't have context frames
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
         if (msg.messageType == QQmlProfilerDefinitions::SceneGraphFrame) {
             if (msg.detailType == QQmlProfilerDefinitions::SceneGraphContextFrame) {
@@ -608,7 +609,7 @@ void tst_QQmlProfilerService::scenegraphData()
     }
 
     QVERIFY(contextFrameTime != -1);
-
+#endif
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
         if (msg.detailType == QQmlProfilerDefinitions::SceneGraphRendererFrame) {
             QVERIFY(msg.time >= contextFrameTime);

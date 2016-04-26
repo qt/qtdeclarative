@@ -13,7 +13,8 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         qquickanimatedsprite \
         qquickframebufferobject \
         qquickopenglinfo \
-        qquickspritesequence
+        qquickspritesequence \
+        qquickshadereffect
 }
 
 !cross_compile: PRIVATETESTS += examples
@@ -72,7 +73,6 @@ QUICKTESTS =  \
     qquickrectangle \
     qquickrendererinfo \
     qquickrepeater \
-    qquickshadereffect \
     qquickshortcut \
     qquicktext \
     qquicktextdocument \

@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderLoop::QSGSoftwareRenderLoop()
 {
-    sg = QSGContext::createDefaultContext();
+    sg = new QSGSoftwareContext();
     rc = sg->createRenderContext();
 }
 
@@ -104,10 +104,14 @@ void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
 void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
 {
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (!cd->isRenderable() || !m_windows.contains(window))
+    if (!m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
+
+    //If were not in grabOnly mode, dont render a non-renderable window
+    if (!data.grabOnly && !cd->isRenderable())
+        return;
 
     //Resize the backing store if necessary
     if (m_backingStores[window]->size() != window->size()) {
@@ -163,10 +167,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
-#ifndef QT_NO_OPENGL
-        // QPlatformBackingStore::toImage() only with OpenGL for some reason
         grabContent = m_backingStores[window]->handle()->toImage();
-#endif
         data.grabOnly = false;
     }
 
@@ -209,8 +210,19 @@ void QSGSoftwareRenderLoop::exposureChanged(QQuickWindow *window)
 
 QImage QSGSoftwareRenderLoop::grab(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return QImage();
+    //If the window was never shown, create a new backing store
+    if (!m_backingStores.contains(window)) {
+        m_backingStores[window] = new QBackingStore(window);
+        // Call create on window to make sure platform window is created
+        window->create();
+    }
+
+    //If there is no WindowData, add one
+    if (!m_windows.contains(window)) {
+        WindowData data;
+        data.updatePending = false;
+        m_windows[window] = data;
+    }
 
     m_windows[window].grabOnly = true;
 

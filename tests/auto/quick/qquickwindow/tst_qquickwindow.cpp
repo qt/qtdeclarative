@@ -1240,9 +1240,10 @@ void tst_qquickwindow::headless()
     QSignalSpy initialized(window, SIGNAL(sceneGraphInitialized()));
     QSignalSpy invalidated(window, SIGNAL(sceneGraphInvalidated()));
 
+#ifndef QT_NO_OPENGL
     // Verify that the window is alive and kicking
     QVERIFY(window->openglContext() != 0);
-
+#endif
     // Store the visual result
     QImage originalContent = window->grabWindow();
 
@@ -1270,7 +1271,9 @@ void tst_qquickwindow::headless()
 
     if (threaded)
         QTRY_COMPARE(initialized.size(), 1);
+#ifndef QT_NO_OPENGL
     QVERIFY(window->openglContext() != 0);
+#endif
 
     // Verify that the visual output is the same
     QImage newContent = window->grabWindow();
@@ -1643,7 +1646,9 @@ void tst_qquickwindow::hideThenDelete()
     }
 
     QVERIFY(sgInvalidated->size() > 0);
+#ifndef QT_NO_OPENGL
     QVERIFY(openglDestroyed->size() > 0);
+#endif
 }
 
 void tst_qquickwindow::showHideAnimate()

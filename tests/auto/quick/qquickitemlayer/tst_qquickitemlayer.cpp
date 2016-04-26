@@ -60,9 +60,10 @@ private slots:
     void initTestCase() Q_DECL_OVERRIDE;
     void layerEnabled();
     void layerSmooth();
+#ifndef QT_NO_OPENGL
     void layerMipmap();
     void layerEffect();
-
+#endif
     void layerVisibility_data();
     void layerVisibility();
 
@@ -169,8 +170,7 @@ void tst_QQuickItemLayer::layerEnabled()
     QVERIFY(fb.pixel(0, 0) != fb.pixel(0, fb.height() - 1));
 }
 
-
-
+#ifndef QT_NO_OPENGL
 // The test draws a one pixel wide line and scales it down by more than a a factor 2
 // If mipmpping works, the pixels should be gray, not white or black
 
@@ -196,8 +196,7 @@ void tst_QQuickItemLayer::layerEffect()
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
 }
-
-
+#endif
 
 // The test draws a rectangle and verifies that there is padding on each side
 // as the source rect spans outside the item. The padding is verified using

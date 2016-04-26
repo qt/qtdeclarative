@@ -306,6 +306,7 @@ void tst_qquickimage::mirror()
 
     qreal width = 300;
     qreal height = 250;
+    qreal devicePixelRatio = 1.0;
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
 #if defined(Q_OS_BLACKBERRY)
@@ -325,13 +326,15 @@ void tst_qquickimage::mirror()
 
         QImage screenshot = window->grabWindow();
         screenshots[fillMode] = screenshot;
+        devicePixelRatio = window->devicePixelRatio();
     }
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
         QPixmap srcPixmap;
         QVERIFY(srcPixmap.load(testFile("pattern.png")));
 
-        QPixmap expected(width, height);
+        QPixmap expected(width * (int)devicePixelRatio, height * (int)devicePixelRatio);
+        expected.setDevicePixelRatio(devicePixelRatio);
         expected.fill();
         QPainter p_e(&expected);
         QTransform transform;
