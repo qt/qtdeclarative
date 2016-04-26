@@ -44,8 +44,8 @@ T.Menu {
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.min(background ? background.implicitHeight : 0,
-                             contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
     //! [contentItem]
     contentItem: ListView {
@@ -64,7 +64,7 @@ T.Menu {
     //! [background]
     background: Rectangle {
         implicitWidth: 200
-        implicitHeight: 200
+        implicitHeight: 40
         color: control.Universal.chromeMediumLowColor
         border.color: control.Universal.chromeHighColor
         border.width: 1 // FlyoutBorderThemeThickness

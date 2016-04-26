@@ -45,8 +45,8 @@ T.Menu {
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.min(background ? background.implicitHeight : 0,
-                             contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
     topPadding: 8
     bottomPadding: 8
@@ -83,7 +83,7 @@ T.Menu {
     //! [background]
     background: Rectangle {
         implicitWidth: 200
-        implicitHeight: 200
+        implicitHeight: 48
 
         radius: 3
         color: control.Material.dialogColor
