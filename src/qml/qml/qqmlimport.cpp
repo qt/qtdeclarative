@@ -302,7 +302,7 @@ public:
                                                       int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
 #ifndef QT_NO_LIBRARY
-   bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
+   bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
 #endif
 };
@@ -878,14 +878,34 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
     return 0;
 }
 
+/*!
+    Returns the list of possible versioned URI combinations. For example, if \a uri is
+    QtQml.Models, \a vmaj is 2, and \a vmin is 0, this method returns the following:
+    [QtQml.Models.2.0, QtQml.2.0.Models, QtQml.Models.2, QtQml.2.Models, QtQml.Models]
+ */
+static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
+{
+    QStringList result;
+    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
+        int index = uri.length();
+        do {
+            QString versionUri = uri;
+            versionUri.insert(index, QQmlImports::versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version)));
+            result += versionUri;
+
+            index = uri.lastIndexOf(Dot, index - 1);
+        } while (index > 0 && version != QQmlImports::Unversioned);
+    }
+    return result;
+}
 
 #ifndef QT_NO_LIBRARY
 /*!
-    Get all static plugins that are QML plugins and has a meta data URI that begins with \a uri.
-    Note that if e.g uri == "a", and different plugins have meta data "a", "a.2.1", "a.b.c", all
-    will be added to the result. So the result needs further version matching by the caller.
+    Get all static plugins that are QML plugins and has a meta data URI that matches with one of
+    \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
+    above.
  */
-bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
+bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                                       const QString &qmldirPath, QList<QQmlError> *errors)
 {
     static QVector<QStaticPlugin> plugins;
@@ -914,7 +934,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
             }
             // A plugin can be set up to handle multiple URIs, so go through the list:
             foreach (const QJsonValue &metaTagUri, metaTagsUriList) {
-                if (metaTagUri.toString().startsWith(uri)) {
+                if (versionUris.contains(metaTagUri.toString())) {
                     result.append(qMakePair(plugin, metaTagsUriList));
                     break;
                 }
@@ -1007,14 +1027,13 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             // versioned to unversioned, we need to compare with differnt version strings. If a module
             // has several plugins, they must all have the same version. Start by populating pluginPairs
             // with relevant plugins to cut the list short early on:
+            const QStringList versionUris = versionUriList(uri, vmaj, vmin);
             QVector<StaticPluginPair> pluginPairs;
-            if (!populatePluginPairVector(pluginPairs, uri, qmldirFilePath, errors))
+            if (!populatePluginPairVector(pluginPairs, uri, versionUris, qmldirFilePath, errors))
                 return false;
 
             const QString basePath = QFileInfo(qmldirPath).absoluteFilePath();
-            for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned && staticPluginsFound == 0; ++version) {
-                QString versionUri = uri + QQmlImports::versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
-
+            for (const QString &versionUri : versionUris) {
                 foreach (const StaticPluginPair &pair, pluginPairs) {
                     foreach (const QJsonValue &metaTagUri, pair.second) {
                         if (versionUri == metaTagUri.toString()) {
@@ -1035,6 +1054,8 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         }
                     }
                 }
+                if (staticPluginsFound > 0)
+                    break;
             }
         }
 
