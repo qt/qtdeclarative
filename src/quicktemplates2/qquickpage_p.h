@@ -58,6 +58,7 @@ class QQuickPagePrivate;
 class Q_QUICKTEMPLATES2_EXPORT QQuickPage : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
@@ -66,6 +67,9 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickPage : public QQuickControl
 
 public:
     explicit QQuickPage(QQuickItem *parent = nullptr);
+
+    QString title() const;
+    void setTitle(const QString &title);
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);
@@ -77,6 +81,7 @@ public:
     QQmlListProperty<QQuickItem> contentChildren();
 
 Q_SIGNALS:
+    void titleChanged();
     void headerChanged();
     void footerChanged();
     void contentChildrenChanged();

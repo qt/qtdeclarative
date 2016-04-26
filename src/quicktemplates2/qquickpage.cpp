@@ -98,6 +98,7 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    QString title;
     QQuickItem *header;
     QQuickItem *footer;
 };
@@ -158,6 +159,27 @@ QQuickPage::QQuickPage(QQuickItem *parent) :
 {
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+}
+
+/*!
+    \qmlproperty string QtQuick.Controls::Page::title
+
+    This property holds the page title.
+*/
+
+QString QQuickPage::title() const
+{
+    return d_func()->title;
+}
+
+void QQuickPage::setTitle(const QString &title)
+{
+    Q_D(QQuickPage);
+    if (d->title == title)
+        return;
+
+    d->title = title;
+    emit titleChanged();
 }
 
 /*!
