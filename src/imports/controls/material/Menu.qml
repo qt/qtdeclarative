@@ -48,6 +48,9 @@ T.Menu {
     implicitHeight: Math.min(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
 
+    topPadding: 8
+    bottomPadding: 8
+
     transformOrigin: Item.Top
 
     enter: Transition {
