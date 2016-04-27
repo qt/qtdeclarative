@@ -83,9 +83,9 @@
 
     After doing that, we'll simply add the following line:
 
-    \qml
+    \code
     radius: 4
-    \endqml
+    \endcode
 
     To avoid confusion with the controls in the
     module itself, we'll call the file \c MyButton.qml. To use the control in
@@ -285,7 +285,7 @@
     \li Make the size of the shadow depend on the elevation
     \endlist
 
-    \qml
+    \code
         layer.enabled: control.enabled && control.MyStyle.elevation > 0
         layer.effect: DropShadow {
             verticalOffset: 1
@@ -293,7 +293,7 @@
             samples: control.MyStyle.elevation
             spread: 0.5
         }
-    \endqml
+    \endcode
 
     With that in place, we can try out our new elevation feature:
 
