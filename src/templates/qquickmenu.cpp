@@ -92,6 +92,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMenuPrivate::QQuickMenuPrivate() :
+    contentItem(Q_NULLPTR),
     contentModel(Q_NULLPTR),
     dummyFocusItem(Q_NULLPTR),
     ignoreActiveFocusChanges(false)
