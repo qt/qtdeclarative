@@ -289,7 +289,7 @@
         layer.enabled: control.enabled && control.MyStyle.elevation > 0
         layer.effect: DropShadow {
             verticalOffset: 1
-            color: control.activeKeyFocus ? "#330066ff" : "#aaaaaa"
+            color: control.visualFocus ? "#330066ff" : "#aaaaaa"
             samples: control.MyStyle.elevation
             spread: 0.5
         }
