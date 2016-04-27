@@ -72,6 +72,7 @@
     \list
       \li \l{Getting Started with Qt Quick Controls 2}
       \li \l{Styling Qt Quick Controls 2}
+      \li \l{Customizing Qt Quick Controls 2}
       \li \l{High-DPI Support in Qt Quick Controls 2}
       \li \l{Using File Selectors with Qt Quick Controls 2}
       \li \l{Differences between Qt Quick Controls}
