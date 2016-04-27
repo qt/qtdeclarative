@@ -71,7 +71,6 @@ struct QQuickShaderEffectMaterialKey {
     };
 
     QByteArray sourceCode[ShaderTypeCount];
-    const char *className;
 
     bool operator == (const QQuickShaderEffectMaterialKey &other) const;
     bool operator != (const QQuickShaderEffectMaterialKey &other) const;

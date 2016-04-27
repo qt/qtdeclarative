@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QtQml.StateMachine/1.0")
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
     QtQmlStateMachinePlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }

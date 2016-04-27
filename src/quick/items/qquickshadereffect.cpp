@@ -1041,7 +1041,6 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
             builder.appendSourceFile(QStringLiteral(":/qt-project.org/items/shaders/shadereffect.vert"));
             s.sourceCode[Key::VertexShader] = builder.source();
         }
-        s.className = metaObject()->className();
 
         material->setProgramSource(s);
         material->attributes = m_common.attributes;

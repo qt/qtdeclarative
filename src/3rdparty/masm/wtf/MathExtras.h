@@ -173,10 +173,14 @@ inline float log2f(float num)
 inline long long abs(long long num) { return _abs64(num); }
 #endif
 
+#if COMPILER(MSVC12_OR_LOWER)
+
 inline double nextafter(double x, double y) { return _nextafter(x, y); }
 inline float nextafterf(float x, float y) { return x > y ? x - FLT_EPSILON : x + FLT_EPSILON; }
 
 inline double copysign(double x, double y) { return _copysign(x, y); }
+
+#endif // COMPILER(MSVC12_OR_LOWER)
 
 // Work around a bug in Win, where atan2(+-infinity, +-infinity) yields NaN instead of specific values.
 inline double wtf_atan2(double x, double y)
@@ -211,6 +215,8 @@ inline double wtf_pow(double x, double y) { return y == 0 ? 1 : pow(x, y); }
 #define fmod(x, y) wtf_fmod(x, y)
 #define pow(x, y) wtf_pow(x, y)
 
+#if COMPILER(MSVC12_OR_LOWER)
+
 // MSVC's math functions do not bring lrint.
 inline long int lrint(double flt)
 {
@@ -233,6 +239,7 @@ inline long int lrint(double flt)
     return static_cast<long int>(intgr);
 }
 
+#endif // COMPILER(MSVC12_OR_LOWER)
 #endif // COMPILER(MSVC)
 
 inline double deg2rad(double d)  { return d * piDouble / 180.0; }

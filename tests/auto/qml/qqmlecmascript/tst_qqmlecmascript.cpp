@@ -2937,6 +2937,18 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
     QCOMPARE(o->actuals().count(), 0);
+
+    o->reset();
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_intQJSValue(123, function() { return \"Hello world!\";})"));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 29);
+    QVERIFY(ret->isString());
+    QCOMPARE(ret->toQStringNoThrow(), QString("Hello world!"));
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(123));
+    QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
+    QVERIFY(!callback.isNull());
+    QVERIFY(callback.isCallable());
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)

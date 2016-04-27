@@ -225,7 +225,7 @@ void QQuickImageBase::load()
         // sourceSize is set. If sourceSize is not set then the provider default size
         // will be used, as usual.
         bool setDevicePixelRatio = false;
-        if (!d->sourcesize.isValid()) {
+        if (d->sourcesize.isValid()) {
             if (loadUrl.scheme() == QLatin1String("image")) {
                 setDevicePixelRatio = true;
             } else {

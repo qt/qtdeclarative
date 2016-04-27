@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -37,17 +37,21 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//![0]
 #include <QtQuick/QQuickView>
 #include <QGuiApplication>
+#include <QQmlEngine>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+//![0]
     QQuickView view;
+#ifdef Q_OS_OSX
+    view.engine()->addImportPath(app.applicationDirPath() + "/../PlugIns");
+#endif
+//![0]
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///app.qml"));
     view.show();
     return app.exec();
 }
-//![0]
