@@ -59,7 +59,7 @@ class QQuickButtonGroupPrivate;
 class QQuickButtonGroupAttached;
 class QQuickButtonGroupAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickButtonGroup : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged)
@@ -91,7 +91,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickButtonGroupAttached : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroupAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickButtonGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)

@@ -56,7 +56,7 @@ class QQuickFlickable;
 class QQuickScrollIndicatorAttached;
 class QQuickScrollIndicatorPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickScrollIndicator : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
@@ -100,7 +100,7 @@ private:
 
 class QQuickScrollIndicatorAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickScrollIndicatorAttached : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollIndicatorAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollIndicator *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

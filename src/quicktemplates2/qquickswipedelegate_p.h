@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 class QQuickSwipeDelegatePrivate;
 class QQuickSwipeExposure;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(QQuickSwipeExposure *exposure READ exposure CONSTANT)
@@ -84,7 +84,7 @@ private:
 
 class QQuickSwipeExposurePrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeExposure : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeExposure : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)

@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlObjectModel;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickMenu)
 

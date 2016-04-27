@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickOverlayPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickOverlay : public QQuickItem
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)

@@ -58,7 +58,7 @@ class QQuickSpinButton;
 class QQuickSpinButtonPrivate;
 class QQuickSpinBoxPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickSpinBox : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int from READ from WRITE setFrom NOTIFY fromChanged FINAL)
@@ -141,7 +141,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickSpinBox)
 };
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickSpinButton : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)

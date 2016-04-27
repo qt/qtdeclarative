@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMenuItemPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickMenuItem : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)

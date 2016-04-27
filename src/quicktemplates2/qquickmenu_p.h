@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQuickMenuItem;
 class QQuickMenuPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickMenu : public QQuickPopup
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)

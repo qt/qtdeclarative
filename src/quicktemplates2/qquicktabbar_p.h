@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTabBarPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickTabBar : public QQuickContainer
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)

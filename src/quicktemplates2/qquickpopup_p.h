@@ -69,7 +69,7 @@ class QQuickWindow;
 class QQuickPopupPrivate;
 class QQuickTransition;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

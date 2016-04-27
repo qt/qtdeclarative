@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 class QQuickRangeSliderPrivate;
 class QQuickRangeSliderNode;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickRangeSlider : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
@@ -127,7 +127,7 @@ private:
 
 class QQuickRangeSliderNodePrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickRangeSliderNode : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSliderNode : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)

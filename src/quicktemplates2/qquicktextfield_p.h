@@ -57,7 +57,7 @@ class QQuickText;
 class QQuickTextFieldPrivate;
 class QQuickMouseEvent;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickTextField : public QQuickTextInput
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override

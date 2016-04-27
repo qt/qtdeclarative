@@ -58,7 +58,7 @@ class QQuickStackElement;
 class QQuickStackAttached;
 class QQuickStackViewPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickStackView : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ isBusy NOTIFY busyChanged FINAL)
@@ -156,7 +156,7 @@ private:
 
 class QQuickStackAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickStackAttached : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

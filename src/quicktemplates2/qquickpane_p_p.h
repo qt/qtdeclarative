@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPane;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickPanePrivate : public QQuickControlPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPane)
 

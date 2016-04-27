@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractButtonPrivate;
 
-class Q_QUICKTEMPLATES2_EXPORT QQuickAbstractButton : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
