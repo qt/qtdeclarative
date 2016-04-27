@@ -192,6 +192,7 @@ public:
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
     void itemParentChanged(QQuickItem *, QQuickItem *) override;
+    void itemDestroyed(QQuickItem *) override;
 
     void updateIndex();
     void updateIsCurrent();
@@ -309,20 +310,28 @@ void QQuickSwipeViewAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem 
     updateView(parent);
 }
 
+void QQuickSwipeViewAttachedPrivate::itemDestroyed(QQuickItem *item)
+{
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
+}
+
 QQuickSwipeViewAttached::QQuickSwipeViewAttached(QQuickItem *item) :
     QObject(*(new QQuickSwipeViewAttachedPrivate(item)), item)
 {
     Q_D(QQuickSwipeViewAttached);
-    if (item->parentItem()) {
+    if (item->parentItem())
         d->updateView(item->parentItem());
-    } else {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        p->addItemChangeListener(d, QQuickItemPrivate::Parent);
-    }
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    p->addItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
 }
 
 QQuickSwipeViewAttached::~QQuickSwipeViewAttached()
 {
+    Q_D(QQuickSwipeViewAttached);
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
+    if (item)
+        QQuickItemPrivate::get(item)->removeItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
 }
 
 QQuickSwipeView *QQuickSwipeViewAttached::view() const

@@ -110,6 +110,11 @@ public:
         , activeFocusControl(nullptr)
     { }
 
+    static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
+    {
+        return window->d_func();
+    }
+
     void relayout();
 
     void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) override;
@@ -263,6 +268,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     if (d->footer)
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
                                                                     QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+    d_ptr.reset(); // QTBUG-52731
 }
 
 /*!
@@ -616,6 +622,9 @@ public:
 void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
 {
     Q_Q(QQuickApplicationWindowAttached);
+    if (window && !QQuickApplicationWindowPrivate::get(window))
+        window = nullptr; // being deleted (QTBUG-52731)
+
     QQuickApplicationWindow *newWindow = qobject_cast<QQuickApplicationWindow *>(wnd);
     if (window != newWindow) {
         QQuickApplicationWindow *oldWindow = window;

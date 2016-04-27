@@ -92,6 +92,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMenuPrivate::QQuickMenuPrivate() :
+    contentItem(nullptr),
     contentModel(nullptr)
 {
     Q_Q(QQuickMenu);

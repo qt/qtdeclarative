@@ -542,6 +542,7 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
     m_primary = primary;
     propagatePrimary();
     emit primaryChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagatePrimary()
@@ -597,6 +598,7 @@ void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
     m_accent = accent;
     propagateAccent();
     emit accentChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagateAccent()
