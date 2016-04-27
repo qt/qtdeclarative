@@ -68,7 +68,7 @@ Rectangle {
         height: width
         control: control
         colored: control.checked
-        opacity: control.down || control.activeKeyFocus ? 1 : 0
+        opacity: control.down || control.visualFocus ? 1 : 0
     }
 
     // TODO: This needs to be transparent
