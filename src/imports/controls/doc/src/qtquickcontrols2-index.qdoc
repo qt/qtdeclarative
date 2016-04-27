@@ -36,22 +36,19 @@
 
     \section1 Prerequisites
 
-    The QML types can be imported into your application using the following
-    import statement in your \c {.qml} file:
+    The \l{Qt Quick Controls 2 QML Types}{QML types} can be imported into your
+    application using the following import statement in your \c {.qml} file:
 
     \code
     import QtQuick.Controls 2.0
     \endcode
 
-    The C++ types can be included into your application using the following
-    include statement:
+    The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into
+    your application using the following include statement:
 
     \code
     #include <QtQuickControls2>
     \endcode
-
-    \note If you are using a few classes from this module, we recommend including
-    those specific classes only instead of the module.
 
     To link against the corresponding C++ libraries, add the following to your
     qmake project file:
@@ -62,15 +59,9 @@
 
     For more details, see \l {Getting Started with Qt Quick Controls 2}.
 
-    \section1 QML Types
-
-    \section2 QtQuick.Controls Module
-    \generatelist {qmltypesbymodule QtQuick.Controls}
-
     \section1 Important Concepts in Qt Quick Controls 2
 
     \list
-      \li \l{Getting Started with Qt Quick Controls 2}
       \li \l{Styling Qt Quick Controls 2}
       \li \l{Customizing Qt Quick Controls 2}
       \li \l{High-DPI Support in Qt Quick Controls 2}
@@ -79,22 +70,20 @@
       \li \l{Deploying Qt Quick Controls 2 Applications}
     \endlist
 
-    \section1 Related Information
-
-    \section2 Reference
+    \section1 Reference
 
     \list
       \li \l{Qt Quick Controls 2 QML Types}{QML Types}
       \li \l{Qt Quick Controls 2 C++ Classes}{C++ Classes}
     \endlist
 
-    \section2 Examples
+    \section1 Examples
 
     \list
       \li \l{Qt Quick Controls 2 Examples}
     \endlist
 
-    \section2 Related Modules
+    \section1 Related Modules
 
     \list
       \li \l{Qt Quick}
