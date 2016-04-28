@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTUMBLER_H
-#define QQUICKTUMBLER_H
+#ifndef QQUICKTUMBLER_P_H
+#define QQUICKTUMBLER_P_H
 
 //
 //  W A R N I N G
@@ -140,4 +140,4 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickTumbler)
 QML_DECLARE_TYPEINFO(QQuickTumbler, QML_HAS_ATTACHED_PROPERTIES)
 
-#endif // QQUICKTUMBLER_H
+#endif // QQUICKTUMBLER_P_H

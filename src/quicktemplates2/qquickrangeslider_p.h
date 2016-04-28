@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRANGESLIDER_H
-#define QQUICKRANGESLIDER_H
+#ifndef QQUICKRANGESLIDER_P_H
+#define QQUICKRANGESLIDER_P_H
 
 //
 //  W A R N I N G
@@ -172,4 +172,4 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickRangeSlider)
 
-#endif // QQUICKRANGESLIDER_H
+#endif // QQUICKRANGESLIDER_P_H

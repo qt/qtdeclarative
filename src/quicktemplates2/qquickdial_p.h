@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIAL_H
-#define QQUICKDIAL_H
+#ifndef QQUICKDIAL_P_H
+#define QQUICKDIAL_P_H
 
 //
 //  W A R N I N G
@@ -149,4 +149,4 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickDial)
 
-#endif // QQUICKDIAL_H
+#endif // QQUICKDIAL_P_H

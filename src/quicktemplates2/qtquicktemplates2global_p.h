@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTQUICKTEMPLATES2GLOBAL_H
-#define QTQUICKTEMPLATES2GLOBAL_H
+#ifndef QTQUICKTEMPLATES2GLOBAL_P_H
+#define QTQUICKTEMPLATES2GLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -64,4 +64,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-#endif // QTQUICKTEMPLATES2GLOBAL_H
+#endif // QTQUICKTEMPLATES2GLOBAL_P_H
