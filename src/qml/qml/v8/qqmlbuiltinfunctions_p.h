@@ -67,6 +67,13 @@ struct QtObject : Object {
     QtObject(QQmlEngine *qmlEngine);
     QObject *platform;
     QObject *application;
+
+    enum { Finished = -1 };
+    int enumeratorIterator;
+    int keyIterator;
+
+    bool isComplete() const
+    { return enumeratorIterator == Finished; }
 };
 
 struct ConsoleObject : Object {
@@ -85,6 +92,9 @@ struct QQmlBindingFunction : FunctionObject {
 struct QtObject : Object
 {
     V4_OBJECT2(QtObject, Object)
+
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static ReturnedValue method_isQtObject(CallContext *ctx);
     static ReturnedValue method_rgba(CallContext *ctx);
@@ -124,6 +134,10 @@ struct QtObject : Object
     static ReturnedValue method_get_inputMethod(CallContext *ctx);
 #endif
     static ReturnedValue method_get_styleHints(CallContext *ctx);
+
+private:
+    void addAll();
+    ReturnedValue findAndAdd(const QString *name, bool &foundProperty) const;
 };
 
 struct ConsoleObject : Object

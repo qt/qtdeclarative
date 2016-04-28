@@ -87,6 +87,7 @@ private slots:
     void fontFamilies();
     void quit();
     void resolvedUrl();
+    void qtObjectContents();
 
 private:
     QQmlEngine engine;
@@ -930,6 +931,51 @@ void tst_qqmlqt::resolvedUrl()
 
     QCOMPARE(object->property("result").toString(), component.url().toString());
     QCOMPARE(object->property("isString").toBool(), true);
+
+    delete object;
+}
+
+void tst_qqmlqt::qtObjectContents()
+{
+    struct StaticQtMetaObject : public QObject
+    {
+        static const QMetaObject *get()
+        { return &staticQtMetaObject; }
+    };
+
+    QQmlComponent component(&engine, testFileUrl("qtObjectContents.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVERIFY(object->property("values").canConvert<QJSValue>());
+    QVariantMap values = object->property("values").value<QJSValue>().toVariant().toMap();
+
+    QSet<const char *> keys;
+    int uniqueKeys = 0;
+    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
+        QMetaEnum enumerator = qtMetaObject->enumerator(ii);
+        for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
+            auto key = enumerator.key(jj);
+//            qDebug() << "key:" << key;
+            if (!keys.contains(key)) {
+                ++uniqueKeys;
+                keys.insert(key);
+            }
+            QVERIFY(values.contains(key));
+            QVariant value = values.value(key);
+            QVERIFY(value.canConvert<int>());
+            QCOMPARE(value.toInt(), enumerator.value(jj));
+        }
+    }
+    QVERIFY(values.contains("Asynchronous"));
+    QCOMPARE(values.value("Asynchronous").toInt(), 0);
+    ++uniqueKeys;
+    QVERIFY(values.contains("Synchronous"));
+    QCOMPARE(values.value("Synchronous").toInt(), 1);
+    ++uniqueKeys;
+    QCOMPARE(values.count(), uniqueKeys);
 
     delete object;
 }
