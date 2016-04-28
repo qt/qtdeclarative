@@ -97,6 +97,7 @@ TestCase {
         compare(control.highlightedIndex, -1)
         compare(control.currentText, "")
         verify(control.delegate)
+        verify(control.indicator)
         verify(control.popup)
 
         control.destroy()

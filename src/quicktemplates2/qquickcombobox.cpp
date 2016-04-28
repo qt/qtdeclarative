@@ -154,7 +154,7 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
 public:
     QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false), hasCurrentIndex(false),
         highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
-        delegate(nullptr), popup(nullptr) { }
+        delegate(nullptr), indicator(nullptr), popup(nullptr) { }
 
     bool isPopupVisible() const;
     void showPopup();
@@ -185,6 +185,7 @@ public:
     QQuickItem *pressedItem;
     QQmlInstanceModel *delegateModel;
     QQmlComponent *delegate;
+    QQuickItem *indicator;
     QQuickPopup *popup;
 };
 
@@ -600,6 +601,32 @@ void QQuickComboBox::setDelegate(QQmlComponent* delegate)
     if (delegateModel)
         delegateModel->setDelegate(d->delegate);
     emit delegateChanged();
+}
+
+/*!
+    \qmlproperty Item QtQuick.Controls::ComboBox::indicator
+
+    This property holds the drop indicator item.
+*/
+QQuickItem *QQuickComboBox::indicator() const
+{
+    Q_D(const QQuickComboBox);
+    return d->indicator;
+}
+
+void QQuickComboBox::setIndicator(QQuickItem *indicator)
+{
+    Q_D(QQuickComboBox);
+    if (d->indicator == indicator)
+        return;
+
+    delete d->indicator;
+    d->indicator = indicator;
+    if (indicator) {
+        if (!indicator->parentItem())
+            indicator->setParentItem(this);
+    }
+    emit indicatorChanged();
 }
 
 /*!

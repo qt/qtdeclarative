@@ -107,6 +107,7 @@ Module {
         Property { name: "displayText"; type: "string" }
         Property { name: "textRole"; type: "string" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "popup"; type: "QQuickPopup"; isPointer: true }
         Signal {
             name: "activated"

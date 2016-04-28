@@ -69,6 +69,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QString displayText READ displayText WRITE setDisplayText RESET resetDisplayText NOTIFY displayTextChanged FINAL)
     Q_PROPERTY(QString textRole READ textRole WRITE setTextRole NOTIFY textRoleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
 
 public:
@@ -101,6 +102,9 @@ public:
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
+    QQuickItem *indicator() const;
+    void setIndicator(QQuickItem *indicator);
+
     QQuickPopup *popup() const;
     void setPopup(QQuickPopup *popup);
 
@@ -122,6 +126,7 @@ Q_SIGNALS:
     void displayTextChanged();
     void textRoleChanged();
     void delegateChanged();
+    void indicatorChanged();
     void popupChanged();
 
     void activated(int index);

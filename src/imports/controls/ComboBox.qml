@@ -42,8 +42,11 @@ import QtQuick.Templates 2.0 as T
 T.ComboBox {
     id: control
 
-    implicitWidth: (background ? background.implicitWidth : contentItem.implicitWidth) + leftPadding + rightPadding
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             Math.max(contentItem.implicitHeight,
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 8
@@ -62,15 +65,25 @@ T.ComboBox {
     }
     //! [delegate]
 
+    //! [indicator]
+    indicator: Image {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
+    }
+    //! [indicator]
+
     //! [contentItem]
     contentItem: Text {
+        leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+
         text: control.displayText
         font: control.font
         color: control.visualFocus ? "#0066ff" : "#353637"
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
-        rightPadding: 18 + control.spacing
     }
     //! [contentItem]
 
@@ -83,12 +96,6 @@ T.ComboBox {
             (control.pressed || popup.visible ? "#d6d6d6" : "#f6f6f6")
         border.color: control.visualFocus ? "#0066ff" : "#353637"
         border.width: control.visualFocus ? 2 : 1
-
-        Image {
-            x: parent.width - width - 4
-            y: (parent.height - height) / 2
-            source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
-        }
     }
     //! [background]
 

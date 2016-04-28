@@ -47,7 +47,8 @@ T.ComboBox {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             Math.max(contentItem.implicitHeight,
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 6
@@ -62,15 +63,26 @@ T.ComboBox {
     }
     //! [delegate]
 
+    //! [indicator]
+    indicator: Image {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        opacity: !control.enabled ? 0.5 : 1.0
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
+    }
+    //! [indicator]
+
     //! [contentItem]
     contentItem: Text {
+        leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+
         text: control.displayText
         font: control.font
         color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
-        rightPadding: 14 + control.spacing
     }
     //! [contentItem]
 
@@ -94,13 +106,6 @@ T.ComboBox {
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
             spread: 0.5
-        }
-
-        Image {
-            x: parent.width - width - control.rightPadding
-            y: (parent.height - height) / 2
-            opacity: !control.enabled ? 0.5 : 1.0
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
         }
 
         Rectangle {
