@@ -955,22 +955,32 @@ TestCase {
         signalName: "closed"
     }
 
+    Component {
+        id: pausePopup
+        Popup {
+            enter: Transition { PauseAnimation { duration: 200 } }
+            exit: Transition { PauseAnimation { duration: 200 } }
+        }
+    }
+
     function test_openedClosed() {
-        var control = popupControl.createObject(testCase)
+        var control = pausePopup.createObject(testCase)
         verify(control)
 
         openedSpy.target = control
         closedSpy.target = control
 
         control.open()
-        tryCompare(control, "visible", true)
-        compare(openedSpy.count, 1)
+        compare(control.visible, true)
+        compare(openedSpy.count, 0)
+        tryCompare(openedSpy, "count", 1)
         compare(closedSpy.count, 0)
 
         control.close()
-        tryCompare(control, "visible", false)
         compare(openedSpy.count, 1)
-        compare(closedSpy.count, 1)
+        compare(closedSpy.count, 0)
+        tryCompare(closedSpy, "count", 1)
+        compare(control.visible, false)
 
         control.destroy()
     }
