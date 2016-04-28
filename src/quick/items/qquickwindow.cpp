@@ -257,6 +257,26 @@ void QQuickWindow::focusInEvent(QFocusEvent *ev)
     d->updateFocusItemTransform();
 }
 
+#ifndef QT_NO_IM
+static bool transformDirtyOnItemOrAncestor(const QQuickItem *item)
+{
+    while (item) {
+        if (QQuickItemPrivate::get(item)->dirtyAttributes & (
+            QQuickItemPrivate::TransformOrigin |
+            QQuickItemPrivate::Transform |
+            QQuickItemPrivate::BasicTransform |
+            QQuickItemPrivate::Position |
+            QQuickItemPrivate::Size |
+            QQuickItemPrivate::ParentChanged |
+            QQuickItemPrivate::Clip)) {
+            return true;
+        }
+        item = item->parentItem();
+    }
+    return false;
+}
+#endif
+
 void QQuickWindowPrivate::polishItems()
 {
     // An item can trigger polish on another item, or itself for that matter,
@@ -276,7 +296,17 @@ void QQuickWindowPrivate::polishItems()
     if (recursionSafeguard == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
-    updateFocusItemTransform();
+#ifndef QT_NO_IM
+    if (QQuickItem *focusItem = q_func()->activeFocusItem()) {
+        // If the current focus item, or any of its anchestors, has changed location
+        // inside the window, we need inform IM about it. This to ensure that overlays
+        // such as selection handles will be updated.
+        const bool isActiveFocusItem = (focusItem == QGuiApplication::focusObject());
+        const bool hasImEnabled = focusItem->inputMethodQuery(Qt::ImEnabled).toBool();
+        if (isActiveFocusItem && hasImEnabled && transformDirtyOnItemOrAncestor(focusItem))
+            updateFocusItemTransform();
+    }
+#endif
 }
 
 /*!
