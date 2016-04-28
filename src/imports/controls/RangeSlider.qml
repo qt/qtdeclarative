@@ -59,8 +59,8 @@ T.RangeSlider {
         implicitHeight: 28
         radius: width / 2
         border.width: activeFocus ? 2 : 1
-        border.color: "#353637"
-        color: first.pressed ? "#bdbebf" : "#ffffff"
+        border.color: activeFocus ? "#0066ff" : (control.first.pressed ? "#26282a" : "#353637")
+        color: first.pressed ? (activeFocus ? "#cce0ff" : "#e4e4e4") : (activeFocus ? "#f0f6ff" : "#f6f6f6")
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
@@ -74,8 +74,8 @@ T.RangeSlider {
         implicitHeight: 28
         radius: width / 2
         border.width: activeFocus ? 2 : 1
-        border.color: "#353637"
-        color: second.pressed ? "#bdbebf" : "#ffffff"
+        border.color: activeFocus ? "#0066ff" : (control.second.pressed ? "#26282a" : "#353637")
+        color: second.pressed ? (activeFocus ? "#cce0ff" : "#e4e4e4") : (activeFocus ? "#f0f6ff" : "#f6f6f6")
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
