@@ -47,7 +47,7 @@ T.Tumbler {
     delegate: Text {
         id: label
         text: modelData
-        color: "#666666"
+        color: control.enabled ? (control.visualFocus ? "#0066ff" : "#26282a") : "#c2c2c2"
         font: control.font
         opacity: 1 - Math.abs(Tumbler.position * 0.8) * (control.enabled ? 1.0 : 0.4)
         horizontalAlignment: Text.AlignHCenter
