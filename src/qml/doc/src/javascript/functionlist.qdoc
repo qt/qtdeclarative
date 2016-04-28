@@ -233,6 +233,17 @@
 
     \section2 The Number Object
 
+    \section3 Value Properties
+
+    \list
+    \li NaN
+    \li NEGATIVE_INFINITY
+    \li POSITIVE_INFINITY
+    \li MAX_VALUE
+    \li MIN_VALUE
+    \li EPSILON // ECMAScript 6: Added in Qt 5.8
+    \endlist
+
     \section3 Function Properties
 
     \list
