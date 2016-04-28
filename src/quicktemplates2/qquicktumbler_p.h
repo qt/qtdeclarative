@@ -116,23 +116,23 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT)
-    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal displacement READ displacement NOTIFY displacementChanged FINAL)
 
 public:
     explicit QQuickTumblerAttached(QQuickItem *delegateItem);
     ~QQuickTumblerAttached();
 
     QQuickTumbler *tumbler() const;
-    qreal position() const;
+    qreal displacement() const;
 
 Q_SIGNALS:
-    void positionChanged();
+    void displacementChanged();
 
 private:
     Q_DISABLE_COPY(QQuickTumblerAttached)
     Q_DECLARE_PRIVATE(QQuickTumblerAttached)
 
-    Q_PRIVATE_SLOT(d_func(), void _q_calculatePosition())
+    Q_PRIVATE_SLOT(d_func(), void _q_calculateDisplacement())
 };
 
 QT_END_NAMESPACE

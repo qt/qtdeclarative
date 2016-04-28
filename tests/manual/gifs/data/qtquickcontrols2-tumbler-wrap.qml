@@ -63,7 +63,7 @@ Window {
             Text {
                 text: modelData.toString().length < 2 ? "0" + modelData : modelData
                 color: "#666666"
-                opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.position)) * 0.6
+                opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: fontMetrics.font.pixelSize * 1.25
@@ -79,7 +79,7 @@ Window {
                 delegate: Text {
                     text: (modelData.toString().length < 2 ? "0" : "") + (modelData + 1)
                     color: "#666666"
-                    opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.position)) * 0.6
+                    opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: fontMetrics.font.pixelSize * 1.25

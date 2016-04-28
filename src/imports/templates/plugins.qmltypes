@@ -1737,6 +1737,6 @@ Module {
         name: "QQuickTumblerAttached"
         prototype: "QObject"
         Property { name: "tumbler"; type: "QQuickTumbler"; isReadonly: true; isPointer: true }
-        Property { name: "position"; type: "double"; isReadonly: true }
+        Property { name: "displacement"; type: "double"; isReadonly: true }
     }
 }

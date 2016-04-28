@@ -403,7 +403,7 @@ public:
     QQuickTumblerAttachedPrivate(QQuickItem *delegateItem) :
         tumbler(nullptr),
         index(-1),
-        position(1)
+        displacement(1)
     {
         if (!delegateItem->parentItem()) {
             qWarning() << "Tumbler: attached properties must be accessed from within a delegate item that has a parent";
@@ -434,29 +434,29 @@ public:
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
-    void _q_calculatePosition();
+    void _q_calculateDisplacement();
 
-    // The Tumbler that contains the delegate. Required to calculated the position.
+    // The Tumbler that contains the delegate. Required to calculated the displacement.
     QQuickTumbler *tumbler;
-    // The index of the delegate. Used to calculate the position.
+    // The index of the delegate. Used to calculate the displacement.
     int index;
-    // The position for our delegate.
-    qreal position;
+    // The displacement for our delegate.
+    qreal displacement;
 };
 
 void QQuickTumblerAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
 {
-    _q_calculatePosition();
+    _q_calculateDisplacement();
 }
 
 void QQuickTumblerAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
 {
-    _q_calculatePosition();
+    _q_calculateDisplacement();
 }
 
 void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
-    _q_calculatePosition();
+    _q_calculateDisplacement();
 
     if (parent == child) {
         // The child that was removed from the contentItem was the delegate
@@ -470,10 +470,10 @@ void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem
     }
 }
 
-void QQuickTumblerAttachedPrivate::_q_calculatePosition()
+void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
 {
-    const int previousPosition = position;
-    position = 0;
+    const int previousDisplacement = displacement;
+    displacement = 0;
 
     const int count = tumbler->count();
     // This can happen in tests, so it may happen in normal usage too.
@@ -484,30 +484,29 @@ void QQuickTumblerAttachedPrivate::_q_calculatePosition()
     if (contentType == UnsupportedContentItemType)
         return;
 
-    const int halfVisibleItems = tumbler->visibleItemCount() / 2;
+    qreal offset = 0;
 
     if (contentType == PathViewContentItem) {
-        qreal offset = tumbler->contentItem()->property("offset").toReal();
+        offset = tumbler->contentItem()->property("offset").toReal();
 
-        position = count - index - offset;
-        if (position > halfVisibleItems + 1)
-            position -= count;
-        else if (position < -halfVisibleItems - 1)
-            position += count;
+        displacement = count - index - offset;
+        int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
+        if (displacement > halfVisibleItems)
+            displacement -= count;
+        else if (displacement < -halfVisibleItems)
+            displacement += count;
     } else {
         const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
         const qreal delegateH = delegateHeight(tumbler);
         const qreal preferredHighlightBegin = tumbler->contentItem()->property("preferredHighlightBegin").toReal();
-        // Tumbler's position goes from negative at the top to positive towards the bottom, so we must switch this around.
-        const qreal reversePosition = (contentY + preferredHighlightBegin) / delegateH;
-        position = reversePosition - index;
+        // Tumbler's displacement goes from negative at the top to positive towards the bottom, so we must switch this around.
+        const qreal reverseDisplacement = (contentY + preferredHighlightBegin) / delegateH;
+        displacement = reverseDisplacement - index;
     }
 
-    position /= halfVisibleItems;
-
     Q_Q(QQuickTumblerAttached);
-    if (position != previousPosition)
-        emit q->positionChanged();
+    if (displacement != previousDisplacement)
+        emit q->displacementChanged();
 }
 
 QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
@@ -522,7 +521,7 @@ QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
 
         const char *contentItemSignal = contentType == PathViewContentItem
             ? SIGNAL(offsetChanged()) : SIGNAL(contentYChanged());
-        connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculatePosition()));
+        connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculateDisplacement()));
     }
 }
 
@@ -544,34 +543,27 @@ QQuickTumbler *QQuickTumblerAttached::tumbler() const
 }
 
 /*!
-    \qmlattachedproperty real QtQuick.Controls::Tumbler::position
+    \qmlattachedproperty real QtQuick.Controls::Tumbler::displacement
     \readonly
 
-    This attached property holds a value that describes the logical position
-    of a delegate item.
+    This attached property holds a value from \c {-visibleItemCount / 2} to
+    \c {visibleItemCount / 2}, which represents how far away this item is from
+    being the current item, with \c 0 being completely current.
 
-    The logical position is a percentage describing how far away an item is from
-    being the current item; that is, how far the item is from the vertical center
-    of the tumbler. The following image presents a tumbler with five visible items
-    that each print their index, and the respective logical position in parentheses:
+    For example, the item below will be 40% opaque when it is not the current item,
+    and transition to 100% opacity when it becomes the current item:
 
-    \image qtquickcontrols2-tumbler-position.png
-
-    The logical position is convenient for applying effects on delegate items.
-    For example, adding the line below to a tumbler delegate makes the item 100%
-    opaque when it is at the center of the tumbler, and 20% opaque when it is at
-    the top or bottom of the tumbler.
-
-    \snippet qtquickcontrols2-tumbler-position.qml 1
-
-    \note When the tumbler is being interacted with, the logical position can be
-          outside the range \c [-1.0..1.0] when an item moves past the position of
-          the first or last stationary visible item.
+    \code
+    delegate: Text {
+        text: modelData
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
+    }
+    \endcode
 */
-qreal QQuickTumblerAttached::position() const
+qreal QQuickTumblerAttached::displacement() const
 {
     Q_D(const QQuickTumblerAttached);
-    return d->position;
+    return d->displacement;
 }
 
 QT_END_NAMESPACE

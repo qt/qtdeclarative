@@ -49,7 +49,7 @@ T.Tumbler {
         text: modelData
         color: control.enabled ? (control.visualFocus ? "#0066ff" : "#26282a") : "#c2c2c2"
         font: control.font
-        opacity: 1 - Math.abs(Tumbler.position * 0.8) * (control.enabled ? 1.0 : 0.4)
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
