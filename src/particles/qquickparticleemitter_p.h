@@ -322,6 +322,8 @@ public:
            return m_startTime;
        }
 
+       void reclaculateGroupId() const;
+
 protected:
        qreal m_particlesPerSecond;
        int m_particleDuration;
@@ -358,9 +360,6 @@ protected:
        QPointF m_last_last_last_emitter;
 
        bool isEmitConnected();
-
-private: // methods
-       void reclaculateGroupId() const;
 
 private: // data
        QString m_group;
