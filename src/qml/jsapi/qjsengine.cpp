@@ -247,6 +247,11 @@ Q_DECLARE_METATYPE(QList<int>)
 
 QT_BEGIN_NAMESPACE
 
+static void checkForApplicationInstance()
+{
+    if (!QCoreApplication::instance())
+        qFatal("QJSEngine: Must construct a QCoreApplication before a QJSEngine");
+}
 
 /*!
     Constructs a QJSEngine object.
@@ -258,6 +263,8 @@ QJSEngine::QJSEngine()
     : QObject(*new QJSEnginePrivate, 0)
     , d(new QV8Engine(this))
 {
+    checkForApplicationInstance();
+
     QJSEnginePrivate::addToDebugServer(this);
 }
 
@@ -272,6 +279,8 @@ QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
     , d(new QV8Engine(this))
 {
+    checkForApplicationInstance();
+
     QJSEnginePrivate::addToDebugServer(this);
 }
 
@@ -282,6 +291,7 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
     , d(new QV8Engine(this))
 {
+    checkForApplicationInstance();
 }
 
 /*!
