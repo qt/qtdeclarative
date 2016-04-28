@@ -598,13 +598,13 @@ void Element::computeBounds()
     }
     bounds.map(*node->matrix());
 
-    if (!qIsFinite(bounds.tl.x) || bounds.tl.x == FLT_MAX)
+    if (!qt_is_finite(bounds.tl.x) || bounds.tl.x == FLT_MAX)
         bounds.tl.x = -FLT_MAX;
-    if (!qIsFinite(bounds.tl.y) || bounds.tl.y == FLT_MAX)
+    if (!qt_is_finite(bounds.tl.y) || bounds.tl.y == FLT_MAX)
         bounds.tl.y = -FLT_MAX;
-    if (!qIsFinite(bounds.br.x) || bounds.br.x == -FLT_MAX)
+    if (!qt_is_finite(bounds.br.x) || bounds.br.x == -FLT_MAX)
         bounds.br.x = FLT_MAX;
-    if (!qIsFinite(bounds.br.y) || bounds.br.y == -FLT_MAX)
+    if (!qt_is_finite(bounds.br.y) || bounds.br.y == -FLT_MAX)
         bounds.br.y = FLT_MAX;
 
     Q_ASSERT(bounds.tl.x <= bounds.br.x);
