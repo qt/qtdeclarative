@@ -3972,6 +3972,12 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
+    \qmlproperty Item Window::contentItem
+    \readonly
+    \brief The invisible root item of the scene.
+*/
+
+/*!
     \qmlproperty Qt::ScreenOrientation Window::contentOrientation
 
     This is a hint to the window manager in case it needs to display
