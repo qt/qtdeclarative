@@ -72,7 +72,7 @@ public:
     int maxTextureWidth() const override;
     int maxTextureHeight() const override;
 
-    void activateTexture();
+    void useTexture();
     QSize currentSize() const;
 
 private:

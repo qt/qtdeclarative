@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 class QSGD3D12RenderContext;
 class QSGD3D12GuiThreadShaderEffectManager;
 class QSGD3D12ShaderEffectNode;
+class QSGD3D12Texture;
 
 class QSGD3D12ShaderLinker
 {
@@ -97,6 +98,7 @@ class QSGD3D12ShaderEffectMaterial : public QSGD3D12Material
 {
 public:
     QSGD3D12ShaderEffectMaterial(QSGD3D12ShaderEffectNode *node);
+    ~QSGD3D12ShaderEffectMaterial();
 
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
@@ -118,6 +120,7 @@ public:
     QSGD3D12ShaderLinker linker;
     QSGMaterialType *mtype = nullptr;
     QVector<QSGTextureProvider *> textureProviders;
+    QSGD3D12Texture *dummy = nullptr;
 };
 
 class QSGD3D12ShaderEffectNode : public QObject, public QSGShaderEffectNode
@@ -133,6 +136,8 @@ public:
     static void cleanupMaterialTypeCache();
 
     void preprocess() override;
+
+    QSGD3D12RenderContext *renderContext() { return m_rc; }
 
 private Q_SLOTS:
     void handleTextureChange();

@@ -149,7 +149,7 @@ void QSGD3D12GlyphCache::endFillTexture()
     m_engine->queueTextureUpload(m_id, m_glyphImages, m_glyphPos);
 
     // Nothing else left to do, it is up to the text material to call
-    // activateTexture() which will then add the texture dependency to the frame.
+    // useTexture() which will then add the texture dependency to the frame.
 
     m_glyphImages.clear();
     m_glyphPos.clear();
@@ -170,7 +170,7 @@ int QSGD3D12GlyphCache::maxTextureHeight() const
     return 16384;
 }
 
-void QSGD3D12GlyphCache::activateTexture()
+void QSGD3D12GlyphCache::useTexture()
 {
     if (m_id)
         m_engine->useTexture(m_id);

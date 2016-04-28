@@ -389,30 +389,44 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
     if (!mgr)
         return;
 
+    const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
+
     disconnectSignals(shaderType);
 
+    m_shaders[shaderType].shaderInfo = QSGGuiThreadShaderEffectManager::ShaderInfo();
     m_shaders[shaderType].varData.clear();
 
-    if (src.isEmpty()) {
-        m_shaders[shaderType].valid = false;
-        return;
+    if (!src.isEmpty()) {
+        // Figure out what input parameters and variables are used in the shader.
+        // For file-based shader source/bytecode this is where the data is pulled
+        // in from the file.
+        QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
+        // ### this may need some sort of caching mechanism
+        if (!mgr->reflect(src, &shaderInfo)) {
+            qWarning("ShaderEffect: shader reflection failed for %s", src.constData());
+            m_shaders[shaderType].hasShaderCode = false;
+            return;
+        }
+        m_shaders[shaderType].shaderInfo = shaderInfo;
+        m_shaders[shaderType].hasShaderCode = true;
+    } else {
+        m_shaders[shaderType].hasShaderCode = false;
+        if (shaderType == Fragment) {
+            // With built-in shaders hasShaderCode is set to false and all
+            // metadata is empty, as it is left up to the node to provide a
+            // built-in default shader and its metadata. However, in case of
+            // the built-in fragment shader the value for 'source' has to be
+            // provided and monitored like with an application-provided shader.
+            QSGGuiThreadShaderEffectManager::ShaderInfo::Variable v;
+            v.name = QByteArrayLiteral("source");
+            v.bindPoint = 0;
+            v.type = texturesSeparate ? QSGGuiThreadShaderEffectManager::ShaderInfo::Texture
+                                      : QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler;
+            m_shaders[shaderType].shaderInfo.variables.append(v);
+        }
     }
 
-    // Figure out what input parameters and variables are used in the shader.
-    // For file-based shader source/bytecode this is where the data is pulled
-    // in from the file.
-    QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
-    // ### this will need some sort of caching mechanism
-    if (!mgr->reflect(src, &shaderInfo)) {
-        qWarning("ShaderEffect: shader reflection failed for %s", src.constData());
-        m_shaders[shaderType].valid = false;
-        return;
-    }
-
-    m_shaders[shaderType].shaderInfo = shaderInfo;
-    m_shaders[shaderType].valid = true;
-
-    const int varCount = shaderInfo.variables.count();
+    const int varCount = m_shaders[shaderType].shaderInfo.variables.count();
     m_shaders[shaderType].varData.resize(varCount);
 
     // Reuse signal mappers as much as possible since the mapping is based on
@@ -420,12 +434,10 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
     if (m_signalMappers[shaderType].count() < varCount)
         m_signalMappers[shaderType].resize(varCount);
 
-    const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
-
     // Hook up the signals to get notified about changes for properties that
     // correspond to variables in the shader. Store also the values.
     for (int i = 0; i < varCount; ++i) {
-        const auto &v(shaderInfo.variables.at(i));
+        const auto &v(m_shaders[shaderType].shaderInfo.variables.at(i));
         QSGShaderEffectNode::VariableData &vd(m_shaders[shaderType].varData[i]);
         const bool isSpecial = v.name.startsWith("qt_"); // special names not mapped to properties
         if (isSpecial) {

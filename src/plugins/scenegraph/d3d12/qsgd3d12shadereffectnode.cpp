@@ -39,6 +39,7 @@
 
 #include "qsgd3d12shadereffectnode_p.h"
 #include "qsgd3d12rendercontext_p.h"
+#include "qsgd3d12texture_p.h"
 #include "qsgd3d12engine_p.h"
 #include <QtCore/qfile.h>
 #include <QtQml/qqmlfile.h>
@@ -181,6 +182,11 @@ QSGD3D12ShaderEffectMaterial::QSGD3D12ShaderEffectMaterial(QSGD3D12ShaderEffectN
     setFlag(Blending | RequiresFullMatrix, true); // may be changed in sync()
 }
 
+QSGD3D12ShaderEffectMaterial::~QSGD3D12ShaderEffectMaterial()
+{
+    delete dummy;
+}
+
 struct QSGD3D12ShaderMaterialTypeCache
 {
     QSGMaterialType *get(const QByteArray &vs, const QByteArray &fs);
@@ -260,7 +266,7 @@ int QSGD3D12ShaderEffectMaterial::compare(const QSGMaterial *other) const
 
 int QSGD3D12ShaderEffectMaterial::constantBufferSize() const
 {
-    return linker.constantBufferSize;
+    return QSGD3D12Engine::alignedConstantBufferSize(linker.constantBufferSize);
 }
 
 void QSGD3D12ShaderEffectMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
@@ -279,7 +285,7 @@ static inline QColor qsg_premultiply_color(const QColor &c)
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(const RenderState &state,
-                                                                             QSGD3D12PipelineState *,
+                                                                             QSGD3D12PipelineState *pipelineState,
                                                                              ExtraState *,
                                                                              quint8 *constantBuffer)
 {
@@ -413,15 +419,44 @@ QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(con
         }
     }
 
-    for (QSGTextureProvider *tp : textureProviders) {
+    for (int i = 0; i < textureProviders.count(); ++i) {
+        QSGTextureProvider *tp = textureProviders[i];
+        QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[i]);
         if (tp) {
-            if (QSGTexture *t = tp->texture())
+            if (QSGTexture *t = tp->texture()) {
+                tv.filter = t->filtering() == QSGTexture::Linear
+                        ? QSGD3D12TextureView::FilterLinear : QSGD3D12TextureView::FilterNearest;
+                tv.addressModeHoriz = t->horizontalWrapMode() == QSGTexture::ClampToEdge
+                        ? QSGD3D12TextureView::AddressClamp : QSGD3D12TextureView::AddressWrap;
+                tv.addressModeVert = t->verticalWrapMode() == QSGTexture::ClampToEdge
+                        ? QSGD3D12TextureView::AddressClamp : QSGD3D12TextureView::AddressWrap;
                 t->bind();
+                continue;
+            }
         }
-        // ### have a dummy in case the texture provider is null
+        if (!dummy) {
+            dummy = new QSGD3D12Texture(node->renderContext()->engine());
+            QImage img(128, 128, QImage::Format_ARGB32_Premultiplied);
+            img.fill(0);
+            dummy->setImage(img, QSGRenderContext::CreateTexture_Alpha);
+        }
+        tv.filter = QSGD3D12TextureView::FilterNearest;
+        tv.addressModeHoriz = QSGD3D12TextureView::AddressWrap;
+        tv.addressModeVert = QSGD3D12TextureView::AddressWrap;
+        dummy->bind();
     }
 
-    // ### cull mode
+    switch (cullMode) {
+    case QSGShaderEffectNode::FrontFaceCulling:
+        pipelineState->cullMode = QSGD3D12PipelineState::CullFront;
+        break;
+    case QSGShaderEffectNode::BackFaceCulling:
+        pipelineState->cullMode = QSGD3D12PipelineState::CullBack;
+        break;
+    default:
+        pipelineState->cullMode = QSGD3D12PipelineState::CullNone;
+        break;
+    }
 
     return r;
 }
@@ -506,7 +541,7 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
     if (syncData->dirty & QSGShaderEffectNode::DirtyShaders) {
         QByteArray vertBlob, fragBlob;
 
-        m_material.hasCustomVertexShader = syncData->vertex.shader->valid;
+        m_material.hasCustomVertexShader = syncData->vertex.shader->hasShaderCode;
         if (m_material.hasCustomVertexShader) {
             vertBlob = syncData->vertex.shader->shaderInfo.blob;
         } else {
@@ -514,7 +549,7 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
                                                sizeof(g_VS_DefaultShaderEffect));
         }
 
-        m_material.hasCustomFragmentShader = syncData->fragment.shader->valid;
+        m_material.hasCustomFragmentShader = syncData->fragment.shader->hasShaderCode;
         if (m_material.hasCustomFragmentShader) {
             fragBlob = syncData->fragment.shader->shaderInfo.blob;
         } else {
@@ -528,11 +563,8 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
         if (m_material.hasCustomVertexShader) {
             m_material.linker.feedVertexInput(*syncData->vertex.shader);
             m_material.linker.feedConstants(*syncData->vertex.shader);
-            m_material.linker.feedSamplers(*syncData->vertex.shader);
-            m_material.linker.feedTextures(*syncData->vertex.shader);
         } else {
             QSGShaderEffectNode::ShaderData defaultSD;
-            defaultSD.valid = true;
             defaultSD.shaderInfo.blob = vertBlob;
             defaultSD.shaderInfo.type = QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex;
 
@@ -558,13 +590,13 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
             m_material.linker.feedConstants(defaultSD);
         }
 
+        m_material.linker.feedSamplers(*syncData->vertex.shader);
+        m_material.linker.feedTextures(*syncData->vertex.shader);
+
         if (m_material.hasCustomFragmentShader) {
             m_material.linker.feedConstants(*syncData->fragment.shader);
-            m_material.linker.feedSamplers(*syncData->fragment.shader);
-            m_material.linker.feedTextures(*syncData->fragment.shader);
         } else {
             QSGShaderEffectNode::ShaderData defaultSD;
-            defaultSD.valid = true;
             defaultSD.shaderInfo.blob = fragBlob;
             defaultSD.shaderInfo.type = QSGGuiThreadShaderEffectManager::ShaderInfo::TypeFragment;
 
@@ -598,6 +630,11 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
             m_material.linker.feedSamplers(defaultSD);
             m_material.linker.feedTextures(defaultSD);
         }
+
+        // While this may seem unnecessary for the built-in shaders, the value
+        // of 'source' is still in there and we have to process it.
+        m_material.linker.feedSamplers(*syncData->fragment.shader);
+        m_material.linker.feedTextures(*syncData->fragment.shader);
 
         m_material.updateTextureProviders(true);
         markDirty(QSGNode::DirtyMaterial);

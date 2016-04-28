@@ -332,8 +332,8 @@ public:
     };
 
     struct ShaderData {
-        ShaderData() : valid(false) { }
-        bool valid;
+        ShaderData() : hasShaderCode(false) { }
+        bool hasShaderCode;
         QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
         QVector<VariableData> varData;
     };

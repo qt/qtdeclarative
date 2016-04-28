@@ -566,7 +566,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     tv.addressModeHoriz = QSGD3D12TextureView::AddressClamp;
     tv.addressModeVert = QSGD3D12TextureView::AddressClamp;
 
-    glyphCache()->activateTexture();
+    glyphCache()->useTexture();
 
     return r;
 }
