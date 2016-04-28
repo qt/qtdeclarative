@@ -52,7 +52,7 @@ T.ToolButton {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#c2c2c2"
+        color: control.enabled ? (control.visualFocus ? "#0066ff" : "#26282a") : "#c2c2c2"
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
