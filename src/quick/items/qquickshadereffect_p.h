@@ -90,9 +90,9 @@ public:
     Q_ENUM(Status)
 
     enum ShaderType {
+        UnknownShadingLanguage,
         GLSL,
-        HLSL,
-        Metal
+        HLSL
     };
     Q_ENUM(ShaderType)
 

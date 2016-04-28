@@ -321,6 +321,12 @@ QT_BEGIN_NAMESPACE
         \endcode
     \endtable
 
+    \note With OpenGL the \c y coordinate runs from bottom to top whereas with
+    Direct 3D it goes top to bottom. For shader effect sources Qt Quick hides
+    the difference by treating QtQuick::ShaderEffectSource::textureMirroring as
+    appropriate, meaning texture coordinates in HLSL version of the shaders
+    will not need any adjustments compared to the equivalent GLSL code.
+
     \section1 ShaderEffect and Item Layers
 
     The ShaderEffect type can be combined with \l {Item Layers} {layered items}.
@@ -644,12 +650,23 @@ QQuickShaderEffect::Status QQuickShaderEffect::status() const
 }
 
 /*!
-    \qmlproperty QtQuick::ShaderEffect::ShaderType QtQuick::ShaderEffect::shaderType
+    \qmlproperty enumeration QtQuick::ShaderEffect::shaderType
 
     This property contains the shading language supported by the current Qt
     Quick backend the application is using.
 
-    With OpenGL the value is GLSL.
+    \list
+    \li ShaderEffect.UnknownShadingLanguage - Not yet known due to no window and scenegraph associated
+    \li ShaderEffect.GLSL - GLSL or GLSL ES
+    \li ShaderEffect.HLSL - HLSL
+    \endlist
+
+    \note The value is only up-to-date once the item is associated with a
+    window and the window's scenegraph has initialized. Bindings relying on the
+    value have to keep this in mind since the value may change from
+    ShaderEffect.UnknownShadingLanguage to the actual value after component
+    initialization is complete. This is particularly relevant for ShaderEffect
+    items inside ShaderEffectSource items set as property values.
 
     \since 5.8
     \since QtQuick 2.8
@@ -667,14 +684,26 @@ QQuickShaderEffect::ShaderType QQuickShaderEffect::shaderType() const
 }
 
 /*!
-    \qmlproperty QtQuick::ShaderEffect::ShaderCompilationType QtQuick::ShaderEffect::shaderCompilationType
+    \qmlproperty enumeration QtQuick::ShaderEffect::shaderCompilationType
 
     This property contains a bitmask of the shader compilation approaches
     supported by the current Qt Quick backend the application is using.
 
-    With OpenGL the value is RuntimeCompilation, which corresponds to the
-    traditional way of using ShaderEffect. Non-OpenGL backends are expected to
-    focus more on OfflineCompilation, however.
+    \list
+    \li ShaderEffect.RuntimeCompilation
+    \li ShaderEffect.OfflineCompilation
+    \endlist
+
+    With OpenGL the value is ShaderEffect.RuntimeCompilation, which corresponds
+    to the traditional way of using ShaderEffect. Non-OpenGL backends are
+    expected to focus more on ShaderEffect.OfflineCompilation, however.
+
+    \note The value is only up-to-date once the item is associated with a
+    window and the window's scenegraph has initialized. Bindings relying on the
+    value have to keep this in mind since the value may change from \c 0 to the
+    actual bitmask after component initialization is complete. This is
+    particularly relevant for ShaderEffect items inside ShaderEffectSource
+    items set as property values.
 
     \since 5.8
     \since QtQuick 2.8
@@ -692,16 +721,30 @@ QQuickShaderEffect::ShaderCompilationType QQuickShaderEffect::shaderCompilationT
 }
 
 /*!
-    \qmlproperty QtQuick::ShaderEffect::ShaderSourceType QtQuick::ShaderEffect::shaderSourceType
+    \qmlproperty enumeration QtQuick::ShaderEffect::shaderSourceType
 
     This property contains a bitmask of the supported ways of providing shader
     sources.
 
-    With OpenGL the value is ShaderSourceString, which corresponds to the
-    traditional way of inlining GLSL source code into QML. Other, non-OpenGL Qt
-    Quick backends may however decide not to support inlined shader sources, or
-    even shader sources at all. In this case shaders are expected to be
-    pre-compiled into formats like SPIR-V or D3D shader bytecode.
+    \list
+    \li ShaderEffect.ShaderSourceString
+    \li ShaderEffect.ShaderSourceFile
+    \li ShaderEffect.ShaderByteCode
+    \endlist
+
+    With OpenGL the value is ShaderEffect.ShaderSourceString, which corresponds
+    to the traditional way of inlining GLSL source code into QML. Other,
+    non-OpenGL Qt Quick backends may however decide not to support inlined
+    shader sources, or even shader sources at all. In this case shaders are
+    expected to be pre-compiled into formats like SPIR-V or D3D shader
+    bytecode.
+
+    \note The value is only up-to-date once the item is associated with a
+    window and the window's scenegraph has initialized. Bindings relying on the
+    value have to keep this in mind since the value may change from \c 0 to the
+    actual bitmask after component initialization is complete. This is
+    particularly relevant for ShaderEffect items inside ShaderEffectSource
+    items set as property values.
 
     \since 5.8
     \since QtQuick 2.8

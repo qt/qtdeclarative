@@ -520,7 +520,7 @@ QSGD3D12ShaderEffectNode::QSGD3D12ShaderEffectNode(QSGD3D12RenderContext *rc, QS
 
 QRectF QSGD3D12ShaderEffectNode::normalizedTextureSubRect() const
 {
-    return QRectF(0, 1, 1, -1); // ###
+    return QRectF(0, 0, 1, 1);
 }
 
 void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)

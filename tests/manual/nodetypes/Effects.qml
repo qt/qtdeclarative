@@ -47,25 +47,38 @@ Item {
         anchors.margins: 10
         anchors.fill: parent
         Image {
-            id: image
+            id: image1
             source: "qrc:/qt.png"
         }
         ShaderEffectSource {
-            id: effectSource
-            sourceItem: image
+            id: effectSource1
+            sourceItem: image1
             hideSource: true
         }
-        ShaderEffect {
-            width: image.width
-            height: image.height
+        ShaderEffect { // wobble
+            id: eff
+            width: image1.width
+            height: image1.height
             anchors.centerIn: parent
 
-            property variant source: effectSource
+            property variant source: effectSource1
             property real amplitude: 0.04 * 0.2
             property real frequency: 20
             property real time: 0
 
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
+
+            property bool customVertexShader: false // the effect is fine with the default vs, but toggle this to test
+
+            property string glslVertexShader:
+                "uniform highp mat4 qt_Matrix;" +
+                "attribute highp vec4 qt_Vertex;" +
+                "attribute highp vec2 qt_MultiTexCoord0;" +
+                "varying highp vec2 qt_TexCoord0;" +
+                "void main() {" +
+                "   qt_TexCoord0 = qt_MultiTexCoord0;" +
+                "   gl_Position = qt_Matrix * qt_Vertex;" +
+                "}"
 
             property string glslFragmentShader:
                 "uniform sampler2D source;" +
@@ -82,11 +95,93 @@ Item {
             property string hlslVertexShaderByteCode: "qrc:/vs_wobble.cso"
             property string hlslPixelShaderByteCode: "qrc:/ps_wobble.cso"
 
-            // This effect does not need a custom vertex shader but have one with HLSL just to test that path as well.
-            vertexShader: shaderType === ShaderEffect.GLSL ? ""
-                                                           : (shaderType === ShaderEffect.HLSL ? hlslVertexShaderByteCode : "")
-            fragmentShader: shaderType === ShaderEffect.GLSL ? glslFragmentShader
-                                                             : (shaderType === ShaderEffect.HLSL ? hlslPixelShaderByteCode : "")
+            vertexShader: customVertexShader ? (shaderType === ShaderEffect.HLSL ? hlslVertexShaderByteCode : (shaderType === ShaderEffect.GLSL ? glslVertexShader : "")) : ""
+
+            fragmentShader: shaderType === ShaderEffect.HLSL ? hlslPixelShaderByteCode : (shaderType === ShaderEffect.GLSL ? glslFragmentShader : "")
+        }
+
+        Image {
+            id: image2
+            source: "qrc:/face-smile.png"
+        }
+        ShaderEffectSource {
+            id: effectSource2
+            sourceItem: image2
+            hideSource: true
+        }
+        ShaderEffect { // dropshadow
+            id: eff2
+            width: image2.width
+            height: image2.height
+            scale: 2
+            x: 40
+            y: 40
+
+            property variant source: effectSource2
+
+            property string glslShaderPass1: "
+                uniform lowp float qt_Opacity;
+                uniform sampler2D source;
+                uniform highp vec2 delta;
+                varying highp vec2 qt_TexCoord0;
+                void main() {
+                    gl_FragColor = (0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
+                        + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
+                        + 0.2466 * texture2D(source, qt_TexCoord0)
+                        + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
+                        + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta)) * qt_Opacity;
+                }"
+            property string glslShaderPass2: "
+                uniform lowp float qt_Opacity;
+                uniform highp vec2 offset;
+                uniform sampler2D source;
+                uniform sampler2D shadow;
+                uniform highp float darkness;
+                uniform highp vec2 delta;
+                varying highp vec2 qt_TexCoord0;
+                void main() {
+                    lowp vec4 fg = texture2D(source, qt_TexCoord0);
+                    lowp vec4 bg = texture2D(shadow, qt_TexCoord0 + delta);
+                    gl_FragColor = (fg + vec4(0., 0., 0., darkness * bg.a) * (1. - fg.a)) * qt_Opacity;
+                }"
+
+            property variant shadow: ShaderEffectSource {
+                sourceItem: ShaderEffect {
+                    width: eff2.width
+                    height: eff2.height
+                    property variant delta: Qt.size(0.0, 1.0 / height)
+                    property variant source: ShaderEffectSource {
+                        sourceItem: ShaderEffect {
+                            id: innerEff
+                            width: eff2.width
+                            height: eff2.height
+                            property variant delta: Qt.size(1.0 / width, 0.0)
+                            property variant source: effectSource2
+                            fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow1.cso" : (shaderType === ShaderEffect.GLSL ? eff2.glslShaderPass1 : "")
+                        }
+                    }
+                    fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow1.cso" : (shaderType === ShaderEffect.GLSL ? eff2.glslShaderPass1: "")
+                }
+            }
+            property real angle: 0
+            property variant offset: Qt.point(5.0 * Math.cos(angle), 5.0 * Math.sin(angle))
+            NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
+            property variant delta: Qt.size(offset.x / width, offset.y / height)
+            property real darkness: 0.5
+            fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow2.cso" : (shaderType === ShaderEffect.GLSL ? glslShaderPass2 : "")
+        }
+
+        Column {
+            anchors.bottom: parent.bottom
+            Text {
+                color: "yellow"
+                font.pointSize: 24
+                text: "Shader effect is " + (eff.shaderType === ShaderEffect.HLSL ? "HLSL" : (eff.shaderType === ShaderEffect.GLSL ? "GLSL" : "UNKNOWN")) + " based";
+            }
+            Text {
+                // check the inner shader effect's properties as those only get updated later on, once a window gets associated
+                text: innerEff.shaderType + " " + innerEff.shaderCompilationType + " " + innerEff.shaderSourceType
+            }
         }
     }
 }

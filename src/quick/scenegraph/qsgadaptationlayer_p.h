@@ -230,9 +230,9 @@ class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
 public:
     // Enum values must match ShaderEffect.
     enum ShaderType {
+        UnknownShadingLanguage,
         GLSL,
-        HLSL,
-        Metal
+        HLSL
     };
     enum ShaderCompilationType {
         RuntimeCompilation = 0x01,

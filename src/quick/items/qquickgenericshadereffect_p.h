@@ -105,6 +105,8 @@ private slots:
     void sourceDestroyed(QObject *object);
     void markGeometryDirtyAndUpdate();
     void markGeometryDirtyAndUpdateIfSupportsAtlas();
+    void itemWindowChanged(QQuickWindow *w);
+    void backendChanged();
 
 private:
     QSGGuiThreadShaderEffectManager *shaderEffectManager() const;

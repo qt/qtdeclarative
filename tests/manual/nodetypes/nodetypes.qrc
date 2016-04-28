@@ -13,5 +13,7 @@
         <file>shadow.png</file>
         <file>vs_wobble.cso</file>
         <file>ps_wobble.cso</file>
+        <file>ps_shadow1.cso</file>
+        <file>ps_shadow2.cso</file>
     </qresource>
 </RCC>

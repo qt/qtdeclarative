@@ -1538,6 +1538,10 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         D3D12_ROOT_SIGNATURE_DESC desc;
         desc.NumParameters = rootParamCount;
         desc.pParameters = rootParams;
+        // Mixing up samplers and resource views in QSGD3D12TextureView means
+        // that the number of static samplers has to match the number of
+        // textures. This is not really ideal in general but works for Quick's use cases.
+        // The shaders can still choose to declare and use fewer samplers, if they want to.
         desc.NumStaticSamplers = pipelineState.shaders.rootSig.textureViews.count();
         D3D12_STATIC_SAMPLER_DESC staticSamplers[8];
         int sdIdx = 0;

@@ -92,12 +92,10 @@ bool QSGD3D12Layer::hasMipmaps() const
 
 QRectF QSGD3D12Layer::normalizedTextureSubRect() const
 {
-    // (0, 0) is the top-left corner, unlike OpenGL. Hence the inversion of
-    // m_mirrorVertical, as opposed to the GL version.
     return QRectF(m_mirrorHorizontal ? 1 : 0,
-                  m_mirrorVertical ? 1 : 0,
+                  m_mirrorVertical ? 0 : 1,
                   m_mirrorHorizontal ? -1 : 1,
-                  m_mirrorVertical ? -1 : 1);
+                  m_mirrorVertical ? 1 : -1);
 }
 
 void QSGD3D12Layer::bind()
@@ -339,10 +337,16 @@ void QSGD3D12Layer::updateContent()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
+
+    // Note that the handling of vertical mirroring differs from OpenGL here
+    // due to y running top-bottom with D3D as opposed to bottom-top with GL.
+    // The common parts of Quick follow OpenGL so vertical mirroring is
+    // typically enabled.
     QRectF mirrored(m_mirrorHorizontal ? m_rect.right() : m_rect.left(),
-                    m_mirrorVertical ? m_rect.bottom() : m_rect.top(),
+                    m_mirrorVertical ? m_rect.top() : m_rect.bottom(),
                     m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
-                    m_mirrorVertical ? -m_rect.height() : m_rect.height());
+                    m_mirrorVertical ? m_rect.height() : -m_rect.height());
+
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 

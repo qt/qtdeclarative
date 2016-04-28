@@ -61,6 +61,7 @@ QQuickGenericShaderEffect::QQuickGenericShaderEffect(QQuickShaderEffect *item, Q
     , m_mgr(nullptr)
     , m_dirty(0)
 {
+    connect(m_item, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(itemWindowChanged(QQuickWindow*)));
 }
 
 QQuickGenericShaderEffect::~QQuickGenericShaderEffect()
@@ -76,7 +77,11 @@ QQuickGenericShaderEffect::~QQuickGenericShaderEffect()
 
 void QQuickGenericShaderEffect::setFragmentShader(const QByteArray &src)
 {
-    if (m_fragShader.constData() == src.constData())
+    // Compare the actual values since they are often just filenames.
+    // Optimizing by comparing constData() is a bad idea since seemingly static
+    // strings in QML may in fact have different addresses when a binding
+    // triggers assigning the "same" value to the property.
+    if (m_fragShader == src)
         return;
 
     m_fragShader = src;
@@ -91,7 +96,7 @@ void QQuickGenericShaderEffect::setFragmentShader(const QByteArray &src)
 
 void QQuickGenericShaderEffect::setVertexShader(const QByteArray &src)
 {
-    if (m_vertShader.constData() == src.constData())
+    if (m_vertShader == src)
         return;
 
     m_vertShader = src;
@@ -192,7 +197,7 @@ QQuickShaderEffect::Status QQuickGenericShaderEffect::status() const
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
-        return QQuickShaderEffect::Error;
+        return QQuickShaderEffect::Uncompiled;
 
     return QQuickShaderEffect::Status(mgr->status());
 }
@@ -201,7 +206,7 @@ QQuickShaderEffect::ShaderType QQuickGenericShaderEffect::shaderType() const
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
-        return QQuickShaderEffect::HLSL;
+        return QQuickShaderEffect::ShaderType(0);
 
     return QQuickShaderEffect::ShaderType(mgr->shaderType());
 }
@@ -210,7 +215,7 @@ QQuickShaderEffect::ShaderCompilationType QQuickGenericShaderEffect::shaderCompi
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
-        return QQuickShaderEffect::OfflineCompilation;
+        return QQuickShaderEffect::ShaderCompilationType(0);
 
     return QQuickShaderEffect::ShaderCompilationType(mgr->shaderCompilationType());
 }
@@ -219,7 +224,7 @@ QQuickShaderEffect::ShaderSourceType QQuickGenericShaderEffect::shaderSourceType
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
-        return QQuickShaderEffect::ShaderByteCode;
+        return QQuickShaderEffect::ShaderSourceType(0);
 
     return QQuickShaderEffect::ShaderSourceType(mgr->shaderSourceType());
 }
@@ -348,18 +353,39 @@ QSGGuiThreadShaderEffectManager *QQuickGenericShaderEffect::shaderEffectManager(
         if (w && w->isSceneGraphInitialized()) {
             m_mgr = QQuickWindowPrivate::get(w)->context->sceneGraphContext()->createGuiThreadShaderEffectManager();
             if (m_mgr) {
-                QObject::connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(logChanged()));
-                QObject::connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(statusChanged()));
-                QObject::connect(m_mgr, SIGNAL(textureChanged()), this, SLOT(markGeometryDirtyAndUpdateIfSupportsAtlas()));
+                connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(logChanged()));
+                connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(statusChanged()));
+                connect(m_mgr, SIGNAL(textureChanged()), this, SLOT(markGeometryDirtyAndUpdateIfSupportsAtlas()));
             }
         } else if (!w) {
-            qWarning("ShaderEffect: Backend specifics cannot be queried until the item has a window");
+            // Wait until itemWindowChanged() gets called. Return null for now.
         } else {
-            qWarning("ShaderEffect: Backend specifics cannot be queried until the scenegraph has initialized");
+            // Have window, but no scenegraph -> ensure the signal is connected. Return null for now.
+            const_cast<QQuickGenericShaderEffect *>(this)->itemWindowChanged(w);
         }
     }
 
     return m_mgr;
+}
+
+void QQuickGenericShaderEffect::itemWindowChanged(QQuickWindow *w)
+{
+    if (w) {
+        if (w->isSceneGraphInitialized())
+            backendChanged();
+        else
+            connect(w, SIGNAL(sceneGraphInitialized()), this, SLOT(backendChanged()), Qt::UniqueConnection);
+    }
+}
+
+void QQuickGenericShaderEffect::backendChanged()
+{
+    disconnect(m_item->window(), SIGNAL(sceneGraphInitialized()), this, SLOT(backendChanged()));
+    emit m_item->logChanged();
+    emit m_item->statusChanged();
+    emit m_item->shaderTypeChanged();
+    emit m_item->shaderCompilationTypeChanged();
+    emit m_item->shaderSourceTypeChanged();
 }
 
 void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)
