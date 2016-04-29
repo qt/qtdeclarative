@@ -135,14 +135,14 @@ void QQuickTextFieldPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickTextField);
     QQuickItemPrivate::implicitWidthChanged();
-    emit q->implicitWidthChanged();
+    emit q->implicitWidthChanged3();
 }
 
 void QQuickTextFieldPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickTextField);
     QQuickItemPrivate::implicitHeightChanged();
-    emit q->implicitHeightChanged();
+    emit q->implicitHeightChanged3();
 }
 
 QQuickTextField::QQuickTextField(QQuickItem *parent) :

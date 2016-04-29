@@ -267,14 +267,14 @@ void QQuickTextAreaPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickTextArea);
     QQuickItemPrivate::implicitWidthChanged();
-    emit q->implicitWidthChanged();
+    emit q->implicitWidthChanged3();
 }
 
 void QQuickTextAreaPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickTextArea);
     QQuickItemPrivate::implicitHeightChanged();
-    emit q->implicitHeightChanged();
+    emit q->implicitHeightChanged3();
 }
 
 QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
