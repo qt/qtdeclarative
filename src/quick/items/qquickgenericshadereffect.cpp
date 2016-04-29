@@ -272,7 +272,18 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
         m_dirty = QSGShaderEffectNode::DirtyShaderAll;
     }
 
-    // Dirty mesh and geometry are handled here, the rest is passed on to the node.
+    QSGShaderEffectNode::SyncData sd;
+    sd.dirty = m_dirty;
+    sd.cullMode = QSGShaderEffectNode::CullMode(m_cullMode);
+    sd.blending = m_blending;
+    sd.vertex.shader = &m_shaders[Vertex];
+    sd.vertex.dirtyConstants = &m_dirtyConstants[Vertex];
+    sd.vertex.dirtyTextures = &m_dirtyTextures[Vertex];
+    sd.fragment.shader = &m_shaders[Fragment];
+    sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
+    sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
+    node->syncMaterial(&sd);
+
     if (m_dirty & QSGShaderEffectNode::DirtyShaderMesh) {
         node->setGeometry(nullptr);
         m_dirty &= ~QSGShaderEffectNode::DirtyShaderMesh;
@@ -284,7 +295,8 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
         QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
         QSGGeometry *geometry = node->geometry();
 
-        geometry = mesh->updateGeometry(geometry, 2, 0, node->normalizedTextureSubRect(), rect);
+        const QRectF srcRect = node->updateNormalizedTextureSubRect(m_supportsAtlasTextures);
+        geometry = mesh->updateGeometry(geometry, 2, 0, srcRect, rect);
 
         node->setFlag(QSGNode::OwnsGeometry, false);
         node->setGeometry(geometry);
@@ -292,20 +304,6 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
 
         m_dirty &= ~QSGShaderEffectNode::DirtyShaderGeometry;
     }
-
-    QSGShaderEffectNode::SyncData sd;
-    sd.dirty = m_dirty;
-    sd.cullMode = QSGShaderEffectNode::CullMode(m_cullMode);
-    sd.blending = m_blending;
-    sd.supportsAtlasTextures = m_supportsAtlasTextures;
-    sd.vertex.shader = &m_shaders[Vertex];
-    sd.vertex.dirtyConstants = &m_dirtyConstants[Vertex];
-    sd.vertex.dirtyTextures = &m_dirtyTextures[Vertex];
-    sd.fragment.shader = &m_shaders[Fragment];
-    sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
-    sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
-
-    node->sync(&sd);
 
     m_dirty = 0;
     for (int i = 0; i < NShader; ++i) {

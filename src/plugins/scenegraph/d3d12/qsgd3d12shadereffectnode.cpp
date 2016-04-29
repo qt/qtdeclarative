@@ -73,6 +73,7 @@ void QSGD3D12ShaderLinker::reset(const QByteArray &vertBlob, const QByteArray &f
     constants.clear();
     samplers.clear();
     textures.clear();
+    textureNameMap.clear();
 }
 
 void QSGD3D12ShaderLinker::feedVertexInput(const QSGShaderEffectNode::ShaderData &shader)
@@ -113,7 +114,12 @@ void QSGD3D12ShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &
                 Constant c;
                 c.size = var.size;
                 c.specialType = vd.specialType;
-                c.value = vd.value;
+                if (c.specialType != QSGShaderEffectNode::VariableData::SubRect) {
+                    c.value = vd.value;
+                } else {
+                    Q_ASSERT(var.name.startsWith(QByteArrayLiteral("qt_SubRect_")));
+                    c.value = var.name.mid(11);
+                }
                 constants[var.offset] = c;
             }
         }
@@ -144,11 +150,33 @@ void QSGD3D12ShaderLinker::feedTextures(const QSGShaderEffectNode::ShaderData &s
             if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Texture) {
                 Q_ASSERT(vd.specialType == QSGShaderEffectNode::VariableData::Source);
                 textures.insert(var.bindPoint, vd.value);
+                textureNameMap.insert(var.name, var.bindPoint);
             }
         }
     } else {
-        for (int idx : *dirtyIndices)
-            textures.insert(shader.shaderInfo.variables.at(idx).bindPoint, shader.varData.at(idx).value);
+        for (int idx : *dirtyIndices) {
+            const auto &var(shader.shaderInfo.variables.at(idx));
+            const auto &vd(shader.varData.at(idx));
+            textures.insert(var.bindPoint, vd.value);
+            textureNameMap.insert(var.name, var.bindPoint);
+        }
+    }
+}
+
+void QSGD3D12ShaderLinker::linkTextureSubRects()
+{
+    // feedConstants stores <name> in Constant::value for subrect entries. Now
+    // that both constants and textures are known, replace the name with the
+    // texture bind point.
+    for (Constant &c : constants) {
+        if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
+            if (c.value.type() == QMetaType::QByteArray) {
+                const QByteArray name = c.value.toByteArray();
+                if (!textureNameMap.contains(name))
+                    qWarning("ShaderEffect: qt_SubRect_%s refers to unknown source texture", qPrintable(name));
+                c.value = textureNameMap[name];
+            }
+        }
     }
 }
 
@@ -234,6 +262,16 @@ QSGMaterialType *QSGD3D12ShaderEffectMaterial::type() const
     return mtype;
 }
 
+static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProviders)
+{
+    for (int i = 0; i < textureProviders.count(); ++i) {
+        QSGTextureProvider *t = textureProviders.at(i);
+        if (t && t->texture() && t->texture()->isAtlasTexture())
+            return true;
+    }
+    return false;
+}
+
 int QSGD3D12ShaderEffectMaterial::compare(const QSGMaterial *other) const
 {
     Q_ASSERT(other && type() == other->type());
@@ -246,6 +284,10 @@ int QSGD3D12ShaderEffectMaterial::compare(const QSGMaterial *other) const
         return diff;
 
     if (linker.constants != o->linker.constants)
+        return 1;
+
+    if ((hasAtlasTexture(textureProviders) && !geometryUsesTextureSubRect)
+            || (hasAtlasTexture(o->textureProviders) && !o->geometryUsesTextureSubRect))
         return 1;
 
     for (int i = 0; i < textureProviders.count(); ++i) {
@@ -309,6 +351,16 @@ QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(con
                 memcpy(dst, state.combinedMatrix().constData(), sz);
                 r |= UpdatedConstantBuffer;
             }
+        } else if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
+            // float4
+            QRectF subRect(0, 0, 1, 1);
+            int srcBindPoint = c.value.toInt(); // filled in by linkTextureSubRects
+            if (QSGTexture *t = textureProviders.at(srcBindPoint)->texture())
+                subRect = t->normalizedTextureSubRect();
+            const float f[4] = { float(subRect.x()), float(subRect.y()),
+                                 float(subRect.width()), float(subRect.height()) };
+            Q_ASSERT(sizeof(f) == c.size);
+            memcpy(dst, f, sizeof(f));
         } else if (c.specialType == QSGShaderEffectNode::VariableData::None) {
             r |= UpdatedConstantBuffer;
             switch (c.value.type()) {
@@ -424,6 +476,11 @@ QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(con
         QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[i]);
         if (tp) {
             if (QSGTexture *t = tp->texture()) {
+                if (t->isAtlasTexture() && !geometryUsesTextureSubRect) {
+                    QSGTexture *newTexture = t->removedFromAtlas();
+                    if (newTexture)
+                        t = newTexture;
+                }
                 tv.filter = t->filtering() == QSGTexture::Linear
                         ? QSGD3D12TextureView::FilterLinear : QSGD3D12TextureView::FilterNearest;
                 tv.addressModeHoriz = t->horizontalWrapMode() == QSGTexture::ClampToEdge
@@ -518,12 +575,27 @@ QSGD3D12ShaderEffectNode::QSGD3D12ShaderEffectNode(QSGD3D12RenderContext *rc, QS
     setMaterial(&m_material);
 }
 
-QRectF QSGD3D12ShaderEffectNode::normalizedTextureSubRect() const
+QRectF QSGD3D12ShaderEffectNode::updateNormalizedTextureSubRect(bool supportsAtlasTextures)
 {
-    return QRectF(0, 0, 1, 1);
+    QRectF srcRect(0, 0, 1, 1);
+    bool geometryUsesTextureSubRect = false;
+    if (supportsAtlasTextures && m_material.textureProviders.count() == 1) {
+        QSGTextureProvider *provider = m_material.textureProviders.at(0);
+        if (provider->texture()) {
+            srcRect = provider->texture()->normalizedTextureSubRect();
+            geometryUsesTextureSubRect = true;
+        }
+    }
+
+    if (m_material.geometryUsesTextureSubRect != geometryUsesTextureSubRect) {
+        m_material.geometryUsesTextureSubRect = geometryUsesTextureSubRect;
+        markDirty(QSGNode::DirtyMaterial);
+    }
+
+    return srcRect;
 }
 
-void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
+void QSGD3D12ShaderEffectNode::syncMaterial(SyncData *syncData)
 {
     if (Q_UNLIKELY(debug_render()))
         qDebug() << "shadereffect node sync" << syncData->dirty;
@@ -636,7 +708,10 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
         m_material.linker.feedSamplers(*syncData->fragment.shader);
         m_material.linker.feedTextures(*syncData->fragment.shader);
 
+        m_material.linker.linkTextureSubRects();
+
         m_material.updateTextureProviders(true);
+
         markDirty(QSGNode::DirtyMaterial);
 
         if (Q_UNLIKELY(debug_render()))
@@ -657,6 +732,7 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
                 m_material.linker.feedTextures(*syncData->vertex.shader, syncData->vertex.dirtyTextures);
             if (!syncData->fragment.dirtyTextures->isEmpty())
                 m_material.linker.feedTextures(*syncData->fragment.shader, syncData->fragment.dirtyTextures);
+            m_material.linker.linkTextureSubRects();
             m_material.updateTextureProviders(false);
             markDirty(QSGNode::DirtyMaterial);
             if (Q_UNLIKELY(debug_render()))
@@ -668,8 +744,6 @@ void QSGD3D12ShaderEffectNode::sync(SyncData *syncData)
         m_material.setFlag(QSGMaterial::RequiresFullMatrix, m_material.hasCustomVertexShader);
         markDirty(QSGNode::DirtyMaterial);
     }
-
-    // ### texture subrect
 }
 
 void QSGD3D12ShaderEffectNode::handleTextureChange()

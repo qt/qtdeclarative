@@ -342,7 +342,6 @@ public:
         DirtyShaderFlags dirty;
         CullMode cullMode;
         bool blending;
-        bool supportsAtlasTextures;
         struct ShaderSyncData {
             const ShaderData *shader;
             const QSet<int> *dirtyConstants;
@@ -355,8 +354,8 @@ public:
     // Each ShaderEffect item has one node (render thread) and one manager (gui thread).
     QSGShaderEffectNode(QSGGuiThreadShaderEffectManager *) { }
 
-    virtual QRectF normalizedTextureSubRect() const = 0;
-    virtual void sync(SyncData *syncData) = 0;
+    virtual QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) = 0;
+    virtual void syncMaterial(SyncData *syncData) = 0;
 
     void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };

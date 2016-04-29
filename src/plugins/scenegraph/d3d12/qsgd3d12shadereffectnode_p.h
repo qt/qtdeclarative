@@ -70,6 +70,7 @@ public:
     void feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);
     void feedSamplers(const QSGShaderEffectNode::ShaderData &shader);
     void feedTextures(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);
+    void linkTextureSubRects();
 
     void dump();
 
@@ -90,6 +91,7 @@ public:
     QHash<uint, Constant> constants; // offset -> Constant
     QSet<int> samplers; // bindpoint
     QHash<int, QVariant> textures; // bindpoint -> value (source ref)
+    QHash<QByteArray, int> textureNameMap; // name -> bindpoint
 };
 
 QDebug operator<<(QDebug debug, const QSGD3D12ShaderLinker::Constant &c);
@@ -121,6 +123,7 @@ public:
     QSGMaterialType *mtype = nullptr;
     QVector<QSGTextureProvider *> textureProviders;
     QSGD3D12Texture *dummy = nullptr;
+    bool geometryUsesTextureSubRect = false;
 };
 
 class QSGD3D12ShaderEffectNode : public QObject, public QSGShaderEffectNode
@@ -130,8 +133,8 @@ class QSGD3D12ShaderEffectNode : public QObject, public QSGShaderEffectNode
 public:
     QSGD3D12ShaderEffectNode(QSGD3D12RenderContext *rc, QSGD3D12GuiThreadShaderEffectManager *mgr);
 
-    QRectF normalizedTextureSubRect() const override;
-    void sync(SyncData *syncData) override;
+    QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) override;
+    void syncMaterial(SyncData *syncData) override;
 
     static void cleanupMaterialTypeCache();
 
