@@ -327,6 +327,7 @@ private slots:
     void writeUnregisteredQObjectProperty();
     void switchExpression();
     void qtbug_46022();
+    void qtbug_52340();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7908,6 +7909,17 @@ void tst_qqmlecmascript::qtbug_46022()
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("test1").toBool(), true);
     QCOMPARE(obj->property("test2").toBool(), true);
+}
+
+void tst_qqmlecmascript::qtbug_52340()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_52340.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "testCall", Q_RETURN_ARG(QVariant, returnValue)));
+    QVERIFY(returnValue.isValid());
+    QVERIFY(returnValue.toBool());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
