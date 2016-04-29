@@ -409,6 +409,28 @@ void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)
     }
 }
 
+struct ReflectCache
+{
+    bool contains(const QByteArray &key) const
+    {
+        return m_reflectCache.contains(key);
+    }
+
+    QSGGuiThreadShaderEffectManager::ShaderInfo value(const QByteArray &key) const
+    {
+        return m_reflectCache.value(key);
+    }
+
+    void insert(const QByteArray &key, const QSGGuiThreadShaderEffectManager::ShaderInfo &value)
+    {
+        m_reflectCache.insert(key, value);
+    }
+
+    QHash<QByteArray, QSGGuiThreadShaderEffectManager::ShaderInfo> m_reflectCache;
+};
+
+Q_GLOBAL_STATIC(ReflectCache, reflectCache)
+
 void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray &src)
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
@@ -426,14 +448,18 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
         // Figure out what input parameters and variables are used in the shader.
         // For file-based shader source/bytecode this is where the data is pulled
         // in from the file.
-        QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
-        // ### this may need some sort of caching mechanism
-        if (!mgr->reflect(src, &shaderInfo)) {
-            qWarning("ShaderEffect: shader reflection failed for %s", src.constData());
-            m_shaders[shaderType].hasShaderCode = false;
-            return;
+        if (reflectCache()->contains(src)) {
+            m_shaders[shaderType].shaderInfo = reflectCache()->value(src);
+        } else {
+            QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
+            if (!mgr->reflect(src, &shaderInfo)) {
+                qWarning("ShaderEffect: shader reflection failed for %s", src.constData());
+                m_shaders[shaderType].hasShaderCode = false;
+                return;
+            }
+            m_shaders[shaderType].shaderInfo = shaderInfo;
+            reflectCache()->insert(src, shaderInfo);
         }
-        m_shaders[shaderType].shaderInfo = shaderInfo;
         m_shaders[shaderType].hasShaderCode = true;
     } else {
         m_shaders[shaderType].hasShaderCode = false;
