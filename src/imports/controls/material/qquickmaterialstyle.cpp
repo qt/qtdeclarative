@@ -392,7 +392,6 @@ static const QRgb hintTextColorDark = 0x4CFFFFFF;
 static const QRgb dividerColorLight = 0x1E000000;
 static const QRgb dividerColorDark = 0x1EFFFFFF;
 static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
-// TODO: find out actual value
 static const QRgb raisedButtonPressColorLight = 0xFFCCCDCD;
 static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
 static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
@@ -414,7 +413,6 @@ static const QRgb switchUncheckedTrackColorLight = 0x42000000;
 static const QRgb switchUncheckedTrackColorDark = 0x4CFFFFFF;
 static const QRgb switchDisabledTrackColorLight = 0x1E000000;
 static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
-// TODO: find out actual values
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
@@ -896,7 +894,6 @@ QColor QQuickMaterialStyle::checkBoxUncheckedRippleColor() const
 QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
     QColor pressColor = accentColor();
-    // TODO: find out actual value
     pressColor.setAlpha(m_theme == Light ? 30 : 50);
     return pressColor;
 }
