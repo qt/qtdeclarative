@@ -433,9 +433,6 @@ After filling the width and height of its parent, we also set some margins on
 the view. This gives us a nice alignment with the placeholder text in the
 "compose message" field:
 
-\omit
-TODO: recreate image
-\endomit
 \image qtquickcontrols2-chattutorial-chapter3-view-margins.png
 
 Next, we set \l {ListView::}{displayMarginBeginning} and \l
