@@ -174,6 +174,8 @@ public:
     void setRightMargin(qreal value, bool reset = false);
     void setBottomMargin(qreal value, bool reset = false);
 
+    void setWindow(QQuickWindow *window);
+
     bool focus;
     bool modal;
     bool dim;
@@ -197,6 +199,7 @@ public:
     qreal contentHeight;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
+    QQuickWindow *window;
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;

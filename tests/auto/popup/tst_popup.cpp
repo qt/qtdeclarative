@@ -53,6 +53,7 @@ class tst_popup : public QQmlDataTest
 private slots:
     void visible();
     void overlay();
+    void windowChange();
     void closePolicy_data();
     void closePolicy();
 };
@@ -130,6 +131,31 @@ void tst_popup::overlay()
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
     QVERIFY(!popup->isVisible());
+}
+
+void tst_popup::windowChange()
+{
+    QQuickPopup popup;
+    QSignalSpy spy(&popup, SIGNAL(windowChanged(QQuickWindow*)));
+    QVERIFY(spy.isValid());
+
+    QQuickItem item;
+    popup.setParentItem(&item);
+    QVERIFY(!popup.window());
+    QCOMPARE(spy.count(), 0);
+
+    QQuickWindow window;
+    item.setParentItem(window.contentItem());
+    QCOMPARE(popup.window(), &window);
+    QCOMPARE(spy.count(), 1);
+
+    item.setParentItem(nullptr);
+    QVERIFY(!popup.window());
+    QCOMPARE(spy.count(), 2);
+
+    popup.setParentItem(window.contentItem());
+    QCOMPARE(popup.window(), &window);
+    QCOMPARE(spy.count(), 3);
 }
 
 Q_DECLARE_METATYPE(QQuickPopup::ClosePolicy)

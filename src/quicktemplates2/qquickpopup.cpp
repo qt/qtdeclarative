@@ -142,6 +142,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , contentHeight(0)
     , closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside)
     , parentItem(nullptr)
+    , window(nullptr)
     , enter(nullptr)
     , exit(nullptr)
     , popupItem(nullptr)
@@ -290,6 +291,16 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
         q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
                          QMarginsF(leftMargin, topMargin, rightMargin, oldMargin));
     }
+}
+
+void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
+{
+    Q_Q(QQuickPopup);
+    if (window == newWindow)
+        return;
+
+    window = newWindow;
+    emit q->windowChanged(newWindow);
 }
 
 class QQuickPopupItemPrivate : public QQuickControlPrivate
@@ -719,6 +730,7 @@ QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
 QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
+    d->setWindow(nullptr);
     d->positioner.setParentItem(nullptr);
     delete d->popupItem;
 }
@@ -1353,22 +1365,20 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (d->parentItem == parent)
         return;
 
-    QQuickWindow *oldWindow = window();
-
+    if (d->parentItem)
+        QObjectPrivate::disconnect(d->parentItem, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
     if (parent) {
+        QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
         p->resolveFont();
         if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
             p->updateLocale(window->locale(), false); // explicit=false
     }
+    d->setWindow(parent ? parent->window() : nullptr);
     emit parentChanged();
-
-    QQuickWindow *newWindow = window();
-    if (oldWindow != newWindow)
-        emit windowChanged(newWindow);
 }
 
 /*!
