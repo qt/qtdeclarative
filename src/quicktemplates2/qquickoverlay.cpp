@@ -54,6 +54,7 @@ public:
     void popupAboutToHide();
     void drawerPositionChange();
     void resizeOverlay(QQuickItem *overlay);
+    void restackOverlay();
 
     QQuickItem *modal;
     QQuickItem *modeless;
@@ -72,17 +73,11 @@ void QQuickOverlayPrivate::popupAboutToShow()
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (popup->isModal()) {
-        if (modal) {
-            modal->setZ(popup->z());
-            modal->stackBefore(popup->popupItem());
+        if (modal)
             QQmlProperty::write(modal, QStringLiteral("opacity"), 1.0);
-        }
     } else if (popup->dim()) {
-        if (modeless) {
-            modeless->setZ(popup->z());
-            modeless->stackBefore(popup->popupItem());
+        if (modeless)
             QQmlProperty::write(modeless, QStringLiteral("opacity"), 1.0);
-        }
     }
 }
 
@@ -126,6 +121,39 @@ void QQuickOverlayPrivate::resizeOverlay(QQuickItem *overlay)
     Q_Q(QQuickOverlay);
     overlay->setWidth(q->width());
     overlay->setHeight(q->height());
+}
+
+void QQuickOverlayPrivate::restackOverlay()
+{
+    if (!modal && !modeless)
+        return;
+
+    // find the top-most modal and modeless dimming popups
+    QQuickPopup *modalPopup = nullptr;
+    QQuickPopup *modelessPopup = nullptr;
+    for (auto it = popups.crbegin(), end = popups.crend(); it != end; ++it) {
+        QQuickPopup *popup = (*it);
+        if (popup->isModal()) {
+            if (!modalPopup)
+                modalPopup = popup;
+        } else if (popup->dim()) {
+            if (!modelessPopup)
+                modelessPopup = popup;
+        }
+        if (modalPopup && modelessPopup)
+            break;
+    }
+
+    if (modal) {
+        modal->setZ(modalPopup ? modalPopup->z() : 0.0);
+        if (modalPopup)
+            modal->stackBefore(modalPopup->popupItem());
+    }
+    if (modeless) {
+        modeless->setZ(modelessPopup ? modelessPopup->z() : 0.0);
+        if (modelessPopup)
+            modeless->stackBefore(modelessPopup->popupItem());
+    }
 }
 
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
@@ -204,6 +232,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
     if (change == ItemChildAddedChange) {
         d->popups.append(popup);
+        d->restackOverlay();
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
@@ -218,6 +247,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         }
     } else if (change == ItemChildRemovedChange) {
         d->popups.removeOne(popup);
+        d->restackOverlay();
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
