@@ -264,6 +264,11 @@ ApplicationWindow {
                         settings.style = styleBox.displayText
                         settingsPopup.close()
                     }
+
+                    Material.foreground: Material.primary
+                    Material.background: "transparent"
+                    Material.elevation: 0
+
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                 }
@@ -275,6 +280,10 @@ ApplicationWindow {
                         styleBox.currentIndex = styleBox.styleIndex
                         settingsPopup.close()
                     }
+
+                    Material.background: "transparent"
+                    Material.elevation: 0
+
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                 }

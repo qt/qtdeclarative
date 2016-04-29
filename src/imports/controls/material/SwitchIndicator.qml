@@ -80,12 +80,9 @@ Item {
                 duration: 300
             }
         }
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 1
-            color: control.Material.dropShadowColor
-            spread: 0.3
+        layer.enabled: control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
         }
     }
 }

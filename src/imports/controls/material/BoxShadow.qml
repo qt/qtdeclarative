@@ -35,43 +35,35 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtGraphicalEffects 1.0
 
-T.ItemDelegate {
-    id: control
+/*!
+   A implementation of CSS's box-shadow, used by ElevationEffect for a Material Design
+   elevation shadow effect.
+ */
+RectangularGlow {
+    // The 4 properties from CSS box-shadow, plus the inherited color property
+    property int offsetX
+    property int offsetY
+    property int blurRadius
+    property int spreadRadius
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+    // The source item the shadow is being applied to, used for correctly
+    // calculating the corner radious
+    property Item source
 
-    padding: 16
-    spacing: 16
+    property bool fullWidth
+    property bool fullHeight
 
-    //! [contentItem]
-    contentItem: Text {
-        leftPadding: control.checkable && !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+    x: (parent.width - width)/2 + offsetX
+    y: (parent.height - height)/2 + offsetY
 
-        text: control.text
-        font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [contentItem]
+    implicitWidth: source ? source.width : parent.width
+    implicitHeight: source ? source.height : parent.height
 
-    //! [background]
-    background: Rectangle {
-        implicitHeight: 48
-
-        visible: control.down || control.highlighted
-        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
-    }
-    //! [background]
+    width: implicitWidth + 2 * spreadRadius + (fullWidth ? 2 * cornerRadius : 0)
+    height: implicitHeight + 2 * spreadRadius + (fullHeight ? 2 * cornerRadius : 0)
+    glowRadius: blurRadius/2
+    spread: 0.05
+    cornerRadius: blurRadius + (source && source.radius || 0)
 }

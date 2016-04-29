@@ -38,6 +38,7 @@ import QtQuick 2.6
 import QtGraphicalEffects 1.0
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 T.Drawer {
     id: control
@@ -65,12 +66,9 @@ T.Drawer {
         color: control.Material.dialogColor
 
         layer.enabled: control.position > 0
-        layer.effect: DropShadow {
-            horizontalOffset: control.edge === Qt.LeftEdge ? 1 : control.edge === Qt.RightEdge ? -1 : 0
-            verticalOffset: control.edge === Qt.TopEdge ? 1 : control.edge === Qt.BottomEdge ? -1 : 0
-            color: control.Material.dropShadowColor
-            samples: 15
-            spread: 0.5
+        layer.effect: ElevationEffect {
+            elevation: 16
+            fullHeight: true
         }
     }
     //! [background]

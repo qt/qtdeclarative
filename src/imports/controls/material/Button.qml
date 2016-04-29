@@ -37,10 +37,20 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 import QtGraphicalEffects 1.0
 
 T.Button {
     id: control
+
+    // TODO: Add a flat property to T.Button, and make this:
+    // flat ? control.down || control.hovered ? 2 : 0
+    //      : control.down ? 8 : 2
+    // See https://bugreports.qt.io/browse/QTBUG-51054
+    // NOTE: Flat buttons should be transparent by default and have no elevation when pressed
+    // However, on the desktop, flat buttons can be colored and have a 2dp when pressed
+    // This is called a flat raised button
+    Material.elevation: control.down ? 8 : 2
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
@@ -66,6 +76,7 @@ T.Button {
     //! [contentItem]
 
     //! [background]
+    // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
         implicitHeight: 48
@@ -75,10 +86,16 @@ T.Button {
         width: parent.width
         height: parent.height - 12
         radius: 2
-        color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
-            (control.down ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
-            (control.visualFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
-            (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
+        color: !control.enabled
+                    ? control.Material.buttonDisabledColor
+                : control.down
+                    ? control.highlighted ? control.Material.highlightedButtonPressColor
+                                          : control.Material.buttonPressColor
+                : control.visualFocus
+                    ? control.highlighted ? control.Material.highlightedButtonHoverColor
+                                          : control.Material.buttonHoverColor
+                    : control.highlighted ? control.Material.highlightedButtonColor
+                                          : control.Material.buttonColor
 
         Behavior on color {
             ColorAnimation {
@@ -86,20 +103,12 @@ T.Button {
             }
         }
 
-        Rectangle {
-            width: parent.width
-            height: parent.height
-            radius: parent.radius
-            visible: control.visualFocus
-            color: control.Material.checkBoxUncheckedRippleColor
-        }
-
-        layer.enabled: control.enabled
-        layer.effect: DropShadow {
-            verticalOffset: 1
-            color: control.Material.dropShadowColor
-            samples: control.down ? 15 : 9
-            spread: 0.5
+        // The layer is disabled when the button color is transparent so you can do
+        // Material.background: "transparent" and get a proper flat button without needing
+        // to set Material.elevation as well
+        layer.enabled: control.enabled && control.Material.buttonColor.a > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
         }
     }
     //! [background]

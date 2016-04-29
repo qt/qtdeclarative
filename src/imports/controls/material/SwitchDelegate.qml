@@ -42,6 +42,8 @@ import QtQuick.Controls.Material.impl 2.0
 T.SwitchDelegate {
     id: control
 
+    Material.elevation: 1
+
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
@@ -80,7 +82,7 @@ T.SwitchDelegate {
         implicitHeight: 48
 
         visible: control.down || control.highlighted
-        color: control.down ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
+        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
     }
     //! [background]
 }

@@ -37,9 +37,12 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 T.ToolBar {
     id: control
+
+    Material.elevation: 4
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
@@ -55,6 +58,12 @@ T.ToolBar {
     background: Rectangle {
         implicitHeight: 48
         color: control.Material.primaryColor
+
+        layer.enabled: control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
+            fullWidth: true
+        }
     }
     //! [background]
 }

@@ -12,6 +12,7 @@ SOURCES += \
 
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
+    $$PWD/BoxShadow.qml \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
@@ -20,6 +21,7 @@ QML_FILES += \
     $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Drawer.qml \
+    $$PWD/ElevationEffect.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \

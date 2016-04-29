@@ -89,7 +89,9 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 2, 0, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 2, 0, "RingAnimator");
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 2, 0, "StripAnimator");
+    qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 0, "ElevationEffect");
     qmlRegisterType(typeUrl(QStringLiteral("Ripple.qml")), import, 2, 0, "Ripple");
     qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");

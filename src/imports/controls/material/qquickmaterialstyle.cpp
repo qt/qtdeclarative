@@ -392,7 +392,7 @@ static const QRgb hintTextColorDark = 0x4CFFFFFF;
 static const QRgb dividerColorLight = 0x1E000000;
 static const QRgb dividerColorDark = 0x1EFFFFFF;
 static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
-static const QRgb raisedButtonPressColorLight = 0xFFCCCDCD;
+static const QRgb raisedButtonColorDark = 0xFFD6D7D7;
 static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
 static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
 static const QRgb flatButtonPressColorLight = 0x66999999;
@@ -442,7 +442,8 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(
     m_primary(defaultPrimary),
     m_accent(defaultAccent),
     m_foreground(defaultForeground),
-    m_background(defaultBackground)
+    m_background(defaultBackground),
+    m_elevation(0)
 {
     init();
 }
@@ -734,6 +735,25 @@ void QQuickMaterialStyle::resetBackground()
     inheritBackground(material ? material->m_background : defaultBackground, true, material ? material->m_hasBackground : false);
 }
 
+int QQuickMaterialStyle::elevation() const
+{
+    return m_elevation;
+}
+
+void QQuickMaterialStyle::setElevation(int elevation)
+{
+    if (m_elevation == elevation)
+        return;
+
+    m_elevation = elevation;
+    emit elevationChanged();
+}
+
+void QQuickMaterialStyle::resetElevation()
+{
+    setElevation(0);
+}
+
 QColor QQuickMaterialStyle::primaryColor() const
 {
     if (m_customPrimary)
@@ -743,24 +763,36 @@ QColor QQuickMaterialStyle::primaryColor() const
     return colors[m_primary][Shade500];
 }
 
-QColor QQuickMaterialStyle::accentColor() const
+QColor QQuickMaterialStyle::accentColor(Shade shade) const
 {
     if (m_customAccent)
-        return QColor::fromRgba(m_accent);
+        return shade == Shade500 ? QColor::fromRgba(m_accent)
+                                 : this->shade(QColor::fromRgba(m_accent), shade);
     if (m_accent > BlueGrey)
         return QColor();
-    return colors[m_accent][m_theme == Light ? Shade500 : Shade200];
+    return colors[m_accent][shade];
 }
 
-QColor QQuickMaterialStyle::backgroundColor() const
+QColor QQuickMaterialStyle::accentColor() const
+{
+    return accentColor(m_theme == Light ? Shade500 : Shade200);
+}
+
+QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
 {
     if (!m_hasBackground)
         return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
     if (m_customBackground)
-        return QColor::fromRgba(m_background);
+        return shade == Shade500 ? QColor::fromRgba(m_background)
+                                 : this->shade(QColor::fromRgba(m_background), shade);
     if (m_background > BlueGrey)
         return QColor();
-    return colors[m_background][Shade500];
+    return colors[m_background][shade];
+}
+
+QColor QQuickMaterialStyle::backgroundColor() const
+{
+    return backgroundColor(Shade500);
 }
 
 QColor QQuickMaterialStyle::primaryTextColor() const
@@ -808,52 +840,77 @@ QColor QQuickMaterialStyle::dividerColor() const
     return QColor::fromRgba(m_theme == Light ? dividerColorLight : dividerColorDark);
 }
 
-QColor QQuickMaterialStyle::raisedButtonColor() const
+QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hover) const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonColorLight : flatButtonFocusColorDark);
+    Shade shade = m_theme == Light ? pressed ? Shade700 : Shade500
+                                   : pressed ? Shade100 : Shade200;
+
+    QColor color = Qt::transparent;
+
+    if (m_hasBackground) {
+        color = backgroundColor(shade);
+    } else if (highlighted) {
+        color = accentColor(shade);
+    } else if (elevation() > 0) {
+        color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
+                                                  : raisedButtonColorDark);
+
+        if (pressed) {
+            color = this->shade(color, shade);
+        }
+    }
+
+    if (color == Qt::transparent && pressed) {
+        color = QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight
+                                                  : flatButtonPressColorDark);
+    }
+
+    if (pressed || hover) {
+        // Add overlaying black shadow 12% opacity
+        return alphaBlend(color, QColor::fromRgba(0x1F000000));
+    } else {
+        return color;
+    }
 }
 
-QColor QQuickMaterialStyle::raisedButtonHoverColor() const
+QColor QQuickMaterialStyle::buttonColor() const
 {
-    // The specs don't specify different colors here for the light theme.
-    return QColor::fromRgba(m_theme == Light ? raisedButtonColorLight : flatButtonPressColorDark);
+    return buttonColor(false, false, false);
 }
 
-QColor QQuickMaterialStyle::raisedButtonPressColor() const
+QColor QQuickMaterialStyle::buttonHoverColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonPressColorLight : flatButtonPressColorDark);
+    return buttonColor(false, false, true);
 }
 
-QColor QQuickMaterialStyle::raisedButtonDisabledColor() const
+QColor QQuickMaterialStyle::buttonPressColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
+    return buttonColor(false, true, false);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
+QColor QQuickMaterialStyle::buttonDisabledColor() const
 {
-    return accentColor();
+    if (elevation() > 0) {
+        return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight
+                                                 : raisedButtonDisabledColorDark);
+    } else {
+        return Qt::transparent;
+    }
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
+QColor QQuickMaterialStyle::highlightedButtonColor() const
 {
-    // Add overlaying black shadow 12% opacity
-    return alphaBlend(accentColor(), QColor::fromRgba(0x1F000000));
+    return buttonColor(true, false, false);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
+QColor QQuickMaterialStyle::highlightedButtonHoverColor() const
 {
-    // Add overlaying black shadow 12% opacity
-    return alphaBlend(shade(accentColor(), m_theme == Light ? Shade700 : Shade100), QColor::fromRgba(0x1F000000));
+    return buttonColor(true, false, true);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
+QColor QQuickMaterialStyle::highlightedButtonPressColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
-}
-
-QColor QQuickMaterialStyle::flatButtonPressColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight : flatButtonPressColorDark);
+    return buttonColor(true, true, false);
 }
 
 QColor QQuickMaterialStyle::flatButtonFocusColor() const

@@ -39,10 +39,13 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.0
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 import QtGraphicalEffects 1.0
 
 T.ComboBox {
     id: control
+
+    Material.elevation: control.pressed ? 8 : 2
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
@@ -100,12 +103,9 @@ T.ComboBox {
             }
         }
 
-        layer.enabled: control.enabled
-        layer.effect: DropShadow {
-            verticalOffset: 1
-            color: control.Material.dropShadowColor
-            samples: control.pressed ? 15 : 9
-            spread: 0.5
+        layer.enabled: control.enabled && control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
         }
 
         Rectangle {
@@ -156,11 +156,8 @@ T.ComboBox {
             color: control.Material.dialogColor
 
             layer.enabled: control.enabled
-            layer.effect: DropShadow {
-                verticalOffset: 1
-                color: control.Material.dropShadowColor
-                samples: 15
-                spread: 0.5
+            layer.effect: ElevationEffect {
+                elevation: 8
             }
         }
     }

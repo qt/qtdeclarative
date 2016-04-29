@@ -118,9 +118,9 @@ T.SpinBox {
         width: height
         padding: control.spacing
         radius: 3
-        color: Qt.tint(Qt.tint(control.Material.raisedButtonColor,
-                               control.activeFocus ? control.Material.raisedButtonHoverColor : "transparent"),
-                               control.up.pressed ? control.Material.raisedButtonPressColor: "transparent")
+        color: Qt.tint(Qt.tint(control.Material.buttonColor,
+                               control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
+                               control.up.pressed ? control.Material.buttonPressColor: "transparent")
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -148,9 +148,9 @@ T.SpinBox {
         width: height
         padding: control.spacing
         radius: 3
-        color: Qt.tint(Qt.tint(control.Material.raisedButtonColor,
-                               control.activeFocus ? control.Material.raisedButtonHoverColor : "transparent"),
-                               control.down.pressed ? control.Material.raisedButtonPressColor : "transparent")
+        color: Qt.tint(Qt.tint(control.Material.buttonColor,
+                               control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
+                               control.down.pressed ? control.Material.buttonPressColor : "transparent")
 
         Rectangle {
             x: (parent.width - width) / 2

@@ -38,9 +38,12 @@ import QtQuick 2.6
 import QtGraphicalEffects 1.0
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 T.Popup {
     id: control
+
+    Material.elevation: 24
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
@@ -70,12 +73,9 @@ T.Popup {
         radius: 3
         color: control.Material.dialogColor
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 1
-            color: control.Material.dropShadowColor
-            samples: 15
-            spread: 0.5
+        layer.enabled: control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
         }
     }
 }

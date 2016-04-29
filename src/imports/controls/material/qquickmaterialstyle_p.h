@@ -63,6 +63,9 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
     Q_PROPERTY(QVariant foreground READ foreground WRITE setForeground RESET resetForeground NOTIFY foregroundChanged FINAL)
     Q_PROPERTY(QVariant background READ background WRITE setBackground RESET resetBackground NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(int elevation READ elevation WRITE setElevation RESET resetElevation NOTIFY elevationChanged FINAL)
+
+
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY backgroundChanged FINAL)
@@ -73,15 +76,13 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dropShadowColor READ dropShadowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonColor READ raisedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonHoverColor READ raisedButtonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonPressColor READ raisedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonDisabledColor READ raisedButtonDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonColor READ raisedHighlightedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonHoverColor READ raisedHighlightedButtonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonPressColor READ raisedHighlightedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonDisabledColor READ raisedHighlightedButtonDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor flatButtonPressColor READ flatButtonPressColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonHoverColor READ buttonHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonPressColor READ buttonPressColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonHoverColor READ highlightedButtonHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonPressColor READ highlightedButtonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor flatButtonFocusColor READ flatButtonFocusColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateColor READ swipeDelegateColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateHoverColor READ swipeDelegateHoverColor NOTIFY paletteChanged FINAL)
@@ -187,6 +188,10 @@ public:
     void propagateBackground();
     void resetBackground();
 
+    int elevation() const;
+    void setElevation(int elevation);
+    void resetElevation();
+
     QColor primaryColor() const;
     QColor accentColor() const;
     QColor backgroundColor() const;
@@ -197,15 +202,14 @@ public:
     QColor textSelectionColor() const;
     QColor dropShadowColor() const;
     QColor dividerColor() const;
-    QColor raisedButtonColor() const;
-    QColor raisedButtonHoverColor() const;
-    QColor raisedButtonPressColor() const;
-    QColor raisedButtonDisabledColor() const;
-    QColor raisedHighlightedButtonColor() const;
-    QColor raisedHighlightedButtonHoverColor() const;
-    QColor raisedHighlightedButtonPressColor() const;
-    QColor raisedHighlightedButtonDisabledColor() const;
-    QColor flatButtonPressColor() const;
+    QColor buttonColor() const;
+    QColor buttonHoverColor() const;
+    QColor buttonPressColor() const;
+    QColor buttonDisabledColor() const;
+    QColor highlightedButtonColor() const;
+    QColor highlightedButtonHoverColor() const;
+    QColor highlightedButtonPressColor() const;
+    QColor highlightedButtonDisabledColor() const;
     QColor flatButtonFocusColor() const;
     QColor swipeDelegateColor() const;
     QColor swipeDelegateHoverColor() const;
@@ -237,6 +241,8 @@ Q_SIGNALS:
     void accentChanged();
     void foregroundChanged();
     void backgroundChanged();
+    void elevationChanged();
+
     void paletteChanged();
 
 protected:
@@ -245,6 +251,10 @@ protected:
 private:
     void init();
     bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const;
+
+    QColor backgroundColor(Shade shade) const;
+    QColor accentColor(Shade shade) const;
+    QColor buttonColor(bool highlighted, bool pressed, bool hover) const;
 
     bool m_explicitTheme;
     bool m_explicitPrimary;
@@ -262,6 +272,7 @@ private:
     uint m_accent;
     uint m_foreground;
     uint m_background;
+    int m_elevation;
 };
 
 QT_END_NAMESPACE
