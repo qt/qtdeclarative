@@ -37,7 +37,6 @@
 #include <QtQuick/private/qquickmultipointtoucharea_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
-#include <qpa/qwindowsysteminterface.h>
 
 #include <private/qquickwindow_p.h>
 
@@ -132,7 +131,7 @@ class tst_TouchMouse : public QQmlDataTest
     Q_OBJECT
 public:
     tst_TouchMouse()
-        :device(0)
+        :device(QTest::createTouchDevice())
     {}
 
 private slots:
@@ -191,11 +190,6 @@ void tst_TouchMouse::initTestCase()
 
     QQmlDataTest::initTestCase();
     qmlRegisterType<EventItem>("Qt.test", 1, 0, "EventItem");
-    if (!device) {
-        device = new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
-    }
 }
 
 void tst_TouchMouse::simpleTouchEvent()
