@@ -217,7 +217,7 @@ public:
 
     static inline void flushPendingBinding(QObject *, int coreIndex);
 
-    static void ensurePropertyCache(QJSEngine *engine, QObject *object);
+    static QQmlPropertyCache *ensurePropertyCache(QJSEngine *engine, QObject *object);
 
 private:
     // For attachedProperties

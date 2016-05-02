@@ -49,25 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_OBJECT_VTABLE(QV4::QQuickRootItemMarker);
-
-QV4::Heap::QQuickRootItemMarker *QV4::QQuickRootItemMarker::create(QQmlEngine *engine, QQuickWindow *window)
-{
-    QV4::ExecutionEngine *e = QQmlEnginePrivate::getV4Engine(engine);
-    return e->memoryManager->allocObject<QQuickRootItemMarker>(window);
-}
-
-void QV4::QQuickRootItemMarker::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
-{
-    QQuickItem *root = static_cast<QQuickRootItemMarker::Data *>(that)->window->contentItem();
-    if (root) {
-        QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
-        rootPrivate->markObjects(e);
-    }
-
-    QV4::Object::markObjects(that, e);
-}
-
 void QQuickViewPrivate::init(QQmlEngine* e)
 {
     Q_Q(QQuickView);
@@ -81,10 +62,10 @@ void QQuickViewPrivate::init(QQmlEngine* e)
         engine.data()->setIncubationController(q->incubationController());
 
     {
+        // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
+        // wrapper so that the garbage collector can see the policy.
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine.data());
-        QV4::Scope scope(v4);
-        QV4::Scoped<QV4::QQuickRootItemMarker> v(scope, QV4::QQuickRootItemMarker::create(engine.data(), q));
-        rootItemMarker.set(v4, v);
+        QV4::QObjectWrapper::wrap(v4, contentItem);
     }
 
     QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
