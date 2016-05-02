@@ -76,16 +76,24 @@ void QQuickContainerPrivate::init()
 
 void QQuickContainerPrivate::cleanup()
 {
+    Q_Q(QQuickContainer);
     // ensure correct destruction order (QTBUG-46798)
-    delete contentItem;
     const int count = contentModel->count();
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = itemAt(i);
-        if (item) {
-            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
-            delete item;
-        }
+        if (item)
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder);
     }
+
+    QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
+    if (focusItem && window)
+        QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+
+    q->contentItemChange(nullptr, contentItem);
+    delete contentItem;
+
+    QObject::disconnect(contentModel, &QQmlObjectModel::countChanged, q, &QQuickContainer::countChanged);
+    QObject::disconnect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
     delete contentModel;
 }
 
@@ -104,7 +112,7 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
     updatingCurrent = true;
 
     item->setParentItem(effectiveContentItem(contentItem));
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder);
     contentModel->insert(index, item);
 
     q->itemAdded(index, item);
@@ -150,7 +158,7 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
         currentChanged = true;
     }
 
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder);
     item->setParentItem(nullptr);
     contentModel->remove(index);
 
@@ -208,12 +216,10 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (item) {
-        if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
-            QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
+        if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
             item->setParentItem(effectiveContentItem(p->contentItem));
-        } else if (p->contentModel->indexOf(item, nullptr) == -1) {
+        else if (p->contentModel->indexOf(item, nullptr) == -1)
             q->addItem(item);
-        }
     } else {
         p->contentData.append(obj);
     }
