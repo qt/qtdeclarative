@@ -56,10 +56,8 @@ void CustomRenderNode::render(const RenderState *state)
     if (!ri)
         return;
 
-    m_api = ri->graphicsAPI();
-
     if (!m_renderer) {
-        switch (m_api) {
+        switch (ri->graphicsAPI()) {
         case QSGRendererInterface::OpenGL:
 #ifndef QT_NO_OPENGL
             m_renderer = new OpenGLRenderer(m_item, this);
@@ -97,13 +95,6 @@ CustomRenderItem::CustomRenderItem(QQuickItem *parent)
 {
     // Our item shows something so set the flag.
     setFlag(ItemHasContents);
-
-    // We want the graphics API type to be exposed to QML. The value is easy to
-    // get during rendering on the render thread in CustomRenderNode::render(),
-    // but is more tricky here since the item gets a window associated later,
-    // which in turn will get the underlying scenegraph started at some later
-    // point. So defer.
-    connect(this, &QQuickItem::windowChanged, this, &CustomRenderItem::onWindowChanged);
 }
 
 QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
@@ -113,46 +104,4 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         n = new CustomRenderNode(this);
 
     return n;
-}
-
-void CustomRenderItem::onWindowChanged(QQuickWindow *w)
-{
-    if (w) {
-        if (w->isSceneGraphInitialized())
-            updateGraphicsAPI();
-        else
-            connect(w, &QQuickWindow::sceneGraphInitialized, this, &CustomRenderItem::updateGraphicsAPI);
-    } else {
-        updateGraphicsAPI();
-    }
-}
-
-void CustomRenderItem::updateGraphicsAPI()
-{
-    QString newAPI;
-    if (!window()) {
-        newAPI = QLatin1String("[no window]");
-    } else {
-        QSGRendererInterface *ri = window()->rendererInterface();
-        if (!ri) {
-            newAPI = QLatin1String("[no renderer interface]");
-        } else {
-            switch (ri->graphicsAPI()) {
-            case QSGRendererInterface::OpenGL:
-                newAPI = QLatin1String("OpenGL");
-                break;
-            case QSGRendererInterface::Direct3D12:
-                newAPI = QLatin1String("D3D12");
-                break;
-            default:
-                newAPI = QString(QLatin1String("[unsupported graphics API %1]")).arg(ri->graphicsAPI());
-                break;
-            }
-        }
-    }
-
-    if (newAPI != m_api) {
-        m_api = newAPI;
-        emit graphicsAPIChanged();
-    }
 }

@@ -63,31 +63,16 @@ public:
 
 private:
     QQuickItem *m_item;
-    int m_api;
     CustomRenderer *m_renderer = nullptr;
 };
 
 class CustomRenderItem : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QString graphicsAPI READ graphicsAPI NOTIFY graphicsAPIChanged)
 
 public:
     CustomRenderItem(QQuickItem *parent = nullptr);
-
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
-
-    QString graphicsAPI() const { return m_api; }
-
-private slots:
-    void onWindowChanged(QQuickWindow *w);
-    void updateGraphicsAPI();
-
-signals:
-    void graphicsAPIChanged();
-
-private:
-    QString m_api;
 };
 
 #endif

@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.8 // for RendererInfo
 import SceneGraphRendering 2.0
 
 Item {
@@ -89,7 +89,8 @@ Item {
             anchors.right: renderer.right
             anchors.margins: 20
             wrapMode: Text.WordWrap
-            text: "Custom rendering via the graphics API " + renderer.graphicsAPI
+            property int api: RendererInfo.api
+            text: "Custom rendering via the graphics API " + (api === RendererInfo.OpenGL ? "OpenGL" : (api === RendererInfo.Direct3D12 ? "Direct3D 12" : ""))
             color: "yellow"
         }
     }
