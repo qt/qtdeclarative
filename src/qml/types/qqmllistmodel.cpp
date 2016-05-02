@@ -392,6 +392,8 @@ void ListModel::updateCacheIndices()
 
 QVariant ListModel::getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV4::ExecutionEngine *eng)
 {
+    if (roleIndex >= m_layout->roleCount())
+        return QVariant();
     ListElement *e = elements[elementIndex];
     const ListLayout::Role &r = m_layout->getExistingRole(roleIndex);
     return e->getProperty(r, owner, eng);
