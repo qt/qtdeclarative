@@ -1272,7 +1272,7 @@ void QSGD3D12EnginePrivate::beginFrame()
                 e.descHeap = nullptr;
                 if (e.cpuDescriptorPtr) {
                     D3D12_CPU_DESCRIPTOR_HANDLE h = { e.cpuDescriptorPtr };
-                    cpuDescHeapManager.release(h, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                    cpuDescHeapManager.release(h, e.descHeapType);
                 }
             }
             pfd.deleteQueue.clear();
@@ -2263,7 +2263,7 @@ void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
         return;
     }
 
-    deferredDelete(t.srv);
+    deferredDelete(t.srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     t.srv = cpuDescHeapManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -2453,9 +2453,9 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
 
     if (t.texture) {
         deferredDelete(t.texture);
-        deferredDelete(t.srv);
+        deferredDelete(t.srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         for (D3D12_CPU_DESCRIPTOR_HANDLE h : t.mipUAVs)
-            deferredDelete(h);
+            deferredDelete(h, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     QSet<PersistentFrameData::PendingRelease> *pendingReleasesSet = inFrame
@@ -2657,10 +2657,11 @@ void QSGD3D12EnginePrivate::deferredDelete(ComPtr<ID3D12DescriptorHeap> dh)
     (*dq) << e;
 }
 
-void QSGD3D12EnginePrivate::deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h)
+void QSGD3D12EnginePrivate::deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h, D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     PersistentFrameData::DeleteQueueEntry e;
     e.cpuDescriptorPtr = h.ptr;
+    e.descHeapType = type;
     QVector<PersistentFrameData::DeleteQueueEntry> *dq = inFrame
             ? &pframeData[currentPFrameIndex].deleteQueue
             : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFrameDeleteQueue;
@@ -2745,13 +2746,13 @@ void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
     if (rt.color) {
         deferredDelete(rt.color);
         rt.color = nullptr;
-        deferredDelete(rt.rtv);
-        deferredDelete(rt.srv);
+        deferredDelete(rt.rtv, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        deferredDelete(rt.srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
     if (rt.ds) {
         deferredDelete(rt.ds);
         rt.ds = nullptr;
-        deferredDelete(rt.dsv);
+        deferredDelete(rt.dsv, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     rt.flags &= ~RenderTarget::EntryInUse;

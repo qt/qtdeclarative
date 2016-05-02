@@ -222,6 +222,7 @@ private:
             ComPtr<ID3D12Resource> res;
             ComPtr<ID3D12DescriptorHeap> descHeap;
             SIZE_T cpuDescriptorPtr = 0;
+            D3D12_DESCRIPTOR_HEAP_TYPE descHeapType = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         };
         QVector<DeleteQueueEntry> deleteQueue;
         QVector<DeleteQueueEntry> outOfFrameDeleteQueue;
@@ -245,7 +246,7 @@ private:
 
     void deferredDelete(ComPtr<ID3D12Resource> res);
     void deferredDelete(ComPtr<ID3D12DescriptorHeap> dh);
-    void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h);
+    void deferredDelete(D3D12_CPU_DESCRIPTOR_HANDLE h, D3D12_DESCRIPTOR_HEAP_TYPE type);
 
     struct Buffer;
     void ensureBuffer(Buffer *buf);
