@@ -87,12 +87,15 @@ public:
 
     void clear() { m_messages.clear(); }
 
+    void setIncludeCategoriesEnabled(bool enabled) { m_includeCategories = enabled; }
+
 private:
-    static void messageHandler(QtMsgType, const QMessageLogContext &, const QString &message);
+    static void messageHandler(QtMsgType, const QMessageLogContext &context, const QString &message);
 
     static QQmlTestMessageHandler *m_instance;
     QStringList m_messages;
     QtMessageHandler m_oldHandler;
+    bool m_includeCategories;
 };
 
 #endif // QQMLTESTUTILS_H
