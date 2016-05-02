@@ -56,8 +56,9 @@ T.Slider {
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
-        border.color: "#353637"
-        color: control.pressed ? "#bdbebf" : "#f6f6f6"
+        color: control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
