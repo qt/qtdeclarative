@@ -39,40 +39,46 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import Stuff 1.0
 
 Item {
-    focus: true
-
-    Loader {
-        anchors.fill: parent
-        id: loader
+    ListModel {
+        id: balloonModel
+        ListElement {
+            balloonWidth: 200
+        }
+        ListElement {
+            balloonWidth: 120
+        }
+        ListElement {
+            balloonWidth: 120
+        }
+        ListElement {
+            balloonWidth: 120
+        }
+        ListElement {
+            balloonWidth: 120
+        }
     }
 
-    Keys.onPressed: {
-        if (event.key === Qt.Key_S)
-            loader.source = "";
-
-        if (event.key === Qt.Key_R)
-            loader.source = "qrc:/Rects.qml";
-        if (event.key === Qt.Key_4)
-            loader.source = "qrc:/LotsOfRects.qml";
-
-        if (event.key === Qt.Key_I)
-            loader.source = "qrc:/Images.qml";
-
-        if (event.key === Qt.Key_T)
-            loader.source = "qrc:/Text.qml";
-
-        if (event.key === Qt.Key_A)
-            loader.source = "qrc:/Animators.qml";
-
-        if (event.key === Qt.Key_L)
-            loader.source = "qrc:/Layers.qml";
-
-        if (event.key === Qt.Key_E)
-            loader.source = "qrc:/Effects.qml";
-
-        if (event.key === Qt.Key_P)
-            loader.source = "qrc:/Painter.qml";
+    ListView {
+        anchors.fill: parent
+        anchors.margins: 10
+        id: balloonView
+        model: balloonModel
+        spacing: 5
+        delegate: TextBalloon {
+            anchors.right: index % 2 == 0 ? undefined : parent.right
+            height: 60
+            rightAligned: index % 2 == 0 ? false : true
+            width: balloonWidth
+            innerAnim: model.index === 1
+            NumberAnimation on width {
+                from: 200
+                to: 300
+                duration: 5000
+                running: model.index === 0
+            }
+        }
     }
 }

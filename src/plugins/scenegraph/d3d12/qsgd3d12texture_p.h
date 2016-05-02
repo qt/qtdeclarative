@@ -64,7 +64,7 @@ public:
     QSGD3D12Texture(QSGD3D12Engine *engine) : m_engine(engine) { }
     ~QSGD3D12Texture();
 
-    void setImage(const QImage &image, uint flags);
+    void create(const QImage &image, uint flags);
 
     int textureId() const override;
     QSize textureSize() const override;
@@ -75,14 +75,13 @@ public:
 
     SIZE_T srv() const;
 
-private:
+protected:
     QSGD3D12Engine *m_engine;
     QImage m_image;
     bool m_createPending = false;
     bool m_createdWithMipMaps = false;
     uint m_id = 0;
     bool m_alphaWanted = false;
-    QSize m_size;
 };
 
 QT_END_NAMESPACE

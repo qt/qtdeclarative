@@ -8,6 +8,7 @@
         <file>Animators.qml</file>
         <file>Layers.qml</file>
         <file>Effects.qml</file>
+        <file>Painter.qml</file>
         <file>qt.png</file>
         <file>face-smile.png</file>
         <file>shadow.png</file>

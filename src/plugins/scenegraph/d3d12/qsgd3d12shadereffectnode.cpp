@@ -495,7 +495,7 @@ QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(con
             dummy = new QSGD3D12Texture(node->renderContext()->engine());
             QImage img(128, 128, QImage::Format_ARGB32_Premultiplied);
             img.fill(0);
-            dummy->setImage(img, QSGRenderContext::CreateTexture_Alpha);
+            dummy->create(img, QSGRenderContext::CreateTexture_Alpha);
         }
         tv.filter = QSGD3D12TextureView::FilterNearest;
         tv.addressModeHoriz = QSGD3D12TextureView::AddressWrap;

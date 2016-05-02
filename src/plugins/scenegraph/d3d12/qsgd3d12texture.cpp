@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-void QSGD3D12Texture::setImage(const QImage &image, uint flags)
+void QSGD3D12Texture::create(const QImage &image, uint flags)
 {
     // ### atlas?
 
@@ -51,7 +51,6 @@ void QSGD3D12Texture::setImage(const QImage &image, uint flags)
     m_alphaWanted = alphaRequest && image.hasAlphaChannel();
 
     m_image = image;
-    m_size = image.size();
 
     m_id = m_engine->genTexture();
     Q_ASSERT(m_id);
@@ -75,7 +74,7 @@ int QSGD3D12Texture::textureId() const
 
 QSize QSGD3D12Texture::textureSize() const
 {
-    return m_size;
+    return m_image.size();
 }
 
 bool QSGD3D12Texture::hasAlphaChannel() const

@@ -92,11 +92,11 @@ QSGTexture *QSGD3D12RenderContext::createTexture(const QImage &image, uint flags
 {
     Q_ASSERT(m_engine);
     QSGD3D12Texture *t = new QSGD3D12Texture(m_engine);
-    t->setImage(image, flags);
+    t->create(image, flags);
     return t;
 }
 
- QSGRenderer *QSGD3D12RenderContext::createRenderer()
+QSGRenderer *QSGD3D12RenderContext::createRenderer()
 {
     return new QSGD3D12Renderer(this);
 }

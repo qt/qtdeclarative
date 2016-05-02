@@ -255,17 +255,18 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     The Canvas item supports two render targets: \c Canvas.Image and
     \c Canvas.FramebufferObject.
 
-    The \c Canvas.Image render target is a \a QImage object.  This render
-    target supports background thread rendering, allowing complex or long
-    running painting to be executed without blocking the UI.
+    The \c Canvas.Image render target is a \a QImage object. This render target
+    supports background thread rendering, allowing complex or long running
+    painting to be executed without blocking the UI. This is the only render
+    target that is supported by all Qt Quick backends.
 
     The Canvas.FramebufferObject render target utilizes OpenGL hardware
     acceleration rather than rendering into system memory, which in many cases
-    results in faster rendering. Canvas.FramebufferObject relies on the
-    OpenGL extensions \c GL_EXT_framebuffer_multisample and
-    \c GL_EXT_framebuffer_blit for antialiasing. It will also use more
-    graphics memory when rendering strategy is anything other than
-    Canvas.Cooperative.
+    results in faster rendering. Canvas.FramebufferObject relies on the OpenGL
+    extensions \c GL_EXT_framebuffer_multisample and \c GL_EXT_framebuffer_blit
+    for antialiasing. It will also use more graphics memory when rendering
+    strategy is anything other than Canvas.Cooperative. Framebuffer objects may
+    not be available with Qt Quick backends other than OpenGL.
 
     The default render target is Canvas.Image and the default renderStrategy is
     Canvas.Immediate.
@@ -300,7 +301,14 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
     classes that consume texture providers.
 
-    \sa Context2D
+    \note In general large canvases, frequent updates, and animation should be
+    avoided with the Canvas.Image render target. This is because with
+    accelerated graphics APIs each update will lead to a texture upload. Also,
+    if possible, prefer QQuickPaintedItem and implement drawing in C++ via
+    QPainter instead of the more expensive and likely less performing
+    JavaScript and Context2D approach.
+
+    \sa Context2D QQuickPaintedItem
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
