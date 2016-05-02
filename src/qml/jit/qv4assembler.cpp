@@ -79,16 +79,6 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     }
 }
 
-QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)
-{
-    if (functionIndex < 0 || functionIndex >= codeRefs.count())
-        return 0;
-    JSC::ExecutableMemoryHandle *handle = codeRefs[functionIndex].executableMemory();
-    if (!handle)
-        return 0;
-    return handle->chunk();
-}
-
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
