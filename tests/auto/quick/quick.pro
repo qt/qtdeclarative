@@ -64,6 +64,7 @@ QUICKTESTS =  \
     qquickpincharea \
     qquickpositioners \
     qquickrectangle \
+    qquickrendererinfo \
     qquickrepeater \
     qquickshadereffect \
     qquickshortcut \

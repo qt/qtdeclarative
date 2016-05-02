@@ -37,37 +37,64 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRENDERERINTERFACE_H
-#define QSGRENDERERINTERFACE_H
+#ifndef QQUICKRENDERERINFO_P_H
+#define QQUICKRENDERERINFO_P_H
 
-#include <QtQuick/qsgnode.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_EXPORT QSGRendererInterface
+class QQuickItem;
+class QQuickWindow;
+
+class QQuickRendererInfo : public QObject
 {
+    Q_OBJECT
+    Q_PROPERTY(GraphicsAPI api READ api NOTIFY apiChanged FINAL)
+
 public:
+    // must match QSGRendererInterface
     enum GraphicsAPI {
         Unknown,
         Software,
         OpenGL,
         Direct3D12
     };
+    Q_ENUM(GraphicsAPI)
 
-    enum Resource {
-        Device,
-        CommandQueue,
-        CommandList
-    };
+    QQuickRendererInfo(QQuickItem *item = 0);
 
-    virtual ~QSGRendererInterface();
+    static QQuickRendererInfo *qmlAttachedProperties(QObject *object);
 
-    virtual GraphicsAPI graphicsAPI() const = 0;
+    GraphicsAPI api() const { return m_api; }
 
-    virtual void *getResource(Resource resource) const;
-    virtual void *getResource(const char *resource) const;
+Q_SIGNALS:
+    void apiChanged();
+
+private Q_SLOTS:
+    void updateInfo();
+    void setWindow(QQuickWindow *window);
+
+private:
+    QPointer<QQuickWindow> m_window;
+    GraphicsAPI m_api;
 };
 
 QT_END_NAMESPACE
 
-#endif
+QML_DECLARE_TYPEINFO(QQuickRendererInfo, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKRENDERERINFO_P_H

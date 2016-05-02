@@ -77,7 +77,8 @@ HEADERS += \
     $$PWD/qquickshadereffect_p.h \
     $$PWD/qquickgenericshadereffect_p.h \
     $$PWD/qquickrendercontrol.h \
-    $$PWD/qquickrendercontrol_p.h
+    $$PWD/qquickrendercontrol_p.h \
+    $$PWD/qquickrendererinfo_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -130,7 +131,8 @@ SOURCES += \
     $$PWD/qquickshadereffectmesh.cpp \
     $$PWD/qquickshadereffect.cpp \
     $$PWD/qquickgenericshadereffect.cpp \
-    $$PWD/qquickrendercontrol.cpp
+    $$PWD/qquickrendercontrol.cpp \
+    $$PWD/qquickrendererinfo.cpp
 
 # Items that depend on OpenGL Renderer
 contains(QT_CONFIG, opengl(es1|es2)?) {
