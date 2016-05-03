@@ -94,6 +94,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
+    Q_PROPERTY(bool allowVerticalFlip READ allowVerticalFlip WRITE setAllowVerticalFlip NOTIFY allowVerticalFlipChanged FINAL REVISION 1)
+    Q_PROPERTY(bool allowHorizontalFlip READ allowHorizontalFlip WRITE setAllowHorizontalFlip NOTIFY allowHorizontalFlipChanged FINAL REVISION 1)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
@@ -193,6 +195,12 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
+
+    bool allowVerticalFlip() const;
+    void setAllowVerticalFlip(bool allow);
+
+    bool allowHorizontalFlip() const;
+    void setAllowHorizontalFlip(bool allow);
 
     QLocale locale() const;
     void setLocale(const QLocale &locale);
@@ -303,6 +311,8 @@ Q_SIGNALS:
     void leftPaddingChanged();
     void rightPaddingChanged();
     void bottomPaddingChanged();
+    Q_REVISION(1) void allowVerticalFlipChanged();
+    Q_REVISION(1) void allowHorizontalFlipChanged();
     void fontChanged();
     void localeChanged();
     void parentChanged();

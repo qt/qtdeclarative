@@ -1324,6 +1324,64 @@ void QQuickPopup::resetBottomPadding()
 }
 
 /*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::Popup::allowVerticalFlip
+
+    This property holds whether the popup is allowed to flip vertically.
+
+    A popup can be flipped from above its parent item to below it, or vice
+    versa, in order to make the popup fit inside the window.
+
+    The default value is \c false.
+
+    \sa allowHorizontalFlip
+*/
+bool QQuickPopup::allowVerticalFlip() const
+{
+    Q_D(const QQuickPopup);
+    return d->allowVerticalFlip;
+}
+
+void QQuickPopup::setAllowVerticalFlip(bool allow)
+{
+    Q_D(QQuickPopup);
+    if (d->allowVerticalFlip == allow)
+        return;
+
+    d->allowVerticalFlip = allow;
+    emit allowVerticalFlipChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::Popup::allowHorizontalFlip
+
+    This property holds whether the popup is allowed to flip horizontally.
+
+    A popup can be flipped from the left side of its parent item to the right
+    side, or vice versa, in order to make the popup fit inside the window.
+
+    The default value is \c false.
+
+    \sa allowVerticalFlip
+*/
+bool QQuickPopup::allowHorizontalFlip() const
+{
+    Q_D(const QQuickPopup);
+    return d->allowHorizontalFlip;
+}
+
+void QQuickPopup::setAllowHorizontalFlip(bool allow)
+{
+    Q_D(QQuickPopup);
+    if (d->allowHorizontalFlip == allow)
+        return;
+
+    d->allowHorizontalFlip = allow;
+    emit allowHorizontalFlipChanged();
+}
+
+/*!
     \qmlproperty Locale QtQuick.Controls::Popup::locale
 
     This property holds the locale of the popup.

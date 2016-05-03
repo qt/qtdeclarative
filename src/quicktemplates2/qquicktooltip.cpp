@@ -163,9 +163,8 @@ void QQuickToolTipPrivate::stopTimeout()
 QQuickToolTip::QQuickToolTip(QQuickItem *parent) :
     QQuickPopup(*(new QQuickToolTipPrivate), parent)
 {
-    Q_D(QQuickToolTip);
-    d->allowVerticalFlip = true;
-    d->allowHorizontalFlip = true;
+    setAllowVerticalFlip(true);
+    setAllowHorizontalFlip(true);
 }
 
 /*!
