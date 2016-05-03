@@ -112,7 +112,7 @@ when passed from C++ to QML and vice-versa:
         \li QVector2D, QVector3D, QVector4D
         \li \l vector2d, \l vector3d, \l vector4d
     \row
-        \li Enums declared with Q_ENUMS()
+        \li Enums declared with Q_ENUM() or Q_ENUMS()
         \li \l enumeration
 \endtable
 
@@ -347,7 +347,7 @@ properties:
 \section1 Enumeration Types
 
 To use a custom enumeration as a data type, its class must be registered and
-the enumeration must also be declared with Q_ENUMS() to register it with Qt's
+the enumeration must also be declared with Q_ENUM() to register it with Qt's
 meta object system. For example, the \c Message class below has a \c Status
 enum:
 
@@ -355,7 +355,6 @@ enum:
  class Message : public QObject
  {
      Q_OBJECT
-     Q_ENUMS(Status)
      Q_PROPERTY(Status status READ status NOTIFY statusChanged)
  public:
      enum Status {
@@ -363,6 +362,7 @@ enum:
          Loading,
          Error
      };
+     Q_ENUM(Status)
      Status status() const;
  signals:
      void statusChanged();
