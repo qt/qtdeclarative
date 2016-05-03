@@ -43,6 +43,7 @@
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#include <qsgrendererinterface.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquicksvgparser_p.h>
@@ -4087,6 +4088,13 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_renderTarget = QQuickCanvasItem::Image;
     }
 
+    // Disable Framebuffer Object based rendering when not running with OpenGL
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
+        QSGRendererInterface *rif = canvasItem->window()->rendererInterface();
+        if (rif && rif->graphicsAPI() != QSGRendererInterface::OpenGL)
+            m_renderTarget = QQuickCanvasItem::Image;
+    }
+
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
         m_texture = new QQuickContext2DImageTexture;
@@ -4111,7 +4119,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     QThread *renderThread = m_thread;
 #ifndef QT_NO_OPENGL
     QQuickWindow *window = canvasItem->window();
-    QThread *sceneGraphThread = window->openglContext() ? window->openglContext()->thread() : 0;
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    QThread *sceneGraphThread = wd->context->thread();
 
     if (m_renderStrategy == QQuickCanvasItem::Threaded)
         renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
