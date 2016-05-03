@@ -83,11 +83,11 @@ tst_examples::tst_examples()
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
     excludedFiles << "examples/quick/demos/photosurface/photosurface.qml"; // root item is Window rather than Item
 
-    // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
+    // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
     excludedDirs << "quick/text/fonts"; // QTBUG-29004
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
-    excludedDirs << "tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
+    excludedDirs << "examples/quick/tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
@@ -175,9 +175,8 @@ void tst_examples::namingConvention(const QDir &d)
 void tst_examples::namingConvention()
 {
     QStringList examplesLocations;
-    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtdeclarative");
-    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtquick");
-    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtqml");
+    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qml");
+    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/quick");
 
     foreach(const QString &examples, examplesLocations) {
         QDir d(examples);
