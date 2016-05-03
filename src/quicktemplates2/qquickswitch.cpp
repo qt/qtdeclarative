@@ -142,14 +142,17 @@ bool QQuickSwitchPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent
     pressPoint = QPoint();
     q->setPressed(false);
     if (child->keepMouseGrab()) {
+        bool wasChecked = checked;
         q->setChecked(position > 0.5);
         q->setPosition(checked ? 1.0 : 0.0);
         child->setKeepMouseGrab(false);
+        if (wasChecked != checked)
+            emit q->clicked();
         event->accept();
     } else {
+        q->toggle();
         emit q->clicked();
         event->accept();
-        q->toggle();
     }
     return true;
 }
