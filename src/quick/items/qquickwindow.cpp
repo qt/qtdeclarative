@@ -3407,33 +3407,40 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 QImage QQuickWindow::grabWindow()
 {
     Q_D(QQuickWindow);
+
+    if (!isVisible() && !d->renderControl) {
+        if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
+            return d->windowManager->grab(this);
+    }
+
 #ifndef QT_NO_OPENGL
-    auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
-    if (!isVisible() && !openglRenderContext->openglContext()) {
+    if (!isVisible() && !d->renderControl) {
+        auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
+        if (!openglRenderContext->openglContext()) {
+            if (!handle() || !size().isValid()) {
+                qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");
+                return QImage();
+            }
 
-        if (!handle() || !size().isValid()) {
-            qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");
-            return QImage();
+            QOpenGLContext context;
+            context.setFormat(requestedFormat());
+            context.setShareContext(qt_gl_global_share_context());
+            context.create();
+            context.makeCurrent(this);
+            d->context->initialize(&context);
+
+            d->polishItems();
+            d->syncSceneGraph();
+            d->renderSceneGraph(size());
+
+            bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
+            QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
+            d->cleanupNodesOnShutdown();
+            d->context->invalidate();
+            context.doneCurrent();
+
+            return image;
         }
-
-        QOpenGLContext context;
-        context.setFormat(requestedFormat());
-        context.setShareContext(qt_gl_global_share_context());
-        context.create();
-        context.makeCurrent(this);
-        d->context->initialize(&context);
-
-        d->polishItems();
-        d->syncSceneGraph();
-        d->renderSceneGraph(size());
-
-        bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
-        QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
-        d->cleanupNodesOnShutdown();
-        d->context->invalidate();
-        context.doneCurrent();
-
-        return image;
     }
 #endif
     if (d->renderControl)

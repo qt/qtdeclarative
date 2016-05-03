@@ -349,6 +349,8 @@ public:
     void useRenderTargetAsTexture(uint id);
     uint activeRenderTarget() const;
 
+    QImage executeAndWaitReadbackRenderTarget(uint id = 0);
+
     // QSGRendererInterface
     GraphicsAPI graphicsAPI() const override;
     void *getResource(Resource resource) const override;

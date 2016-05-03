@@ -74,5 +74,8 @@ Item {
 
         if (event.key === Qt.Key_P)
             loader.source = "qrc:/Painter.qml";
+
+        if (event.key === Qt.Key_G)
+            helper.testGrab()
     }
 }

@@ -180,6 +180,8 @@ public:
     void useRenderTargetAsTexture(uint id);
     uint activeRenderTarget() const { return currentRenderTarget; }
 
+    QImage executeAndWaitReadbackRenderTarget(uint id);
+
     void *getResource(QSGRendererInterface::Resource resource) const;
 
     // the device is intentionally hidden here. all resources have to go

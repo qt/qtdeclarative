@@ -69,6 +69,10 @@ class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
     Q_OBJECT
 
 public:
+    enum RenderLoopFlags {
+        SupportsGrabWithoutExpose = 0x01
+    };
+
     virtual ~QSGRenderLoop();
 
     virtual void show(QQuickWindow *window) = 0;
@@ -103,6 +107,8 @@ public:
     static void setInstance(QSGRenderLoop *instance);
 
     virtual bool interleaveIncubation() const { return false; }
+
+    virtual int flags() const { return 0; }
 
     static void cleanup();
 

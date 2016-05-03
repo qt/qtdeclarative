@@ -367,8 +367,16 @@ bool QSGD3D12RenderThread::event(QEvent *e)
         Q_ASSERT(wme->window == exposedWindow || !exposedWindow);
         mutex.lock();
         if (wme->window) {
-            // ###
-            Q_UNREACHABLE();
+            // Grabbing is generally done by rendering a frame and reading the
+            // color buffer contents back, without presenting, and then
+            // creating a QImage from the returned data. It is terribly
+            // inefficient since it involves a full blocking wait for the GPU.
+            // However, our hands are tied by the existing, synchronous APIs of
+            // QQuickWindow and such.
+            QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
+            wd->syncSceneGraph();
+            wd->renderSceneGraph(wme->window->size());
+            *wme->image = engine->executeAndWaitReadbackRenderTarget();
         }
         if (Q_UNLIKELY(debug_loop()))
             qDebug("RT - WM_Grab - waking gui to handle result");
@@ -733,7 +741,14 @@ QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
         qDebug() << "grab" << window;
 
     WindowData *w = windowFor(windows, window);
-    Q_ASSERT(w);
+    // Have to support invisible (but created()'ed) windows as well.
+    // Unlike with GL, leaving that case for QQuickWindow to handle is not feasible.
+    const bool tempExpose = !w;
+    if (tempExpose) {
+        handleExposure(window);
+        w = windowFor(windows, window);
+        Q_ASSERT(w);
+    }
 
     if (!w->thread->isRunning())
         return QImage();
@@ -751,6 +766,11 @@ QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
     w->thread->waitCondition.wait(&w->thread->mutex);
     lockedForSync = false;
     w->thread->mutex.unlock();
+
+    result.setDevicePixelRatio(window->effectiveDevicePixelRatio());
+
+    if (tempExpose)
+        handleObscurity(w);
 
     return result;
 }
@@ -839,6 +859,11 @@ bool QSGD3D12RenderLoop::interleaveIncubation() const
         }
     }
     return somethingVisible && anim->isRunning();
+}
+
+int QSGD3D12RenderLoop::flags() const
+{
+    return SupportsGrabWithoutExpose;
 }
 
 bool QSGD3D12RenderLoop::event(QEvent *e)

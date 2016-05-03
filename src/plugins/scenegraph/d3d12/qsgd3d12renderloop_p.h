@@ -91,8 +91,8 @@ public:
     void postJob(QQuickWindow *window, QRunnable *job) override;
 
     QSurface::SurfaceType windowSurfaceType() const override;
-
     bool interleaveIncubation() const override;
+    int flags() const override;
 
     bool event(QEvent *e) override;
 

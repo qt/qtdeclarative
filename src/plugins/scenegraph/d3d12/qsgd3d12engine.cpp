@@ -515,6 +515,11 @@ uint QSGD3D12Engine::activeRenderTarget() const
     return d->activeRenderTarget();
 }
 
+QImage QSGD3D12Engine::executeAndWaitReadbackRenderTarget(uint id)
+{
+    return d->executeAndWaitReadbackRenderTarget(id);
+}
+
 QSGRendererInterface::GraphicsAPI QSGD3D12Engine::graphicsAPI() const
 {
     return Direct3D12;
@@ -1748,7 +1753,12 @@ void QSGD3D12EnginePrivate::queueSetRenderTarget(uint id)
         RenderTarget &rt(renderTargets[idx]);
         rtvHandle = rt.rtv;
         dsvHandle = rt.dsv;
-        rt.flags |= RenderTarget::NeedsReadBarrier;
+        if (!(rt.flags & RenderTarget::NeedsReadBarrier)) {
+            rt.flags |= RenderTarget::NeedsReadBarrier;
+            if (!(rt.flags & RenderTarget::Multisample))
+                transitionResource(rt.color.Get(), commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                   D3D12_RESOURCE_STATE_RENDER_TARGET);
+        }
     }
 
     commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
@@ -2159,6 +2169,27 @@ static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, 
 
     if (bytesPerPixel)
         *bytesPerPixel = bpp;
+
+    return f;
+}
+
+static inline QImage::Format imageFormatForTexture(DXGI_FORMAT format)
+{
+    QImage::Format f = QImage::Format_Invalid;
+
+    switch (format) {
+    case DXGI_FORMAT_R8G8B8A8_UNORM:
+        f = QImage::Format_RGBA8888_Premultiplied;
+        break;
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+        f = QImage::Format_ARGB32_Premultiplied;
+        break;
+    case DXGI_FORMAT_R8_UNORM:
+        f = QImage::Format_Grayscale8;
+        break;
+    default:
+        break;
+    }
 
     return f;
 }
@@ -2780,6 +2811,116 @@ void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
     }
 
     tframeData.activeTextures.append(TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id));
+}
+
+QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)
+{
+    if (inFrame) {
+        qWarning("%s: Cannot be called while frame preparation is active", __FUNCTION__);
+        return QImage();
+    }
+
+    frameCommandList->Reset(frameCommandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
+
+    D3D12_RESOURCE_STATES bstate;
+    bool needsBarrier = false;
+    ID3D12Resource *rtRes;
+    if (id == 0) {
+        const int idx = presentFrameIndex % swapChainBufferCount;
+        if (windowSamples > 1) {
+            resolveMultisampledTarget(defaultRT[idx].Get(), backBufferRT[idx].Get(),
+                                      D3D12_RESOURCE_STATE_COPY_SOURCE, frameCommandList.Get());
+        } else {
+            bstate = D3D12_RESOURCE_STATE_PRESENT;
+            needsBarrier = true;
+        }
+        rtRes = backBufferRT[idx].Get();
+    } else {
+        const int idx = id - 1;
+        Q_ASSERT(idx < renderTargets.count());
+        RenderTarget &rt(renderTargets[idx]);
+        Q_ASSERT(rt.entryInUse() && rt.color);
+
+        if (rt.flags & RenderTarget::Multisample) {
+            resolveMultisampledTarget(rt.color.Get(), rt.colorResolve.Get(),
+                                      D3D12_RESOURCE_STATE_COPY_SOURCE, frameCommandList.Get());
+            rtRes = rt.colorResolve.Get();
+        } else {
+            rtRes = rt.color.Get();
+            bstate = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+            needsBarrier = true;
+        }
+    }
+
+    ComPtr<ID3D12Resource> readbackBuf;
+
+    D3D12_RESOURCE_DESC rtDesc = rtRes->GetDesc();
+    UINT64 textureByteSize = 0;
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT textureLayout = {};
+    device->GetCopyableFootprints(&rtDesc, 0, 1, 0, &textureLayout, nullptr, nullptr, &textureByteSize);
+
+    D3D12_HEAP_PROPERTIES heapProp = {};
+    heapProp.Type = D3D12_HEAP_TYPE_READBACK;
+
+    D3D12_RESOURCE_DESC bufDesc = {};
+    bufDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufDesc.Width = textureByteSize;
+    bufDesc.Height = 1;
+    bufDesc.DepthOrArraySize = 1;
+    bufDesc.MipLevels = 1;
+    bufDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufDesc.SampleDesc.Count = 1;
+    bufDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    if (FAILED(device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &bufDesc,
+                                               D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&readbackBuf)))) {
+        qWarning("Failed to create committed resource (readback buffer)");
+        return QImage();
+    }
+
+    D3D12_TEXTURE_COPY_LOCATION dstLoc;
+    dstLoc.pResource = readbackBuf.Get();
+    dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    dstLoc.PlacedFootprint = textureLayout;
+    D3D12_TEXTURE_COPY_LOCATION srcLoc;
+    srcLoc.pResource = rtRes;
+    srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    srcLoc.SubresourceIndex = 0;
+
+    ID3D12GraphicsCommandList *cl = frameCommandList.Get();
+    if (needsBarrier)
+        transitionResource(rtRes, cl, bstate, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    cl->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+    if (needsBarrier)
+        transitionResource(rtRes, cl, D3D12_RESOURCE_STATE_COPY_SOURCE, bstate);
+
+    cl->Close();
+    ID3D12CommandList *commandLists[] = { cl };
+    commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    QScopedPointer<QSGD3D12CPUWaitableFence> f(createCPUWaitableFence());
+    waitForGPU(f.data()); // uh oh
+
+    QImage::Format fmt = imageFormatForTexture(rtDesc.Format);
+    if (fmt == QImage::Format_Invalid) {
+        qWarning("Could not map render target format %d to a QImage format", rtDesc.Format);
+        return QImage();
+    }
+    QImage img(rtDesc.Width, rtDesc.Height, fmt);
+    quint8 *p = nullptr;
+    const D3D12_RANGE readRange = { 0, 0 };
+    if (FAILED(readbackBuf->Map(0, &readRange, reinterpret_cast<void **>(&p)))) {
+        qWarning("Mapping the readback buffer failed");
+        return QImage();
+    }
+    for (UINT y = 0; y < rtDesc.Height; ++y) {
+        quint8 *dst = img.scanLine(y);
+        memcpy(dst, p, rtDesc.Width * 4);
+        p += textureLayout.Footprint.RowPitch;
+    }
+    readbackBuf->Unmap(0, nullptr);
+
+    return img;
 }
 
 void *QSGD3D12EnginePrivate::getResource(QSGRendererInterface::Resource resource) const

@@ -151,9 +151,19 @@ class Helper : public QObject
     Q_OBJECT
 
 public:
+    Helper(QQuickWindow *w) : m_window(w) { }
+
     Q_INVOKABLE void sleep(int ms) {
         QThread::msleep(ms);
     }
+
+    Q_INVOKABLE void testGrab() {
+        QImage img = m_window->grabWindow();
+        qDebug() << "Saving image to grab_result.png" << img;
+        img.save("grab_result.png");
+    }
+
+    QQuickWindow *m_window;
 };
 
 int main(int argc, char **argv)
@@ -171,10 +181,11 @@ int main(int argc, char **argv)
     qDebug("  [L] - Layers");
     qDebug("  [E] - Effects");
     qDebug("  [P] - QQuickPaintedItem");
+    qDebug("  [G] - Grab current window");
     qDebug("\nPress S to stop the currently running test\n");
 
-    Helper helper;
     QQuickView view;
+    Helper helper(&view);
     if (app.arguments().contains(QLatin1String("--multisample"))) {
         qDebug("Requesting sample count 4");
         QSurfaceFormat fmt;
