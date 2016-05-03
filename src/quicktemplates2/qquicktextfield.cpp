@@ -353,6 +353,16 @@ void QQuickTextField::classBegin()
     d->resolveFont();
 }
 
+void QQuickTextField::componentComplete()
+{
+    Q_D(QQuickTextField);
+    QQuickTextInput::componentComplete();
+#ifndef QT_NO_ACCESSIBILITY
+    if (!d->accessibleAttached && QAccessible::isActive())
+        d->accessibilityActiveChanged(true);
+#endif
+}
+
 void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickTextField);

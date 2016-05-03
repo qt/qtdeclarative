@@ -119,6 +119,8 @@ protected:
 
 private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
+
+    friend class QQuickPopup;
 };
 
 class QQuickPopupPositioner : public QQuickItemChangeListener

@@ -477,6 +477,16 @@ void QQuickTextArea::classBegin()
     d->resolveFont();
 }
 
+void QQuickTextArea::componentComplete()
+{
+    Q_D(QQuickTextArea);
+    QQuickTextEdit::componentComplete();
+#ifndef QT_NO_ACCESSIBILITY
+    if (!d->accessibleAttached && QAccessible::isActive())
+        d->accessibilityActiveChanged(true);
+#endif
+}
+
 void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickTextArea);

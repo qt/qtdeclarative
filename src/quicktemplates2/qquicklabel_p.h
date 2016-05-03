@@ -77,6 +77,7 @@ Q_SIGNALS:
 
 protected:
     void classBegin() override;
+    void componentComplete() override;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

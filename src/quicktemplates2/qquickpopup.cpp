@@ -1753,6 +1753,8 @@ void QQuickPopup::setFiltersChildMouseEvents(bool filter)
 
 void QQuickPopup::classBegin()
 {
+    Q_D(QQuickPopup);
+    d->popupItem->classBegin();
 }
 
 void QQuickPopup::componentComplete()
@@ -1763,6 +1765,7 @@ void QQuickPopup::componentComplete()
         setParentItem(qobject_cast<QQuickItem *>(parent()));
     if (d->visible)
         d->transitionManager.transitionEnter();
+    d->popupItem->componentComplete();
 }
 
 bool QQuickPopup::isComponentComplete() const

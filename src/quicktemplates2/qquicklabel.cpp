@@ -221,6 +221,16 @@ void QQuickLabel::classBegin()
     d->resolveFont();
 }
 
+void QQuickLabel::componentComplete()
+{
+    Q_D(QQuickLabel);
+    QQuickText::componentComplete();
+#ifndef QT_NO_ACCESSIBILITY
+    if (!d->accessibleAttached && QAccessible::isActive())
+        d->accessibilityActiveChanged(true);
+#endif
+}
+
 void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickLabel);
