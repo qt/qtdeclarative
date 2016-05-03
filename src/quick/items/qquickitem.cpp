@@ -2639,7 +2639,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
         QQuickItem *scopeItem = 0;
 
-        if (hasFocus())
+        if (hasFocus() || op->subFocusItem == this)
             scopeFocusedItem = this;
         else if (!isFocusScope() && d->subFocusItem)
             scopeFocusedItem = d->subFocusItem;
