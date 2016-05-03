@@ -7336,7 +7336,7 @@ void tst_qqmlecmascript::sequenceSort_data()
 
     QTest::newRow("qtbug_25269") << "test_qtbug_25269" << false;
 
-    const char *types[] = { "alphabet", "numbers", "reals" };
+    const char *types[] = { "alphabet", "numbers", "reals", "number_vector", "real_vector" };
     const char *sort[] = { "insertionSort", "quickSort" };
 
     for (size_t t=0 ; t < sizeof(types)/sizeof(types[0]) ; ++t) {

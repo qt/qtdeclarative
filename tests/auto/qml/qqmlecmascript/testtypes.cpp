@@ -295,6 +295,18 @@ public:
     {
         return v;
     }
+    Q_INVOKABLE QVector<int> integerVector(QVector<int> v) const
+    {
+        return v;
+    }
+    Q_INVOKABLE QVector<qreal> realVector(QVector<qreal> v) const
+    {
+        return v;
+    }
+    Q_INVOKABLE QVector<bool> boolVector(QVector<bool> v) const
+    {
+        return v;
+    }
 };
 
 static MyInheritedQmlObject *theSingletonObject = 0;
