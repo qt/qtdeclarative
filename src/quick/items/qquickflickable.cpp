@@ -1392,15 +1392,15 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         break;
     case Qt::NoScrollPhase: // default phase with an ordinary wheel mouse
     case Qt::ScrollUpdate:
-        if (d->scrollingPhase) {
+        if (d->scrollingPhase)
             d->pressed = true;
-            d->movementEndingTimer.start(MovementEndingTimerInterval, this);
-        }
+#ifdef Q_OS_OSX
+        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
+#endif
         break;
     case Qt::ScrollEnd:
         d->pressed = false;
         d->scrollingPhase = false;
-        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
         d->draggingEnding();
         event->accept();
         returnToBounds();
