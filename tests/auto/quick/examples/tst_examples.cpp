@@ -79,13 +79,11 @@ private:
 tst_examples::tst_examples()
 {
     // Add files to exclude here
-    excludedFiles << "examples/quick/canvas/tiger/tiger.qml"; // QTBUG-26528
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
     excludedFiles << "examples/quick/demos/photosurface/photosurface.qml"; // root item is Window rather than Item
 
     // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
-    excludedDirs << "quick/text/fonts"; // QTBUG-29004
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
     excludedDirs << "examples/quick/tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
