@@ -2736,7 +2736,7 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
 
     for (QV4::IR::BasicBlock *bb : function->basicBlocks()) {
         for (QV4::IR::Stmt *s : bb->statements()) {
-            s->accept(this);
+            visit(s);
             if (!_canSimplify)
                 return false;
         }
@@ -2906,7 +2906,7 @@ void QQmlIRFunctionCleanser::clean()
     foreach (QV4::IR::Function *function, module->functions) {
         for (QV4::IR::BasicBlock *block : function->basicBlocks()) {
             for (QV4::IR::Stmt *s : block->statements()) {
-                s->accept(this);
+                visit(s);
             }
         }
     }
@@ -2917,9 +2917,30 @@ void QQmlIRFunctionCleanser::clean()
     }
 }
 
-void QQmlIRFunctionCleanser::visitClosure(QV4::IR::Closure *closure)
+void QQmlIRFunctionCleanser::visit(QV4::IR::Stmt *s)
 {
-    closure->value = newFunctionIndices.at(closure->value);
+
+    switch (s->stmtKind) {
+    case QV4::IR::Stmt::PhiStmt:
+        // nothing to do
+        break;
+    default:
+        STMT_VISIT_ALL_KINDS(s);
+        break;
+    }
+}
+
+void QQmlIRFunctionCleanser::visit(QV4::IR::Expr *e)
+{
+    switch (e->exprKind) {
+    case QV4::IR::Expr::ClosureExpr: {
+        auto closure = e->asClosure();
+        closure->value = newFunctionIndices.at(closure->value);
+    } break;
+    default:
+        EXPR_VISIT_ALL_KINDS(e);
+        break;
+    }
 }
 
 QT_END_NAMESPACE

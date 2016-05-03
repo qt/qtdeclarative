@@ -358,7 +358,7 @@ private:
     const QQmlPropertyCacheVector &propertyCaches;
 };
 
-class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass, public QV4::IR::StmtVisitor
+class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass
 {
 public:
     QQmlJavaScriptBindingExpressionSimplificationPass(QQmlTypeCompiler *typeCompiler);
@@ -368,12 +368,30 @@ public:
 private:
     void reduceTranslationBindings(int objectIndex);
 
-    virtual void visitMove(QV4::IR::Move *move);
-    virtual void visitJump(QV4::IR::Jump *) {}
-    virtual void visitCJump(QV4::IR::CJump *) { discard(); }
-    virtual void visitExp(QV4::IR::Exp *) { discard(); }
-    virtual void visitPhi(QV4::IR::Phi *) {}
-    virtual void visitRet(QV4::IR::Ret *ret);
+    void visit(QV4::IR::Stmt *s)
+    {
+        switch (s->stmtKind) {
+        case QV4::IR::Stmt::MoveStmt:
+            visitMove(s->asMove());
+            break;
+        case QV4::IR::Stmt::RetStmt:
+            visitRet(s->asRet());
+            break;
+        case QV4::IR::Stmt::CJumpStmt:
+            discard();
+            break;
+        case QV4::IR::Stmt::ExpStmt:
+            discard();
+            break;
+        case QV4::IR::Stmt::JumpStmt:
+            break;
+        case QV4::IR::Stmt::PhiStmt:
+            break;
+        }
+    }
+
+    void visitMove(QV4::IR::Move *move);
+    void visitRet(QV4::IR::Ret *ret);
 
     void visitFunctionCall(const QString *name, QV4::IR::ExprList *args, QV4::IR::Temp *target);
 
@@ -397,8 +415,7 @@ private:
     QVector<int> irFunctionsToRemove;
 };
 
-class QQmlIRFunctionCleanser : public QQmlCompilePass, public QV4::IR::StmtVisitor,
-                               public QV4::IR::ExprVisitor
+class QQmlIRFunctionCleanser : public QQmlCompilePass
 {
 public:
     QQmlIRFunctionCleanser(QQmlTypeCompiler *typeCompiler, const QVector<int> &functionsToRemove);
@@ -406,51 +423,13 @@ public:
     void clean();
 
 private:
-    virtual void visitClosure(QV4::IR::Closure *closure);
-
-    virtual void visitTemp(QV4::IR::Temp *) {}
-    virtual void visitArgLocal(QV4::IR::ArgLocal *) {}
-
     virtual void visitMove(QV4::IR::Move *s) {
-        s->source->accept(this);
-        s->target->accept(this);
+        visit(s->source);
+        visit(s->target);
     }
 
-    virtual void visitConvert(QV4::IR::Convert *e) { e->expr->accept(this); }
-    virtual void visitPhi(QV4::IR::Phi *) { }
-
-    virtual void visitExp(QV4::IR::Exp *s) { s->expr->accept(this); }
-
-    virtual void visitJump(QV4::IR::Jump *) {}
-    virtual void visitCJump(QV4::IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(QV4::IR::Ret *s) { s->expr->accept(this); }
-
-    virtual void visitConst(QV4::IR::Const *) {}
-    virtual void visitString(QV4::IR::String *) {}
-    virtual void visitRegExp(QV4::IR::RegExp *) {}
-    virtual void visitName(QV4::IR::Name *) {}
-    virtual void visitUnop(QV4::IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(QV4::IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(QV4::IR::Call *e) {
-        e->base->accept(this);
-        for (QV4::IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(QV4::IR::New *e) {
-        e->base->accept(this);
-        for (QV4::IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitSubscript(QV4::IR::Subscript *e) {
-        e->base->accept(this);
-        e->index->accept(this);
-    }
-
-    virtual void visitMember(QV4::IR::Member *e) {
-        e->base->accept(this);
-    }
+    void visit(QV4::IR::Stmt *s);
+    void visit(QV4::IR::Expr *e);
 
 private:
     QV4::IR::Module *module;

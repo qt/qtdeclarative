@@ -252,7 +252,7 @@ protected:
                 _unhandled.removeLast();
             }
 
-            s->accept(this);
+            visit(s);
         }
 
         if (IR::Jump *jump = s->asJump()) {
@@ -275,7 +275,7 @@ protected:
             moves.order();
             QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
             foreach (IR::Move *move, newMoves)
-                move->accept(this);
+                visit(move);
         }
     }
 
@@ -425,7 +425,7 @@ void InstructionSelection::run(int functionIndex)
                 }
             }
 
-            s->accept(this);
+            visit(s);
         }
     }
 

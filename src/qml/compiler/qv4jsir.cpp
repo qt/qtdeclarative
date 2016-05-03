@@ -157,12 +157,13 @@ AluOp binaryOperator(int op)
     }
 }
 
-struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
+class RemoveSharedExpressions
 {
     CloneExpr clone;
     std::vector<Expr *> subexpressions; // contains all the non-cloned subexpressions in the given function. sorted using std::lower_bound.
     Expr *uniqueExpr;
 
+public:
     RemoveSharedExpressions(): uniqueExpr(0) {}
 
     void operator()(IR::Function *function)
@@ -176,11 +177,12 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
             clone.setBasicBlock(block);
 
             for (Stmt *s : block->statements()) {
-                s->accept(this);
+                visit(s);
             }
         }
     }
 
+private:
     template <typename Expr_>
     Expr_ *cleanup(Expr_ *expr)
     {
@@ -189,7 +191,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
             subexpressions.insert(it, expr);
             IR::Expr *e = expr;
             qSwap(uniqueExpr, e);
-            expr->accept(this);
+            visit(expr);
             qSwap(uniqueExpr, e);
             return static_cast<Expr_ *>(e);
         }
@@ -199,83 +201,45 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
         return clone(expr);
     }
 
-    // statements
-    virtual void visitExp(Exp *s)
+    void visit(Stmt *s)
     {
-        s->expr = cleanup(s->expr);
+        if (auto e = s->asExp()) {
+            e->expr = cleanup(e->expr);
+        } else if (auto m = s->asMove()) {
+            m->target = cleanup(m->target);
+            m->source = cleanup(m->source);
+        } else if (auto c = s->asCJump()) {
+            c->cond = cleanup(c->cond);
+        } else if (auto r = s->asRet()) {
+            r->expr = cleanup(r->expr);
+        }
     }
 
-    virtual void visitMove(Move *s)
+    void visit(Expr *e)
     {
-        s->target = cleanup(s->target);
-        s->source = cleanup(s->source);
-    }
-
-    virtual void visitJump(Jump *)
-    {
-        // nothing to do for Jump statements
-    }
-
-    virtual void visitCJump(CJump *s)
-    {
-        s->cond = cleanup(s->cond);
-    }
-
-    virtual void visitRet(Ret *s)
-    {
-        s->expr = cleanup(s->expr);
-    }
-
-    virtual void visitPhi(IR::Phi *) { Q_UNIMPLEMENTED(); }
-
-    // expressions
-    virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitRegExp(RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-
-    virtual void visitConvert(Convert *e)
-    {
-        e->expr = cleanup(e->expr);
-    }
-
-    virtual void visitUnop(Unop *e)
-    {
-        e->expr = cleanup(e->expr);
-    }
-
-    virtual void visitBinop(Binop *e)
-    {
-        e->left = cleanup(e->left);
-        e->right = cleanup(e->right);
-    }
-
-    virtual void visitCall(Call *e)
-    {
-        e->base = cleanup(e->base);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr = cleanup(it->expr);
-    }
-
-    virtual void visitNew(New *e)
-    {
-        e->base = cleanup(e->base);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr = cleanup(it->expr);
-    }
-
-    virtual void visitSubscript(Subscript *e)
-    {
-        e->base = cleanup(e->base);
-        e->index = cleanup(e->index);
-    }
-
-    virtual void visitMember(Member *e)
-    {
-        e->base = cleanup(e->base);
+        if (auto c = e->asConvert()) {
+            c->expr = cleanup(c->expr);
+        } else if (auto u = e->asUnop()) {
+            u->expr = cleanup(u->expr);
+        } else if (auto b = e->asBinop()) {
+            b->left = cleanup(b->left);
+            b->right = cleanup(b->right);
+        } else if (auto c = e->asCall()) {
+            c->base = cleanup(c->base);
+            for (IR::ExprList *it = c->args; it; it = it->next) {
+                it->expr = cleanup(it->expr);
+            }
+        } else if (auto n = e->asNew()) {
+            n->base = cleanup(n->base);
+            for (IR::ExprList *it = n->args; it; it = it->next) {
+                it->expr = cleanup(it->expr);
+            }
+        } else if (auto s = e->asSubscript()) {
+            s->base = cleanup(s->base);
+            s->index = cleanup(s->index);
+        } else if (auto m = e->asMember()) {
+            m->base = cleanup(m->base);
+        }
     }
 };
 
@@ -548,75 +512,39 @@ ExprList *CloneExpr::clone(ExprList *list)
     return clonedList;
 }
 
-void CloneExpr::visitConst(Const *e)
+void CloneExpr::visit(Expr *e)
 {
-    cloned = cloneConst(e, block->function);
-}
-
-void CloneExpr::visitString(String *e)
-{
-    cloned = block->STRING(e->value);
-}
-
-void CloneExpr::visitRegExp(RegExp *e)
-{
-    cloned = block->REGEXP(e->value, e->flags);
-}
-
-void CloneExpr::visitName(Name *e)
-{
-    cloned = cloneName(e, block->function);
-}
-
-void CloneExpr::visitTemp(Temp *e)
-{
-    cloned = cloneTemp(e, block->function);
-}
-
-void CloneExpr::visitArgLocal(ArgLocal *e)
-{
-    cloned = cloneArgLocal(e, block->function);
-}
-
-void CloneExpr::visitClosure(Closure *e)
-{
-    cloned = block->CLOSURE(e->value);
-}
-
-void CloneExpr::visitConvert(Convert *e)
-{
-    cloned = block->CONVERT(clone(e->expr), e->type);
-}
-
-void CloneExpr::visitUnop(Unop *e)
-{
-    cloned = block->UNOP(e->op, clone(e->expr));
-}
-
-void CloneExpr::visitBinop(Binop *e)
-{
-    cloned = block->BINOP(e->op, clone(e->left), clone(e->right));
-}
-
-void CloneExpr::visitCall(Call *e)
-{
-    cloned = block->CALL(clone(e->base), clone(e->args));
-}
-
-void CloneExpr::visitNew(New *e)
-{
-    cloned = block->NEW(clone(e->base), clone(e->args));
-}
-
-void CloneExpr::visitSubscript(Subscript *e)
-{
-    cloned = block->SUBSCRIPT(clone(e->base), clone(e->index));
-}
-
-void CloneExpr::visitMember(Member *e)
-{
-    Expr *clonedBase = clone(e->base);
-    cloned = block->MEMBER(clonedBase, e->name, e->property, e->kind, e->idIndex);
+    if (auto c = e->asConst()) {
+        cloned = cloneConst(c, block->function);
+    } else if (auto s = e->asString()) {
+        cloned = block->STRING(s->value);
+    } else if (auto r = e->asRegExp()) {
+        cloned = block->REGEXP(r->value, r->flags);
+    } else if (auto n = e->asName()) {
+        cloned = cloneName(n, block->function);
+    } else if (auto t = e->asTemp()) {
+        cloned = cloneTemp(t, block->function);
+    } else if (auto a = e->asArgLocal()) {
+        cloned = cloneArgLocal(a, block->function);
+    } else if (auto c = e->asClosure()) {
+        cloned = block->CLOSURE(c->value);
+    } else if (auto c = e->asConvert()) {
+        cloned = block->CONVERT(clone(c->expr), c->type);
+    } else if (auto u = e->asUnop()) {
+        cloned = block->UNOP(u->op, clone(u->expr));
+    } else if (auto b = e->asBinop()) {
+        cloned = block->BINOP(b->op, clone(b->left), clone(b->right));
+    } else if (auto c = e->asCall()) {
+        cloned = block->CALL(clone(c->base), clone(c->args));
+    } else if (auto n = e->asNew()) {
+        cloned = block->NEW(clone(n->base), clone(n->args));
+    } else if (auto s = e->asSubscript()) {
+        cloned = block->SUBSCRIPT(clone(s->base), clone(s->index));
+    } else if (auto m = e->asMember()) {
+        cloned = block->MEMBER(clone(m->base), m->name, m->property, m->kind, m->idIndex);
+    } else {
+        Q_UNREACHABLE();
+    }
 }
 
 IRPrinter::IRPrinter(QTextStream *out)
@@ -632,17 +560,17 @@ IRPrinter::~IRPrinter()
 
 void IRPrinter::print(Stmt *s)
 {
-    s->accept(this);
+    visit(s);
 }
 
 void IRPrinter::print(const Expr &e)
 {
-    const_cast<Expr *>(&e)->accept(this);
+    visit(const_cast<Expr *>(&e));
 }
 
 void IRPrinter::print(Expr *e)
 {
-    e->accept(this);
+    visit(e);
 }
 
 void IRPrinter::print(Function *f)
@@ -696,7 +624,7 @@ void IRPrinter::print(BasicBlock *bb)
         QTextStream *prevOut = &os;
         std::swap(out, prevOut);
         addStmtNr(s);
-        s->accept(this);
+        visit(s);
         if (s->location.startLine) {
             out->flush();
             for (int i = 58 - str.length(); i > 0; --i)
@@ -713,10 +641,29 @@ void IRPrinter::print(BasicBlock *bb)
     std::swap(currentBB, bb);
 }
 
+void IRPrinter::visit(Stmt *s)
+{
+    if (auto e = s->asExp()) {
+        visitExp(e);
+    } else if (auto m = s->asMove()) {
+        visitMove(m);
+    } else if (auto j = s->asJump()) {
+        visitJump(j);
+    } else if (auto c = s->asCJump()) {
+        visitCJump(c);
+    } else if (auto r = s->asRet()) {
+        visitRet(r);
+    } else if (auto p = s->asPhi()) {
+        visitPhi(p);
+    } else {
+        Q_UNREACHABLE();
+    }
+}
+
 void IRPrinter::visitExp(Exp *s)
 {
     *out << "void ";
-    s->expr->accept(this);
+    visit(s->expr);
 }
 
 void IRPrinter::visitMove(Move *s)
@@ -725,13 +672,13 @@ void IRPrinter::visitMove(Move *s)
         if (!s->swap && targetTemp->type != UnknownType)
             *out << typeName(targetTemp->type) << ' ';
 
-    s->target->accept(this);
+    visit(s->target);
     *out << ' ';
     if (s->swap)
         *out << "<=> ";
     else
         *out << "= ";
-    s->source->accept(this);
+    visit(s->source);
 }
 
 void IRPrinter::visitJump(Jump *s)
@@ -742,7 +689,7 @@ void IRPrinter::visitJump(Jump *s)
 void IRPrinter::visitCJump(CJump *s)
 {
     *out << "if ";
-    s->cond->accept(this);
+    visit(s->cond);
     *out << " goto L" << s->iftrue->index()
          << " else goto L" << s->iffalse->index();
 }
@@ -752,7 +699,7 @@ void IRPrinter::visitRet(Ret *s)
     *out << "return";
     if (s->expr) {
         *out << ' ';
-        s->expr->accept(this);
+        visit(s->expr);
     }
 }
 
@@ -761,7 +708,7 @@ void IRPrinter::visitPhi(Phi *s)
     if (s->targetTemp->type != UnknownType)
         *out << typeName(s->targetTemp->type) << ' ';
 
-    s->targetTemp->accept(this);
+    visit(s->targetTemp);
     *out << " = phi ";
     for (int i = 0, ei = s->incoming.size(); i < ei; ++i) {
         if (i > 0)
@@ -769,7 +716,42 @@ void IRPrinter::visitPhi(Phi *s)
         if (currentBB)
             *out << 'L' << currentBB->in.at(i)->index() << ": ";
         if (s->incoming[i])
-            s->incoming[i]->accept(this);
+            visit(s->incoming[i]);
+    }
+}
+
+void IRPrinter::visit(Expr *e)
+{
+    if (auto c = e->asConst()) {
+        visitConst(c);
+    } else if (auto s = e->asString()) {
+        visitString(s);
+    } else if (auto r = e->asRegExp()) {
+        visitRegExp(r);
+    } else if (auto n = e->asName()) {
+        visitName(n);
+    } else if (auto t = e->asTemp()) {
+        visitTemp(t);
+    } else if (auto a = e->asArgLocal()) {
+        visitArgLocal(a);
+    } else if (auto c = e->asClosure()) {
+        visitClosure(c);
+    } else if (auto c = e->asConvert()) {
+        visitConvert(c);
+    } else if (auto u = e->asUnop()) {
+        visitUnop(u);
+    } else if (auto b = e->asBinop()) {
+        visitBinop(b);
+    } else if (auto c = e->asCall()) {
+        visitCall(c);
+    } else if (auto n = e->asNew()) {
+        visitNew(n);
+    } else if (auto s = e->asSubscript()) {
+        visitSubscript(s);
+    } else if (auto m = e->asMember()) {
+        visitMember(m);
+    } else {
+        Q_UNREACHABLE();
     }
 }
 
@@ -867,32 +849,32 @@ void IRPrinter::visitClosure(Closure *e)
 void IRPrinter::visitConvert(Convert *e)
 {
     *out << "convert " << typeName(e->expr->type) << " to " << typeName(e->type) << ' ';
-    e->expr->accept(this);
+    visit(e->expr);
 }
 
 void IRPrinter::visitUnop(Unop *e)
 {
     *out << opname(e->op) << ' ';
-    e->expr->accept(this);
+    visit(e->expr);
 }
 
 void IRPrinter::visitBinop(Binop *e)
 {
     *out << opname(e->op) << ' ';
-    e->left->accept(this);
+    visit(e->left);
     *out << ", ";
-    e->right->accept(this);
+    visit(e->right);
 }
 
 void IRPrinter::visitCall(Call *e)
 {
     *out << "call ";
-    e->base->accept(this);
+    visit(e->base);
     *out << '(';
     for (ExprList *it = e->args; it; it = it->next) {
         if (it != e->args)
             *out << ", ";
-        it->expr->accept(this);
+        visit(it->expr);
     }
     *out << ')';
 }
@@ -900,21 +882,21 @@ void IRPrinter::visitCall(Call *e)
 void IRPrinter::visitNew(New *e)
 {
     *out << "new ";
-    e->base->accept(this);
+    visit(e->base);
     *out << '(';
     for (ExprList *it = e->args; it; it = it->next) {
         if (it != e->args)
             *out << ", ";
-        it->expr->accept(this);
+        visit(it->expr);
     }
     *out << ')';
 }
 
 void IRPrinter::visitSubscript(Subscript *e)
 {
-    e->base->accept(this);
+    visit(e->base);
     *out << '[';
-    e->index->accept(this);
+    visit(e->index);
     *out << ']';
 }
 
@@ -924,7 +906,7 @@ void IRPrinter::visitMember(Member *e)
             && e->attachedPropertiesId != 0 && !e->base->asTemp())
         *out << "[[attached property from " << e->attachedPropertiesId << "]]";
     else
-        e->base->accept(this);
+        visit(e->base);
     *out << '.' << *e->name;
 #ifndef V4_BOOTSTRAP
     if (e->property) {

@@ -104,7 +104,7 @@ inline Primitive convertToValue(IR::Const *c)
     return Primitive::undefinedValue();
 }
 
-class ConvertTemps: protected IR::StmtVisitor, protected IR::ExprVisitor
+class ConvertTemps
 {
     void renumber(IR::Temp *t)
     {
@@ -132,7 +132,7 @@ protected:
 
     virtual void process(IR::Stmt *s)
     {
-        s->accept(this);
+        visit(s);
     }
 
 public:
@@ -157,34 +157,28 @@ public:
     }
 
 protected:
-    virtual void visitConst(IR::Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(IR::Name *) {}
-    virtual void visitTemp(IR::Temp *e) { renumber(e); }
-    virtual void visitArgLocal(IR::ArgLocal *) {}
-    virtual void visitClosure(IR::Closure *) {}
-    virtual void visitConvert(IR::Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(IR::Call *e) {
-        e->base->accept(this);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
+    void visit(IR::Stmt *s) {
+        switch (s->stmtKind) {
+        case IR::Stmt::PhiStmt:
+            visitPhi(s->asPhi());
+            break;
+        default:
+            STMT_VISIT_ALL_KINDS(s);
+            break;
+        }
     }
-    virtual void visitNew(IR::New *e) {
-        e->base->accept(this);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
+
+    virtual void visitPhi(IR::Phi *)
+    { Q_UNREACHABLE(); }
+
+private:
+    void visit(IR::Expr *e) {
+        if (auto temp = e->asTemp()) {
+            renumber(temp);
+        } else {
+            EXPR_VISIT_ALL_KINDS(e);
+        }
     }
-    virtual void visitSubscript(IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitMove(IR::Move *s) { s->target->accept(this); s->source->accept(this); }
-    virtual void visitJump(IR::Jump *) {}
-    virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(IR::Phi *) { Q_UNREACHABLE(); }
 };
 } // namespace QV4
 

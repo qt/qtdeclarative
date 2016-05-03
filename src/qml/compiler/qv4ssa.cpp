@@ -898,7 +898,7 @@ private:
     }
 };
 
-class VariableCollector: public StmtVisitor, ExprVisitor {
+class VariableCollector {
     std::vector<Temp> _allTemps;
     std::vector<BasicBlockSet> _defsites;
     std::vector<std::vector<int> > A_orig;
@@ -946,7 +946,7 @@ public:
             currentBB = bb;
             killed.assign(function->tempCount, false);
             for (Stmt *s : bb->statements())
-                s->accept(this);
+                visit(s);
         }
     }
 
@@ -971,62 +971,45 @@ public:
         return nonLocals.at(var.index);
     }
 
-protected:
-    virtual void visitPhi(Phi *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
+private:
+    void visit(Stmt *s)
+    {
+        if (s->asPhi()) {
+            // nothing to do
+        } else if (auto move = s->asMove()) {
+            visit(move->source);
 
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(Member *e) { e->base->accept(this); }
-    virtual void visitExp(Exp *s) { s->expr->accept(this); }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
+            if (Temp *t = move->target->asTemp()) {
+                addTemp(t);
 
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
+                if (isCollectable(t)) {
+                    _defsites[t->index].insert(currentBB);
+                    addDefInCurrentBlock(t);
 
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitMove(Move *s) {
-        s->source->accept(this);
-
-        if (Temp *t = s->target->asTemp()) {
-            addTemp(t);
-
-            if (isCollectable(t)) {
-                _defsites[t->index].insert(currentBB);
-                addDefInCurrentBlock(t);
-
-                // For semi-pruned SSA:
-                killed.setBit(t->index);
+                    // For semi-pruned SSA:
+                    killed.setBit(t->index);
+                }
+            } else {
+                visit(move->target);
             }
         } else {
-            s->target->accept(this);
+            STMT_VISIT_ALL_KINDS(s)
         }
     }
 
-    virtual void visitTemp(Temp *t)
+    void visit(Expr *e)
     {
-        addTemp(t);
+        if (auto t = e->asTemp()) {
+            addTemp(t);
 
-        if (isCollectable(t))
-            if (!killed.at(t->index))
-                nonLocals.setBit(t->index);
+            if (isCollectable(t)) {
+                if (!killed.at(t->index)) {
+                    nonLocals.setBit(t->index);
+                }
+            }
+        } else {
+            EXPR_VISIT_ALL_KINDS(e);
+        }
     }
 };
 
@@ -1345,7 +1328,7 @@ void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
 //
 //   Undo(t, c) =
 //     mapping[t] = c
-class VariableRenamer: public StmtVisitor, public ExprVisitor
+class VariableRenamer
 {
     Q_DISABLE_COPY(VariableRenamer)
 
@@ -1466,7 +1449,7 @@ private:
 
         for (Stmt *s : bb->statements()) {
             currentStmt = s;
-            s->accept(this);
+            visit(s);
         }
 
         for (BasicBlock *Y : bb->out) {
@@ -1532,23 +1515,35 @@ private:
         return newIndex;
     }
 
-protected:
-    virtual void visitTemp(Temp *e) { // only called for uses, not defs
-//        qDebug()<<"I: replacing use of"<<e->index<<"with"<<stack[e->index].top();
-        e->index = currentNumber(*e);
-        e->kind = Temp::VirtualRegister;
-        defUses.addUse(*e, currentStmt);
+private:
+    void visit(Stmt *s)
+    {
+        if (auto move = s->asMove()) {
+            // uses:
+            visit(move->source);
+
+            // defs:
+            if (Temp *t = move->target->asTemp()) {
+                renameTemp(t);
+            } else {
+                visit(move->target);
+            }
+        } else if (auto phi = s->asPhi()) {
+            renameTemp(phi->targetTemp);
+        } else {
+            STMT_VISIT_ALL_KINDS(s);
+        }
     }
 
-    virtual void visitMove(Move *s) {
-        // uses:
-        s->source->accept(this);
-
-        // defs:
-        if (Temp *t = s->target->asTemp())
-            renameTemp(t);
-        else
-            s->target->accept(this);
+    void visit(Expr *e)
+    {
+        if (auto temp = e->asTemp()) {
+            temp->index = currentNumber(*temp);
+            temp->kind = Temp::VirtualRegister;
+            defUses.addUse(*temp, currentStmt);
+        } else {
+            EXPR_VISIT_ALL_KINDS(e);
+        }
     }
 
     void renameTemp(Temp *t) { // only called for defs, not uses
@@ -1557,44 +1552,6 @@ protected:
         t->kind = Temp::VirtualRegister;
         t->index = newIdx;
         defUses.addDef(t, currentStmt, currentBB);
-    }
-
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitPhi(Phi *s) { renameTemp(s->targetTemp); }
-
-    virtual void visitExp(Exp *s) { s->expr->accept(this); }
-
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitSubscript(Subscript *e) {
-        e->base->accept(this);
-        e->index->accept(this);
-    }
-
-    virtual void visitMember(Member *e) {
-        e->base->accept(this);
     }
 };
 
@@ -1922,7 +1879,7 @@ private:
     }
 };
 
-class SideEffectsChecker: public ExprVisitor
+class SideEffectsChecker
 {
     bool _sideEffect;
 
@@ -1931,11 +1888,14 @@ public:
         : _sideEffect(false)
     {}
 
+    ~SideEffectsChecker()
+    {}
+
     bool hasSideEffects(Expr *expr)
     {
         bool sideEffect = false;
         qSwap(_sideEffect, sideEffect);
-        expr->accept(this);
+        visit(expr);
         qSwap(_sideEffect, sideEffect);
         return sideEffect;
     }
@@ -1948,12 +1908,35 @@ protected:
 
     bool seenSideEffects() const { return _sideEffect; }
 
-protected:
-    void visitConst(Const *) Q_DECL_OVERRIDE {}
-    void visitString(IR::String *) Q_DECL_OVERRIDE {}
-    void visitRegExp(IR::RegExp *) Q_DECL_OVERRIDE {}
+    void visit(Expr *e)
+    {
+        if (auto n = e->asName()) {
+            visitName(n);
+        } else if (auto t = e->asTemp()) {
+            visitTemp(t);
+        } else if (auto c = e->asClosure()) {
+            visitClosure(c);
+        } else if (auto c = e->asConvert()) {
+            visitConvert(c);
+        } else if (auto u = e->asUnop()) {
+            visitUnop(u);
+        } else if (auto b = e->asBinop()) {
+            visitBinop(b);
+        } else if (auto c = e->asCall()) {
+            visitCall(c);
+        } else if (auto n = e->asNew()) {
+            visitNew(n);
+        } else if (auto s = e->asSubscript()) {
+            visitSubscript(s);
+        } else if (auto m = e->asMember()) {
+            visitMember(m);
+        }
+    }
 
-    void visitName(Name *e) Q_DECL_OVERRIDE {
+    virtual void visitTemp(Temp *) {}
+
+private:
+    void visitName(Name *e) {
         if (e->freeOfSideEffects)
             return;
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
@@ -1962,15 +1945,12 @@ protected:
             markAsSideEffect();
     }
 
-    void visitTemp(Temp *) Q_DECL_OVERRIDE {}
-    void visitArgLocal(ArgLocal *) Q_DECL_OVERRIDE {}
-
-    void visitClosure(Closure *) Q_DECL_OVERRIDE {
+    void visitClosure(Closure *) {
         markAsSideEffect();
     }
 
-    void visitConvert(Convert *e) Q_DECL_OVERRIDE {
-        e->expr->accept(this);
+    void visitConvert(Convert *e) {
+        visit(e->expr);
 
         switch (e->expr->type) {
         case QObjectType:
@@ -1983,8 +1963,8 @@ protected:
         }
     }
 
-    void visitUnop(Unop *e) Q_DECL_OVERRIDE {
-        e->expr->accept(this);
+    void visitUnop(Unop *e) {
+        visit(e->expr);
 
         switch (e->op) {
         case OpUPlus:
@@ -2001,7 +1981,7 @@ protected:
         }
     }
 
-    void visitBinop(Binop *e) Q_DECL_OVERRIDE {
+    void visitBinop(Binop *e) {
         // TODO: prune parts that don't have a side-effect. For example, in:
         //   function f(x) { +x+1; return 0; }
         // we can prune the binop and leave the unop/conversion.
@@ -2013,30 +1993,30 @@ protected:
             markAsSideEffect();
     }
 
-    void visitSubscript(Subscript *e) Q_DECL_OVERRIDE {
-        e->base->accept(this);
-        e->index->accept(this);
+    void visitSubscript(Subscript *e) {
+        visit(e->base);
+        visit(e->index);
         markAsSideEffect();
     }
 
-    void visitMember(Member *e) Q_DECL_OVERRIDE {
-        e->base->accept(this);
+    void visitMember(Member *e) {
+        visit(e->base);
         if (e->freeOfSideEffects)
             return;
         markAsSideEffect();
     }
 
-    void visitCall(Call *e) Q_DECL_OVERRIDE {
-        e->base->accept(this);
+    void visitCall(Call *e) {
+        visit(e->base);
         for (ExprList *args = e->args; args; args = args->next)
-            args->expr->accept(this);
+            visit(args->expr);
         markAsSideEffect(); // TODO: there are built-in functions that have no side effect.
     }
 
-    void visitNew(New *e) Q_DECL_OVERRIDE {
-        e->base->accept(this);
+    void visitNew(New *e) {
+        visit(e->base);
         for (ExprList *args = e->args; args; args = args->next)
-            args->expr->accept(this);
+            visit(args->expr);
         markAsSideEffect(); // TODO: there are built-in types that have no side effect.
     }
 };
@@ -2045,21 +2025,19 @@ class EliminateDeadCode: public SideEffectsChecker
 {
     DefUses &_defUses;
     StatementWorklist &_worklist;
-    QVector<Temp *> _collectedTemps;
+    QVarLengthArray<Temp *, 8> _collectedTemps;
 
 public:
     EliminateDeadCode(DefUses &defUses, StatementWorklist &worklist)
         : _defUses(defUses)
         , _worklist(worklist)
-    {
-        _collectedTemps.reserve(8);
-    }
+    {}
 
     void run(Expr *&expr, Stmt *stmt) {
         _collectedTemps.clear();
         if (!hasSideEffects(expr)) {
             expr = 0;
-            foreach (Temp *t, _collectedTemps) {
+            for (Temp *t : _collectedTemps) {
                 _defUses.removeUse(stmt, *t);
                 _worklist += _defUses.defStmt(*t);
             }
@@ -2067,13 +2045,13 @@ public:
     }
 
 protected:
-    void visitTemp(Temp *e) Q_DECL_OVERRIDE
+    void visitTemp(Temp *e) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         _collectedTemps.append(e);
     }
 };
 
-class PropagateTempTypes: public StmtVisitor, ExprVisitor
+class PropagateTempTypes
 {
     const DefUses &defUses;
     UntypedTemp theTemp;
@@ -2089,64 +2067,31 @@ public:
         newType = type;
         theTemp = temp;
         if (Stmt *defStmt = defUses.defStmt(temp.temp))
-            defStmt->accept(this);
+            visit(defStmt);
         foreach (Stmt *use, defUses.uses(temp.temp))
-            use->accept(this);
+            visit(use);
     }
 
-protected:
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *e) {
-        if (theTemp == UntypedTemp(*e)) {
-            e->type = static_cast<Type>(newType.type);
-            e->memberResolver = newType.memberResolver;
+private:
+    void visit(Stmt *s)
+    {
+        STMT_VISIT_ALL_KINDS(s);
+    }
+
+    void visit(Expr *e)
+    {
+        if (auto temp = e->asTemp()) {
+            if (theTemp == UntypedTemp(*temp)) {
+                temp->type = static_cast<Type>(newType.type);
+                temp->memberResolver = newType.memberResolver;
+            }
+        } else {
+            EXPR_VISIT_ALL_KINDS(e);
         }
-    }
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitSubscript(Subscript *e) {
-        e->base->accept(this);
-        e->index->accept(this);
-    }
-
-    virtual void visitMember(Member *e) {
-        e->base->accept(this);
-    }
-
-    virtual void visitExp(Exp *s) {s->expr->accept(this);}
-    virtual void visitMove(Move *s) {
-        s->source->accept(this);
-        s->target->accept(this);
-    }
-
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(Phi *s) {
-        s->targetTemp->accept(this);
-        foreach (Expr *e, s->incoming)
-            e->accept(this);
     }
 };
 
-class TypeInference: public StmtVisitor, public ExprVisitor
+class TypeInference
 {
     enum { DebugTypeInference = 0 };
 
@@ -2248,7 +2193,7 @@ private:
         TypingResult ty;
         std::swap(_ty, ty);
         std::swap(_currentStmt, s);
-        _currentStmt->accept(this);
+        visit(_currentStmt);
         std::swap(_currentStmt, s);
         std::swap(_ty, ty);
         return ty.fullyTyped;
@@ -2257,7 +2202,7 @@ private:
     TypingResult run(Expr *e) {
         TypingResult ty;
         std::swap(_ty, ty);
-        e->accept(this);
+        visit(e);
         std::swap(_ty, ty);
 
         if (ty.type != UnknownType)
@@ -2299,39 +2244,74 @@ private:
         }
     }
 
-protected:
-    virtual void visitConst(Const *e) {
-        if (e->type & NumberType) {
-            if (canConvertToSignedInteger(e->value))
+private:
+    void visit(Expr *e)
+    {
+        if (auto c = e->asConst()) {
+            visitConst(c);
+        } else if (auto s = e->asString()) {
+            visitString(s);
+        } else if (auto r = e->asRegExp()) {
+            visitRegExp(r);
+        } else if (auto n = e->asName()) {
+            visitName(n);
+        } else if (auto t = e->asTemp()) {
+            visitTemp(t);
+        } else if (auto a = e->asArgLocal()) {
+            visitArgLocal(a);
+        } else if (auto c = e->asClosure()) {
+            visitClosure(c);
+        } else if (auto c = e->asConvert()) {
+            visitConvert(c);
+        } else if (auto u = e->asUnop()) {
+            visitUnop(u);
+        } else if (auto b = e->asBinop()) {
+            visitBinop(b);
+        } else if (auto c = e->asCall()) {
+            visitCall(c);
+        } else if (auto n = e->asNew()) {
+            visitNew(n);
+        } else if (auto s = e->asSubscript()) {
+            visitSubscript(s);
+        } else if (auto m = e->asMember()) {
+            visitMember(m);
+        } else {
+            Q_UNREACHABLE();
+        }
+    }
+
+    void visitConst(Const *c) {
+        if (c->type & NumberType) {
+            if (canConvertToSignedInteger(c->value))
                 _ty = TypingResult(SInt32Type);
-            else if (canConvertToUnsignedInteger(e->value))
+            else if (canConvertToUnsignedInteger(c->value))
                 _ty = TypingResult(UInt32Type);
             else
-                _ty = TypingResult(e->type);
+                _ty = TypingResult(c->type);
         } else
-            _ty = TypingResult(e->type);
+            _ty = TypingResult(c->type);
     }
-    virtual void visitString(IR::String *) { _ty = TypingResult(StringType); }
-    virtual void visitRegExp(IR::RegExp *) { _ty = TypingResult(VarType); }
-    virtual void visitName(Name *) { _ty = TypingResult(VarType); }
-    virtual void visitTemp(Temp *e) {
+    void visitString(IR::String *) { _ty = TypingResult(StringType); }
+    void visitRegExp(IR::RegExp *) { _ty = TypingResult(VarType); }
+    void visitName(Name *) { _ty = TypingResult(VarType); }
+    void visitTemp(Temp *e) {
         if (e->memberResolver && e->memberResolver->isValid())
             _ty = TypingResult(e->memberResolver);
         else
             _ty = TypingResult(_tempTypes[e->index]);
         setType(e, _ty.type);
     }
-    virtual void visitArgLocal(ArgLocal *e) {
+    void visitArgLocal(ArgLocal *e) {
         _ty = TypingResult(VarType);
         setType(e, _ty.type);
     }
 
-    virtual void visitClosure(Closure *) { _ty = TypingResult(VarType); }
-    virtual void visitConvert(Convert *e) {
+    void visitClosure(Closure *) { _ty = TypingResult(VarType); }
+    void visitConvert(Convert *e) {
         _ty = TypingResult(e->type);
     }
 
-    virtual void visitUnop(Unop *e) {
+    void visitUnop(Unop *e) {
         _ty = run(e->expr);
         switch (e->op) {
         case OpUPlus: _ty.type = DoubleType; return;
@@ -2348,7 +2328,7 @@ protected:
         }
     }
 
-    virtual void visitBinop(Binop *e) {
+    void visitBinop(Binop *e) {
         TypingResult leftTy = run(e->left);
         TypingResult rightTy = run(e->right);
         _ty.fullyTyped = leftTy.fullyTyped && rightTy.fullyTyped;
@@ -2406,24 +2386,24 @@ protected:
         }
     }
 
-    virtual void visitCall(Call *e) {
+    void visitCall(Call *e) {
         _ty = run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             _ty.fullyTyped &= run(it->expr).fullyTyped;
         _ty.type = VarType;
     }
-    virtual void visitNew(New *e) {
+    void visitNew(New *e) {
         _ty = run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             _ty.fullyTyped &= run(it->expr).fullyTyped;
         _ty.type = VarType;
     }
-    virtual void visitSubscript(Subscript *e) {
+    void visitSubscript(Subscript *e) {
         _ty.fullyTyped = run(e->base).fullyTyped && run(e->index).fullyTyped;
         _ty.type = VarType;
     }
 
-    virtual void visitMember(Member *e) {
+    void visitMember(Member *e) {
         _ty = run(e->base);
 
         if (_ty.fullyTyped && _ty.type.memberResolver && _ty.type.memberResolver->isValid()) {
@@ -2433,8 +2413,27 @@ protected:
             _ty.type = VarType;
     }
 
-    virtual void visitExp(Exp *s) { _ty = run(s->expr); }
-    virtual void visitMove(Move *s) {
+    void visit(Stmt *s)
+    {
+        if (auto e = s->asExp()) {
+            visitExp(e);
+        } else if (auto m = s->asMove()) {
+            visitMove(m);
+        } else if (auto j = s->asJump()) {
+            visitJump(j);
+        } else if (auto c = s->asCJump()) {
+            visitCJump(c);
+        } else if (auto r = s->asRet()) {
+            visitRet(r);
+        } else if (auto p = s->asPhi()) {
+            visitPhi(p);
+        } else {
+            Q_UNREACHABLE();
+        }
+    }
+
+    void visitExp(Exp *s) { _ty = run(s->expr); }
+    void visitMove(Move *s) {
         if (Temp *t = s->target->asTemp()) {
             if (Name *n = s->source->asName()) {
                 if (n->builtin == Name::builtin_qml_context) {
@@ -2455,10 +2454,10 @@ protected:
         _ty.fullyTyped &= sourceTy.fullyTyped;
     }
 
-    virtual void visitJump(Jump *) { _ty = TypingResult(MissingType); }
-    virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
-    virtual void visitRet(Ret *s) { _ty = run(s->expr); }
-    virtual void visitPhi(Phi *s) {
+    void visitJump(Jump *) { _ty = TypingResult(MissingType); }
+    void visitCJump(CJump *s) { _ty = run(s->cond); }
+    void visitRet(Ret *s) { _ty = run(s->expr); }
+    void visitPhi(Phi *s) {
         _ty = run(s->incoming[0]);
         for (int i = 1, ei = s->incoming.size(); i != ei; ++i) {
             TypingResult ty = run(s->incoming[i]);
@@ -2677,14 +2676,15 @@ void convertConst(Const *c, Type targetType)
     c->type = targetType;
 }
 
-class TypePropagation: public StmtVisitor, public ExprVisitor {
+class TypePropagation
+{
     DefUses &_defUses;
     Type _ty;
     IR::Function *_f;
 
     bool run(Expr *&e, Type requestedType = UnknownType, bool insertConversion = true) {
         qSwap(_ty, requestedType);
-        e->accept(this);
+        visit(e);
         qSwap(_ty, requestedType);
 
         if (requestedType != UnknownType) {
@@ -2731,7 +2731,7 @@ public:
 
             for (Stmt *s : bb->statements()) {
                 _currStmt = s;
-                s->accept(this);
+                visit(s);
             }
 
             foreach (const Conversion &conversion, _conversions) {
@@ -2817,8 +2817,29 @@ public:
         }
     }
 
-protected:
-    virtual void visitConst(Const *c) {
+private:
+    void visit(Expr *e)
+    {
+        if (auto c = e->asConst()) {
+            visitConst(c);
+        } else if (auto c = e->asConvert()) {
+            run(c->expr, c->type);
+        } else if (auto u = e->asUnop()) {
+            run(u->expr, u->type);
+        } else if (auto b = e->asBinop()) {
+            visitBinop(b);
+        } else if (auto c = e->asCall()) {
+            visitCall(c);
+        } else if (auto n = e->asNew()) {
+            visitNew(n);
+        } else if (auto s = e->asSubscript()) {
+            visitSubscript(s);
+        } else if (auto m = e->asMember()) {
+            visitMember(m);
+        }
+    }
+
+    void visitConst(Const *c) {
         if (_ty & NumberType && c->type & NumberType) {
             if (_ty == SInt32Type)
                 c->value = QV4::Primitive::toInt32(c->value);
@@ -2828,15 +2849,7 @@ protected:
         }
     }
 
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { run(e->expr, e->type); }
-    virtual void visitUnop(Unop *e) { run(e->expr, e->type); }
-    virtual void visitBinop(Binop *e) {
+    void visitBinop(Binop *e) {
         // FIXME: This routine needs more tuning!
         switch (e->op) {
         case OpAdd:
@@ -2887,20 +2900,36 @@ protected:
             Q_UNREACHABLE();
         }
     }
-    virtual void visitCall(Call *e) {
+    void visitCall(Call *e) {
         run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             run(it->expr);
     }
-    virtual void visitNew(New *e) {
+    void visitNew(New *e) {
         run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             run(it->expr);
     }
-    virtual void visitSubscript(Subscript *e) { run(e->base); run(e->index); }
-    virtual void visitMember(Member *e) { run(e->base); }
-    virtual void visitExp(Exp *s) { run(s->expr); }
-    virtual void visitMove(Move *s) {
+    void visitSubscript(Subscript *e) { run(e->base); run(e->index); }
+    void visitMember(Member *e) { run(e->base); }
+
+    void visit(Stmt *s)
+    {
+        if (auto e = s->asExp()) {
+            visitExp(e);
+        } else if (auto m = s->asMove()) {
+            visitMove(m);
+        } else if (auto c = s->asCJump()) {
+            visitCJump(c);
+        } else if (auto r = s->asRet()) {
+            visitRet(r);
+        } else if (auto p = s->asPhi()) {
+            visitPhi(p);
+        }
+    }
+
+    void visitExp(Exp *s) { run(s->expr); }
+    void visitMove(Move *s) {
         if (s->source->asConvert())
             return; // this statement got inserted for a phi-node type conversion
 
@@ -2925,12 +2954,11 @@ protected:
 
         run(s->source, s->target->type, !inhibitConversion);
     }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) {
+    void visitCJump(CJump *s) {
         run(s->cond, BoolType);
     }
-    virtual void visitRet(Ret *s) { run(s->expr); }
-    virtual void visitPhi(Phi *s) {
+    void visitRet(Ret *s) { run(s->expr); }
+    void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
         for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
             run(s->incoming[i], ty);
@@ -3504,7 +3532,7 @@ static Expr *clone(Expr *e, IR::Function *function) {
     }
 }
 
-class ExprReplacer: public StmtVisitor, public ExprVisitor
+class ExprReplacer
 {
     DefUses &_defUses;
     IR::Function* _function;
@@ -3535,7 +3563,7 @@ public:
 //        qout << "        " << uses.size() << " uses:"<<endl;
         foreach (Stmt *use, uses) {
 //            qout<<"        ";use->dump(qout);qout<<"\n";
-            use->accept(this);
+            visit(use);
 //            qout<<"     -> ";use->dump(qout);qout<<"\n";
             W += use;
             if (newUses)
@@ -3546,45 +3574,101 @@ public:
         qSwap(_toReplace, toReplace);
     }
 
-protected:
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { check(e->expr); }
-    virtual void visitUnop(Unop *e) { check(e->expr); }
-    virtual void visitBinop(Binop *e) { check(e->left); check(e->right); }
-    virtual void visitCall(Call *e) {
+private:
+    void visit(Expr *e)
+    {
+        if (auto c = e->asConst()) {
+            visitConst(c);
+        } else if (auto s = e->asString()) {
+            visitString(s);
+        } else if (auto r = e->asRegExp()) {
+            visitRegExp(r);
+        } else if (auto n = e->asName()) {
+            visitName(n);
+        } else if (auto t = e->asTemp()) {
+            visitTemp(t);
+        } else if (auto a = e->asArgLocal()) {
+            visitArgLocal(a);
+        } else if (auto c = e->asClosure()) {
+            visitClosure(c);
+        } else if (auto c = e->asConvert()) {
+            visitConvert(c);
+        } else if (auto u = e->asUnop()) {
+            visitUnop(u);
+        } else if (auto b = e->asBinop()) {
+            visitBinop(b);
+        } else if (auto c = e->asCall()) {
+            visitCall(c);
+        } else if (auto n = e->asNew()) {
+            visitNew(n);
+        } else if (auto s = e->asSubscript()) {
+            visitSubscript(s);
+        } else if (auto m = e->asMember()) {
+            visitMember(m);
+        } else {
+            Q_UNREACHABLE();
+        }
+    }
+
+    void visitConst(Const *) {}
+    void visitString(IR::String *) {}
+    void visitRegExp(IR::RegExp *) {}
+    void visitName(Name *) {}
+    void visitTemp(Temp *) {}
+    void visitArgLocal(ArgLocal *) {}
+    void visitClosure(Closure *) {}
+    void visitConvert(Convert *e) { check(e->expr); }
+    void visitUnop(Unop *e) { check(e->expr); }
+    void visitBinop(Binop *e) { check(e->left); check(e->right); }
+    void visitCall(Call *e) {
         check(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             check(it->expr);
     }
-    virtual void visitNew(New *e) {
+    void visitNew(New *e) {
         check(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             check(it->expr);
     }
-    virtual void visitSubscript(Subscript *e) { check(e->base); check(e->index); }
-    virtual void visitMember(Member *e) { check(e->base); }
-    virtual void visitExp(Exp *s) { check(s->expr); }
-    virtual void visitMove(Move *s) { check(s->target); check(s->source); }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { check(s->cond); }
-    virtual void visitRet(Ret *s) { check(s->expr); }
-    virtual void visitPhi(Phi *s) {
+    void visitSubscript(Subscript *e) { check(e->base); check(e->index); }
+    void visitMember(Member *e) { check(e->base); }
+
+    void visit(Stmt *s)
+    {
+        if (auto e = s->asExp()) {
+            visitExp(e);
+        } else if (auto m = s->asMove()) {
+            visitMove(m);
+        } else if (auto j = s->asJump()) {
+            visitJump(j);
+        } else if (auto c = s->asCJump()) {
+            visitCJump(c);
+        } else if (auto r = s->asRet()) {
+            visitRet(r);
+        } else if (auto p = s->asPhi()) {
+            visitPhi(p);
+        } else {
+            Q_UNREACHABLE();
+        }
+    }
+
+    void visitExp(Exp *s) { check(s->expr); }
+    void visitMove(Move *s) { check(s->target); check(s->source); }
+    void visitJump(Jump *) {}
+    void visitCJump(CJump *s) { check(s->cond); }
+    void visitRet(Ret *s) { check(s->expr); }
+    void visitPhi(Phi *s) {
         for (int i = 0, ei = s->incoming.size(); i != ei; ++i)
             check(s->incoming[i]);
     }
 
 private:
     void check(Expr *&e) {
-        if (equals(e, _toReplace))
+        if (equals(e, _toReplace)) {
             e = clone(_replacement, _function);
-        else
-            e->accept(this);
+        } else {
+            visit(e);
+        }
     }
 
     // This only calculates equality for everything needed by constant propagation
@@ -4153,7 +4237,8 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
 }
 
 //### TODO: use DefUses from the optimizer, because it already has all this information
-class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
+class InputOutputCollector
+{
     void setOutput(Temp *out)
     {
         Q_ASSERT(!output);
@@ -4170,48 +4255,33 @@ public:
     void collect(Stmt *s) {
         inputs.resize(0);
         output = 0;
-        s->accept(this);
+        visit(s);
     }
 
-protected:
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *e) {
-        inputs.push_back(e);
-    }
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(Member *e) { e->base->accept(this); }
-    virtual void visitExp(Exp *s) { s->expr->accept(this); }
-    virtual void visitMove(Move *s) {
-        s->source->accept(this);
-        if (Temp *t = s->target->asTemp()) {
-            setOutput(t);
+private:
+    void visit(Expr *e)
+    {
+        if (auto t = e->asTemp()) {
+            inputs.push_back(t);
         } else {
-            s->target->accept(this);
+            EXPR_VISIT_ALL_KINDS(e);
         }
     }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(Phi *) {
-        // Handled separately
+
+    void visit(Stmt *s)
+    {
+        if (auto m = s->asMove()) {
+            visit(m->source);
+            if (Temp *t = m->target->asTemp()) {
+                setOutput(t);
+            } else {
+                visit(m->target);
+            }
+        } else if (s->asPhi()) {
+            // Handled separately
+        } else {
+            STMT_VISIT_ALL_KINDS(s);
+        }
     }
 };
 
@@ -4381,7 +4451,7 @@ void removeUnreachleBlocks(IR::Function *function)
     function->renumberBasicBlocks();
 }
 
-class ConvertArgLocals: protected StmtVisitor, protected ExprVisitor
+class ConvertArgLocals
 {
 public:
     ConvertArgLocals(IR::Function *function)
@@ -4419,10 +4489,13 @@ public:
             }
         }
 
-        for (BasicBlock *bb : function->basicBlocks())
-            if (!bb->isRemoved())
-                for (Stmt *s : bb->statements())
-                    s->accept(this);
+        for (BasicBlock *bb : function->basicBlocks()) {
+            if (!bb->isRemoved()) {
+                for (Stmt *s : bb->statements()) {
+                    visit(s);
+                }
+            }
+        }
 
         if (convertArgs && function->formals.size() > 0)
             function->basicBlock(0)->prependStatements(extraMoves);
@@ -4430,39 +4503,45 @@ public:
         function->locals.clear();
     }
 
-protected:
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { check(e->expr); }
-    virtual void visitUnop(Unop *e) { check(e->expr); }
-    virtual void visitBinop(Binop *e) { check(e->left); check(e->right); }
-    virtual void visitCall(Call *e) {
-        check(e->base);
-        for (ExprList *it = e->args; it; it = it->next)
-            check(it->expr);
-    }
-    virtual void visitNew(New *e) {
-        check(e->base);
-        for (ExprList *it = e->args; it; it = it->next)
-            check(it->expr);
-    }
-    virtual void visitSubscript(Subscript *e) { check(e->base); check(e->index); }
-    virtual void visitMember(Member *e) { check(e->base); }
-    virtual void visitExp(Exp *s) { check(s->expr); }
-    virtual void visitMove(Move *s) { check(s->target); check(s->source); }
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { check(s->cond); }
-    virtual void visitRet(Ret *s) { check(s->expr); }
-    virtual void visitPhi(Phi *) {
-        Q_UNREACHABLE();
+private:
+    void visit(Stmt *s)
+    {
+        if (auto e = s->asExp()) {
+            check(e->expr);
+        } else if (auto m = s->asMove()) {
+            check(m->target); check(m->source);
+        } else if (auto c = s->asCJump()) {
+            check(c->cond);
+        } else if (auto r = s->asRet()) {
+            check(r->expr);
+        }
     }
 
-private:
+    void visit(Expr *e)
+    {
+        if (auto c = e->asConvert()) {
+            check(c->expr);
+        } else if (auto u = e->asUnop()) {
+            check(u->expr);
+        } else if (auto b = e->asBinop()) {
+            check(b->left); check(b->right);
+        } else if (auto c = e->asCall()) {
+            check(c->base);
+            for (ExprList *it = c->args; it; it = it->next) {
+                check(it->expr);
+            }
+        } else if (auto n = e->asNew()) {
+            check(n->base);
+            for (ExprList *it = n->args; it; it = it->next) {
+                check(it->expr);
+            }
+        } else if (auto s = e->asSubscript()) {
+            check(s->base); check(s->index);
+        } else if (auto m = e->asMember()) {
+            check(m->base);
+        }
+    }
+
     void check(Expr *&e) {
         if (ArgLocal *al = e->asArgLocal()) {
             if (al->kind == ArgLocal::Local) {
@@ -4475,7 +4554,7 @@ private:
                 e = t;
             }
         } else {
-            e->accept(this);
+            visit(e);
         }
     }
 
@@ -4498,7 +4577,7 @@ private:
     std::vector<int> tempForLocal;
 };
 
-class CloneBasicBlock: protected IR::StmtVisitor, protected CloneExpr
+class CloneBasicBlock: protected CloneExpr
 {
 public:
     BasicBlock *operator()(IR::BasicBlock *originalBlock)
@@ -4506,38 +4585,37 @@ public:
         block = new BasicBlock(originalBlock->function, 0);
 
         for (Stmt *s : originalBlock->statements()) {
-            s->accept(this);
+            visit(s);
             clonedStmt->location = s->location;
         }
 
         return block;
     }
 
-protected:
-    virtual void visitExp(Exp *stmt)
-    { clonedStmt = block->EXP(clone(stmt->expr)); }
-
-    virtual void visitMove(Move *stmt)
-    { clonedStmt = block->MOVE(clone(stmt->target), clone(stmt->source)); }
-
-    virtual void visitJump(Jump *stmt)
-    { clonedStmt = block->JUMP(stmt->target); }
-
-    virtual void visitCJump(CJump *stmt)
-    { clonedStmt = block->CJUMP(clone(stmt->cond), stmt->iftrue, stmt->iffalse); }
-
-    virtual void visitRet(Ret *stmt)
-    { clonedStmt = block->RET(clone(stmt->expr)); }
-
-    virtual void visitPhi(Phi *stmt)
+private:
+    void visit(Stmt *s)
     {
-        Phi *phi = block->function->NewStmt<Phi>();
-        clonedStmt = phi;
+        if (auto e = s->asExp()) {
+            clonedStmt = block->EXP(clone(e->expr));
+        } else if (auto m = s->asMove()) {
+            clonedStmt = block->MOVE(clone(m->target), clone(m->source));
+        } else if (auto j = s->asJump()) {
+            clonedStmt = block->JUMP(j->target);
+        } else if (auto c = s->asCJump()) {
+            clonedStmt = block->CJUMP(clone(c->cond), c->iftrue, c->iffalse);
+        } else if (auto r = s->asRet()) {
+            clonedStmt = block->RET(clone(r->expr));
+        } else if (auto p = s->asPhi()) {
+            Phi *phi = block->function->NewStmt<Phi>();
+            clonedStmt = phi;
 
-        phi->targetTemp = clone(stmt->targetTemp);
-        foreach (Expr *in, stmt->incoming)
-            phi->incoming.append(clone(in));
-        block->appendStatement(phi);
+            phi->targetTemp = clone(p->targetTemp);
+            foreach (Expr *in, p->incoming)
+                phi->incoming.append(clone(in));
+            block->appendStatement(phi);
+        } else {
+            Q_UNREACHABLE();
+        }
     }
 
 private:
@@ -4769,7 +4847,7 @@ static void verifyNoPointerSharing(IR::Function *function)
     if (!DoVerification)
         return;
 
-    class : public StmtVisitor, public ExprVisitor {
+    class {
     public:
         void operator()(IR::Function *f)
         {
@@ -4777,44 +4855,23 @@ static void verifyNoPointerSharing(IR::Function *function)
                 if (bb->isRemoved())
                     continue;
 
-                for (Stmt *s : bb->statements())
-                    s->accept(this);
+                for (Stmt *s : bb->statements()) {
+                    visit(s);
+                }
             }
         }
 
-    protected:
-        virtual void visitExp(Exp *s) { check(s); s->expr->accept(this); }
-        virtual void visitMove(Move *s) { check(s); s->target->accept(this); s->source->accept(this); }
-        virtual void visitJump(Jump *s) { check(s); }
-        virtual void visitCJump(CJump *s) { check(s); s->cond->accept(this); }
-        virtual void visitRet(Ret *s) { check(s); s->expr->accept(this); }
-        virtual void visitPhi(Phi *s)
+    private:
+        void visit(Stmt *s)
         {
             check(s);
-            s->targetTemp->accept(this);
-            foreach (Expr *e, s->incoming)
-                e->accept(this);
+            STMT_VISIT_ALL_KINDS(s);
         }
 
-        virtual void visitConst(Const *e) { check(e); }
-        virtual void visitString(IR::String *e) { check(e); }
-        virtual void visitRegExp(IR::RegExp *e) { check(e); }
-        virtual void visitName(Name *e) { check(e); }
-        virtual void visitTemp(Temp *e) { check(e); }
-        virtual void visitArgLocal(ArgLocal *e) { check(e); }
-        virtual void visitClosure(Closure *e) { check(e); }
-        virtual void visitConvert(Convert *e) { check(e); e->expr->accept(this); }
-        virtual void visitUnop(Unop *e) { check(e); e->expr->accept(this); }
-        virtual void visitBinop(Binop *e) { check(e); e->left->accept(this); e->right->accept(this); }
-        virtual void visitCall(Call *e) { check(e); e->base->accept(this); check(e->args); }
-        virtual void visitNew(New *e) { check(e); e->base->accept(this); check(e->args); }
-        virtual void visitSubscript(Subscript *e) { check(e); e->base->accept(this); e->index->accept(this); }
-        virtual void visitMember(Member *e) { check(e); e->base->accept(this); }
-
-        void check(ExprList *l)
+        void visit(Expr *e)
         {
-            for (ExprList *it = l; it; it = it->next)
-                check(it->expr);
+            check(e);
+            EXPR_VISIT_ALL_KINDS(e);
         }
 
     private:
@@ -4836,7 +4893,7 @@ static void verifyNoPointerSharing(IR::Function *function)
     V(function);
 }
 
-class RemoveLineNumbers: public SideEffectsChecker, public StmtVisitor
+class RemoveLineNumbers: private SideEffectsChecker
 {
 public:
     static void run(IR::Function *function)
@@ -4854,19 +4911,27 @@ public:
     }
 
 private:
+    ~RemoveLineNumbers() {}
+
     static bool hasSideEffects(Stmt *stmt)
     {
         RemoveLineNumbers checker;
-        stmt->accept(&checker);
+        if (auto e = stmt->asExp()) {
+            checker.visit(e->expr);
+        } else if (auto m = stmt->asMove()) {
+            checker.visit(m->source);
+            if (!checker.seenSideEffects()) {
+                checker.visit(m->target);
+            }
+        } else if (auto c = stmt->asCJump()) {
+            checker.visit(c->cond);
+        } else if (auto r = stmt->asRet()) {
+            checker.visit(r->expr);
+        }
         return checker.seenSideEffects();
     }
 
-    void visitExp(Exp *s) Q_DECL_OVERRIDE { s->expr->accept(this); }
-    void visitMove(Move *s) Q_DECL_OVERRIDE { s->source->accept(this); s->target->accept(this); }
-    void visitJump(Jump *) Q_DECL_OVERRIDE {}
-    void visitCJump(CJump *s) Q_DECL_OVERRIDE { s->cond->accept(this); }
-    void visitRet(Ret *s) Q_DECL_OVERRIDE { s->expr->accept(this); }
-    void visitPhi(Phi *) Q_DECL_OVERRIDE {}
+    void visitTemp(Temp *) Q_DECL_OVERRIDE Q_DECL_FINAL {}
 };
 
 } // anonymous namespace

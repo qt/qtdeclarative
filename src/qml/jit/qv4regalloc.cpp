@@ -87,7 +87,7 @@ public:
     {}
 
 protected:
-    void addStmtNr(Stmt *s)
+    void addStmtNr(Stmt *s) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         addJustifiedNr(intervals->positionForStatement(s));
     }
@@ -115,7 +115,7 @@ public:
     }
 
 protected:
-    void visitTemp(Temp *e)
+    void visitTemp(Temp *e) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         switch (e->kind) {
         case Temp::PhysicalRegister: {
@@ -184,7 +184,7 @@ public:
             _currentBB = bb;
             for (Stmt *s : bb->statements()) {
                 _currentStmt = s;
-                s->accept(this);
+                visit(s);
             }
         }
     }
@@ -809,7 +809,8 @@ using namespace QT_PREPEND_NAMESPACE(QV4::IR);
 using namespace QT_PREPEND_NAMESPACE(QV4);
 
 namespace {
-class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
+class ResolutionPhase
+{
     Q_DISABLE_COPY(ResolutionPhase)
 
     LifeTimeIntervals::Ptr _intervals;
@@ -891,7 +892,7 @@ private:
                     addNewIntervals(usePosition(_currentStmt));
                 else
                     addNewIntervals(defPosition(_currentStmt));
-                _currentStmt->accept(this);
+                visit(_currentStmt);
                 for (Move *load : _loads)
                     newStatements.append(load);
                 if (_currentStmt->asPhi())
@@ -1178,8 +1179,20 @@ private:
         return load;
     }
 
-protected:
-    virtual void visitTemp(Temp *t)
+private:
+    void visit(Expr *e)
+    {
+        switch (e->exprKind) {
+        case Expr::TempExpr:
+            visitTemp(e->asTemp());
+            break;
+        default:
+            EXPR_VISIT_ALL_KINDS(e);
+            break;
+        }
+    }
+
+    void visitTemp(Temp *t)
     {
         if (t->kind != Temp::VirtualRegister)
             return;
@@ -1209,47 +1222,25 @@ protected:
         }
     }
 
-    virtual void visitArgLocal(ArgLocal *) {}
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
-    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(Member *e) { e->base->accept(this); }
-
-    virtual void visitCall(Call *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(New *e) {
-        e->base->accept(this);
-        for (ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitExp(Exp *s) { s->expr->accept(this); }
-
-    virtual void visitMove(Move *s)
+    void visit(Stmt *s)
     {
-        if (Temp *t = s->target->asTemp())
-            maybeGenerateSpill(t);
+        switch (s->stmtKind) {
+        case Stmt::MoveStmt: {
+            auto m = s->asMove();
+            if (Temp *t = m->target->asTemp())
+                maybeGenerateSpill(t);
 
-        s->source->accept(this);
-        s->target->accept(this);
-    }
-
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(Phi *s)
-    {
-        maybeGenerateSpill(s->targetTemp);
+            visit(m->source);
+            visit(m->target);
+        } break;
+        case Stmt::PhiStmt: {
+            auto p = s->asPhi();
+            maybeGenerateSpill(p->targetTemp);
+        } break;
+        default:
+            STMT_VISIT_ALL_KINDS(s);
+            break;
+        }
     }
 };
 } // anonymous namespace

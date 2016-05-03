@@ -354,7 +354,7 @@ void InstructionSelection::run(int functionIndex)
                     lastLine = s->location.startLine;
                 }
             }
-            s->accept(this);
+            visit(s);
         }
     }
 
