@@ -58,8 +58,8 @@ QT_BEGIN_NAMESPACE
     as \l ListView.
 
     SwipeDelegate inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text}, react to \l {AbstractButton::clicked}{clicks}
-    using the AbstractButton API.
+    \l {AbstractButton::text}{text} and react to
+    \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
 
     Information regarding the progress of a swipe, as well as the components
     that should be shown upon swiping, are both available through the
