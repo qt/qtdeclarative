@@ -3744,7 +3744,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
 
 /*!
-    Creates a new QSGTexture object from an existing GL texture \a id and \a size.
+    Creates a new QSGTexture object from an existing OpenGL texture \a id and \a size.
 
     The caller of the function is responsible for deleting the returned texture.
 
@@ -3755,17 +3755,15 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     Use \a options to customize the texture attributes. The TextureUsesAtlas
     option is ignored.
 
-    \warning This function will return 0 if the scenegraph has not yet been
-    initialized.
+    \warning This function will return null if the scenegraph has not yet been
+    initialized or OpenGL is not in use.
 
     \sa sceneGraphInitialized(), QSGTexture
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {
 #ifndef QT_NO_OPENGL
-    Q_D(const QQuickWindow);
-    auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
-    if (openglRenderContext && openglRenderContext->openglContext()) {
+    if (openglContext()) {
         QSGPlainTexture *texture = new QSGPlainTexture();
         texture->setTextureId(id);
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
