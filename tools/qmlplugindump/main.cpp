@@ -972,6 +972,7 @@ int main(int argc, char *argv[])
     if (!requireWindowManager)
         qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
 
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
     QGuiApplication app(argc, argv);
     const QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
