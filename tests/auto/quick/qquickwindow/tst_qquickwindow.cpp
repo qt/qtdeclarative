@@ -346,6 +346,7 @@ private slots:
     void crashWhenHoverItemDeleted();
 
     void unloadSubWindow();
+    void changeVisibilityInCompleted();
 
     void qobjectEventFilter_touch();
     void qobjectEventFilter_key();
@@ -1845,6 +1846,28 @@ void tst_qquickwindow::unloadSubWindow()
     QQuickLoader *loader = window->property("loader1").value<QQuickLoader*>();
     loader->setActive(false);
     QTRY_VERIFY(transient.isNull() || !transient->isVisible());
+}
+
+// QTBUG-52573
+void tst_qquickwindow::changeVisibilityInCompleted()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("changeVisibilityInCompleted.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+    QTest::qWaitForWindowExposed(window.data());
+    QPointer<QQuickWindow> winVisible;
+    QTRY_VERIFY(winVisible = window->property("winVisible").value<QQuickWindow*>());
+    QPointer<QQuickWindow> winVisibility;
+    QTRY_VERIFY(winVisibility = window->property("winVisibility").value<QQuickWindow*>());
+    QTest::qWaitForWindowExposed(winVisible);
+    QTest::qWaitForWindowExposed(winVisibility);
+
+    QVERIFY(winVisible->isVisible());
+    QCOMPARE(winVisibility->visibility(), QWindow::Windowed);
 }
 
 // QTBUG-32004

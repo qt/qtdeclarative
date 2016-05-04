@@ -71,7 +71,6 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 
     ReturnedValue evalCall(CallData *callData, bool directCall) const;
 
-    using Object::construct;
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
