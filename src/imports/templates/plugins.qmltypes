@@ -18,9 +18,7 @@ Module {
         Property { name: "down"; type: "bool" }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
         Property { name: "checked"; type: "bool" }
-        Property { name: "highlighted"; type: "bool" }
         Property { name: "autoExclusive"; type: "bool" }
-        Property { name: "autoRepeat"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Signal { name: "pressed" }
         Signal { name: "released" }
@@ -72,6 +70,8 @@ Module {
         exports: ["QtQuick.Templates/Button 2.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "checkable"; type: "bool" }
+        Property { name: "autoRepeat"; type: "bool" }
+        Property { name: "highlighted"; type: "bool" }
     }
     Component {
         name: "QQuickCheckBox"
@@ -436,6 +436,7 @@ Module {
         prototype: "QQuickAbstractButton"
         exports: ["QtQuick.Templates/ItemDelegate 2.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "highlighted"; type: "bool" }
     }
     Component {
         name: "QQuickLabel"
@@ -486,6 +487,7 @@ Module {
         exports: ["QtQuick.Templates/MenuItem 2.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "checkable"; type: "bool" }
+        Property { name: "highlighted"; type: "bool" }
         Signal { name: "triggered" }
     }
     Component {
@@ -503,6 +505,7 @@ Module {
         prototype: "QQuickControl"
         exports: ["QtQuick.Templates/Page 2.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "title"; type: "string" }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
@@ -1088,23 +1091,23 @@ Module {
         }
         Signal {
             name: "styleChanged"
-            Parameter { name: "style"; type: "TextStyle" }
+            Parameter { name: "style"; type: "QQuickText::TextStyle" }
         }
         Signal {
             name: "horizontalAlignmentChanged"
-            Parameter { name: "alignment"; type: "HAlignment" }
+            Parameter { name: "alignment"; type: "QQuickText::HAlignment" }
         }
         Signal {
             name: "verticalAlignmentChanged"
-            Parameter { name: "alignment"; type: "VAlignment" }
+            Parameter { name: "alignment"; type: "QQuickText::VAlignment" }
         }
         Signal {
             name: "textFormatChanged"
-            Parameter { name: "textFormat"; type: "TextFormat" }
+            Parameter { name: "textFormat"; type: "QQuickText::TextFormat" }
         }
         Signal {
             name: "elideModeChanged"
-            Parameter { name: "mode"; type: "TextElideMode" }
+            Parameter { name: "mode"; type: "QQuickText::TextElideMode" }
         }
         Signal { name: "contentSizeChanged" }
         Signal {
@@ -1139,16 +1142,24 @@ Module {
         prototype: "QQuickTextEdit"
         exports: ["QtQuick.Templates/TextArea 2.0"]
         exportMetaObjectRevisions: [0]
+        attachedType: "QQuickTextAreaAttached"
         Property { name: "font"; type: "QFont" }
         Property { name: "implicitWidth"; type: "double" }
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholderText"; type: "string" }
         Property { name: "focusReason"; type: "Qt::FocusReason" }
+        Signal { name: "implicitWidthChanged3" }
+        Signal { name: "implicitHeightChanged3" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
         }
+    }
+    Component {
+        name: "QQuickTextAreaAttached"
+        prototype: "QObject"
+        Property { name: "flickable"; type: "QQuickTextArea"; isPointer: true }
     }
     Component {
         name: "QQuickTextEdit"
@@ -1426,6 +1437,8 @@ Module {
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholderText"; type: "string" }
         Property { name: "focusReason"; type: "Qt::FocusReason" }
+        Signal { name: "implicitWidthChanged3" }
+        Signal { name: "implicitHeightChanged3" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1544,11 +1557,11 @@ Module {
         }
         Signal {
             name: "horizontalAlignmentChanged"
-            Parameter { name: "alignment"; type: "HAlignment" }
+            Parameter { name: "alignment"; type: "QQuickTextInput::HAlignment" }
         }
         Signal {
             name: "verticalAlignmentChanged"
-            Parameter { name: "alignment"; type: "VAlignment" }
+            Parameter { name: "alignment"; type: "QQuickTextInput::VAlignment" }
         }
         Signal {
             name: "readOnlyChanged"
@@ -1568,7 +1581,7 @@ Module {
         }
         Signal {
             name: "echoModeChanged"
-            Parameter { name: "echoMode"; type: "EchoMode" }
+            Parameter { name: "echoMode"; type: "QQuickTextInput::EchoMode" }
         }
         Signal {
             name: "passwordMaskDelayChanged"
@@ -1590,7 +1603,7 @@ Module {
         }
         Signal {
             name: "mouseSelectionModeChanged"
-            Parameter { name: "mode"; type: "SelectionMode" }
+            Parameter { name: "mode"; type: "QQuickTextInput::SelectionMode" }
         }
         Signal { name: "contentSizeChanged" }
         Signal { name: "paddingChanged"; revision: 6 }
