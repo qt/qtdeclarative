@@ -78,6 +78,7 @@
 # include <private/qopenglvertexarrayobject_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
+#include <qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -3163,7 +3164,8 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 /*!
     Returns the opengl context used for rendering.
 
-    If the scene graph is not ready, this function will return 0.
+    If the scene graph is not ready, or the scene graph is not using OpenGL,
+    this function will return null.
 
     \sa sceneGraphInitialized(), sceneGraphInvalidated()
  */
@@ -3172,17 +3174,15 @@ QOpenGLContext *QQuickWindow::openglContext() const
 {
 #ifndef QT_NO_OPENGL
     Q_D(const QQuickWindow);
-    if (d->context) {
-        auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
-        return openglRenderContext->openglContext();
-    } else {
-        return nullptr;
+    if (d->context && d->context->isValid()) {
+        QSGRendererInterface *rif = d->context->sceneGraphContext()->rendererInterface(d->context);
+        if (rif && rif->graphicsAPI() == QSGRendererInterface::OpenGL) {
+            auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
+            return openglRenderContext->openglContext();
+        }
     }
-
-    //return d->context ? d->context->openglContext() : 0;
-#else
-    return nullptr;
 #endif
+    return nullptr;
 }
 
 /*!
