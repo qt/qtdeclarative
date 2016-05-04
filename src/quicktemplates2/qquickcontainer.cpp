@@ -85,12 +85,14 @@ void QQuickContainerPrivate::cleanup()
             QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder);
     }
 
-    QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
-    if (focusItem && window)
-        QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+    if (contentItem) {
+        QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
+        if (focusItem && window)
+            QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
 
-    q->contentItemChange(nullptr, contentItem);
-    delete contentItem;
+        q->contentItemChange(nullptr, contentItem);
+        delete contentItem;
+    }
 
     QObject::disconnect(contentModel, &QQmlObjectModel::countChanged, q, &QQuickContainer::countChanged);
     QObject::disconnect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
