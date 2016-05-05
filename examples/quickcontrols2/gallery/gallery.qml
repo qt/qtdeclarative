@@ -185,7 +185,6 @@ ApplicationWindow {
             }
 
             Label {
-                color: "#26282a"
                 text: "Qt Quick Controls 2 provides a set of controls that can be used to build complete interfaces in Qt Quick."
                 anchors.margins: 20
                 anchors.top: logo.bottom
