@@ -1042,7 +1042,7 @@ static QColor lighterShade(const QColor &color, qreal amount)
     return hsl.convertTo(color.spec());
 }
 
-QColor darkerShade(const QColor &color, qreal amount)
+static QColor darkerShade(const QColor &color, qreal amount)
 {
     QColor hsl = color.toHsl();
     hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() - amount, 1.0), color.alphaF());
