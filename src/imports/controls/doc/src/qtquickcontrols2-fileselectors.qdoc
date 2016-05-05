@@ -130,7 +130,7 @@
 
     \note It is recommended to use \l QQmlApplicationEngine, which internally
     creates a \l QQmlFileSelector instance. This is all that is needed to take
-    QML file selectors in use.
+    QML file selectors into use.
 
     \section1 Related Information
     \list
