@@ -39,7 +39,6 @@ import QtQuick.Controls 2.0
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Material.impl 2.0
-import QtGraphicalEffects 1.0
 
 T.Menu {
     id: control
