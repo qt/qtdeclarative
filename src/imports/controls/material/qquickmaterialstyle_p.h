@@ -83,7 +83,6 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonHoverColor READ highlightedButtonHoverColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonPressColor READ highlightedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor flatButtonFocusColor READ flatButtonFocusColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateColor READ swipeDelegateColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateHoverColor READ swipeDelegateHoverColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegatePressColor READ swipeDelegatePressColor NOTIFY paletteChanged FINAL)
@@ -211,7 +210,6 @@ public:
     QColor highlightedButtonHoverColor() const;
     QColor highlightedButtonPressColor() const;
     QColor highlightedButtonDisabledColor() const;
-    QColor flatButtonFocusColor() const;
     QColor swipeDelegateColor() const;
     QColor swipeDelegateHoverColor() const;
     QColor swipeDelegatePressColor() const;

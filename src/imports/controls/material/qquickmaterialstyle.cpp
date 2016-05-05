@@ -861,9 +861,16 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hov
         }
     }
 
-    if (color == Qt::transparent && pressed) {
-        color = QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight
-                                                  : flatButtonPressColorDark);
+    if (color == Qt::transparent) {
+        if (pressed) {
+            return QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight
+                                                     : flatButtonPressColorDark);
+        } else if (hover) {
+            return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight
+                                                     : flatButtonFocusColorDark);
+        } else {
+            return color;
+        }
     }
 
     if (pressed || hover) {
@@ -912,11 +919,6 @@ QColor QQuickMaterialStyle::highlightedButtonHoverColor() const
 QColor QQuickMaterialStyle::highlightedButtonPressColor() const
 {
     return buttonColor(true, true, false);
-}
-
-QColor QQuickMaterialStyle::flatButtonFocusColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark);
 }
 
 QColor QQuickMaterialStyle::swipeDelegateColor() const
