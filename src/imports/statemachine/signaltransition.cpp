@@ -78,8 +78,9 @@ bool SignalTransition::eventTest(QEvent *event)
     // Set arguments as context properties
     int count = e->arguments().count();
     QMetaMethod metaMethod = e->sender()->metaObject()->method(e->signalIndex());
+    const auto parameterNames = metaMethod.parameterNames();
     for (int i = 0; i < count; i++)
-        context.setContextProperty(metaMethod.parameterNames()[i], QVariant::fromValue(e->arguments().at(i)));
+        context.setContextProperty(parameterNames[i], QVariant::fromValue(e->arguments().at(i)));
 
     QQmlExpression expr(m_guard, &context, this);
     QVariant result = expr.evaluate();
