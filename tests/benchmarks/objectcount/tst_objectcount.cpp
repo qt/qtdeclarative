@@ -189,7 +189,7 @@ void tst_ObjectCount::material()
 void tst_ObjectCount::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect");
 }
 
 void tst_ObjectCount::universal()
