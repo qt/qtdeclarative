@@ -255,6 +255,7 @@ private:
     QColor backgroundColor(Shade shade) const;
     QColor accentColor(Shade shade) const;
     QColor buttonColor(bool highlighted, bool pressed, bool hover) const;
+    Shade themeShade() const;
 
     bool m_explicitTheme;
     bool m_explicitPrimary;

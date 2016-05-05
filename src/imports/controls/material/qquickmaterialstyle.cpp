@@ -767,8 +767,8 @@ QColor QQuickMaterialStyle::primaryColor() const
 QColor QQuickMaterialStyle::accentColor(Shade shade) const
 {
     if (m_customAccent)
-        return shade == Shade500 ? QColor::fromRgba(m_accent)
-                                 : this->shade(QColor::fromRgba(m_accent), shade);
+        return shade == themeShade() ? QColor::fromRgba(m_accent)
+                                     : this->shade(QColor::fromRgba(m_accent), shade);
     if (m_accent > BlueGrey)
         return QColor();
     return colors[m_accent][shade];
@@ -776,7 +776,7 @@ QColor QQuickMaterialStyle::accentColor(Shade shade) const
 
 QColor QQuickMaterialStyle::accentColor() const
 {
-    return accentColor(m_theme == Light ? Shade500 : Shade200);
+    return accentColor(themeShade());
 }
 
 QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
@@ -784,8 +784,8 @@ QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
     if (!m_hasBackground)
         return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
     if (m_customBackground)
-        return shade == Shade500 ? QColor::fromRgba(m_background)
-                                 : this->shade(QColor::fromRgba(m_background), shade);
+        return shade == themeShade() ? QColor::fromRgba(m_background)
+                                     : this->shade(QColor::fromRgba(m_background), shade);
     if (m_background > BlueGrey)
         return QColor();
     return colors[m_background][shade];
@@ -793,7 +793,7 @@ QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
 
 QColor QQuickMaterialStyle::backgroundColor() const
 {
-    return backgroundColor(Shade500);
+    return backgroundColor(themeShade());
 }
 
 QColor QQuickMaterialStyle::primaryTextColor() const
@@ -843,8 +843,8 @@ QColor QQuickMaterialStyle::dividerColor() const
 
 QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hover) const
 {
-    Shade shade = m_theme == Light ? pressed ? Shade700 : Shade500
-                                   : pressed ? Shade100 : Shade200;
+    Shade shade = pressed ? (m_theme == Light ? Shade700 : Shade100)
+                          : themeShade();
 
     QColor color = Qt::transparent;
 
@@ -963,7 +963,7 @@ QColor QQuickMaterialStyle::switchUncheckedTrackColor() const
 
 QColor QQuickMaterialStyle::switchCheckedTrackColor() const
 {
-    QColor trackColor = m_theme == Light ? accentColor() : shade(accentColor(), Shade200);
+    QColor trackColor(accentColor());
     trackColor.setAlphaF(0.5);
     return trackColor;
 }
@@ -1050,6 +1050,11 @@ static QColor darkerShade(const QColor &color, qreal amount)
     return hsl.convertTo(color.spec());
 }
 
+QQuickMaterialStyle::Shade QQuickMaterialStyle::themeShade() const
+{
+    return m_theme == Light ? Shade500 : Shade200;
+}
+
 /*
  * The following lightness values originate from the Material Design Color Generator project.
  *
@@ -1075,6 +1080,8 @@ static QColor darkerShade(const QColor &color, qreal amount)
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+// Returns the same color, if shade == themeShade()
 QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
 {
     switch (shade) {
