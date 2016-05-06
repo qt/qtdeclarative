@@ -255,10 +255,8 @@ QT_BEGIN_NAMESPACE
     \l{ECMA-262}, Section 15.1.
 */
 QJSEngine::QJSEngine()
-    : QObject(*new QJSEnginePrivate, 0)
-    , d(new QV8Engine(this))
+    : QJSEngine(nullptr)
 {
-    QJSEnginePrivate::addToDebugServer(this);
 }
 
 /*!

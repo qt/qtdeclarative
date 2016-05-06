@@ -227,9 +227,8 @@ QQmlFile::QQmlFile(QQmlEngine *e, const QUrl &url)
 }
 
 QQmlFile::QQmlFile(QQmlEngine *e, const QString &url)
-: d(new QQmlFilePrivate)
+    : QQmlFile(e, QUrl(url))
 {
-    load(e, url);
 }
 
 QQmlFile::~QQmlFile()

@@ -249,11 +249,8 @@ QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e)
 Creates a new QQmlPropertyCache of \a metaObject.
 */
 QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e, const QMetaObject *metaObject)
-    : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
-      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0)
+    : QQmlPropertyCache(e)
 {
-    Q_ASSERT(engine);
     Q_ASSERT(metaObject);
 
     update(metaObject);
