@@ -2815,9 +2815,19 @@ void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
 
 QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)
 {
-    if (inFrame) {
+    // Readback due to QQuickWindow::grabWindow() happens outside
+    // begin-endFrame, but QQuickItemGrabResult leads to rendering a layer
+    // without a real frame afterwards and triggering readback. This has to be
+    // supported as well.
+    if (inFrame && (!activeLayers || currentLayerDepth)) {
         qWarning("%s: Cannot be called while frame preparation is active", __FUNCTION__);
         return QImage();
+    }
+
+    // Due to the above we insert a fake "real" frame when a layer was just rendered into.
+    if (inFrame) {
+        beginFrame();
+        endFrame();
     }
 
     frameCommandList->Reset(frameCommandAllocator[frameIndex % frameInFlightCount].Get(), nullptr);
@@ -2913,10 +2923,19 @@ QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)
         qWarning("Mapping the readback buffer failed");
         return QImage();
     }
-    for (UINT y = 0; y < rtDesc.Height; ++y) {
-        quint8 *dst = img.scanLine(y);
-        memcpy(dst, p, rtDesc.Width * 4);
-        p += textureLayout.Footprint.RowPitch;
+    const int bpp = 4; // ###
+    if (id == 0) {
+        for (UINT y = 0; y < rtDesc.Height; ++y) {
+            quint8 *dst = img.scanLine(y);
+            memcpy(dst, p, rtDesc.Width * bpp);
+            p += textureLayout.Footprint.RowPitch;
+        }
+    } else {
+        for (int y = rtDesc.Height - 1; y >= 0; --y) {
+            quint8 *dst = img.scanLine(y);
+            memcpy(dst, p, rtDesc.Width * bpp);
+            p += textureLayout.Footprint.RowPitch;
+        }
     }
     readbackBuf->Unmap(0, nullptr);
 

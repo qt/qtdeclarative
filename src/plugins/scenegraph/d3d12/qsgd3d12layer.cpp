@@ -186,8 +186,7 @@ void QSGD3D12Layer::scheduleUpdate()
 
 QImage QSGD3D12Layer::toImage() const
 {
-    // ### figure out something for item grab support
-    return QImage();
+    return m_rc->engine()->executeAndWaitReadbackRenderTarget(m_rt);
 }
 
 void QSGD3D12Layer::setLive(bool live)
