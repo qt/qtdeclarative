@@ -1647,10 +1647,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
             resolvedPath += Slash;
 
         foreach (const QString &suffix, suffixes) {
-            QString pluginFileName = prefix;
-
-            pluginFileName += baseName;
-            pluginFileName += suffix;
+            QString pluginFileName = prefix + baseName + suffix;
 
             QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + pluginFileName);
             if (!absolutePath.isEmpty())
