@@ -590,8 +590,7 @@ bool JsonParser::parseString(QString *string)
                 return false;
             }
             if (QChar::requiresSurrogates(ch)) {
-                *string += QChar(QChar::highSurrogate(ch));
-                *string += QChar(QChar::lowSurrogate(ch));
+                *string += QChar(QChar::highSurrogate(ch)) + QChar(QChar::lowSurrogate(ch));
             } else {
                 *string += QChar(ch);
             }
@@ -672,8 +671,8 @@ static QString quote(const QString &str)
         default:
             if (c.unicode() <= 0x1f) {
                 product += QStringLiteral("\\u00");
-                product += c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0');
-                product += QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
+                product += (c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0')) +
+                        QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
             } else {
                 product += c;
             }

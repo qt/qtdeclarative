@@ -900,10 +900,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
              property->aliasIdValueIndex = registerString(alias.first());
 
              QString propertyValue = alias.value(1);
-             if (alias.count() == 3) {
-                 propertyValue += QLatin1Char('.');
-                 propertyValue += alias.at(2);
-             }
+             if (alias.count() == 3)
+                 propertyValue += QLatin1Char('.') + alias.at(2);
              property->aliasPropertyValueIndex = registerString(propertyValue);
         }
         QQmlJS::AST::SourceLocation errorLocation;
@@ -1201,8 +1199,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             if (import->qualifierIndex != emptyStringIndex
                 && stringAt(import->qualifierIndex) == currentName) {
                 qualifiedIdElement = qualifiedIdElement->next;
-                currentName += QLatin1Char('.');
-                currentName += qualifiedIdElement->name;
+                currentName += QLatin1Char('.') + qualifiedIdElement->name;
 
                 if (!qualifiedIdElement->name.unicode()->isUpper())
                     COMPILE_EXCEPTION(qualifiedIdElement->firstSourceLocation(), tr("Expected type name"));
