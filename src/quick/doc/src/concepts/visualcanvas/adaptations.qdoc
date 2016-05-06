@@ -1,0 +1,86 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title Scene Graph Adaptations
+\page qtquick-visualcanvas-adaptations.html
+
+\section1 Scene Graph Adaptations in Qt Quick
+
+Originally Qt Quick only had one available renderer for parsing the
+scene graph and rendering the results to a render target.  This renderer
+is now the default OpenGL Renderer which supports rendering either using
+the OpenGL ES 2.0 or OpenGL 2.0 APIs.  The Qt Quick APIs are designed
+with the assumption that these two APIs are always available.  It is
+however possible now to use other graphics API's to render Qt Quick
+scenes using the scene graph APIs.
+
+\section1 OpenGL ES 2.0 and OpenGL 2.0 Adaptation
+
+The default adaptation capable of providing the full Qt Quick 2 feature
+set is the OpenGL adaptation.  All of the details of the OpenGL
+adpatation can are available here
+\l{qtquick-visualcanvas-scenegraph-renderer.html}{OpenGL Adaptation}
+
+\section1 Software Adaptation
+
+The Software adaptation is an alternative renderer for \l {Qt Quick} 2 that uses the Raster
+paint engine to render the contents of the scene graph instead of OpenGL.
+As a result of not using OpenGL to render the scene graph, some features
+and optimizations are no longer available. Most Qt Quick 2 applications
+will run without modification though any attempts to use unsupported
+features will be ignored. By using the Software adpatation it is possible to run Qt
+Quick 2 applications on hardware and platforms that do not have OpenGL
+support.
+
+The Software adaptation was previously known as the Qt Quick 2D Renderer.
+
+\section2 Shader Effects
+ShaderEffect components in QtQuick 2 can not be rendered by the Software adptation.
+
+\section2 Qt Graphical Effects Module
+\l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use
+graphical effects from this module, then you should not hide the source
+item so that the original item can still be rendered.
+
+\section2 Particle Effects
+It is not possible to render particle effects with the Software adaptation. Whenever
+possible, remove particles completely from the scene. Otherwise they will still
+require some processing, even though they are not visible.
+
+\section2 Sprites
+The Sprite item depends on OpenGL functions and will not be visible.
+
+\section2 Rendering Text
+The text rendering with the Software adaptation is based on software
+rasterization and does not respond as well to transformations such as scaling
+as when using OpenGL. The quality is similar to choosing \l [QML] {Text::renderType}
+{Text.NativeRendering} with \l [QML] {Text} items.
+
+\section1 Direct3D 12 (experimental)
+
+*/
