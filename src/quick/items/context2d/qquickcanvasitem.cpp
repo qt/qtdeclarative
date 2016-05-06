@@ -772,11 +772,9 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     d->nodeTexture = texture;
     node->setTexture(texture);
-    const QSize ts = texture->textureSize();
-    const QRectF srcRect(0, 0, ts.width(), ts.height());
-    QSGGeometry::updateTexturedRectGeometry(node->geometry(),
-                                            QRectF(QPoint(0, 0), d->canvasWindow.size()),
-                                            texture->convertToNormalizedSourceRect(srcRect));
+    node->setTargetRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
+    node->setInnerTargetRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
+    node->update();
 
     if (d->textureProvider) {
         d->textureProvider->tex = d->nodeTexture;
