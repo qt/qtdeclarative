@@ -44,7 +44,6 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
 
-#include <QtCore/qstringbuilder.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
 
@@ -305,7 +304,7 @@ void QQuickStateGroup::componentComplete()
     for (int ii = 0; ii < d->states.count(); ++ii) {
         QQuickState *state = d->states.at(ii);
         if (!state->isNamed())
-            state->setName(QLatin1String("anonymousState") % QString::number(++d->unnamedCount));
+            state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
     }
 
     if (d->updateAutoState()) {

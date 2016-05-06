@@ -56,7 +56,6 @@
 
 #include <private/qv4value_p.h>
 
-#include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
 
