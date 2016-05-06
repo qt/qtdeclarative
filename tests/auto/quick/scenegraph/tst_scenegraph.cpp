@@ -185,12 +185,17 @@ QImage showAndGrab(const QString &file, int w, int h)
 // Assumes the images are opaque white...
 bool containsSomethingOtherThanWhite(const QImage &image)
 {
-    Q_ASSERT(image.format() == QImage::Format_ARGB32_Premultiplied
-             || image.format() == QImage::Format_RGB32);
-    int w = image.width();
-    int h = image.height();
+    QImage img;
+    if (image.format() != QImage::Format_ARGB32_Premultiplied
+             || image.format() != QImage::Format_RGB32)
+        img = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    else
+        img = image;
+
+    int w = img.width();
+    int h = img.height();
     for (int y=0; y<h; ++y) {
-        const uint *pixels = (const uint *) image.constScanLine(y);
+        const uint *pixels = (const uint *) img.constScanLine(y);
         for (int x=0; x<w; ++x)
             if (pixels[x] != 0xffffffff)
                 return true;
@@ -431,6 +436,13 @@ void tst_SceneGraph::render_data()
 
 void tst_SceneGraph::render()
 {
+    QQuickView dummy;
+    dummy.show();
+    QTest::qWaitForWindowExposed(&dummy);
+    if (dummy.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+        QSKIP("Skipping complex rendering tests due to not running with OpenGL");
+    dummy.hide();
+
     QFETCH(QString, file);
     QFETCH(QList<Sample>, baseStage);
     QFETCH(QList<Sample>, finalStage);
@@ -494,6 +506,9 @@ void tst_SceneGraph::hideWithOtherContext()
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
 
+        if (view.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+            QSKIP("Skipping OpenGL context test due to not running with OpenGL");
+
         renderingOnMainThread = view.openglContext()->thread() == QGuiApplication::instance()->thread();
 
         // Make the local context current on the local window...
@@ -532,6 +547,9 @@ void tst_SceneGraph::createTextureFromImage()
     QFETCH(bool, expectedAlpha);
 
     QQuickView view;
+    view.show();
+    QTest::qWaitForWindowExposed(&view);
+
     QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
 }

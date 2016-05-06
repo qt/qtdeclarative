@@ -1197,7 +1197,7 @@ void QSGD3D12EnginePrivate::beginFrame()
             b.d[currentPFrameIndex].dirty.clear();
     }
 
-    if (frameIndex >= frameInFlightCount) {
+    if (frameIndex >= frameInFlightCount - 1) {
         // Now sync the buffer changes from the previous, potentially still in
         // flight, frames. This is done by taking the ranges dirtied in those
         // frames and adding them to the global CPU-side buffer's dirty list,
@@ -1225,7 +1225,9 @@ void QSGD3D12EnginePrivate::beginFrame()
                 }
             }
         }
+    }
 
+    if (frameIndex >= frameInFlightCount) {
         // Do some texture upload bookkeeping.
         const quint64 finishedFrameIndex = frameIndex - frameInFlightCount; // we know since we just blocked for this
         // pfd conveniently refers to the same slot that was used by that frame
