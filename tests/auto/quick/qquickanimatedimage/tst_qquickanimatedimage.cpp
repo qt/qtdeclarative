@@ -60,6 +60,7 @@ private slots:
     void remote_data();
     void sourceSize();
     void sourceSizeChanges();
+    void sourceSizeChanges_intermediate();
     void sourceSizeReadOnly();
     void invalidSource();
     void qtbug_16520();
@@ -369,6 +370,28 @@ void tst_qquickanimatedimage::sourceSizeChanges()
 
     delete anim;
 }
+
+void tst_qquickanimatedimage::sourceSizeChanges_intermediate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nAnimatedImage { readonly property int testWidth: status === AnimatedImage.Ready ? sourceSize.width : -1; source: srcImage }", QUrl::fromLocalFile(""));
+    QTRY_VERIFY(component.isReady());
+    QQmlContext *ctxt = engine.rootContext();
+    ctxt->setContextProperty("srcImage", "");
+
+    QScopedPointer<QQuickAnimatedImage> anim(qobject_cast<QQuickAnimatedImage*>(component.create()));
+    QVERIFY(anim != 0);
+
+    ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
+    QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
+    QTRY_COMPARE(anim->property("testWidth").toInt(), anim->sourceSize().width());
+
+    ctxt->setContextProperty("srcImage", testFileUrl("hearts_copy.gif"));
+    QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
+    QTRY_COMPARE(anim->property("testWidth").toInt(), anim->sourceSize().width());
+}
+
 
 void tst_qquickanimatedimage::qtbug_16520()
 {
