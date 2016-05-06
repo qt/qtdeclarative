@@ -1630,7 +1630,7 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::EnterKey::type
+    \qmlattachedproperty enumeration QtQuick::EnterKey::type
 
     Holds the type of the Enter key.
 

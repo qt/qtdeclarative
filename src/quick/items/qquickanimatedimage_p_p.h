@@ -66,7 +66,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), preset_currentframe(0), _movie(0), reply(0), redirectCount(0), oldPlaying(false)
+      : playing(true), paused(false), preset_currentframe(0), _movie(0), reply(0), redirectCount(0), oldPlaying(false), currentSourceSize(0, 0)
     {
     }
 
@@ -80,6 +80,7 @@ public:
     int redirectCount;
     bool oldPlaying;
     QMap<int, QQuickPixmap *> frameMap;
+    QSize currentSourceSize;
 };
 
 QT_END_NAMESPACE

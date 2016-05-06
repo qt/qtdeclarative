@@ -300,8 +300,9 @@ void QQuickAnimatedImage::load()
         d->status = Null;
         emit statusChanged(d->status);
 
-        if (sourceSize() != d->oldSourceSize) {
-            d->oldSourceSize = sourceSize();
+        d->currentSourceSize = QSize(0, 0);
+        if (d->currentSourceSize != d->oldSourceSize) {
+            d->oldSourceSize = d->currentSourceSize;
             emit sourceSizeChanged();
         }
         if (isPlaying() != d->oldPlaying)
@@ -372,8 +373,9 @@ void QQuickAnimatedImage::movieRequestFinished()
         d->status = Error;
         emit statusChanged(d->status);
 
-        if (sourceSize() != d->oldSourceSize) {
-            d->oldSourceSize = sourceSize();
+        d->currentSourceSize = QSize(0, 0);
+        if (d->currentSourceSize != d->oldSourceSize) {
+            d->oldSourceSize = d->currentSourceSize;
             emit sourceSizeChanged();
         }
         if (isPlaying() != d->oldPlaying)
@@ -410,8 +412,14 @@ void QQuickAnimatedImage::movieRequestFinished()
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();
-    if (sourceSize() != d->oldSourceSize) {
-        d->oldSourceSize = sourceSize();
+
+    if (d->_movie)
+        d->currentSourceSize = d->_movie->currentPixmap().size();
+    else
+        d->currentSourceSize = QSize(0, 0);
+
+    if (d->currentSourceSize != d->oldSourceSize) {
+        d->oldSourceSize = d->currentSourceSize;
         emit sourceSizeChanged();
     }
 }
@@ -464,9 +472,7 @@ void QQuickAnimatedImage::onCacheChanged()
 QSize QQuickAnimatedImage::sourceSize()
 {
     Q_D(QQuickAnimatedImage);
-    if (!d->_movie)
-        return QSize(0, 0);
-    return QSize(d->_movie->currentPixmap().size());
+    return d->currentSourceSize;
 }
 
 void QQuickAnimatedImage::componentComplete()
