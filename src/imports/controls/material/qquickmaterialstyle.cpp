@@ -711,6 +711,7 @@ void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool h
     m_background = background;
     propagateBackground();
     emit backgroundChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagateBackground()
