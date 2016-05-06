@@ -51,8 +51,8 @@ T.ComboBox {
 
     spacing: 8
     padding: 6
-    leftPadding: 12
-    rightPadding: 12
+    leftPadding: padding + 6
+    rightPadding: padding + 6
 
     opacity: enabled ? 1 : 0.3
 

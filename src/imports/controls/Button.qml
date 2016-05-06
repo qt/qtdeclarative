@@ -47,8 +47,8 @@ T.Button {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
-    leftPadding: 8
-    rightPadding: 8
+    leftPadding: padding + 2
+    rightPadding: padding + 2
 
     //! [contentItem]
     contentItem: Text {

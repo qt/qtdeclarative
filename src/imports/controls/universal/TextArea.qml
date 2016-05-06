@@ -49,10 +49,10 @@ T.TextArea {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     // TextControlThemePadding + 2 (border)
-    topPadding: 5
-    leftPadding: 12
-    rightPadding: 8
-    bottomPadding: 7
+    padding: 12
+    topPadding: padding - 7
+    rightPadding: padding - 4
+    bottomPadding: padding - 5
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 

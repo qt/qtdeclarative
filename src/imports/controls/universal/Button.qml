@@ -47,10 +47,9 @@ T.Button {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    topPadding: 4
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 4
+    padding: 8
+    topPadding: padding - 4
+    bottomPadding: padding - 4
 
     property bool useSystemFocusVisuals: true
 

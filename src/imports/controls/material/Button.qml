@@ -50,8 +50,8 @@ T.Button {
 
     // external vertical padding is 6 (to increase touch area)
     padding: 12
-    leftPadding: 8
-    rightPadding: 8
+    leftPadding: padding - 4
+    rightPadding: padding - 4
 
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
                              : control.down ? 8 : 2

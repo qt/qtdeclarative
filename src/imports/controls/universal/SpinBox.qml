@@ -52,10 +52,11 @@ T.SpinBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     // TextControlThemePadding + 2 (border)
-    topPadding: 5
-    bottomPadding: 7
-    leftPadding: 12 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
-    rightPadding: 8 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    padding: 12
+    topPadding: padding - 7
+    leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
+    rightPadding: padding - 4 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    bottomPadding: padding - 5
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 

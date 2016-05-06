@@ -50,10 +50,9 @@ T.ToolTip {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     margins: 8
-    topPadding: 5
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 7
+    padding: 8
+    topPadding: padding - 3
+    bottomPadding: padding - 1
 
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 

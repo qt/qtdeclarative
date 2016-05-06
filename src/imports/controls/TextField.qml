@@ -46,7 +46,7 @@ T.TextField {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
-    leftPadding: 10
+    leftPadding: padding + 4
 
     opacity: enabled ? 1 : 0.2
     color: "#353637"
