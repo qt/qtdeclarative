@@ -133,7 +133,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , allowHorizontalFlip(false)
     , x(0)
     , y(0)
-    , margins(0)
+    , margins(-1)
     , topMargin(0)
     , leftMargin(0)
     , rightMargin(0)
@@ -560,71 +560,65 @@ void QQuickPopupPrivate::reposition()
             const QMarginsF margins = getMargins();
             const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
 
-            // push inside the margins
-            if (margins.top() > 0 && rect.top() < bounds.top())
+            // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
+            if (allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
+                const QRectF flipped = parentItem->mapRectToScene(QRectF(parentItem->width() - x - rect.width(), y, rect.width(), rect.height()));
+                if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
+                    rect.moveLeft(flipped.left());
+            }
+
+            // if the popup doesn't fit vertically inside the window, try flipping it around (above <-> below)
+            if (allowVerticalFlip && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
+                const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
+                if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
+                    rect.moveTop(flipped.top());
+            }
+
+            // push inside the margins if specified
+            if (margins.top() >= 0 && rect.top() < bounds.top())
                 rect.moveTop(margins.top());
-            if (margins.bottom() > 0 && rect.bottom() > bounds.bottom())
+            if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
                 rect.moveBottom(bounds.bottom());
-            if (margins.left() > 0 && rect.left() < bounds.left())
+            if (margins.left() >= 0 && rect.left() < bounds.left())
                 rect.moveLeft(margins.left());
-            if (margins.right() > 0 && rect.right() > bounds.right())
+            if (margins.right() >= 0 && rect.right() > bounds.right())
                 rect.moveRight(bounds.right());
 
-            if (rect.left() < bounds.left() || rect.right() > bounds.right()) {
-                if (allowHorizontalFlip) {
-                    // if the tooltip doesn't fit inside the window, try flipping it around (left <-> right)
-                    const QRectF flipped = parentItem->mapRectToScene(QRectF(parentItem->width() - x - rect.width(), y, rect.width(), rect.height()));
+            if (iw > 0 && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
+                // neither the flipped or pushed geometry fits inside the window, choose
+                // whichever side (left vs. right) fits larger part of the popup
+                if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
+                    rect.moveLeft(bounds.left());
+                else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
+                    rect.moveRight(bounds.right());
 
-                    if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
-                        rect.moveLeft(flipped.left());
+                // as a last resort, adjust the width to fit the window
+                if (rect.left() < bounds.left()) {
+                    rect.setLeft(bounds.left());
+                    widthAdjusted = true;
                 }
-
-                if (iw > 0) {
-                    // neither the flipped around geometry fits inside the window, choose
-                    // whichever side (left vs. right) fits larger part of the popup
-                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
-                        rect.moveLeft(bounds.left());
-                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
-                        rect.moveRight(bounds.right());
-
-                    // as a last resort, adjust width to fit the window
-                    if (rect.left() < bounds.left()) {
-                        rect.setLeft(bounds.left());
-                        widthAdjusted = true;
-                    }
-                    if (rect.right() > bounds.right()) {
-                        rect.setRight(bounds.right());
-                        widthAdjusted = true;
-                    }
+                if (rect.right() > bounds.right()) {
+                    rect.setRight(bounds.right());
+                    widthAdjusted = true;
                 }
             }
 
-            if (rect.top() < bounds.top() || rect.bottom() > bounds.bottom()) {
-                if (allowVerticalFlip) {
-                    // if the tooltip doesn't fit inside the window, try flipping it around (above <-> below)
-                    const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
+            if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
+                // neither the flipped or pushed geometry fits inside the window, choose
+                // whichever side (above vs. below) fits larger part of the popup
+                if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
+                    rect.moveTop(bounds.top());
+                else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
+                    rect.moveBottom(bounds.bottom());
 
-                    if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
-                        rect.moveTop(flipped.top());
+                // as a last resort, adjust the height to fit the window
+                if (rect.top() < bounds.top()) {
+                    rect.setTop(bounds.top());
+                    heightAdjusted = true;
                 }
-
-                if (ih > 0) {
-                    // neither the flipped around geometry fits inside the window, choose
-                    // whichever side (above vs. below) fits larger part of the popup
-                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
-                        rect.moveTop(bounds.top());
-                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
-                        rect.moveBottom(bounds.bottom());
-
-                    // as a last resort, adjust height to fit the window
-                    if (rect.top() < bounds.top()) {
-                        rect.setTop(bounds.top());
-                        heightAdjusted = true;
-                    }
-                    if (rect.bottom() > bounds.bottom()) {
-                        rect.setBottom(bounds.bottom());
-                        heightAdjusted = true;
-                    }
+                if (rect.bottom() > bounds.bottom()) {
+                    rect.setBottom(bounds.bottom());
+                    heightAdjusted = true;
                 }
             }
         }
@@ -1027,6 +1021,9 @@ qreal QQuickPopup::availableHeight() const
 
     This property holds the default margins around the popup.
 
+    A popup with negative margins is not pushed within the bounds
+    of the enclosing window. The default value is \c -1.
+
     \sa topMargin, leftMargin, rightMargin, bottomMargin
 */
 qreal QQuickPopup::margins() const
@@ -1057,13 +1054,16 @@ void QQuickPopup::setMargins(qreal margins)
 
 void QQuickPopup::resetMargins()
 {
-    setMargins(0);
+    setMargins(-1);
 }
 
 /*!
     \qmlproperty real QtQuick.Controls::Popup::topMargin
 
     This property holds the top margin around the popup.
+
+    A popup with a negative top margin is not pushed within the top edge
+    of the enclosing window. The default value is \c -1.
 
     \sa margins, bottomMargin
 */
@@ -1084,13 +1084,16 @@ void QQuickPopup::setTopMargin(qreal margin)
 void QQuickPopup::resetTopMargin()
 {
     Q_D(QQuickPopup);
-    d->setTopMargin(0, true);
+    d->setTopMargin(-1, true);
 }
 
 /*!
     \qmlproperty real QtQuick.Controls::Popup::leftMargin
 
     This property holds the left margin around the popup.
+
+    A popup with a negative left margin is not pushed within the left edge
+    of the enclosing window. The default value is \c -1.
 
     \sa margins, rightMargin
 */
@@ -1111,13 +1114,16 @@ void QQuickPopup::setLeftMargin(qreal margin)
 void QQuickPopup::resetLeftMargin()
 {
     Q_D(QQuickPopup);
-    d->setLeftMargin(0, true);
+    d->setLeftMargin(-1, true);
 }
 
 /*!
     \qmlproperty real QtQuick.Controls::Popup::rightMargin
 
     This property holds the right margin around the popup.
+
+    A popup with a negative right margin is not pushed within the right edge
+    of the enclosing window. The default value is \c -1.
 
     \sa margins, leftMargin
 */
@@ -1138,13 +1144,16 @@ void QQuickPopup::setRightMargin(qreal margin)
 void QQuickPopup::resetRightMargin()
 {
     Q_D(QQuickPopup);
-    d->setRightMargin(0, true);
+    d->setRightMargin(-1, true);
 }
 
 /*!
     \qmlproperty real QtQuick.Controls::Popup::bottomMargin
 
     This property holds the bottom margin around the popup.
+
+    A popup with a negative bottom margin is not pushed within the bottom edge
+    of the enclosing window. The default value is \c -1.
 
     \sa margins, topMargin
 */
@@ -1165,7 +1174,7 @@ void QQuickPopup::setBottomMargin(qreal margin)
 void QQuickPopup::resetBottomMargin()
 {
     Q_D(QQuickPopup);
-    d->setBottomMargin(0, true);
+    d->setBottomMargin(-1, true);
 }
 
 /*!

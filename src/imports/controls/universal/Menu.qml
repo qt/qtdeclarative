@@ -47,6 +47,8 @@ T.Menu {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
+    margins: 8
+
     //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight

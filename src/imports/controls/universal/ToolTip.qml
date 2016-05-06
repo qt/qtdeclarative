@@ -49,6 +49,7 @@ T.ToolTip {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
+    margins: 8
     topPadding: 5
     leftPadding: 8
     rightPadding: 8

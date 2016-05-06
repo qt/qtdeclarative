@@ -394,6 +394,34 @@ TestCase {
         compare(control.contentItem.parent.x, testCase.width - control.width - 20)
         compare(control.contentItem.parent.y, testCase.height - control.height - 20)
 
+        control.margins = undefined
+        compare(control.margins, -1)
+
+        control.bottomMargin = undefined
+        compare(control.bottomMargin, -1)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height)
+
+        control.rightMargin = undefined
+        compare(control.rightMargin, -1)
+        compare(control.contentItem.parent.x, testCase.width)
+        compare(control.contentItem.parent.y, testCase.height)
+
+        control.x = -testCase.width
+        control.y = -testCase.height
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, 20)
+
+        control.topMargin = undefined
+        compare(control.topMargin, -1)
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, -testCase.height)
+
+        control.leftMargin = undefined
+        compare(control.leftMargin, -1)
+        compare(control.contentItem.parent.x, -testCase.width)
+        compare(control.contentItem.parent.y, -testCase.height)
+
         control.destroy()
     }
 
