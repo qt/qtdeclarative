@@ -1075,8 +1075,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     \section1 Rendering
 
-    QQuickWindow uses a scene graph on top of OpenGL to
-    render. This scene graph is disconnected from the QML scene and
+    QQuickWindow uses a scene graph to represent what needs to be rendered.
+    This scene graph is disconnected from the QML scene and
     potentially lives in another thread, depending on the platform
     implementation. Since the rendering scene graph lives
     independently from the QML scene, it can also be completely
@@ -1090,9 +1090,9 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     \section2 Integration with OpenGL
 
-    It is possible to integrate OpenGL calls directly into the
-    QQuickWindow using the same OpenGL context as the Qt Quick Scene
-    Graph. This is done by connecting to the
+    When using the default OpenGL adaptation, it is possible to integrate
+    OpenGL calls directly into the QQuickWindow using the same OpenGL
+    context as the Qt Quick Scene Graph. This is done by connecting to the
     QQuickWindow::beforeRendering() or QQuickWindow::afterRendering()
     signal.
 
@@ -1105,10 +1105,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     When a QQuickWindow instance is deliberately hidden with hide() or
     setVisible(false), it will stop rendering and its scene graph and
-    OpenGL context might be released. The sceneGraphInvalidated()
+    graphics context might be released. The sceneGraphInvalidated()
     signal will be emitted when this happens.
 
-    \warning It is crucial that OpenGL operations and interaction with
+    \warning It is crucial that graphics operations and interaction with
     the scene graph happens exclusively on the rendering thread,
     primarily during the updatePaintNode() phase.
 
@@ -1124,8 +1124,9 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     required to aggressively release these resources. The
     releaseResources() can be used to force the clean up of certain
     resources. Calling releaseResources() may result in the entire
-    scene graph and its OpenGL context being deleted. The
-    sceneGraphInvalidated() signal will be emitted when this happens.
+    scene graph and in the case of the OpenGL adaptation the associated
+    context will be deleted. The sceneGraphInvalidated() signal will be
+    emitted when this happens.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
@@ -1259,6 +1260,9 @@ void QQuickWindow::releaseResources()
     The OpenGL context is still released when the last QQuickWindow is
     deleted.
 
+    \note This only has an effect when using the default OpenGL scene
+    graph adaptation.
+
     \sa setPersistentSceneGraph(),
     QOpenGLContext::aboutToBeDestroyed(), sceneGraphInitialized()
  */
@@ -1276,7 +1280,8 @@ void QQuickWindow::setPersistentOpenGLContext(bool persistent)
     lifetime of the QQuickWindow.
 
     \note This is a hint. When and how this happens is implementation
-    specific.
+    specific.  It also only has an effect when using the default OpenGL
+    scene graph adaptation
  */
 
 bool QQuickWindow::isPersistentOpenGLContext() const
@@ -3160,10 +3165,13 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 }
 
 /*!
-    Returns the opengl context used for rendering.
+    Returns the OpenGL context used for rendering.
 
     If the scene graph is not ready, or the scene graph is not using OpenGL,
     this function will return null.
+
+    \note If using a scene graph adaptation other than OpenGL this
+    function will return nullptr.
 
     \sa sceneGraphInitialized(), sceneGraphInvalidated()
  */
@@ -3216,14 +3224,14 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the scene graph has been invalidated.
 
-    This signal implies that the opengl rendering context used
+    This signal implies that the graphics rendering context used
     has been invalidated and all user resources tied to that context
     should be released.
 
-    The OpenGL context of this window will be bound when this function
-    is called. The only exception is if the native OpenGL has been
-    destroyed outside Qt's control, for instance through
-    EGL_CONTEXT_LOST.
+    In the case of the default OpenGL adaptation the context of this
+    window will be bound when this function is called. The only exception
+    is if the native OpenGL has been destroyed outside Qt's control,
+    for instance through EGL_CONTEXT_LOST.
 
     This signal will be emitted from the scene graph rendering thread.
  */
@@ -3234,7 +3242,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     This signal is emitted when an \a error occurred during scene graph initialization.
 
     Applications should connect to this signal if they wish to handle errors,
-    like OpenGL context creation failures, in a custom way. When no slot is
+    like graphics context creation failures, in a custom way. When no slot is
     connected to the signal, the behavior will be different: Quick will print
     the \a message, or show a message box, and terminate the application.
 
@@ -3303,6 +3311,10 @@ bool QQuickWindow::isSceneGraphInitialized() const
     The specified fbo must be created in the context of the window
     or one that shares with it.
 
+    \note
+    This function only has an effect when using the default OpenGL scene
+    graph adaptation.
+
     \warning
     This function can only be called from the thread doing
     the rendering.
@@ -3334,6 +3346,10 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 
     The specified FBO must be created in the context of the window
     or one that shares with it.
+
+    \note
+    This function only has an effect when using the default OpenGL scene
+    graph adaptation.
 
     \warning
     This function can only be called from the thread doing
@@ -3382,6 +3398,10 @@ QSize QQuickWindow::renderTargetSize() const
 
     The default is to render to the surface of the window, in which
     case the render target is 0.
+
+    \note
+    This function will return nullptr when not using the OpenGL scene
+    graph adaptation.
  */
 QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 {
@@ -3482,7 +3502,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     mipmapping enabled.
 
     \value TextureOwnsGLTexture The texture object owns the texture id and
-    will delete the GL texture when the texture object is deleted.
+    will delete the OpenGL texture when the texture object is deleted.
 
     \value TextureCanUseAtlas The image can be uploaded into a texture atlas.
 
@@ -3497,7 +3517,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     This enum describes the error in a sceneGraphError() signal.
 
-    \value ContextNotAvailable OpenGL context creation failed. This typically means that
+    \value ContextNotAvailable graphics context creation failed. This typically means that
     no suitable OpenGL implementation was found, for example because no graphics drivers
     are installed and so no OpenGL 2 support is present. On mobile and embedded boards
     that use OpenGL ES such an error is likely to indicate issues in the windowing system
@@ -3514,7 +3534,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     This signal can be used to do any preparation required before calls to
     QQuickItem::updatePaintNode().
 
-    The GL context used for rendering the scene graph will be bound at this point.
+    The OpenGL context used for rendering the scene graph will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -3535,15 +3555,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     This signal can be used to do preparation required after calls to
     QQuickItem::updatePaintNode(), while the GUI thread is still locked.
 
-    The GL context used for rendering the scene graph will be bound at this point.
+    The graphics context used for rendering the scene graph will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for afterSynchronizing leaves the GL
-    context in the same state as it was when the signal handler was entered. Failing to
-    do so can result in the scene not rendering properly.
+    \warning When using the OpenGL adaptation, make sure that a signal handler for
+    afterSynchronizing leaves the OpenGL context in the same state as it was when the
+    signal handler was entered. Failing to do so can result in the scene not rendering
+    properly.
 
     \since 5.3
     \sa resetOpenGLState()
@@ -3555,16 +3576,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     This signal is emitted before the scene starts rendering.
 
     Combined with the modes for clearing the background, this option
-    can be used to paint using raw GL under QML content.
+    can be used to paint using raw OpenGL under QML content.
 
-    The GL context used for rendering the scene graph will be bound
+    The OpenGL context used for rendering the scene graph will be bound
     at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for beforeRendering leaves the GL
+    \warning Make very sure that a signal handler for beforeRendering leaves the OpenGL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 
@@ -3576,16 +3597,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     This signal is emitted after the scene has completed rendering, before swapbuffers is called.
 
-    This signal can be used to paint using raw GL on top of QML content,
+    This signal can be used to paint using raw OpenGL on top of QML content,
     or to do screen scraping of the current frame buffer.
 
-    The GL context used for rendering the scene graph will be bound at this point.
+    The OpenGL context used for rendering the scene graph will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for afterRendering() leaves the GL
+    \warning Make very sure that a signal handler for afterRendering() leaves the OpenGL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 
@@ -3620,6 +3641,10 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     until after the QQuickWindow::sceneGraphInitialize() has been
     emitted.
 
+    \note
+    This signal will only be emmited when using the default OpenGL scene
+    graph adaptation.
+
     \since 5.3
  */
 
@@ -3632,15 +3657,15 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     Applications may use this signal to release resources, but should be
     prepared to reinstantiated them again fast. The scene graph and the
-    OpenGL context are not released at this time.
+    graphics context are not released at this time.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for sceneGraphAboutToStop() leaves the GL
-    context in the same state as it was when the signal handler was entered. Failing to
-    do so can result in the scene not rendering properly.
+    \warning Make very sure that a signal handler for sceneGraphAboutToStop() leaves the
+    graphics context in the same state as it was when the signal handler was entered.
+    Failing to do so can result in the scene not rendering properly.
 
     \sa sceneGraphInvalidated(), resetOpenGLState()
     \since 5.3
@@ -3651,7 +3676,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     Sets whether the scene graph rendering of QML should clear the color buffer
     before it starts rendering to \a enabled.
 
-    By disabling clearing of the color buffer, it is possible to do GL painting
+    By disabling clearing of the color buffer, it is possible to render OpengGL content
     under the scene graph.
 
     The color buffer is cleared by default.
@@ -3692,7 +3717,8 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     alpha channel, the corresponding texture will have an alpha channel.
 
     The caller of the function is responsible for deleting the returned texture.
-    The actual GL texture will be deleted when the texture object is deleted.
+    For example whe using the OpenGL adaptation the actual OpenGL texture will
+    be deleted when the texture object is deleted.
 
     When \a options contains TextureCanUseAtlas, the engine may put the image
     into a texture atlas. Textures in an atlas need to rely on
@@ -3709,9 +3735,9 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     texture which can use mipmap filtering. Mipmapped textures can not be in
     an atlas.
 
-    The returned texture will be using \c GL_TEXTURE_2D as texture target and
-    \c GL_RGBA as internal format. Reimplement QSGTexture to create textures
-    with different parameters.
+    When using the OpenGL adaptation, the returned texture will be using
+    \c GL_TEXTURE_2D as texture target and \c GL_RGBA as internal format.
+    Reimplement QSGTexture to create textures with different parameters.
 
     \warning This function will return 0 if the scene graph has not yet been
     initialized.
@@ -3755,6 +3781,9 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
     \warning This function will return null if the scenegraph has not yet been
     initialized or OpenGL is not in use.
+
+    \note This function only has an effect when using the default OpenGL scene graph
+    adpation.
 
     \sa sceneGraphInitialized(), QSGTexture
  */
@@ -3860,6 +3889,9 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     QQuickWindow::setClearBeforeRendering to control clearing of the color
     buffer. The depth and stencil buffer might be clobbered by the scene
     graph renderer. Clear these manually on demand.
+
+    \note This function only has an effect when using the default OpenGL scene graph
+    adpation.
 
     \sa QQuickWindow::beforeRendering()
  */
