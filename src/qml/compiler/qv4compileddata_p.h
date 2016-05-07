@@ -620,8 +620,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
 
-    virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int /*functionIndex*/) { return 0; }
-
     void markObjects(QV4::ExecutionEngine *e);
 
 protected:

@@ -297,6 +297,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickShaderEffect, 2>(uri, 2, 8, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickRendererInfo>(uri, 2, 8,"RendererInfo", QQuickRendererInfo::tr("RendererInfo is only available via attached properties"));
+    qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
 }
 
 static void initResources()

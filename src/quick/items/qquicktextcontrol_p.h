@@ -98,6 +98,7 @@ public:
     void setOverwriteMode(bool overwrite);
     bool cursorVisible() const;
     void setCursorVisible(bool visible);
+    QRectF anchorRect() const;
     QRectF cursorRect(const QTextCursor &cursor) const;
     QRectF cursorRect() const;
     QRectF selectionRect(const QTextCursor &cursor) const;

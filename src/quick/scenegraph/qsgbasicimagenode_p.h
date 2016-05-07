@@ -70,6 +70,15 @@ public:
     void update() override;
     void preprocess() override;
 
+    static QSGGeometry *updateGeometry(const QRectF &targetRect,
+                                       const QRectF &innerTargetRect,
+                                       const QRectF &sourceRect,
+                                       const QRectF &innerSourceRect,
+                                       const QRectF &subSourceRect,
+                                       QSGGeometry *geometry,
+                                       bool mirror = false,
+                                       bool antialiasing = false);
+
 protected:
     virtual void updateMaterialAntialiasing() = 0;
     virtual void setMaterialTexture(QSGTexture *texture) = 0;

@@ -111,7 +111,7 @@ QQuickSpriteEngine::QQuickSpriteEngine(QObject *parent)
 }
 
 QQuickSpriteEngine::QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent)
-    : QQuickStochasticEngine(parent), m_startedImageAssembly(false), m_loaded(false)
+    : QQuickSpriteEngine(parent)
 {
     foreach (QQuickSprite* sprite, sprites)
         m_states << (QQuickStochasticState*)sprite;

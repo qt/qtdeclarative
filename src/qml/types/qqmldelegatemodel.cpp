@@ -235,10 +235,8 @@ void QQmlDelegateModelPrivate::init()
 }
 
 QQmlDelegateModel::QQmlDelegateModel()
-: QQmlInstanceModel(*(new QQmlDelegateModelPrivate(0)))
+    : QQmlDelegateModel(nullptr, nullptr)
 {
-    Q_D(QQmlDelegateModel);
-    d->init();
 }
 
 QQmlDelegateModel::QQmlDelegateModel(QQmlContext *ctxt, QObject *parent)
@@ -2357,7 +2355,7 @@ QQmlDelegateModelGroup::QQmlDelegateModelGroup(QObject *parent)
 
 QQmlDelegateModelGroup::QQmlDelegateModelGroup(
         const QString &name, QQmlDelegateModel *model, int index, QObject *parent)
-    : QObject(*new QQmlDelegateModelGroupPrivate, parent)
+    : QQmlDelegateModelGroup(parent)
 {
     Q_D(QQmlDelegateModelGroup);
     d->name = name;

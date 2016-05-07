@@ -211,11 +211,8 @@ QQmlApplicationEngine::QQmlApplicationEngine(QObject *parent)
   This is provided as a convenience,  and is the same as using the empty constructor and calling load afterwards.
 */
 QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
-    : QQmlEngine(*(new QQmlApplicationEnginePrivate(this)), parent)
+    : QQmlApplicationEngine(parent)
 {
-    Q_D(QQmlApplicationEngine);
-    d->init();
-    QJSEnginePrivate::addToDebugServer(this);
     load(url);
 }
 
@@ -228,12 +225,8 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
   This is provided as a convenience, and is the same as using the empty constructor and calling load afterwards.
 */
 QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *parent)
-    : QQmlEngine(*(new QQmlApplicationEnginePrivate(this)), parent)
+    : QQmlApplicationEngine(QUrl::fromLocalFile(filePath), parent)
 {
-    Q_D(QQmlApplicationEngine);
-    d->init();
-    QJSEnginePrivate::addToDebugServer(this);
-    load(QUrl::fromLocalFile(filePath));
 }
 
 /*!

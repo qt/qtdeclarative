@@ -236,7 +236,6 @@ void Document::collectTypeReferences()
                 // ### FIXME: We could report the more accurate location here by using prop->location, but the old
                 // compiler can't and the tests expect it to be the object location right now.
                 QV4::CompiledData::TypeReference &r = typeReferences.add(prop->customTypeNameIndex, obj->location);
-                r.needsCreation = true;
                 r.errorWhenNotFound = true;
             }
         }

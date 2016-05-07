@@ -511,11 +511,8 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
     \sa loadUrl()
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *parent)
-: QObject(*(new QQmlComponentPrivate), parent)
+    : QQmlComponent(engine, url, QQmlComponent::PreferSynchronous, parent)
 {
-    Q_D(QQmlComponent);
-    d->engine = engine;
-    d->loadUrl(url);
 }
 
 /*!
@@ -530,10 +527,9 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMode mode,
                              QObject *parent)
-: QObject(*(new QQmlComponentPrivate), parent)
+    : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->engine = engine;
     d->loadUrl(url, mode);
 }
 
@@ -545,11 +541,8 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMod
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
                              QObject *parent)
-: QObject(*(new QQmlComponentPrivate), parent)
+    : QQmlComponent(engine, fileName, QQmlComponent::PreferSynchronous, parent)
 {
-    Q_D(QQmlComponent);
-    d->engine = engine;
-    d->loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)));
 }
 
 /*!
@@ -561,10 +554,9 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
                              CompilationMode mode, QObject *parent)
-: QObject(*(new QQmlComponentPrivate), parent)
+    : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->engine = engine;
     d->loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)), mode);
 }
 
@@ -572,10 +564,9 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     \internal
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, QQmlCompiledData *cc, int start, QObject *parent)
-    : QObject(*(new QQmlComponentPrivate), parent)
+    : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->engine = engine;
     d->cc = cc;
     cc->addref();
     d->start = start;

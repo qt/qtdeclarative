@@ -3,6 +3,7 @@ TARGET = tst_scenegraph
 SOURCES += tst_scenegraph.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

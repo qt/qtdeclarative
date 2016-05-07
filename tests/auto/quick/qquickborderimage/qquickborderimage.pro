@@ -7,6 +7,7 @@ SOURCES += tst_qquickborderimage.cpp \
            ../../shared/testhttpserver.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 TESTDATA = data/*
 

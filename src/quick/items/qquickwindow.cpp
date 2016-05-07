@@ -1148,10 +1148,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     Constructs a window for displaying a QML scene with parent window \a parent.
 */
 QQuickWindow::QQuickWindow(QWindow *parent)
-    : QWindow(*(new QQuickWindowPrivate), parent)
+    : QQuickWindow(*new QQuickWindowPrivate, parent)
 {
-    Q_D(QQuickWindow);
-    d->init(this);
 }
 
 

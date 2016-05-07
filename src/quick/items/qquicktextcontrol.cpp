@@ -1399,10 +1399,16 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVar
     switch (property) {
     case Qt::ImCursorRectangle:
         return cursorRect();
+    case Qt::ImAnchorRectangle:
+        return anchorRect();
     case Qt::ImFont:
         return QVariant(d->cursor.charFormat().font());
-    case Qt::ImCursorPosition:
+    case Qt::ImCursorPosition: {
+        const QPointF pt = argument.toPointF();
+        if (!pt.isNull())
+            return QVariant(d->doc->documentLayout()->hitTest(pt, Qt::FuzzyHit) - block.position());
         return QVariant(d->cursor.position() - block.position());
+    }
     case Qt::ImSurroundingText:
         return QVariant(block.text());
     case Qt::ImCurrentSelection:
@@ -1525,6 +1531,17 @@ void QQuickTextControl::setCursorVisible(bool visible)
     d->cursorVisible = visible;
     d->setBlinkingCursorEnabled(d->cursorVisible
             && (d->interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard)));
+}
+
+QRectF QQuickTextControl::anchorRect() const
+{
+    Q_D(const QQuickTextControl);
+    QRectF rect;
+    QTextCursor cursor = d->cursor;
+    if (!cursor.isNull()) {
+        rect = d->rectForPosition(cursor.anchor());
+    }
+    return rect;
 }
 
 QRectF QQuickTextControl::cursorRect(const QTextCursor &cursor) const

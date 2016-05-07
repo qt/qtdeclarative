@@ -44,6 +44,7 @@
 
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
@@ -75,6 +76,7 @@ private slots:
     void statusChanges_data();
     void sourceSizeChanges();
     void progressAndStatusChanges();
+    void borderImageMesh();
 
 private:
     QQmlEngine engine;
@@ -573,6 +575,21 @@ void tst_qquickborderimage::progressAndStatusChanges()
     QTRY_COMPARE(statusSpy.count(), 4);
 
     delete obj;
+}
+
+void tst_qquickborderimage::borderImageMesh()
+{
+    QQuickView *window = new QQuickView;
+
+    window->setSource(testFileUrl("nonmesh.qml"));
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QImage nonmesh = window->grabWindow();
+
+    window->setSource(testFileUrl("mesh.qml"));
+    QImage mesh = window->grabWindow();
+
+    QVERIFY(QQuickVisualTestUtil::compareImages(mesh, nonmesh));
 }
 
 QTEST_MAIN(tst_qquickborderimage)

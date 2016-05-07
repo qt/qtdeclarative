@@ -97,12 +97,9 @@ static bool openLibrary()
     return state == Loaded;
 }
 
-QQmlMemoryScope::QQmlMemoryScope(const QUrl &url) : pushed(false)
+QQmlMemoryScope::QQmlMemoryScope(const QUrl &url)
+    : QQmlMemoryScope(url.path().toUtf8().constData())
 {
-    if (openLibrary() && memprofile_is_enabled()) {
-        memprofile_push_location(url.path().toUtf8().constData(), 0);
-        pushed = true;
-    }
 }
 
 QQmlMemoryScope::QQmlMemoryScope(const char *string) : pushed(false)

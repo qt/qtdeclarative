@@ -4152,6 +4152,7 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
         v = (bool)(flags() & ItemAcceptsInputMethod);
         break;
     case Qt::ImHints:
+    case Qt::ImAnchorRectangle:
     case Qt::ImCursorRectangle:
     case Qt::ImFont:
     case Qt::ImCursorPosition:

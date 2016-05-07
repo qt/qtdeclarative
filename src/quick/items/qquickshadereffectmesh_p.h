@@ -107,6 +107,48 @@ private:
     QString m_log;
 };
 
+class QQuickScaleGrid;
+class QQuickBorderImageMesh : public QQuickShaderEffectMesh
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT)
+    Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY sizeChanged)
+    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
+    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
+public:
+    QQuickBorderImageMesh(QObject *parent = 0);
+
+    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
+    QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                const QRectF &srcRect, const QRectF &rect) override;
+
+    QQuickScaleGrid *border();
+
+    enum TileMode { Stretch = Qt::StretchTile, Repeat = Qt::RepeatTile, Round = Qt::RoundTile };
+    Q_ENUM(TileMode)
+
+    QSize size() const;
+    void setSize(const QSize &size);
+
+    TileMode horizontalTileMode() const;
+    void setHorizontalTileMode(TileMode);
+
+    TileMode verticalTileMode() const;
+    void setVerticalTileMode(TileMode);
+
+Q_SIGNALS:
+    void sizeChanged();
+    void horizontalTileModeChanged();
+    void verticalTileModeChanged();
+
+private:
+    QQuickScaleGrid *m_border;
+    QSize m_size;
+    TileMode m_horizontalTileMode;
+    TileMode m_verticalTileMode;
+};
+
 inline QColor qt_premultiply_color(const QColor &c)
 {
     return QColor::fromRgbF(c.redF() * c.alphaF(), c.greenF() * c.alphaF(), c.blueF() * c.alphaF(), c.alphaF());

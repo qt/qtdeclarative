@@ -433,11 +433,8 @@ QQuickWidget::QQuickWidget(QWidget *parent)
 
 */
 QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
-: QWidget(*(new QQuickWidgetPrivate), parent, 0)
+    : QQuickWidget(parent)
 {
-    setMouseTracking(true);
-    setFocusPolicy(Qt::StrongFocus);
-    d_func()->init();
     setSource(source);
 }
 

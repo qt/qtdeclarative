@@ -194,9 +194,8 @@ QQuickView::QQuickView(QWindow *parent)
 
 */
 QQuickView::QQuickView(const QUrl &source, QWindow *parent)
-: QQuickWindow(*(new QQuickViewPrivate), parent)
+    : QQuickView(parent)
 {
-    d_func()->init();
     setSource(source);
 }
 

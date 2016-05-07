@@ -77,18 +77,16 @@ QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
 void QQuickWindowQmlImpl::setVisible(bool visible)
 {
     Q_D(QQuickWindowQmlImpl);
-    if (!d->complete)
-        d->visible = visible;
-    else if (!transientParent() || transientParent()->isVisible())
+    d->visible = visible;
+    if (d->complete && (!transientParent() || transientParent()->isVisible()))
         QQuickWindow::setVisible(visible);
 }
 
 void QQuickWindowQmlImpl::setVisibility(Visibility visibility)
 {
     Q_D(QQuickWindowQmlImpl);
-    if (!d->complete)
-        d->visibility = visibility;
-    else
+    d->visibility = visibility;
+    if (d->complete)
         QQuickWindow::setVisibility(visibility);
 }
 

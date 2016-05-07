@@ -574,6 +574,52 @@ void QQuickBorderImage::doUpdate()
     update();
 }
 
+void QQuickBorderImagePrivate::calculateRects(const QQuickScaleGrid *border,
+                                              const QSize &sourceSize,
+                                              const QSizeF &targetSize,
+                                              int horizontalTileMode,
+                                              int verticalTileMode,
+                                              qreal devicePixelRatio,
+                                              QRectF *targetRect,
+                                              QRectF *innerTargetRect,
+                                              QRectF *innerSourceRect,
+                                              QRectF *subSourceRect)
+{
+    *innerSourceRect = QRectF(0, 0, 1, 1);
+    *targetRect = QRectF(0, 0, targetSize.width(), targetSize.height());
+    *innerTargetRect = *targetRect;
+
+    if (border) {
+        *innerSourceRect = QRectF(border->left() * devicePixelRatio / qreal(sourceSize.width()),
+                                  border->top() * devicePixelRatio / qreal(sourceSize.height()),
+                                  qMax<qreal>(0, sourceSize.width() - (border->right() + border->left()) * devicePixelRatio) / sourceSize.width(),
+                                  qMax<qreal>(0, sourceSize.height() - (border->bottom() + border->top()) * devicePixelRatio) / sourceSize.height());
+        *innerTargetRect = QRectF(border->left(),
+                                  border->top(),
+                                  qMax<qreal>(0, targetSize.width() - (border->right() + border->left())),
+                                  qMax<qreal>(0, targetSize.height() - (border->bottom() + border->top())));
+    }
+
+    qreal hTiles = 1;
+    qreal vTiles = 1;
+    const QSizeF innerTargetSize = innerTargetRect->size() * devicePixelRatio;
+    if (innerSourceRect->width() != 0
+        && horizontalTileMode != QQuickBorderImage::Stretch) {
+        hTiles = innerTargetSize.width() / qreal(innerSourceRect->width() * sourceSize.width());
+        if (horizontalTileMode == QQuickBorderImage::Round)
+            hTiles = qCeil(hTiles);
+    }
+    if (innerSourceRect->height() != 0
+        && verticalTileMode != QQuickBorderImage::Stretch) {
+        vTiles = innerTargetSize.height() / qreal(innerSourceRect->height() * sourceSize.height());
+        if (verticalTileMode == QQuickBorderImage::Round)
+            vTiles = qCeil(vTiles);
+    }
+
+    *subSourceRect = QRectF(0, 0, hTiles, vTiles);
+}
+
+
 QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickBorderImage);
@@ -598,45 +644,25 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         node->setTexture(texture);
 
     // Don't implicitly create the scalegrid in the rendering thread...
-    QRectF innerSourceRect(0, 0, 1, 1);
-    QRectF targetRect(0, 0, width(), height());
-    QRectF innerTargetRect = targetRect;
-    if (d->border) {
-        const QQuickScaleGrid *border = d->getScaleGrid();
-        innerSourceRect = QRectF(border->left() * d->devicePixelRatio / qreal(d->pix.width()),
-                                 border->top() * d->devicePixelRatio / qreal(d->pix.height()),
-                                 qMax<qreal>(0, d->pix.width() - (border->right() + border->left()) * d->devicePixelRatio) / d->pix.width(),
-                                 qMax<qreal>(0, d->pix.height() - (border->bottom() + border->top()) * d->devicePixelRatio) / d->pix.height());
-        innerTargetRect = QRectF(border->left(),
-                                 border->top(),
-                                 qMax<qreal>(0, width() - (border->right() + border->left())),
-                                 qMax<qreal>(0, height() - (border->bottom() + border->top())));
-    }
-    qreal hTiles = 1;
-    qreal vTiles = 1;
-    const QSizeF innerTargetSize = innerTargetRect.size() * d->devicePixelRatio;
-    if (innerSourceRect.width() != 0
-        && d->horizontalTileMode != QQuickBorderImage::Stretch) {
-        hTiles = innerTargetSize.width() / qreal(innerSourceRect.width() * d->pix.width());
-        if (d->horizontalTileMode == QQuickBorderImage::Round)
-            hTiles = qCeil(hTiles);
-    }
-    if (innerSourceRect.height() != 0
-        && d->verticalTileMode != QQuickBorderImage::Stretch) {
-        vTiles = innerTargetSize.height() / qreal(innerSourceRect.height() * d->pix.height());
-        if (d->verticalTileMode == QQuickBorderImage::Round)
-            vTiles = qCeil(vTiles);
-    }
+    QRectF targetRect;
+    QRectF innerTargetRect;
+    QRectF innerSourceRect;
+    QRectF subSourceRect;
+    d->calculateRects(d->border,
+                      QSize(d->pix.width(), d->pix.height()), QSizeF(width(), height()),
+                      d->horizontalTileMode, d->verticalTileMode, d->devicePixelRatio,
+                      &targetRect, &innerTargetRect,
+                      &innerSourceRect, &subSourceRect);
 
     node->setTargetRect(targetRect);
     node->setInnerSourceRect(innerSourceRect);
     node->setInnerTargetRect(innerTargetRect);
-    node->setSubSourceRect(QRectF(0, 0, hTiles, vTiles));
+    node->setSubSourceRect(subSourceRect);
     node->setMirror(d->mirror);
 
     node->setMipmapFiltering(QSGTexture::None);
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    if (innerSourceRect == QRectF(0, 0, 1, 1) && (vTiles > 1 || hTiles > 1)) {
+    if (innerSourceRect == QRectF(0, 0, 1, 1) && (subSourceRect.width() > 1 || subSourceRect.height() > 1)) {
         node->setHorizontalWrapMode(QSGTexture::Repeat);
         node->setVerticalWrapMode(QSGTexture::Repeat);
     } else {

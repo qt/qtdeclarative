@@ -200,6 +200,264 @@ static inline void appendQuad(quint16 **indices, quint16 topLeft, quint16 topRig
     *(*indices)++ = topLeft;
 }
 
+QSGGeometry *QSGBasicImageNode::updateGeometry(const QRectF &targetRect,
+                                               const QRectF &innerTargetRect,
+                                               const QRectF &sourceRect,
+                                               const QRectF &innerSourceRect,
+                                               const QRectF &subSourceRect,
+                                               QSGGeometry *geometry,
+                                               bool mirror,
+                                               bool antialiasing)
+{
+    int floorLeft = qFloor(subSourceRect.left());
+    int ceilRight = qCeil(subSourceRect.right());
+    int floorTop = qFloor(subSourceRect.top());
+    int ceilBottom = qCeil(subSourceRect.bottom());
+    int hTiles = ceilRight - floorLeft;
+    int vTiles = ceilBottom - floorTop;
+
+    int hCells = hTiles;
+    int vCells = vTiles;
+    if (innerTargetRect.width() == 0)
+        hCells = 0;
+    if (innerTargetRect.left() != targetRect.left())
+        ++hCells;
+    if (innerTargetRect.right() != targetRect.right())
+        ++hCells;
+    if (innerTargetRect.height() == 0)
+        vCells = 0;
+    if (innerTargetRect.top() != targetRect.top())
+        ++vCells;
+    if (innerTargetRect.bottom() != targetRect.bottom())
+        ++vCells;
+    QVarLengthArray<X, 32> xData(2 * hCells);
+    QVarLengthArray<Y, 32> yData(2 * vCells);
+    X *xs = xData.data();
+    Y *ys = yData.data();
+
+    if (innerTargetRect.left() != targetRect.left()) {
+        xs[0].x = targetRect.left();
+        xs[0].tx = sourceRect.left();
+        xs[1].x = innerTargetRect.left();
+        xs[1].tx = innerSourceRect.left();
+        xs += 2;
+    }
+    if (innerTargetRect.width() != 0) {
+        xs[0].x = innerTargetRect.left();
+        xs[0].tx = innerSourceRect.x() + (subSourceRect.left() - floorLeft) * innerSourceRect.width();
+        ++xs;
+        float b = innerTargetRect.width() / subSourceRect.width();
+        float a = innerTargetRect.x() - subSourceRect.x() * b;
+        for (int i = floorLeft + 1; i <= ceilRight - 1; ++i) {
+            xs[0].x = xs[1].x = a + b * i;
+            xs[0].tx = innerSourceRect.right();
+            xs[1].tx = innerSourceRect.left();
+            xs += 2;
+        }
+        xs[0].x = innerTargetRect.right();
+        xs[0].tx = innerSourceRect.x() + (subSourceRect.right() - ceilRight + 1) * innerSourceRect.width();
+        ++xs;
+    }
+    if (innerTargetRect.right() != targetRect.right()) {
+        xs[0].x = innerTargetRect.right();
+        xs[0].tx = innerSourceRect.right();
+        xs[1].x = targetRect.right();
+        xs[1].tx = sourceRect.right();
+        xs += 2;
+    }
+    Q_ASSERT(xs == xData.data() + xData.size());
+    if (mirror) {
+        float leftPlusRight = targetRect.left() + targetRect.right();
+        int count = xData.size();
+        xs = xData.data();
+        for (int i = 0; i < count >> 1; ++i)
+            qSwap(xs[i], xs[count - 1 - i]);
+        for (int i = 0; i < count; ++i)
+            xs[i].x = leftPlusRight - xs[i].x;
+    }
+
+    if (innerTargetRect.top() != targetRect.top()) {
+        ys[0].y = targetRect.top();
+        ys[0].ty = sourceRect.top();
+        ys[1].y = innerTargetRect.top();
+        ys[1].ty = innerSourceRect.top();
+        ys += 2;
+    }
+    if (innerTargetRect.height() != 0) {
+        ys[0].y = innerTargetRect.top();
+        ys[0].ty = innerSourceRect.y() + (subSourceRect.top() - floorTop) * innerSourceRect.height();
+        ++ys;
+        float b = innerTargetRect.height() / subSourceRect.height();
+        float a = innerTargetRect.y() - subSourceRect.y() * b;
+        for (int i = floorTop + 1; i <= ceilBottom - 1; ++i) {
+            ys[0].y = ys[1].y = a + b * i;
+            ys[0].ty = innerSourceRect.bottom();
+            ys[1].ty = innerSourceRect.top();
+            ys += 2;
+        }
+        ys[0].y = innerTargetRect.bottom();
+        ys[0].ty = innerSourceRect.y() + (subSourceRect.bottom() - ceilBottom + 1) * innerSourceRect.height();
+        ++ys;
+    }
+    if (innerTargetRect.bottom() != targetRect.bottom()) {
+        ys[0].y = innerTargetRect.bottom();
+        ys[0].ty = innerSourceRect.bottom();
+        ys[1].y = targetRect.bottom();
+        ys[1].ty = sourceRect.bottom();
+        ys += 2;
+    }
+    Q_ASSERT(ys == yData.data() + yData.size());
+
+    if (antialiasing) {
+        QSGGeometry *g = geometry;
+        Q_ASSERT(g);
+
+        g->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
+                    hCells * vCells * 6 + (hCells + vCells) * 12);
+        g->setDrawingMode(GL_TRIANGLES);
+        SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
+        memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
+        quint16 *indices = g->indexDataAsUShort();
+
+        // The deltas are how much the fuzziness can reach into the image.
+        // Only the border vertices are moved by the vertex shader, so the fuzziness
+        // can't reach further into the image than the closest interior vertices.
+        float leftDx = xData.at(1).x - xData.at(0).x;
+        float rightDx = xData.at(xData.size() - 1).x - xData.at(xData.size() - 2).x;
+        float topDy = yData.at(1).y - yData.at(0).y;
+        float bottomDy = yData.at(yData.size() - 1).y - yData.at(yData.size() - 2).y;
+
+        float leftDu = xData.at(1).tx - xData.at(0).tx;
+        float rightDu = xData.at(xData.size() - 1).tx - xData.at(xData.size() - 2).tx;
+        float topDv = yData.at(1).ty - yData.at(0).ty;
+        float bottomDv = yData.at(yData.size() - 1).ty - yData.at(yData.size() - 2).ty;
+
+        if (hCells == 1) {
+            leftDx = rightDx *= 0.5f;
+            leftDu = rightDu *= 0.5f;
+        }
+        if (vCells == 1) {
+            topDy = bottomDy *= 0.5f;
+            topDv = bottomDv *= 0.5f;
+        }
+
+        // This delta is how much the fuzziness can reach out from the image.
+        float delta = float(qAbs(targetRect.width()) < qAbs(targetRect.height())
+                            ? targetRect.width() : targetRect.height()) * 0.5f;
+
+        quint16 index = 0;
+        ys = yData.data();
+        for (int j = 0; j < vCells; ++j, ys += 2) {
+            xs = xData.data();
+            bool isTop = j == 0;
+            bool isBottom = j == vCells - 1;
+            for (int i = 0; i < hCells; ++i, xs += 2) {
+                bool isLeft = i == 0;
+                bool isRight = i == hCells - 1;
+
+                SmoothVertex *v = vertices + index;
+
+                quint16 topLeft = index;
+                for (int k = (isTop || isLeft ? 2 : 1); k--; ++v, ++index) {
+                    v->x = xs[0].x;
+                    v->u = xs[0].tx;
+                    v->y = ys[0].y;
+                    v->v = ys[0].ty;
+                }
+
+                quint16 topRight = index;
+                for (int k = (isTop || isRight ? 2 : 1); k--; ++v, ++index) {
+                    v->x = xs[1].x;
+                    v->u = xs[1].tx;
+                    v->y = ys[0].y;
+                    v->v = ys[0].ty;
+                }
+
+                quint16 bottomLeft = index;
+                for (int k = (isBottom || isLeft ? 2 : 1); k--; ++v, ++index) {
+                    v->x = xs[0].x;
+                    v->u = xs[0].tx;
+                    v->y = ys[1].y;
+                    v->v = ys[1].ty;
+                }
+
+                quint16 bottomRight = index;
+                for (int k = (isBottom || isRight ? 2 : 1); k--; ++v, ++index) {
+                    v->x = xs[1].x;
+                    v->u = xs[1].tx;
+                    v->y = ys[1].y;
+                    v->v = ys[1].ty;
+                }
+
+                appendQuad(&indices, topLeft, topRight, bottomLeft, bottomRight);
+
+                if (isTop) {
+                    vertices[topLeft].dy = vertices[topRight].dy = topDy;
+                    vertices[topLeft].dv = vertices[topRight].dv = topDv;
+                    vertices[topLeft + 1].dy = vertices[topRight + 1].dy = -delta;
+                    appendQuad(&indices, topLeft + 1, topRight + 1, topLeft, topRight);
+                }
+
+                if (isBottom) {
+                    vertices[bottomLeft].dy = vertices[bottomRight].dy = -bottomDy;
+                    vertices[bottomLeft].dv = vertices[bottomRight].dv = -bottomDv;
+                    vertices[bottomLeft + 1].dy = vertices[bottomRight + 1].dy = delta;
+                    appendQuad(&indices, bottomLeft, bottomRight, bottomLeft + 1, bottomRight + 1);
+                }
+
+                if (isLeft) {
+                    vertices[topLeft].dx = vertices[bottomLeft].dx = leftDx;
+                    vertices[topLeft].du = vertices[bottomLeft].du = leftDu;
+                    vertices[topLeft + 1].dx = vertices[bottomLeft + 1].dx = -delta;
+                    appendQuad(&indices, topLeft + 1, topLeft, bottomLeft + 1, bottomLeft);
+                }
+
+                if (isRight) {
+                    vertices[topRight].dx = vertices[bottomRight].dx = -rightDx;
+                    vertices[topRight].du = vertices[bottomRight].du = -rightDu;
+                    vertices[topRight + 1].dx = vertices[bottomRight + 1].dx = delta;
+                    appendQuad(&indices, topRight, topRight + 1, bottomRight, bottomRight + 1);
+                }
+            }
+        }
+
+        Q_ASSERT(index == g->vertexCount());
+        Q_ASSERT(indices - g->indexCount() == g->indexData());
+    } else {
+        if (!geometry) {
+            geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(),
+                                       hCells * vCells * 4, hCells * vCells * 6,
+                                       GL_UNSIGNED_SHORT);
+        } else {
+            geometry->allocate(hCells * vCells * 4, hCells * vCells * 6);
+        }
+        geometry->setDrawingMode(GL_TRIANGLES);
+        QSGGeometry::TexturedPoint2D *vertices = geometry->vertexDataAsTexturedPoint2D();
+        ys = yData.data();
+        for (int j = 0; j < vCells; ++j, ys += 2) {
+            xs = xData.data();
+            for (int i = 0; i < hCells; ++i, xs += 2) {
+                vertices[0].x = vertices[2].x = xs[0].x;
+                vertices[0].tx = vertices[2].tx = xs[0].tx;
+                vertices[1].x = vertices[3].x = xs[1].x;
+                vertices[1].tx = vertices[3].tx = xs[1].tx;
+
+                vertices[0].y = vertices[1].y = ys[0].y;
+                vertices[0].ty = vertices[1].ty = ys[0].ty;
+                vertices[2].y = vertices[3].y = ys[1].y;
+                vertices[2].ty = vertices[3].ty = ys[1].ty;
+
+                vertices += 4;
+            }
+        }
+
+        quint16 *indices = geometry->indexDataAsUShort();
+        for (int i = 0; i < 4 * vCells * hCells; i += 4)
+            appendQuad(&indices, i, i + 1, i + 2, i + 3);
+    }
+    return geometry;
+}
+
 void QSGBasicImageNode::updateGeometry()
 {
     Q_ASSERT(!m_targetRect.isEmpty());
@@ -288,239 +546,10 @@ void QSGBasicImageNode::updateGeometry()
                 QSGGeometry::updateTexturedRectGeometry(&m_geometry, m_targetRect, sr);
             }
         } else {
-            int hCells = hTiles;
-            int vCells = vTiles;
-            if (m_innerTargetRect.width() == 0)
-                hCells = 0;
-            if (m_innerTargetRect.left() != m_targetRect.left())
-                ++hCells;
-            if (m_innerTargetRect.right() != m_targetRect.right())
-                ++hCells;
-            if (m_innerTargetRect.height() == 0)
-                vCells = 0;
-            if (m_innerTargetRect.top() != m_targetRect.top())
-                ++vCells;
-            if (m_innerTargetRect.bottom() != m_targetRect.bottom())
-                ++vCells;
-            QVarLengthArray<X, 32> xData(2 * hCells);
-            QVarLengthArray<Y, 32> yData(2 * vCells);
-            X *xs = xData.data();
-            Y *ys = yData.data();
-
-            if (m_innerTargetRect.left() != m_targetRect.left()) {
-                xs[0].x = m_targetRect.left();
-                xs[0].tx = sourceRect.left();
-                xs[1].x = m_innerTargetRect.left();
-                xs[1].tx = innerSourceRect.left();
-                xs += 2;
-            }
-            if (m_innerTargetRect.width() != 0) {
-                xs[0].x = m_innerTargetRect.left();
-                xs[0].tx = innerSourceRect.x() + (m_subSourceRect.left() - floorLeft) * innerSourceRect.width();
-                ++xs;
-                float b = m_innerTargetRect.width() / m_subSourceRect.width();
-                float a = m_innerTargetRect.x() - m_subSourceRect.x() * b;
-                for (int i = floorLeft + 1; i <= ceilRight - 1; ++i) {
-                    xs[0].x = xs[1].x = a + b * i;
-                    xs[0].tx = innerSourceRect.right();
-                    xs[1].tx = innerSourceRect.left();
-                    xs += 2;
-                }
-                xs[0].x = m_innerTargetRect.right();
-                xs[0].tx = innerSourceRect.x() + (m_subSourceRect.right() - ceilRight + 1) * innerSourceRect.width();
-                ++xs;
-            }
-            if (m_innerTargetRect.right() != m_targetRect.right()) {
-                xs[0].x = m_innerTargetRect.right();
-                xs[0].tx = innerSourceRect.right();
-                xs[1].x = m_targetRect.right();
-                xs[1].tx = sourceRect.right();
-                xs += 2;
-            }
-            Q_ASSERT(xs == xData.data() + xData.size());
-            if (m_mirror) {
-                float leftPlusRight = m_targetRect.left() + m_targetRect.right();
-                int count = xData.size();
-                xs = xData.data();
-                for (int i = 0; i < count >> 1; ++i)
-                    qSwap(xs[i], xs[count - 1 - i]);
-                for (int i = 0; i < count; ++i)
-                    xs[i].x = leftPlusRight - xs[i].x;
-            }
-
-            if (m_innerTargetRect.top() != m_targetRect.top()) {
-                ys[0].y = m_targetRect.top();
-                ys[0].ty = sourceRect.top();
-                ys[1].y = m_innerTargetRect.top();
-                ys[1].ty = innerSourceRect.top();
-                ys += 2;
-            }
-            if (m_innerTargetRect.height() != 0) {
-                ys[0].y = m_innerTargetRect.top();
-                ys[0].ty = innerSourceRect.y() + (m_subSourceRect.top() - floorTop) * innerSourceRect.height();
-                ++ys;
-                float b = m_innerTargetRect.height() / m_subSourceRect.height();
-                float a = m_innerTargetRect.y() - m_subSourceRect.y() * b;
-                for (int i = floorTop + 1; i <= ceilBottom - 1; ++i) {
-                    ys[0].y = ys[1].y = a + b * i;
-                    ys[0].ty = innerSourceRect.bottom();
-                    ys[1].ty = innerSourceRect.top();
-                    ys += 2;
-                }
-                ys[0].y = m_innerTargetRect.bottom();
-                ys[0].ty = innerSourceRect.y() + (m_subSourceRect.bottom() - ceilBottom + 1) * innerSourceRect.height();
-                ++ys;
-            }
-            if (m_innerTargetRect.bottom() != m_targetRect.bottom()) {
-                ys[0].y = m_innerTargetRect.bottom();
-                ys[0].ty = innerSourceRect.bottom();
-                ys[1].y = m_targetRect.bottom();
-                ys[1].ty = sourceRect.bottom();
-                ys += 2;
-            }
-            Q_ASSERT(ys == yData.data() + yData.size());
-
-            if (m_antialiasing) {
-                QSGGeometry *g = geometry();
-                Q_ASSERT(g != &m_geometry);
-
-                g->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
-                            hCells * vCells * 6 + (hCells + vCells) * 12);
-                g->setDrawingMode(QSGGeometry::DrawTriangles);
-                SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
-                memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
-                quint16 *indices = g->indexDataAsUShort();
-
-                // The deltas are how much the fuzziness can reach into the image.
-                // Only the border vertices are moved by the vertex shader, so the fuzziness
-                // can't reach further into the image than the closest interior vertices.
-                float leftDx = xData.at(1).x - xData.at(0).x;
-                float rightDx = xData.at(xData.size() - 1).x - xData.at(xData.size() - 2).x;
-                float topDy = yData.at(1).y - yData.at(0).y;
-                float bottomDy = yData.at(yData.size() - 1).y - yData.at(yData.size() - 2).y;
-
-                float leftDu = xData.at(1).tx - xData.at(0).tx;
-                float rightDu = xData.at(xData.size() - 1).tx - xData.at(xData.size() - 2).tx;
-                float topDv = yData.at(1).ty - yData.at(0).ty;
-                float bottomDv = yData.at(yData.size() - 1).ty - yData.at(yData.size() - 2).ty;
-
-                if (hCells == 1) {
-                    leftDx = rightDx *= 0.5f;
-                    leftDu = rightDu *= 0.5f;
-                }
-                if (vCells == 1) {
-                    topDy = bottomDy *= 0.5f;
-                    topDv = bottomDv *= 0.5f;
-                }
-
-                // This delta is how much the fuzziness can reach out from the image.
-                float delta = float(qAbs(m_targetRect.width()) < qAbs(m_targetRect.height())
-                                    ? m_targetRect.width() : m_targetRect.height()) * 0.5f;
-
-                quint16 index = 0;
-                ys = yData.data();
-                for (int j = 0; j < vCells; ++j, ys += 2) {
-                    xs = xData.data();
-                    bool isTop = j == 0;
-                    bool isBottom = j == vCells - 1;
-                    for (int i = 0; i < hCells; ++i, xs += 2) {
-                        bool isLeft = i == 0;
-                        bool isRight = i == hCells - 1;
-
-                        SmoothVertex *v = vertices + index;
-
-                        quint16 topLeft = index;
-                        for (int k = (isTop || isLeft ? 2 : 1); k--; ++v, ++index) {
-                            v->x = xs[0].x;
-                            v->u = xs[0].tx;
-                            v->y = ys[0].y;
-                            v->v = ys[0].ty;
-                        }
-
-                        quint16 topRight = index;
-                        for (int k = (isTop || isRight ? 2 : 1); k--; ++v, ++index) {
-                            v->x = xs[1].x;
-                            v->u = xs[1].tx;
-                            v->y = ys[0].y;
-                            v->v = ys[0].ty;
-                        }
-
-                        quint16 bottomLeft = index;
-                        for (int k = (isBottom || isLeft ? 2 : 1); k--; ++v, ++index) {
-                            v->x = xs[0].x;
-                            v->u = xs[0].tx;
-                            v->y = ys[1].y;
-                            v->v = ys[1].ty;
-                        }
-
-                        quint16 bottomRight = index;
-                        for (int k = (isBottom || isRight ? 2 : 1); k--; ++v, ++index) {
-                            v->x = xs[1].x;
-                            v->u = xs[1].tx;
-                            v->y = ys[1].y;
-                            v->v = ys[1].ty;
-                        }
-
-                        appendQuad(&indices, topLeft, topRight, bottomLeft, bottomRight);
-
-                        if (isTop) {
-                            vertices[topLeft].dy = vertices[topRight].dy = topDy;
-                            vertices[topLeft].dv = vertices[topRight].dv = topDv;
-                            vertices[topLeft + 1].dy = vertices[topRight + 1].dy = -delta;
-                            appendQuad(&indices, topLeft + 1, topRight + 1, topLeft, topRight);
-                        }
-
-                        if (isBottom) {
-                            vertices[bottomLeft].dy = vertices[bottomRight].dy = -bottomDy;
-                            vertices[bottomLeft].dv = vertices[bottomRight].dv = -bottomDv;
-                            vertices[bottomLeft + 1].dy = vertices[bottomRight + 1].dy = delta;
-                            appendQuad(&indices, bottomLeft, bottomRight, bottomLeft + 1, bottomRight + 1);
-                        }
-
-                        if (isLeft) {
-                            vertices[topLeft].dx = vertices[bottomLeft].dx = leftDx;
-                            vertices[topLeft].du = vertices[bottomLeft].du = leftDu;
-                            vertices[topLeft + 1].dx = vertices[bottomLeft + 1].dx = -delta;
-                            appendQuad(&indices, topLeft + 1, topLeft, bottomLeft + 1, bottomLeft);
-                        }
-
-                        if (isRight) {
-                            vertices[topRight].dx = vertices[bottomRight].dx = -rightDx;
-                            vertices[topRight].du = vertices[bottomRight].du = -rightDu;
-                            vertices[topRight + 1].dx = vertices[bottomRight + 1].dx = delta;
-                            appendQuad(&indices, topRight, topRight + 1, bottomRight, bottomRight + 1);
-                        }
-                    }
-                }
-
-                Q_ASSERT(index == g->vertexCount());
-                Q_ASSERT(indices - g->indexCount() == g->indexData());
-            } else {
-                m_geometry.allocate(hCells * vCells * 4, hCells * vCells * 6);
-                m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
-                QSGGeometry::TexturedPoint2D *vertices = m_geometry.vertexDataAsTexturedPoint2D();
-                ys = yData.data();
-                for (int j = 0; j < vCells; ++j, ys += 2) {
-                    xs = xData.data();
-                    for (int i = 0; i < hCells; ++i, xs += 2) {
-                        vertices[0].x = vertices[2].x = xs[0].x;
-                        vertices[0].tx = vertices[2].tx = xs[0].tx;
-                        vertices[1].x = vertices[3].x = xs[1].x;
-                        vertices[1].tx = vertices[3].tx = xs[1].tx;
-
-                        vertices[0].y = vertices[1].y = ys[0].y;
-                        vertices[0].ty = vertices[1].ty = ys[0].ty;
-                        vertices[2].y = vertices[3].y = ys[1].y;
-                        vertices[2].ty = vertices[3].ty = ys[1].ty;
-
-                        vertices += 4;
-                    }
-                }
-
-                quint16 *indices = m_geometry.indexDataAsUShort();
-                for (int i = 0; i < 4 * vCells * hCells; i += 4)
-                    appendQuad(&indices, i, i + 1, i + 2, i + 3);
-            }
+            QSGGeometry *g = m_antialiasing ? geometry() : &m_geometry;
+            updateGeometry(m_targetRect, m_innerTargetRect,
+                           sourceRect, innerSourceRect, m_subSourceRect,
+                           g, m_mirror, m_antialiasing);
         }
     }
     markDirty(DirtyGeometry);

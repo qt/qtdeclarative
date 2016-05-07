@@ -188,6 +188,8 @@ private slots:
     void subclassedUncreateableRevision_data();
     void subclassedUncreateableRevision();
 
+    void uncreatableTypesAsProperties();
+
     void propertyInit();
     void remoteLoadCrash();
     void signalWithDefaultArg();
@@ -3158,6 +3160,14 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
     delete obj;
 }
 
+void tst_qqmllanguage::uncreatableTypesAsProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("uncreatableTypeAsProperty.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+}
+
 void tst_qqmllanguage::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -3863,12 +3873,11 @@ void tst_qqmllanguage::compositeSingletonInstantiateError()
     VERIFY_ERRORS("singletonTest9.error.txt");
 }
 
-// Having a composite singleton type as dynamic property type fails
-// (like C++ singleton)
+// Having a composite singleton type as dynamic property type is allowed
 void tst_qqmllanguage::compositeSingletonDynamicPropertyError()
 {
     QQmlComponent component(&engine, testFile("singletonTest10.qml"));
-    VERIFY_ERRORS("singletonTest10.error.txt");
+    VERIFY_ERRORS(0);
 }
 
 // Having a composite singleton type as dynamic signal parameter succeeds
