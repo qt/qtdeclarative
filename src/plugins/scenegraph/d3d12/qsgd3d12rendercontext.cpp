@@ -117,4 +117,13 @@ void QSGD3D12RenderContext::setEngine(QSGD3D12Engine *engine)
         emit initialized();
 }
 
+void QSGD3D12RenderContext::ensureInitializedEmitted()
+{
+    if (!m_pendingInitialized)
+        return;
+
+    m_pendingInitialized = false;
+    emit initialized();
+}
+
 QT_END_NAMESPACE

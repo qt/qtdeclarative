@@ -70,8 +70,12 @@ public:
     void setEngine(QSGD3D12Engine *engine);
     QSGD3D12Engine *engine() { return m_engine; }
 
+    void ensureInitializedEmitted();
+    void setInitializedPending() { m_pendingInitialized = true; }
+
 private:
     QSGD3D12Engine *m_engine = nullptr;
+    bool m_pendingInitialized = false;
 };
 
 QT_END_NAMESPACE

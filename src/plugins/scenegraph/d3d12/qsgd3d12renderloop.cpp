@@ -294,7 +294,26 @@ bool QSGD3D12RenderThread::event(QEvent *e)
         QSGD3D12SyncEvent *wme = static_cast<QSGD3D12SyncEvent *>(e);
         if (sleeping)
             stopEventProcessing = true;
-        if (!engine->window()) {
+        // One thread+engine for each window. However, the native window may
+        // change in some (quite artificial) cases, e.g. due to a hide -
+        // destroy - show on the QWindow.
+        bool needsWindow = !engine->window();
+        if (engine->window() && engine->window() != wme->window->winId()) {
+            if (Q_UNLIKELY(debug_loop()))
+                qDebug("RT - WM_RequestSync - native window handle changes for active engine");
+            engine->waitGPU();
+            QQuickWindowPrivate::get(wme->window)->cleanupNodesOnShutdown();
+            QSGD3D12ShaderEffectNode::cleanupMaterialTypeCache();
+            rc->invalidate();
+            engine->releaseResources();
+            needsWindow = true;
+            // Be nice and emit the rendercontext's initialized() later on at
+            // some point so that QQuickWindow::sceneGraphInitialized() behaves
+            // in a manner similar to GL.
+            rc->setInitializedPending();
+        }
+        if (needsWindow) {
+            // Must only ever get here when there is no window or releaseResources() has been called.
             const int samples = wme->window->format().samples();
             if (Q_UNLIKELY(debug_loop()))
                 qDebug() << "RT - WM_RequestSync - initializing D3D12 engine" << wme->window
@@ -302,7 +321,6 @@ bool QSGD3D12RenderThread::event(QEvent *e)
             engine->attachToWindow(wme->window->winId(), wme->size, wme->dpr, samples);
         }
         exposedWindow = wme->window;
-        Q_ASSERT(exposedWindow->winId() == engine->window()); // one thread+engine for each window
         engine->setWindowSize(wme->size, wme->dpr);
         if (Q_UNLIKELY(debug_loop()))
             qDebug() << "RT - WM_RequestSync" << exposedWindow;
@@ -374,6 +392,7 @@ bool QSGD3D12RenderThread::event(QEvent *e)
             // However, our hands are tied by the existing, synchronous APIs of
             // QQuickWindow and such.
             QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
+            rc->ensureInitializedEmitted();
             wd->syncSceneGraph();
             wd->renderSceneGraph(wme->window->size());
             *wme->image = engine->executeAndWaitReadbackRenderTarget();
@@ -508,6 +527,7 @@ void QSGD3D12RenderThread::sync(bool inExpose)
         if (wd->renderer)
             wd->renderer->clearChangedFlag();
 
+        rc->ensureInitializedEmitted();
         wd->syncSceneGraph();
 
         if (!hadRenderer && wd->renderer) {
