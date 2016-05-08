@@ -288,6 +288,8 @@ bool qsg_safeguard_texture(QSGTexture *texture)
         QOpenGLContext::currentContext()->functions()->glBindTexture(GL_TEXTURE_2D, 0);
         return false;
     }
+#else
+    Q_UNUSED(texture)
 #endif
     return true;
 }

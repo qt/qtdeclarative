@@ -104,6 +104,8 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
             t->setVerticalWrapMode(QSGTexture::ClampToEdge);
         }
     }
+#else
+    Q_UNUSED(state)
 #endif
     t->setMipmapFiltering(tx->mipmapFiltering());
 

@@ -314,7 +314,7 @@ QSGGeometry *QSGBasicImageNode::updateGeometry(const QRectF &targetRect,
 
         g->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
                     hCells * vCells * 6 + (hCells + vCells) * 12);
-        g->setDrawingMode(GL_TRIANGLES);
+        g->setDrawingMode(QSGGeometry::DrawTriangles);
         SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
         memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
         quint16 *indices = g->indexDataAsUShort();
@@ -427,11 +427,11 @@ QSGGeometry *QSGBasicImageNode::updateGeometry(const QRectF &targetRect,
         if (!geometry) {
             geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                        hCells * vCells * 4, hCells * vCells * 6,
-                                       GL_UNSIGNED_SHORT);
+                                       QSGGeometry::TypeUnsignedShort);
         } else {
             geometry->allocate(hCells * vCells * 4, hCells * vCells * 6);
         }
-        geometry->setDrawingMode(GL_TRIANGLES);
+        geometry->setDrawingMode(QSGGeometry::DrawTriangles);
         QSGGeometry::TexturedPoint2D *vertices = geometry->vertexDataAsTexturedPoint2D();
         ys = yData.data();
         for (int j = 0; j < vCells; ++j, ys += 2) {

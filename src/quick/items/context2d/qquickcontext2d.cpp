@@ -4099,12 +4099,14 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     case QQuickCanvasItem::Image:
         m_texture = new QQuickContext2DImageTexture;
         break;
-#ifndef QT_NO_OPENGL
     case QQuickCanvasItem::FramebufferObject:
-
+#ifndef QT_NO_OPENGL
         m_texture = new QQuickContext2DFBOTexture;
-        break;
+#else
+        // It shouldn't be possible to use a FramebufferObject without OpenGL
+        m_texture = nullptr;
 #endif
+        break;
     }
 
     m_texture->setItem(canvasItem);

@@ -2203,8 +2203,8 @@ void tst_qquickwindow::testRenderJob()
             QCOMPARE(int(readPixel[2]), 0);
             QCOMPARE(int(readPixel[3]), 255);
         }
-    }
 #endif
+    }
 
     // Verify that jobs are deleted when window is not rendered at all
     completedJobs.clear();
@@ -2221,7 +2221,6 @@ void tst_qquickwindow::testRenderJob()
 
 class EventCounter : public QQuickRectangle
 {
-    Q_OBJECT
 public:
     EventCounter(QQuickItem *parent = 0)
         : QQuickRectangle(parent)
