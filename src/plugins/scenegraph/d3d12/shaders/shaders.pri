@@ -98,6 +98,12 @@ shadereffectdefault_pshader.header = ps_shadereffectdefault.hlslh
 shadereffectdefault_pshader.entry = PS_DefaultShaderEffect
 shadereffectdefault_pshader.type = ps_5_0
 
+tdr_CS = $$PWD/tdr.hlsl
+tdr_cshader.input = tdr_CS
+tdr_cshader.header = cs_tdr.hlslh
+tdr_cshader.entry = timeout
+tdr_cshader.type = cs_5_0
+
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
@@ -107,6 +113,7 @@ HLSL_SHADERS = \
     mipmapgen_cshader \
     textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8 \
     styledtext_vshader styledtext_pshader outlinedtext_vshader outlinedtext_pshader \
-    shadereffectdefault_vshader shadereffectdefault_pshader
+    shadereffectdefault_vshader shadereffectdefault_pshader \
+    tdr_cshader
 
 load(hlsl_bytecode_header)

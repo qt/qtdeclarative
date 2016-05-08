@@ -656,6 +656,20 @@ void QSGD3D12RenderThread::syncAndRender()
                int(threadTimer.elapsed() - renderTime / 1000000));
 
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
+
+    static int devLossTest = qEnvironmentVariableIntValue("QT_D3D_TEST_DEVICE_LOSS");
+    if (devLossTest > 0) {
+        static QElapsedTimer kt;
+        static bool timerRunning = false;
+        if (!timerRunning) {
+            kt.start();
+            timerRunning = true;
+        } else if (kt.elapsed() > 5000) {
+            --devLossTest;
+            kt.restart();
+            engine->simulateDeviceLoss();
+        }
+    }
 }
 
 template<class T> T *windowFor(const QVector<T> &list, QQuickWindow *window)

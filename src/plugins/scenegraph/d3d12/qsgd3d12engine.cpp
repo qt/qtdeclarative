@@ -45,6 +45,14 @@
 #include <qmath.h>
 #include <QtCore/private/qsimd_p.h>
 
+// Comment out to disable DeviceLossTester functionality in order to reduce
+// code size and improve startup perf a tiny bit.
+#define DEVLOSS_TEST
+
+#ifdef DEVLOSS_TEST
+#include "cs_tdr.hlslh"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // NOTE: Avoid categorized logging. It is slow.
@@ -520,6 +528,11 @@ QImage QSGD3D12Engine::executeAndWaitReadbackRenderTarget(uint id)
     return d->executeAndWaitReadbackRenderTarget(id);
 }
 
+void QSGD3D12Engine::simulateDeviceLoss()
+{
+    d->simulateDeviceLoss();
+}
+
 QSGRendererInterface::GraphicsAPI QSGD3D12Engine::graphicsAPI() const
 {
     return Direct3D12;
@@ -626,6 +639,7 @@ void QSGD3D12EnginePrivate::releaseResources()
         return;
 
     mipmapper.releaseResources();
+    devLossTest.releaseResources();
 
     frameCommandList = nullptr;
     copyCommandList = nullptr;
@@ -803,6 +817,9 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     rootSigCache.setMaxCost(MAX_CACHED_ROOTSIG);
 
     if (!mipmapper.initialize(this))
+        return;
+
+    if (!devLossTest.initialize(this))
         return;
 
     currentRenderTarget = 0;
@@ -1147,6 +1164,12 @@ void QSGD3D12EnginePrivate::updateBuffer(Buffer *buf)
     buf->cpuDataRef.dirty.clear();
 }
 
+void QSGD3D12EnginePrivate::ensureDevice()
+{
+    if (!initialized && window)
+        initialize(window, windowSize, windowDpr, windowSamples);
+}
+
 void QSGD3D12EnginePrivate::beginFrame()
 {
     if (inFrame && !activeLayers)
@@ -1167,9 +1190,11 @@ void QSGD3D12EnginePrivate::beginFrame()
 
     inFrame = true;
 
-    // The device may have been lost. This is the point to attempt to start again from scratch.
-    if (!initialized && window)
-        initialize(window, windowSize, windowDpr, windowSamples);
+    // The device may have been lost. This is the point to attempt to start
+    // again from scratch. Except when it is not. Operations that can happen
+    // out of frame (e.g. textures, render targets) may trigger reinit earlier
+    // than beginFrame.
+    ensureDevice();
 
     // Wait for a buffer to be available for Present, if the waitable event is in use.
     if (waitableSwapChainMaxLatency)
@@ -2039,7 +2064,7 @@ uint QSGD3D12EnginePrivate::genBuffer()
 
 void QSGD3D12EnginePrivate::releaseBuffer(uint id)
 {
-    if (!id)
+    if (!id || !initialized)
         return;
 
     const int idx = id - 1;
@@ -2199,6 +2224,8 @@ static inline QImage::Format imageFormatForTexture(DXGI_FORMAT format)
 void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Format format,
                                           QSGD3D12Engine::TextureCreateFlags createFlags)
 {
+    ensureDevice();
+
     Q_ASSERT(id);
     const int idx = id - 1;
     Q_ASSERT(idx < textures.count() && textures[idx].entryInUse());
@@ -2471,7 +2498,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
 
 void QSGD3D12EnginePrivate::releaseTexture(uint id)
 {
-    if (!id)
+    if (!id || !initialized)
         return;
 
     const int idx = id - 1;
@@ -2708,6 +2735,8 @@ uint QSGD3D12EnginePrivate::genRenderTarget()
 
 void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const QVector4D &clearColor, uint samples)
 {
+    ensureDevice();
+
     Q_ASSERT(id);
     const int idx = id - 1;
     Q_ASSERT(idx < renderTargets.count() && renderTargets[idx].entryInUse());
@@ -2760,7 +2789,7 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
 
 void QSGD3D12EnginePrivate::releaseRenderTarget(uint id)
 {
-    if (!id)
+    if (!id || !initialized)
         return;
 
     const int idx = id - 1;
@@ -2942,6 +2971,90 @@ QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)
     readbackBuf->Unmap(0, nullptr);
 
     return img;
+}
+
+void QSGD3D12EnginePrivate::simulateDeviceLoss()
+{
+    qWarning("QSGD3D12Engine: Triggering device loss via TDR");
+    devLossTest.killDevice();
+}
+
+bool QSGD3D12EnginePrivate::DeviceLossTester::initialize(QSGD3D12EnginePrivate *enginePriv)
+{
+    engine = enginePriv;
+
+#ifdef DEVLOSS_TEST
+    D3D12_DESCRIPTOR_RANGE descRange[2];
+    descRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    descRange[0].NumDescriptors = 1;
+    descRange[0].BaseShaderRegister = 0;
+    descRange[0].RegisterSpace = 0;
+    descRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    descRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+    descRange[1].NumDescriptors = 1;
+    descRange[1].BaseShaderRegister = 0;
+    descRange[1].RegisterSpace = 0;
+    descRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER param;
+    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    param.DescriptorTable.NumDescriptorRanges = 2;
+    param.DescriptorTable.pDescriptorRanges = descRange;
+
+    D3D12_ROOT_SIGNATURE_DESC desc = {};
+    desc.NumParameters = 1;
+    desc.pParameters = &param;
+
+    ComPtr<ID3DBlob> signature;
+    ComPtr<ID3DBlob> error;
+    if (FAILED(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
+        QByteArray msg(static_cast<const char *>(error->GetBufferPointer()), error->GetBufferSize());
+        qWarning("Failed to serialize compute root signature: %s", qPrintable(msg));
+        return false;
+    }
+    if (FAILED(engine->device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
+                                        IID_PPV_ARGS(&computeRootSignature)))) {
+        qWarning("Failed to create compute root signature");
+        return false;
+    }
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.pRootSignature = computeRootSignature.Get();
+    psoDesc.CS.pShaderBytecode = g_timeout;
+    psoDesc.CS.BytecodeLength = sizeof(g_timeout);
+
+    if (FAILED(engine->device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&computeState)))) {
+        qWarning("Failed to create compute pipeline state");
+        return false;
+    }
+#endif
+
+    return true;
+}
+
+void QSGD3D12EnginePrivate::DeviceLossTester::releaseResources()
+{
+    computeState = nullptr;
+    computeRootSignature = nullptr;
+}
+
+void QSGD3D12EnginePrivate::DeviceLossTester::killDevice()
+{
+#ifdef DEVLOSS_TEST
+    ID3D12CommandAllocator *ca = engine->frameCommandAllocator[engine->frameIndex % engine->frameInFlightCount].Get();
+    ID3D12GraphicsCommandList *cl = engine->frameCommandList.Get();
+    cl->Reset(ca, computeState.Get());
+
+    cl->SetComputeRootSignature(computeRootSignature.Get());
+    cl->Dispatch(256, 1, 1);
+
+    cl->Close();
+    ID3D12CommandList *commandLists[] = { cl };
+    engine->commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    engine->waitGPU();
+#endif
 }
 
 void *QSGD3D12EnginePrivate::getResource(QSGRendererInterface::Resource resource) const

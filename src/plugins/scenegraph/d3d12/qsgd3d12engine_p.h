@@ -351,6 +351,8 @@ public:
 
     QImage executeAndWaitReadbackRenderTarget(uint id = 0);
 
+    void simulateDeviceLoss();
+
     // QSGRendererInterface
     GraphicsAPI graphicsAPI() const override;
     void *getResource(Resource resource) const override;

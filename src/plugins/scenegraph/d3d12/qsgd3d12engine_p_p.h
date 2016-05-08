@@ -182,12 +182,15 @@ public:
 
     QImage executeAndWaitReadbackRenderTarget(uint id);
 
+    void simulateDeviceLoss();
+
     void *getResource(QSGRendererInterface::Resource resource) const;
 
     // the device is intentionally hidden here. all resources have to go
     // through the engine and, unlike with GL, cannot just be created in random
     // places due to the need for proper tracking, managing and releasing.
 private:
+    void ensureDevice();
     void setupDefaultRenderTargets();
     void deviceLost() override;
 
@@ -417,6 +420,18 @@ private:
     };
 
     QVector<Buffer> buffers;
+
+    struct DeviceLossTester {
+        bool initialize(QSGD3D12EnginePrivate *enginePriv);
+        void releaseResources();
+        void killDevice();
+
+        QSGD3D12EnginePrivate *engine;
+        ComPtr<ID3D12PipelineState> computeState;
+        ComPtr<ID3D12RootSignature> computeRootSignature;
+    };
+
+    DeviceLossTester devLossTest;
 };
 
 inline uint qHash(const QSGD3D12EnginePrivate::PersistentFrameData::PendingRelease &pr, uint seed = 0)
