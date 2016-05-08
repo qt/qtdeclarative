@@ -403,7 +403,7 @@ public:
     QQuickTumblerAttachedPrivate(QQuickItem *delegateItem) :
         tumbler(nullptr),
         index(-1),
-        displacement(1)
+        displacement(0)
     {
         if (!delegateItem->parentItem()) {
             qWarning() << "Tumbler: attached properties must be accessed from within a delegate item that has a parent";
@@ -489,8 +489,10 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     if (contentType == PathViewContentItem) {
         offset = tumbler->contentItem()->property("offset").toReal();
 
-        displacement = count - index - offset;
-        int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
+        displacement = count > 1 ? count - index - offset : 0;
+        // Don't add 1 if count <= visibleItemCount
+        const int visibleItems = tumbler->visibleItemCount();
+        int halfVisibleItems = visibleItems / 2 + (visibleItems < count ? 1 : 0);
         if (displacement > halfVisibleItems)
             displacement -= count;
         else if (displacement < -halfVisibleItems)
@@ -522,6 +524,8 @@ QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
         const char *contentItemSignal = contentType == PathViewContentItem
             ? SIGNAL(offsetChanged()) : SIGNAL(contentYChanged());
         connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculateDisplacement()));
+
+        d->_q_calculateDisplacement();
     }
 }
 
