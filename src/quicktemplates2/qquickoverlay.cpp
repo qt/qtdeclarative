@@ -128,20 +128,18 @@ void QQuickOverlayPrivate::restackOverlay()
     if (!modal && !modeless)
         return;
 
-    // find the top-most modal and modeless dimming popups
+    // find the bottom-most modal and top-most modeless dimming popups
     QQuickPopup *modalPopup = nullptr;
     QQuickPopup *modelessPopup = nullptr;
     for (auto it = popups.crbegin(), end = popups.crend(); it != end; ++it) {
         QQuickPopup *popup = (*it);
         if (popup->isModal()) {
-            if (!modalPopup)
+            if (!modalPopup || modalPopup->z() >= popup->z())
                 modalPopup = popup;
         } else if (popup->dim()) {
             if (!modelessPopup)
                 modelessPopup = popup;
         }
-        if (modalPopup && modelessPopup)
-            break;
     }
 
     if (modal) {

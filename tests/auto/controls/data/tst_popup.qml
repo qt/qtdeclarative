@@ -869,14 +869,24 @@ TestCase {
     Component {
         id: overlayTest
         ApplicationWindow {
-            property alias drawer: drawer
+            property alias firstDrawer: firstDrawer
+            property alias secondDrawer: secondDrawer
+            property alias upperDrawer: upperDrawer
             property alias modalPopup: modalPopup
             property alias modelessPopup: modelessPopup
             property alias plainPopup: plainPopup
             visible: true
             Drawer {
+                z: 5
+                id: upperDrawer
+            }
+            Drawer {
                 z: 1
-                id: drawer
+                id: firstDrawer
+            }
+            Drawer {
+                z: 1
+                id: secondDrawer
             }
             Popup {
                 id: modalPopup
@@ -908,14 +918,28 @@ TestCase {
         compare(window.overlay.modal.opacity, 0.0)
         compare(window.overlay.modeless.opacity, 0.0)
 
-        window.drawer.open()
+        window.firstDrawer.open()
         compare(window.overlay.modal.z, 1.0)
         tryCompare(window.overlay.modal, "opacity", 1.0)
-        window.drawer.close()
+        window.firstDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.secondDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.secondDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.firstDrawer.open()
+        window.secondDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.firstDrawer.close()
+        window.secondDrawer.close()
         tryCompare(window.overlay.modal, "opacity", 0.0)
 
         window.modalPopup.open()
-        compare(window.overlay.modal.z, 2.0)
+        compare(window.overlay.modal.z, 1.0)
         compare(window.modalPopup.visible, true)
         tryCompare(window.overlay.modal, "opacity", 1.0)
 
@@ -946,6 +970,20 @@ TestCase {
         tryCompare(window.plainPopup, "visible", false)
         compare(window.overlay.modal.opacity, 0.0)
         compare(window.overlay.modeless.opacity, 0.0)
+
+        window.upperDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.upperDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.firstDrawer.open()
+        window.upperDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.firstDrawer.close()
+        window.upperDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
 
         window.destroy()
     }
