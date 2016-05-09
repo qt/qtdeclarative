@@ -1023,6 +1023,42 @@ QColor QQuickMaterialStyle::tooltipColor() const
     return color(Grey, Shade700);
 }
 
+QColor QQuickMaterialStyle::toolTextColor() const
+{
+    if (m_hasForeground || m_customPrimary)
+        return primaryTextColor();
+
+    switch (m_primary) {
+    case Red:
+    case Pink:
+    case Purple:
+    case DeepPurple:
+    case Indigo:
+    case Blue:
+    case Teal:
+    case DeepOrange:
+    case Brown:
+    case BlueGrey:
+        return QColor::fromRgba(primaryTextColorDark);
+
+    case LightBlue:
+    case Cyan:
+    case Green:
+    case LightGreen:
+    case Lime:
+    case Yellow:
+    case Amber:
+    case Orange:
+    case Grey:
+        return QColor::fromRgba(primaryTextColorLight);
+
+    default:
+        break;
+    }
+
+    return primaryTextColor();
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);

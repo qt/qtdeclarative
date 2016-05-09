@@ -104,6 +104,7 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -231,6 +232,7 @@ public:
     QColor backgroundDimColor() const;
     QColor listHighlightColor() const;
     QColor tooltipColor() const;
+    QColor toolTextColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
