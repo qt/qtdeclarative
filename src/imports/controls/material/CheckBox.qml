@@ -50,10 +50,10 @@ T.CheckBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 8
-    topPadding: 14
+    topPadding: 15
     leftPadding: 8
     rightPadding: 8
-    bottomPadding: 14
+    bottomPadding: 15
 
     //! [indicator]
     indicator: CheckIndicator {

@@ -39,8 +39,8 @@ import QtQuick.Controls.Material 2.0
 
 Rectangle {
     id: indicatorItem
-    implicitWidth: 20
-    implicitHeight: 20
+    implicitWidth: 18
+    implicitHeight: 18
     color: "transparent"
     border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
     border.width: control.checked ? width / 2 : 2
@@ -76,8 +76,8 @@ Rectangle {
         id: checkImage
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        width: 16
-        height: 16
+        width: 14
+        height: 14
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/check.png"
         fillMode: Image.PreserveAspectFit
 
