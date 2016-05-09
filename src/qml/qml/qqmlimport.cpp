@@ -893,7 +893,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
         // To avoid traversing all static plugins for all imports, we cut down
         // the list the first time called to only contain QML plugins:
         foreach (const QStaticPlugin &plugin, QPluginLoader::staticPlugins()) {
-            if (plugin.metaData().value(QStringLiteral("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
+            if (qobject_cast<QQmlExtensionPlugin *>(plugin.instance()))
                 plugins.append(plugin);
         }
     }
