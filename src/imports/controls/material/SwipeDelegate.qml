@@ -50,6 +50,8 @@ T.SwipeDelegate {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
+    topPadding: 8
+    bottomPadding: 8
     spacing: 16
 
     //! [contentItem]
@@ -77,6 +79,8 @@ T.SwipeDelegate {
 
     //! [background]
     background: Rectangle {
+        implicitHeight: 48
+
         color: !control.enabled ? control.Material.swipeDelegateDisabledColor :
             (control.down ? control.Material.swipeDelegatePressColor :
             (control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor : control.Material.swipeDelegateColor))
