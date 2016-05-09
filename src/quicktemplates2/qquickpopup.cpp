@@ -773,7 +773,10 @@ void QQuickPopup::close()
 qreal QQuickPopup::x() const
 {
     Q_D(const QQuickPopup);
-    return d->x;
+    qreal x = d->popupItem->x();
+    if (d->parentItem)
+        x = d->parentItem->mapFromScene(QPointF(x, 0)).x();
+    return x;
 }
 
 void QQuickPopup::setX(qreal x)
@@ -785,7 +788,8 @@ void QQuickPopup::setX(qreal x)
     d->x = x;
     if (d->popupItem->isVisible())
         d->reposition();
-    emit xChanged();
+    else
+        emit xChanged();
 }
 
 /*!
@@ -796,7 +800,10 @@ void QQuickPopup::setX(qreal x)
 qreal QQuickPopup::y() const
 {
     Q_D(const QQuickPopup);
-    return d->y;
+    qreal y = d->popupItem->y();
+    if (d->parentItem)
+        y = d->parentItem->mapFromScene(QPointF(0, y)).y();
+    return y;
 }
 
 void QQuickPopup::setY(qreal y)
@@ -808,7 +815,8 @@ void QQuickPopup::setY(qreal y)
     d->y = y;
     if (d->popupItem->isVisible())
         d->reposition();
-    emit yChanged();
+    else
+        emit yChanged();
 }
 
 QPointF QQuickPopup::position() const
@@ -1889,6 +1897,10 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickPopup);
     d->reposition();
+    if (!qFuzzyCompare(newGeometry.x(), oldGeometry.x()))
+        emit xChanged();
+    if (!qFuzzyCompare(newGeometry.y(), oldGeometry.y()))
+        emit yChanged();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
         emit availableWidthChanged();

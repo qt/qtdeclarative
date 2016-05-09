@@ -107,6 +107,16 @@ TestCase {
         signalName: "bottomPaddingChanged"
     }
 
+    SignalSpy {
+        id: xSpy
+        signalName: "xChanged"
+    }
+
+    SignalSpy {
+        id: ySpy
+        signalName: "yChanged"
+    }
+
     function test_padding() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
@@ -283,6 +293,46 @@ TestCase {
         compare(control.availableHeight, 0)
         compare(availableWidthSpy.count, availableWidthChanges)
         compare(availableHeightSpy.count, ++availableHeightChanges)
+
+        control.destroy()
+    }
+
+    function test_position() {
+        var control = popupControl.createObject(testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
+        verify(control)
+        verify(control.visible)
+
+        xSpy.target = control
+        ySpy.target = control
+
+        verify(xSpy.valid)
+        verify(ySpy.valid)
+
+        // moving outside margins does not trigger change notifiers
+        control.x = -100
+        compare(control.x, 10)
+        compare(control.y, 20)
+        compare(xSpy.count, 0)
+        compare(ySpy.count, 0)
+
+        control.y = -200
+        compare(control.x, 10)
+        compare(control.y, 20)
+        compare(xSpy.count, 0)
+        compare(ySpy.count, 0)
+
+        // moving within margins triggers change notifiers
+        control.x = 30
+        compare(control.x, 30)
+        compare(control.y, 20)
+        compare(xSpy.count, 1)
+        compare(ySpy.count, 0)
+
+        control.y = 40
+        compare(control.x, 30)
+        compare(control.y, 40)
+        compare(xSpy.count, 1)
+        compare(ySpy.count, 1)
 
         control.destroy()
     }
