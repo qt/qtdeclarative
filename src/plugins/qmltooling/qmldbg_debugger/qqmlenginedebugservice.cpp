@@ -758,10 +758,8 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }
 
-    QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
-            QLatin1String(") {");
-    jsfunction += body;
-    jsfunction += QLatin1String("\n})");
+    const QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
+            QLatin1String(") {") + body + QLatin1String("\n})");
 
     QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
