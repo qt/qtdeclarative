@@ -519,6 +519,14 @@ TestCase {
         compare(control.popup.visible, true)
         verify(control.popup.contentItem.y < control.y)
 
+        // follow the control outside the horizontal window bounds
+        control.x = -control.width / 2
+        compare(control.x, -control.width / 2)
+        compare(control.popup.contentItem.parent.x, -control.width / 2)
+        control.x = testCase.width - control.width / 2
+        compare(control.x, testCase.width - control.width / 2)
+        compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2)
+
         control.destroy()
     }
 
