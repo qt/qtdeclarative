@@ -1,6 +1,6 @@
-import QtQuick 2.0
+import QtQml 2.0
 
-Rectangle {
+QtObject {
     function something(i) {
         if (i > 10) {
             something(i / 4);
@@ -9,8 +9,8 @@ Rectangle {
         }
     }
 
-    width: 400
-    height: 400
+    property int width: 400
+    property int height: 400
 
     onWidthChanged: something(width);
     Component.onCompleted: width = 500;

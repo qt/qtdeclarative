@@ -662,11 +662,11 @@ void tst_QQmlProfilerService::signalSourceLocation()
                               QLatin1String("signalSourceLocation.qml"));
     expected.line = 8;
     expected.column = 28;
-    VERIFY(MessageListQML, 13, expected, CheckAll);
+    VERIFY(MessageListQML, 9, expected, CheckAll);
 
     expected.line = 7;
     expected.column = 21;
-    VERIFY(MessageListQML, 15, expected, CheckAll);
+    VERIFY(MessageListQML, 11, expected, CheckAll);
 }
 
 void tst_QQmlProfilerService::javascript()
