@@ -39,10 +39,13 @@ import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Material.impl 2.0
 
 Item {
+    id: indicator
     implicitWidth: 38
     implicitHeight: 32
 
     property alias control: ripple.control
+
+    Material.elevation: 1
 
     Ripple {
         id: ripple
@@ -79,9 +82,9 @@ Item {
                 duration: 300
             }
         }
-        layer.enabled: control.Material.elevation > 0
+        layer.enabled: indicator.Material.elevation > 0
         layer.effect: ElevationEffect {
-            elevation: control.Material.elevation
+            elevation: indicator.Material.elevation
         }
     }
 }

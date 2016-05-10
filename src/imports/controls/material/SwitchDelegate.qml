@@ -42,8 +42,6 @@ import QtQuick.Controls.Material.impl 2.0
 T.SwitchDelegate {
     id: control
 
-    Material.elevation: 1
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
