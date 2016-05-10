@@ -71,6 +71,7 @@ private slots:
     void locale();
     void activeFocusControl_data();
     void activeFocusControl();
+    void focusAfterPopupClosed();
 };
 
 void tst_applicationwindow::qmlCreation()
@@ -637,6 +638,50 @@ void tst_applicationwindow::activeFocusControl()
         QVERIFY(activeFocusControl->hasActiveFocus());
     }
     QCOMPARE(window->activeFocusControl(), activeFocusControl);
+}
+
+void tst_applicationwindow::focusAfterPopupClosed()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("focusAfterPopupClosed.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow*>(component.create()));
+    QVERIFY(window);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(QGuiApplication::focusWindow() == window.data());
+
+    QQuickItem* contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QVERIFY(contentItem->hasActiveFocus());
+
+    QQuickItem* focusScope = window->property("focusScope").value<QQuickItem*>();
+    QVERIFY(focusScope);
+    QVERIFY(focusScope->hasActiveFocus());
+
+    QSignalSpy spy(window.data(), SIGNAL(focusScopeKeyPressed()));
+    QTest::keyClick(window.data(), Qt::Key_Space);
+    QCOMPARE(spy.count(), 1);
+
+    // Open the menu.
+    QQuickItem* toolButton = window->property("toolButton").value<QQuickItem*>();
+    QVERIFY(toolButton);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        toolButton->mapFromScene(QPointF(toolButton->width() / 2, toolButton->height() / 2)).toPoint());
+    QVERIFY(!focusScope->hasActiveFocus());
+
+    // The FocusScope shouldn't receive any key events while the menu is open.
+    QTest::keyClick(window.data(), Qt::Key_Space);
+    QCOMPARE(spy.count(), 1);
+
+    // Close the menu. The FocusScope should regain focus.
+    QTest::keyClick(window.data(), Qt::Key_Escape);
+    QVERIFY(focusScope->hasActiveFocus());
+
+    QTest::keyClick(window.data(), Qt::Key_Space);
+    QCOMPARE(spy.count(), 2);
 }
 
 QTEST_MAIN(tst_applicationwindow)

@@ -232,6 +232,12 @@ void QQuickPopupPrivate::finalizeExitTransition(bool hide)
         popupItem->setVisible(false);
     }
 
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+    if (applicationWindow)
+        applicationWindow->contentItem()->setFocus(true);
+    else if (window)
+        window->contentItem()->setFocus(true);
+
     visible = false;
     emit q->visibleChanged();
     emit q->closed();
