@@ -93,7 +93,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
-        QFileSelectorPrivate::addStatics(QStringList() << style);
+        QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
 
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
