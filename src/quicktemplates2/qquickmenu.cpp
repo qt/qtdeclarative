@@ -112,6 +112,14 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         resizeItem(item);
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
+
+    QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
+    if (menuItem) {
+        Q_Q(QQuickMenu);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
+        QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
+        QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
+    }
 }
 
 void QQuickMenuPrivate::moveItem(int from, int to)
@@ -126,6 +134,14 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     item->setParentItem(nullptr);
     contentModel->remove(index);
+
+    QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
+    if (menuItem) {
+        Q_Q(QQuickMenu);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
+        QObject::disconnect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
+        QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
+    }
 }
 
 void QQuickMenuPrivate::resizeItem(QQuickItem *item)
@@ -231,13 +247,6 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
             item->setParentItem(p->contentItem);
         } else if (p->contentModel->indexOf(item, nullptr) == -1) {
             q->addItem(item);
-
-            QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
-            if (menuItem) {
-                QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, p, &QQuickMenuPrivate::onItemPressed);
-                QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
-                QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, p, &QQuickMenuPrivate::onItemActiveFocusChanged);
-            }
         }
     } else {
         p->contentData.append(obj);

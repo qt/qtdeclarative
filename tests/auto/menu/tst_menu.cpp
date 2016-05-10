@@ -64,6 +64,7 @@ private slots:
     void mouse();
     void contextMenuKeyboard();
     void menuButton();
+    void addItem();
 };
 
 void tst_menu::defaults()
@@ -248,6 +249,23 @@ void tst_menu::menuButton()
     QTest::keyClick(window, Qt::Key_Tab);
     QQuickItem *firstItem = menu->itemAt(0);
     QVERIFY(firstItem->hasActiveFocus());
+}
+
+void tst_menu::addItem()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("addItem.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+
+    QQuickItem *menuItem = menu->itemAt(0);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+    QVERIFY(!menu->isVisible());
 }
 
 QTEST_MAIN(tst_menu)
