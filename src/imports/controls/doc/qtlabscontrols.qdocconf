@@ -35,7 +35,7 @@ exampledirs += ../../../../examples/quickcontrols2 \
                ../../../../tests/auto/controls/data \
                snippets
 
-examplesinstallpath = qtquickcontrols2/quickcontrols2
+examplesinstallpath = quickcontrols2
 
 headerdirs += ../../../templates \
               ../../calendar \
