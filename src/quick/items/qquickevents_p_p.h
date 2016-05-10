@@ -73,10 +73,22 @@ class QQuickKeyEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickKeyEvent(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers, const QString &text=QString(), bool autorep=false, ushort count=1)
-        : event(type, key, modifiers, text, autorep, count) { event.setAccepted(false); }
-    QQuickKeyEvent(const QKeyEvent &ke)
-        : event(ke) { event.setAccepted(false); }
+    QQuickKeyEvent()
+        : event(QEvent::None, 0, 0)
+    {}
+
+    void reset(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
+               const QString &text = QString(), bool autorep = false, ushort count = 1)
+    {
+        event = QKeyEvent(type, key, modifiers, text, autorep, count);
+        event.setAccepted(false);
+    }
+
+    void reset(const QKeyEvent &ke)
+    {
+        event = ke;
+        event.setAccepted(false);
+    }
 
     int key() const { return event.key(); }
     QString text() const { return event.text(); }
@@ -109,10 +121,21 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickMouseEvent(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers
-                  , bool isClick=false, bool wasHeld=false)
-        : _x(x), _y(y), _button(button), _buttons(buttons), _modifiers(modifiers)
-          , _source(Qt::MouseEventNotSynthesized), _wasHeld(wasHeld), _isClick(isClick), _accepted(true) {}
+    QQuickMouseEvent() {}
+
+    void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
+               Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false)
+    {
+        _x = x;
+        _y = y;
+        _button = button;
+        _buttons = buttons;
+        _modifiers = modifiers;
+        _source = Qt::MouseEventNotSynthesized;
+        _wasHeld = wasHeld;
+        _isClick = isClick;
+        _accepted = true;
+    }
 
     qreal x() const { return _x; }
     qreal y() const { return _y; }
@@ -139,9 +162,9 @@ private:
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
     Qt::MouseEventSource _source;
-    bool _wasHeld;
-    bool _isClick;
-    bool _accepted;
+    bool _wasHeld : 1;
+    bool _isClick : 1;
+    bool _accepted : 1;
 };
 
 class QQuickWheelEvent : public QObject
@@ -157,10 +180,20 @@ class QQuickWheelEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickWheelEvent(qreal x, qreal y, const QPoint& angleDelta, const QPoint& pixelDelta,
+    QQuickWheelEvent() {}
+
+    void reset(qreal x, qreal y, const QPoint &angleDelta, const QPoint &pixelDelta,
                      Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, bool inverted)
-        : _x(x), _y(y), _angleDelta(angleDelta), _pixelDelta(pixelDelta), _buttons(buttons),
-          _modifiers(modifiers), _inverted(inverted), _accepted(true) {}
+    {
+        _x = x;
+        _y = y;
+        _angleDelta = angleDelta;
+        _pixelDelta = pixelDelta;
+        _buttons = buttons;
+        _modifiers = modifiers;
+        _accepted = true;
+        _inverted = inverted;
+    }
 
     qreal x() const { return _x; }
     qreal y() const { return _y; }

@@ -40,7 +40,6 @@
 #include "qquickmousearea_p.h"
 #include "qquickmousearea_p_p.h"
 #include "qquickwindow.h"
-#include "qquickevents_p_p.h"
 #include "qquickdrag_p.h"
 
 #include <private/qqmldata_p.h>
@@ -761,7 +760,8 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
     }
 #endif
 
-    QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
+    QQuickMouseEvent &me = d->quickMouseEvent;
+    me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
     me.setSource(event->source());
     emit mouseXChanged(&me);
     me.setPosition(d->lastPos);
@@ -802,7 +802,8 @@ void QQuickMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
     Q_D(QQuickMouseArea);
     if (d->enabled) {
         d->saveEvent(event);
-        QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true, false);
+        QQuickMouseEvent &me = d->quickMouseEvent;
+        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true, false);
         me.setSource(event->source());
         me.setAccepted(d->isDoubleClickConnected());
         emit this->doubleClicked(&me);
@@ -822,7 +823,8 @@ void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
         d->lastPos = event->posF();
         d->lastModifiers = event->modifiers();
         setHovered(true);
-        QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
+        QQuickMouseEvent &me = d->quickMouseEvent;
+        me.reset(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
         emit mouseXChanged(&me);
         me.setPosition(d->lastPos);
         emit mouseYChanged(&me);
@@ -838,7 +840,8 @@ void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
     } else {
         d->lastPos = event->posF();
         d->lastModifiers = event->modifiers();
-        QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
+        QQuickMouseEvent &me = d->quickMouseEvent;
+        me.reset(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
         emit mouseXChanged(&me);
         me.setPosition(d->lastPos);
         emit mouseYChanged(&me);
@@ -865,8 +868,9 @@ void QQuickMouseArea::wheelEvent(QWheelEvent *event)
         return;
     }
 
-    QQuickWheelEvent we(event->posF().x(), event->posF().y(), event->angleDelta(),
-                        event->pixelDelta(), event->buttons(), event->modifiers(), event->inverted());
+    QQuickWheelEvent &we = d->quickWheelEvent;
+    we.reset(event->posF().x(), event->posF().y(), event->angleDelta(), event->pixelDelta(),
+             event->buttons(), event->modifiers(), event->inverted());
     we.setAccepted(d->isWheelConnected());
     emit wheel(&we);
     if (!we.isAccepted())
@@ -997,7 +1001,8 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
 #endif
         if (d->pressed && dragged == false && d->hovered == true) {
             d->longPress = true;
-            QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
+            QQuickMouseEvent &me = d->quickMouseEvent;
+            me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
             me.setSource(Qt::MouseEventSynthesizedByQt);
             me.setAccepted(d->isPressAndHoldConnected());
             emit pressAndHold(&me);
@@ -1175,7 +1180,8 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
     Qt::MouseButtons oldPressed = d->pressed;
 
     if (wasPressed != p) {
-        QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress);
+        QQuickMouseEvent &me = d->quickMouseEvent;
+        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress);
         me.setSource(source);
         if (p) {
             d->pressed |= button;
