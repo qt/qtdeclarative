@@ -56,9 +56,9 @@ T.Slider {
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
-        color: control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+        color: control.enabled ? (control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")) : "#fdfdfd"
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+        border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")) : "#d6d6d6"
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
@@ -75,6 +75,7 @@ T.Slider {
         radius: 3
         border.color: "#353637"
         color: "#ffffff"
+        opacity: control.enabled ? 1 : 0.2
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
