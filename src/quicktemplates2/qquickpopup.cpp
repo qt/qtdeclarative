@@ -551,6 +551,9 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
 void QQuickPopupPrivate::reposition()
 {
     Q_Q(QQuickPopup);
+    if (!popupItem->isVisible())
+        return;
+
     const qreal w = popupItem->width();
     const qreal h = popupItem->height();
     const qreal iw = popupItem->implicitWidth();
