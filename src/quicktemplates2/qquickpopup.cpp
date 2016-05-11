@@ -181,17 +181,16 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
 void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 {
     Q_Q(QQuickPopup);
-    QQuickWindow *quickWindow = q->window();
-    if (!quickWindow) {
+    if (!window) {
         qmlInfo(q) << "cannot find any window to open popup in.";
         return;
     }
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(quickWindow);
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
     if (!applicationWindow) {
-        quickWindow->installEventFilter(q);
+        window->installEventFilter(q);
         popupItem->setZ(10001); // DefaultWindowDecoration+1
-        popupItem->setParentItem(quickWindow->contentItem());
+        popupItem->setParentItem(window->contentItem());
     } else {
         popupItem->setParentItem(applicationWindow->overlay());
     }
@@ -207,9 +206,8 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 void QQuickPopupPrivate::prepareExitTransition()
 {
     Q_Q(QQuickPopup);
-    QQuickWindow *quickWindow = q->window();
-    if (quickWindow && !qobject_cast<QQuickApplicationWindow *>(quickWindow))
-        quickWindow->removeEventFilter(q);
+    if (window && !qobject_cast<QQuickApplicationWindow *>(window))
+        window->removeEventFilter(q);
     if (focus)
         popupItem->setFocus(false);
     emit q->aboutToHide();
@@ -566,7 +564,6 @@ void QQuickPopupPrivate::reposition()
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
 
-        QQuickWindow *window = q->window();
         if (window) {
             const QMarginsF margins = getMargins();
             const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
@@ -1357,10 +1354,7 @@ void QQuickPopup::resetFont()
 QQuickWindow *QQuickPopup::window() const
 {
     Q_D(const QQuickPopup);
-    if (!d->parentItem)
-        return nullptr;
-
-    return d->parentItem->window();
+    return d->window;
 }
 
 QQuickItem *QQuickPopup::popupItem() const
