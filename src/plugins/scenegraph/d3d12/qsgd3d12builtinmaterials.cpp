@@ -356,12 +356,6 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
     return r;
 }
 
-static inline float qsg_device_pixel_ratio(QSGD3D12Engine *engine)
-{
-    // ### offscreen render target support will need changes
-    return engine->windowDevicePixelRatio();
-}
-
 static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
 {
     float o = c.w() * globalOpacity;
@@ -396,7 +390,7 @@ QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderCo
                     ? fontEngine->glyphFormat : QFontEngine::Format_A32;
 
         QSGD3D12Engine *d3dengine = rc->engine();
-        const float devicePixelRatio = qsg_device_pixel_ratio(d3dengine);
+        const float devicePixelRatio = d3dengine->windowDevicePixelRatio();
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
             glyphCacheTransform = QTransform();
@@ -518,7 +512,7 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const Rende
     }
     p += TEXT_CB_SIZE_1;
 
-    const float dpr = qsg_device_pixel_ratio(m_rc->engine());
+    const float dpr = m_rc->engine()->windowDevicePixelRatio();
     if (state.isCachedMaterialDataDirty() || m_lastDpr != dpr) {
         m_lastDpr = dpr;
         memcpy(p, &dpr, TEXT_CB_SIZE_2);
