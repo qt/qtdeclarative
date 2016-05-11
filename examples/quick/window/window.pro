@@ -6,7 +6,8 @@ RESOURCES += \
     window.qrc \
     ../shared/shared.qrc
 EXAMPLE_FILES = \
-    window.qml
+    window.qml \
+    resources
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/window
 INSTALLS += target

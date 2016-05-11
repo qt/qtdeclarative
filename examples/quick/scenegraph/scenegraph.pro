@@ -8,3 +8,6 @@ SUBDIRS += \
         textureinthread \
         threadedanimation \
         twotextureproviders
+
+EXAMPLE_FILES += \
+    shared

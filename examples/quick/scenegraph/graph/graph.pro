@@ -32,3 +32,5 @@ OTHER_FILES += \
     shaders/line.fsh \
     shaders/line.vsh
 
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/graph
+INSTALLS += target
