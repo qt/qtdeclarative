@@ -81,6 +81,13 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     \snippet qtquickcontrols2-spinbox-textual.qml 1
 
+    In the same manner, SpinBox can be customized to accept floating point
+    numbers:
+
+    \image qtquickcontrols2-spinbox-double.png
+
+    \snippet qtquickcontrols2-spinbox-double.qml 1
+
     \sa Tumbler, {Customizing SpinBox}
 */
 
