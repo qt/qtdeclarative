@@ -1926,9 +1926,9 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    for (QVector<QQmlPrivate::QmlUnitCacheLookupFunction>::ConstIterator it = data->lookupCachedQmlUnit.constBegin(), end = data->lookupCachedQmlUnit.constEnd();
-         it != end; ++it) {
-        if (const QQmlPrivate::CachedQmlUnit *unit = (*it)(uri))
+
+    for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
+        if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri))
             return unit;
     }
     return 0;
