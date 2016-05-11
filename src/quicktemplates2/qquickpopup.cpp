@@ -766,24 +766,13 @@ void QQuickPopup::close()
 */
 qreal QQuickPopup::x() const
 {
-    Q_D(const QQuickPopup);
-    qreal x = d->popupItem->x();
-    if (d->parentItem)
-        x = d->parentItem->mapFromScene(QPointF(x, 0)).x();
-    return x;
+    return position().x();
 }
 
 void QQuickPopup::setX(qreal x)
 {
     Q_D(QQuickPopup);
-    if (qFuzzyCompare(d->x, x))
-        return;
-
-    d->x = x;
-    if (d->popupItem->isVisible())
-        d->reposition();
-    else
-        emit xChanged();
+    setPosition(QPointF(x, d->y));
 }
 
 /*!
@@ -793,30 +782,22 @@ void QQuickPopup::setX(qreal x)
 */
 qreal QQuickPopup::y() const
 {
-    Q_D(const QQuickPopup);
-    qreal y = d->popupItem->y();
-    if (d->parentItem)
-        y = d->parentItem->mapFromScene(QPointF(0, y)).y();
-    return y;
+    return position().y();
 }
 
 void QQuickPopup::setY(qreal y)
 {
     Q_D(QQuickPopup);
-    if (qFuzzyCompare(d->y, y))
-        return;
-
-    d->y = y;
-    if (d->popupItem->isVisible())
-        d->reposition();
-    else
-        emit yChanged();
+    setPosition(QPointF(d->x, y));
 }
 
 QPointF QQuickPopup::position() const
 {
     Q_D(const QQuickPopup);
-    return QPointF(d->x, d->y);
+    QPointF pos = d->popupItem->position();
+    if (d->parentItem)
+        pos = d->parentItem->mapFromScene(pos);
+    return pos;
 }
 
 void QQuickPopup::setPosition(const QPointF &pos)
@@ -829,12 +810,14 @@ void QQuickPopup::setPosition(const QPointF &pos)
 
     d->x = pos.x();
     d->y = pos.y();
-    if (d->popupItem->isVisible())
+    if (d->popupItem->isVisible()) {
         d->reposition();
-    if (xChange)
-        emit xChanged();
-    if (yChange)
-        emit yChanged();
+    } else {
+        if (xChange)
+            emit xChanged();
+        if (yChange)
+            emit yChanged();
+    }
 }
 
 /*!
