@@ -971,6 +971,7 @@ TestCase {
             property alias modalPopup: modalPopup
             property alias modelessPopup: modelessPopup
             property alias plainPopup: plainPopup
+            property alias modalPopupWithoutDim: modalPopupWithoutDim
             visible: true
             Drawer {
                 z: 5
@@ -1000,6 +1001,13 @@ TestCase {
                 id: plainPopup
                 z: 4
                 enter: Transition { PauseAnimation { duration: 200 } }
+                exit: Transition { PauseAnimation { duration: 200 } }
+            }
+            Popup {
+                id: modalPopupWithoutDim
+                z: 5
+                dim: false
+                modal: true
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
         }
@@ -1064,6 +1072,16 @@ TestCase {
 
         window.plainPopup.close()
         tryCompare(window.plainPopup, "visible", false)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
+
+        window.modalPopupWithoutDim.open()
+        tryCompare(window.modalPopupWithoutDim, "visible", true)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
+
+        window.modalPopupWithoutDim.close()
+        tryCompare(window.modalPopupWithoutDim, "visible", false)
         compare(window.overlay.modal.opacity, 0.0)
         compare(window.overlay.modeless.opacity, 0.0)
 
