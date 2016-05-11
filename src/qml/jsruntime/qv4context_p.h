@@ -241,7 +241,7 @@ struct WithContext : public ExecutionContext
     V4_MANAGED(WithContext, ExecutionContext)
 };
 
-struct QmlContext : public ExecutionContext
+struct Q_QML_EXPORT QmlContext : public ExecutionContext
 {
     V4_MANAGED(QmlContext, ExecutionContext)
 
