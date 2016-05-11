@@ -50,7 +50,7 @@ T.Menu {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
-    margins: 12
+    margins: 0
     topPadding: 8
     bottomPadding: 8
 
