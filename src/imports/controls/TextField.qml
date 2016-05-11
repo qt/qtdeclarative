@@ -74,9 +74,9 @@ T.TextField {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
-//        border.width: control.activeFocus ? 2 : 1
+        border.width: control.activeFocus ? 2 : 1
         color: control.enabled ? "transparent" : "#353637"
-        border.color: control.enabled ? "#bdbebf" : "transparent"
+        border.color: control.activeFocus ? "#0066ff" : (control.enabled ? "#bdbebf" : "transparent")
     }
     //! [background]
 }
