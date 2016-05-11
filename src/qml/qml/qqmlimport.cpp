@@ -191,7 +191,7 @@ void qmlClearEnginePlugins()
 {
     StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
     QMutexLocker lock(&plugins->mutex);
-    foreach (RegisteredPlugin plugin, plugins->values()) {
+    for (auto &plugin : qAsConst(*plugins)) {
         QPluginLoader* loader = plugin.loader;
         if (loader && !loader->unload())
             qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));

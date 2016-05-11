@@ -1914,14 +1914,11 @@ QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QList<QQmlType*> alltypes = data->nameToType.values();
     QList<QQmlType*> retn;
-    foreach (QQmlType* t, alltypes) {
-        if (t->isSingleton()) {
-            retn.append(t);
-        }
+    for (const auto type : qAsConst(data->nameToType)) {
+        if (type->isSingleton())
+            retn.append(type);
     }
-
     return retn;
 }
 
