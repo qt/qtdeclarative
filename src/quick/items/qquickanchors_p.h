@@ -89,7 +89,13 @@ public:
     QQuickAnchors(QQuickItem *item, QObject *parent=0);
     virtual ~QQuickAnchors();
 
-    enum Anchor {
+    enum Anchor
+#if !(defined(Q_CC_GNU) && !defined(Q_CC_CLANG) && (Q_CC_GNU < 500))
+            // Not specifying the enum base type will have MSVC 'interpret' it as signed instead of an unsigned bit-field.
+            // However, specifying the enum base type breaks GCC 4.x on OpenSUSE 13.something, where it complains that it can't store all values in a 7 bit bitfield.
+            : uint
+#endif
+    {
         InvalidAnchor = 0x0,
         LeftAnchor = 0x01,
         RightAnchor = 0x02,
