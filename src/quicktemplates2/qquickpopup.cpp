@@ -133,6 +133,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , allowHorizontalFlip(false)
     , x(0)
     , y(0)
+    , effectiveX(0)
+    , effectiveY(0)
     , margins(-1)
     , topMargin(0)
     , leftMargin(0)
@@ -625,6 +627,17 @@ void QQuickPopupPrivate::reposition()
     }
 
     popupItem->setPosition(rect.topLeft());
+
+    const QPointF effectivePos = parentItem ? parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
+    if (!qFuzzyCompare(effectiveX, effectivePos.x())) {
+        effectiveX = effectivePos.x();
+        emit q->xChanged();
+    }
+    if (!qFuzzyCompare(effectiveY, effectivePos.y())) {
+        effectiveY = effectivePos.y();
+        emit q->yChanged();
+    }
+
     if (widthAdjusted && rect.width() > 0)
         popupItem->setWidth(rect.width());
     if (heightAdjusted && rect.height() > 0)
@@ -766,7 +779,8 @@ void QQuickPopup::close()
 */
 qreal QQuickPopup::x() const
 {
-    return position().x();
+    Q_D(const QQuickPopup);
+    return d->effectiveX;
 }
 
 void QQuickPopup::setX(qreal x)
@@ -782,7 +796,8 @@ void QQuickPopup::setX(qreal x)
 */
 qreal QQuickPopup::y() const
 {
-    return position().y();
+    Q_D(const QQuickPopup);
+    return d->effectiveY;
 }
 
 void QQuickPopup::setY(qreal y)
@@ -794,10 +809,7 @@ void QQuickPopup::setY(qreal y)
 QPointF QQuickPopup::position() const
 {
     Q_D(const QQuickPopup);
-    QPointF pos = d->popupItem->position();
-    if (d->parentItem)
-        pos = d->parentItem->mapFromScene(pos);
-    return pos;
+    return QPointF(d->effectiveX, d->effectiveY);
 }
 
 void QQuickPopup::setPosition(const QPointF &pos)
@@ -1889,10 +1901,6 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickPopup);
     d->reposition();
-    if (!qFuzzyCompare(newGeometry.x(), oldGeometry.x()))
-        emit xChanged();
-    if (!qFuzzyCompare(newGeometry.y(), oldGeometry.y()))
-        emit yChanged();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
         emit availableWidthChanged();

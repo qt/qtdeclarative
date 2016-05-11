@@ -192,6 +192,8 @@ public:
     bool allowHorizontalFlip;
     qreal x;
     qreal y;
+    qreal effectiveX;
+    qreal effectiveY;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;

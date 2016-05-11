@@ -334,6 +334,24 @@ TestCase {
         compare(xSpy.count, 1)
         compare(ySpy.count, 1)
 
+        // re-parent and reset the position
+        control.parent = rect.createObject(testCase, {color: "red", width: 100, height: 100})
+        control.x = 0
+        control.y = 0
+        compare(xSpy.count, 2)
+        compare(ySpy.count, 2)
+
+        // moving parent outside margins triggers change notifiers
+        control.parent.x = -50
+        compare(control.x, 50 + control.leftMargin)
+        compare(xSpy.count, 3)
+        compare(ySpy.count, 2)
+
+        control.parent.y = -60
+        compare(control.y, 60 + control.topMargin)
+        compare(xSpy.count, 3)
+        compare(ySpy.count, 3)
+
         control.destroy()
     }
 
