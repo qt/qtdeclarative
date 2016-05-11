@@ -79,7 +79,6 @@ QSGGlyphNode *QSGD3D12Context::createGlyphNode(QSGRenderContext *renderContext, 
 
 QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
 {
-    Q_UNREACHABLE();
     return nullptr;
 }
 
