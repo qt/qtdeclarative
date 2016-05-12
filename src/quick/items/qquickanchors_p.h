@@ -90,9 +90,9 @@ public:
     virtual ~QQuickAnchors();
 
     enum Anchor
-#if !(defined(Q_CC_GNU) && !defined(Q_CC_CLANG) && (Q_CC_GNU < 500))
+#if defined(Q_CC_CLANG) || !defined(Q_CC_GNU) // meaning: clang and msvc, but NOT gcc proper (because, you know, Q_CC_CLANG implies Q_CC_GNU)
             // Not specifying the enum base type will have MSVC 'interpret' it as signed instead of an unsigned bit-field.
-            // However, specifying the enum base type breaks GCC 4.x on OpenSUSE 13.something, where it complains that it can't store all values in a 7 bit bitfield.
+            // However, specifying the enum base type breaks many GCCs, which complain that it can't store all values in a 7 bit bitfield.
             : uint
 #endif
     {
