@@ -882,11 +882,11 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             // If the width of the item has changed and it's possible the result of wrapping,
             // eliding, scaling has changed, or the text is not left aligned do another layout.
-            if ((lineWidth < qMin(oldWidth, naturalWidth) || (widthExceeded && lineWidth > oldWidth))
+            if ((!qFuzzyCompare(lineWidth, oldWidth) || (widthExceeded && lineWidth > oldWidth))
                     && (singlelineElide || multilineElide || canWrap || horizontalFit
                         || q->effectiveHAlign() != QQuickText::AlignLeft)) {
                 widthChanged = true;
-                widthExceeded = false;
+                widthExceeded = lineWidth >= qMin(oldWidth, naturalWidth);
                 heightExceeded = false;
                 continue;
             }
