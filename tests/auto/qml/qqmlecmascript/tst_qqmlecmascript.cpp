@@ -322,6 +322,7 @@ private slots:
     void writeUnregisteredQObjectProperty();
     void switchExpression();
     void qtbug_46022();
+    void qtbug_52340();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -2944,6 +2945,18 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->invoked(), 29);
     QCOMPARE(o->actuals().count(), 1);
     QCOMPARE(qvariant_cast<QByteArray>(o->actuals().at(0)), QByteArray("Hello"));
+
+    o->reset();
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_intQJSValue(123, function() { return \"Hello world!\";})"));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 30);
+    QVERIFY(ret->isString());
+    QCOMPARE(ret->toQStringNoThrow(), QString("Hello world!"));
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(123));
+    QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
+    QVERIFY(!callback.isNull());
+    QVERIFY(callback.isCallable());
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)
@@ -7331,7 +7344,7 @@ void tst_qqmlecmascript::sequenceSort_data()
 
     QTest::newRow("qtbug_25269") << "test_qtbug_25269" << false;
 
-    const char *types[] = { "alphabet", "numbers", "reals" };
+    const char *types[] = { "alphabet", "numbers", "reals", "number_vector", "real_vector" };
     const char *sort[] = { "insertionSort", "quickSort" };
 
     for (size_t t=0 ; t < sizeof(types)/sizeof(types[0]) ; ++t) {
@@ -7896,6 +7909,17 @@ void tst_qqmlecmascript::qtbug_46022()
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("test1").toBool(), true);
     QCOMPARE(obj->property("test2").toBool(), true);
+}
+
+void tst_qqmlecmascript::qtbug_52340()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_52340.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "testCall", Q_RETURN_ARG(QVariant, returnValue)));
+    QVERIFY(returnValue.isValid());
+    QVERIFY(returnValue.toBool());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -112,7 +112,7 @@ when passed from C++ to QML and vice-versa:
         \li QVector2D, QVector3D, QVector4D
         \li \l vector2d, \l vector3d, \l vector4d
     \row
-        \li Enums declared with Q_ENUMS()
+        \li Enums declared with Q_ENUM() or Q_ENUMS()
         \li \l enumeration
 \endtable
 
@@ -261,6 +261,9 @@ In particular, QML currently supports:
   \li \c {QList<bool>}
   \li \c {QList<QString>} and \c{QStringList}
   \li \c {QList<QUrl>}
+  \li \c {QVector<int>}
+  \li \c {QVector<qreal>}
+  \li \c {QVector<bool>}
 \endlist
 
 These sequence types are implemented directly in terms of the underlying C++
@@ -303,6 +306,9 @@ The default-constructed values for each sequence type are as follows:
 \row \li QList<bool> \li boolean value \c {false}
 \row \li QList<QString> and QStringList \li empty QString
 \row \li QList<QUrl> \li empty QUrl
+\row \li QVector<int> \li integer value 0
+\row \li QVector<qreal> \li real value 0.0
+\row \li QVector<bool> \li boolean value \c {false}
 \endtable
 
 If you wish to remove elements from a sequence rather than simply replace
@@ -341,7 +347,7 @@ properties:
 \section1 Enumeration Types
 
 To use a custom enumeration as a data type, its class must be registered and
-the enumeration must also be declared with Q_ENUMS() to register it with Qt's
+the enumeration must also be declared with Q_ENUM() to register it with Qt's
 meta object system. For example, the \c Message class below has a \c Status
 enum:
 
@@ -349,7 +355,6 @@ enum:
  class Message : public QObject
  {
      Q_OBJECT
-     Q_ENUMS(Status)
      Q_PROPERTY(Status status READ status NOTIFY statusChanged)
  public:
      enum Status {
@@ -357,6 +362,7 @@ enum:
          Loading,
          Error
      };
+     Q_ENUM(Status)
      Status status() const;
  signals:
      void statusChanged();

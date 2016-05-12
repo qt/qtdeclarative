@@ -77,11 +77,17 @@ enum MemoryType {
 struct FunctionCallProperties {
     qint64 start;
     qint64 end;
+    quintptr id;
+};
+
+struct FunctionLocation {
     QString name;
     QString file;
     int line;
     int column;
 };
+
+typedef QHash<qint64, QV4::Profiling::FunctionLocation> FunctionLocationHash;
 
 struct MemoryAllocationProperties {
     qint64 timestamp;
@@ -118,7 +124,8 @@ public:
         return *this;
     }
 
-    FunctionCallProperties resolve() const;
+    FunctionLocation resolveLocation() const;
+    FunctionCallProperties properties() const;
 
 private:
     friend bool operator<(const FunctionCall &call1, const FunctionCall &call2);
@@ -173,7 +180,8 @@ public slots:
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
-    void dataReady(const QVector<QV4::Profiling::FunctionCallProperties> &,
+    void dataReady(const QV4::Profiling::FunctionLocationHash &,
+                   const QVector<QV4::Profiling::FunctionCallProperties> &,
                    const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
@@ -218,8 +226,10 @@ public:
 Q_DECLARE_TYPEINFO(QV4::Profiling::MemoryAllocationProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionLocation, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
+Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
 

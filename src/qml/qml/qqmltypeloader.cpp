@@ -661,7 +661,7 @@ void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
     Q_ASSERT(m_waitingFor.contains(blob));
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
     QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler,
-                               blob->url());
+                               blob);
 
     m_inCallback = true;
 
@@ -1121,6 +1121,7 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
 }
 
 #define DATALOADER_MAXIMUM_REDIRECT_RECURSION 16
+#define TYPELOADER_MINIMUM_TRIM_THRESHOLD 64
 
 #ifndef QT_NO_NETWORK
 void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
@@ -1225,7 +1226,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, QQmlFile *file)
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob->url());
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
 
     blob->m_inCallback = true;
 
@@ -1245,7 +1246,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob->url());
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
 
     blob->m_inCallback = true;
 
@@ -1398,13 +1399,10 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
                     // Probe for all possible locations
                     int priority = 0;
-                    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
-                        foreach (const QString &path, remotePathList) {
-                            QString qmldirUrl = QQmlImports::completeQmldirPath(importUri, path, import->majorVersion, import->minorVersion,
-                                                                                static_cast<QQmlImports::ImportVersion>(version));
-                            if (!fetchQmldir(QUrl(qmldirUrl), import, ++priority, errors))
-                                return false;
-                        }
+                    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(importUri, remotePathList, import->majorVersion, import->minorVersion);
+                    for (const QString &qmldirPath : qmlDirPaths) {
+                        if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors))
+                            return false;
                     }
                 }
             }
@@ -1602,7 +1600,8 @@ bool QQmlTypeLoader::QmldirContent::designerSupported() const
 Constructs a new type loader that uses the given \a engine.
 */
 QQmlTypeLoader::QQmlTypeLoader(QQmlEngine *engine)
-    : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this))
+    : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this)),
+      m_typeCacheTrimThreshold(TYPELOADER_MINIMUM_TRIM_THRESHOLD)
 {
 }
 
@@ -1639,6 +1638,10 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     QQmlTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
+        // Trim before adding the new type, so that we don't immediately trim it away
+        if (m_typeCache.size() >= m_typeCacheTrimThreshold)
+            trimCache();
+
         typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
@@ -1943,10 +1946,20 @@ void QQmlTypeLoader::clearCache()
     qDeleteAll(m_importQmlDirCache);
 
     m_typeCache.clear();
+    m_typeCacheTrimThreshold = TYPELOADER_MINIMUM_TRIM_THRESHOLD;
     m_scriptCache.clear();
     m_qmldirCache.clear();
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
+}
+
+void QQmlTypeLoader::updateTypeCacheTrimThreshold()
+{
+    int size = m_typeCache.size();
+    if (size > m_typeCacheTrimThreshold)
+        m_typeCacheTrimThreshold = size * 2;
+    if (size < m_typeCacheTrimThreshold / 2)
+        m_typeCacheTrimThreshold = qMax(size * 2, TYPELOADER_MINIMUM_TRIM_THRESHOLD);
 }
 
 void QQmlTypeLoader::trimCache()
@@ -1972,6 +1985,8 @@ void QQmlTypeLoader::trimCache()
             m_typeCache.erase(iter);
         }
     }
+
+    updateTypeCacheTrimThreshold();
 
     // TODO: release any scripts which are no longer referenced by any types
 }

@@ -63,10 +63,12 @@ public:
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) Q_DECL_OVERRIDE;
 
 public slots:
-    void receiveData(const QVector<QQmlProfilerData> &new_data);
+    void receiveData(const QVector<QQmlProfilerData> &new_data,
+                     const QQmlProfiler::LocationHash &locations);
 
 private:
     QVector<QQmlProfilerData> data;
+    QQmlProfiler::LocationHash locations;
     int next;
 };
 

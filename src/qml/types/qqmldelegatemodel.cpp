@@ -1040,7 +1040,7 @@ QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index
                 return QString();
             int from = dot+1;
             dot = name.indexOf(QLatin1Char('.'), from);
-            value = obj->property(name.mid(from, dot-from).toUtf8());
+            value = obj->property(name.midRef(from, dot - from).toUtf8());
         }
         return value.toString();
     }
@@ -1557,29 +1557,6 @@ bool QQmlDelegateModel::isDescendantOf(const QPersistentModelIndex& desc, const 
     return false;
 }
 
-void QQmlDelegateModel::_q_layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
-{
-    Q_D(QQmlDelegateModel);
-    if (!d->m_complete)
-        return;
-
-    if (hint == QAbstractItemModel::VerticalSortHint) {
-        d->m_storedPersistentIndexes.clear();
-        if (!parents.isEmpty() && d->m_adaptorModel.rootIndex.isValid() &&  !isDescendantOf(d->m_adaptorModel.rootIndex, parents)) {
-            return;
-        }
-
-        for (int i = 0; i < d->m_count; ++i) {
-            const QModelIndex index = d->m_adaptorModel.aim()->index(i, 0, d->m_adaptorModel.rootIndex);
-            d->m_storedPersistentIndexes.append(index);
-        }
-    } else if (hint == QAbstractItemModel::HorizontalSortHint) {
-        // Ignored
-    } else {
-        // Triggers model reset, no preparations for that are needed
-    }
-}
-
 void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
     Q_D(QQmlDelegateModel);
@@ -1591,19 +1568,7 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
             return;
         }
 
-        for (int i = 0, c = d->m_storedPersistentIndexes.count(); i < c; ++i) {
-            const QPersistentModelIndex &index = d->m_storedPersistentIndexes.at(i);
-            if (i == index.row())
-                continue;
-
-            _q_itemsMoved(i, index.row(), 1);
-        }
-
-        d->m_storedPersistentIndexes.clear();
-
-        // layoutUpdate does not necessarily have any move changes, but it can
-        // also mean data changes. We can't detect what exactly has changed, so
-        // just emit it for all items
+        // mark all items as changed
         _q_itemsChanged(0, d->m_count, QVector<int>());
 
     } else if (hint == QAbstractItemModel::HorizontalSortHint) {

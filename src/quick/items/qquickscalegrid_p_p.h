@@ -116,7 +116,7 @@ public:
     QString pixmapUrl() const;
 
 private:
-    static QQuickBorderImage::TileMode stringToRule(const QString &);
+    static QQuickBorderImage::TileMode stringToRule(const QStringRef &);
 
 private:
     int _l;

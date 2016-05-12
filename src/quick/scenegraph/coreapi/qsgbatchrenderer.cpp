@@ -496,11 +496,6 @@ void Updater::visitGeometryNode(Node *n)
             if (e->batch)
                 renderer->invalidateBatchAndOverlappingRenderOrders(e->batch);
         }
-        if (n->dirtyState & QSGNode::DirtyMaterial) {
-            Element *e = n->element();
-            if (e->batch && e->batch->isMaterialCompatible(e) == BatchBreaksOnCompare)
-                renderer->invalidateBatchAndOverlappingRenderOrders(e->batch);
-        }
     }
 
     SHADOWNODE_TRAVERSE(n) visitNode(child);
@@ -598,13 +593,13 @@ void Element::computeBounds()
     }
     bounds.map(*node->matrix());
 
-    if (!qIsFinite(bounds.tl.x) || bounds.tl.x == FLT_MAX)
+    if (!qt_is_finite(bounds.tl.x) || bounds.tl.x == FLT_MAX)
         bounds.tl.x = -FLT_MAX;
-    if (!qIsFinite(bounds.tl.y) || bounds.tl.y == FLT_MAX)
+    if (!qt_is_finite(bounds.tl.y) || bounds.tl.y == FLT_MAX)
         bounds.tl.y = -FLT_MAX;
-    if (!qIsFinite(bounds.br.x) || bounds.br.x == -FLT_MAX)
+    if (!qt_is_finite(bounds.br.x) || bounds.br.x == -FLT_MAX)
         bounds.br.x = FLT_MAX;
-    if (!qIsFinite(bounds.br.y) || bounds.br.y == -FLT_MAX)
+    if (!qt_is_finite(bounds.br.y) || bounds.br.y == -FLT_MAX)
         bounds.br.y = FLT_MAX;
 
     Q_ASSERT(bounds.tl.x <= bounds.br.x);
@@ -1240,7 +1235,10 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
             if (e->isMaterialBlended != blended) {
                 m_rebuild |= Renderer::FullRebuild;
                 e->isMaterialBlended = blended;
-            } else if (!e->batch) {
+            } else if (e->batch) {
+                if (e->batch->isMaterialCompatible(e) == BatchBreaksOnCompare)
+                    invalidateBatchAndOverlappingRenderOrders(e->batch);
+            } else {
                 m_rebuild |= Renderer::BuildBatches;
             }
         }

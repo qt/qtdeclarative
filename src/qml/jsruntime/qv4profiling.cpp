@@ -46,26 +46,35 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Profiling {
 
-FunctionCallProperties FunctionCall::resolve() const
+FunctionLocation FunctionCall::resolveLocation() const
 {
-    FunctionCallProperties props = {
-        m_start,
-        m_end,
+    FunctionLocation location = {
         m_function->name()->toQString(),
         m_function->compilationUnit->fileName(),
         m_function->compiledFunction->location.line,
         m_function->compiledFunction->location.column
     };
+    return location;
+}
+
+FunctionCallProperties FunctionCall::properties() const
+{
+    FunctionCallProperties props = {
+        m_start,
+        m_end,
+        reinterpret_cast<quintptr>(m_function)
+    };
     return props;
 }
 
-
 Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(engine)
 {
-    static int meta = qRegisterMetaType<QVector<QV4::Profiling::FunctionCallProperties> >();
-    static int meta2 = qRegisterMetaType<QVector<QV4::Profiling::MemoryAllocationProperties> >();
-    Q_UNUSED(meta);
-    Q_UNUSED(meta2);
+    static const int metatypes[] = {
+        qRegisterMetaType<QVector<QV4::Profiling::FunctionCallProperties> >(),
+        qRegisterMetaType<QVector<QV4::Profiling::MemoryAllocationProperties> >(),
+        qRegisterMetaType<FunctionLocationHash>()
+    };
+    Q_UNUSED(metatypes);
     m_timer.start();
 }
 
@@ -85,13 +94,16 @@ bool operator<(const FunctionCall &call1, const FunctionCall &call2)
 void Profiler::reportData()
 {
     std::sort(m_data.begin(), m_data.end());
-    QVector<FunctionCallProperties> resolved;
-    resolved.reserve(m_data.size());
+    QVector<FunctionCallProperties> properties;
+    QHash<qint64, FunctionLocation> locations;
+    properties.reserve(m_data.size());
 
-    foreach (const FunctionCall &call, m_data)
-        resolved.append(call.resolve());
+    foreach (const FunctionCall &call, m_data) {
+        properties.append(call.properties());
+        locations[properties.constLast().id] = call.resolveLocation();
+    }
 
-    emit dataReady(resolved, m_memory_data);
+    emit dataReady(locations, properties, m_memory_data);
     m_data.clear();
     m_memory_data.clear();
 }

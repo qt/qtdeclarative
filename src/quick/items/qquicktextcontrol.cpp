@@ -109,6 +109,7 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       overwriteMode(false),
       acceptRichText(true),
       cursorVisible(false),
+      cursorBlinkingEnabled(false),
       hasFocus(false),
       hadSelectionOnMousePress(false),
       wordSelectionEnabled(false),
@@ -463,14 +464,30 @@ void QQuickTextControlPrivate::_q_updateCursorPosChanged(const QTextCursor &some
 
 void QQuickTextControlPrivate::setBlinkingCursorEnabled(bool enable)
 {
-    Q_Q(QQuickTextControl);
+    if (cursorBlinkingEnabled == enable)
+        return;
 
-    if (enable && QGuiApplication::styleHints()->cursorFlashTime() > 0)
-        cursorBlinkTimer.start(QGuiApplication::styleHints()->cursorFlashTime() / 2, q);
+    cursorBlinkingEnabled = enable;
+    updateCursorFlashTime();
+
+    if (enable)
+        connect(qApp->styleHints(), &QStyleHints::cursorFlashTimeChanged, this, &QQuickTextControlPrivate::updateCursorFlashTime);
+    else
+        disconnect(qApp->styleHints(), &QStyleHints::cursorFlashTimeChanged, this, &QQuickTextControlPrivate::updateCursorFlashTime);
+}
+
+void QQuickTextControlPrivate::updateCursorFlashTime()
+{
+    // Note: cursorOn represents the current blinking state controlled by a timer, and
+    // should not be confused with cursorVisible or cursorBlinkingEnabled. However, we
+    // interpretate a cursorFlashTime of 0 to mean "always on, never blink".
+    cursorOn = true;
+    int flashTime = QGuiApplication::styleHints()->cursorFlashTime();
+
+    if (cursorBlinkingEnabled && flashTime >= 2)
+        cursorBlinkTimer.start(flashTime / 2, q_func());
     else
         cursorBlinkTimer.stop();
-
-    cursorOn = enable;
 
     repaintCursor();
 }

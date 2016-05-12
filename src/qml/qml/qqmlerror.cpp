@@ -43,6 +43,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qvector.h>
 
 #include <private/qv4errorobject_p.h>
 
@@ -288,11 +289,11 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
             stream.setCodec("UTF-8");
 #endif
             const QString code = stream.readAll();
-            const QStringList lines = code.split(QLatin1Char('\n'));
+            const auto lines = code.splitRef(QLatin1Char('\n'));
 
             if (lines.count() >= error.line()) {
-                const QString &line = lines.at(error.line() - 1);
-                debug << "\n    " << qPrintable(line);
+                const QStringRef &line = lines.at(error.line() - 1);
+                debug << "\n    " << line.toLocal8Bit().constData();
 
                 if(error.column() > 0) {
                     int column = qMax(0, error.column() - 1);

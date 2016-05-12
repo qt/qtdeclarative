@@ -1037,8 +1037,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (compiledData->isComponent(index)) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
-        Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(QStringLiteral("<component>"),
-                context->url(), obj->location.line, obj->location.column));
+        Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                             compiledData, obj, QStringLiteral("<component>"), context->url()));
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
@@ -1048,8 +1048,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;
         if (type) {
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(type->qmlTypeName(),
-                    context->url(), obj->location.line, obj->location.column));
+            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                                 compiledData, obj, type->qmlTypeName(), context->url()));
             instance = type->create();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1071,8 +1071,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->component);
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(typeRef->component->fileName(),
-                    context->url(), obj->location.line, obj->location.column));
+            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                                 compiledData, obj, typeRef->component->fileName(),
+                                 context->url()));
             if (typeRef->component->compilationUnit->data->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1115,7 +1116,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         parserStatus->classBegin();
         // push() the profiler state here, together with the parserStatus, as we'll pop() them
         // together, too.
-        Q_QML_OC_PROFILE(sharedState->profiler, sharedState->profiler.push(profiler));
+        Q_QML_OC_PROFILE(sharedState->profiler, sharedState->profiler.push(obj));
         sharedState->allParserStatusCallbacks.push(parserStatus);
         parserStatus->d = &sharedState->allParserStatusCallbacks.top();
     }

@@ -605,7 +605,7 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 {
     if (url.startsWith(QLatin1String("qrc:"), Qt::CaseInsensitive)) {
         if (url.length() > 4)
-            return QLatin1Char(':') + url.mid(4);
+            return QLatin1Char(':') + url.midRef(4);
         return QString();
     }
 

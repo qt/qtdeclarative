@@ -146,7 +146,6 @@ private Q_SLOTS:
     void _q_rowsRemoved(const QModelIndex &,int,int);
     void _q_rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
     void _q_dataChanged(const QModelIndex&,const QModelIndex&,const QVector<int> &);
-    void _q_layoutAboutToBeChanged(const QList<QPersistentModelIndex>&, QAbstractItemModel::LayoutChangeHint);
     void _q_layoutChanged(const QList<QPersistentModelIndex>&, QAbstractItemModel::LayoutChangeHint);
 
 private:

@@ -714,9 +714,9 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                   sourceRect.height() / nsHeight);
 
     if (targetRect.isEmpty()
-        || !qIsFinite(targetRect.width()) || !qIsFinite(targetRect.height())
+        || !qt_is_finite(targetRect.width()) || !qt_is_finite(targetRect.height())
         || nsrect.isEmpty()
-        || !qIsFinite(nsrect.width()) || !qIsFinite(nsrect.height())) {
+        || !qt_is_finite(nsrect.width()) || !qt_is_finite(nsrect.height())) {
         delete node;
         return 0;
     }

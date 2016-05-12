@@ -249,8 +249,8 @@ void Document::collectTypeReferences()
 
 void Document::removeScriptPragmas(QString &script)
 {
-    const QString pragma(QLatin1String("pragma"));
-    const QString library(QLatin1String("library"));
+    const QLatin1String pragma("pragma");
+    const QLatin1String library("library");
 
     QQmlJS::Lexer l(0);
     l.setCode(script, 0);
@@ -268,7 +268,7 @@ void Document::removeScriptPragmas(QString &script)
 
         if (token != QQmlJSGrammar::T_PRAGMA ||
             l.tokenStartLine() != startLine ||
-            script.mid(l.tokenOffset(), l.tokenLength()) != pragma)
+            script.midRef(l.tokenOffset(), l.tokenLength()) != pragma)
             return;
 
         token = l.lex();
@@ -277,7 +277,7 @@ void Document::removeScriptPragmas(QString &script)
             l.tokenStartLine() != startLine)
             return;
 
-        QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
+        const QStringRef pragmaValue = script.midRef(l.tokenOffset(), l.tokenLength());
         int endOffset = l.tokenLength() + l.tokenOffset();
 
         token = l.lex();

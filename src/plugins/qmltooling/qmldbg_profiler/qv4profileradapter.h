@@ -74,7 +74,8 @@ signals:
     void v4ProfilingEnabledWhileWaiting(quint64 v4Features);
 
 public slots:
-    void receiveData(const QVector<QV4::Profiling::FunctionCallProperties> &,
+    void receiveData(const QV4::Profiling::FunctionLocationHash &,
+                     const QVector<QV4::Profiling::FunctionCallProperties> &,
                      const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
 private slots:
@@ -82,6 +83,7 @@ private slots:
     void forwardEnabledWhileWaiting(quint64 features);
 
 private:
+    QV4::Profiling::FunctionLocationHash m_functionLocations;
     QVector<QV4::Profiling::FunctionCallProperties> m_functionCallData;
     QVector<QV4::Profiling::MemoryAllocationProperties> m_memoryData;
     int m_functionCallPos;

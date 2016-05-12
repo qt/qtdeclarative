@@ -187,17 +187,17 @@ QTransform QQuickDesignerSupport::parentTransform(QQuickItem *referencedItem)
     return parentTransform;
 }
 
-QString propertyNameForAnchorLine(const QQuickAnchorLine::AnchorLine &anchorLine)
+QString propertyNameForAnchorLine(const QQuickAnchors::Anchor &anchorLine)
 {
     switch (anchorLine) {
-        case QQuickAnchorLine::Left: return QLatin1String("left");
-        case QQuickAnchorLine::Right: return QLatin1String("right");
-        case QQuickAnchorLine::Top: return QLatin1String("top");
-        case QQuickAnchorLine::Bottom: return QLatin1String("bottom");
-        case QQuickAnchorLine::HCenter: return QLatin1String("horizontalCenter");
-        case QQuickAnchorLine::VCenter: return QLatin1String("verticalCenter");
-        case QQuickAnchorLine::Baseline: return QLatin1String("baseline");
-        case QQuickAnchorLine::Invalid:
+        case QQuickAnchors::LeftAnchor: return QLatin1String("left");
+        case QQuickAnchors::RightAnchor: return QLatin1String("right");
+        case QQuickAnchors::TopAnchor: return QLatin1String("top");
+        case QQuickAnchors::BottomAnchor: return QLatin1String("bottom");
+        case QQuickAnchors::HCenterAnchor: return QLatin1String("horizontalCenter");
+        case QQuickAnchors::VCenterAnchor: return QLatin1String("verticalCenter");
+        case QQuickAnchors::BaselineAnchor: return QLatin1String("baseline");
+        case QQuickAnchors::InvalidAnchor: // fallthrough:
         default: return QString();
     }
 }
@@ -343,7 +343,7 @@ QPair<QString, QObject*> QQuickDesignerSupport::anchorLineTarget(QQuickItem *ite
             return QPair<QString, QObject*>();
 
         QQuickAnchorLine anchorLine = metaProperty.read().value<QQuickAnchorLine>();
-        if (anchorLine.anchorLine != QQuickAnchorLine::Invalid) {
+        if (anchorLine.anchorLine != QQuickAnchors::InvalidAnchor) {
             targetObject = anchorLine.item;
             targetName = propertyNameForAnchorLine(anchorLine.anchorLine);
         }

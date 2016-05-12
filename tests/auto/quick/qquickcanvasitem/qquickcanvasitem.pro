@@ -25,6 +25,7 @@ OTHER_FILES += \
     data/tst_arcto.qml \
     data/tst_arc.qml \
     data/tst_context.qml \
+    data/tst_imagedata.qml \
     data/CanvasTestCase.qml \
     data/CanvasComponent.qml \
     data/tst_image.qml \

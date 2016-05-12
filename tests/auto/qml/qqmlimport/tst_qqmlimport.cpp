@@ -41,6 +41,8 @@ private slots:
     void importPathOrder();
     void testDesignerSupported();
     void uiFormatLoading();
+    void completeQmldirPaths_data();
+    void completeQmldirPaths();
     void cleanup();
 };
 
@@ -144,6 +146,43 @@ void tst_QQmlImport::importPathOrder()
     engine.addImportPath(QT_QMLTEST_DATADIR);
     expectedImportPaths.prepend(QT_QMLTEST_DATADIR);
     QCOMPARE(expectedImportPaths, engine.importPathList());
+}
+
+Q_DECLARE_METATYPE(QQmlImports::ImportVersion)
+
+void tst_QQmlImport::completeQmldirPaths_data()
+{
+    QTest::addColumn<QString>("uri");
+    QTest::addColumn<QStringList>("basePaths");
+    QTest::addColumn<int>("majorVersion");
+    QTest::addColumn<int>("minorVersion");
+    QTest::addColumn<QStringList>("expectedPaths");
+
+    QTest::newRow("QtQml") << "QtQml" << (QStringList() << "qtbase/qml/" << "path/to/qml") << 2 << 7
+                           << (QStringList() << "qtbase/qml/QtQml.2.7/qmldir" << "path/to/qml/QtQml.2.7/qmldir"
+                                             << "qtbase/qml/QtQml.2/qmldir" << "path/to/qml/QtQml.2/qmldir"
+                                             << "qtbase/qml/QtQml/qmldir" << "path/to/qml/QtQml/qmldir");
+
+    QTest::newRow("QtQml.Models") << "QtQml.Models" << QStringList("qtbase/qml/") << 2 << 2
+                                  << (QStringList() << "qtbase/qml/QtQml/Models.2.2/qmldir" << "qtbase/qml/QtQml.2.2/Models/qmldir"
+                                                    << "qtbase/qml/QtQml/Models.2/qmldir" << "qtbase/qml/QtQml.2/Models/qmldir"
+                                                    << "qtbase/qml/QtQml/Models/qmldir");
+
+    QTest::newRow("org.qt-project.foo.bar") << "org.qt-project.foo.bar" << QStringList("qtbase/qml/") << 0 << 1
+                                            << (QStringList() << "qtbase/qml/org/qt-project/foo/bar.0.1/qmldir" << "qtbase/qml/org/qt-project/foo.0.1/bar/qmldir" << "qtbase/qml/org/qt-project.0.1/foo/bar/qmldir" << "qtbase/qml/org.0.1/qt-project/foo/bar/qmldir"
+                                                              << "qtbase/qml/org/qt-project/foo/bar.0/qmldir" << "qtbase/qml/org/qt-project/foo.0/bar/qmldir" << "qtbase/qml/org/qt-project.0/foo/bar/qmldir" << "qtbase/qml/org.0/qt-project/foo/bar/qmldir"
+                                                              << "qtbase/qml/org/qt-project/foo/bar/qmldir");
+}
+
+void tst_QQmlImport::completeQmldirPaths()
+{
+    QFETCH(QString, uri);
+    QFETCH(QStringList, basePaths);
+    QFETCH(int, majorVersion);
+    QFETCH(int, minorVersion);
+    QFETCH(QStringList, expectedPaths);
+
+    QCOMPARE(QQmlImports::completeQmldirPaths(uri, basePaths, majorVersion, minorVersion), expectedPaths);
 }
 
 QTEST_MAIN(tst_QQmlImport)

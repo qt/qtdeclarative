@@ -156,8 +156,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
 QV8Engine::~QV8Engine()
 {
-    for (int ii = 0; ii < m_extensionData.count(); ++ii)
-        delete m_extensionData[ii];
+    qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
 #if !defined(QT_NO_XMLSTREAMREADER) && defined(QT_NO_NETWORK)

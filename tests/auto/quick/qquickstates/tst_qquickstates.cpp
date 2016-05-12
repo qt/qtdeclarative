@@ -698,7 +698,7 @@ void tst_qquickstates::anchorChanges()
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), qreal(150));
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
-    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchors::InvalidAnchor);  //### was reset (how do we distinguish from not set at all)
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
 
@@ -891,7 +891,7 @@ void tst_qquickstates::anchorChangesRTL()
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), offsetRTL(rect, innerRect) - qreal(150));
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
-    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchors::InvalidAnchor);  //### was reset (how do we distinguish from not set at all)
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
 

@@ -137,6 +137,8 @@ private slots:
     void jsArrayChange();
     void qtbug42716();
     void addCustomAttribute();
+    void movementDirection_data();
+    void movementDirection();
 };
 
 class TestObject : public QObject
@@ -2381,6 +2383,72 @@ void tst_QQuickPathView::addCustomAttribute()
     const QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("customAttribute.qml"));
     window->show();
+}
+
+void tst_QQuickPathView::movementDirection_data()
+{
+    QTest::addColumn<QQuickPathView::MovementDirection>("movementdirection");
+    QTest::addColumn<int>("toidx");
+    QTest::addColumn<qreal>("fromoffset");
+    QTest::addColumn<qreal>("tooffset");
+
+    QTest::newRow("default-shortest") << QQuickPathView::Shortest << 3 << 8.0 << 5.0;
+    QTest::newRow("negative") << QQuickPathView::Negative << 2 << 0.0 << 6.0;
+    QTest::newRow("positive") << QQuickPathView::Positive << 3 << 8.0 << 5.0;
+
+}
+
+static void verify_offsets(QQuickPathView *pathview, int toidx, qreal fromoffset, qreal tooffset)
+{
+    pathview->setCurrentIndex(toidx);
+    bool started = false;
+    qreal first, second;
+    QTest::qWait(100);
+    first = pathview->offset();
+    while (1) {
+        QTest::qWait(10); // highlightMoveDuration: 1000
+        second = pathview->offset();
+        if (!started && second != first) { // animation started
+            started = true;
+            break;
+        }
+    }
+
+    if (tooffset > fromoffset) {
+        QVERIFY(fromoffset <= first);
+        QVERIFY(first <= second);
+        QVERIFY(second <= tooffset);
+    } else {
+        QVERIFY(fromoffset >= first);
+        QVERIFY(first >= second);
+        QVERIFY(second >= tooffset);
+    }
+    QTRY_COMPARE(pathview->offset(), tooffset);
+}
+
+void tst_QQuickPathView::movementDirection()
+{
+    QFETCH(QQuickPathView::MovementDirection, movementdirection);
+    QFETCH(int, toidx);
+    QFETCH(qreal, fromoffset);
+    QFETCH(qreal, tooffset);
+
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("movementDirection.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView*>("view");
+    QVERIFY(pathview != 0);
+    QVERIFY(pathview->offset() == 0.0);
+    QVERIFY(pathview->currentIndex() == 0);
+    pathview->setMovementDirection(movementdirection);
+    QVERIFY(pathview->movementDirection() == movementdirection);
+
+    verify_offsets(pathview, toidx, fromoffset, tooffset);
 }
 
 QTEST_MAIN(tst_QQuickPathView)

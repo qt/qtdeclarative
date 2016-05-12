@@ -136,39 +136,38 @@ QQuickGridScaledImage::QQuickGridScaledImage(QIODevice *data)
         if (colonId <= 0)
             return;
 
-        QStringList list;
-        list.append(line.left(colonId).trimmed());
-        list.append(line.mid(colonId+1).trimmed());
+        const QStringRef property = line.leftRef(colonId).trimmed();
+        QStringRef value = line.midRef(colonId + 1).trimmed();
 
-        if (list[0] == QLatin1String("border.left"))
-            l = list[1].toInt();
-        else if (list[0] == QLatin1String("border.right"))
-            r = list[1].toInt();
-        else if (list[0] == QLatin1String("border.top"))
-            t = list[1].toInt();
-        else if (list[0] == QLatin1String("border.bottom"))
-            b = list[1].toInt();
-        else if (list[0] == QLatin1String("source"))
-            imgFile = list[1];
-        else if (list[0] == QLatin1String("horizontalTileRule") || list[0] == QLatin1String("horizontalTileMode"))
-            _h = stringToRule(list[1]);
-        else if (list[0] == QLatin1String("verticalTileRule") || list[0] == QLatin1String("verticalTileMode"))
-            _v = stringToRule(list[1]);
+        if (property == QLatin1String("border.left")) {
+            l = value.toInt();
+        } else if (property == QLatin1String("border.right")) {
+            r = value.toInt();
+        } else if (property == QLatin1String("border.top")) {
+            t = value.toInt();
+        } else if (property == QLatin1String("border.bottom")) {
+            b = value.toInt();
+        } else if (property == QLatin1String("source")) {
+            if (value.startsWith(QLatin1Char('"')) && value.endsWith(QLatin1Char('"')))
+                value = value.mid(1, value.size() - 2); // remove leading/trailing quotes.
+            imgFile = value.toString();
+        } else if (property == QLatin1String("horizontalTileRule") || property == QLatin1String("horizontalTileMode")) {
+            _h = stringToRule(value);
+        } else if (property == QLatin1String("verticalTileRule") || property == QLatin1String("verticalTileMode")) {
+            _v = stringToRule(value);
+        }
     }
 
     if (l < 0 || r < 0 || t < 0 || b < 0 || imgFile.isEmpty())
         return;
 
     _l = l; _r = r; _t = t; _b = b;
-
     _pix = imgFile;
-    if (_pix.startsWith(QLatin1Char('"')) && _pix.endsWith(QLatin1Char('"')))
-        _pix = _pix.mid(1, _pix.size() - 2); // remove leading/trailing quotes.
 }
 
-QQuickBorderImage::TileMode QQuickGridScaledImage::stringToRule(const QString &s)
+QQuickBorderImage::TileMode QQuickGridScaledImage::stringToRule(const QStringRef &s)
 {
-    QString string = s;
+    QStringRef string = s;
     if (string.startsWith(QLatin1Char('"')) && string.endsWith(QLatin1Char('"')))
         string = string.mid(1, string.size() - 2); // remove leading/trailing quotes.
 

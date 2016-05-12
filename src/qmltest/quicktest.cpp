@@ -352,7 +352,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         QTestRootObject::instance()->init();
         QString path = fi.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
-            view->setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
+            view->setSource(QUrl(QLatin1String("qrc:") + path.midRef(2)));
         else
             view->setSource(QUrl::fromLocalFile(path));
 
