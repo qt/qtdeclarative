@@ -913,8 +913,10 @@ void tst_qquicktext::hAlignImplicitWidth()
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
-    const int windowWidth = 220;
-    const int textWidth = qCeil(text->implicitWidth());
+    // QQuickWindow::grabWindow() scales the returned image by the devicePixelRatio of the screen.
+    const qreal devicePixelRatio = view.screen()->devicePixelRatio();
+    const int windowWidth = 220 * devicePixelRatio;
+    const int textWidth = qCeil(text->implicitWidth()) * devicePixelRatio;
     QVERIFY2(textWidth < windowWidth, "System font too large.");
     const int sectionWidth = textWidth / 3;
     const int centeredSection1 = (windowWidth - textWidth) / 2;
