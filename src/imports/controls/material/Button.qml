@@ -90,7 +90,7 @@ T.Button {
                 : control.down
                     ? control.highlighted ? control.Material.highlightedButtonPressColor
                                           : control.Material.buttonPressColor
-                : control.visualFocus
+                : control.visualFocus || control.checked
                     ? control.highlighted ? control.Material.highlightedButtonHoverColor
                                           : control.Material.buttonHoverColor
                     : control.highlighted ? control.Material.highlightedButtonColor
