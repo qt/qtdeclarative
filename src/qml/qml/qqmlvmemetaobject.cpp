@@ -665,9 +665,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             } else {
                                 QV4::MemberData *md = propertiesAsMemberData();
                                 if (md) {
-                                    QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
-                                    if (v)
-                                        QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], t);
+                                    QVariant propertyAsVariant;
+                                    if (QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>())
+                                        propertyAsVariant = v->d()->data;
+                                    QQml_valueTypeProvider()->readValueType(propertyAsVariant, a[0], t);
                                 }
                             }
                             break;

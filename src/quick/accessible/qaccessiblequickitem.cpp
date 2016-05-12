@@ -48,6 +48,11 @@ QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
 {
 }
 
+QWindow *QAccessibleQuickItem::window() const
+{
+    return item()->window();
+}
+
 int QAccessibleQuickItem::childCount() const
 {
     return childItems().count();

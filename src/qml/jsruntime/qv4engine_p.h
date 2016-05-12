@@ -75,15 +75,11 @@ namespace CompiledData {
 struct CompilationUnit;
 }
 
-#define CHECK_STACK_LIMITS(v4) \
-    if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
-    else \
-        return v4->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
-
-
 struct Q_QML_EXPORT ExecutionEngine
 {
 private:
+    static qint32 maxCallDepth;
+
     friend struct ExecutionContextSaver;
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
@@ -92,6 +88,7 @@ public:
 
     Value *jsStackTop;
     quint32 hasException;
+    qint32 callDepth;
 
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
@@ -101,7 +98,6 @@ public:
     ExecutionContext *currentContext;
 
     Value *jsStackLimit;
-    quintptr cStackLimit;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -431,8 +427,6 @@ public:
 
     InternalClass *newClass(const InternalClass &other);
 
-    bool recheckCStackLimits();
-
     // Exception handling
     Value *exceptionValue;
     StackTrace exceptionStackTrace;
@@ -465,6 +459,8 @@ public:
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
+
+    bool checkStackLimits(ReturnedValue &exception);
 };
 
 inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
@@ -517,7 +513,26 @@ inline void Value::mark(ExecutionEngine *e)
         o->mark(e);
 }
 
+#define CHECK_STACK_LIMITS(v4) { ReturnedValue e; if ((v4)->checkStackLimits(e)) return e; } \
+    ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
+struct ExecutionEngineCallDepthRecorder
+{
+    ExecutionEngine *ee;
+
+    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ++ee->callDepth; }
+    ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
+};
+
+inline bool ExecutionEngine::checkStackLimits(ReturnedValue &exception)
+{
+    if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= maxCallDepth))) {
+        exception = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
+        return true;
+    }
+
+    return false;
+}
 
 } // namespace QV4
 
