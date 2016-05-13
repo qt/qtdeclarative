@@ -41,9 +41,9 @@ Rectangle {
     implicitHeight: 28
 
     radius: width / 2
-    color: control.down ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+    color: control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")
     border.width: control.visualFocus ? 2 : 1
-    border.color: control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
+    border.color: control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")
 
     property Item control
 
@@ -53,7 +53,7 @@ Rectangle {
         width: 20
         height: 20
         radius: width / 2
-        color: parent.border.color
+        color: control.down ? "#26282a" : "#353637"
         visible: control.checked
     }
 }

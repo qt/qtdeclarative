@@ -95,9 +95,9 @@ T.ComboBox {
         implicitHeight: 40
 
         color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
-            (control.pressed || popup.visible ? "#d6d6d6" : "#f6f6f6")
-        border.color: control.visualFocus ? "#0066ff" : "#353637"
-        border.width: control.visualFocus ? 2 : 1
+            (control.pressed || popup.visible ? "#d0d0d0" : "#e0e0e0")
+        border.color: "#0066ff"
+        border.width: control.visualFocus ? 2 : 0
     }
     //! [background]
 
@@ -121,7 +121,7 @@ T.ComboBox {
                 width: listview.width
                 height: listview.height
                 color: "transparent"
-                border.color: "#353637"
+                border.color: "#bdbebf"
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }

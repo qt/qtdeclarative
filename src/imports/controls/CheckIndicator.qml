@@ -44,9 +44,9 @@ Rectangle {
     implicitWidth: 28
     implicitHeight: 28
 
-    color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
+    color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : "#ffffff") : "#353637"
     border.width: control.visualFocus ? 2 : 1
-    border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")) : "transparent"
+    border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")) : "transparent"
 
     Image {
         x: (parent.width - width) / 2
