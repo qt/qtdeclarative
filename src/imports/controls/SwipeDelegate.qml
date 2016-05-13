@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.SwipeDelegate {
     id: control
@@ -52,8 +52,8 @@ T.SwipeDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -64,7 +64,7 @@ T.SwipeDelegate {
         verticalAlignment: Text.AlignVCenter
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400
@@ -73,22 +73,12 @@ T.SwipeDelegate {
     }
     //! [contentItem]
 
-    //! [indicator]
-    indicator: Image {
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-
-        visible: control.checked
-        source: control.checkable ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png" : ""
-    }
-    //! [indicator]
-
     //! [background]
     background: Rectangle {
-        color: control.pressed ? "#bdbebf" : "#eeeeee"
+        color: control.down ? "#bdbebf" : "#eeeeee"
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             NumberAnimation {
                 easing.type: Easing.InOutCubic
                 duration: 400

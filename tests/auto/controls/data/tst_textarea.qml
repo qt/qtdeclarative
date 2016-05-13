@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -56,6 +56,15 @@ TestCase {
     }
 
     Component {
+        id: flickable
+        Flickable {
+            width: 200
+            height: 200
+            TextArea.flickable: TextArea { }
+        }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -68,10 +77,16 @@ TestCase {
 
     function test_implicitSize() {
         var control = textArea.createObject(testCase)
+
+        var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
+        var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
         control.background.implicitWidth = 400
         control.background.implicitHeight = 200
         compare(control.implicitWidth, 400)
         compare(control.implicitHeight, 200)
+        compare(implicitWidthSpy.count, 1)
+        compare(implicitHeightSpy.count, 1)
+
         control.destroy()
     }
 
@@ -136,5 +151,29 @@ TestCase {
         compare(childSpy.count, 0)
 
         control.destroy()
+    }
+
+    function test_flickable() {
+        var control = flickable.createObject(testCase, {text:"line0"})
+        verify(control)
+
+        var textArea = control.TextArea.flickable
+        verify(textArea)
+
+        for (var i = 1; i <= 100; ++i)
+            textArea.text += "line\n" + i
+
+        verify(textArea.contentWidth > 0)
+        verify(textArea.contentHeight > 200)
+
+        compare(control.contentWidth, textArea.contentWidth + textArea.leftPadding + textArea.rightPadding)
+        compare(control.contentHeight, textArea.contentHeight + textArea.topPadding + textArea.bottomPadding)
+
+        control.destroy()
+    }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_textarea.qml") + ":45:1: QML TestCase: TextArea must be attached to a Flickable")
+        testCase.TextArea.flickable = null
     }
 }

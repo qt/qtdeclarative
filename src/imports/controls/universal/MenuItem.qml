@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.MenuItem {
     id: control
@@ -56,8 +56,8 @@ T.MenuItem {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -75,7 +75,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.pressed ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
+        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
     }
     //! [indicator]
 
@@ -85,14 +85,14 @@ T.MenuItem {
         implicitHeight: 40
 
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 1; y: 1
             width: parent.width - 2
             height: parent.height - 2
 
-            visible: control.activeKeyFocus
+            visible: control.visualFocus
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

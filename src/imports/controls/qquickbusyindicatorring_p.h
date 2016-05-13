@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKBUSYINDICATOR_P_H
-#define QQUICKBUSYINDICATOR_P_H
+#ifndef QQUICKBUSYINDICATORRING_P_H
+#define QQUICKBUSYINDICATORRING_P_H
 
 //
 //  W A R N I N G
@@ -79,4 +79,4 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickBusyIndicatorRing)
 
-#endif // QQUICKBUSYINDICATOR_P_H
+#endif // QQUICKBUSYINDICATORRING_P_H

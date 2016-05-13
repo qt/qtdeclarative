@@ -40,8 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -212,7 +211,7 @@ TestCase {
 
         group.buttons = []
         compare(group.buttons.length, 0)
-        compare(group.checkedButton, null)
+        tryCompare(group, "checkedButton", null)
         compare(buttonsSpy.count, 5)
 
         group.destroy()
@@ -320,5 +319,32 @@ TestCase {
         compare(buttonsSpy.count, 2)
 
         group.destroy()
+    }
+
+    Component {
+        id: repeater
+        Column {
+            id: column
+            property ButtonGroup group: ButtonGroup { buttons: column.children }
+            property alias repeater: r
+            Repeater {
+                id: r
+                model: 3
+                delegate: RadioDelegate {
+                    checked: index == 0
+                    objectName: index
+                }
+            }
+        }
+    }
+
+    function test_repeater() {
+        var container = repeater.createObject(testCase)
+        verify(container)
+
+        verify(container.group.checkedButton)
+        compare(container.group.checkedButton.objectName, "0")
+
+        container.destroy()
     }
 }

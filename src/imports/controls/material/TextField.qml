@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Material 2.0
 
 T.TextField {
     id: control
@@ -44,9 +44,10 @@ T.TextField {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             placeholder.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+                             placeholder.implicitHeight + 1 + topPadding + bottomPadding)
 
-    padding: 6
+    topPadding: 8
+    bottomPadding: 16
 
     color: enabled ? Material.primaryTextColor : Material.hintTextColor
     selectionColor: Material.accentColor
@@ -98,7 +99,7 @@ T.TextField {
 
     //! [background]
     background: Rectangle {
-        y: control.height - height
+        y: control.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor

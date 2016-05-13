@@ -4,10 +4,13 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    drawer \
     material \
     menu \
     popup \
     pressandhold \
+    qquickstyle \
+    qquickstyleselector \
     sanity \
     snippets \
     styles \

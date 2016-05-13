@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,18 +35,16 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls.material 1.0
+import QtQuick.Controls.Material 2.0
 
 Rectangle {
     id: indicatorItem
-    implicitWidth: 20
-    implicitHeight: 20
+    implicitWidth: 18
+    implicitHeight: 18
     color: "transparent"
     border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
     border.width: control.checked ? width / 2 : 2
     radius: 2
-
-    visible: control.checkable
 
     property alias control: ripple.control
 
@@ -70,7 +68,7 @@ Rectangle {
         height: width
         control: control
         colored: control.checked
-        opacity: control.pressed ? 1 : 0
+        opacity: control.down || control.visualFocus ? 1 : 0
     }
 
     // TODO: This needs to be transparent
@@ -78,9 +76,9 @@ Rectangle {
         id: checkImage
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        width: 16
-        height: 16
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
+        width: 14
+        height: 14
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/check.png"
         fillMode: Image.PreserveAspectFit
 
         scale: control.checked ? 1 : 0

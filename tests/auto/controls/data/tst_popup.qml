@@ -40,8 +40,8 @@
 
 import QtQuick 2.4
 import QtTest 1.0
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 TestCase {
     id: testCase
@@ -105,6 +105,16 @@ TestCase {
     SignalSpy {
         id: bottomPaddingSpy
         signalName: "bottomPaddingChanged"
+    }
+
+    SignalSpy {
+        id: xSpy
+        signalName: "xChanged"
+    }
+
+    SignalSpy {
+        id: ySpy
+        signalName: "yChanged"
     }
 
     function test_padding() {
@@ -287,6 +297,46 @@ TestCase {
         control.destroy()
     }
 
+    function test_position() {
+        var control = popupControl.createObject(testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
+        verify(control)
+        verify(control.visible)
+
+        xSpy.target = control
+        ySpy.target = control
+
+        verify(xSpy.valid)
+        verify(ySpy.valid)
+
+        // moving outside margins does not trigger change notifiers
+        control.x = -100
+        compare(control.x, 10)
+        compare(control.y, 20)
+        compare(xSpy.count, 0)
+        compare(ySpy.count, 0)
+
+        control.y = -200
+        compare(control.x, 10)
+        compare(control.y, 20)
+        compare(xSpy.count, 0)
+        compare(ySpy.count, 0)
+
+        // moving within margins triggers change notifiers
+        control.x = 30
+        compare(control.x, 30)
+        compare(control.y, 20)
+        compare(xSpy.count, 1)
+        compare(ySpy.count, 0)
+
+        control.y = 40
+        compare(control.x, 30)
+        compare(control.y, 40)
+        compare(xSpy.count, 1)
+        compare(ySpy.count, 1)
+
+        control.destroy()
+    }
+
     function test_margins() {
         var control = popupControl.createObject(testCase, {width: 100, height: 100})
         verify(control)
@@ -343,6 +393,34 @@ TestCase {
         compare(control.bottomMargin, 20)
         compare(control.contentItem.parent.x, testCase.width - control.width - 20)
         compare(control.contentItem.parent.y, testCase.height - control.height - 20)
+
+        control.margins = undefined
+        compare(control.margins, -1)
+
+        control.bottomMargin = undefined
+        compare(control.bottomMargin, -1)
+        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
+        compare(control.contentItem.parent.y, testCase.height)
+
+        control.rightMargin = undefined
+        compare(control.rightMargin, -1)
+        compare(control.contentItem.parent.x, testCase.width)
+        compare(control.contentItem.parent.y, testCase.height)
+
+        control.x = -testCase.width
+        control.y = -testCase.height
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, 20)
+
+        control.topMargin = undefined
+        compare(control.topMargin, -1)
+        compare(control.contentItem.parent.x, 20)
+        compare(control.contentItem.parent.y, -testCase.height)
+
+        control.leftMargin = undefined
+        compare(control.leftMargin, -1)
+        compare(control.contentItem.parent.x, -testCase.width)
+        compare(control.contentItem.parent.y, -testCase.height)
 
         control.destroy()
     }
@@ -869,17 +947,42 @@ TestCase {
     Component {
         id: overlayTest
         ApplicationWindow {
-            property alias popup1: popup1
-            property alias popup2: popup2
+            property alias firstDrawer: firstDrawer
+            property alias secondDrawer: secondDrawer
+            property alias upperDrawer: upperDrawer
+            property alias modalPopup: modalPopup
+            property alias modelessPopup: modelessPopup
+            property alias plainPopup: plainPopup
             visible: true
+            Drawer {
+                z: 5
+                id: upperDrawer
+            }
+            Drawer {
+                z: 1
+                id: firstDrawer
+            }
+            Drawer {
+                z: 1
+                id: secondDrawer
+            }
             Popup {
-                id: popup1
+                id: modalPopup
+                z: 2
                 modal: true
                 exit: Transition { PauseAnimation { duration: 200 } }
             }
             Popup {
-                id: popup2
-                modal: true
+                id: modelessPopup
+                z: 3
+                dim: true
+                exit: Transition { PauseAnimation { duration: 200 } }
+            }
+            Popup {
+                id: plainPopup
+                z: 4
+                enter: Transition { PauseAnimation { duration: 200 } }
+                exit: Transition { PauseAnimation { duration: 200 } }
             }
         }
     }
@@ -890,18 +993,75 @@ TestCase {
 
         window.requestActivate()
         tryCompare(window, "active", true)
-        compare(window.overlay.background.opacity, 0.0)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
 
-        window.popup1.open()
-        compare(window.popup1.visible, true)
-        compare(window.popup2.visible, false)
-        tryCompare(window.overlay.background, "opacity", 1.0)
+        window.firstDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.firstDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
 
-        window.popup1.close()
-        window.popup2.open()
-        compare(window.popup2.visible, true)
-        tryCompare(window.popup1, "visible", false)
-        compare(window.overlay.background.opacity, 1.0)
+        window.secondDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.secondDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.firstDrawer.open()
+        window.secondDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.firstDrawer.close()
+        window.secondDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.modalPopup.open()
+        compare(window.overlay.modal.z, 1.0)
+        compare(window.modalPopup.visible, true)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+
+        window.modelessPopup.open()
+        compare(window.overlay.modeless.z, 3.0)
+        compare(window.modelessPopup.visible, true)
+        tryCompare(window.overlay.modeless, "opacity", 1.0)
+
+        window.modelessPopup.close()
+        tryCompare(window.modelessPopup, "visible", false)
+        tryCompare(window.overlay.modeless, "opacity", 0.0)
+        compare(window.overlay.modeless.z, 0.0)
+
+        compare(window.modalPopup.visible, true)
+        compare(window.overlay.modal.opacity, 1.0)
+
+        window.modalPopup.close()
+        tryCompare(window.modalPopup, "visible", false)
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+        compare(window.overlay.modal.z, 1.0)
+
+        window.plainPopup.open()
+        tryCompare(window.plainPopup, "visible", true)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
+
+        window.plainPopup.close()
+        tryCompare(window.plainPopup, "visible", false)
+        compare(window.overlay.modal.opacity, 0.0)
+        compare(window.overlay.modeless.opacity, 0.0)
+
+        window.upperDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.upperDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
+
+        window.firstDrawer.open()
+        window.upperDrawer.open()
+        compare(window.overlay.modal.z, 1.0)
+        tryCompare(window.overlay.modal, "opacity", 1.0)
+        window.firstDrawer.close()
+        window.upperDrawer.close()
+        tryCompare(window.overlay.modal, "opacity", 0.0)
 
         window.destroy()
     }
@@ -920,6 +1080,46 @@ TestCase {
         compare(control.ApplicationWindow.window, null)
         compare(control.contentItem.ApplicationWindow.window, null)
         compare(child.ApplicationWindow.window, null)
+
+        control.destroy()
+    }
+
+    SignalSpy {
+        id: openedSpy
+        signalName: "opened"
+    }
+
+    SignalSpy {
+        id: closedSpy
+        signalName: "closed"
+    }
+
+    Component {
+        id: pausePopup
+        Popup {
+            enter: Transition { PauseAnimation { duration: 200 } }
+            exit: Transition { PauseAnimation { duration: 200 } }
+        }
+    }
+
+    function test_openedClosed() {
+        var control = pausePopup.createObject(testCase)
+        verify(control)
+
+        openedSpy.target = control
+        closedSpy.target = control
+
+        control.open()
+        compare(control.visible, true)
+        compare(openedSpy.count, 0)
+        tryCompare(openedSpy, "count", 1)
+        compare(closedSpy.count, 0)
+
+        control.close()
+        compare(openedSpy.count, 1)
+        compare(closedSpy.count, 0)
+        tryCompare(closedSpy, "count", 1)
+        compare(control.visible, false)
 
         control.destroy()
     }

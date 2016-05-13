@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
+import QtQuick.Controls 2.0
 
 T.Tumbler {
     id: control
@@ -48,9 +48,9 @@ T.Tumbler {
     //! [delegate]
     delegate: Text {
         text: modelData
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         font: control.font
-        opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
+        color: control.Universal.foreground
+        opacity: (1.0 - Math.abs(Tumbler.displacement) / (visibleItemCount / 2)) * (control.enabled ? 1 : 0.6)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

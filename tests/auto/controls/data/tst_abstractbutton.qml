@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.templates 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -66,14 +66,5 @@ TestCase {
         compare(control.text, "");
 
         control.destroy();
-    }
-
-    function test_highlighted() {
-        var control = button.createObject(testCase)
-        verify(control)
-        compare(control.highlighted, false)
-
-        control.highlighted = true
-        compare(control.highlighted, true)
     }
 }

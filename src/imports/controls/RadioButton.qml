@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Controls.impl 2.0
+import QtQuick.Templates 2.0 as T
 
 T.RadioButton {
     id: control
@@ -67,7 +68,7 @@ T.RadioButton {
 
         text: control.text
         font: control.font
-        color: control.pressed ? "#26282a" : "#353637"
+        color: control.down ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

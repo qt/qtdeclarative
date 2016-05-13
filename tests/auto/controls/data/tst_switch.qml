@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -162,7 +162,7 @@ TestCase {
         mouseMove(control, control.width * 2, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
         mouseRelease(control, control.width * 2, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 2)
+        compare(clickedSpy.count, 3)
         compare(checkedSpy.count, 3)
         compare(pressedSpy.count, 6)
         compare(control.checked, true)
@@ -175,7 +175,7 @@ TestCase {
         mouseMove(control, -control.width, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
         mouseRelease(control, -control.width, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 2)
+        compare(clickedSpy.count, 4)
         compare(checkedSpy.count, 4)
         compare(pressedSpy.count, 8)
         compare(control.checked, false)
@@ -186,7 +186,7 @@ TestCase {
         compare(pressedSpy.count, 8)
         compare(control.pressed, false)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(clickedSpy.count, 2)
+        compare(clickedSpy.count, 4)
         compare(checkedSpy.count, 4)
         compare(pressedSpy.count, 8)
         compare(control.checked, false)

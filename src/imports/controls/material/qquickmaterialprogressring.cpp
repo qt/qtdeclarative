@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -225,14 +225,12 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
 
         // The start angle is only affected by the rotation animation for the "grow" phase.
         startAngle = lastStartAngle;
-        // TODO: use the correct curve here. QEasingCurve's bezier API doesn't support SVG path data.
         QEasingCurve angleCurve(QEasingCurve::OutQuad);
         const qreal percentage = angleCurve.valueForProgress(spanPercentageComplete);
         endAngle = lastStartAngle + minSweepSpan + percentage * (maxSweepSpan - minSweepSpan);
         lastEndAngle = endAngle;
     } else {
         // Both the start angle *and* the span are affected by the "shrink" phase.
-        // TODO: use the correct curve here. QEasingCurve's bezier API doesn't support SVG path data.
         QEasingCurve angleCurve(QEasingCurve::InQuad);
         const qreal percentage = angleCurve.valueForProgress(spanPercentageComplete);
         startAngle = lastEndAngle - maxSweepSpan + percentage * (maxSweepSpan - minSweepSpan);

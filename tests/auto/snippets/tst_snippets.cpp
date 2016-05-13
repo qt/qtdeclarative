@@ -51,6 +51,7 @@ private slots:
 
 private:
     QMap<QString, QStringPair> filePaths;
+    QStringList nonVisualSnippets;
 };
 
 void tst_Snippets::initTestCase()
@@ -63,12 +64,16 @@ void tst_Snippets::initTestCase()
 
     qInfo() << datadir;
 
-    QDirIterator it(datadir, QStringList() << "qtquick*.qml" << "qtlabs*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
+    QDirIterator it(datadir, QStringList() << "qtquick*-custom.qml" << "qtlabs-custom*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QFileInfo fi(it.next());
         filePaths.insert(fi.baseName(), qMakePair(fi.filePath(), outdir.filePath(fi.baseName() + ".png")));
     }
     QVERIFY(!filePaths.isEmpty());
+
+    nonVisualSnippets << "qtquickcontrols2-stackview-custom.qml"
+                      << "qtquickcontrols2-swipeview-custom.qml"
+                      << "qtquickcontrols2-tooltip-custom.qml";
 }
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -95,11 +100,21 @@ void tst_Snippets::screenshots()
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
-    QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();
-    QSignalSpy spy(result.data(), SIGNAL(ready()));
-    QVERIFY(spy.isValid());
-    QVERIFY(spy.wait());
-    QVERIFY(result->saveToFile(output));
+    bool generateScreenshot = true;
+    foreach (const QString &baseName, nonVisualSnippets) {
+        if (input.contains(baseName)) {
+            generateScreenshot = false;
+            break;
+        }
+    }
+
+    if (generateScreenshot) {
+        QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();
+        QSignalSpy spy(result.data(), SIGNAL(ready()));
+        QVERIFY(spy.isValid());
+        QVERIFY(spy.wait());
+        QVERIFY(result->saveToFile(output));
+    }
 
     QGuiApplication::processEvents();
 }

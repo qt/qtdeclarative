@@ -41,8 +41,8 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
-import Qt.labs.controls.universal 1.0
+import QtQuick.Controls 2.0
+import QtQuick.Controls.Universal 2.0
 
 TestCase {
     id: testCase
@@ -62,6 +62,8 @@ TestCase {
         Button {
             Universal.theme: Universal.Dark
             Universal.accent: Universal.Violet
+            Universal.foreground: Universal.Brown
+            Universal.background: Universal.Yellow
         }
     }
 
@@ -139,6 +141,8 @@ TestCase {
         verify(control)
         verify(control.Universal)
         compare(control.Universal.accent, "#3e65ff") // Universal.Cobalt
+        compare(control.Universal.foreground, "#000000") // SystemBaseHighColor
+        compare(control.Universal.background, "#ffffff") // SystemAltHighColor
         compare(control.Universal.theme, Universal.Light)
         control.destroy()
     }
@@ -147,8 +151,12 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
         control.Universal.accent = Universal.Steel
+        control.Universal.foreground = Universal.Red
+        control.Universal.background = Universal.Green
         control.Universal.theme = Universal.Dark
         compare(control.Universal.accent, "#647687") // Universal.Steel
+        compare(control.Universal.foreground, "#e51400") // Universal.Red
+        compare(control.Universal.background, "#60a917") // Universal.Green
         compare(control.Universal.theme, Universal.Dark)
         control.destroy()
     }
@@ -157,10 +165,16 @@ TestCase {
         var control = styledButton.createObject(testCase)
         verify(control)
         compare(control.Universal.accent, "#aa00ff") // Universal.Violet
+        compare(control.Universal.foreground, "#825a2c") // Universal.Brown
+        compare(control.Universal.background, "#e3c800") // Universal.Yellow
         compare(control.Universal.theme, Universal.Dark)
         control.Universal.accent = undefined
+        control.Universal.foreground = undefined
+        control.Universal.background = undefined
         control.Universal.theme = undefined
         compare(control.Universal.accent, testCase.Universal.accent)
+        compare(control.Universal.foreground, testCase.Universal.foreground)
+        compare(control.Universal.background, testCase.Universal.background)
         compare(control.Universal.theme, testCase.Universal.theme)
         control.destroy()
     }
@@ -168,6 +182,8 @@ TestCase {
     function test_inheritance_data() {
         return [
             { tag: "accent", value1: "#a20025" /*Universal.Crimson*/, value2: "#6a00ff" /*Universal.Indigo*/ },
+            { tag: "foreground", value1: "#a20025" /*Universal.Crimson*/, value2: "#6a00ff" /*Universal.Indigo*/ },
+            { tag: "background", value1: "#a20025" /*Universal.Crimson*/, value2: "#6a00ff" /*Universal.Indigo*/ },
             { tag: "theme", value1: Universal.Dark, value2: Universal.Light },
         ]
     }
@@ -302,45 +318,53 @@ TestCase {
         window.destroy()
     }
 
-    function test_colors() {
+    function test_colors_data() {
+        return [
+            { tag: "accent" }, { tag: "background" }, { tag: "foreground" }
+        ]
+    }
+
+    function test_colors(data) {
         var control = button.createObject(testCase)
         verify(control)
 
-        // Universal.Accent - enum
-        control.Universal.accent = Universal.Red
-        compare(control.Universal.accent, "#e51400")
+        var prop = data.tag
 
-        // Universal.Accent - string
-        control.Universal.accent = "Emerald"
-        compare(control.Universal.accent, "#008a00")
+        // Universal.Color - enum
+        control.Universal[prop] = Universal.Red
+        compare(control.Universal[prop], "#e51400")
+
+        // Universal.Color - string
+        control.Universal[prop] = "Emerald"
+        compare(control.Universal[prop], "#008a00")
 
         // SVG named color
-        control.Universal.accent = "tomato"
-        compare(control.Universal.accent, "#ff6347")
+        control.Universal[prop] = "tomato"
+        compare(control.Universal[prop], "#ff6347")
 
         // #rrggbb
-        control.Universal.accent = "#123456"
-        compare(control.Universal.accent, "#123456")
+        control.Universal[prop] = "#123456"
+        compare(control.Universal[prop], "#123456")
 
         // #aarrggbb
-        control.Universal.accent = "#12345678"
-        compare(control.Universal.accent, "#12345678")
+        control.Universal[prop] = "#12345678"
+        compare(control.Universal[prop], "#12345678")
 
         // Qt.rgba() - no alpha
-        control.Universal.accent = Qt.rgba(0.5, 0.5, 0.5)
-        compare(control.Universal.accent, "#808080")
+        control.Universal[prop] = Qt.rgba(0.5, 0.5, 0.5)
+        compare(control.Universal[prop], "#808080")
 
         // Qt.rgba() - with alpha
-        control.Universal.accent = Qt.rgba(0.5, 0.5, 0.5, 0.5)
-        compare(control.Universal.accent, "#80808080")
+        control.Universal[prop] = Qt.rgba(0.5, 0.5, 0.5, 0.5)
+        compare(control.Universal[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: 123")
-        control.Universal.accent = 123
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: foo")
-        control.Universal.accent = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal.accent value: #1")
-        control.Universal.accent = "#1"
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: 123")
+        control.Universal[prop] = 123
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: foo")
+        control.Universal[prop] = "foo"
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: #1")
+        control.Universal[prop] = "#1"
 
         control.destroy()
     }
@@ -362,7 +386,7 @@ TestCase {
         verify(window)
         verify(window.pane)
 
-        var control = Qt.createQmlObject("import Qt.labs.controls 1.0; " + data.type + " { }", window.pane)
+        var control = Qt.createQmlObject("import QtQuick.Controls 2.0; " + data.type + " { }", window.pane)
         verify(control)
 
         compare(control.font[data.attribute], data.value)

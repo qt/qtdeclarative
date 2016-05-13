@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -59,6 +59,36 @@ TestCase {
         var control = menuItem.createObject(testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
+        control.destroy()
+    }
+
+    function test_checkable() {
+        var control = menuItem.createObject(testCase)
+        verify(control)
+        verify(control.hasOwnProperty("checkable"))
+        verify(!control.checkable)
+
+        mouseClick(control)
+        verify(!control.checked)
+
+        control.checkable = true
+        mouseClick(control)
+        verify(control.checked)
+
+        mouseClick(control)
+        verify(!control.checked)
+
+        control.destroy()
+    }
+
+    function test_highlighted() {
+        var control = menuItem.createObject(testCase)
+        verify(control)
+        verify(!control.highlighted)
+
+        control.highlighted = true
+        verify(control.highlighted)
+
         control.destroy()
     }
 }

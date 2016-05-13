@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtQuickControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -372,8 +372,13 @@ static const QRgb colors[][14] = {
 static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
 static uint defaultPrimary = QQuickMaterialStyle::Indigo;
 static uint defaultAccent = QQuickMaterialStyle::Pink;
+static uint defaultForeground = 0xDD000000; // primaryTextColorLight
+static uint defaultBackground = 0xFFFAFAFA; // backgroundColorLight
 static bool defaultPrimaryCustom = false;
 static bool defaultAccentCustom = false;
+static bool defaultForegroundCustom = true;
+static bool defaultBackgroundCustom = true;
+
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
@@ -384,13 +389,12 @@ static const QRgb secondaryTextColorLight = 0x89000000;
 static const QRgb secondaryTextColorDark = 0xB2FFFFFF;
 static const QRgb hintTextColorLight = 0x60000000;
 static const QRgb hintTextColorDark = 0x4CFFFFFF;
-static const QRgb dividerTextColorLight = 0x1E000000;
-static const QRgb dividerTextColorDark = 0x1EFFFFFF;
+static const QRgb dividerColorLight = 0x1E000000;
+static const QRgb dividerColorDark = 0x1EFFFFFF;
 static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
-// TODO: find out actual value
-static const QRgb raisedButtonPressColorLight = 0xFFCCCDCD;
-static const QRgb raisedButtonDisabledColorLight = dividerTextColorLight;
-static const QRgb raisedButtonDisabledColorDark = dividerTextColorDark;
+static const QRgb raisedButtonColorDark = 0x3FCCCCCC;
+static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
+static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
 static const QRgb flatButtonPressColorLight = 0x66999999;
 static const QRgb flatButtonPressColorDark = 0x3FCCCCCC;
 static const QRgb flatButtonFocusColorLight = 0x33CCCCCC;
@@ -409,7 +413,6 @@ static const QRgb switchUncheckedTrackColorLight = 0x42000000;
 static const QRgb switchUncheckedTrackColorDark = 0x4CFFFFFF;
 static const QRgb switchDisabledTrackColorLight = 0x1E000000;
 static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
-// TODO: find out actual values
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 
@@ -427,11 +430,20 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(
     m_explicitTheme(false),
     m_explicitPrimary(false),
     m_explicitAccent(false),
+    m_explicitForeground(false),
+    m_explicitBackground(false),
     m_customPrimary(defaultPrimaryCustom),
     m_customAccent(defaultAccentCustom),
+    m_customForeground(defaultForegroundCustom),
+    m_customBackground(defaultBackgroundCustom),
+    m_hasForeground(false),
+    m_hasBackground(false),
     m_theme(defaultTheme),
     m_primary(defaultPrimary),
-    m_accent(defaultAccent)
+    m_accent(defaultAccent),
+    m_foreground(defaultForeground),
+    m_background(defaultBackground),
+    m_elevation(0)
 {
     init();
 }
@@ -456,6 +468,10 @@ void QQuickMaterialStyle::setTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_hasBackground)
+        emit backgroundChanged();
+    if (!m_hasForeground)
+        emit foregroundChanged();
 }
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
@@ -467,6 +483,10 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_hasBackground)
+        emit backgroundChanged();
+    if (!m_hasForeground)
+        emit foregroundChanged();
 }
 
 void QQuickMaterialStyle::propagateTheme()
@@ -498,27 +518,8 @@ void QQuickMaterialStyle::setPrimary(const QVariant &var)
 {
     QRgb primary = 0;
     bool custom = false;
-    if (var.type() == QVariant::Int) {
-        int val = var.toInt();
-        if (val > BlueGrey) {
-            qmlInfo(parent()) << "unknown Material.primary value: " << val;
-            return;
-        }
-        primary = val;
-    } else {
-        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
-        if (val != -1) {
-            primary = val;
-        } else {
-            QColor color(var.toString());
-            if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Material.primary value: " << var.toString();
-                return;
-            }
-            custom = true;
-            primary = color.rgba();
-        }
-    }
+    if (!variantToRgba(var, "primary", &primary, &custom))
+        return;
 
     m_explicitPrimary = true;
     if (m_primary == primary)
@@ -540,6 +541,7 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
     m_primary = primary;
     propagatePrimary();
     emit primaryChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagatePrimary()
@@ -572,27 +574,8 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
 {
     QRgb accent = 0;
     bool custom = false;
-    if (var.type() == QVariant::Int) {
-        int val = var.toInt();
-        if (val > BlueGrey) {
-            qmlInfo(parent()) << "unknown Material.accent value: " << val;
-            return;
-        }
-        accent = val;
-    } else {
-        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
-        if (val != -1) {
-            accent = val;
-        } else {
-            QColor color(var.toString());
-            if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Material.accent value: " << var.toString();
-                return;
-            }
-            custom = true;
-            accent = color.rgba();
-        }
-    }
+    if (!variantToRgba(var, "accent", &accent, &custom))
+        return;
 
     m_explicitAccent = true;
     if (m_accent == accent)
@@ -614,6 +597,7 @@ void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
     m_accent = accent;
     propagateAccent();
     emit accentChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::propagateAccent()
@@ -637,6 +621,140 @@ void QQuickMaterialStyle::resetAccent()
     inheritAccent(material ? material->m_accent : defaultAccent, true);
 }
 
+QVariant QQuickMaterialStyle::foreground() const
+{
+    return primaryTextColor();
+}
+
+void QQuickMaterialStyle::setForeground(const QVariant &var)
+{
+    QRgb foreground = 0;
+    bool custom = false;
+    if (!variantToRgba(var, "foreground", &foreground, &custom))
+        return;
+
+    m_hasForeground = true;
+    m_explicitForeground = true;
+    if (m_foreground == foreground)
+        return;
+
+    m_customForeground = custom;
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool has)
+{
+    if (m_explicitForeground || m_foreground == foreground)
+        return;
+
+    m_hasForeground = has;
+    m_customForeground = custom;
+    m_foreground = foreground;
+    propagateForeground();
+    emit foregroundChanged();
+}
+
+void QQuickMaterialStyle::propagateForeground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritForeground(m_foreground, m_customForeground, m_hasForeground);
+    }
+}
+
+void QQuickMaterialStyle::resetForeground()
+{
+    if (!m_explicitForeground)
+        return;
+
+    m_hasForeground = false;
+    m_customForeground = false;
+    m_explicitForeground = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritForeground(material ? material->m_foreground : defaultForeground, true, material ? material->m_hasForeground : false);
+}
+
+QVariant QQuickMaterialStyle::background() const
+{
+    return backgroundColor();
+}
+
+void QQuickMaterialStyle::setBackground(const QVariant &var)
+{
+    QRgb background = 0;
+    bool custom = false;
+    if (!variantToRgba(var, "background", &background, &custom))
+        return;
+
+    m_hasBackground = true;
+    m_explicitBackground = true;
+    if (m_background == background)
+        return;
+
+    m_customBackground = custom;
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+}
+
+void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
+{
+    if (m_explicitBackground || m_background == background)
+        return;
+
+    m_hasBackground = has;
+    m_customBackground = custom;
+    m_background = background;
+    propagateBackground();
+    emit backgroundChanged();
+    emit paletteChanged();
+}
+
+void QQuickMaterialStyle::propagateBackground()
+{
+    const auto styles = childStyles();
+    for (QQuickStyleAttached *child : styles) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritBackground(m_background, m_customBackground, m_hasBackground);
+    }
+}
+
+void QQuickMaterialStyle::resetBackground()
+{
+    if (!m_explicitBackground)
+        return;
+
+    m_hasBackground = false;
+    m_customBackground = false;
+    m_explicitBackground = false;
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+    inheritBackground(material ? material->m_background : defaultBackground, true, material ? material->m_hasBackground : false);
+}
+
+int QQuickMaterialStyle::elevation() const
+{
+    return m_elevation;
+}
+
+void QQuickMaterialStyle::setElevation(int elevation)
+{
+    if (m_elevation == elevation)
+        return;
+
+    m_elevation = elevation;
+    emit elevationChanged();
+}
+
+void QQuickMaterialStyle::resetElevation()
+{
+    setElevation(0);
+}
+
 QColor QQuickMaterialStyle::primaryColor() const
 {
     if (m_customPrimary)
@@ -646,27 +764,53 @@ QColor QQuickMaterialStyle::primaryColor() const
     return colors[m_primary][Shade500];
 }
 
-QColor QQuickMaterialStyle::accentColor() const
+QColor QQuickMaterialStyle::accentColor(Shade shade) const
 {
     if (m_customAccent)
-        return QColor::fromRgba(m_accent);
+        return shade == themeShade() ? QColor::fromRgba(m_accent)
+                                     : this->shade(QColor::fromRgba(m_accent), shade);
     if (m_accent > BlueGrey)
         return QColor();
-    return colors[m_accent][m_theme == Light ? Shade500 : Shade200];
+    return colors[m_accent][shade];
+}
+
+QColor QQuickMaterialStyle::accentColor() const
+{
+    return accentColor(themeShade());
+}
+
+QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
+{
+    if (!m_hasBackground)
+        return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
+    if (m_customBackground)
+        return shade == themeShade() ? QColor::fromRgba(m_background)
+                                     : this->shade(QColor::fromRgba(m_background), shade);
+    if (m_background > BlueGrey)
+        return QColor();
+    return colors[m_background][shade];
 }
 
 QColor QQuickMaterialStyle::backgroundColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
+    return backgroundColor(themeShade());
 }
 
 QColor QQuickMaterialStyle::primaryTextColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
+    if (!m_hasForeground)
+        return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
+    if (m_customForeground)
+        return QColor::fromRgba(m_foreground);
+    if (m_foreground > BlueGrey)
+        return QColor();
+    return colors[m_foreground][Shade500];
 }
 
 QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
 {
+    if (m_explicitForeground)
+        return primaryTextColor();
     return QColor::fromRgba(primaryTextColorDark);
 }
 
@@ -694,60 +838,87 @@ QColor QQuickMaterialStyle::dropShadowColor() const
 
 QColor QQuickMaterialStyle::dividerColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? dividerTextColorLight : dividerTextColorDark);
+    return QColor::fromRgba(m_theme == Light ? dividerColorLight : dividerColorDark);
 }
 
-QColor QQuickMaterialStyle::raisedButtonColor() const
+QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hover) const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonColorLight : flatButtonFocusColorDark);
+    Shade shade = pressed ? (m_theme == Light ? Shade700 : Shade100)
+                          : themeShade();
+
+    QColor color = Qt::transparent;
+
+    if (m_hasBackground) {
+        color = backgroundColor(shade);
+    } else if (highlighted) {
+        color = accentColor(shade);
+    } else if (elevation() > 0) {
+        color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
+                                                  : raisedButtonColorDark);
+
+        if (pressed) {
+            color = this->shade(color, shade);
+        }
+    }
+
+    if (color == Qt::transparent) {
+        if (pressed) {
+            return QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight
+                                                     : flatButtonPressColorDark);
+        } else if (hover) {
+            return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight
+                                                     : flatButtonFocusColorDark);
+        } else {
+            return color;
+        }
+    }
+
+    if (pressed || hover) {
+        // Add overlaying black shadow 12% opacity
+        return alphaBlend(color, QColor::fromRgba(0x1F000000));
+    } else {
+        return color;
+    }
 }
 
-QColor QQuickMaterialStyle::raisedButtonHoverColor() const
+QColor QQuickMaterialStyle::buttonColor() const
 {
-    // The specs don't specify different colors here for the light theme.
-    return QColor::fromRgba(m_theme == Light ? raisedButtonColorLight : flatButtonPressColorDark);
+    return buttonColor(false, false, false);
 }
 
-QColor QQuickMaterialStyle::raisedButtonPressColor() const
+QColor QQuickMaterialStyle::buttonHoverColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonPressColorLight : flatButtonPressColorDark);
+    return buttonColor(false, false, true);
 }
 
-QColor QQuickMaterialStyle::raisedButtonDisabledColor() const
+QColor QQuickMaterialStyle::buttonPressColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
+    return buttonColor(false, true, false);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
+QColor QQuickMaterialStyle::buttonDisabledColor() const
 {
-    return accentColor();
+    if (elevation() > 0) {
+        return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight
+                                                 : raisedButtonDisabledColorDark);
+    } else {
+        return Qt::transparent;
+    }
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
+QColor QQuickMaterialStyle::highlightedButtonColor() const
 {
-    // Add overlaying black shadow 12% opacity
-    return alphaBlend(accentColor(), QColor::fromRgba(0x1F000000));
+    return buttonColor(true, false, false);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
+QColor QQuickMaterialStyle::highlightedButtonHoverColor() const
 {
-    // Add overlaying black shadow 12% opacity
-    return alphaBlend(shade(accentColor(), m_theme == Light ? Shade700 : Shade100), QColor::fromRgba(0x1F000000));
+    return buttonColor(true, false, true);
 }
 
-QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
+QColor QQuickMaterialStyle::highlightedButtonPressColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
-}
-
-QColor QQuickMaterialStyle::flatButtonPressColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight : flatButtonPressColorDark);
-}
-
-QColor QQuickMaterialStyle::flatButtonFocusColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark);
+    return buttonColor(true, true, false);
 }
 
 QColor QQuickMaterialStyle::swipeDelegateColor() const
@@ -783,7 +954,6 @@ QColor QQuickMaterialStyle::checkBoxUncheckedRippleColor() const
 QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
     QColor pressColor = accentColor();
-    // TODO: find out actual value
     pressColor.setAlpha(m_theme == Light ? 30 : 50);
     return pressColor;
 }
@@ -795,7 +965,7 @@ QColor QQuickMaterialStyle::switchUncheckedTrackColor() const
 
 QColor QQuickMaterialStyle::switchCheckedTrackColor() const
 {
-    QColor trackColor = m_theme == Light ? accentColor() : shade(accentColor(), Shade200);
+    QColor trackColor(accentColor());
     trackColor.setAlphaF(0.5);
     return trackColor;
 }
@@ -832,7 +1002,7 @@ QColor QQuickMaterialStyle::scrollBarPressedColor() const
 
 QColor QQuickMaterialStyle::drawerBackgroundColor() const
 {
-    return QColor::fromRgba(dividerTextColorLight);
+    return QColor::fromRgba(dividerColorLight);
 }
 
 QColor QQuickMaterialStyle::dialogColor() const
@@ -855,6 +1025,42 @@ QColor QQuickMaterialStyle::tooltipColor() const
     return color(Grey, Shade700);
 }
 
+QColor QQuickMaterialStyle::toolTextColor() const
+{
+    if (m_hasForeground || m_customPrimary)
+        return primaryTextColor();
+
+    switch (m_primary) {
+    case Red:
+    case Pink:
+    case Purple:
+    case DeepPurple:
+    case Indigo:
+    case Blue:
+    case Teal:
+    case DeepOrange:
+    case Brown:
+    case BlueGrey:
+        return QColor::fromRgba(primaryTextColorDark);
+
+    case LightBlue:
+    case Cyan:
+    case Green:
+    case LightGreen:
+    case Lime:
+    case Yellow:
+    case Amber:
+    case Orange:
+    case Grey:
+        return QColor::fromRgba(primaryTextColorLight);
+
+    default:
+        break;
+    }
+
+    return primaryTextColor();
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);
@@ -875,11 +1081,16 @@ static QColor lighterShade(const QColor &color, qreal amount)
     return hsl.convertTo(color.spec());
 }
 
-QColor darkerShade(const QColor &color, qreal amount)
+static QColor darkerShade(const QColor &color, qreal amount)
 {
     QColor hsl = color.toHsl();
     hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() - amount, 1.0), color.alphaF());
     return hsl.convertTo(color.spec());
+}
+
+QQuickMaterialStyle::Shade QQuickMaterialStyle::themeShade() const
+{
+    return m_theme == Light ? Shade500 : Shade200;
 }
 
 /*
@@ -907,6 +1118,8 @@ QColor darkerShade(const QColor &color, qreal amount)
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+// Returns the same color, if shade == themeShade()
 QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
 {
     switch (shade) {
@@ -951,6 +1164,8 @@ void QQuickMaterialStyle::parentStyleChange(QQuickStyleAttached *newParent, QQui
     if (material) {
         inheritPrimary(material->m_primary, material->m_customPrimary);
         inheritAccent(material->m_accent, material->m_customAccent);
+        inheritForeground(material->m_foreground, material->m_customForeground, material->m_hasForeground);
+        inheritBackground(material->m_background, material->m_customBackground, material->m_hasBackground);
         inheritTheme(material->theme());
     }
 }
@@ -977,14 +1192,14 @@ void QQuickMaterialStyle::init()
         QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
 
         bool ok = false;
-        QByteArray themeValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
+        QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
         Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
         if (ok)
             defaultTheme = m_theme = themeEnum;
         else if (!themeValue.isEmpty())
             qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
 
-        QByteArray primaryValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
+        QByteArray primaryValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
         Color primaryEnum = toEnumValue<Color>(primaryValue, &ok);
         if (ok) {
             defaultPrimaryCustom = m_customPrimary = false;
@@ -999,7 +1214,7 @@ void QQuickMaterialStyle::init()
             }
         }
 
-        QByteArray accentValue = resolveSetting("QT_LABS_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
+        QByteArray accentValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_ACCENT", settings, QStringLiteral("Accent"));
         Color accentEnum = toEnumValue<Color>(accentValue, &ok);
         if (ok) {
             defaultAccentCustom = m_customAccent = false;
@@ -1013,10 +1228,68 @@ void QQuickMaterialStyle::init()
                 qWarning().nospace().noquote() << "Material: unknown accent value: " << accentValue;
             }
         }
+
+        QByteArray foregroundValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+        Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
+        if (ok) {
+            defaultForegroundCustom = m_customForeground = false;
+            defaultForeground = m_foreground = foregroundEnum;
+        } else if (!foregroundValue.isEmpty()) {
+            QColor color(foregroundValue.constData());
+            if (color.isValid()) {
+                defaultForegroundCustom = m_customForeground = true;
+                defaultForeground = m_foreground = color.rgba();
+            } else {
+                qWarning().nospace().noquote() << "Material: unknown foreground value: " << foregroundValue;
+            }
+        }
+
+        QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND", settings, QStringLiteral("Background"));
+        Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
+        if (ok) {
+            defaultBackgroundCustom = m_customBackground = false;
+            defaultBackground = m_background = backgroundEnum;
+        } else if (!backgroundValue.isEmpty()) {
+            QColor color(backgroundValue.constData());
+            if (color.isValid()) {
+                defaultBackgroundCustom = m_customBackground = true;
+                defaultBackground = m_background = color.rgba();
+            } else {
+                qWarning().nospace().noquote() << "Material: unknown background value: " << backgroundValue;
+            }
+        }
+
         defaultsInitialized = true;
     }
 
     QQuickStyleAttached::init(); // TODO: lazy init?
+}
+
+bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const
+{
+    *custom = false;
+    if (var.type() == QVariant::Int) {
+        int val = var.toInt();
+        if (val > BlueGrey) {
+            qmlInfo(parent()) << "unknown Material." << name << " value: " << val;
+            return false;
+        }
+        *rgba = val;
+    } else {
+        int val = QMetaEnum::fromType<Color>().keyToValue(var.toByteArray());
+        if (val != -1) {
+            *rgba = val;
+        } else {
+            QColor color(var.toString());
+            if (!color.isValid()) {
+                qmlInfo(parent()) << "unknown Material." << name << " value: " << var.toString();
+                return false;
+            }
+            *custom = true;
+            *rgba = color.rgba();
+        }
+    }
+    return true;
 }
 
 QT_END_NAMESPACE

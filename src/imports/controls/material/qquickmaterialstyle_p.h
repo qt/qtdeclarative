@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,26 +61,28 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
     Q_PROPERTY(QVariant primary READ primary WRITE setPrimary RESET resetPrimary NOTIFY primaryChanged FINAL)
     Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
+    Q_PROPERTY(QVariant foreground READ foreground WRITE setForeground RESET resetForeground NOTIFY foregroundChanged FINAL)
+    Q_PROPERTY(QVariant background READ background WRITE setBackground RESET resetBackground NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(int elevation READ elevation WRITE setElevation RESET resetElevation NOTIFY elevationChanged FINAL)
+
+
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
-    Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY foregroundChanged FINAL)  // TODO: rename to foregroundColor()?
     Q_PROPERTY(QColor primaryHighlightedTextColor READ primaryHighlightedTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor secondaryTextColor READ secondaryTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor hintTextColor READ hintTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dropShadowColor READ dropShadowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonColor READ raisedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonHoverColor READ raisedButtonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonPressColor READ raisedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedButtonDisabledColor READ raisedButtonDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonColor READ raisedHighlightedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonHoverColor READ raisedHighlightedButtonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonPressColor READ raisedHighlightedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor raisedHighlightedButtonDisabledColor READ raisedHighlightedButtonDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor flatButtonPressColor READ flatButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor flatButtonFocusColor READ flatButtonFocusColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonHoverColor READ buttonHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonPressColor READ buttonPressColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonHoverColor READ highlightedButtonHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonPressColor READ highlightedButtonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateColor READ swipeDelegateColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegateHoverColor READ swipeDelegateHoverColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor swipeDelegatePressColor READ swipeDelegatePressColor NOTIFY paletteChanged FINAL)
@@ -101,6 +103,7 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -173,6 +176,22 @@ public:
     void propagateAccent();
     void resetAccent();
 
+    QVariant foreground() const;
+    void setForeground(const QVariant &foreground);
+    void inheritForeground(uint foreground, bool custom, bool has);
+    void propagateForeground();
+    void resetForeground();
+
+    QVariant background() const;
+    void setBackground(const QVariant &background);
+    void inheritBackground(uint background, bool custom, bool has);
+    void propagateBackground();
+    void resetBackground();
+
+    int elevation() const;
+    void setElevation(int elevation);
+    void resetElevation();
+
     QColor primaryColor() const;
     QColor accentColor() const;
     QColor backgroundColor() const;
@@ -183,16 +202,14 @@ public:
     QColor textSelectionColor() const;
     QColor dropShadowColor() const;
     QColor dividerColor() const;
-    QColor raisedButtonColor() const;
-    QColor raisedButtonHoverColor() const;
-    QColor raisedButtonPressColor() const;
-    QColor raisedButtonDisabledColor() const;
-    QColor raisedHighlightedButtonColor() const;
-    QColor raisedHighlightedButtonHoverColor() const;
-    QColor raisedHighlightedButtonPressColor() const;
-    QColor raisedHighlightedButtonDisabledColor() const;
-    QColor flatButtonPressColor() const;
-    QColor flatButtonFocusColor() const;
+    QColor buttonColor() const;
+    QColor buttonHoverColor() const;
+    QColor buttonPressColor() const;
+    QColor buttonDisabledColor() const;
+    QColor highlightedButtonColor() const;
+    QColor highlightedButtonHoverColor() const;
+    QColor highlightedButtonPressColor() const;
+    QColor highlightedButtonDisabledColor() const;
     QColor swipeDelegateColor() const;
     QColor swipeDelegateHoverColor() const;
     QColor swipeDelegatePressColor() const;
@@ -213,6 +230,7 @@ public:
     QColor backgroundDimColor() const;
     QColor listHighlightColor() const;
     QColor tooltipColor() const;
+    QColor toolTextColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
@@ -221,6 +239,10 @@ Q_SIGNALS:
     void themeChanged();
     void primaryChanged();
     void accentChanged();
+    void foregroundChanged();
+    void backgroundChanged();
+    void elevationChanged();
+
     void paletteChanged();
 
 protected:
@@ -228,15 +250,30 @@ protected:
 
 private:
     void init();
+    bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const;
+
+    QColor backgroundColor(Shade shade) const;
+    QColor accentColor(Shade shade) const;
+    QColor buttonColor(bool highlighted, bool pressed, bool hover) const;
+    Shade themeShade() const;
 
     bool m_explicitTheme;
     bool m_explicitPrimary;
     bool m_explicitAccent;
+    bool m_explicitForeground;
+    bool m_explicitBackground;
     bool m_customPrimary;
     bool m_customAccent;
+    bool m_customForeground;
+    bool m_customBackground;
+    bool m_hasForeground;
+    bool m_hasBackground;
     Theme m_theme;
     uint m_primary;
     uint m_accent;
+    uint m_foreground;
+    uint m_background;
+    int m_elevation;
 };
 
 QT_END_NAMESPACE

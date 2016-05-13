@@ -30,25 +30,28 @@
     \title Material Style
 
     The Material Style is based on the Google Material Design Guidelines.
-    \l {detailed-description}{More...}
+    \l{detailed-desc-material}{More...}
 
-    \styleimport {Qt.labs.controls.material 1.0}
+    \styleimport {QtQuick.Controls.Material 2.0}
 
     \section1 Attached Properties
 
     \list
         \li \l {accent-attached-prop}{\b accent} : color
+        \li \l {background-attached-prop}{\b background} : color
+        \li \l {foreground-attached-prop}{\b foreground} : color
         \li \l {primary-attached-prop}{\b primary} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
 
     \section1 Detailed Description
+    \target detailed-desc-material
 
     The Material style is based on the \l {https://www.google.com/design/spec/material-design/introduction.html}
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
-    \image qtquickcontrols-material.png
+    \image qtquickcontrols2-material.png
     \caption The Material style in light and dark themes
 
     \note The Material style is not a native Android style. The Material
@@ -60,17 +63,21 @@
 
     \section2 Customization
 
-    The Material style allows customizing three attributes, \l {theme-attached-prop}{theme},
-    \l {primary-attached-prop}{primary} and \l {accent-attached-prop}{accent}. The following
-    example illustrates how to create a red \e stop button with light text:
+    The Material style allows customizing five attributes, \l {theme-attached-prop}{theme},
+    \l {primary-attached-prop}{primary}, \l {accent-attached-prop}{accent},
+    \l {foreground-attached-prop}{foreground}, and \l {background-attached-prop}{background}.
+
+    \image qtquickcontrols2-material-attributes.png
+
+    The following example illustrates how to create a red \e stop button with light text:
 
     \table
         \row
             \li
                 \qml
                 import QtQuick 2.0
-                import Qt.labs.controls 1.0
-                import Qt.labs.controls.material 1.0
+                import QtQuick.Controls 2.0
+                import QtQuick.Controls.Material 2.0
 
                 Button {
                     text: "Stop"
@@ -81,10 +88,10 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols-material-button.png
+                \image qtquickcontrols2-material-button.png
     \endtable
 
-    Both attributes can be specified for any window or item, and they automatically
+    All attributes can be specified for any window or item, and they automatically
     propagate to children in the same manner as \l {Control::font}{fonts}. In the
     following example, the window and all three radio buttons appear in the dark
     theme using a purple accent color:
@@ -94,8 +101,8 @@
             \li
                 \qml
                 import QtQuick 2.0
-                import Qt.labs.controls 1.0
-                import Qt.labs.controls.material 1.0
+                import QtQuick.Controls 2.0
+                import QtQuick.Controls.Material 2.0
 
                 ApplicationWindow {
                     visible: true
@@ -113,11 +120,11 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols-material-dark.png
+                \image qtquickcontrols2-material-dark.png
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a \l {qtlabscontrols-conf}
+    specify them via environment variables or in a \l {qtquickcontrols2-conf}
     {configuration file}.
 
     \section3 Environment Variables
@@ -127,19 +134,28 @@
             \li Variable
             \li Description
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_THEME
+            \li \c QT_QUICK_CONTROLS_MATERIAL_THEME
             \li The value can be one of the available \l {theme-attached-prop}{themes},
                 for example \c "Dark".
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_ACCENT
+            \li \c QT_QUICK_CONTROLS_MATERIAL_ACCENT
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the \l {Pre-defined Colors}{pre-defined colors}, for example
                 for example \c "Teal".
         \row
-            \li \c QT_LABS_CONTROLS_MATERIAL_PRIMARY
+            \li \c QT_QUICK_CONTROLS_MATERIAL_PRIMARY
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the \l {Pre-defined Colors}{pre-defined colors}, for example
                 for example \c "BlueGrey".
+        \row
+            \li \c QT_QUICK_CONTROLS_MATERIAL_FOREGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {Pre-defined Colors}{pre-defined colors}.
+
+        \row
+            \li \c QT_QUICK_CONTROLS_MATERIAL_BACKGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {Pre-defined Colors}{pre-defined colors}.
     \endtable
 
     \section2 Dependency
@@ -164,27 +180,25 @@
     to work well with the rest of the Material style palette:
 
     Available pre-defined colors:
-    \value Material.Red Red (#F44336)
-    \value Material.Pink Pink (#E91E63)
-    \value Material.Purple Purple (#9C27B0)
-    \value Material.DeepPurple Deep Purple (#673AB7)
-    \value Material.Indigo Indigo (#3F51B5)
-    \value Material.Blue Blue (#2196F3)
-    \value Material.LightBlue Light Blue (#03A9F4)
-    \value Material.Cyan Cyan (#00BCD4)
-    \value Material.Teal Teal (#009688)
-    \value Material.Green Green (#4CAF50)
-    \value Material.LightGreen Light Green (#8BC34A)
-    \value Material.Lime Lime (#CDDC39)
-    \value Material.Yellow Yellow (#FFEB3B)
-    \value Material.Amber Amber (#FFC107)
-    \value Material.Orange Orange (#FF9800)
-    \value Material.DeepOrange Deep Orange (#FF5722)
-    \value Material.Brown Brown (#795548)
-    \value Material.Grey Grey (#9E9E9E)
-    \value Material.BlueGrey Blue Grey (#607D8B)
-
-    \labs
+    \value Material.Red \stylecolor {#F44336} {}
+    \value Material.Pink \stylecolor {#E91E63} {(default accent)}
+    \value Material.Purple \stylecolor {#9C27B0} {}
+    \value Material.DeepPurple \stylecolor {#673AB7} {}
+    \value Material.Indigo \stylecolor {#3F51B5} {(default primary)}
+    \value Material.Blue \stylecolor {#2196F3} {}
+    \value Material.LightBlue \stylecolor {#03A9F4} {}
+    \value Material.Cyan \stylecolor {#00BCD4} {}
+    \value Material.Teal \stylecolor {#009688} {}
+    \value Material.Green \stylecolor {#4CAF50} {}
+    \value Material.LightGreen \stylecolor {#8BC34A} {}
+    \value Material.Lime \stylecolor {#CDDC39} {}
+    \value Material.Yellow \stylecolor {#FFEB3B} {}
+    \value Material.Amber \stylecolor {#FFC107} {}
+    \value Material.Orange \stylecolor {#FF9800} {}
+    \value Material.DeepOrange \stylecolor {#FF5722} {}
+    \value Material.Brown \stylecolor {#795548} {}
+    \value Material.Grey \stylecolor {#9E9E9E} {}
+    \value Material.BlueGrey \stylecolor {#607D8B} {}
 
     \section1 Attached Property Documentation
 
@@ -193,11 +207,29 @@
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
-    The default value is \c Material.Teal.
+    The default value is \c Material.Pink.
 
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined colors} that have been designed
     to work well with the rest of the Material style palette.
+
+    \endstyleproperty
+
+    \styleproperty {Material.background} {color} {background-attached-prop}
+    \target background-attached-prop
+    This attached property holds the background color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
+
+    \endstyleproperty
+
+    \styleproperty {Material.foreground} {color} {foreground-attached-prop}
+    \target foreground-attached-prop
+    This attached property holds the foreground color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
 
     \endstyleproperty
 
@@ -206,7 +238,7 @@
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
-    The default value is \c Material.BlueGray.
+    The default value is \c Material.Indigo.
 
     \note Even though the primary can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined colors} that have been designed

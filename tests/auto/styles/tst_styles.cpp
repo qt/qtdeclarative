@@ -38,11 +38,11 @@
 #include <QtCore/qprocess.h>
 #include <QtQuickTest/quicktest.h>
 
-static const char* styles[] = { "material", "universal" };
+static const char* styles[] = { "Material", "Universal" };
 
 int main(int argc, char *argv[])
 {
-    QByteArray style = qgetenv("QT_LABS_CONTROLS_STYLE");
+    QByteArray style = qgetenv("QT_QUICK_CONTROLS_STYLE");
     if (!style.isEmpty())
         return quick_test_main(argc, argv, "tst_styles(" + style + ")", TST_CONTROLS_DATA);
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < count; ++i) {
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("QT_LABS_CONTROLS_STYLE", styles[i]);
+        env.insert("QT_QUICK_CONTROLS_STYLE", styles[i]);
 
         QProcess process;
         process.setProcessEnvironment(env);

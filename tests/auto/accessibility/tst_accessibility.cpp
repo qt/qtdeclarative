@@ -41,7 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuickTemplates/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 

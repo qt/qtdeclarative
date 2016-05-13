@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -52,7 +52,9 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
         const QString family = font.family();
         systemFont.setFamily(family);
         buttonFont.setFamily(family);
+        toolTipFont.setFamily(family);
         itemViewFont.setFamily(family);
+        listViewFont.setFamily(family);
         menuItemFont.setFamily(family);
         editorFont.setFamily(family);
     }
@@ -63,8 +65,13 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
 
+    toolTipFont.setPixelSize(14);
+    toolTipFont.setWeight(QFont::Medium);
+
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
+
+    listViewFont.setPixelSize(16);
 
     menuItemFont.setPixelSize(16);
 
@@ -78,8 +85,12 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
     case QPlatformTheme::PushButtonFont:
     case QPlatformTheme::ToolButtonFont:
         return &buttonFont;
+    case QPlatformTheme::TipLabelFont:
+        return &toolTipFont;
     case QPlatformTheme::ItemViewFont:
         return &itemViewFont;
+    case QPlatformTheme::ListViewFont:
+        return &listViewFont;
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
         return &menuItemFont;

@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 T.ToolTip {
     id: control
@@ -49,14 +49,15 @@ T.ToolTip {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
+    margins: 6
     padding: 6
 
-    closePolicy: T.Popup.OnEscape | T.Popup.OnPressOutsideParent | T.Popup.OnReleaseOutsideParent
+    closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 
     //! [contentItem]
     contentItem: Text {
         text: control.text
-        // TODO: font: control.font
+        font: control.font
         // TODO: wrapMode: Label.Wrap
     }
     //! [contentItem]

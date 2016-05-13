@@ -41,9 +41,9 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
 import QtQuick.Layouts 1.0
-import Qt.labs.controls 1.0
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.universal 1.0
+import QtQuick.Controls 2.0
+import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Universal 2.0
 
 ApplicationWindow {
     id: window
@@ -96,7 +96,7 @@ ApplicationWindow {
             }
             ToolButton {
                 text: "Pressed"
-                pressed: true
+                down: true
                 hoverEnabled: true
                 ToolTip.text: text
                 ToolTip.delay: 1000
@@ -141,7 +141,7 @@ ApplicationWindow {
         }
         TabButton {
             text: "Pressed"
-            pressed: true
+            down: true
         }
         TabButton {
             text: "Disabled"
@@ -169,7 +169,7 @@ ApplicationWindow {
                     }
                     Button {
                         text: "Pressed"
-                        pressed: true
+                        down: true
                     }
                     Button {
                         text: "Checked"
@@ -178,7 +178,7 @@ ApplicationWindow {
                     Button {
                         text: "CH + PR"
                         checked: true
-                        pressed: true
+                        down: true
                     }
                     Button {
                         text: "Disabled"
@@ -201,7 +201,7 @@ ApplicationWindow {
                     Button {
                         text: "HI + PR"
                         highlighted: true
-                        pressed: true
+                        down: true
                     }
                     Button {
                         text: "HI + CH"
@@ -211,7 +211,7 @@ ApplicationWindow {
                     Button {
                         text: "HI+CH+PR"
                         highlighted: true
-                        pressed: true
+                        down: true
                         checked: true
                     }
                     Button {
@@ -233,7 +233,7 @@ ApplicationWindow {
                     }
                     CheckBox {
                         text: "Pressed"
-                        pressed: true
+                        down: true
                     }
                     CheckBox {
                         text: "Checked"
@@ -242,7 +242,7 @@ ApplicationWindow {
                     CheckBox {
                         text: "CH + PR"
                         checked: true
-                        pressed: true
+                        down: true
                     }
                     CheckBox {
                         text: "Disabled"
@@ -261,7 +261,7 @@ ApplicationWindow {
                     }
                     RadioButton {
                         text: "Pressed"
-                        pressed: true
+                        down: true
                     }
                     RadioButton {
                         text: "Checked"
@@ -270,7 +270,7 @@ ApplicationWindow {
                     RadioButton {
                         text: "CH + PR"
                         checked: true
-                        pressed: true
+                        down: true
                     }
                     RadioButton {
                         text: "Disabled"
@@ -289,7 +289,7 @@ ApplicationWindow {
                     }
                     Switch {
                         text: "Pressed"
-                        pressed: true
+                        down: true
                     }
                     Switch {
                         text: "Checked"
@@ -298,7 +298,7 @@ ApplicationWindow {
                     Switch {
                         text: "CH + PR"
                         checked: true
-                        pressed: true
+                        down: true
                     }
                     Switch {
                         text: "Disabled"

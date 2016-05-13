@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.Switch {
     id: control
@@ -54,37 +54,10 @@ T.Switch {
     property bool useSystemFocusVisuals: true
 
     //! [indicator]
-    indicator: Rectangle {
-        implicitWidth: 44
-        implicitHeight: 20
+    indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        radius: 10
-        color: !control.enabled ? "transparent" :
-                control.pressed ? control.Universal.baseMediumColor :
-                control.checked ? control.Universal.accent : "transparent"
-        border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.checked && !control.pressed ? control.Universal.accent : control.Universal.baseMediumColor
-        border.width: 2
-
-        Rectangle {
-            width: 10
-            height: 10
-            radius: 5
-
-            color: !control.enabled ? control.Universal.baseLowColor :
-                    control.pressed || control.checked ? control.Universal.chromeWhiteColor : control.Universal.baseMediumHighColor
-
-            x: Math.max(5, Math.min(parent.width - width - 5,
-                                    control.visualPosition * parent.width - (width / 2)))
-            y: (parent.height - height) / 2
-
-            Behavior on x {
-                enabled: !control.pressed
-                SmoothedAnimation { velocity: 200 }
-            }
-        }
+        control: control
     }
     //! [indicator]
 
@@ -100,7 +73,8 @@ T.Switch {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 }

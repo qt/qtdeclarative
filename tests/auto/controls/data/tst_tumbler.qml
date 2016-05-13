@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -57,7 +57,7 @@ TestCase {
     readonly property real defaultListViewTumblerOffset: -defaultImplicitDelegateHeight
 
     function init() {
-        tumbler = Qt.createQmlObject("import Qt.labs.controls 1.0; Tumbler { }", testCase, "");
+        tumbler = Qt.createQmlObject("import QtQuick.Controls 2.0; Tumbler { }", testCase, "");
         verify(tumbler, "Tumbler: failed to create an instance");
         compare(tumbler.contentItem.parent, tumbler);
     }
@@ -237,25 +237,34 @@ TestCase {
     function test_displacement_data() {
         var data = [
             // At 0 offset, the first item is current.
-            { index: 0, offset: 0, expectedDisplacement: 0 },
-            { index: 1, offset: 0, expectedDisplacement: -1 },
-            { index: 5, offset: 0, expectedDisplacement: 1 },
+            { count: 6, index: 0, offset: 0, expectedDisplacement: 0 },
+            { count: 6, index: 1, offset: 0, expectedDisplacement: -1 },
+            { count: 6, index: 5, offset: 0, expectedDisplacement: 1 },
             // When we start to move the first item down, the second item above it starts to become current.
-            { index: 0, offset: 0.25, expectedDisplacement: -0.25 },
-            { index: 1, offset: 0.25, expectedDisplacement: -1.25 },
-            { index: 5, offset: 0.25, expectedDisplacement: 0.75 },
-            { index: 0, offset: 0.5, expectedDisplacement: -0.5 },
-            { index: 1, offset: 0.5, expectedDisplacement: -1.5 },
-            { index: 5, offset: 0.5, expectedDisplacement: 0.5 },
+            { count: 6, index: 0, offset: 0.25, expectedDisplacement: -0.25 },
+            { count: 6, index: 1, offset: 0.25, expectedDisplacement: -1.25 },
+            { count: 6, index: 5, offset: 0.25, expectedDisplacement: 0.75 },
+            { count: 6, index: 0, offset: 0.5, expectedDisplacement: -0.5 },
+            { count: 6, index: 1, offset: 0.5, expectedDisplacement: -1.5 },
+            { count: 6, index: 5, offset: 0.5, expectedDisplacement: 0.5 },
             // By this stage, the delegate at index 1 is destroyed, so we can't test its displacement.
-            { index: 0, offset: 0.75, expectedDisplacement: -0.75 },
-            { index: 5, offset: 0.75, expectedDisplacement: 0.25 },
-            { index: 0, offset: 4.75, expectedDisplacement: 1.25 },
-            { index: 1, offset: 4.75, expectedDisplacement: 0.25 },
-            { index: 0, offset: 4.5, expectedDisplacement: 1.5 },
-            { index: 1, offset: 4.5, expectedDisplacement: 0.5 },
-            { index: 0, offset: 4.25, expectedDisplacement: 1.75 },
-            { index: 1, offset: 4.25, expectedDisplacement: 0.75 }
+            { count: 6, index: 0, offset: 0.75, expectedDisplacement: -0.75 },
+            { count: 6, index: 5, offset: 0.75, expectedDisplacement: 0.25 },
+            { count: 6, index: 0, offset: 4.75, expectedDisplacement: 1.25 },
+            { count: 6, index: 1, offset: 4.75, expectedDisplacement: 0.25 },
+            { count: 6, index: 0, offset: 4.5, expectedDisplacement: 1.5 },
+            { count: 6, index: 1, offset: 4.5, expectedDisplacement: 0.5 },
+            { count: 6, index: 0, offset: 4.25, expectedDisplacement: 1.75 },
+            { count: 6, index: 1, offset: 4.25, expectedDisplacement: 0.75 },
+            // count == visibleItemCount
+            { count: 3, index: 0, offset: 0, expectedDisplacement: 0 },
+            { count: 3, index: 1, offset: 0, expectedDisplacement: -1 },
+            { count: 3, index: 2, offset: 0, expectedDisplacement: 1 },
+            // count < visibleItemCount
+            { count: 2, index: 0, offset: 0, expectedDisplacement: 0 },
+            { count: 2, index: 1, offset: 0, expectedDisplacement: 1 },
+            // count == 1
+            { count: 1, index: 0, offset: 0, expectedDisplacement: 0 }
         ];
         for (var i = 0; i < data.length; ++i) {
             var row = data[i];
@@ -283,8 +292,8 @@ TestCase {
         // TODO: test setting these in the opposite order (delegate after model
         // doesn't seem to cause a change in delegates in PathView)
         tumbler.delegate = displacementDelegate;
-        tumbler.model = 6;
-        compare(tumbler.count, 6);
+        tumbler.model = data.count;
+        compare(tumbler.count, data.count);
 
         var delegate = findChild(tumbler.contentItem, "delegate" + data.index);
         verify(delegate);

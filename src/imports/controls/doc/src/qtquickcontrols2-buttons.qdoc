@@ -31,7 +31,7 @@
 
     Qt Quick Controls 2 offers a selection of button-like controls.
 
-    \annotatedlist qtlabscontrols-buttons
+    \annotatedlist qtquickcontrols2-buttons
 
     Each type of button has its own specific target use case. The following
     sections offer guidelines for choosing the appropriate type of button,
@@ -39,7 +39,7 @@
 
     \section1 Button Control
 
-    \image qtquickcontrols-button.png
+    \image qtquickcontrols2-button.png
 
     \l Button presents a push-button control that can be pushed or clicked
     by the user. Buttons are normally used to perform an action, or to answer
@@ -48,7 +48,7 @@
 
     \section1 CheckBox Control
 
-    \image qtquickcontrols-checkbox.png
+    \image qtquickcontrols2-checkbox.png
 
     \l CheckBox presents an option button that can be toggled on (checked)
     or off (unchecked). Check boxes are typically used to select one or more
@@ -56,7 +56,7 @@
 
     \section1 RadioButton Control
 
-    \image qtquickcontrols-radiobutton.png
+    \image qtquickcontrols2-radiobutton.png
 
     \l RadioButton presents an option button that can be toggled on (checked)
     or off (unchecked). Radio buttons are typically used to select one option
@@ -64,7 +64,7 @@
 
     \section1 Switch Control
 
-    \image qtquickcontrols-switch.png
+    \image qtquickcontrols2-switch.png
 
     \l Switch is an option button that can be dragged or toggled on (checked)
     or off (unchecked). Switches are typically used to select between two
@@ -72,7 +72,7 @@
 
     \section1 ToolButton Control
 
-    \image qtquickcontrols-toolbutton.png
+    \image qtquickcontrols2-toolbutton.png
 
     \l ToolButton is functionally similar to \l Button, but provides a look
     that is more suitable within a \l ToolBar.

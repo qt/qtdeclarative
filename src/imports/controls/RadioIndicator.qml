@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -41,9 +41,9 @@ Rectangle {
     implicitHeight: 28
 
     radius: width / 2
-    color: control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6"
-    border.width: control.activeFocus ? 2 : 1
-    border.color: control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+    color: control.down ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+    border.width: control.visualFocus ? 2 : 1
+    border.color: control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
 
     property Item control
 

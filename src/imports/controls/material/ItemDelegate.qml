@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Material 2.0
 
 T.ItemDelegate {
     id: control
@@ -52,85 +51,10 @@ T.ItemDelegate {
     padding: 16
     spacing: 16
 
-    //! [indicator]
-    indicator: Rectangle {
-        id: indicatorItem
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        implicitWidth: 20
-        implicitHeight: 20
-        color: "transparent"
-        border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
-        border.width: control.checked ? width / 2 : 2
-        radius: 2
-
-        visible: control.checkable
-
-        Behavior on border.width {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: 100
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Ripple {
-            width: parent.width
-            height: width
-            control: control
-            colored: control.checked
-            opacity: control.pressed ? 1 : 0
-        }
-
-        // TODO: This needs to be transparent
-        Image {
-            id: checkImage
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 16
-            height: 16
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
-            fillMode: Image.PreserveAspectFit
-
-            scale: control.checked ? 1 : 0
-            Behavior on scale { NumberAnimation { duration: 100 } }
-        }
-
-        states: State {
-            name: "checked"
-            when: control.checked
-        }
-
-        transitions: Transition {
-            SequentialAnimation {
-                NumberAnimation {
-                    target: indicatorItem
-                    property: "scale"
-                    // Go down 2 pixels in size.
-                    to: 1 - 2 / indicatorItem.width
-                    duration: 120
-                }
-                NumberAnimation {
-                    target: indicatorItem
-                    property: "scale"
-                    to: 1
-                    duration: 120
-                }
-            }
-        }
-    }
-    //! [indicator]
-
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.checkable && !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        rightPadding: control.checkable && control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -144,8 +68,10 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed || control.highlighted
-        color: control.pressed ? control.Material.flatButtonPressColor : control.Material.listHighlightColor
+        implicitHeight: 48
+
+        visible: control.down || control.highlighted
+        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
     }
     //! [background]
 }

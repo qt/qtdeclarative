@@ -40,7 +40,7 @@
 
 import QtQuick 2.4
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -63,6 +63,10 @@ TestCase {
     Component {
         id: signalSpy
         SignalSpy { }
+    }
+
+    QtObject {
+        id: object
     }
 
     function test_properties_data() {
@@ -152,5 +156,10 @@ TestCase {
         tryCompare(control, "visible", false)
 
         control.destroy()
+    }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_tooltip.qml") + ":68:5: QML QtObject: ToolTip must be attached to an Item")
+        object.ToolTip.text = ""
     }
 }

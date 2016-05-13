@@ -1,13 +1,13 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtQuickControls2
-description             = Qt Quick Controls Reference Documentation
+description             = Qt Quick Controls 2 Reference Documentation
 version                 = $QT_VERSION
 
 qhp.projects            = QtQuickControls2
 
 qhp.QtQuickControls2.file          = qtquickcontrols2.qhp
-qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
+qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols2.$QT_VERSION_TAG
 qhp.QtQuickControls2.virtualFolder = qtquickcontrols2
 qhp.QtQuickControls2.indexTitle    = Qt Quick Controls 2
 qhp.QtQuickControls2.indexRoot     =
@@ -16,43 +16,51 @@ qhp.QtQuickControls2.filterAttributes                  = qtquickcontrols2 $QT_VE
 qhp.QtQuickControls2.customFilters.Qt.name             = QtQuickControls2 $QT_VERSION
 qhp.QtQuickControls2.customFilters.Qt.filterAttributes = qtquickcontrols2 $QT_VERSION
 
-qhp.QtQuickControls2.subprojects = qtquickcontrols2qmltypes
-
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.title      = Controls 2 QML Types
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.indexTitle = Qt Quick Controls 2 QML Types
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.selectors  = qmlclass
-qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.sortPages  = true
+qhp.QtQuickControls2.subprojects = qmltypes classes examples
+qhp.QtQuickControls2.subprojects.qmltypes.title = QML Types
+qhp.QtQuickControls2.subprojects.qmltypes.indexTitle = Qt Quick Controls 2 QML Types
+qhp.QtQuickControls2.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQuickControls2.subprojects.qmltypes.sortPages = true
+qhp.QtQuickControls2.subprojects.classes.title = C++ Classes
+qhp.QtQuickControls2.subprojects.classes.indexTitle = Qt Quick Controls 2 C++ Classes
+qhp.QtQuickControls2.subprojects.classes.selectors = class fake:headerfile
+qhp.QtQuickControls2.subprojects.classes.sortPages = true
+qhp.QtQuickControls2.subprojects.examples.title = Examples
+qhp.QtQuickControls2.subprojects.examples.indexTitle = Qt Quick Controls 2 Examples
+qhp.QtQuickControls2.subprojects.examples.selectors = fake:example
 
 depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qmake qtsql qtwidgets
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
 # \example controls/tabs
-exampledirs += ../../../../examples/controls \
+exampledirs += ../../../../examples/quickcontrols2 \
                ../ \
-               ../../../templates \
+               ../../../quicktemplates2 \
                ../../calendar \
                ../../../../tests/auto/controls/data \
                snippets
 
-examplesinstallpath = qtquickcontrols2/controls
+examplesinstallpath = qtquickcontrols2/quickcontrols2
 
-headerdirs += ../../../templates \
+headerdirs += ../../../quicktemplates2 \
               ../../calendar \
-              ../../../controls
+              ../../../quickcontrols2
 
-sourcedirs += ../../../templates \
+sourcedirs += ../../../quicktemplates2 \
               ../../calendar \
-              ../../../controls
+              ../../../quickcontrols2 \
+              src
 
 imagedirs += images
 
 navigation.landingpage  = "Qt Quick Controls 2"
 navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
+navigation.cppclassespage = "Qt Quick Controls 2 C++ Classes"
 
 tagfile                 = qtquickcontrols2.tags
 
-# \styleimport {Qt.labs.controls.universal 1.0}
+# \styleimport {QtQuick.Controls.Universal 2.0}
 macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"
 
 # \styleproperty {Universal.accent} {enumeration} {html-target-id}
@@ -62,6 +70,9 @@ macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\
 # \endstyleproperty
 macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\3\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
 macro.endstyleproperty = "\\br"
+
+# \stylecolor {#6A00FF} {(default)}
+macro.stylecolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\">\1 \2</div>"
 
 macro.labs = "\\note \\e{Types in the Qt.labs module are not guaranteed to remain compatible in future versions.}"
 

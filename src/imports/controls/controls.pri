@@ -1,10 +1,12 @@
 HEADERS += \
     $$PWD/qquickbusyindicatorring_p.h \
-    $$PWD/qquickprogressstrip_p.h
+    $$PWD/qquickprogressstrip_p.h \
+    $$PWD/qquickdialring_p.h
 
 SOURCES += \
     $$PWD/qquickbusyindicatorring.cpp \
-    $$PWD/qquickprogressstrip.cpp
+    $$PWD/qquickprogressstrip.cpp \
+    $$PWD/qquickdialring.cpp
 
 QML_CONTROLS = \
     ApplicationWindow.qml \
@@ -38,6 +40,8 @@ QML_CONTROLS = \
     StackView.qml \
     SwipeDelegate.qml \
     Switch.qml \
+    SwitchIndicator.qml \
+    SwitchDelegate.qml \
     SwipeView.qml \
     TabBar.qml \
     TabButton.qml \

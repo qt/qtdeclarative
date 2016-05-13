@@ -1,0 +1,61 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtquickcontrols2-popups.html
+    \title Popup Controls
+
+    \annotatedlist qtquickcontrols2-popups
+
+    Each type of popup control has its own specific target use case. The
+    following sections offer guidelines for choosing the appropriate type
+    of popup control, depending on the use case.
+
+    \section1 Drawer Control
+
+    \image qtquickcontrols2-drawer-expanded-wireframe.png
+
+    \l Drawer provides a swipe-based side panel, similar to those often used
+    in touch interfaces to provide a central location for navigation.
+
+    \section1 Menu Control
+
+    \image qtquickcontrols2-menu.png
+
+    \l Menu is a traditional menu.
+
+    \section1 Popup Control
+
+    \l Popup is the base type of popup-like user interface controls.
+
+    \section1 ToolTip Control
+
+    \image qtquickcontrols2-tooltip.png
+
+    \l ToolTip shows a short piece of text that informs the user of a control's
+    function. It is typically placed above or below the parent control.
+*/

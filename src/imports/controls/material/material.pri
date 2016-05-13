@@ -12,6 +12,7 @@ SOURCES += \
 
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
+    $$PWD/BoxShadow.qml \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
@@ -20,6 +21,7 @@ QML_FILES += \
     $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Drawer.qml \
+    $$PWD/ElevationEffect.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \
@@ -45,6 +47,8 @@ QML_FILES += \
     $$PWD/SwipeDelegate.qml \
     $$PWD/SwipeView.qml \
     $$PWD/Switch.qml \
+    $$PWD/SwitchDelegate.qml \
+    $$PWD/SwitchIndicator.qml \
     $$PWD/TabBar.qml \
     $$PWD/TabButton.qml \
     $$PWD/TextArea.qml \

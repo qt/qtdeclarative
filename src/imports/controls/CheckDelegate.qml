@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.impl 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Controls.impl 2.0
 
 T.CheckDelegate {
     id: control
@@ -53,8 +54,8 @@ T.CheckDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -79,8 +80,8 @@ T.CheckDelegate {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        visible: control.pressed || control.highlighted
-        color: control.pressed ? "#bdbebf" : "#eeeeee"
+        visible: control.down || control.highlighted
+        color: control.down ? "#bdbebf" : "#eeeeee"
     }
     //! [background]
 }

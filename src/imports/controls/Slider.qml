@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.Slider {
     id: control
@@ -56,8 +56,9 @@ T.Slider {
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
-        border.color: "#353637"
-        color: control.pressed ? "#bdbebf" : "#f6f6f6"
+        color: control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }

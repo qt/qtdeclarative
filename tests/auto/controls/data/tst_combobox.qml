@@ -41,7 +41,7 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -97,6 +97,7 @@ TestCase {
         compare(control.highlightedIndex, -1)
         compare(control.currentText, "")
         verify(control.delegate)
+        verify(control.indicator)
         verify(control.popup)
 
         control.destroy()
@@ -518,6 +519,14 @@ TestCase {
         compare(control.popup.visible, true)
         verify(control.popup.contentItem.y < control.y)
 
+        // follow the control outside the horizontal window bounds
+        control.x = -control.width / 2
+        compare(control.x, -control.width / 2)
+        compare(control.popup.contentItem.parent.x, -control.width / 2)
+        control.x = testCase.width - control.width / 2
+        compare(control.x, testCase.width - control.width / 2)
+        compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2)
+
         control.destroy()
     }
 
@@ -641,11 +650,9 @@ TestCase {
                         width: _combobox.width
                         text: _combobox.textRole ? (Array.isArray(_combobox.model) ? modelData[_combobox.textRole] : model[_combobox.textRole]) : modelData
                         objectName: "delegate"
-                        checkable: true
                         autoExclusive: true
                         checked: _combobox.currentIndex === index
                         highlighted: _combobox.highlightedIndex === index
-                        pressed: highlighted && _combobox.pressed
                     }
                 }
             }
@@ -793,5 +800,15 @@ TestCase {
         compare(loader.item.displayText, "First")
 
         loader.destroy()
+    }
+
+    // QTBUG-52615
+    function test_currentIndex() {
+        var control = comboBox.createObject(testCase, {currentIndex: -1, model: 3})
+        verify(control)
+
+        compare(control.currentIndex, -1)
+
+        control.destroy()
     }
 }

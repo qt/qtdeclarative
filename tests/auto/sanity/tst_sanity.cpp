@@ -254,12 +254,12 @@ void tst_Sanity::anchors_data()
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
-static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QStringList &skiplist = QStringList())
+static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList())
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
     // dir would be added as an "implicit" import path overriding the actual import
-    // path (qtbase/qml/Qt/labs/controls/material). => The QML engine fails to load
+    // path (qtbase/qml/QtQuick/Controls.2/Material). => The QML engine fails to load
     // the style C++ plugin from the implicit import path (the source dir).
     //
     // Therefore we only use the source tree for finding out the set of QML files that
@@ -267,13 +267,13 @@ static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QSt
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
     foreach (const QFileInfo &entry, entries) {
         QString name = entry.baseName();
         if (!skiplist.contains(name)) {
             foreach (const QString &importPath, engine->importPathList()) {
                 QString name = entry.dir().dirName() + "/" + entry.fileName();
-                QString filePath = importPath + "/Qt/labs/" + targetPath + "/" + entry.fileName();
+                QString filePath = importPath + "/" + targetPath + "/" + entry.fileName();
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
@@ -309,10 +309,10 @@ void tst_Sanity::attachedObjects()
 void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "calendar");
-    addTestRows(&engine, "controls");
-    addTestRows(&engine, "controls/material", QStringList() << "Ripple" << "SliderHandle");
-    addTestRows(&engine, "controls/universal");
+    addTestRows(&engine, "calendar", "Qt/labs/calendar");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect");
+    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_Sanity)

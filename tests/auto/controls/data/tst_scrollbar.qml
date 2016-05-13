@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -265,5 +265,10 @@ TestCase {
         compare(control.position, 0.5)
 
         control.destroy()
+    }
+
+    function test_warning() {
+        ignoreWarning(Qt.resolvedUrl("tst_scrollbar.qml") + ":45:1: QML TestCase: ScrollBar must be attached to a Flickable")
+        testCase.ScrollBar.vertical = null
     }
 }

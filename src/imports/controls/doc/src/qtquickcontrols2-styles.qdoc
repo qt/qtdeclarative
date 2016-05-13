@@ -35,7 +35,7 @@
     \l {Universal Style}{Universal} and \l {Material Style}{Material} styles
     offer an appealing design, but require more system resources.
 
-    \section1 Selecting and Configuring Styles
+    \section1 Using Styles in Qt Quick Controls 2
 
     In order to run an application with a specific style, either configure the
     style using \l QQuickStyle in C++, pass a command line argument, or set an
@@ -82,19 +82,19 @@
 
     \section2 Environment variable
 
-    Setting the \c QT_LABS_CONTROLS_STYLE environment variable can be used to set
+    Setting the \c QT_QUICK_CONTROLS_STYLE environment variable can be used to set
     a system-wide style preference. It takes precedence over the configuration file
     mentioned below. The following example runs a Qt Quick Controls 2 application with
     the Universal style:
 
     \code
-    QT_LABS_CONTROLS_STYLE=universal ./app
+    QT_QUICK_CONTROLS_STYLE=universal ./app
     \endcode
 
     \section2 Configuration file
-    \target qtlabscontrols-conf
+    \target qtquickcontrols2-conf
 
-    Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols.conf,
+    Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols2.conf,
     that is built into an application's resources.
 
     The configuration file can specify the preferred style (may be overridden by either
@@ -124,7 +124,7 @@
     \code
     <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/">
-        <file>qtquickcontrols.conf</file>
+        <file>qtquickcontrols2.conf</file>
     </qresource>
     </RCC>
     \endcode
@@ -146,5 +146,6 @@
     \li \l {Material Style}
     \li \l {Universal Style}
     \li \l{Using File Selectors with Qt Quick Controls 2}
+    \li \l {Deploying Qt Quick Controls 2 Applications}
     \endlist
 */

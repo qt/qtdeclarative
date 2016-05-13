@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -44,14 +44,14 @@ Rectangle {
     implicitWidth: 28
     implicitHeight: 28
 
-    color: control.enabled ? (control.pressed ? (control.activeFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
-    border.width: control.activeFocus ? 2 : 1
-    border.color: control.enabled ? (control.activeFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")) : "transparent"
+    color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : "#f6f6f6") : "#353637"
+    border.width: control.visualFocus ? 2 : 1
+    border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")) : "transparent"
 
     Image {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check" + (control.activeFocus ? "-focus.png" : ".png")
+        source: "image://default/check/" + (control.visualFocus ? "#0066ff" : "#353637")
         visible: control.checkState === Qt.Checked
     }
 
@@ -60,7 +60,7 @@ Rectangle {
         y: (parent.height - height) / 2
         width: 16
         height: 3
-        color: control.activeFocus ? "#0066ff" : "#353637"
+        color: control.visualFocus ? "#0066ff" : "#353637"
         visible: control.checkState === Qt.PartiallyChecked
     }
 }

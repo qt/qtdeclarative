@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -69,10 +69,16 @@ TestCase {
     function test_implicitSize() {
         var control = textField.createObject(testCase)
         verify(control.implicitWidth > control.leftPadding + control.rightPadding)
+
+        var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
+        var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
         control.background.implicitWidth = 400
         control.background.implicitHeight = 200
         compare(control.implicitWidth, 400)
         compare(control.implicitHeight, 200)
+        compare(implicitWidthSpy.count, 1)
+        compare(implicitHeightSpy.count, 1)
+
         control.destroy()
     }
 

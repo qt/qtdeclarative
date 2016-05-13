@@ -62,10 +62,14 @@ private slots:
     void swipeDelegateBehind();
     void delegates_data();
     void delegates();
+    void dial_data();
+    void dial();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
         QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint, int movementDelay = 15);
+    void moveSmoothlyAlongArc(QQuickWindow *window, QPoint arcCenter, qreal distanceFromCenter,
+        qreal startAngleRadians, qreal endAngleRadians, QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint);
 
     QString dataDirPath;
     QDir outputDir;
@@ -96,13 +100,36 @@ void tst_Gifs::moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoi
     }
 }
 
+QPoint posAlongArc(QPoint arcCenter, qreal startAngleRadians, qreal endAngleRadians,
+    qreal distanceFromCenter, qreal progress, QEasingCurve::Type easingCurveType)
+{
+    QEasingCurve curve(easingCurveType);
+    const qreal angle = startAngleRadians + curve.valueForProgress(progress) * (endAngleRadians - startAngleRadians);
+    return (arcCenter - QTransform().rotateRadians(angle).map(QPointF(0, distanceFromCenter))).toPoint();
+}
+
+void tst_Gifs::moveSmoothlyAlongArc(QQuickWindow *window, QPoint arcCenter, qreal distanceFromCenter,
+    qreal startAngleRadians, qreal endAngleRadians, QEasingCurve::Type easingCurveType)
+{
+    QEasingCurve curve(easingCurveType);
+    const qreal angleSpan = endAngleRadians - startAngleRadians;
+    const int movements = qAbs(angleSpan) * 20 + 20;
+
+    for (int movement = 0; movement < movements; ++movement) {
+        const qreal progress = movement / qreal(movements);
+        const QPoint pos = posAlongArc(arcCenter, startAngleRadians, endAngleRadians,
+            distanceFromCenter, progress, easingCurveType);
+        QTest::mouseMove(window, pos, 15);
+    }
+}
+
 void tst_Gifs::tumblerWrap()
 {
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
-    gifRecorder.setQmlFileName("qtquickcontrols-tumbler-wrap.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-tumbler-wrap.qml");
 
     gifRecorder.start();
 
@@ -172,7 +199,7 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(5);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-slider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
 
     gifRecorder.start();
 
@@ -209,7 +236,7 @@ void tst_Gifs::rangeSlider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(7);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-rangeslider.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-rangeslider.qml");
 
     gifRecorder.start();
 
@@ -258,7 +285,7 @@ void tst_Gifs::busyIndicator()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols-busyindicator.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
 
     gifRecorder.start();
 
@@ -285,7 +312,7 @@ void tst_Gifs::switchGif()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols-switch.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-switch.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -303,7 +330,7 @@ void tst_Gifs::button()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols-button.qml");
+    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -317,7 +344,7 @@ void tst_Gifs::button()
 
 void tst_Gifs::tabBar()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols-tabbar.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols2-tabbar.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -346,7 +373,7 @@ void tst_Gifs::tabBar()
 
 void tst_Gifs::menu()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols-menu.qml");
+    const QString qmlFileName = QStringLiteral("qtquickcontrols2-menu.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
@@ -380,8 +407,8 @@ void tst_Gifs::menu()
 void tst_Gifs::swipeDelegate_data()
 {
     QTest::addColumn<QString>("qmlFileName");
-    QTest::newRow("qtquickcontrols-swipedelegate.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate.qml");
-    QTest::newRow("qtquickcontrols-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtquickcontrols-swipedelegate-leading-trailing.qml");
+    QTest::newRow("qtquickcontrols2-swipedelegate.qml") << QString::fromLatin1("qtquickcontrols2-swipedelegate.qml");
+    QTest::newRow("qtquickcontrols2-swipedelegate-leading-trailing.qml") << QString::fromLatin1("qtquickcontrols2-swipedelegate-leading-trailing.qml");
 }
 
 void tst_Gifs::swipeDelegate()
@@ -433,7 +460,7 @@ void tst_Gifs::swipeDelegateBehind()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(14);
-    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols-swipedelegate-behind.qml"));
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols2-swipedelegate-behind.qml"));
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -474,9 +501,10 @@ void tst_Gifs::delegates_data()
     QTest::addColumn<QVector<int> >("pressIndices");
     QTest::addColumn<int>("duration");
 
-    QTest::newRow("ItemDelegate") << "itemdelegate" << (QVector<int>() << 0 << 0) << 5;
+    QTest::newRow("ItemDelegate") << "itemdelegate" << (QVector<int>() << 0 << 1 << 2) << 5;
     QTest::newRow("CheckDelegate") << "checkdelegate" << (QVector<int>() << 0 << 0) << 5;
     QTest::newRow("RadioDelegate") << "radiodelegate" << (QVector<int>() << 1 << 0) << 5;
+    QTest::newRow("SwitchDelegate") << "switchdelegate" << (QVector<int>() << 0 << 0) << 5;
 }
 
 void tst_Gifs::delegates()
@@ -489,7 +517,7 @@ void tst_Gifs::delegates()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(duration);
-    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols-%1.qml").arg(name));
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-%1.qml").arg(name));
     gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
@@ -505,6 +533,65 @@ void tst_Gifs::delegates()
         QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, i == 0 ? 200 : 1000);
         QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, delegateCenter, 400);
     }
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::dial_data()
+{
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("dial-wrap") << "wrap";
+    QTest::newRow("dial-no-wrap") << "no-wrap";
+}
+
+void tst_Gifs::dial()
+{
+    QFETCH(QString, name);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(10);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-dial-%1.qml").arg(name));
+    gifRecorder.setHighQuality(false);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *dial = window->property("dial").value<QQuickItem*>();
+    QVERIFY(dial);
+
+    const QPoint arcCenter = dial->mapToScene(QPoint(dial->width() / 2, dial->height() / 2)).toPoint();
+    const qreal distanceFromCenter = dial->height() * 0.25;
+    // Go a bit past the actual min/max to ensure that we get the full range.
+    const qreal minAngle = qDegreesToRadians(-170.0);
+    const qreal maxAngle = qDegreesToRadians(170.0);
+    // Drag from start to end.
+    qreal startAngle = minAngle;
+    qreal endAngle = maxAngle;
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, posAlongArc(
+        arcCenter, startAngle, endAngle, distanceFromCenter, 0, QEasingCurve::InOutQuad), 30);
+
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Come back from the end a bit.
+    startAngle = endAngle;
+    endAngle -= qDegreesToRadians(50.0);
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Try to drag over max to show what happens with different wrap settings.
+    startAngle = endAngle;
+    endAngle = qDegreesToRadians(270.0);
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    // Go back to the start so that it loops nicely.
+    startAngle = endAngle;
+    endAngle = minAngle;
+    moveSmoothlyAlongArc(window, arcCenter, distanceFromCenter, startAngle, endAngle, QEasingCurve::InOutQuad);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, posAlongArc(
+        arcCenter, startAngle, endAngle, distanceFromCenter, 1, QEasingCurve::InOutQuad), 30);
 
     gifRecorder.waitForFinish();
 }

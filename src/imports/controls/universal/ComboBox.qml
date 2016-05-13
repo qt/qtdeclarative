@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,9 +36,9 @@
 
 import QtQuick 2.6
 import QtQuick.Window 2.2
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.ComboBox {
     id: control
@@ -46,7 +46,8 @@ T.ComboBox {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             Math.max(contentItem.implicitHeight,
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 10
@@ -60,19 +61,30 @@ T.ComboBox {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
-        pressed: highlighted && control.pressed
     }
     //! [delegate]
 
+    //! [indicator]
+    indicator: Image {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        source: "image://universal/downarrow/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor)
+    }
+    //! [indicator]
+
     //! [contentItem]
     contentItem: Text {
+        leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+
         text: control.displayText
         font: control.font
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
-        rightPadding: 12 + control.spacing
+
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 
@@ -93,23 +105,16 @@ T.ComboBox {
             width: parent.width - 4
             height: parent.height - 4
 
-            visible: control.activeKeyFocus
+            visible: control.visualFocus
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
-        }
-
-        Image {
-            id: checkmark
-            x: parent.width - width - control.rightPadding
-            y: (parent.height - height) / 2
-            source: "image://universal/downarrow/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor)
         }
     }
     //! [background]
 
     //! [popup]
     popup: T.Popup {
-        implicitWidth: control.width
+        width: control.width
         implicitHeight: Math.min(396, listview.contentHeight)
         topMargin: 8
         bottomMargin: 8

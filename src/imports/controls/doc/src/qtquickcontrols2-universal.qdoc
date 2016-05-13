@@ -30,25 +30,28 @@
     \title Universal Style
 
     The Universal Style is based on the Microsoft Universal Design Guidelines.
-    \l {detailed-description}{More...}
+    \l {detailed-desc-universal}{More...}
 
-    \styleimport {Qt.labs.controls.universal 1.0}
+    \styleimport {QtQuick.Controls.Universal 2.0}
 
     \section1 Attached Properties
 
     \list
         \li \l {accent-attached-prop}{\b accent} : color
+        \li \l {background-attached-prop}{\b background} : color
+        \li \l {foreground-attached-prop}{\b foreground} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
 
     \section1 Detailed Description
+    \target detailed-desc-universal
 
     The Universal style is a device-agnostic style based on the
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines}.
     The Universal style has been designed to look good on all devices, from
     phones and tablets to PCs.
 
-    \image qtquickcontrols-universal.png
+    \image qtquickcontrols2-universal.png
     \caption The Universal style in light and dark themes
 
     \note The Universal style is not a native Windows 10 style. The Universal
@@ -60,17 +63,21 @@
 
     \section2 Customization
 
-    The Universal style allows customizing two attributes, \l {theme-attached-prop}{theme}
-    and \l {accent-attached-prop}{accent}. The following example illustrates how to create
-    a red \e stop button with light text:
+    The Universal style allows customizing four attributes, \l {theme-attached-prop}{theme},
+    \l {accent-attached-prop}{accent}, \l {foreground-attached-prop}{foreground}, and
+    \l {background-attached-prop}{background}.
+
+    \image qtquickcontrols2-universal-attributes.png
+
+    The following example illustrates how to create a red \e stop button with light text:
 
     \table
         \row
             \li
                 \qml
                 import QtQuick 2.0
-                import Qt.labs.controls 1.0
-                import Qt.labs.controls.universal 1.0
+                import QtQuick.Controls 2.0
+                import QtQuick.Controls.Universal 2.0
 
                 Button {
                     text: "Stop"
@@ -81,7 +88,7 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols-universal-button.png
+                \image qtquickcontrols2-universal-button.png
     \endtable
 
     Both attributes can be specified for any window or item, and they automatically
@@ -94,8 +101,8 @@
             \li
                 \qml
                 import QtQuick 2.0
-                import Qt.labs.controls 1.0
-                import Qt.labs.controls.universal 1.0
+                import QtQuick.Controls 2.0
+                import QtQuick.Controls.Universal 2.0
 
                 ApplicationWindow {
                     visible: true
@@ -113,11 +120,11 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols-universal-dark.png
+                \image qtquickcontrols2-universal-dark.png
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a \l {qtlabscontrols-conf}
+    specify them via environment variables or in a \l {qtquickcontrols2-conf}
     {configuration file}.
 
     \section3 Environment Variables
@@ -127,11 +134,11 @@
             \li Variable
             \li Description
         \row
-            \li \c QT_LABS_CONTROLS_UNIVERSAL_THEME
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_THEME
             \li The value can be one of the available \l {theme-attached-prop}{themes},
                 for example \c "Dark".
         \row
-            \li \c QT_LABS_CONTROLS_UNIVERSAL_ACCENT
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_ACCENT
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the pre-defined  \l {accent-attached-prop} {accents}, for
                 example \c "Violet".
@@ -152,8 +159,6 @@
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
-    \labs
-
     \section1 Attached Property Documentation
 
     \styleproperty {Universal.accent} {color} {accent-attached-prop}
@@ -165,28 +170,44 @@
     recommended to use one of the pre-defined accents that have been designed
     to work well with the rest of the Universal style palette:
 
-    \value Universal.Lime Lime (#A4C400)
-    \value Universal.Green Green (#60A917)
-    \value Universal.Emerald Emerald (#008A00)
-    \value Universal.Teal Teal (#00ABA9)
-    \value Universal.Cyan Cyan (#1BA1E2)
-    \value Universal.Cobalt Cobalt (#3E65FF, default)
-    \value Universal.Indigo Indigo (#6A00FF)
-    \value Universal.Violet Violet (#AA00FF)
-    \value Universal.Pink Pink (#F472D0)
-    \value Universal.Magenta Magenta (#D80073)
-    \value Universal.Crimson Crimson (#A20025)
-    \value Universal.Red Red (#E51400)
-    \value Universal.Orange Orange (#FA6800)
-    \value Universal.Amber Amber (#F0A30A)
-    \value Universal.Yellow Yellow (#E3C800)
-    \value Universal.Brown Brown (#825A2C)
-    \value Universal.Olive Olive (#6D8764)
-    \value Universal.Steel Steel (#647687)
-    \value Universal.Mauve Mauve (#76608A)
-    \value Universal.Taupe Taupe (#87794E)
+    \value Universal.Lime \stylecolor {#A4C400} {}
+    \value Universal.Green \stylecolor {#60A917} {}
+    \value Universal.Emerald \stylecolor {#008A00} {}
+    \value Universal.Teal \stylecolor {#00ABA9} {}
+    \value Universal.Cyan \stylecolor {#1BA1E2} {}
+    \value Universal.Cobalt \stylecolor {#3E65FF} {(default accent)}
+    \value Universal.Indigo \stylecolor {#6A00FF} {}
+    \value Universal.Violet \stylecolor {#AA00FF} {}
+    \value Universal.Pink \stylecolor {#F472D0} {}
+    \value Universal.Magenta \stylecolor {#D80073} {}
+    \value Universal.Crimson \stylecolor {#A20025} {}
+    \value Universal.Red \stylecolor {#E51400} {}
+    \value Universal.Orange \stylecolor {#FA6800} {}
+    \value Universal.Amber \stylecolor {#F0A30A} {}
+    \value Universal.Yellow \stylecolor {#E3C800} {}
+    \value Universal.Brown \stylecolor {#825A2C} {}
+    \value Universal.Olive \stylecolor {#6D8764} {}
+    \value Universal.Steel \stylecolor {#647687} {}
+    \value Universal.Mauve \stylecolor {#76608A} {}
+    \value Universal.Taupe \stylecolor {#87794E} {}
 
     \endstyleproperty
+
+    \styleproperty {Universal.background} {color} {background-attached-prop}
+    \target background-attached-prop
+    This attached property holds the background color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
+
+    \endstyleproperty
+
+    \styleproperty {Universal.foreground} {color} {foreground-attached-prop}
+    \target foreground-attached-prop
+    This attached property holds the foreground color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    The default value is theme-specific (light or dark).
 
     \styleproperty {Universal.theme} {enumeration} {theme-attached-prop}
     \target theme-attached-prop

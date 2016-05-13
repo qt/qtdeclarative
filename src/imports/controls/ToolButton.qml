@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.ToolButton {
     id: control
@@ -52,7 +52,7 @@ T.ToolButton {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#c2c2c2"
+        color: control.enabled ? (control.visualFocus ? "#0066ff" : "#26282a") : "#c2c2c2"
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -65,8 +65,8 @@ T.ToolButton {
         implicitHeight: 40
 
         color: Qt.darker("#33333333", control.enabled && (control.checked || control.highlighted) ? 1.5 : 1.0)
-        opacity: control.pressed ? 1.0 : control.enabled && (control.checked || control.highlighted) ? 0.5 : 0
-        visible: control.pressed || (control.enabled && (control.checked || control.highlighted))
+        opacity: control.down ? 1.0 : control.enabled && (control.checked || control.highlighted) ? 0.5 : 0
+        visible: control.down || (control.enabled && (control.checked || control.highlighted))
     }
     //! [background]
 }

@@ -32,7 +32,7 @@
     \l {QFileSelector}{File selectors} provide a convenient way of selecting
     file variants. Qt offers the platform name and the locale as built-in
     selectors. Qt Quick Controls 2 extends the built-in selectors with the name
-    of the style that an application is running with.
+    (lowercase) of the style that an application is running with.
 
     By using file selectors, style-specific tweaks can be applied without
     creating a hard dependency to a style. From the available file variants,
@@ -62,7 +62,7 @@
     \code
     // main.qml
     import QtQuick 2.6
-    import Qt.labs.controls 1.0
+    import QtQuick.Controls 2.0
 
     ApplicationWindow {
         id: window
@@ -81,7 +81,7 @@
     \code
     // CustomButton.qml
     import QtQuick 2.6
-    import Qt.labs.controls 1.0
+    import QtQuick.Controls 2.0
 
     Button {
         id: control
@@ -103,8 +103,8 @@
     // +material/CustomButton.qml
     import QtQuick 2.6
     import QtGraphicalEffects 1.0
-    import Qt.labs.controls 1.0
-    import Qt.labs.controls.material 1.0
+    import QtQuick.Controls 2.0
+    import QtQuick.Controls.Material 2.0
 
     Button {
         id: control
@@ -130,7 +130,7 @@
 
     \note It is recommended to use \l QQmlApplicationEngine, which internally
     creates a \l QQmlFileSelector instance. This is all that is needed to take
-    QML file selectors in use.
+    QML file selectors into use.
 
     \section1 Related Information
     \list

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.Button {
     id: control
@@ -55,7 +55,7 @@ T.Button {
         text: control.text
         font: control.font
         opacity: enabled || highlighted ? 1 : 0.3
-        color: control.checked || control.highlighted ? "#ffffff" : (control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637"))
+        color: control.checked || control.highlighted ? "#ffffff" : (control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637"))
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -68,10 +68,10 @@ T.Button {
         implicitHeight: 40
         opacity: enabled ? 1 : (control.checked ? 0.2 : 0.3)
         color: control.checked || control.highlighted ?
-            (control.activeKeyFocus ? (control.pressed ? "#599bff" : "#0066ff") : (control.pressed ? "#585a5c" : "#353637")) :
-            (control.activeKeyFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") : (control.pressed ? "#d6d6d6" : "#f6f6f6"))
-        border.color: control.activeKeyFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
-        border.width: control.checked || control.highlighted ? 0 : (control.activeKeyFocus ? 2 : 1)
+            (control.visualFocus ? (control.down ? "#599bff" : "#0066ff") : (control.down ? "#585a5c" : "#353637")) :
+            (control.visualFocus ? (control.down ? "#cce0ff" : "#f0f6ff") : (control.down ? "#d6d6d6" : "#f6f6f6"))
+        border.color: control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
+        border.width: control.checked || control.highlighted ? 0 : (control.visualFocus ? 2 : 1)
     }
     //! [background]
 }

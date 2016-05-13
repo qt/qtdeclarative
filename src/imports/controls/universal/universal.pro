@@ -1,9 +1,9 @@
-TARGET = qtquickuniversalstyleplugin
-TARGETPATH = Qt/labs/controls/universal
-IMPORT_VERSION = 1.0
+TARGET = qtquickcontrols2universalstyleplugin
+TARGETPATH = QtQuick/Controls.2/Universal
+IMPORT_VERSION = 2.0
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates-private quickcontrols-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquickuniversalstyleplugin.cpp
+    $$PWD/qtquickcontrols2universalstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtquickuniversalstyleplugin.qrc
+    $$PWD/qtquickcontrols2universalstyleplugin.qrc
 
 include(universal.pri)
 

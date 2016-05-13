@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -53,6 +53,11 @@ TestCase {
     SignalSpy {
         id: pressedSpy
         signalName: "pressedChanged"
+    }
+
+    SignalSpy {
+        id: downSpy
+        signalName: "downChanged"
     }
 
     SignalSpy {
@@ -97,47 +102,66 @@ TestCase {
         verify(control)
 
         pressedSpy.target = control
+        downSpy.target = control
         clickedSpy.target = control
         verify(pressedSpy.valid)
+        verify(downSpy.valid)
         verify(clickedSpy.valid)
 
         // check
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftToolButton)
         compare(pressedSpy.count, 1)
+        compare(downSpy.count, 1)
         compare(control.pressed, true)
+        compare(control.down, true)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftToolButton)
         compare(clickedSpy.count, 1)
         compare(pressedSpy.count, 2)
+        compare(downSpy.count, 2)
         compare(control.pressed, false)
+        compare(control.down, false)
 
         // uncheck
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftToolButton)
         compare(pressedSpy.count, 3)
+        compare(downSpy.count, 3)
         compare(control.pressed, true)
+        compare(control.down, true)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftToolButton)
         compare(clickedSpy.count, 2)
         compare(pressedSpy.count, 4)
+        compare(downSpy.count, 4)
         compare(control.pressed, false)
+        compare(control.down, false)
 
         // release outside
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftToolButton)
         compare(pressedSpy.count, 5)
+        compare(downSpy.count, 5)
         compare(control.pressed, true)
+        compare(control.down, true)
         mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftToolButton)
         compare(control.pressed, false)
+        compare(control.down, false)
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftToolButton)
         compare(clickedSpy.count, 2)
         compare(pressedSpy.count, 6)
+        compare(downSpy.count, 6)
         compare(control.pressed, false)
+        compare(control.down, false)
 
         // right button
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(pressedSpy.count, 6)
+        compare(downSpy.count, 6)
         compare(control.pressed, false)
+        compare(control.down, false)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(clickedSpy.count, 2)
         compare(pressedSpy.count, 6)
+        compare(downSpy.count, 6)
         compare(control.pressed, false)
+        compare(control.down, false)
 
         control.destroy()
     }

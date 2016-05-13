@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Controls.impl 2.0
+import QtQuick.Templates 2.0 as T
 
 T.Dial {
     id: control
@@ -44,13 +46,12 @@ T.Dial {
     implicitHeight: 184
 
     //! [background]
-    background: Rectangle {
-        x: control.width / 2 - width / 2
-        y: control.height / 2 - height / 2
-        width: Math.max(64, Math.min(control.width, control.height))
-        height: width
-        radius: width / 2
-        border.color: "#353637"
+    background: DialRing {
+        width: control.availableWidth
+        height: control.availableHeight
+        color: control.visualFocus ? "#0066ff" : "#353637"
+        progress: control.position
+        opacity: control.enabled ? 1 : 0.3
     }
     //! [background]
 
@@ -61,11 +62,12 @@ T.Dial {
         y: background.y + background.height / 2 - handle.height / 2
         width: 14
         height: 10
-        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/dial-indicator.png"
+        source: "image://default/dial-indicator/" + (control.visualFocus ? "#0066ff" : "#353637")
         antialiasing: true
+        opacity: control.enabled ? 1 : 0.3
         transform: [
             Translate {
-                y: -background.height * 0.4 + handle.height / 2
+                y: -Math.min(background.width, background.height) * 0.4 + handle.height / 2
             },
             Rotation {
                 angle: control.angle

@@ -42,13 +42,13 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates/private/qquickoverlay_p.h>
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtQuickTemplates/private/qquicklabel_p.h>
-#include <QtQuickTemplates/private/qquicktextarea_p.h>
-#include <QtQuickTemplates/private/qquicktextfield_p.h>
-#include <QtQuickControls/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquicklabel_p.h>
+#include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
+#include <QtQuickControls2/private/qquickproxytheme_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -521,7 +521,7 @@ void tst_applicationwindow::defaultFont()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import Qt.labs.controls 1.0; ApplicationWindow { }", QUrl());
+    component.setData("import QtQuick.Controls 2.0; ApplicationWindow { }", QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));

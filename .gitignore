@@ -5,22 +5,25 @@
 /lib
 /mkspecs
 
-/examples/controls/chattutorial/chapter1-settingup/chapter1-settingup
-/examples/controls/chattutorial/chapter2-lists/chapter2-lists
-/examples/controls/chattutorial/chapter3-navigation/chapter3-navigation
-/examples/controls/chattutorial/chapter4-models/chapter4-models
-/examples/controls/chattutorial/chapter5-styling/chapter5-styling
-/examples/controls/gallery/gallery
+/examples/quickcontrols2/chattutorial/chapter1-settingup/chapter1-settingup
+/examples/quickcontrols2/chattutorial/chapter2-lists/chapter2-lists
+/examples/quickcontrols2/chattutorial/chapter3-navigation/chapter3-navigation
+/examples/quickcontrols2/chattutorial/chapter4-models/chapter4-models
+/examples/quickcontrols2/chattutorial/chapter5-styling/chapter5-styling
+/examples/quickcontrols2/gallery/gallery
 
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/tst_controls
+/tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/material/tst_material
 /tests/auto/menu/tst_menu
 /tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
+/tests/auto/qquickstyle/tst_qquickstyle
+/tests/auto/qquickstyleselector/tst_qquickstyleselector
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
 /tests/auto/styles/tst_styles

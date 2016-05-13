@@ -9,4 +9,5 @@ find_package(Qt5Core REQUIRED)
 include("${_Qt5CTestMacros}")
 
 test_module_includes(
+  QuickControls2 QQuickStyle
 )

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,8 +36,8 @@
 
 import QtQuick 2.6
 import QtQuick.Window 2.2
-import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
+import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 T.ComboBox {
     id: control
@@ -45,62 +45,64 @@ T.ComboBox {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             Math.max(contentItem.implicitHeight,
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 8
     padding: 6
-    leftPadding: 8
-    rightPadding: 8
+    leftPadding: 12
+    rightPadding: 12
+
+    opacity: enabled ? 1 : 0.3
 
     //! [delegate]
     delegate: ItemDelegate {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
-        checkable: true
-        autoExclusive: true
-        checked: control.currentIndex === index
-        highlighted: control.highlightedIndex === index
-        pressed: highlighted && control.pressed
+        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
+        highlighted: control.highlightedIndex == index
     }
     //! [delegate]
 
+    //! [indicator]
+    indicator: Image {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
+    }
+    //! [indicator]
+
     //! [contentItem]
     contentItem: Text {
+        leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+
         text: control.displayText
         font: control.font
-        color: "#ffffff"
+        color: control.visualFocus ? "#0066ff" : "#353637"
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
-        rightPadding: 18 + control.spacing
     }
     //! [contentItem]
 
     //! [background]
-    background: Item {
+    background: Rectangle {
         implicitWidth: 120
         implicitHeight: 40
 
-        Rectangle {
-            width: parent.width
-            height: parent.height
-            opacity: control.enabled ? 1.0 : 0.2
-            color: control.pressed || popup.visible ? "#585A5C" : "#353637"
-        }
-
-        Image {
-            x: parent.width - width - control.rightPadding
-            y: (parent.height - height) / 2
-            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/drop-indicator.png"
-        }
+        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
+            (control.pressed || popup.visible ? "#d6d6d6" : "#f6f6f6")
+        border.color: control.visualFocus ? "#0066ff" : "#353637"
+        border.width: control.visualFocus ? 2 : 1
     }
     //! [background]
 
     //! [popup]
     popup: T.Popup {
-        y: control.height - 1
-        implicitWidth: control.width
+        y: control.height - (control.visualFocus ? 0 : 1)
+        width: control.width
         implicitHeight: listview.contentHeight
         topMargin: 6
         bottomMargin: 6
@@ -116,8 +118,8 @@ T.ComboBox {
                 parent: listview
                 width: listview.width
                 height: listview.height
-                border.color: "#353637"
                 color: "transparent"
+                border.color: "#353637"
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }

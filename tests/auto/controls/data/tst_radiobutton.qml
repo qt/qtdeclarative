@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -55,7 +55,7 @@ TestCase {
         RadioButton {
             id: control
 
-            property ControlSpy spy: ControlSpy {
+            property SignalSequenceSpy spy: SignalSequenceSpy {
                 target: control
                 signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged"]
             }
@@ -107,9 +107,9 @@ TestCase {
         compare(control.pressed, true)
         verify(control.spy.success)
         control.spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                        ["checkedChanged", { "pressed": false, "checked": true }],
                                         "released",
-                                        "clicked",
-                                        ["checkedChanged", { "pressed": false, "checked": true }]]
+                                        "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.checked, true)
         compare(control.pressed, false)
@@ -170,9 +170,9 @@ TestCase {
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false, "checked": false }],
+                                        ["checkedChanged", { "pressed": false, "checked": true }],
                                         "released",
-                                        "clicked",
-                                        ["checkedChanged", { "pressed": false, "checked": true }]]
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         compare(control.checked, true)
         verify(control.spy.success)

@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -59,6 +59,7 @@ TestCase {
         var control = drawer.createObject(testCase)
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
+        compare(control.dragMargin, Qt.styleHints.startDragDistance)
         control.destroy()
     }
 

@@ -31,26 +31,26 @@
 
     Qt Quick Controls 2 offers a selection of navigation models.
 
-    \annotatedlist qtlabscontrols-navigation
+    \annotatedlist qtquickcontrols2-navigation
 
     The following sections offer guidelines for choosing the appropriate type
     of navigation model, depending on the use case.
 
     \section1 StackView Control
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols2-stackview-wireframe.png
 
     \l StackView provides a stack-based navigation model.
 
     \section1 SwipeView Control
 
-    \image qtquickcontrols-swipeview-wireframe.png
+    \image qtquickcontrols2-swipeview-wireframe.png
 
     \l SwipeView provides a swipe-based navigation model.
 
     \section1 TabBar and TabButton Controls
 
-    \image qtquickcontrols-tabbar-wireframe.png
+    \image qtquickcontrols2-tabbar-wireframe.png
 
     \l TabBar and \l TabButton provide a tab-based navigation model.
 */

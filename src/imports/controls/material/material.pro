@@ -1,9 +1,9 @@
-TARGET = qtquickmaterialstyleplugin
-TARGETPATH = Qt/labs/controls/material
-IMPORT_VERSION = 1.0
+TARGET = qtquickcontrols2materialstyleplugin
+TARGETPATH = QtQuick/Controls.2/Material
+IMPORT_VERSION = 2.0
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates-private quickcontrols-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
@@ -11,10 +11,10 @@ OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquickmaterialstyleplugin.cpp
+    $$PWD/qtquickcontrols2materialstyleplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtquickmaterialstyleplugin.qrc
+    $$PWD/qtquickcontrols2materialstyleplugin.qrc
 
 include(material.pri)
 

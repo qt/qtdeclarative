@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.ItemDelegate {
     id: control
@@ -55,20 +55,10 @@ T.ItemDelegate {
     rightPadding: 12
     bottomPadding: 13
 
-    //! [indicator]
-    indicator: Image {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-
-        visible: control.checked
-        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.pressed ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
-    }
-    //! [indicator]
-
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -77,18 +67,19 @@ T.ItemDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed || control.highlighted || control.activeKeyFocus
-        color: control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        visible: control.down || control.highlighted || control.visualFocus
+        color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.activeKeyFocus || control.highlighted
+            visible: control.visualFocus || control.highlighted
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

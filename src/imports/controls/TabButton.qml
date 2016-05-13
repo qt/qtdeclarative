@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.TabButton {
     id: control
@@ -54,7 +54,7 @@ T.TabButton {
         font: control.font
         elide: Text.ElideRight
         opacity: enabled ? 1 : 0.3
-        color: !control.checked ? "#ffffff" : control.pressed ? "#26282a" : "#353637"
+        color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -63,7 +63,7 @@ T.TabButton {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: control.pressed ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
+        color: control.down ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
     }
     //! [background]
 }

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
+import QtQuick.Templates 2.0 as T
 
 T.ItemDelegate {
     id: control
@@ -52,8 +52,8 @@ T.ItemDelegate {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+        rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -65,22 +65,12 @@ T.ItemDelegate {
     }
     //! [contentItem]
 
-    //! [indicator]
-    indicator: Image {
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-
-        visible: control.checked
-        source: control.checkable ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png" : ""
-    }
-    //! [indicator]
-
     //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        visible: control.pressed || control.highlighted
-        color: control.pressed ? "#bdbebf" : "#eeeeee"
+        visible: control.down || control.highlighted || control.visualFocus
+        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#eeeeee")
     }
     //! [background]
 }

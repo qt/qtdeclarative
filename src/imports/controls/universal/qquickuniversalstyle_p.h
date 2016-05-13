@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyleattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +60,8 @@ class QQuickUniversalStyle : public QQuickStyleAttached
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
     Q_PROPERTY(QVariant accent READ accent WRITE setAccent RESET resetAccent NOTIFY accentChanged FINAL)
+    Q_PROPERTY(QVariant foreground READ foreground WRITE setForeground RESET resetForeground NOTIFY foregroundChanged FINAL)
+    Q_PROPERTY(QVariant background READ background WRITE setBackground RESET resetBackground NOTIFY backgroundChanged FINAL)
 
     Q_PROPERTY(QColor altHighColor READ altHighColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor altLowColor READ altLowColor NOTIFY paletteChanged FINAL)
@@ -100,7 +102,7 @@ public:
     void propagateTheme();
     void resetTheme();
 
-    enum Accent {
+    enum Color {
         Lime,
         Green,
         Emerald,
@@ -122,13 +124,27 @@ public:
         Mauve,
         Taupe
     };
-    Q_ENUM(Accent)
+    Q_ENUM(Color)
 
     QVariant accent() const;
     void setAccent(const QVariant &accent);
     void inheritAccent(QRgb accent);
     void propagateAccent();
     void resetAccent();
+
+    QVariant foreground() const;
+    void setForeground(const QVariant &foreground);
+    void inheritForeground(QRgb foreground, bool has);
+    void propagateForeground();
+    void resetForeground();
+
+    QVariant background() const;
+    void setBackground(const QVariant &background);
+    void inheritBackground(QRgb background, bool has);
+    void propagateBackground();
+    void resetBackground();
+
+    Q_INVOKABLE QColor color(Color color) const;
 
     QColor altHighColor() const;
     QColor altLowColor() const;
@@ -161,7 +177,7 @@ public:
         AltMedium,
         AltMediumHigh,
         AltMediumLow,
-        BaseHighColor,
+        BaseHigh,
         BaseLow,
         BaseMedium,
         BaseMediumHigh,
@@ -182,11 +198,13 @@ public:
         ListMedium
     };
 
-    QColor getColor(SystemColor role) const;
+    QColor systemColor(SystemColor role) const;
 
 Q_SIGNALS:
     void themeChanged();
     void accentChanged();
+    void foregroundChanged();
+    void backgroundChanged();
     void paletteChanged();
 
 protected:
@@ -194,11 +212,18 @@ protected:
 
 private:
     void init();
+    bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const;
 
-    bool m_hasTheme;
-    bool m_hasAccent;
+    bool m_explicitTheme;
+    bool m_explicitAccent;
+    bool m_explicitForeground;
+    bool m_explicitBackground;
+    bool m_hasForeground;
+    bool m_hasBackground;
     QQuickUniversalStyle::Theme m_theme;
     QRgb m_accent;
+    QRgb m_foreground;
+    QRgb m_background;
 };
 
 QT_END_NAMESPACE

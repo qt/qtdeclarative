@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.RadioDelegate {
     id: control
@@ -77,18 +77,19 @@ T.RadioDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
+        opacity: enabled ? 1.0 : 0.2
+        color: control.Universal.foreground
     }
     //! [contentItem]
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed || control.highlighted || control.activeFocus
-        color: control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        visible: control.down || control.highlighted || control.visualFocus
+        color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.activeFocus || control.highlighted
+            visible: control.visualFocus || control.highlighted
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

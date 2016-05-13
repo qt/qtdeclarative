@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+import QtQuick.Templates 2.0 as T
+import QtQuick.Controls.Universal 2.0
 
 T.TextArea {
     id: control
@@ -57,7 +57,7 @@ T.TextArea {
     Universal.theme: activeFocus ? Universal.Light : undefined
 
     color: !enabled ? Universal.chromeDisabledLowColor :
-            activeFocus ? Universal.chromeBlackHighColor : Universal.baseHighColor
+            activeFocus ? Universal.chromeBlackHighColor : Universal.foreground
     selectionColor: Universal.accent
     selectedTextColor: Universal.chromeWhiteColor
 
@@ -86,7 +86,7 @@ T.TextArea {
         border.width: 2 // TextControlBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
                        control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
-        color: control.enabled ? control.Universal.altHighColor : control.Universal.baseLowColor
+        color: control.enabled ? control.Universal.background : control.Universal.baseLowColor
     }
     //! [background]
 }

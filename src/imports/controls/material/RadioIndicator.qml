@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,15 +35,15 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls.material 1.0
-import Qt.labs.controls.material.impl 1.0
+import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 Rectangle {
     implicitWidth: 20
     implicitHeight: 20
     radius: width / 2
     border.width: 2
-    border.color: control.checked || control.pressed ? control.Material.accentColor : control.Material.secondaryTextColor
+    border.color: control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
     color: "transparent"
 
     property alias control: ripple.control
@@ -54,7 +54,7 @@ Rectangle {
         height: width
         control: control
         colored: control.checked
-        opacity: control.pressed || control.activeFocus ? 1 : 0
+        opacity: control.down || control.visualFocus ? 1 : 0
     }
 
     Rectangle {
@@ -64,6 +64,6 @@ Rectangle {
         height: 10
         radius: width / 2
         color: parent.border.color
-        visible: control.checked || control.pressed
+        visible: control.checked || control.down
     }
 }

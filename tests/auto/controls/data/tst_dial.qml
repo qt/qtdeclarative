@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import Qt.labs.controls 1.0
+import QtQuick.Controls 2.0
 
 TestCase {
     id: testCase
@@ -179,6 +179,8 @@ TestCase {
     }
 
     function test_dragging(data) {
+        dial.wrap = true;
+        verify(dial.wrap);
         dial.from = data.from;
         dial.to = data.to;
 
@@ -208,6 +210,43 @@ TestCase {
         fuzzyCompare(dial.value, data.bottomValue, 0.1);
         verify(valueSpy.count > 0);
         valueSpy.clear();
+    }
+
+    function test_nonWrapping() {
+        compare(dial.wrap, false);
+        dial.value = 0;
+
+        // Ensure that dragging from bottom left to bottom right doesn't work.
+        var yPos = dial.height * 0.75;
+        mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
+        var positionAtPress = dial.position;
+        mouseMove(dial, dial.width * 0.5, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+        mouseMove(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+        mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+
+        // Try the same thing, but a bit higher.
+        yPos = dial.height * 0.6;
+        mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
+        positionAtPress = dial.position;
+        mouseMove(dial, dial.width * 0.5, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+        mouseMove(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+        mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+
+        // Going from below the center of the dial to above it should work (once it gets above the center).
+        mousePress(dial, dial.width * 0.25, dial.height * 0.75, Qt.LeftButton);
+        positionAtPress = dial.position;
+        mouseMove(dial, dial.width * 0.5, dial.height * 0.6, Qt.LeftButton);
+        compare(dial.position, positionAtPress);
+        mouseMove(dial, dial.width * 0.75, dial.height * 0.4, Qt.LeftButton);
+        verify(dial.position > positionAtPress);
+        mouseRelease(dial, dial.width * 0.75, dial.height * 0.3, Qt.LeftButton);
+        verify(dial.position > positionAtPress);
     }
 
     property Component focusTest: Component {
