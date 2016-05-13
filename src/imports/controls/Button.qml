@@ -54,7 +54,7 @@ T.Button {
     contentItem: Text {
         text: control.text
         font: control.font
-        opacity: enabled || highlighted ? 1 : 0.3
+        opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
         color: control.checked || control.highlighted ? "#ffffff" : (control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637"))
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -66,7 +66,7 @@ T.Button {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        opacity: enabled ? 1 : (control.checked ? 0.2 : 0.3)
+        opacity: enabled ? 1 : 0.3
         color: control.checked || control.highlighted ?
             (control.visualFocus ? (control.down ? "#599bff" : "#0066ff") : (control.down ? "#585a5c" : "#353637")) :
             (control.visualFocus ? (control.down ? "#cce0ff" : "#f0f6ff") : (control.down ? "#d6d6d6" : "#f6f6f6"))
