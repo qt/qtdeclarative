@@ -190,7 +190,7 @@ Binding *Object::findBinding(quint32 nameIndex) const
 
 void Object::insertSorted(Binding *b)
 {
-    Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::valueLocation>(b);
+    Binding *insertionPoint = bindings->findSortedInsertionPoint<quint32, Binding, &Binding::offset>(b);
     bindings->insertAfter(insertionPoint, b);
 }
 
@@ -1082,6 +1082,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 {
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->offset = nameLocation.offset;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
@@ -1101,6 +1102,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->offset = nameLocation.offset;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
 
@@ -1225,6 +1227,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
         if (!binding) {
             binding = New<Binding>();
             binding->propertyNameIndex = propertyNameIndex;
+            binding->offset = qualifiedIdElement->identifierToken.offset;
             binding->location.line = qualifiedIdElement->identifierToken.startLine;
             binding->location.column = qualifiedIdElement->identifierToken.startColumn;
             binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;

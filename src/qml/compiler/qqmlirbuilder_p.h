@@ -113,7 +113,7 @@ struct PoolList
         T *insertPos = 0;
 
         for (T *it = first; it; it = it->next) {
-            if (!(it->*sortMember < item->*sortMember))
+            if (!(it->*sortMember <= item->*sortMember))
                 break;
             insertPos = it;
         }
@@ -227,6 +227,10 @@ struct Property : public QV4::CompiledData::Property
 
 struct Binding : public QV4::CompiledData::Binding
 {
+    // The offset in the source file where the binding appeared. This is used for sorting to ensure
+    // that assignments to list properties are done in the correct order. We use the offset here instead
+    // of Binding::location as the latter has limited precision.
+    quint32 offset;
     // Binding's compiledScriptIndex is index in object's functionsAndExpressions
     Binding *next;
 };
