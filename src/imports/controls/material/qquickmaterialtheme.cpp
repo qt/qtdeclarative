@@ -37,6 +37,7 @@
 #include "qquickmaterialtheme_p.h"
 
 #include <QtGui/qfont.h>
+#include <QtGui/qfontinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -45,11 +46,14 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
 {
     QFont font;
     font.setFamily(QStringLiteral("Roboto"));
-    if (!font.exactMatch())
-        font.setFamily(QStringLiteral("Noto"));
+    QString family = QFontInfo(font).family();
 
-    if (font.exactMatch()) {
-        const QString family = font.family();
+    if (family != QStringLiteral("Roboto")) {
+        font.setFamily(QStringLiteral("Noto"));
+        family = QFontInfo(font).family();
+    }
+
+    if (family == QStringLiteral("Roboto") || family == QStringLiteral("Noto")) {
         systemFont.setFamily(family);
         buttonFont.setFamily(family);
         toolTipFont.setFamily(family);

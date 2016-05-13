@@ -37,6 +37,7 @@
 #include "qquickuniversaltheme_p.h"
 
 #include <QtGui/qfont.h>
+#include <QtGui/qfontinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -44,7 +45,7 @@ QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
     const QFont font(QStringLiteral("Segoe UI"));
-    if (font.exactMatch()) {
+    if (QFontInfo(font).family() == QStringLiteral("Segoe UI")) {
         const QString family = font.family();
         systemFont.setFamily(family);
         groupBoxTitleFont.setFamily(family);
