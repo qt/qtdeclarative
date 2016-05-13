@@ -377,9 +377,8 @@ QQuickSmoothedAnimation::~QQuickSmoothedAnimation()
 }
 
 QQuickSmoothedAnimationPrivate::QQuickSmoothedAnimationPrivate()
-    : anim(0)
+    : anim(new QSmoothedAnimation)
 {
-    anim = new QSmoothedAnimation;
 }
 
 QQuickSmoothedAnimationPrivate::~QQuickSmoothedAnimationPrivate()
