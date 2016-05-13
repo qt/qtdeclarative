@@ -63,6 +63,8 @@ T.Dial {
         width: 14
         height: 10
         source: "image://default/dial-indicator/" + (control.visualFocus ? "#0066ff" : "#353637")
+        sourceSize.width: width
+        sourceSize.height: height
         antialiasing: true
         opacity: control.enabled ? 1 : 0.3
         transform: [

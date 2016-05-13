@@ -76,6 +76,8 @@ T.MenuItem {
 
         visible: control.checked
         source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
     //! [indicator]
 

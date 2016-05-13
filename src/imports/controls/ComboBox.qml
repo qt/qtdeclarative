@@ -70,6 +70,8 @@ T.ComboBox {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
+        sourceSize.width: width
+        sourceSize.height: height
     }
     //! [indicator]
 

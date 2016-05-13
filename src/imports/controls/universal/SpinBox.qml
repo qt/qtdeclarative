@@ -107,6 +107,8 @@ T.SpinBox {
             source: "image://universal/" + (control.mirrored ? "left" : "right") + "arrow/"
                     + (!control.enabled ? control.Universal.chromeDisabledLowColor :
                                           control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
+            sourceSize.width: width
+            sourceSize.height: height
         }
     }
     //! [up.indicator]
@@ -133,6 +135,8 @@ T.SpinBox {
             source: "image://universal/" + (control.mirrored ? "right" : "left") + "arrow/"
                     + (!control.enabled ? control.Universal.chromeDisabledLowColor :
                                           control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
+            sourceSize.width: width
+            sourceSize.height: height
         }
     }
     //! [down.indicator]

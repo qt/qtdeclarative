@@ -58,6 +58,8 @@ Rectangle {
 
         visible: control.checkState === Qt.Checked
         source: "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.chromeWhiteColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
 
     Rectangle {

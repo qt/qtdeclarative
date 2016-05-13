@@ -52,6 +52,8 @@ Rectangle {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
         source: "image://default/check/" + (control.visualFocus ? "#0066ff" : "#353637")
+        sourceSize.width: width
+        sourceSize.height: height
         visible: control.checkState === Qt.Checked
     }
 
