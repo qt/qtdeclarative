@@ -67,11 +67,12 @@ T.Button {
         implicitWidth: 100
         implicitHeight: 40
         opacity: enabled ? 1 : 0.3
+        visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.checked || control.highlighted ?
             (control.visualFocus ? (control.down ? "#599bff" : "#0066ff") : (control.down ? "#585a5c" : "#353637")) :
             (control.visualFocus ? (control.down ? "#cce0ff" : "#f0f6ff") : (control.down ? "#d6d6d6" : "#f6f6f6"))
         border.color: control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
-        border.width: control.checked || control.highlighted ? 0 : (control.visualFocus ? 2 : 1)
+        border.width: control.flat || control.checked || control.highlighted ? 0 : (control.visualFocus ? 2 : 1)
     }
     //! [background]
 }

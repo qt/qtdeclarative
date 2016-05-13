@@ -42,15 +42,6 @@ import QtQuick.Controls.Material.impl 2.0
 T.Button {
     id: control
 
-    // TODO: Add a flat property to T.Button, and make this:
-    // flat ? control.down || control.hovered ? 2 : 0
-    //      : control.down ? 8 : 2
-    // See https://bugreports.qt.io/browse/QTBUG-51054
-    // NOTE: Flat buttons should be transparent by default and have no elevation when pressed
-    // However, on the desktop, flat buttons can be colored and have a 2dp when pressed
-    // This is called a flat raised button
-    Material.elevation: control.down ? 8 : 2
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
@@ -62,11 +53,16 @@ T.Button {
     leftPadding: 8
     rightPadding: 8
 
+    Material.elevation: flat ? control.down || control.hovered ? 2 : 0
+                             : control.down ? 8 : 2
+    Material.background: flat ? "transparent" : undefined
+
     //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
         color: !control.enabled ? control.Material.hintTextColor :
+            control.flat && control.highlighted ? control.Material.accentColor :
             control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

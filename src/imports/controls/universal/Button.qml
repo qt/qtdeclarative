@@ -72,6 +72,7 @@ T.Button {
         implicitWidth: 32
         implicitHeight: 32
 
+        visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.down ? control.Universal.baseMediumLowColor :
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor
