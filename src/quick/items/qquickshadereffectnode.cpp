@@ -455,7 +455,7 @@ void QQuickShaderEffectMaterial::cleanupMaterialCache()
 {
     QQuickShaderEffectMaterialCache *cache = QQuickShaderEffectMaterialCache::get(false);
     if (cache) {
-        qDeleteAll(cache->cache.values());
+        qDeleteAll(cache->cache);
         delete cache;
     }
 }

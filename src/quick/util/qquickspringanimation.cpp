@@ -585,7 +585,8 @@ QAbstractAnimationJob* QQuickSpringAnimation::transition(QQuickStateActions &act
                 animation->restart();
             anims.insert(animation);
         }
-        foreach (QSpringAnimation *anim, d->activeAnimations.values()){
+        const auto copy = d->activeAnimations;
+        for (QSpringAnimation *anim : copy) {
             if (!anims.contains(anim)) {
                 anim->clearTemplate();
                 d->activeAnimations.remove(anim->target);

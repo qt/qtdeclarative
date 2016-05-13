@@ -845,7 +845,7 @@ Renderer::~Renderer()
         for (int i=0; i<m_batchPool.size(); ++i) qsg_wipeBatch(m_batchPool.at(i), this);
     }
 
-    foreach (Node *n, m_nodes.values())
+    for (Node *n : qAsConst(m_nodes))
         m_nodeAllocator.release(n);
 
     // Remaining elements...

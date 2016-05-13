@@ -392,7 +392,7 @@ QQuickSmoothedAnimationPrivate::~QQuickSmoothedAnimationPrivate()
 
 void QQuickSmoothedAnimationPrivate::updateRunningAnimations()
 {
-    foreach(QSmoothedAnimation* ease, activeAnimations.values()){
+    for (QSmoothedAnimation *ease : qAsConst(activeAnimations)) {
         ease->maximumEasingTime = anim->maximumEasingTime;
         ease->reversingMode = anim->reversingMode;
         ease->velocity = anim->velocity;
@@ -444,7 +444,8 @@ QAbstractAnimationJob* QQuickSmoothedAnimation::transition(QQuickStateActions &a
             anims.insert(ease);
         }
 
-        foreach (QSmoothedAnimation *ease, d->activeAnimations.values()){
+        const auto copy = d->activeAnimations;
+        for (QSmoothedAnimation *ease : copy) {
             if (!anims.contains(ease)) {
                 ease->clearTemplate();
                 d->activeAnimations.remove(ease->target);
