@@ -75,7 +75,7 @@ T.SwipeDelegate {
 
     //! [background]
     background: Rectangle {
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        color: control.visualFocus ? (control.down ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#ffffff")
 
         Behavior on x {
             enabled: !control.down
