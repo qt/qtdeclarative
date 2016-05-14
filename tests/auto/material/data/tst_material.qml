@@ -426,6 +426,25 @@ TestCase {
         window.destroy()
     }
 
+    function test_windowChange() {
+        var ldr = loader.createObject()
+        verify(ldr)
+
+        var wnd = window.createObject()
+        verify(wnd)
+
+        wnd.Material.theme = Material.Dark
+        compare(wnd.Material.theme, Material.Dark)
+
+        ldr.active = true
+        verify(ldr.item)
+        compare(ldr.item.Material.theme, Material.Light)
+
+        ldr.parent = wnd.contentItem
+        compare(ldr.item.Material.theme, Material.Dark)
+
+        wnd.destroy()
+    }
 
     function test_colors_data() {
         return [

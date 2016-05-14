@@ -318,6 +318,26 @@ TestCase {
         window.destroy()
     }
 
+    function test_windowChange() {
+        var ldr = loader.createObject()
+        verify(ldr)
+
+        var wnd = window.createObject()
+        verify(wnd)
+
+        wnd.Universal.theme = Universal.Dark
+        compare(wnd.Universal.theme, Universal.Dark)
+
+        ldr.active = true
+        verify(ldr.item)
+        compare(ldr.item.Universal.theme, Universal.Light)
+
+        ldr.parent = wnd.contentItem
+        compare(ldr.item.Universal.theme, Universal.Dark)
+
+        wnd.destroy()
+    }
+
     function test_colors_data() {
         return [
             { tag: "accent" }, { tag: "background" }, { tag: "foreground" }

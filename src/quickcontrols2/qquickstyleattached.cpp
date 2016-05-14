@@ -39,6 +39,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
+#include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 
@@ -154,15 +155,19 @@ QQuickStyleAttached::QQuickStyleAttached(QObject *parent) : QObject(parent)
             item = popup->popupItem();
     }
 
-    if (item)
+    if (item) {
+        connect(item, &QQuickItem::windowChanged, this, &QQuickStyleAttached::itemWindowChanged);
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
 }
 
 QQuickStyleAttached::~QQuickStyleAttached()
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (item)
+    if (item) {
+        disconnect(item, &QQuickItem::windowChanged, this, &QQuickStyleAttached::itemWindowChanged);
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
 
     setParentStyle(nullptr);
 }
@@ -220,6 +225,14 @@ void QQuickStyleAttached::parentStyleChange(QQuickStyleAttached *newParent, QQui
 {
     Q_UNUSED(newParent);
     Q_UNUSED(oldParent);
+}
+
+void QQuickStyleAttached::itemWindowChanged(QQuickWindow *window)
+{
+    Q_UNUSED(window);
+    QQuickItem *item = qobject_cast<QQuickItem *>(sender());
+    if (item)
+        setParentStyle(findParentStyle(metaObject(), item));
 }
 
 void QQuickStyleAttached::itemParentChanged(QQuickItem *item, QQuickItem *parent)
