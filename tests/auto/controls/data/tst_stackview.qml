@@ -243,10 +243,31 @@ TestCase {
         verify(container)
         var control = stackView.createObject(container, {width: 100, height: 100})
         verify(control)
+
         container.width += 10
         container.height += 20
         compare(control.width, 100)
         compare(control.height, 100)
+
+        control.push(item, StackView.Immediate)
+        compare(item.width, control.width)
+        compare(item.height, control.height)
+
+        control.width = 200
+        control.height = 200
+        compare(item.width, control.width)
+        compare(item.height, control.height)
+
+        control.clear()
+        control.width += 10
+        control.height += 20
+        verify(item.width !== control.width)
+        verify(item.height !== control.height)
+
+        control.push(item, StackView.Immediate)
+        compare(item.width, control.width)
+        compare(item.height, control.height)
+
         container.destroy()
     }
 

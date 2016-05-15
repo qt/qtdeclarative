@@ -91,6 +91,10 @@ QQuickStackElement::~QQuickStackElement()
             item = nullptr;
         } else {
             item->setVisible(false);
+            if (!widthValid)
+                item->resetWidth();
+            if (!heightValid)
+                item->resetHeight();
             if (item->parentItem() != originalParent) {
                 item->setParentItem(originalParent);
             } else {
