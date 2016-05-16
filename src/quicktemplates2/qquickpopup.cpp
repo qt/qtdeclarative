@@ -609,6 +609,11 @@ void QQuickPopupPrivate::reposition()
                     rect.setRight(bounds.right());
                     widthAdjusted = true;
                 }
+            } else if (iw > 0 && rect.left() >= bounds.left() && rect.right() <= bounds.right()
+                       && iw != w) {
+                // restore original width
+                rect.setWidth(iw);
+                widthAdjusted = true;
             }
 
             if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
@@ -628,6 +633,11 @@ void QQuickPopupPrivate::reposition()
                     rect.setBottom(bounds.bottom());
                     heightAdjusted = true;
                 }
+            } else if (ih > 0 && rect.top() >= bounds.top() && rect.bottom() <= bounds.bottom()
+                       && ih != h) {
+                // restore original height
+                rect.setHeight(ih);
+                heightAdjusted = true;
             }
         }
     }
