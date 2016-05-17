@@ -375,7 +375,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         QString string = binding->valueAsString(qmlUnit);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compiledData->compilationUnit->url().resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -570,7 +570,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(qmlUnit);
-            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->compilationUnit->url().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             argv[0] = reinterpret_cast<void *>(&value);
@@ -999,7 +999,7 @@ void QQmlObjectCreator::setupFunctions()
 void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setUrl(compiledData->url());
+    error.setUrl(compiledData->compilationUnit->url());
     error.setLine(location.line);
     error.setColumn(location.column);
     error.setDescription(description);
@@ -1072,7 +1072,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         } else {
             Q_ASSERT(typeRef->component);
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                                 compiledData, obj, typeRef->component->fileName(),
+                                 compiledData, obj, typeRef->component->compilationUnit->fileName(),
                                  context->url()));
             if (typeRef->component->compilationUnit->data->isSingleton())
             {

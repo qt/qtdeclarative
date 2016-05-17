@@ -89,8 +89,6 @@ public:
 
     QQmlEngine *engine;
 
-    QString fileName() const { return compilationUnit->fileName(); }
-    QUrl url() const { return compilationUnit->url(); }
     QQmlTypeNameCache *importCache;
 
     int metaTypeId;
