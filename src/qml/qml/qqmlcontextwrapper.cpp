@@ -99,14 +99,23 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
+    // In V8 the JS global object would come _before_ the QML global object,
+    // so simulate that here.
+    bool hasProp;
+    QV4::ScopedValue result(scope, v4->globalObject->get(name, &hasProp));
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result->asReturnedValue();
+    }
+
     if (resource->d()->isNullWrapper)
         return Object::get(m, name, hasProperty);
 
     if (v4->callingQmlContext() != resource->d()->context)
         return Object::get(m, name, hasProperty);
 
-    bool hasProp;
-    QV4::ScopedValue result(scope, Object::get(m, name, &hasProp));
+    result = Object::get(m, name, &hasProp);
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
