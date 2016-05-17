@@ -48,13 +48,10 @@ namespace Profiling {
 
 FunctionLocation FunctionCall::resolveLocation() const
 {
-    FunctionLocation location = {
-        m_function->name()->toQString(),
-        m_function->compilationUnit->fileName(),
-        m_function->compiledFunction->location.line,
-        m_function->compiledFunction->location.column
-    };
-    return location;
+    return FunctionLocation(m_function->name()->toQString(),
+                            m_function->compilationUnit->fileName(),
+                            m_function->compiledFunction->location.line,
+                            m_function->compiledFunction->location.column);
 }
 
 FunctionCallProperties FunctionCall::properties() const
@@ -95,12 +92,14 @@ void Profiler::reportData()
 {
     std::sort(m_data.begin(), m_data.end());
     QVector<FunctionCallProperties> properties;
-    QHash<qint64, FunctionLocation> locations;
+    FunctionLocationHash locations;
     properties.reserve(m_data.size());
 
     foreach (const FunctionCall &call, m_data) {
         properties.append(call.properties());
-        locations[properties.constLast().id] = call.resolveLocation();
+        FunctionLocation &location = locations[properties.constLast().id];
+        if (!location.isValid())
+            location = call.resolveLocation();
     }
 
     emit dataReady(locations, properties, m_memory_data);

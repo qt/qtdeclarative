@@ -81,13 +81,23 @@ struct FunctionCallProperties {
 };
 
 struct FunctionLocation {
+    FunctionLocation(const QString &name = QString(), const QString &file = QString(),
+                     int line = -1, int column = -1) :
+        name(name), file(file), line(line), column(column)
+    {}
+
+    bool isValid()
+    {
+        return !name.isEmpty();
+    }
+
     QString name;
     QString file;
     int line;
     int column;
 };
 
-typedef QHash<qint64, QV4::Profiling::FunctionLocation> FunctionLocationHash;
+typedef QHash<quintptr, QV4::Profiling::FunctionLocation> FunctionLocationHash;
 
 struct MemoryAllocationProperties {
     qint64 timestamp;
