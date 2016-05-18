@@ -1143,10 +1143,7 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
         return false;
 
     QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset() - metaData->propertyCount);
-    QQmlContext *context = ctxt->asQQmlContext();
-    QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
-
-    *target = ctxtPriv->data->idValues[d->contextIdx].data();
+    *target = ctxt->idValues[d->contextIdx].data();
     if (!*target)
         return false;
 
