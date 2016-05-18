@@ -134,7 +134,8 @@ public:
         static int ebxIdx = -1;
         if (ebxIdx == -1) {
             int calleeSaves = 0;
-            foreach (const RegisterInfo &info, getRegisterInfo()) {
+            const auto infos = getRegisterInfo();
+            for (const RegisterInfo &info : infos) {
                 if (info.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
                     ebxIdx = calleeSaves;
                     break;

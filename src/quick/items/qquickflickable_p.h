@@ -192,7 +192,8 @@ public:
 
     QQuickItem *contentItem();
 
-    enum FlickableDirection { AutoFlickDirection=0x00, HorizontalFlick=0x01, VerticalFlick=0x02, HorizontalAndVerticalFlick=0x03 };
+    enum FlickableDirection { AutoFlickDirection=0x0, HorizontalFlick=0x1, VerticalFlick=0x2, HorizontalAndVerticalFlick=0x3,
+                              AutoFlickIfNeeded=0xc };
     Q_ENUM(FlickableDirection)
     FlickableDirection flickableDirection() const;
     void setFlickableDirection(FlickableDirection);
