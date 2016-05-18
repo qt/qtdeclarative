@@ -766,9 +766,14 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
-    int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine(object)->handle());
     QV4::Scope scope(v4);
+
+    int lineNumber = 0;
+    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex));
+    if (oldMethod && oldMethod->d()->function) {
+        lineNumber = oldMethod->d()->function->compiledFunction->location.line;
+    }
     QV4::ScopedValue v(scope, QQmlJavaScriptExpression::evalFunction(contextData, object, jsfunction, contextData->urlString(), lineNumber));
     vmeMetaObject->setVmeMethod(prop->coreIndex, v);
     return true;

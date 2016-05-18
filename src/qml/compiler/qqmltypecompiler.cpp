@@ -660,7 +660,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
     QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
                                                               + obj->propertyCount() * sizeof(VMD::PropertyData)
-                                                              + obj->functionCount() * sizeof(VMD::MethodData)
                                                               + aliasCount * sizeof(VMD::AliasData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
@@ -879,24 +878,8 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     ((QQmlVMEMetaData *)dynamicData.data())->aliasCount = aliasCount;
 
     // Dynamic slot data - comes after the property data
-    for (const QmlIR::Function *s = obj->firstFunction(); s; s = s->next) {
-        QQmlJS::AST::FunctionDeclaration *astFunction = s->functionDeclaration;
-        int formalsCount = 0;
-        QQmlJS::AST::FormalParameterList *param = astFunction->formals;
-        while (param) {
-            formalsCount++;
-            param = param->next;
-        }
-
-        VMD::MethodData methodData = { /* runtimeFunctionIndex*/ 0, // ###
-                                       formalsCount,
-                                       /* s->location.start.line */0 }; // ###
-
-        VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-        VMD::MethodData &md = *(vmd->methodData() + vmd->methodCount);
-        vmd->methodCount++;
-        md = methodData;
-    }
+    VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
+    vmd->methodCount = obj->functionCount();
 
     return true;
 }

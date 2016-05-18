@@ -877,12 +877,11 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     return -1; // The dynamic method with that id is not available.
                 }
 
-                QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
-
-                QV4::ScopedCallData callData(scope, data->parameterCount);
+                const unsigned int parameterCount = function->formalParameterCount();
+                QV4::ScopedCallData callData(scope, parameterCount);
                 callData->thisObject = ep->v8engine()->global();
 
-                for (int ii = 0; ii < data->parameterCount; ++ii)
+                for (uint ii = 0; ii < parameterCount; ++ii)
                     callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::ScopedValue result(scope);
@@ -1037,22 +1036,6 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         if (needActivate)
             activate(object, methodOffset() + id, 0);
     }
-}
-
-quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
-{
-    if (index < methodOffset()) {
-        Q_ASSERT(parentVMEMetaObject());
-        return parentVMEMetaObject()->vmeMethodLineNumber(index);
-    }
-
-    int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
-
-    int rawIndex = index - methodOffset() - plainSignals;
-
-    QQmlVMEMetaData::MethodData *data = metaData->methodData() + rawIndex;
-    return data->lineNumber;
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)

@@ -121,22 +121,12 @@ struct QQmlVMEMetaData
         int propertyType;
     };
 
-    struct MethodData {
-        int runtimeFunctionIndex;
-        int parameterCount;
-        quint16 lineNumber;
-    };
-
     PropertyData *propertyData() const {
         return (PropertyData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
     }
 
     AliasData *aliasData() const {
         return (AliasData *)(propertyData() + propertyCount);
-    }
-
-    MethodData *methodData() const {
-        return (MethodData *)(aliasData() + aliasCount);
     }
 };
 
@@ -204,7 +194,6 @@ public:
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     QV4::ReturnedValue vmeMethod(int index);
-    quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, const QV4::Value &function);
     QV4::ReturnedValue vmeProperty(int index);
     void setVMEProperty(int index, const QV4::Value &v);
