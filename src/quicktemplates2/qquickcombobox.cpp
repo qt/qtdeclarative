@@ -781,6 +781,7 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Escape:
+    case Qt::Key_Back:
         if (d->isPopupVisible())
             event->accept();
         break;
@@ -828,6 +829,7 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
         event->accept();
         break;
     case Qt::Key_Escape:
+    case Qt::Key_Back:
         d->hidePopup(false);
         setPressed(false);
         event->accept();
