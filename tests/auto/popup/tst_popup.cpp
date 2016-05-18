@@ -56,6 +56,8 @@ private slots:
     void windowChange();
     void closePolicy_data();
     void closePolicy();
+    void activeFocusOnClose1();
+    void activeFocusOnClose2();
 };
 
 void tst_popup::visible()
@@ -245,6 +247,70 @@ void tst_popup::closePolicy()
         QVERIFY(!popup->isVisible());
     else
         QVERIFY(popup->isVisible());
+}
+
+void tst_popup::activeFocusOnClose1()
+{
+    // Test that a popup that never sets focus: true (e.g. ToolTip) doesn't affect
+    // the active focus item when it closes.
+    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose1.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *focusedPopup = helper.window->property("focusedPopup").value<QQuickPopup*>();
+    QVERIFY(focusedPopup);
+
+    QQuickPopup *nonFocusedPopup = helper.window->property("nonFocusedPopup").value<QQuickPopup*>();
+    QVERIFY(nonFocusedPopup);
+
+    focusedPopup->open();
+    QVERIFY(focusedPopup->isVisible());
+    QVERIFY(focusedPopup->hasActiveFocus());
+
+    nonFocusedPopup->open();
+    QVERIFY(nonFocusedPopup->isVisible());
+    QVERIFY(focusedPopup->hasActiveFocus());
+
+    nonFocusedPopup->close();
+    QVERIFY(!nonFocusedPopup->isVisible());
+    QVERIFY(focusedPopup->hasActiveFocus());
+}
+
+void tst_popup::activeFocusOnClose2()
+{
+    // Test that a popup that sets focus: true but relinquishes focus (e.g. by
+    // calling forceActiveFocus() on another item) before it closes doesn't
+    // affect the active focus item when it closes.
+    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose2.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup1 = helper.window->property("popup1").value<QQuickPopup*>();
+    QVERIFY(popup1);
+
+    QQuickPopup *popup2 = helper.window->property("popup2").value<QQuickPopup*>();
+    QVERIFY(popup2);
+
+    QQuickButton *closePopup2Button = helper.window->property("closePopup2Button").value<QQuickButton*>();
+    QVERIFY(closePopup2Button);
+
+    popup1->open();
+    QVERIFY(popup1->isVisible());
+    QVERIFY(popup1->hasActiveFocus());
+
+    popup2->open();
+    QVERIFY(popup2->isVisible());
+    QVERIFY(popup2->hasActiveFocus());
+
+    // Causes popup1.contentItem.forceActiveFocus() to be called, then closes popup2.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        closePopup2Button->mapToScene(QPointF(closePopup2Button->width() / 2, closePopup2Button->height() / 2)).toPoint());
+    QVERIFY(!popup2->isVisible());
+    QVERIFY(popup1->hasActiveFocus());
 }
 
 QTEST_MAIN(tst_popup)

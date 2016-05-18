@@ -131,6 +131,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasBottomMargin(false)
     , allowVerticalFlip(false)
     , allowHorizontalFlip(false)
+    , hadActiveFocusBeforeExitTransition(false)
     , x(0)
     , y(0)
     , effectiveX(0)
@@ -208,8 +209,12 @@ void QQuickPopupPrivate::prepareExitTransition()
     Q_Q(QQuickPopup);
     if (window && !qobject_cast<QQuickApplicationWindow *>(window))
         window->removeEventFilter(q);
-    if (focus)
+    if (focus) {
+        // The setFocus(false) call below removes any active focus before we're
+        // able to check it in finalizeExitTransition.
+        hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
         popupItem->setFocus(false);
+    }
     emit q->aboutToHide();
 }
 
@@ -230,13 +235,16 @@ void QQuickPopupPrivate::finalizeExitTransition(bool hide)
         popupItem->setVisible(false);
     }
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
-    if (applicationWindow)
-        applicationWindow->contentItem()->setFocus(true);
-    else if (window)
-        window->contentItem()->setFocus(true);
+    if (hadActiveFocusBeforeExitTransition) {
+        QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+        if (applicationWindow)
+            applicationWindow->contentItem()->setFocus(true);
+        else if (window)
+            window->contentItem()->setFocus(true);
+    }
 
     visible = false;
+    hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
 }
