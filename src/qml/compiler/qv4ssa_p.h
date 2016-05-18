@@ -135,7 +135,7 @@ public:
         // Validate the new range
         if (_end != InvalidPosition) {
             Q_ASSERT(!_ranges.isEmpty());
-            foreach (const Range &range, _ranges) {
+            for (const Range &range : qAsConst(_ranges)) {
                 Q_ASSERT(range.start >= 0);
                 Q_ASSERT(range.end >= 0);
                 Q_ASSERT(range.start <= range.end);

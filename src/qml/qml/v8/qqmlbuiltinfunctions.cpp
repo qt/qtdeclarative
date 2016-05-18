@@ -88,22 +88,18 @@ struct StaticQtMetaObject : public QObject
 };
 
 Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
+    : enumeratorIterator(0)
+    , keyIterator(0)
 {
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
-    // Set all the enums from the "Qt" namespace
-    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
-    ScopedString str(scope);
-    ScopedValue v(scope);
-    for (int ii = 0, eii = qtMetaObject->enumeratorCount(); ii < eii; ++ii) {
-        QMetaEnum enumerator = qtMetaObject->enumerator(ii);
-        for (int jj = 0, ejj = enumerator.keyCount(); jj < ejj; ++jj) {
-            o->put((str = scope.engine->newString(QString::fromUtf8(enumerator.key(jj)))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
-        }
+    {
+        ScopedString str(scope);
+        ScopedValue v(scope);
+        o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
+        o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
     }
-    o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
-    o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
 
     o->defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     o->defineDefaultProperty(QStringLiteral("isQtObject"), QV4::QtObject::method_isQtObject);
@@ -154,6 +150,70 @@ Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
     o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
 }
 
+void QtObject::addAll()
+{
+    bool dummy = false;
+    findAndAdd(nullptr, dummy);
+}
+
+ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) const
+{
+    Scope scope(engine());
+    ScopedObject o(scope, this);
+    ScopedString key(scope);
+    ScopedValue value(scope);
+
+    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    for (int enumCount = qtMetaObject->enumeratorCount(); d()->enumeratorIterator < enumCount;
+         ++d()->enumeratorIterator) {
+        QMetaEnum enumerator = qtMetaObject->enumerator(d()->enumeratorIterator);
+        for (int keyCount = enumerator.keyCount(); d()->keyIterator < keyCount; ++d()->keyIterator) {
+            key = scope.engine->newString(QString::fromUtf8(enumerator.key(d()->keyIterator)));
+            value = QV4::Primitive::fromInt32(enumerator.value(d()->keyIterator));
+            o->put(key, value);
+            if (name && key->toQString() == *name) {
+                ++d()->keyIterator;
+                foundProperty = true;
+                return value->asReturnedValue();
+            }
+        }
+        d()->keyIterator = 0;
+    }
+    d()->enumeratorIterator = Heap::QtObject::Finished;
+    foundProperty = false;
+    return Encode::undefined();
+}
+
+ReturnedValue QtObject::get(const Managed *m, String *name, bool *hasProperty)
+{
+    bool hasProp = false;
+    if (hasProperty == nullptr) {
+        hasProperty = &hasProp;
+    }
+
+    ReturnedValue ret = QV4::Object::get(m, name, hasProperty);
+    if (*hasProperty) {
+        return ret;
+    }
+
+    auto that = static_cast<const QtObject*>(m);
+    if (!that->d()->isComplete()) {
+        const QString key = name->toQString();
+        ret = that->findAndAdd(&key, *hasProperty);
+    }
+
+    return ret;
+}
+
+void QtObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
+{
+    auto that = static_cast<QtObject*>(m);
+    if (!that->d()->isComplete()) {
+        that->addAll();
+    }
+
+    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
+}
 
 /*!
 \qmlmethod bool Qt::isQtObject(object)
