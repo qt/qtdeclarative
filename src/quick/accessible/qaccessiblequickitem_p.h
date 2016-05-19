@@ -66,6 +66,8 @@ class QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionI
 public:
     QAccessibleQuickItem(QQuickItem *item);
 
+    QWindow *window() const Q_DECL_OVERRIDE;
+
     QRect rect() const;
     QRect viewRect() const;
 

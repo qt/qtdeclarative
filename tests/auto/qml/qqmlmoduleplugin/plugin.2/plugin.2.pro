@@ -6,7 +6,6 @@ DESTDIR = ../imports/org/qtproject/AutoTestQmlPluginType.2
 
 QT += core-private gui-private qml-private
 
-IMPORT_DIR = DESTDIR
 IMPORT_FILES = \
         qmldir
 

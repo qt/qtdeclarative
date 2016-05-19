@@ -7,4 +7,5 @@ EXAMPLE_FILES = \
     images \
     parts \
     pics \
+    texteditor.qmlproject \
     texteditor.qml

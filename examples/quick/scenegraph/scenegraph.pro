@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 SUBDIRS += \
         customgeometry \
+        graph \
         openglunderqml \
         sgengine \
         simplematerial \
@@ -8,3 +9,6 @@ SUBDIRS += \
         textureinthread \
         threadedanimation \
         twotextureproviders
+
+EXAMPLE_FILES += \
+    shared

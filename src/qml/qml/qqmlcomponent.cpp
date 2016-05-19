@@ -1077,6 +1077,7 @@ struct QmlIncubatorObject : Object {
     QPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value statusChanged;
+    Pointer<Heap::QmlContext> qmlContext;
 };
 
 }
@@ -1191,7 +1192,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 */
 
 
-static void setInitialProperties(QV4::ExecutionEngine *engine, const QV4::Value &o, const QV4::Value &v)
+static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
@@ -1201,6 +1202,9 @@ static void setInitialProperties(QV4::ExecutionEngine *engine, const QV4::Value 
     QV4::ScopedValue val(scope);
     if (engine->hasException)
         return;
+
+    QV4::ExecutionContextSaver saver(scope);
+    engine->pushContext(qmlContext);
 
     while (1) {
         name = it.nextPropertyNameAsString(val);
@@ -1275,8 +1279,10 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4, rv));
     Q_ASSERT(object->isObject());
 
-    if (!valuemap->isUndefined())
-        setInitialProperties(v4, object, valuemap);
+    if (!valuemap->isUndefined()) {
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
+        setInitialProperties(v4, qmlContext, object, valuemap);
+    }
 
     d->completeCreate();
 
@@ -1393,6 +1399,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined())
         r->d()->valuemap = valuemap;
+    r->d()->qmlContext = v4->qmlContext();
     r->d()->parent = parent;
 
     QQmlIncubator *incubator = r->d()->incubator.data();
@@ -1406,7 +1413,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 }
 
 // XXX used by QSGLoader
-void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Value &valuemap, QObject *toCreate)
+void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate)
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
@@ -1416,7 +1423,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     Q_ASSERT(object->as<QV4::Object>());
 
     if (!valuemap.isUndefined())
-        setInitialProperties(v4engine, object, valuemap);
+        setInitialProperties(v4engine, qmlContext, object, valuemap);
 }
 
 QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
@@ -1493,6 +1500,7 @@ QQmlComponentExtension::~QQmlComponentExtension()
 QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode m)
     : valuemap(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
+    , qmlContext(0)
 {
     incubator.reset(new QQmlComponentIncubator(this, m));
 }
@@ -1505,7 +1513,8 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
         QV4::ExecutionEngine *v4 = engine();
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
-        setInitialProperties(v4, obj, d()->valuemap);
+        QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
+        setInitialProperties(v4, qmlCtxt, obj, d()->valuemap);
     }
 }
 
@@ -1514,6 +1523,8 @@ void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionE
     QmlIncubatorObject::Data *o = static_cast<QmlIncubatorObject::Data *>(that);
     o->valuemap.mark(e);
     o->statusChanged.mark(e);
+    if (o->qmlContext)
+        o->qmlContext->mark(e);
     Object::markObjects(that, e);
 }
 
