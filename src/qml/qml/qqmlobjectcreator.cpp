@@ -664,7 +664,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             if (qmlTypeForObject(_bindingTarget)) {
                 quint32 bindingSkipList = 0;
 
-                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
+                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {

@@ -480,7 +480,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         }
     }
 
-    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
+    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
         for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
@@ -507,7 +507,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
-            if (obj->propertyCount() > 0) {
+            if (obj->propertyCount() > 0 || obj->aliasCount() > 0) {
                 recordError(obj->location, tr("Fully dynamic types cannot declare new properties."));
                 return false;
             }
@@ -586,9 +586,9 @@ bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
 
 bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
 {
-    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount(),
-                                                             obj->functionCount() + obj->propertyCount() + obj->signalCount(),
-                                                             obj->signalCount() + obj->propertyCount());
+    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
+                                                             obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
+                                                             obj->signalCount() + obj->propertyCount() + obj->aliasCount());
     propertyCaches[objectIndex] = cache;
 
     struct TypeData {
@@ -638,29 +638,40 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
     cache->_dynamicClassName = newClassName;
 
-    int aliasCount = 0;
     int varPropCount = 0;
 
     QmlIR::PropertyResolver resolver(baseTypeCache);
 
     for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
-        if (p->type == QV4::CompiledData::Property::Alias)
-            aliasCount++;
-        else if (p->type == QV4::CompiledData::Property::Var)
+        if (p->type == QV4::CompiledData::Property::Var)
             varPropCount++;
 
-        // No point doing this for both the alias and non alias cases
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
             COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
     }
 
+    for (const QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+        bool notInRevision = false;
+        QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
+        if (d && d->isFinal())
+            COMPILE_EXCEPTION(a, tr("Cannot override FINAL property"));
+    }
+
     typedef QQmlVMEMetaData VMD;
 
     QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
                                                               + obj->propertyCount() * sizeof(VMD::PropertyData)
-                                                              + aliasCount * sizeof(VMD::AliasData), 0);
+                                                              + obj->aliasCount() * sizeof(VMD::AliasData), 0);
+
+    VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
+    // Dynamic slot data - comes after the property data
+    vmd->methodCount = obj->functionCount();
+    // Alias property count.  Actual data is setup in resolveAliases()
+    vmd->aliasCount = obj->aliasCount();
+    vmd->signalCount = obj->signalCount();
+    vmd->propertyCount = obj->propertyCount();
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
     int effectiveMethodIndex = cache->methodIndexCacheStart;
@@ -688,25 +699,25 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         }
     }
 
-    // First set up notify signals for properties - first normal, then var, then alias
-    enum { NSS_Normal = 0, NSS_Alias = 1 };
-    for (int ii = NSS_Normal; ii <= NSS_Alias; ++ii) { // 0 == normal, 1 == var, 2 == alias
+    // Set up notify signals for properties - first normal, then alias
+    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
+        quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
+                QQmlPropertyData::IsVMESignal;
 
-        if (ii == NSS_Alias && aliasCount == 0) continue;
+        QString changedSigName = stringAt(p->nameIndex) + QLatin1String("Changed");
+        seenSignals.insert(changedSigName);
 
-        for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
-            if ((ii == NSS_Normal && p->type == QV4::CompiledData::Property::Alias) ||
-                (ii == NSS_Alias && p->type != QV4::CompiledData::Property::Alias))
-                continue;
+        cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
+    }
 
-            quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
-                            QQmlPropertyData::IsVMESignal;
+    for (const QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+        quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
+                        QQmlPropertyData::IsVMESignal;
 
-            QString changedSigName = stringAt(p->nameIndex) + QLatin1String("Changed");
-            seenSignals.insert(changedSigName);
+        QString changedSigName = stringAt(a->nameIndex) + QLatin1String("Changed");
+        seenSignals.insert(changedSigName);
 
-            cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
-        }
+        cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
 
     // Dynamic signals
@@ -751,8 +762,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
             }
         }
 
-        ((QQmlVMEMetaData *)dynamicData.data())->signalCount++;
-
         quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
                         QQmlPropertyData::IsVMESignal;
         if (paramCount)
@@ -794,14 +803,10 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     }
 
 
-    // Dynamic properties (except var and aliases)
+    // Dynamic properties
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
     int propertyIdx = 0;
     for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
-
-        if (p->type == QV4::CompiledData::Property::Alias)
-            continue;
-
         int propertyType = 0;
         int vmePropertyType = 0;
         quint32 propertyFlags = 0;
@@ -863,23 +868,16 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
 
         QString propertyName = stringAt(p->nameIndex);
-        if (propertyIdx == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
+        if (!obj->defaultPropertyIsAlias && propertyIdx == obj->indexOfDefaultPropertyOrAlias)
+            cache->_defaultPropertyName = propertyName;
         cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                               propertyType, effectiveSignalIndex);
 
         effectiveSignalIndex++;
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-        (vmd->propertyData() + vmd->propertyCount)->propertyType = vmePropertyType;
-        vmd->propertyCount++;
+        (vmd->propertyData() + propertyIdx)->propertyType = vmePropertyType;
     }
-
-    // Alias property count.  Actual data is setup in buildDynamicMetaAliases
-    ((QQmlVMEMetaData *)dynamicData.data())->aliasCount = aliasCount;
-
-    // Dynamic slot data - comes after the property data
-    VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-    vmd->methodCount = obj->functionCount();
 
     return true;
 }
@@ -1301,7 +1299,7 @@ void QQmlAliasAnnotator::annotateBindingsToAliases()
         const QmlIR::Object *obj = qmlObjects.at(i);
 
         QmlIR::PropertyResolver resolver(propertyCache);
-        QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+        QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (!binding->isValueBinding())
@@ -1333,7 +1331,7 @@ void QQmlScriptStringScanner::scan()
         const QmlIR::Object *obj = qmlObjects.at(i);
 
         QmlIR::PropertyResolver resolver(propertyCache);
-        QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+        QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type != QV4::CompiledData::Binding::Type_Script)
@@ -1373,7 +1371,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
 {
     QmlIR::PropertyResolver propertyResolver(propertyCache);
 
-    QQmlPropertyData *defaultProperty = obj->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+    QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
@@ -1480,7 +1478,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         if (obj->functionCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
-        if (obj->propertyCount() > 0)
+        if (obj->propertyCount() > 0 || obj->aliasCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new properties."));
         if (obj->signalCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new signals."));
@@ -1551,12 +1549,8 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
         _objectIndexToIdInScope->insert(objectIndex, _objectIndexToIdInScope->count());
     }
 
-    for (const QmlIR::Property *property = obj->firstProperty(); property; property = property->next) {
-        if (property->type == QV4::CompiledData::Property::Alias) {
-            _objectsWithAliases.append(objectIndex);
-            break;
-        }
-    }
+    if (obj->aliasCount() > 0)
+        _objectsWithAliases.append(objectIndex);
 
     for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
@@ -1587,21 +1581,18 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
         int effectiveAliasIndex = 0;
 
-        const QmlIR::Property *p = obj->firstProperty();
-        for (int propertyIndex = 0; propertyIndex < obj->propertyCount(); ++propertyIndex, p = p->next) {
-            if (p->type != QV4::CompiledData::Property::Alias)
-                continue;
-
-            const int idIndex = p->aliasIdValueIndex;
+        int aliasIndex = 0;
+        for (const QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
+            const int idIndex = alias->idIndex;
             const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
             if (targetObjectIndex == -1) {
-                recordError(p->aliasLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+                recordError(alias->referenceLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
                 return false;
             }
             const int targetId = _objectIndexToIdInScope->value(targetObjectIndex, -1);
             Q_ASSERT(targetId != -1);
 
-            const QString aliasPropertyValue = stringAt(p->aliasPropertyValueIndex);
+            const QString aliasPropertyValue = stringAt(alias->propertyIndex);
 
             QStringRef property;
             QStringRef subProperty;
@@ -1642,7 +1633,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 QQmlPropertyData *targetProperty = resolver.property(property.toString());
                 if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
-                    recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                    recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
                     return false;
                 }
 
@@ -1656,7 +1647,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 if (!subProperty.isEmpty()) {
                     const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
                     if (!valueTypeMetaObject) {
-                        recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                        recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         return false;
                     }
 
@@ -1665,7 +1656,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                     int valueTypeIndex =
                         valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
                     if (valueTypeIndex == -1) {
-                        recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                        recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         return false;
                     }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
@@ -1702,7 +1693,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
             Q_ASSERT(dynamicData.isDetached());
 
-            if (!(p->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
+            if (!(alias->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
                 propertyFlags |= QQmlPropertyData::IsWritable;
             else
                 propertyFlags &= ~QQmlPropertyData::IsWritable;
@@ -1712,8 +1703,11 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             else
                 propertyFlags &= ~QQmlPropertyData::IsResettable;
 
-            QString propertyName = stringAt(p->nameIndex);
-            if (propertyIndex == obj->indexOfDefaultProperty) propertyCache->_defaultPropertyName = propertyName;
+            QString propertyName = stringAt(alias->nameIndex);
+
+            if (obj->defaultPropertyIsAlias && aliasIndex == obj->indexOfDefaultPropertyOrAlias)
+                propertyCache->_defaultPropertyName = propertyName;
+
             propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                                           type, effectiveSignalIndex++);
 
@@ -1825,7 +1819,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
     QString defaultPropertyName;
     QQmlPropertyData *defaultProperty = 0;
-    if (obj->indexOfDefaultProperty != -1) {
+    if (obj->indexOfDefaultPropertyOrAlias != -1) {
         QQmlPropertyCache *cache = propertyCache->parent();
         defaultPropertyName = cache->defaultPropertyName();
         defaultProperty = cache->defaultProperty();
@@ -2545,7 +2539,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
 
     QmlIR::Object *object = qmlObjects.at(objectIndex);
 
-    QString defaultProperty = object->indexOfDefaultProperty != -1 ? propertyCache->parent()->defaultPropertyName() : propertyCache->defaultPropertyName();
+    QString defaultProperty = object->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultPropertyName() : propertyCache->defaultPropertyName();
     QmlIR::Binding *bindingsToReinsert = 0;
     QmlIR::Binding *tail = 0;
 
