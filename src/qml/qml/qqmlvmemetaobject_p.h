@@ -219,9 +219,8 @@ public:
 
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    QV4::WeakValue properties;
-    inline void allocateProperties();
-    QV4::MemberData *propertiesAsMemberData();
+    QV4::WeakValue propertyAndMethodStorage;
+    QV4::MemberData *propertyAndMethodStorageAsMemberData();
 
     int readPropertyAsInt(int id);
     bool readPropertyAsBool(int id);
@@ -254,7 +253,6 @@ public:
 
     void connectAlias(int aliasId);
 
-    QV4::PersistentValue *methods;
     QV4::ReturnedValue method(int);
 
     QV4::ReturnedValue readVarProperty(int);
