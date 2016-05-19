@@ -358,13 +358,13 @@ struct Property
     };
 
     quint32 nameIndex;
-    quint32 type;
+    quint32 type : 31;
+    quint32 flags : 1; // readonly
     union {
         quint32 customTypeNameIndex; // If type >= Custom
         quint32 aliasIdValueIndex; // If type == Alias
     };
     quint32 aliasPropertyValueIndex;
-    quint32 flags; // readonly
     Location location;
     Location aliasLocation; // If type == Alias
 };
