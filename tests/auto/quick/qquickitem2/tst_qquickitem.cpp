@@ -35,6 +35,7 @@
 #include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
@@ -107,6 +108,7 @@ private slots:
     void childrenProperty();
     void resourcesProperty();
 
+    void changeListener();
     void transformCrash();
     void implicitSize();
     void qtbug_16871();
@@ -2692,6 +2694,202 @@ void tst_QQuickItem::childrenRectBottomRightCorner()
     QCOMPARE(rect->height(), qreal(50));
 
     delete window;
+}
+
+struct TestListener : public QQuickItemChangeListener
+{
+    TestListener(bool remove = false) : remove(remove) { reset(); }
+
+    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &) override { ++itemGeometryChanges; value = newGeometry; }
+    void itemSiblingOrderChanged(QQuickItem *) override { ++itemSiblingOrderChanges; }
+    void itemVisibilityChanged(QQuickItem *) override { ++itemVisibilityChanges; }
+    void itemOpacityChanged(QQuickItem *) override { ++itemOpacityChanges; }
+    void itemRotationChanged(QQuickItem *) override { ++itemRotationChanges; }
+    void itemImplicitWidthChanged(QQuickItem *) override { ++itemImplicitWidthChanges; }
+    void itemImplicitHeightChanged(QQuickItem *) override { ++itemImplicitHeightChanges; }
+
+    void itemDestroyed(QQuickItem *item) override
+    {
+        ++itemDestructions;
+        // QTBUG-53453
+        if (remove)
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    }
+    void itemChildAdded(QQuickItem *item, QQuickItem *child) override
+    {
+        ++itemChildAdditions;
+        value = QVariant::fromValue(child);
+        // QTBUG-53453
+        if (remove)
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Children);
+    }
+    void itemChildRemoved(QQuickItem *item, QQuickItem *child) override
+    {
+        ++itemChildRemovals;
+        value = QVariant::fromValue(child);
+        // QTBUG-53453
+        if (remove)
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Children);
+    }
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override
+    {
+        ++itemParentChanges;
+        value = QVariant::fromValue(parent);
+        // QTBUG-53453
+        if (remove)
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
+
+    QQuickAnchorsPrivate *anchorPrivate() override { return nullptr; }
+
+    void reset()
+    {
+        value = QVariant();
+        itemGeometryChanges = 0;
+        itemSiblingOrderChanges = 0;
+        itemVisibilityChanges = 0;
+        itemOpacityChanges = 0;
+        itemDestructions = 0;
+        itemChildAdditions = 0;
+        itemChildRemovals = 0;
+        itemParentChanges = 0;
+        itemRotationChanges = 0;
+        itemImplicitWidthChanges = 0;
+        itemImplicitHeightChanges = 0;
+    }
+
+    bool remove;
+    QVariant value;
+    int itemGeometryChanges;
+    int itemSiblingOrderChanges;
+    int itemVisibilityChanges;
+    int itemOpacityChanges;
+    int itemDestructions;
+    int itemChildAdditions;
+    int itemChildRemovals;
+    int itemParentChanges;
+    int itemRotationChanges;
+    int itemImplicitWidthChanges;
+    int itemImplicitHeightChanges;
+};
+
+void tst_QQuickItem::changeListener()
+{
+    QQuickItem item;
+    TestListener itemListener;
+    QQuickItemPrivate::get(&item)->addItemChangeListener(&itemListener, QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight |
+                                                                        QQuickItemPrivate::Opacity | QQuickItemPrivate::Rotation);
+
+    item.setImplicitWidth(50);
+    QCOMPARE(itemListener.itemImplicitWidthChanges, 1);
+    QCOMPARE(itemListener.itemGeometryChanges, 1);
+    QCOMPARE(itemListener.value, QVariant(QRectF(0,0,50,0)));
+
+    item.setImplicitHeight(50);
+    QCOMPARE(itemListener.itemImplicitHeightChanges, 1);
+    QCOMPARE(itemListener.itemGeometryChanges, 2);
+    QCOMPARE(itemListener.value, QVariant(QRectF(0,0,50,50)));
+
+    item.setWidth(100);
+    QCOMPARE(itemListener.itemGeometryChanges, 3);
+    QCOMPARE(itemListener.value, QVariant(QRectF(0,0,100,50)));
+
+    item.setHeight(100);
+    QCOMPARE(itemListener.itemGeometryChanges, 4);
+    QCOMPARE(itemListener.value, QVariant(QRectF(0,0,100,100)));
+
+    item.setOpacity(0.5);
+    QCOMPARE(itemListener.itemOpacityChanges, 1);
+
+    item.setRotation(90);
+    QCOMPARE(itemListener.itemRotationChanges, 1);
+
+    QQuickItem *parent = new QQuickItem;
+    TestListener parentListener;
+    QQuickItemPrivate::get(parent)->addItemChangeListener(&parentListener, QQuickItemPrivate::Children);
+
+    QQuickItem *child1 = new QQuickItem;
+    QQuickItem *child2 = new QQuickItem;
+    TestListener child1Listener;
+    TestListener child2Listener;
+    QQuickItemPrivate::get(child1)->addItemChangeListener(&child1Listener, QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::Destroyed);
+    QQuickItemPrivate::get(child2)->addItemChangeListener(&child2Listener, QQuickItemPrivate::Parent | QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::Destroyed);
+
+    child1->setParentItem(parent);
+    QCOMPARE(parentListener.itemChildAdditions, 1);
+    QCOMPARE(parentListener.value, QVariant::fromValue(child1));
+    QCOMPARE(child1Listener.itemParentChanges, 1);
+    QCOMPARE(child1Listener.value, QVariant::fromValue(parent));
+
+    child2->setParentItem(parent);
+    QCOMPARE(parentListener.itemChildAdditions, 2);
+    QCOMPARE(parentListener.value, QVariant::fromValue(child2));
+    QCOMPARE(child2Listener.itemParentChanges, 1);
+    QCOMPARE(child2Listener.value, QVariant::fromValue(parent));
+
+    child2->stackBefore(child1);
+    QCOMPARE(child1Listener.itemSiblingOrderChanges, 1);
+    QCOMPARE(child2Listener.itemSiblingOrderChanges, 1);
+
+    child1->setParentItem(nullptr);
+    QCOMPARE(parentListener.itemChildRemovals, 1);
+    QCOMPARE(parentListener.value, QVariant::fromValue(child1));
+    QCOMPARE(child1Listener.itemParentChanges, 2);
+    QCOMPARE(child1Listener.value, QVariant::fromValue<QQuickItem *>(nullptr));
+
+    delete child1;
+    QCOMPARE(child1Listener.itemDestructions, 1);
+
+    delete child2;
+    QCOMPARE(parentListener.itemChildRemovals, 2);
+    QCOMPARE(parentListener.value, QVariant::fromValue(child2));
+    QCOMPARE(child2Listener.itemParentChanges, 2);
+    QCOMPARE(child2Listener.value, QVariant::fromValue<QQuickItem *>(nullptr));
+    QCOMPARE(child2Listener.itemDestructions, 1);
+
+    QQuickItemPrivate::get(parent)->removeItemChangeListener(&parentListener, QQuickItemPrivate::Children);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+
+    // QTBUG-53453: all listeners should get invoked even if they remove themselves while iterating the listeners
+    QList<TestListener *> listeners;
+    for (int i = 0; i < 5; ++i)
+        listeners << new TestListener(true);
+
+    // itemChildAdded() x 5
+    foreach (TestListener *listener, listeners)
+        QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Children);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    child1 = new QQuickItem(parent);
+    foreach (TestListener *listener, listeners)
+        QCOMPARE(listener->itemChildAdditions, 1);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+
+    // itemParentChanged() x 5
+    foreach (TestListener *listener, listeners)
+        QQuickItemPrivate::get(child1)->addItemChangeListener(listener, QQuickItemPrivate::Parent);
+    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.count(), listeners.count());
+    child1->setParentItem(nullptr);
+    foreach (TestListener *listener, listeners)
+        QCOMPARE(listener->itemParentChanges, 1);
+    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.count(), 0);
+
+    // itemChildRemoved() x 5
+    child1->setParentItem(parent);
+    foreach (TestListener *listener, listeners)
+        QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Children);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    delete child1;
+    foreach (TestListener *listener, listeners)
+        QCOMPARE(listener->itemChildRemovals, 1);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+
+    // itemDestroyed() x 5
+    foreach (TestListener *listener, listeners)
+        QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Destroyed);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    delete parent;
+    foreach (TestListener *listener, listeners)
+        QCOMPARE(listener->itemDestructions, 1);
 }
 
 // QTBUG-13893
