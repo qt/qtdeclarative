@@ -21,3 +21,5 @@ target.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins/imports/TimeExamp
 pluginfiles.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins/imports/TimeExample
 
 INSTALLS += target qml pluginfiles
+
+CONFIG += install_ok  # Do not cargo-cult this!

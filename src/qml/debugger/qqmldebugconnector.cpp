@@ -47,14 +47,9 @@ QT_BEGIN_NAMESPACE
 
 // Connectors. We could add more plugins here, and distinguish by arguments to instance()
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugConnector)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebugServerFactory)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQmlNativeDebugConnectorFactory)
 
 // Services
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugService)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQmlInspectorServiceFactory)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQmlProfilerServiceFactory)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebuggerServiceFactory)
 
 struct QQmlDebugConnectorParams {
     QString pluginKey;

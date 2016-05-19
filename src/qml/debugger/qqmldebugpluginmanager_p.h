@@ -68,15 +68,6 @@ QT_BEGIN_NAMESPACE
 
 #else // QT_NO_QML_DEBUGGER
 
-#ifdef QT_STATIC
-#define Q_QML_IMPORT_DEBUG_PLUGIN(className)\
-    QT_END_NAMESPACE\
-    Q_IMPORT_PLUGIN(className)\
-    QT_BEGIN_NAMESPACE
-#else
-#define Q_QML_IMPORT_DEBUG_PLUGIN(className)
-#endif // QT_STATIC
-
 #define Q_QML_DEBUG_PLUGIN_LOADER(interfaceName)\
     Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, interfaceName##Loader,\
         (interfaceName##Factory_iid, QLatin1String("/qmltooling")))\

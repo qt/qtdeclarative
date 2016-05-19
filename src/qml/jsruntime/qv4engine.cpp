@@ -693,7 +693,7 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
         ctx = parentContext(currentContext)->d();
 
-    if (!ctx->outer)
+    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
         return 0;
 
     while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)

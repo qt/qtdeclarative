@@ -577,6 +577,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
         d->disposeInitialPropertyValues();
         d->initialPropertyValues.set(args->v4engine(), ipv);
     }
+    d->qmlCallingContext.set(scope.engine, scope.engine->qmlContext());
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
 }
@@ -645,7 +646,8 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
     Q_ASSERT(v4);
     QV4::Scope scope(v4);
     QV4::ScopedValue ipv(scope, initialPropertyValues.value());
-    d->initializeObjectWithInitialProperties(ipv, obj);
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
+    d->initializeObjectWithInitialProperties(qmlContext, ipv, obj);
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)

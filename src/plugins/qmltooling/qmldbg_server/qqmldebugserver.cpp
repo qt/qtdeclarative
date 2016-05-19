@@ -75,8 +75,6 @@ QT_BEGIN_NAMESPACE
   */
 
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugServerConnection)
-Q_QML_IMPORT_DEBUG_PLUGIN(QTcpServerConnectionFactory)
-Q_QML_IMPORT_DEBUG_PLUGIN(QLocalClientConnectionFactory)
 
 const int protocolVersion = 1;
 

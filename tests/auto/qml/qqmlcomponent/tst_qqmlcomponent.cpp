@@ -40,6 +40,7 @@
 #include <QtQuick>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <private/qv8engine_p.h>
 #include <qcolor.h>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
@@ -116,6 +117,7 @@ private slots:
     void onDestructionCount();
     void recursion();
     void recursionContinuation();
+    void callingContextForInitialProperties();
 
 private:
     QQmlEngine engine;
@@ -521,6 +523,63 @@ void tst_qqmlcomponent::recursionContinuation()
 
     // Eventual sub-object creation succeeds
     QVERIFY(object->property("success").toBool());
+}
+
+class CallingContextCheckingClass : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue)
+public:
+    CallingContextCheckingClass()
+        : m_value(0)
+    {}
+
+    int value() const { return m_value; }
+    void setValue(int v) {
+        scopeObject.clear();
+        callingContextData.setContextData(0);
+
+        m_value = v;
+        QJSEngine *jsEngine = qjsEngine(this);
+        if (!jsEngine)
+            return;
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(jsEngine);
+        if (!v4)
+            return;
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
+        if (!qmlContext)
+            return;
+        callingContextData = qmlContext->qmlContext();
+        scopeObject = qmlContext->qmlScope();
+    }
+
+    int m_value;
+    QQmlGuardedContextData callingContextData;
+    QPointer<QObject> scopeObject;
+};
+
+void tst_qqmlcomponent::callingContextForInitialProperties()
+{
+    qmlRegisterType<CallingContextCheckingClass>("qqmlcomponenttest", 1, 0, "CallingContextCheckingClass");
+
+    QQmlComponent testFactory(&engine, testFileUrl("callingQmlContextComponent.qml"));
+
+    QQmlComponent component(&engine, testFileUrl("callingQmlContext.qml"));
+    QScopedPointer<QObject> root(component.beginCreate(engine.rootContext()));
+    QVERIFY(!root.isNull());
+    root->setProperty("factory", QVariant::fromValue(&testFactory));
+    component.completeCreate();
+    QTRY_VERIFY(qvariant_cast<QObject *>(root->property("incubatedObject")));
+    QObject *o = qvariant_cast<QObject *>(root->property("incubatedObject"));
+    CallingContextCheckingClass *checker = qobject_cast<CallingContextCheckingClass*>(o);
+    QVERIFY(checker);
+
+    QVERIFY(!checker->callingContextData.isNull());
+    QVERIFY(checker->callingContextData->urlString().endsWith(QStringLiteral("callingQmlContext.qml")));
+
+    QVERIFY(!checker->scopeObject.isNull());
+    QVERIFY(checker->scopeObject->metaObject()->indexOfProperty("incubatedObject") != -1);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
