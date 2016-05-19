@@ -833,6 +833,7 @@ public:
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
+        , _currentStmt(0)
     {
         _unprocessed = unprocessed;
         _liveAtStart.reserve(function->basicBlockCount());
