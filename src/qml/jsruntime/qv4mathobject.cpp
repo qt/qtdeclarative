@@ -85,18 +85,10 @@ Heap::MathObject::MathObject()
     m->defineDefaultProperty(QStringLiteral("tan"), QV4::MathObject::method_tan, 1);
 }
 
-#ifdef Q_OS_ANDROID
-// C++11's std::copysign is missing in the std namespace, so get it from the root namespace (math.h)
 static Q_ALWAYS_INLINE double copySign(double x, double y)
 {
     return ::copysign(x, y);
 }
-#else // Ok, we have a proper C++11 standard library
-static Q_ALWAYS_INLINE double copySign(double x, double y)
-{
-    return std::copysign(x, y);
-}
-#endif
 
 ReturnedValue MathObject::method_abs(CallContext *context)
 {
