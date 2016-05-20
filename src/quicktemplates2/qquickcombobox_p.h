@@ -112,8 +112,8 @@ public:
     Q_INVOKABLE int find(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly) const;
 
 public Q_SLOTS:
-    void increase();
-    void decrease();
+    void incrementCurrentIndex();
+    void decrementCurrentIndex();
 
 Q_SIGNALS:
     void countChanged();

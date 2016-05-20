@@ -118,8 +118,8 @@ Module {
             name: "highlighted"
             Parameter { name: "index"; type: "int" }
         }
-        Method { name: "increase" }
-        Method { name: "decrease" }
+        Method { name: "incrementCurrentIndex" }
+        Method { name: "decrementCurrentIndex" }
         Method {
             name: "textAt"
             type: "string"

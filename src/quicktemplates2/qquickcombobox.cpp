@@ -166,8 +166,8 @@ public:
     void createdItem(int index, QObject *object);
     void countChanged();
     void updateCurrentText();
-    void increase();
-    void decrease();
+    void incrementCurrentIndex();
+    void decrementCurrentIndex();
     void setHighlightedIndex(int index);
 
     void createDelegateModel();
@@ -269,7 +269,7 @@ void QQuickComboBoxPrivate::updateCurrentText()
     }
 }
 
-void QQuickComboBoxPrivate::increase()
+void QQuickComboBoxPrivate::incrementCurrentIndex()
 {
     Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
@@ -285,7 +285,7 @@ void QQuickComboBoxPrivate::increase()
     }
 }
 
-void QQuickComboBoxPrivate::decrease()
+void QQuickComboBoxPrivate::decrementCurrentIndex()
 {
     Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
@@ -737,31 +737,31 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::ComboBox::increase()
+    \qmlmethod void QtQuick.Controls::ComboBox::incrementCurrentIndex()
 
-    Increases the current index of the combo box, or the highlighted
+    Increments the current index of the combo box, or the highlighted
     index if the popup list when it is visible.
 
     \sa currentIndex, highlightedIndex
 */
-void QQuickComboBox::increase()
+void QQuickComboBox::incrementCurrentIndex()
 {
     Q_D(QQuickComboBox);
-    d->increase();
+    d->incrementCurrentIndex();
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::ComboBox::decrease()
+    \qmlmethod void QtQuick.Controls::ComboBox::decrementCurrentIndex()
 
-    Decreases the current index of the combo box, or the highlighted
+    Decrements the current index of the combo box, or the highlighted
     index if the popup list when it is visible.
 
     \sa currentIndex, highlightedIndex
 */
-void QQuickComboBox::decrease()
+void QQuickComboBox::decrementCurrentIndex()
 {
     Q_D(QQuickComboBox);
-    d->decrease();
+    d->decrementCurrentIndex();
 }
 
 void QQuickComboBox::focusOutEvent(QFocusEvent *event)
@@ -797,11 +797,11 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         event->accept();
         break;
     case Qt::Key_Up:
-        d->decrease();
+        d->decrementCurrentIndex();
         event->accept();
         break;
     case Qt::Key_Down:
-        d->increase();
+        d->incrementCurrentIndex();
         event->accept();
         break;
     default:
@@ -874,9 +874,9 @@ void QQuickComboBox::wheelEvent(QWheelEvent *event)
     if (d->wheelEnabled && !d->isPopupVisible()) {
         const int oldIndex = d->currentIndex;
         if (event->angleDelta().y() > 0)
-            d->decrease();
+            d->decrementCurrentIndex();
         else
-            d->increase();
+            d->incrementCurrentIndex();
         event->setAccepted(d->currentIndex != oldIndex);
     }
 }
