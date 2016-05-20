@@ -420,6 +420,8 @@ void QQuickDrawer::setPosition(qreal position)
     d->position = position;
     if (isComponentComplete())
         d->reposition();
+    if (d->dimmer)
+        d->dimmer->setOpacity(position);
     emit positionChanged();
 }
 

@@ -204,6 +204,7 @@ public:
     qreal contentHeight;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
+    QQuickItem *dimmer;
     QQuickWindow *window;
     QQuickTransition *enter;
     QQuickTransition *exit;
