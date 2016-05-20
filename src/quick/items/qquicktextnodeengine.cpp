@@ -636,9 +636,12 @@ void QQuickTextNodeEngine::addBorder(const QRectF &rect, qreal border,
 void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFrame *frame)
 {
     QTextDocumentLayout *documentLayout = qobject_cast<QTextDocumentLayout *>(document->documentLayout());
-    QTextFrameFormat frameFormat = frame->format().toFrameFormat();
+    if (Q_UNLIKELY(!documentLayout))
+        return;
 
+    QTextFrameFormat frameFormat = frame->format().toFrameFormat();
     QTextTable *table = qobject_cast<QTextTable *>(frame);
+
     QRectF boundingRect = table == 0
             ? documentLayout->frameBoundingRect(frame)
             : documentLayout->tableBoundingRect(table);
