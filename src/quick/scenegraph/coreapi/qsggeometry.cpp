@@ -218,9 +218,9 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     The QSGGeometry class stores the geometry of the primitives
     rendered with the scene graph. It contains vertex data and
     optionally index data. The mode used to draw the geometry is
-    specified with setDrawingMode(), which maps directly to the OpenGL
+    specified with setDrawingMode(), which maps directly to the graphics API's
     drawing mode, such as \c GL_TRIANGLE_STRIP, \c GL_TRIANGLES, or
-    \c GL_POINTS.
+    \c GL_POINTS in case of OpenGL.
 
     Vertices can be as simple as points defined by x and y values or
     can be more complex where each vertex contains a normal, texture
@@ -527,28 +527,62 @@ const void *QSGGeometry::indexData() const
 }
 
 /*!
+    \enum QSGGeometry::DrawingMode
+
+    The values correspond to OpenGL enum values like \c GL_POINTS, \c GL_LINES,
+    etc. QSGGeometry provies its own type in order to be able to provide the
+    same API with non-OpenGL backends as well.
+
+    \value DrawPoints
+    \value DrawLines
+    \value DrawLineLoop
+    \value DrawLineStrip
+    \value DrawTriangles
+    \value DrawTriangleStrip
+    \value DrawTriangleFan
+ */
+
+/*!
+    \enum QSGGeometry::Type
+
+    The values correspond to OpenGL type constants like \c GL_BYTE, \c
+    GL_UNSIGNED_BYTE, etc. QSGGeometry provies its own type in order to be able
+    to provide the same API with non-OpenGL backends as well.
+
+    \value TypeByte
+    \value TypeUnsignedByte
+    \value TypeShort
+    \value TypeUnsignedShort
+    \value TypeInt
+    \value TypeUnsignedInt
+    \value TypeFloat
+ */
+
+/*!
     Sets the \a mode to be used for drawing this geometry.
 
-    The default value is \c GL_TRIANGLE_STRIP.
+    The default value is QSGGeometry::DrawTriangleStrip.
+
+    \sa DrawingMode
  */
-#ifndef QT_NO_OPENGL
-void QSGGeometry::setDrawingMode(GLenum mode)
+void QSGGeometry::setDrawingMode(unsigned int mode)
 {
     m_drawing_mode = mode;
 }
-#else
-void QSGGeometry::setDrawingMode(int mode)
-{
-    m_drawing_mode = mode;
-}
-#endif
+
 /*!
-    Gets the current line or point width or to be used for this geometry. This property
-    only applies to line width when the drawingMode is \c GL_LINES, \c GL_LINE_STRIP, or
-    \c GL_LINE_LOOP. For desktop OpenGL, it also applies to point size when the drawingMode
-    is \c GL_POINTS.
+    Gets the current line or point width or to be used for this geometry. This
+    property only applies to line width when the drawingMode is DrawLines,
+    DarwLineStrip, or DrawLineLoop. For desktop OpenGL, it also applies to
+    point size when the drawingMode is DrawPoints.
 
     The default value is \c 1.0
+
+    \note When not using OpenGL, support for point and line drawing may be
+    limited. For example, some APIs do not support point sprites and so setting
+    a size other than 1 is not possible. Some backends may be able implement
+    support via geometry shaders, but this is not guaranteed to be always
+    available.
 
     \sa setLineWidth(), drawingMode()
 */
@@ -558,14 +592,15 @@ float QSGGeometry::lineWidth() const
 }
 
 /*!
-    Sets the line or point width to be used for this geometry to \a width. This property
-    only applies to line width when the drawingMode is \c GL_LINES, \c GL_LINE_STRIP, or
-    \c GL_LINE_LOOP. For Desktop OpenGL, it also applies to point size when the drawingMode
-    is \c GL_POINTS.
+    Sets the line or point width to be used for this geometry to \a width. This
+    property only applies to line width when the drawingMode is DrawLines,
+    DrawLineStrip, or DrawLineLoop. For Desktop OpenGL, it also applies to
+    point size when the drawingMode is DrawPoints.
 
-    \note How line width and point size are treated is implementation dependent: The application
-    should not rely on these, but rather create triangles or similar to draw areas. On OpenGL ES,
-    line width support is limited and point size is unsupported.
+    \note How line width and point size are treated is implementation
+    dependent: The application should not rely on these, but rather create
+    triangles or similar to draw areas. On OpenGL ES, line width support is
+    limited and point size is unsupported.
 
     \sa lineWidth(), drawingMode()
 */
