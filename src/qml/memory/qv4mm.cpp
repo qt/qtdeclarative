@@ -68,7 +68,7 @@
 #include <pthread_np.h>
 #endif
 
-#define MIN_UNMANAGED_HEAPSIZE_GC_LIMIT (std::size_t)128*1024
+#define MIN_UNMANAGED_HEAPSIZE_GC_LIMIT std::size_t(128 * 1024)
 
 using namespace WTF;
 
@@ -115,22 +115,11 @@ struct MemoryManager::Data
         ChunkHeader *nextNonFull;
         char *itemStart;
         char *itemEnd;
-        int itemSize;
+        unsigned itemSize;
     };
 
-    bool gcBlocked;
-    bool aggressiveGC;
-    bool gcStats;
     ExecutionEngine *engine;
 
-    enum { MaxItemSize = 512 };
-    ChunkHeader *nonFullChunks[MaxItemSize/16];
-    uint nChunks[MaxItemSize/16];
-    uint availableItems[MaxItemSize/16];
-    uint allocCount[MaxItemSize/16];
-    int totalItems;
-    int totalAlloc;
-    uint maxShift;
     std::size_t maxChunkSize;
     std::vector<PageAllocation> heapChunks;
     std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
@@ -149,6 +138,20 @@ struct MemoryManager::Data
     LargeItem *largeItems;
     std::size_t totalLargeItemsAllocated;
 
+    enum { MaxItemSize = 512 };
+    ChunkHeader *nonFullChunks[MaxItemSize/16];
+    uint nChunks[MaxItemSize/16];
+    uint availableItems[MaxItemSize/16];
+    uint allocCount[MaxItemSize/16];
+    int totalItems;
+    int totalAlloc;
+    uint maxShift;
+
+    bool gcBlocked;
+    bool aggressiveGC;
+    bool gcStats;
+    bool unused; // suppress padding warning
+
     // statistics:
 #ifdef DETAILED_MM_STATS
     QVector<unsigned> allocSizeCounters;
@@ -156,18 +159,18 @@ struct MemoryManager::Data
 
     Data()
         : pageSize(WTF::pageSize())
-        , gcBlocked(false)
-        , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
-        , gcStats(!qEnvironmentVariableIsEmpty("QV4_MM_STATS"))
         , engine(0)
-        , totalItems(0)
-        , totalAlloc(0)
-        , maxShift(maxShiftValue())
         , maxChunkSize(maxChunkSizeValue())
         , unmanagedHeapSize(0)
         , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
         , largeItems(0)
         , totalLargeItemsAllocated(0)
+        , totalItems(0)
+        , totalAlloc(0)
+        , maxShift(maxShiftValue())
+        , gcBlocked(false)
+        , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
+        , gcStats(!qEnvironmentVariableIsEmpty("QV4_MM_STATS"))
     {
         memset(nonFullChunks, 0, sizeof(nonFullChunks));
         memset(nChunks, 0, sizeof(nChunks));
@@ -201,7 +204,7 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 //        qDebug("chunk @ %p, in use: %s, mark bit: %s",
 //               item, (m->inUse() ? "yes" : "no"), (m->isMarked() ? "true" : "false"));
 
-        Q_ASSERT((qintptr) item % 16 == 0);
+        Q_ASSERT(qintptr(item) % 16 == 0);
 
         if (m->isMarked()) {
             Q_ASSERT(m->inUse());
@@ -334,7 +337,8 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
         m_d->heapChunks.push_back(allocation);
 
         header = reinterpret_cast<Data::ChunkHeader *>(allocation.base());
-        header->itemSize = int(size);
+        Q_ASSERT(size <= UINT_MAX);
+        header->itemSize = unsigned(size);
         header->itemStart = reinterpret_cast<char *>(allocation.base()) + roundUpToMultipleOf(16, sizeof(Data::ChunkHeader));
         header->itemEnd = reinterpret_cast<char *>(allocation.base()) + allocation.size() - header->itemSize;
 
@@ -350,7 +354,8 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
         }
         last->setNextFree(0);
         m = header->freeItems.nextFree();
-        const size_t increase = (header->itemEnd - header->itemStart) / header->itemSize;
+        Q_ASSERT(header->itemEnd >= header->itemStart);
+        const size_t increase = quintptr(header->itemEnd - header->itemStart) / header->itemSize;
         m_d->availableItems[pos] += uint(increase);
         m_d->totalItems += int(increase);
 #ifdef V4_USE_VALGRIND
@@ -468,7 +473,7 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    bool *chunkIsEmpty = (bool *)alloca(m_d->heapChunks.size() * sizeof(bool));
+    bool *chunkIsEmpty = static_cast<bool *>(alloca(m_d->heapChunks.size() * sizeof(bool)));
     uint itemsInUse[MemoryManager::Data::MaxItemSize/16];
     memset(itemsInUse, 0, sizeof(itemsInUse));
     memset(m_d->nonFullChunks, 0, sizeof(m_d->nonFullChunks));
@@ -483,7 +488,8 @@ void MemoryManager::sweep(bool lastSweep)
         Q_ASSERT(chunkIter != m_d->heapChunks.end());
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(chunkIter->base());
         const size_t pos = header->itemSize >> 4;
-        const size_t decrease = (header->itemEnd - header->itemStart) / header->itemSize;
+        Q_ASSERT(header->itemEnd >= header->itemStart);
+        const size_t decrease = quintptr(header->itemEnd - header->itemStart) / header->itemSize;
 
         // Release that chunk if it could have been spared since the last GC run without any difference.
         if (chunkIsEmpty[i] && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
@@ -596,7 +602,7 @@ size_t MemoryManager::getUsedMem() const
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(i->base());
         for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
             Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
-            Q_ASSERT((qintptr) item % 16 == 0);
+            Q_ASSERT(qintptr(item) % 16 == 0);
             if (m->inUse())
                 usedMem += header->itemSize;
         }
