@@ -183,7 +183,8 @@ void QQuickStackElement::initialize()
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
         QV4::ScopedValue ipv(scope, properties.value());
-        d->initializeObjectWithInitialProperties(ipv, item);
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
+        d->initializeObjectWithInitialProperties(qmlContext, ipv, item);
         properties.clear();
     }
 
@@ -282,6 +283,7 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
         if (!wrapper) {
             QV4::ExecutionEngine *v4 = args->v4engine();
             element->properties.set(v4, props);
+            element->qmlCallingContext.set(v4, v4->qmlContext());
             return true;
         }
     }

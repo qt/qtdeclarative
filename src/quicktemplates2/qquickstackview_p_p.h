@@ -98,6 +98,7 @@ public:
     QPointer<QQuickItem> originalParent;
     QQuickStackView::Status status;
     QV4::PersistentValue properties;
+    QV4::PersistentValue qmlCallingContext;
 };
 
 class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
