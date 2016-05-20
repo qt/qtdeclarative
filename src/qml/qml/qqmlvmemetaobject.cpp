@@ -140,11 +140,12 @@ void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *e, void **)
 
 void QQmlVMEMetaObjectEndpoint::tryConnect()
 {
+    Q_ASSERT(metaObject->compiledObject);
     int aliasId = this - metaObject->aliasEndpoints;
 
     if (metaObject.flag()) {
         // This is actually notify
-        int sigIdx = metaObject->methodOffset() + aliasId + metaObject->metaData->propertyCount;
+        int sigIdx = metaObject->methodOffset() + aliasId + metaObject->compiledObject->nProperties;
         metaObject->activate(metaObject->object, sigIdx, 0);
     } else {
         QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
@@ -313,18 +314,19 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
-    if (metaData->propertyCount || metaData->methodCount) {
-        Q_ASSERT(compilationUnit);
-        Q_ASSERT(qmlObjectId >= 0);
+    if (compilationUnit && qmlObjectId >= 0) {
         compiledObject = compilationUnit->data->objectAt(qmlObjectId);
-        Q_ASSERT(cache && cache->engine);
-        QV4::ExecutionEngine *v4 = cache->engine;
-        QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, metaData->propertyCount + metaData->methodCount);
-        propertyAndMethodStorage.set(v4, data);
-        std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
 
-        // Need JS wrapper to ensure properties/methods are marked.
-        ensureQObjectWrapper();
+        if (compiledObject->nProperties || compiledObject->nFunctions) {
+            Q_ASSERT(cache && cache->engine);
+            QV4::ExecutionEngine *v4 = cache->engine;
+            QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, compiledObject->nProperties + compiledObject->nFunctions);
+            propertyAndMethodStorage.set(v4, data);
+            std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
+
+            // Need JS wrapper to ensure properties/methods are marked.
+            ensureQObjectWrapper();
+        }
     }
 }
 
@@ -613,11 +615,16 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     if (intercept(c, _id, a))
         return -1;
 
+    const int propertyCount = compiledObject ? int(compiledObject->nProperties) : 0;
+    const int aliasCount = compiledObject ? int(compiledObject->nAliases) : 0;
+    const int signalCount = compiledObject ? int(compiledObject->nSignals) : 0;
+    const int methodCount = compiledObject ? int(compiledObject->nFunctions) : 0;
+
     if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty) {
         if (id >= propOffset()) {
             id -= propOffset();
 
-            if (id < metaData->propertyCount && compiledObject) {
+            if (id < propertyCount) {
                 const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(compiledObject->propertyTable()[id].type);
                 bool needActivate = false;
 
@@ -822,9 +829,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 return -1;
             }
 
-            id -= metaData->propertyCount;
+            id -= propertyCount;
 
-            if (id < metaData->aliasCount) {
+            if (id < aliasCount) {
 
                 QQmlVMEMetaData::AliasData *d = metaData->aliasData() + id;
 
@@ -884,8 +891,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
         if (id >= methodOffset()) {
 
             id -= methodOffset();
-            int plainSignals = metaData->signalCount + metaData->propertyCount +
-                               metaData->aliasCount;
+            int plainSignals = signalCount + propertyCount + aliasCount;
             if (id < plainSignals) {
                 activate(object, _id, a);
                 return -1;
@@ -893,7 +899,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
             id -= plainSignals;
 
-            if (id < metaData->methodCount) {
+            if (id < methodCount) {
                 if (!ctxt->engine)
                     return -1; // We can't run the method
 
@@ -950,7 +956,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
 QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
-    if (!ctxt || !ctxt->isValid()) {
+    if (!ctxt || !ctxt->isValid() || !compiledObject) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
         return QV4::Encode::undefined();
     }
@@ -959,7 +965,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
     if (!md)
         return QV4::Encode::undefined();
 
-    return (md->data() + index + metaData->propertyCount)->asReturnedValue();
+    return (md->data() + index + compiledObject->nProperties)->asReturnedValue();
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
@@ -1085,8 +1091,10 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)
         Q_ASSERT(parentVMEMetaObject());
         return parentVMEMetaObject()->vmeMethod(index);
     }
-    int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
+    if (!compiledObject)
+        return QV4::Primitive::undefinedValue().asReturnedValue();
+    const int plainSignals = compiledObject->nSignals + compiledObject->nProperties + compiledObject->nAliases;
+    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + int(compiledObject->nFunctions)));
     return method(index - methodOffset() - plainSignals);
 }
 
@@ -1097,14 +1105,16 @@ void QQmlVMEMetaObject::setVmeMethod(int index, const QV4::Value &function)
         Q_ASSERT(parentVMEMetaObject());
         return parentVMEMetaObject()->setVmeMethod(index, function);
     }
-    int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
+    if (!compiledObject)
+        return;
+    const int plainSignals = compiledObject->nSignals + compiledObject->nProperties + compiledObject->nAliases;
+    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + int(compiledObject->nFunctions)));
 
     int methodIndex = index - methodOffset() - plainSignals;
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
         return;
-    *(md->data() + methodIndex + metaData->propertyCount) = function;
+    *(md->data() + methodIndex + compiledObject->nProperties) = function;
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
@@ -1147,7 +1157,7 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {
-    Q_ASSERT(index >= propOffset() + metaData->propertyCount);
+    Q_ASSERT(compiledObject && (index >= propOffset() + int(compiledObject->nProperties)));
 
     *target = 0;
     *coreIndex = -1;
@@ -1156,7 +1166,7 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     if (!ctxt)
         return false;
 
-    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset() - metaData->propertyCount);
+    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset() - compiledObject->nProperties);
     *target = ctxt->idValues[d->contextIdx].data();
     if (!*target)
         return false;
@@ -1174,8 +1184,9 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
 void QQmlVMEMetaObject::connectAlias(int aliasId)
 {
+    Q_ASSERT(compiledObject);
     if (!aliasEndpoints)
-        aliasEndpoints = new QQmlVMEMetaObjectEndpoint[metaData->aliasCount];
+        aliasEndpoints = new QQmlVMEMetaObjectEndpoint[compiledObject->nAliases];
 
     QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
 
@@ -1193,8 +1204,9 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
 
 void QQmlVMEMetaObject::connectAliasSignal(int index, bool indexInSignalRange)
 {
-    int aliasId = (index - (indexInSignalRange ? signalOffset() : methodOffset())) - metaData->propertyCount;
-    if (aliasId < 0 || aliasId >= metaData->aliasCount)
+    Q_ASSERT(compiledObject);
+    int aliasId = (index - (indexInSignalRange ? signalOffset() : methodOffset())) - compiledObject->nProperties;
+    if (aliasId < 0 || aliasId >= int(compiledObject->nAliases))
         return;
 
     connectAlias(aliasId);

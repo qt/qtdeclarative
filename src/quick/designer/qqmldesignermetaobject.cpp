@@ -81,13 +81,7 @@ struct MetaPropertyData {
 
 static QQmlVMEMetaData* fakeMetaData()
 {
-    QQmlVMEMetaData* data = new QQmlVMEMetaData;
-    data->propertyCount = 0;
-    data->aliasCount = 0;
-    data->signalCount = 0;
-    data->methodCount = 0;
-
-    return data;
+    return new QQmlVMEMetaData;
 }
 
 static const QQmlVMEMetaData* vMEMetaDataForObject(QObject *object)

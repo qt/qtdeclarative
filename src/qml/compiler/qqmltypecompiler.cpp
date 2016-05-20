@@ -661,16 +661,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
     typedef QQmlVMEMetaData VMD;
 
-    QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
-                                                              + obj->aliasCount() * sizeof(VMD::AliasData), 0);
-
-    VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-    // Dynamic slot data - comes after the property data
-    vmd->methodCount = obj->functionCount();
-    // Alias property count.  Actual data is setup in resolveAliases()
-    vmd->aliasCount = obj->aliasCount();
-    vmd->signalCount = obj->signalCount();
-    vmd->propertyCount = obj->propertyCount();
+    vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData) + obj->aliasCount() * sizeof(VMD::AliasData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
     int effectiveMethodIndex = cache->methodIndexCacheStart;

@@ -78,11 +78,8 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlVMEMetaData
 {
-    short propertyCount;
-    short aliasCount;
-    short signalCount;
-    short methodCount;
     // Make sure this structure is always aligned to int
+    int dummy;
 
     struct AliasData {
         int contextIdx;
@@ -255,6 +252,7 @@ public:
     QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
 
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
+
 
     // keep a reference to the compilation unit in order to still
     // do property access when the context has been invalidated.
