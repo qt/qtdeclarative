@@ -448,7 +448,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Button::toggle()
+    \qmlmethod void QtQuick.Controls::AbstractButton::toggle()
 
     Toggles the checked state of the button.
 */
