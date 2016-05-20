@@ -113,20 +113,8 @@ struct QQmlVMEMetaData
         }
     };
 
-    enum {
-        VarPropertyType = -1
-    };
-
-    struct PropertyData {
-        int propertyType;
-    };
-
-    PropertyData *propertyData() const {
-        return (PropertyData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
-    }
-
     AliasData *aliasData() const {
-        return (AliasData *)(propertyData() + propertyCount);
+        return (AliasData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
     }
 };
 
@@ -189,7 +177,7 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
@@ -267,6 +255,11 @@ public:
     QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
 
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
+
+    // keep a reference to the compilation unit in order to still
+    // do property access when the context has been invalidated.
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    const QV4::CompiledData::Object *compiledObject;
 };
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)

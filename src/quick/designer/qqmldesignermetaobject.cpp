@@ -157,7 +157,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 }
 
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(object, cacheForObject(object, engine), vMEMetaDataForObject(object)),
+    : QQmlVMEMetaObject(object, cacheForObject(object, engine), vMEMetaDataForObject(object), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData),
       m_cache(0)

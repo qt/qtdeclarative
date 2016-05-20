@@ -72,6 +72,9 @@ CompilationUnit::CompilationUnit()
 CompilationUnit::~CompilationUnit()
 {
     unlink();
+    if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
+        free(data);
+    data = 0;
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -163,9 +166,6 @@ void CompilationUnit::unlink()
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
     engine = 0;
-    if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
-        free(data);
-    data = 0;
     free(runtimeStrings);
     runtimeStrings = 0;
     delete [] runtimeLookups;

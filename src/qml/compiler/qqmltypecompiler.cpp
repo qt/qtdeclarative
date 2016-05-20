@@ -662,7 +662,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     typedef QQmlVMEMetaData VMD;
 
     QByteArray &dynamicData = vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData)
-                                                              + obj->propertyCount() * sizeof(VMD::PropertyData)
                                                               + obj->aliasCount() * sizeof(VMD::AliasData), 0);
 
     VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
@@ -808,16 +807,13 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     int propertyIdx = 0;
     for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
         int propertyType = 0;
-        int vmePropertyType = 0;
         quint32 propertyFlags = 0;
 
         if (p->type == QV4::CompiledData::Property::Var) {
             propertyType = QMetaType::QVariant;
-            vmePropertyType = QQmlVMEMetaData::VarPropertyType;
             propertyFlags = QQmlPropertyData::IsVarProperty;
         } else if (p->type < builtinTypeCount) {
             propertyType = builtinTypes[p->type].metaType;
-            vmePropertyType = propertyType;
 
             if (p->type == QV4::CompiledData::Property::Variant)
                 propertyFlags |= QQmlPropertyData::IsQVariant;
@@ -840,20 +836,16 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
                 if (p->type == QV4::CompiledData::Property::Custom) {
                     propertyType = data->metaTypeId;
-                    vmePropertyType = QMetaType::QObjectStar;
                 } else {
                     propertyType = data->listMetaTypeId;
-                    vmePropertyType = qMetaTypeId<QQmlListProperty<QObject> >();
                 }
 
                 tdata->release();
             } else {
                 if (p->type == QV4::CompiledData::Property::Custom) {
                     propertyType = qmltype->typeId();
-                    vmePropertyType = QMetaType::QObjectStar;
                 } else {
                     propertyType = qmltype->qListTypeId();
-                    vmePropertyType = qMetaTypeId<QQmlListProperty<QObject> >();
                 }
             }
 
@@ -874,9 +866,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                               propertyType, effectiveSignalIndex);
 
         effectiveSignalIndex++;
-
-        VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-        (vmd->propertyData() + propertyIdx)->propertyType = vmePropertyType;
     }
 
     return true;
