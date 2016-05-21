@@ -41,6 +41,9 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
 
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlengine_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

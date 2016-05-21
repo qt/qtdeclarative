@@ -41,6 +41,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
