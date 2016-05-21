@@ -47,6 +47,7 @@
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickdial_p.h>
+#include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickframe_p.h>
 #include <QtQuickTemplates2/private/qquickgroupbox_p.h>
@@ -174,6 +175,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
+    qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 1, "DialogButtonBox");
+    qmlRegisterType<QQuickDialogButtonBoxAttached>();
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");
     qmlRegisterType<QQuickSwipeView, 1>(uri, 2, 1, "SwipeView");

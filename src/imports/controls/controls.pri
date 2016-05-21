@@ -17,6 +17,7 @@ QML_CONTROLS = \
     CheckIndicator.qml \
     ComboBox.qml \
     Dial.qml \
+    DialogButtonBox.qml \
     Drawer.qml \
     Frame.qml \
     GroupBox.qml \

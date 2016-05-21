@@ -40,7 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Universal 2.0
 import Qt.labs.settings 1.0
@@ -100,7 +100,7 @@ ApplicationWindow {
 
                     MenuItem {
                         text: "Settings"
-                        onTriggered: settingsPopup.open()
+                        onTriggered: settingsDialog.open()
                     }
                     MenuItem {
                         text: "About"
@@ -208,7 +208,7 @@ ApplicationWindow {
     }
 
     Popup {
-        id: settingsPopup
+        id: settingsDialog
         x: (window.width - width) / 2
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
@@ -255,38 +255,15 @@ ApplicationWindow {
                 Layout.fillHeight: true
             }
 
-            RowLayout {
-                spacing: 10
-
-                Button {
-                    id: okButton
-                    text: "Ok"
-                    onClicked: {
-                        settings.style = styleBox.displayText
-                        settingsPopup.close()
-                    }
-
-                    Material.foreground: Material.primary
-                    Material.background: "transparent"
-                    Material.elevation: 0
-
-                    Layout.preferredWidth: 0
-                    Layout.fillWidth: true
+            DialogButtonBox {
+                standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
+                onAccepted: {
+                    settings.style = styleBox.displayText
+                    settingsDialog.close()
                 }
-
-                Button {
-                    id: cancelButton
-                    text: "Cancel"
-                    onClicked: {
-                        styleBox.currentIndex = styleBox.styleIndex
-                        settingsPopup.close()
-                    }
-
-                    Material.background: "transparent"
-                    Material.elevation: 0
-
-                    Layout.preferredWidth: 0
-                    Layout.fillWidth: true
+                onRejected: {
+                    styleBox.currentIndex = styleBox.styleIndex
+                    settingsDialog.close()
                 }
             }
         }

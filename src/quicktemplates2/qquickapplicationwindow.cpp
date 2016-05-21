@@ -42,6 +42,7 @@
 #include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
 #include "qquicktabbar_p.h"
+#include "qquickdialogbuttonbox_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -314,8 +315,9 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     This property holds the window header item. The header item is positioned to
     the top, and resized to the width of the window. The default value is \c null.
 
-    \note Assigning a ToolBar or TabBar as a window header sets the respective
-    \l ToolBar::position or \l TabBar::position property automatically to \c Header.
+    \note Assigning a ToolBar, TabBar, or DialogButtonBox as a window header
+    automatically sets the respective \l ToolBar::position, \l TabBar::position,
+    or \l DialogButtonBox::position property to \c Header.
 
     \sa footer, Page::header
 */
@@ -348,6 +350,8 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
             toolBar->setPosition(QQuickToolBar::Header);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(header))
             tabBar->setPosition(QQuickTabBar::Header);
+        else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header))
+            buttonBox->setPosition(QQuickDialogButtonBox::Header);
     }
     if (isComponentComplete())
         d->relayout();
@@ -360,8 +364,9 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
     This property holds the window footer item. The footer item is positioned to
     the bottom, and resized to the width of the window. The default value is \c null.
 
-    \note Assigning a ToolBar or TabBar as a window footer sets the respective
-    \l ToolBar::position or \l TabBar::position property automatically to \c Footer.
+    \note Assigning a ToolBar, TabBar, or DialogButtonBox as a window footer
+    automatically sets the respective \l ToolBar::position, \l TabBar::position,
+    or \l DialogButtonBox::position property to \c Footer.
 
     \sa header, Page::footer
 */
@@ -394,6 +399,8 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
             toolBar->setPosition(QQuickToolBar::Footer);
         else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(footer))
             tabBar->setPosition(QQuickTabBar::Footer);
+        else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(footer))
+            buttonBox->setPosition(QQuickDialogButtonBox::Footer);
     }
     if (isComponentComplete())
         d->relayout();

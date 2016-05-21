@@ -137,6 +137,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
+    qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
     qmlRegisterType(selector.select(QStringLiteral("Slider.qml")), uri, 2, 1, "Slider");
     qmlRegisterType(selector.select(QStringLiteral("StackView.qml")), uri, 2, 1, "StackView");
     qmlRegisterType(selector.select(QStringLiteral("SwipeView.qml")), uri, 2, 1, "SwipeView");

@@ -15,6 +15,8 @@ HEADERS += \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickdial_p.h \
+    $$PWD/qquickdialogbuttonbox_p.h \
+    $$PWD/qquickdialogbuttonbox_p_p.h \
     $$PWD/qquickdrawer_p.h \
     $$PWD/qquickframe_p.h \
     $$PWD/qquickframe_p_p.h \
@@ -72,6 +74,7 @@ SOURCES += \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
     $$PWD/qquickdial.cpp \
+    $$PWD/qquickdialogbuttonbox.cpp \
     $$PWD/qquickdrawer.cpp \
     $$PWD/qquickframe.cpp \
     $$PWD/qquickgroupbox.cpp \
