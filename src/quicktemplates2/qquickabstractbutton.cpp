@@ -62,7 +62,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     radio buttons and check boxes. As an abstract control, it has no delegate
     implementations, leaving them to the types that derive from it.
 
-    TODO: ButtonGroup usage
+    \sa ButtonGroup
 */
 
 /*!
