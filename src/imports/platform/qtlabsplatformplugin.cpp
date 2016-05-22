@@ -37,6 +37,11 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
+#include "qquickplatformmenu_p.h"
+#include "qquickplatformmenubar_p.h"
+#include "qquickplatformmenuitem_p.h"
+#include "qquickplatformmenuitemgroup_p.h"
+
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -63,7 +68,10 @@ QtLabsPlatformPlugin::QtLabsPlatformPlugin(QObject *parent) : QQmlExtensionPlugi
 
 void QtLabsPlatformPlugin::registerTypes(const char *uri)
 {
-    Q_UNUSED(uri)
+    qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
+    qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
+    qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
+    qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
 }
 
 QT_END_NAMESPACE
