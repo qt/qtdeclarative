@@ -21,6 +21,7 @@
 /tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/menu/tst_menu
+/tests/auto/platform/tst_platform
 /tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle

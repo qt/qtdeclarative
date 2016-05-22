@@ -6,6 +6,7 @@ SUBDIRS += \
     controls \
     drawer \
     menu \
+    platform \
     popup \
     pressandhold \
     qquickmaterialstyle \
