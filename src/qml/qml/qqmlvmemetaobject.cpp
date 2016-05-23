@@ -148,10 +148,11 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         int sigIdx = metaObject->methodOffset() + aliasId + metaObject->compiledObject->nProperties;
         metaObject->activate(metaObject->object, sigIdx, 0);
     } else {
+        const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
         QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
         if (!d->isObjectAlias()) {
             QQmlContextData *ctxt = metaObject->ctxt;
-            QObject *target = ctxt->idValues[d->contextIdx].data();
+            QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
             if (!target)
                 return;
 
@@ -834,6 +835,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             if (id < aliasCount) {
 
                 QQmlVMEMetaData::AliasData *d = metaData->aliasData() + id;
+                const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[id];
 
                 if (d->flags & QML_ALIAS_FLAG_PTR && c == QMetaObject::ReadProperty)
                         *reinterpret_cast<void **>(a[0]) = 0;
@@ -843,7 +845,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 QQmlContext *context = ctxt->asQQmlContext();
                 QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
-                QObject *target = ctxtPriv->data->idValues[d->contextIdx].data();
+                QObject *target = ctxtPriv->data->idValues[aliasData->targetObjectId].data();
                 if (!target)
                     return -1;
 
@@ -1166,8 +1168,10 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     if (!ctxt)
         return false;
 
-    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset() - compiledObject->nProperties);
-    *target = ctxt->idValues[d->contextIdx].data();
+    const int aliasId = index - propOffset() - compiledObject->nProperties;
+    const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
+    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
+    *target = ctxt->idValues[aliasData->targetObjectId].data();
     if (!*target)
         return false;
 
@@ -1188,7 +1192,7 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
     if (!aliasEndpoints)
         aliasEndpoints = new QQmlVMEMetaObjectEndpoint[compiledObject->nAliases];
 
-    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
+    const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
 
     QQmlVMEMetaObjectEndpoint *endpoint = aliasEndpoints + aliasId;
     if (endpoint->metaObject.data()) {
@@ -1198,7 +1202,7 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
     }
 
     endpoint->metaObject = this;
-    endpoint->connect(&ctxt->idValues[d->contextIdx].bindings);
+    endpoint->connect(&ctxt->idValues[aliasData->targetObjectId].bindings);
     endpoint->tryConnect();
 }
 

@@ -1562,15 +1562,17 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         int effectiveAliasIndex = 0;
 
         int aliasIndex = 0;
-        for (const QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
+        for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
             const int idIndex = alias->idIndex;
             const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
             if (targetObjectIndex == -1) {
                 recordError(alias->referenceLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
                 return false;
             }
-            const int targetId = _objectIndexToIdInScope->value(targetObjectIndex, -1);
-            Q_ASSERT(targetId != -1);
+            Q_ASSERT(!(alias->flags & QV4::CompiledData::Alias::Resolved));
+            alias->flags |= QV4::CompiledData::Alias::Resolved;
+            Q_ASSERT(_objectIndexToIdInScope->contains(targetObjectIndex));
+            alias->targetObjectId = _objectIndexToIdInScope->value(targetObjectIndex);
 
             const QString aliasPropertyValue = stringAt(alias->propertyIndex);
 
@@ -1663,7 +1665,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 }
             }
 
-            QQmlVMEMetaData::AliasData aliasData = { targetId, propIdx, propType, flags, notifySignal };
+            QQmlVMEMetaData::AliasData aliasData = { propIdx, propType, flags, notifySignal };
 
             typedef QQmlVMEMetaData VMD;
             QByteArray &dynamicData = (*vmeMetaObjectData)[objectIndex];

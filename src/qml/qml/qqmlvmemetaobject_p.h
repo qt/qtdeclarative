@@ -82,7 +82,6 @@ struct QQmlVMEMetaData
     int dummy;
 
     struct AliasData {
-        int contextIdx;
         int propertyIdx;
         int propType;
         int flags;

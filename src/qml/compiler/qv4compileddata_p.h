@@ -366,12 +366,16 @@ struct Property
 
 struct Alias {
     enum Flags {
-        IsReadOnly = 0x1
+        IsReadOnly = 0x1,
+        Resolved = 0x2
     };
-    quint32 nameIndex;
-    quint32 idIndex;
-    quint32 propertyIndex : 31;
-    quint32 flags : 1;
+    quint32 nameIndex : 30;
+    quint32 flags : 2;
+    union {
+        quint32 idIndex; // string index
+        quint32 targetObjectId; // object id index (in QQmlContextData::idValues)
+    };
+    quint32 propertyIndex;
     Location location;
     Location referenceLocation;
 };

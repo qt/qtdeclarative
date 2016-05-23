@@ -283,7 +283,7 @@ public:
 
     const Property *firstProperty() const { return properties->first; }
     int propertyCount() const { return properties->count; }
-    const Alias *firstAlias() const { return aliases->first; }
+    Alias *firstAlias() const { return aliases->first; }
     int aliasCount() const { return aliases->count; }
     const Signal *firstSignal() const { return qmlSignals->first; }
     int signalCount() const { return qmlSignals->count; }
