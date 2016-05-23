@@ -74,15 +74,12 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QML_ALIAS_FLAG_PTR 0x00000001
-
 struct QQmlVMEMetaData
 {
     // Make sure this structure is always aligned to int
     int dummy;
 
     struct AliasData {
-        int flags;
         int notifySignal;
     };
 

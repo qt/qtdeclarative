@@ -833,11 +833,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= propertyCount;
 
             if (id < aliasCount) {
-
-                QQmlVMEMetaData::AliasData *d = metaData->aliasData() + id;
                 const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[id];
 
-                if (d->flags & QML_ALIAS_FLAG_PTR && c == QMetaObject::ReadProperty)
+                if ((aliasData->flags & QV4::CompiledData::Alias::AliasPointsToPointerObject) && c == QMetaObject::ReadProperty)
                         *reinterpret_cast<void **>(a[0]) = 0;
 
                 if (!ctxt) return -1;

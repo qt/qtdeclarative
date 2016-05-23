@@ -1588,7 +1588,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
             int propIdx = -1;
             int notifySignal = -1;
-            int flags = 0;
             int type = 0;
             bool writable = false;
             bool resettable = false;
@@ -1605,7 +1604,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 else
                     type = typeRef->component->metaTypeId;
 
-                flags |= QML_ALIAS_FLAG_PTR;
+                alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;
             } else {
                 QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
@@ -1657,13 +1656,13 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                             propertyFlags |= QQmlPropertyData::IsQVariant;
 
                         if (targetProperty->isQObject())
-                            flags |= QML_ALIAS_FLAG_PTR;
+                            alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
                     }
                 }
             }
 
             alias->encodedMetaPropertyIndex = propIdx;
-            QQmlVMEMetaData::AliasData aliasData = { flags, notifySignal };
+            QQmlVMEMetaData::AliasData aliasData = { notifySignal };
 
             typedef QQmlVMEMetaData VMD;
             QByteArray &dynamicData = (*vmeMetaObjectData)[objectIndex];

@@ -367,10 +367,11 @@ struct Property
 struct Alias {
     enum Flags {
         IsReadOnly = 0x1,
-        Resolved = 0x2
+        Resolved = 0x2,
+        AliasPointsToPointerObject = 0x4
     };
-    quint32 nameIndex : 30;
-    quint32 flags : 2;
+    quint32 nameIndex : 29;
+    quint32 flags : 3;
     union {
         quint32 idIndex; // string index
         quint32 targetObjectId; // object id index (in QQmlContextData::idValues)
