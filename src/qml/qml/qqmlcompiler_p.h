@@ -126,7 +126,7 @@ public:
     // map from name index
     QHash<int, TypeReference*> resolvedTypes;
 
-    QQmlPropertyCache *rootPropertyCache;
+    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(compilationUnit->data->indexOfRootObject).data(); }
     QQmlPropertyCacheVector propertyCaches;
     QList<QQmlScriptData *> scripts;
 

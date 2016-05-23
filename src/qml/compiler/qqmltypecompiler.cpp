@@ -339,10 +339,6 @@ void QQmlTypeCompiler::setPropertyCaches(const QQmlPropertyCacheVector &caches)
 {
     compiledData->propertyCaches = caches;
     Q_ASSERT(caches.count() >= document->indexOfRootObject);
-    if (compiledData->rootPropertyCache)
-        compiledData->rootPropertyCache->release();
-    compiledData->rootPropertyCache = caches.at(document->indexOfRootObject).data();
-    compiledData->rootPropertyCache->addref();
 }
 
 const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
@@ -1355,7 +1351,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         } else if (tr->component) {
-            if (tr->component->rootPropertyCache->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
+            if (tr->component->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         }
 
