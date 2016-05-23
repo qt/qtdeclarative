@@ -275,6 +275,8 @@ public:
     bool filtersChildMouseEvents() const;
     void setFiltersChildMouseEvents(bool filter);
 
+    Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason = Qt::OtherFocusReason);
+
 public Q_SLOTS:
     void open();
     void close();

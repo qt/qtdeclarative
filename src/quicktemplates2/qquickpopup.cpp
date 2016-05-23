@@ -1785,6 +1785,22 @@ void QQuickPopup::setFiltersChildMouseEvents(bool filter)
     d->popupItem->setFiltersChildMouseEvents(filter);
 }
 
+/*!
+    \qmlmethod QtQuick.Controls::Popup::forceActiveFocus(reason = Qt.OtherFocusReason)
+
+    Forces active focus on the popup with the given \a reason.
+
+    This method sets focus on the popup and ensures that all ancestor
+    \l FocusScope objects in the object hierarchy are also given \l focus.
+
+    \sa activeFocus, Qt::FocusReason
+*/
+void QQuickPopup::forceActiveFocus(Qt::FocusReason reason)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->forceActiveFocus(reason);
+}
+
 void QQuickPopup::classBegin()
 {
     Q_D(QQuickPopup);
