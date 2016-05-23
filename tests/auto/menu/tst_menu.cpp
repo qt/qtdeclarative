@@ -261,11 +261,15 @@ void tst_menu::addItem()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QVERIFY(menu);
     menu->open();
+    QVERIFY(menu->isVisible());
 
     QQuickItem *menuItem = menu->itemAt(0);
+    QVERIFY(menuItem);
+    QTRY_VERIFY(!QQuickItemPrivate::get(menuItem)->culled); // QTBUG-53262
+
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
-    QVERIFY(!menu->isVisible());
+    QTRY_VERIFY(!menu->isVisible());
 }
 
 QTEST_MAIN(tst_menu)

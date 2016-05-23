@@ -183,6 +183,7 @@ TestCase {
         control.Material.foreground = Material.Blue
         control.Material.theme = Material.Dark
         compare(control.Material.primary, Material.color(Material.Green))
+        expectFail("", "QTBUG-53556")
         compare(control.Material.accent, Material.color(Material.Brown))
         compare(control.Material.background, Material.color(Material.Red))
         compare(control.Material.foreground, Material.color(Material.Blue))
@@ -194,6 +195,7 @@ TestCase {
         var control = styledButton.createObject(testCase)
         verify(control)
         compare(control.Material.primary, Material.color(Material.DeepOrange))
+        expectFail("", "QTBUG-53556")
         compare(control.Material.accent, Material.color(Material.DeepPurple))
         compare(control.Material.background, Material.color(Material.Green))
         compare(control.Material.foreground, Material.color(Material.Blue))
@@ -250,6 +252,8 @@ TestCase {
 
         var grandChild1 = button.createObject(child1)
         var grandChild2 = button.createObject(child2)
+        if (data.tag == "primary" || data.tag == "accent")
+            expectFail("", "QTBUG-53556")
         compare(grandChild1.Material[prop], child1.Material[prop])
         compare(grandChild2.Material[prop], child2.Material[prop])
 
@@ -396,6 +400,7 @@ TestCase {
         compare(container.menu.Material.primary, Material.color(Material.Blue))
         compare(child.Material.primary, Material.color(Material.Blue))
         compare(container.Material.accent, Material.color(Material.Red))
+        expectFail("", "QTBUG-53556")
         compare(container.menu.Material.accent, Material.color(Material.Red))
         compare(child.Material.accent, Material.color(Material.Red))
         container.destroy()
@@ -421,11 +426,31 @@ TestCase {
         compare(window.combo.Material.primary, Material.color(Material.Blue))
         compare(child.Material.primary, Material.color(Material.Blue))
         compare(window.Material.accent, Material.color(Material.Red))
+        expectFail("", "QTBUG-53556")
         compare(window.combo.Material.accent, Material.color(Material.Red))
         compare(child.Material.accent, Material.color(Material.Red))
         window.destroy()
     }
 
+    function test_windowChange() {
+        var ldr = loader.createObject()
+        verify(ldr)
+
+        var wnd = window.createObject()
+        verify(wnd)
+
+        wnd.Material.theme = Material.Dark
+        compare(wnd.Material.theme, Material.Dark)
+
+        ldr.active = true
+        verify(ldr.item)
+        compare(ldr.item.Material.theme, Material.Light)
+
+        ldr.parent = wnd.contentItem
+        compare(ldr.item.Material.theme, Material.Dark)
+
+        wnd.destroy()
+    }
 
     function test_colors_data() {
         return [

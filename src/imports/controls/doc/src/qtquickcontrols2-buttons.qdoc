@@ -33,47 +33,133 @@
 
     \annotatedlist qtquickcontrols2-buttons
 
-    Each type of button has its own specific target use case. The following
+    Each type of button has its own specific use case. The following
     sections offer guidelines for choosing the appropriate type of button,
     depending on the use case.
 
     \section1 Button Control
 
-    \image qtquickcontrols2-button.png
 
-    \l Button presents a push-button control that can be pushed or clicked
-    by the user. Buttons are normally used to perform an action, or to answer
-    a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
-    \e Yes, \e No, and \e Help.
+    \l Button is a clickable control that starts an action, or opens or
+    closes a popup. A button usually has a text label but it can also
+    contain an icon.
+
+    Button is a very suitable control when a popup or dialog needs
+    to perform an action. The most common examples are Apply, Cancel,
+    Save, Close and Help.
+
+    \table
+    \row \li \image qtquickcontrols2-button-normal.png
+         \li A button in its normal state.
+    \row \li \image qtquickcontrols2-button-pressed.png
+         \li A button that is pressed.
+    \row \li \image qtquickcontrols2-button-focused.png
+         \li A button that has active focus.
+    \row \li \image qtquickcontrols2-button-disabled.png
+         \li A button that is disabled.
+    \endtable
+
+    Recommendations:
+
+    \list
+    \li The button's text should be a verb describing the action, or a noun matching
+        the title of the popup that will be opened.
+    \li Don't use a button to set state. \l Switch is more suitable for that.
+    \li Use the default font unless you have UI guidelines specifying otherwise.
+    \li If the text is localized, consider the influence of a longer text on the layout.
+    \endlist
+
+    \b {See also} \l Button and \l AbstractButton
 
     \section1 CheckBox Control
 
     \image qtquickcontrols2-checkbox.png
 
-    \l CheckBox presents an option button that can be toggled on (checked)
-    or off (unchecked). Check boxes are typically used to select one or more
-    options from a set of options.
+    \l CheckBox is used to build multi-selection option lists. Any number of
+    options can be selected, including none, but the options should
+    not be mutually exclusive.
+
+    Use a single CheckBox for a yes/no choice, such as when you have
+    to accept the terms of service agreement in a form.
+
+    For a single yes/no choice, it is also possible to use a switch. If the choice
+    concerns an option, it is best to use a CheckBox. If it concerns action to
+    be taken, a switch is recommended.
+
+    When options can be grouped, you can use a partially checked CheckBox to
+    represent the whole group. Use the checkbox's indeterminate state when
+    a user selects some, but not all, sub-items in the group.
+
+    The three availables statuses are: checked, unchecked and disabled.
+    "Disabled" is useful when the user should not be able to check or uncheck
+    a checkbox.
+
+    The checkable options are often listed vertically.
+
+    Recommendations:
+    \list
+    \li The checkbox label should be a statement that the check mark makes true,
+    and that the absence of a check mark makes false.
+    \li The checkbox label should not contain a negative statement.
+    \li Use the default font, unless you have UI guidelines specifying otherwise.
+    \li If the text is localized, consider the influence of a longer text on the layout.
+    \endlist
+
+    \b {See also} \l CheckBox
 
     \section1 RadioButton Control
 
     \image qtquickcontrols2-radiobutton.png
 
-    \l RadioButton presents an option button that can be toggled on (checked)
-    or off (unchecked). Radio buttons are typically used to select one option
-    from a set of options.
+    \l RadioButton is used to select only one option from a set of options.
+    Selecting one option automatically deselects the one selected before.
+
+    The set of options should not be too large, otherwise it starts taking too much
+    space on the screen. In that case it would be more practical to use a \l ComboBox.
+
+    If there are only two mutually exclusive options, combine them into a
+    single checkbox or a switch.
+
+    Recommendations:
+
+    \list
+    \li Limit the label text to one line.
+    \li Ensure that a sensible default option is checked.
+    \li List RadioButton options vertically.
+    \li If the text is localized, consider the influence of a longer text on the layout.
+    \li Use the default font, unless you have UI guidelines that specify otherwise.
+    \li Just like with CheckBox, do not make the list too large.
+    \li In order to avoid confusion, do not put two groups of radio buttons next to each
+        other.
+    \endlist
+
+    \b {See also} \l RadioButton
 
     \section1 Switch Control
 
     \image qtquickcontrols2-switch.png
 
-    \l Switch is an option button that can be dragged or toggled on (checked)
-    or off (unchecked). Switches are typically used to select between two
-    states.
+    \l Switch represents a physical switch that allows users to choose between an "on"
+    or "off" state.
+    Use a switch for binary operations that take effect immediately after it has been
+    switched on. For example, a switch to turn WIFI on or off.
+
+    Recommendations:
+
+    \list
+    \li Keep labels short and concise.
+    \li If the text is localized, consider the influence of a longer text on the layout.
+    \endlist
+
+    \b {See also} \l Switch
 
     \section1 ToolButton Control
 
     \image qtquickcontrols2-toolbutton.png
 
-    \l ToolButton is functionally similar to \l Button, but provides a look
-    that is more suitable within a \l ToolBar.
+    \l ToolButton is nearly identical to \l Button, but it has a graphical
+    appearance that makes it more suitable for insertion into a \l ToolBar.
+
+    \b {See also} \l ToolButton
+
 */

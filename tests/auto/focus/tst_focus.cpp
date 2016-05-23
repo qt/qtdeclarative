@@ -228,7 +228,7 @@ void tst_focus::reason()
     QEXPECT_FAIL("TextField", "TODO: TextField::visualFocus?", Continue);
     QCOMPARE(control->property("visualFocus"), QVariant(false));
 
-    window->contentItem()->forceActiveFocus(Qt::TabFocusReason);
+    window->contentItem()->setFocus(false, Qt::TabFocusReason);
     QVERIFY(!control->hasActiveFocus());
     QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
 

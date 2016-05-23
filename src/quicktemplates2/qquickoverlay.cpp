@@ -68,14 +68,14 @@ void QQuickOverlayPrivate::popupAboutToShow()
 {
     Q_Q(QQuickOverlay);
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup)
+    if (!popup || !popup->dim())
         return;
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (popup->isModal()) {
         if (modal)
             QQmlProperty::write(modal, QStringLiteral("opacity"), 1.0);
-    } else if (popup->dim()) {
+    } else {
         if (modeless)
             QQmlProperty::write(modeless, QStringLiteral("opacity"), 1.0);
     }
@@ -85,14 +85,14 @@ void QQuickOverlayPrivate::popupAboutToHide()
 {
     Q_Q(QQuickOverlay);
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup)
+    if (!popup || !popup->dim())
         return;
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     if (popup->isModal()) {
         if (modal && modalPopups <= 1)
             QQmlProperty::write(modal, QStringLiteral("opacity"), 0.0);
-    } else if (popup->dim()) {
+    } else {
         if (modeless)
             QQmlProperty::write(modeless, QStringLiteral("opacity"), 0.0);
     }
@@ -102,7 +102,7 @@ void QQuickOverlayPrivate::drawerPositionChange()
 {
     Q_Q(QQuickOverlay);
     QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(q->sender());
-    if (!drawer)
+    if (!drawer || !drawer->dim())
         return;
 
     // call QQuickItem::setOpacity() directly to avoid triggering QML Behaviors
@@ -110,7 +110,7 @@ void QQuickOverlayPrivate::drawerPositionChange()
     if (drawer->isModal()) {
         if (modal)
             modal->setOpacity(drawer->position());
-    } else if (drawer->dim()) {
+    } else {
         if (modeless)
             modeless->setOpacity(drawer->position());
     }
@@ -133,10 +133,13 @@ void QQuickOverlayPrivate::restackOverlay()
     QQuickPopup *modelessPopup = nullptr;
     for (auto it = popups.crbegin(), end = popups.crend(); it != end; ++it) {
         QQuickPopup *popup = (*it);
+        if (!popup->dim())
+            continue;
+
         if (popup->isModal()) {
             if (!modalPopup || modalPopup->z() >= popup->z())
                 modalPopup = popup;
-        } else if (popup->dim()) {
+        } else {
             if (!modelessPopup)
                 modelessPopup = popup;
         }

@@ -51,10 +51,10 @@ T.ComboBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 10
-    topPadding: 5
-    leftPadding: 12
-    rightPadding: 10
-    bottomPadding: 7
+    padding: 12
+    topPadding: padding - 7
+    rightPadding: padding - 2
+    bottomPadding: padding - 5
 
     //! [delegate]
     delegate: ItemDelegate {
@@ -69,6 +69,8 @@ T.ComboBox {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         source: "image://universal/downarrow/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
     //! [indicator]
 

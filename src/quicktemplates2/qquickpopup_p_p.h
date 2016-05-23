@@ -190,8 +190,11 @@ public:
     bool hasBottomMargin;
     bool allowVerticalFlip;
     bool allowHorizontalFlip;
+    bool hadActiveFocusBeforeExitTransition;
     qreal x;
     qreal y;
+    qreal effectiveX;
+    qreal effectiveY;
     qreal margins;
     qreal topMargin;
     qreal leftMargin;

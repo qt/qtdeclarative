@@ -81,9 +81,16 @@ T.SwipeDelegate {
     background: Rectangle {
         implicitHeight: 48
 
-        color: !control.enabled ? control.Material.swipeDelegateDisabledColor :
-            (control.down ? control.Material.swipeDelegatePressColor :
-            (control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor : control.Material.swipeDelegateColor))
+        color: control.Material.backgroundColor
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            visible: control.down || control.highlighted || control.visualFocus
+            color: control.down ? control.Material.buttonPressColor :
+                   control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor :
+                   control.Material.listHighlightColor
+        }
 
         Behavior on x {
             enabled: !control.down

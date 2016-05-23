@@ -47,9 +47,10 @@ Item {
         width: 56
         height: 16
         radius: 8
-        color: control.checked ? (control.visualFocus ? "#0066ff" : "#353637") : "#ffffff"
-        border.width: control.visualFocus ? 2 : 1
-        border.color: control.checked ? "transparent" : (control.visualFocus ? "#0066ff" : "#353637")
+        opacity: control.enabled ? 1 : 0.3
+        color: control.checked ? (control.visualFocus ? "#0066ff" : "#353637") : "#e0e0e0"
+        border.width: control.visualFocus ? 2 : 0
+        border.color: "#0066ff"
     }
 
     Rectangle {
@@ -58,12 +59,12 @@ Item {
         width: 28
         height: 28
         radius: 16
-        color: control.pressed ? (control.visualFocus ? "#cce0ff" : "#e4e4e4") : (control.visualFocus ? "#f0f6ff" : "#f6f6f6")
+        color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")) : "#fdfdfd"
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.visualFocus ? "#0066ff" : (control.pressed ? "#26282a" : "#353637")
+        border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")) : "#d6d6d6"
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !control.down
             SmoothedAnimation { velocity: 200 }
         }
     }

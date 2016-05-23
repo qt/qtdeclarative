@@ -50,10 +50,9 @@ T.RadioButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 8
-    topPadding: 14
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 14
+    padding: 8
+    topPadding: padding + 6
+    bottomPadding: padding + 6
 
     //! [indicator]
     indicator: RadioIndicator {

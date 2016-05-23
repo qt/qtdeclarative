@@ -47,14 +47,14 @@ T.Button {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
-    leftPadding: 8
-    rightPadding: 8
+    leftPadding: padding + 2
+    rightPadding: padding + 2
 
     //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
-        opacity: enabled || highlighted ? 1 : 0.3
+        opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
         color: control.checked || control.highlighted ? "#ffffff" : (control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637"))
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -66,12 +66,13 @@ T.Button {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        opacity: enabled ? 1 : (control.checked ? 0.2 : 0.3)
+        opacity: enabled ? 1 : 0.3
+        visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.checked || control.highlighted ?
             (control.visualFocus ? (control.down ? "#599bff" : "#0066ff") : (control.down ? "#585a5c" : "#353637")) :
-            (control.visualFocus ? (control.down ? "#cce0ff" : "#f0f6ff") : (control.down ? "#d6d6d6" : "#f6f6f6"))
-        border.color: control.visualFocus ? "#0066ff" : (control.down ? "#26282a" : "#353637")
-        border.width: control.checked || control.highlighted ? 0 : (control.visualFocus ? 2 : 1)
+            (control.visualFocus ? (control.down ? "#cce0ff" : "#f0f6ff") : (control.down ? "#d0d0d0" : "#e0e0e0"))
+        border.color: "#0066ff"
+        border.width: control.visualFocus ? 2 : 0
     }
     //! [background]
 }

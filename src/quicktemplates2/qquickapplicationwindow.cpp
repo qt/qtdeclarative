@@ -424,6 +424,8 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->contentItem) {
         d->contentItem = new QQuickItem(QQuickWindow::contentItem());
+        d->contentItem->setFlag(QQuickItem::ItemIsFocusScope);
+        d->contentItem->setFocus(true);
         d->relayout();
     }
     return d->contentItem;

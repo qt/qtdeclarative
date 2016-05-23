@@ -72,6 +72,7 @@ Module {
         Property { name: "checkable"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "highlighted"; type: "bool" }
+        Property { name: "flat"; type: "bool" }
     }
     Component {
         name: "QQuickCheckBox"
@@ -117,8 +118,8 @@ Module {
             name: "highlighted"
             Parameter { name: "index"; type: "int" }
         }
-        Method { name: "increase" }
-        Method { name: "decrease" }
+        Method { name: "incrementCurrentIndex" }
+        Method { name: "decrementCurrentIndex" }
         Method {
             name: "textAt"
             type: "string"

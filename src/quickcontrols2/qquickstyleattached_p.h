@@ -59,6 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSettings;
+class QQuickWindow;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
 {
@@ -80,6 +81,7 @@ protected:
 
     virtual void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent);
 
+    void itemWindowChanged(QQuickWindow *window);
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
 private:

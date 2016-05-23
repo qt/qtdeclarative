@@ -131,8 +131,11 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasBottomMargin(false)
     , allowVerticalFlip(false)
     , allowHorizontalFlip(false)
+    , hadActiveFocusBeforeExitTransition(false)
     , x(0)
     , y(0)
+    , effectiveX(0)
+    , effectiveY(0)
     , margins(-1)
     , topMargin(0)
     , leftMargin(0)
@@ -179,17 +182,16 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
 void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 {
     Q_Q(QQuickPopup);
-    QQuickWindow *quickWindow = q->window();
-    if (!quickWindow) {
+    if (!window) {
         qmlInfo(q) << "cannot find any window to open popup in.";
         return;
     }
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(quickWindow);
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
     if (!applicationWindow) {
-        quickWindow->installEventFilter(q);
+        window->installEventFilter(q);
         popupItem->setZ(10001); // DefaultWindowDecoration+1
-        popupItem->setParentItem(quickWindow->contentItem());
+        popupItem->setParentItem(window->contentItem());
     } else {
         popupItem->setParentItem(applicationWindow->overlay());
     }
@@ -205,11 +207,14 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 void QQuickPopupPrivate::prepareExitTransition()
 {
     Q_Q(QQuickPopup);
-    QQuickWindow *quickWindow = q->window();
-    if (quickWindow && !qobject_cast<QQuickApplicationWindow *>(quickWindow))
-        quickWindow->removeEventFilter(q);
-    if (focus)
+    if (window && !qobject_cast<QQuickApplicationWindow *>(window))
+        window->removeEventFilter(q);
+    if (focus) {
+        // The setFocus(false) call below removes any active focus before we're
+        // able to check it in finalizeExitTransition.
+        hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
         popupItem->setFocus(false);
+    }
     emit q->aboutToHide();
 }
 
@@ -230,7 +235,16 @@ void QQuickPopupPrivate::finalizeExitTransition(bool hide)
         popupItem->setVisible(false);
     }
 
+    if (hadActiveFocusBeforeExitTransition) {
+        QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+        if (applicationWindow)
+            applicationWindow->contentItem()->setFocus(true);
+        else if (window)
+            window->contentItem()->setFocus(true);
+    }
+
     visible = false;
+    hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
 }
@@ -543,6 +557,9 @@ void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
 void QQuickPopupPrivate::reposition()
 {
     Q_Q(QQuickPopup);
+    if (!popupItem->isVisible())
+        return;
+
     const qreal w = popupItem->width();
     const qreal h = popupItem->height();
     const qreal iw = popupItem->implicitWidth();
@@ -555,7 +572,6 @@ void QQuickPopupPrivate::reposition()
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
 
-        QQuickWindow *window = q->window();
         if (window) {
             const QMarginsF margins = getMargins();
             const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
@@ -601,6 +617,11 @@ void QQuickPopupPrivate::reposition()
                     rect.setRight(bounds.right());
                     widthAdjusted = true;
                 }
+            } else if (iw > 0 && rect.left() >= bounds.left() && rect.right() <= bounds.right()
+                       && iw != w) {
+                // restore original width
+                rect.setWidth(iw);
+                widthAdjusted = true;
             }
 
             if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
@@ -620,11 +641,27 @@ void QQuickPopupPrivate::reposition()
                     rect.setBottom(bounds.bottom());
                     heightAdjusted = true;
                 }
+            } else if (ih > 0 && rect.top() >= bounds.top() && rect.bottom() <= bounds.bottom()
+                       && ih != h) {
+                // restore original height
+                rect.setHeight(ih);
+                heightAdjusted = true;
             }
         }
     }
 
     popupItem->setPosition(rect.topLeft());
+
+    const QPointF effectivePos = parentItem ? parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
+    if (!qFuzzyCompare(effectiveX, effectivePos.x())) {
+        effectiveX = effectivePos.x();
+        emit q->xChanged();
+    }
+    if (!qFuzzyCompare(effectiveY, effectivePos.y())) {
+        effectiveY = effectivePos.y();
+        emit q->yChanged();
+    }
+
     if (widthAdjusted && rect.width() > 0)
         popupItem->setWidth(rect.width());
     if (heightAdjusted && rect.height() > 0)
@@ -766,7 +803,8 @@ void QQuickPopup::close()
 */
 qreal QQuickPopup::x() const
 {
-    return position().x();
+    Q_D(const QQuickPopup);
+    return d->effectiveX;
 }
 
 void QQuickPopup::setX(qreal x)
@@ -782,7 +820,8 @@ void QQuickPopup::setX(qreal x)
 */
 qreal QQuickPopup::y() const
 {
-    return position().y();
+    Q_D(const QQuickPopup);
+    return d->effectiveY;
 }
 
 void QQuickPopup::setY(qreal y)
@@ -794,10 +833,7 @@ void QQuickPopup::setY(qreal y)
 QPointF QQuickPopup::position() const
 {
     Q_D(const QQuickPopup);
-    QPointF pos = d->popupItem->position();
-    if (d->parentItem)
-        pos = d->parentItem->mapFromScene(pos);
-    return pos;
+    return QPointF(d->effectiveX, d->effectiveY);
 }
 
 void QQuickPopup::setPosition(const QPointF &pos)
@@ -1336,10 +1372,7 @@ void QQuickPopup::resetFont()
 QQuickWindow *QQuickPopup::window() const
 {
     Q_D(const QQuickPopup);
-    if (!d->parentItem)
-        return nullptr;
-
-    return d->parentItem->window();
+    return d->window;
 }
 
 QQuickItem *QQuickPopup::popupItem() const
@@ -1806,7 +1839,7 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
     if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab))
         QQuickItemPrivate::focusNextPrev(d->popupItem, event->key() == Qt::Key_Tab);
 
-    if (event->key() != Qt::Key_Escape)
+    if (event->key() != Qt::Key_Escape && event->key() != Qt::Key_Back)
         return;
 
     if (d->closePolicy.testFlag(CloseOnEscape))
@@ -1889,10 +1922,6 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickPopup);
     d->reposition();
-    if (!qFuzzyCompare(newGeometry.x(), oldGeometry.x()))
-        emit xChanged();
-    if (!qFuzzyCompare(newGeometry.y(), oldGeometry.y()))
-        emit yChanged();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();
         emit availableWidthChanged();

@@ -51,8 +51,8 @@ T.SpinBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
-    leftPadding: 6 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
-    rightPadding: 6 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
+    rightPadding: padding + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
     opacity: control.enabled ? 1 : 0.3
 
     //! [validator]
@@ -98,8 +98,7 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? "#e4e4e4" : "#f6f6f6"
-        border.color: control.enabled ? "#353637" : "#bdbebf"
+        color: up.pressed ? "#d0d0d0" : "#e0e0e0"
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -124,8 +123,7 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? "#e4e4e4" : "#f6f6f6"
-        border.color: control.enabled ? "#353637" : "#bdbebf"
+        color: down.pressed ? "#d0d0d0" : "#e0e0e0"
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -140,7 +138,7 @@ T.SpinBox {
     //! [background]
     background: Rectangle {
         implicitWidth: 140
-        border.color: "#bdbebf"
+        border.color: "#e0e0e0"
     }
     //! [background]
 }

@@ -50,10 +50,9 @@ T.SwitchDelegate {
 
     spacing: 12
 
-    topPadding: 11
-    leftPadding: 12
-    rightPadding: 12
-    bottomPadding: 13
+    padding: 12
+    topPadding: padding - 1
+    bottomPadding: padding + 1
 
     //! [indicator]
     indicator: SwitchIndicator {

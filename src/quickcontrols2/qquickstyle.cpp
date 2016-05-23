@@ -38,6 +38,7 @@
 #include "qquickstyleattached_p.h"
 
 #include <QtCore/qdir.h>
+#include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>

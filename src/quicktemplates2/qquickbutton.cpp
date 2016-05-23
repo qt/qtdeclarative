@@ -97,11 +97,12 @@ class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
 public:
     QQuickButtonPrivate();
 
+    bool flat;
     bool highlighted;
 };
 
 QQuickButtonPrivate::QQuickButtonPrivate() :
-    highlighted(false)
+    flat(false), highlighted(false)
 {
 }
 
@@ -164,6 +165,31 @@ void QQuickButton::setHighlighted(bool highlighted)
 
     d->highlighted = highlighted;
     emit highlightedChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::Button::flat
+
+    This property holds whether the button is flat.
+
+    A flat button typically does not draw a background unless it is pressed or checked.
+
+    The default value is \c false.
+*/
+bool QQuickButton::isFlat() const
+{
+    Q_D(const QQuickButton);
+    return d->flat;
+}
+
+void QQuickButton::setFlat(bool flat)
+{
+    Q_D(QQuickButton);
+    if (flat == d->flat)
+        return;
+
+    d->flat = flat;
+    emit flatChanged();
 }
 
 QT_END_NAMESPACE

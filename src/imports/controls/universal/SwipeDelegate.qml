@@ -50,10 +50,9 @@ T.SwipeDelegate {
 
     spacing: 12
 
-    topPadding: 11
-    leftPadding: 12
-    rightPadding: 12
-    bottomPadding: 13
+    padding: 12
+    topPadding: padding - 1
+    bottomPadding: padding + 1
 
     //! [contentItem]
     contentItem: Text {
@@ -83,16 +82,19 @@ T.SwipeDelegate {
 
     //! [background]
     background: Rectangle {
-        color: !control.enabled ? control.Universal.chromeDisabledHighColor :
-            (control.down ? control.Universal.chromeHighColor :
-            (control.visualFocus || control.hovered ? control.Universal.chromeLowColor : control.Universal.chromeMediumColor))
+        color: control.Universal.background
 
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.visualFocus || control.highlighted
-            color: control.Universal.accent
-            opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
+            color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+            Rectangle {
+                width: parent.width
+                height: parent.height
+                visible: control.visualFocus || control.highlighted
+                color: control.Universal.accent
+                opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
+            }
         }
 
         Behavior on x {

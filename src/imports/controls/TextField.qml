@@ -46,7 +46,7 @@ T.TextField {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
-    leftPadding: 10
+    leftPadding: padding + 4
 
     opacity: enabled ? 1 : 0.2
     color: "#353637"
@@ -74,9 +74,9 @@ T.TextField {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
-//        border.width: control.activeFocus ? 2 : 1
+        border.width: control.activeFocus ? 2 : 1
         color: control.enabled ? "transparent" : "#353637"
-        border.color: control.enabled ? "#bdbebf" : "transparent"
+        border.color: control.activeFocus ? "#0066ff" : (control.enabled ? "#bdbebf" : "transparent")
     }
     //! [background]
 }

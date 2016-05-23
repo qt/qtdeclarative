@@ -48,10 +48,9 @@ T.MenuItem {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    topPadding: 11
-    leftPadding: 12
-    rightPadding: 12
-    bottomPadding: 13
+    padding: 12
+    topPadding: padding - 1
+    bottomPadding: padding + 1
     spacing: 12
 
     //! [contentItem]
@@ -76,6 +75,8 @@ T.MenuItem {
 
         visible: control.checked
         source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
     //! [indicator]
 

@@ -47,10 +47,9 @@ T.Button {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    topPadding: 4
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 4
+    padding: 8
+    topPadding: padding - 4
+    bottomPadding: padding - 4
 
     property bool useSystemFocusVisuals: true
 
@@ -72,6 +71,7 @@ T.Button {
         implicitWidth: 32
         implicitHeight: 32
 
+        visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.down ? control.Universal.baseMediumLowColor :
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor

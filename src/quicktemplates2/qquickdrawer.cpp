@@ -217,7 +217,10 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
             break;
         }
     } else {
-        event->setAccepted(item->isAncestorOf(popupItem));
+        if (modal)
+            event->setAccepted(item->isAncestorOf(popupItem));
+        else
+            event->setAccepted(false);
     }
 
     velocityCalculator.startMeasuring(pressPoint, event->timestamp());

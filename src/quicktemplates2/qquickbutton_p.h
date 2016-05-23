@@ -60,6 +60,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButton : public QQuickAbstractButto
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
+    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
 
 public:
     explicit QQuickButton(QQuickItem *parent = nullptr);
@@ -67,10 +68,14 @@ public:
     bool isHighlighted() const;
     void setHighlighted(bool highlighted);
 
+    bool isFlat() const;
+    void setFlat(bool flat);
+
 Q_SIGNALS:
     void checkableChanged();
     void autoRepeatChanged();
     void highlightedChanged();
+    void flatChanged();
 
 protected:
     void checkableChange() override;
