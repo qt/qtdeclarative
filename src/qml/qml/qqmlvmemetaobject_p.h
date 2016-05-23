@@ -78,14 +78,6 @@ struct QQmlVMEMetaData
 {
     // Make sure this structure is always aligned to int
     int dummy;
-
-    struct AliasData {
-        int notifySignal;
-    };
-
-    AliasData *aliasData() const {
-        return (AliasData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
-    }
 };
 
 class QQmlVMEMetaObject;

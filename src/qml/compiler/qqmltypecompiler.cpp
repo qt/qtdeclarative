@@ -659,9 +659,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
             COMPILE_EXCEPTION(a, tr("Cannot override FINAL property"));
     }
 
-    typedef QQmlVMEMetaData VMD;
-
-    vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData) + obj->aliasCount() * sizeof(VMD::AliasData), 0);
+    vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
     int effectiveMethodIndex = cache->methodIndexCacheStart;
@@ -1559,7 +1557,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
         int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();
         int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
-        int effectiveAliasIndex = 0;
 
         int aliasIndex = 0;
         for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
@@ -1587,7 +1584,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
 
             int propIdx = -1;
-            int notifySignal = -1;
             int type = 0;
             bool writable = false;
             bool resettable = false;
@@ -1622,7 +1618,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 writable = targetProperty->isWritable();
                 resettable = targetProperty->isResettable();
-                notifySignal = targetProperty->notifyIndex;
 
                 if (!subProperty.isEmpty()) {
                     const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
@@ -1662,15 +1657,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             }
 
             alias->encodedMetaPropertyIndex = propIdx;
-            QQmlVMEMetaData::AliasData aliasData = { notifySignal };
-
-            typedef QQmlVMEMetaData VMD;
-            QByteArray &dynamicData = (*vmeMetaObjectData)[objectIndex];
-            Q_ASSERT(!dynamicData.isEmpty());
-            VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-            *(vmd->aliasData() + effectiveAliasIndex++) = aliasData;
-
-            Q_ASSERT(dynamicData.isDetached());
 
             if (!(alias->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
                 propertyFlags |= QQmlPropertyData::IsWritable;

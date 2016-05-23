@@ -4134,7 +4134,6 @@ void tst_qqmllanguage::earlyIdObjectAccess()
 void tst_qqmllanguage::dataAlignment()
 {
     QVERIFY(sizeof(QQmlVMEMetaData) % sizeof(int) == 0);
-    QVERIFY(sizeof(QQmlVMEMetaData::AliasData) % sizeof(int) == 0);
 }
 
 void tst_qqmllanguage::deleteSingletons()

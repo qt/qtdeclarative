@@ -150,15 +150,23 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         metaObject->activate(metaObject->object, sigIdx, 0);
     } else {
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
-        QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
         if (!aliasData->isObjectAlias()) {
             QQmlContextData *ctxt = metaObject->ctxt;
             QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
             if (!target)
                 return;
 
-            if (d->notifySignal != -1)
-                connect(target, d->notifySignal, ctxt->engine);
+            QQmlData *targetDData = QQmlData::get(target, /*create*/false);
+            if (!targetDData)
+                return;
+            int coreIndex;
+            QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, &coreIndex);
+            const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
+            if (!pd)
+                return;
+
+            if (pd->notifyIndex != -1)
+                connect(target, pd->notifyIndex, ctxt->engine);
         }
 
         metaObject.setFlag();
