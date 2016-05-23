@@ -44,6 +44,7 @@
 #include <qv4objectiterator_p.h>
 
 #include <private/qv4functionobject_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 

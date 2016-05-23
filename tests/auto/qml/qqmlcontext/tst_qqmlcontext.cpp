@@ -56,6 +56,7 @@ private slots:
     void refreshExpressions();
     void refreshExpressionsCrash();
     void refreshExpressionsRootContext();
+    void skipExpressionRefresh_qtbug_53431();
 
     void qtbug_22535();
     void evalAfterInvalidate();
@@ -635,6 +636,19 @@ void tst_qqmlcontext::refreshExpressionsRootContext()
 
     delete o2;
     delete o1;
+}
+
+void tst_qqmlcontext::skipExpressionRefresh_qtbug_53431()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("qtbug_53431.qml"));
+    QScopedPointer<QObject> object(component.create(0));
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("value").toInt(), 1);
+    object->setProperty("value", 10);
+    QCOMPARE(object->property("value").toInt(), 10);
+    engine.rootContext()->setContextProperty("randomContextProperty", 42);
+    QCOMPARE(object->property("value").toInt(), 10);
 }
 
 void tst_qqmlcontext::qtbug_22535()

@@ -13,3 +13,5 @@ target.path = $$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProviderCore
 qml.files = ImageProviderCore/qmldir
 qml.path = $$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProviderCore
 INSTALLS = target qml
+
+CONFIG += install_ok  # Do not cargo-cult this!

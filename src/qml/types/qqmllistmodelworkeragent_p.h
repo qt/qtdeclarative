@@ -53,6 +53,7 @@
 
 #include <qqml.h>
 
+#include <QEvent>
 #include <QMutex>
 #include <QWaitCondition>
 

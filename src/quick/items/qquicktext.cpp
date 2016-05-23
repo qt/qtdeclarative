@@ -650,6 +650,11 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             emit q->lineCountChanged();
         }
 
+        if (qFuzzyIsNull(q->width())) {
+            layout.setText(QString());
+            textHasChanged = true;
+        }
+
         QFontMetricsF fm(font);
         qreal height = (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : qCeil(fm.height()) * lineHeight();
         *baseline = fm.ascent();

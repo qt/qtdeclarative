@@ -53,6 +53,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <private/qv8engine_p.h>
+#include <private/qqmlrefcount_p.h>
 #include <QtCore/QThread>
 #include <QtGui/QImage>
 

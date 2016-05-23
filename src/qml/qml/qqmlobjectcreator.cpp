@@ -43,6 +43,7 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>

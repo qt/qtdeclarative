@@ -60,16 +60,13 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QThreadStorage>
 
-#include <qjsengine.h>
+#include <QtQml/qjsengine.h>
 #include "private/qintrusivelist_p.h"
 
-#include <private/qqmlpropertycache_p.h>
 
-#include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4value_p.h>
-#include <private/qv4object_p.h>
 #include <private/qv4identifier_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4context_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -77,6 +74,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
     struct ArrayObject;
     struct ExecutionEngine;
+    struct QObjectMethod;
 }
 
 #define V4THROW_ERROR(string) \

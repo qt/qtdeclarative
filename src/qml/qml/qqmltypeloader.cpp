@@ -980,7 +980,7 @@ struct CachedLoader {
     }
     void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
-        loader->m_thread->loadWithCachedUnit(blob, unit);
+        loader->m_thread->loadWithCachedUnitAsync(blob, unit);
     }
 };
 
