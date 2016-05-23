@@ -63,27 +63,27 @@ QT_BEGIN_NAMESPACE
 
     Information regarding the progress of a swipe, as well as the components
     that should be shown upon swiping, are both available through the
-    \l {SwipeDelegate::}{exposure} grouped property object. For example,
-    \c exposure.position holds the position of the
-    swipe within the range \c -1.0 to \c 1.0. The \c exposure.left
+    \l {SwipeDelegate::}{swipe} grouped property object. For example,
+    \c swipe.position holds the position of the
+    swipe within the range \c -1.0 to \c 1.0. The \c swipe.left
     property determines which item will be displayed when the control is swiped
-    to the right, and vice versa for \c exposure.right. The positioning of these
+    to the right, and vice versa for \c swipe.right. The positioning of these
     components is left to applications to decide. For example, without specifying
-    any position for \c exposure.left or \c exposure.right, the following will
+    any position for \c swipe.left or \c swipe.right, the following will
     occur:
 
     \image qtquickcontrols2-swipedelegate.gif
 
-    If \c exposure.left and \c exposure.right are anchored to the left and
+    If \c swipe.left and \c swipe.right are anchored to the left and
     right of the \l background item (respectively), they'll behave like this:
 
     \image qtquickcontrols2-swipedelegate-leading-trailing.gif
 
-    When using \c exposure.left and \c exposure.right, the control cannot be
+    When using \c swipe.left and \c swipe.right, the control cannot be
     swiped past the left and right edges. To achieve this type of "wrapping"
-    behavior, set \c exposure.behind instead. This will result in the same
+    behavior, set \c swipe.behind instead. This will result in the same
     item being shown regardless of which direction the control is swiped. For
-    example, in the image below, we set \c exposure.behind and then swipe the
+    example, in the image below, we set \c swipe.behind and then swipe the
     control repeatedly in both directions:
 
     \image qtquickcontrols2-swipedelegate-behind.gif
@@ -91,17 +91,17 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing SwipeDelegate}
 */
 
-class QQuickSwipeExposurePrivate : public QObjectPrivate
+class QQuickSwipePrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickSwipeExposure)
+    Q_DECLARE_PUBLIC(QQuickSwipe)
 
 public:
-    QQuickSwipeExposurePrivate(QQuickSwipeDelegate *control) :
+    QQuickSwipePrivate(QQuickSwipeDelegate *control) :
         control(control),
         positionBeforePress(0),
         position(0),
-        wasActive(false),
-        active(false),
+        wasComplete(false),
+        complete(false),
         left(nullptr),
         behind(nullptr),
         right(nullptr),
@@ -111,7 +111,7 @@ public:
     {
     }
 
-    static QQuickSwipeExposurePrivate *get(QQuickSwipeExposure *exposure);
+    static QQuickSwipePrivate *get(QQuickSwipe *swipe);
 
     QQuickItem *createDelegateItem(QQmlComponent *component);
     QQuickItem *showRelevantItemForPosition(qreal position);
@@ -131,10 +131,10 @@ public:
     // keep track of which direction the user must swipe when using left and right delegates.
     qreal positionBeforePress;
     qreal position;
-    // A "less strict" version of active that is true if active was true
+    // A "less strict" version of complete that is true if complete was true
     // before the last press event.
-    bool wasActive;
-    bool active;
+    bool wasComplete;
+    bool complete;
     QQuickVelocityCalculator velocityCalculator;
     QQmlComponent *left;
     QQmlComponent *behind;
@@ -144,12 +144,12 @@ public:
     QQuickItem *rightItem;
 };
 
-QQuickSwipeExposurePrivate *QQuickSwipeExposurePrivate::get(QQuickSwipeExposure *exposure)
+QQuickSwipePrivate *QQuickSwipePrivate::get(QQuickSwipe *swipe)
 {
-    return exposure->d_func();
+    return swipe->d_func();
 }
 
-QQuickItem *QQuickSwipeExposurePrivate::createDelegateItem(QQmlComponent *component)
+QQuickItem *QQuickSwipePrivate::createDelegateItem(QQmlComponent *component)
 {
     // If we don't use the correct context, it won't be possible to refer to
     // the control's id from within the delegates.
@@ -168,7 +168,7 @@ QQuickItem *QQuickSwipeExposurePrivate::createDelegateItem(QQmlComponent *compon
     return item;
 }
 
-QQuickItem *QQuickSwipeExposurePrivate::showRelevantItemForPosition(qreal position)
+QQuickItem *QQuickSwipePrivate::showRelevantItemForPosition(qreal position)
 {
     if (qFuzzyIsNull(position))
         return nullptr;
@@ -191,7 +191,7 @@ QQuickItem *QQuickSwipeExposurePrivate::showRelevantItemForPosition(qreal positi
     return nullptr;
 }
 
-QQuickItem *QQuickSwipeExposurePrivate::createRelevantItemForDistance(qreal distance)
+QQuickItem *QQuickSwipePrivate::createRelevantItemForDistance(qreal distance)
 {
     if (qFuzzyIsNull(distance))
         return nullptr;
@@ -233,37 +233,37 @@ QQuickItem *QQuickSwipeExposurePrivate::createRelevantItemForDistance(qreal dist
     return nullptr;
 }
 
-void QQuickSwipeExposurePrivate::createLeftItem()
+void QQuickSwipePrivate::createLeftItem()
 {
     if (!leftItem) {
-        Q_Q(QQuickSwipeExposure);
+        Q_Q(QQuickSwipe);
         q->setLeftItem(createDelegateItem(left));
         if (!leftItem)
             qmlInfo(control) << "Failed to create left item:" << left->errors();
     }
 }
 
-void QQuickSwipeExposurePrivate::createBehindItem()
+void QQuickSwipePrivate::createBehindItem()
 {
     if (!behindItem) {
-        Q_Q(QQuickSwipeExposure);
+        Q_Q(QQuickSwipe);
         q->setBehindItem(createDelegateItem(behind));
         if (!behindItem)
             qmlInfo(control) << "Failed to create behind item:" << behind->errors();
     }
 }
 
-void QQuickSwipeExposurePrivate::createRightItem()
+void QQuickSwipePrivate::createRightItem()
 {
     if (!rightItem) {
-        Q_Q(QQuickSwipeExposure);
+        Q_Q(QQuickSwipe);
         q->setRightItem(createDelegateItem(right));
         if (!rightItem)
             qmlInfo(control) << "Failed to create right item:" << right->errors();
     }
 }
 
-void QQuickSwipeExposurePrivate::createAndShowLeftItem()
+void QQuickSwipePrivate::createAndShowLeftItem()
 {
     createLeftItem();
 
@@ -274,7 +274,7 @@ void QQuickSwipeExposurePrivate::createAndShowLeftItem()
         rightItem->setVisible(false);
 }
 
-void QQuickSwipeExposurePrivate::createAndShowBehindItem()
+void QQuickSwipePrivate::createAndShowBehindItem()
 {
     createBehindItem();
 
@@ -282,7 +282,7 @@ void QQuickSwipeExposurePrivate::createAndShowBehindItem()
         behindItem->setVisible(true);
 }
 
-void QQuickSwipeExposurePrivate::createAndShowRightItem()
+void QQuickSwipePrivate::createAndShowRightItem()
 {
     createRightItem();
 
@@ -295,30 +295,30 @@ void QQuickSwipeExposurePrivate::createAndShowRightItem()
         leftItem->setVisible(false);
 }
 
-void QQuickSwipeExposurePrivate::warnAboutMixingDelegates()
+void QQuickSwipePrivate::warnAboutMixingDelegates()
 {
     qmlInfo(control) << "cannot set both behind and left/right properties";
 }
 
-void QQuickSwipeExposurePrivate::warnAboutSettingDelegatesWhileVisible()
+void QQuickSwipePrivate::warnAboutSettingDelegatesWhileVisible()
 {
-    qmlInfo(control) << "left/right/behind properties may only be set when exposure.position is 0";
+    qmlInfo(control) << "left/right/behind properties may only be set when swipe.position is 0";
 }
 
-QQuickSwipeExposure::QQuickSwipeExposure(QQuickSwipeDelegate *control) :
-    QObject(*(new QQuickSwipeExposurePrivate(control)))
+QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control) :
+    QObject(*(new QQuickSwipePrivate(control)))
 {
 }
 
-QQmlComponent *QQuickSwipeExposure::left() const
+QQmlComponent *QQuickSwipe::left() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->left;
 }
 
-void QQuickSwipeExposure::setLeft(QQmlComponent *left)
+void QQuickSwipe::setLeft(QQmlComponent *left)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (left == d->left)
         return;
 
@@ -342,15 +342,15 @@ void QQuickSwipeExposure::setLeft(QQmlComponent *left)
     emit leftChanged();
 }
 
-QQmlComponent *QQuickSwipeExposure::behind() const
+QQmlComponent *QQuickSwipe::behind() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->behind;
 }
 
-void QQuickSwipeExposure::setBehind(QQmlComponent *behind)
+void QQuickSwipe::setBehind(QQmlComponent *behind)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (behind == d->behind)
         return;
 
@@ -374,15 +374,15 @@ void QQuickSwipeExposure::setBehind(QQmlComponent *behind)
     emit behindChanged();
 }
 
-QQmlComponent *QQuickSwipeExposure::right() const
+QQmlComponent *QQuickSwipe::right() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->right;
 }
 
-void QQuickSwipeExposure::setRight(QQmlComponent *right)
+void QQuickSwipe::setRight(QQmlComponent *right)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (right == d->right)
         return;
 
@@ -406,15 +406,15 @@ void QQuickSwipeExposure::setRight(QQmlComponent *right)
     emit rightChanged();
 }
 
-QQuickItem *QQuickSwipeExposure::leftItem() const
+QQuickItem *QQuickSwipe::leftItem() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->leftItem;
 }
 
-void QQuickSwipeExposure::setLeftItem(QQuickItem *item)
+void QQuickSwipe::setLeftItem(QQuickItem *item)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (item == d->leftItem)
         return;
 
@@ -431,15 +431,15 @@ void QQuickSwipeExposure::setLeftItem(QQuickItem *item)
     emit leftItemChanged();
 }
 
-QQuickItem *QQuickSwipeExposure::behindItem() const
+QQuickItem *QQuickSwipe::behindItem() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->behindItem;
 }
 
-void QQuickSwipeExposure::setBehindItem(QQuickItem *item)
+void QQuickSwipe::setBehindItem(QQuickItem *item)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (item == d->behindItem)
         return;
 
@@ -456,15 +456,15 @@ void QQuickSwipeExposure::setBehindItem(QQuickItem *item)
     emit behindItemChanged();
 }
 
-QQuickItem *QQuickSwipeExposure::rightItem() const
+QQuickItem *QQuickSwipe::rightItem() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->rightItem;
 }
 
-void QQuickSwipeExposure::setRightItem(QQuickItem *item)
+void QQuickSwipe::setRightItem(QQuickItem *item)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     if (item == d->rightItem)
         return;
 
@@ -481,15 +481,15 @@ void QQuickSwipeExposure::setRightItem(QQuickItem *item)
     emit rightItemChanged();
 }
 
-qreal QQuickSwipeExposure::position() const
+qreal QQuickSwipe::position() const
 {
-    Q_D(const QQuickSwipeExposure);
+    Q_D(const QQuickSwipe);
     return d->position;
 }
 
-void QQuickSwipeExposure::setPosition(qreal position)
+void QQuickSwipe::setPosition(qreal position)
 {
-    Q_D(QQuickSwipeExposure);
+    Q_D(QQuickSwipe);
     const qreal adjustedPosition = qBound<qreal>(-1.0, position, 1.0);
     if (adjustedPosition == d->position)
         return;
@@ -505,20 +505,20 @@ void QQuickSwipeExposure::setPosition(qreal position)
     emit positionChanged();
 }
 
-bool QQuickSwipeExposure::isActive() const
+bool QQuickSwipe::isComplete() const
 {
-    Q_D(const QQuickSwipeExposure);
-    return d->active;
+    Q_D(const QQuickSwipe);
+    return d->complete;
 }
 
-void QQuickSwipeExposure::setActive(bool active)
+void QQuickSwipe::setComplete(bool complete)
 {
-    Q_D(QQuickSwipeExposure);
-    if (active == d->active)
+    Q_D(QQuickSwipe);
+    if (complete == d->complete)
         return;
 
-    d->active = active;
-    emit activeChanged();
+    d->complete = complete;
+    emit completeChanged();
 }
 
 class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
@@ -527,7 +527,7 @@ class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
 
 public:
     QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control) :
-        exposure(control)
+        swipe(control)
     {
     }
 
@@ -537,23 +537,23 @@ public:
 
     void resizeContent() override;
 
-    QQuickSwipeExposure exposure;
+    QQuickSwipe swipe;
 };
 
 bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
-    QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     // If the position is 0, we want to handle events ourself - we don't want child items to steal them.
     // This code will only get called when a child item has been created;
     // events will go through the regular channels (mousePressEvent()) until then.
-    if (qFuzzyIsNull(exposurePrivate->position)) {
+    if (qFuzzyIsNull(swipePrivate->position)) {
         q->mousePressEvent(event);
         return true;
     }
 
-    exposurePrivate->positionBeforePress = exposurePrivate->position;
-    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
+    swipePrivate->positionBeforePress = swipePrivate->position;
+    swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
     pressPoint = item->mapToItem(q, event->pos());
     return false;
 }
@@ -572,8 +572,8 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
         return false;
 
     // Don't bother reacting to events if we don't have any delegates.
-    QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
-    if (!exposurePrivate->left && !exposurePrivate->right && !exposurePrivate->behind)
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
+    if (!swipePrivate->left && !swipePrivate->right && !swipePrivate->behind)
         return false;
 
     // Don't handle move events for the control if it wasn't pressed.
@@ -591,7 +591,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
                 q->grabMouse();
                 q->setKeepMouseGrab(overThreshold);
                 q->setPressed(true);
-                exposure.setActive(false);
+                swipe.setComplete(false);
             }
         }
     }
@@ -601,15 +601,15 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
         // to the left when the left item is already exposed, and vice versa.
         // The code below assumes that the drag is valid, so if we don't have this check,
         // the wrong items are visible and the swiping wraps.
-        if (exposurePrivate->behind
-            || ((exposurePrivate->left || exposurePrivate->right)
-                && (qFuzzyIsNull(exposurePrivate->positionBeforePress)
-                    || (exposurePrivate->positionBeforePress == -1.0 && distance >= 0.0)
-                    || (exposurePrivate->positionBeforePress == 1.0 && distance <= 0.0)))) {
+        if (swipePrivate->behind
+            || ((swipePrivate->left || swipePrivate->right)
+                && (qFuzzyIsNull(swipePrivate->positionBeforePress)
+                    || (swipePrivate->positionBeforePress == -1.0 && distance >= 0.0)
+                    || (swipePrivate->positionBeforePress == 1.0 && distance <= 0.0)))) {
 
             // We must instantiate the items here so that we can calculate the
             // position against the width of the relevant item.
-            QQuickItem *relevantItem = exposurePrivate->createRelevantItemForDistance(distance);
+            QQuickItem *relevantItem = swipePrivate->createRelevantItemForDistance(distance);
             // If there isn't any relevant item, the user may have swiped back to the 0 position,
             // or they swiped back to a position that is equal to positionBeforePress.
             const qreal normalizedDistance = relevantItem ? distance / relevantItem->width() : 0.0;
@@ -633,14 +633,14 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
                 // to the left by the exact width of the left item, there won't be any relevant item
                 // (because the swipe's position would be at 0.0). In turn, the normalizedDistance
                 // would be 0 (because of the lack of a relevant item), but the distance will be non-zero.
-                position = qFuzzyIsNull(distance) ? exposurePrivate->positionBeforePress : 0;
-            } else if (!exposurePrivate->wasActive) {
+                position = qFuzzyIsNull(distance) ? swipePrivate->positionBeforePress : 0;
+            } else if (!swipePrivate->wasComplete) {
                 position = normalizedDistance;
             } else {
                 position = distance > 0 ? normalizedDistance - 1.0 : normalizedDistance + 1.0;
             }
 
-            exposure.setPosition(position);
+            swipe.setPosition(position);
         }
     }
 
@@ -654,25 +654,25 @@ static const qreal exposeVelocityThreshold = 300.0;
 bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
-    QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
-    exposurePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
+    swipePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
 
     // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
-    const qreal swipeVelocity = exposurePrivate->velocityCalculator.velocity().x();
-    if (exposurePrivate->position > 0.5 ||
-        (exposurePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
-        exposure.setPosition(1.0);
-        exposure.setActive(true);
-        exposurePrivate->wasActive = true;
-    } else if (exposurePrivate->position < -0.5 ||
-        (exposurePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
-        exposure.setPosition(-1.0);
-        exposure.setActive(true);
-        exposurePrivate->wasActive = true;
+    const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
+    if (swipePrivate->position > 0.5 ||
+        (swipePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
+        swipe.setPosition(1.0);
+        swipe.setComplete(true);
+        swipePrivate->wasComplete = true;
+    } else if (swipePrivate->position < -0.5 ||
+        (swipePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
+        swipe.setPosition(-1.0);
+        swipe.setComplete(true);
+        swipePrivate->wasComplete = true;
     } else {
-        exposure.setPosition(0.0);
-        exposure.setActive(false);
-        exposurePrivate->wasActive = false;
+        swipe.setPosition(0.0);
+        swipe.setComplete(false);
+        swipePrivate->wasComplete = false;
     }
 
     q->setKeepMouseGrab(false);
@@ -686,8 +686,8 @@ void QQuickSwipeDelegatePrivate::resizeContent()
     // of the control (we clip anything outside the bounds), we don't want
     // to call QQuickControlPrivate's implementation of this function,
     // as it repositions the contentItem to be visible.
-    QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&exposure);
-    if (!exposurePrivate->active) {
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
+    if (!swipePrivate->complete) {
         QQuickAbstractButtonPrivate::resizeContent();
     }
 }
@@ -699,15 +699,15 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 }
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::SwipeDelegate::exposure
-    \qmlproperty real QtQuick.Controls::SwipeDelegate::exposure.position
-    \qmlproperty bool QtQuick.Controls::SwipeDelegate::exposure.active
-    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.left
-    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.behind
-    \qmlproperty Component QtQuick.Controls::SwipeDelegate::exposure.right
-    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.leftItem
-    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.behindItem
-    \qmlproperty Item QtQuick.Controls::SwipeDelegate::exposure.rightItem
+    \qmlpropertygroup QtQuick.Controls::SwipeDelegate::swipe
+    \qmlproperty real QtQuick.Controls::SwipeDelegate::swipe.position
+    \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.complete
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.left
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.behind
+    \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.right
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.leftItem
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.behindItem
+    \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.rightItem
 
     \table
     \header
@@ -718,14 +718,14 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
         \li This property holds the position of the swipe relative to either
             side of the control. When this value reaches either
             \c -1.0 (left side) or \c 1.0 (right side) and the mouse button is
-            released, \c active will be \c true.
+            released, \c complete will be \c true.
     \row
-        \li active
-        \li This property holds whether the control is fully exposed. It is
-            equivalent to \c {!pressed && (position == -1.0 || position == 1.0)}.
+        \li complete
+        \li This property holds whether the control is fully exposed after
+            having been swiped to the left or right.
 
-            When active is \c true, any interactive items declared in \l left
-            or \l right will receive mouse events.
+            When complete is \c true, any interactive items declared in \l left,
+            \l right, or \l behind will receive mouse events.
     \row
         \li left
         \li This property holds the left delegate.
@@ -771,10 +771,10 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
     \sa {Control::}{contentItem}, {Control::}{background}
 */
-QQuickSwipeExposure *QQuickSwipeDelegate::exposure() const
+QQuickSwipe *QQuickSwipeDelegate::swipe() const
 {
     Q_D(const QQuickSwipeDelegate);
-    return const_cast<QQuickSwipeExposure*>(&d->exposure);
+    return const_cast<QQuickSwipe*>(&d->swipe);
 }
 
 static bool isChildOrGrandchildOf(QQuickItem *child, QQuickItem *item)
@@ -790,9 +790,9 @@ bool QQuickSwipeDelegate::childMouseEventFilter(QQuickItem *child, QEvent *event
     // items before these items won't allow us to get mouse events when the control is not currently exposed
     // but has been previously. Therefore, we instead call setFiltersChildMouseEvents(true) in the constructor
     // and filter out child events only when the child is the left/right/behind item.
-    const QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&d->exposure);
-    if (!isChildOrGrandchildOf(child, exposurePrivate->leftItem) && !isChildOrGrandchildOf(child, exposurePrivate->behindItem)
-        && !isChildOrGrandchildOf(child, exposurePrivate->rightItem)) {
+    const QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
+    if (!isChildOrGrandchildOf(child, swipePrivate->leftItem) && !isChildOrGrandchildOf(child, swipePrivate->behindItem)
+        && !isChildOrGrandchildOf(child, swipePrivate->rightItem)) {
         return false;
     }
 
@@ -818,9 +818,9 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
     QQuickItemDelegate::mousePressEvent(event);
-    QQuickSwipeExposurePrivate *exposurePrivate = QQuickSwipeExposurePrivate::get(&d->exposure);
-    exposurePrivate->positionBeforePress = exposurePrivate->position;
-    exposurePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
+    swipePrivate->positionBeforePress = swipePrivate->position;
+    swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
 }
 
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
