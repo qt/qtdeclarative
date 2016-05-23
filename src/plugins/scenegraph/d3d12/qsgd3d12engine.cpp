@@ -53,6 +53,13 @@
 #include "cs_tdr.hlslh"
 #endif
 
+#ifdef Q_OS_WINRT
+#include <QtCore/private/qeventdispatcher_winrt_p.h>
+#include <functional>
+#include <windows.ui.xaml.h>
+#include <windows.ui.xaml.media.dxinterop.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // NOTE: Avoid categorized logging. It is slow.
@@ -689,8 +696,6 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     windowDpr = dpr;
     windowSamples = qMax(1, surfaceFormatSamples); // may be -1 or 0, whereas windowSamples is uint and >= 1
 
-    HWND hwnd = reinterpret_cast<HWND>(w);
-
     swapChainBufferCount = qMin(qEnvironmentVariableIntValue("QT_D3D_BUFFER_COUNT"), MAX_SWAP_CHAIN_BUFFER_COUNT);
     if (swapChainBufferCount < 2)
         swapChainBufferCount = DEFAULT_SWAP_CHAIN_BUFFER_COUNT;
@@ -734,6 +739,9 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         return;
     }
 
+#ifndef Q_OS_WINRT
+    HWND hwnd = reinterpret_cast<HWND>(w);
+
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     swapChainDesc.BufferCount = swapChainBufferCount;
     swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
@@ -759,6 +767,47 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     }
 
     dev->dxgi()->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+#else
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+    swapChainDesc.Width = windowSize.width() * windowDpr;
+    swapChainDesc.Height = windowSize.height() * windowDpr;
+    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc.BufferCount = swapChainBufferCount;
+    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+    if (waitableSwapChainMaxLatency)
+        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+
+    ComPtr<IDXGISwapChain1> baseSwapChain;
+    HRESULT hr = dev->dxgi()->CreateSwapChainForComposition(commandQueue.Get(), &swapChainDesc, nullptr, &baseSwapChain);
+    if (FAILED(hr)) {
+        qWarning("Failed to create swap chain for composition: 0x%x", hr);
+        return;
+    }
+    if (FAILED(baseSwapChain.As(&swapChain))) {
+        qWarning("Failed to case swap chain");
+        return;
+    }
+
+    // The winrt platform plugin returns an ISwapChainPanel* from winId().
+    ComPtr<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel> swapChainPanel
+            = reinterpret_cast<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel *>(window);
+    ComPtr<ISwapChainPanelNative> swapChainPanelNative;
+    if (FAILED(swapChainPanel.As(&swapChainPanelNative))) {
+        qWarning("Failed to cast swap chain panel to native");
+        return;
+    }
+    hr = QEventDispatcherWinRT::runOnXamlThread([this, &swapChainPanelNative]() {
+        return swapChainPanelNative->SetSwapChain(swapChain.Get());
+    });
+    if (FAILED(hr)) {
+        qWarning("Failed to set swap chain on panel: 0x%x", hr);
+        return;
+    }
+#endif
 
     if (waitableSwapChainMaxLatency) {
         if (FAILED(swapChain->SetMaximumFrameLatency(waitableSwapChainMaxLatency)))
