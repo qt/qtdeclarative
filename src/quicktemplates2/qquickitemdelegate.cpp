@@ -86,7 +86,20 @@ QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem
     This property holds whether the delegate is highlighted.
 
     A delegate can be highlighted in order to draw the user's attention towards
-    it. It has no effect on keyboard interaction.
+    it. It has no effect on keyboard interaction. For example, you can
+    highlight the current item in a ListView using the following code:
+
+    \code
+    ListView {
+        id: listView
+        model: 10
+        delegate: ItemDelegate {
+            text: modelData
+            highlighted: ListView.isCurrentItem
+            onClicked: listView.currentIndex = index
+        }
+    }
+    \endcode
 
     The default value is \c false.
 */
