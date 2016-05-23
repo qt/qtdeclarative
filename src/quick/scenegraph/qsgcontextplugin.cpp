@@ -67,9 +67,9 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
     (QSGContextFactoryInterface_iid, QLatin1String("/scenegraph")))
 #endif
 
-struct QSGAdaptionBackendData
+struct QSGAdaptationBackendData
 {
-    QSGAdaptionBackendData();
+    QSGAdaptationBackendData();
 
     bool tried;
     QSGContextFactoryInterface *factory;
@@ -77,9 +77,11 @@ struct QSGAdaptionBackendData
     QSGContextFactoryInterface::Flags flags;
 
     QVector<QSGContextFactoryInterface *> builtIns;
+
+    QString quickWindowBackendRequest;
 };
 
-QSGAdaptionBackendData::QSGAdaptionBackendData()
+QSGAdaptationBackendData::QSGAdaptationBackendData()
     : tried(false)
     , factory(nullptr)
     , flags(0)
@@ -88,7 +90,7 @@ QSGAdaptionBackendData::QSGAdaptionBackendData()
     builtIns.append(new QSGSoftwareAdaptation);
 }
 
-Q_GLOBAL_STATIC(QSGAdaptionBackendData, qsg_adaptation_data)
+Q_GLOBAL_STATIC(QSGAdaptationBackendData, qsg_adaptation_data)
 
 // This only works when the backend is loaded (contextFactory() was called),
 // otherwise the return value is 0.
@@ -100,15 +102,15 @@ QSGContextFactoryInterface::Flags qsg_backend_flags()
     return qsg_adaptation_data()->flags;
 }
 
-QSGAdaptionBackendData *contextFactory()
+QSGAdaptationBackendData *contextFactory()
 {
-    QSGAdaptionBackendData *backendData = qsg_adaptation_data();
+    QSGAdaptationBackendData *backendData = qsg_adaptation_data();
 
     if (!backendData->tried) {
         backendData->tried = true;
 
         const QStringList args = QGuiApplication::arguments();
-        QString requestedBackend;
+        QString requestedBackend = backendData->quickWindowBackendRequest; // empty or set via QQuickWindow::setBackend()
 
         for (int index = 0; index < args.count(); ++index) {
             if (args.at(index).startsWith(QLatin1String("--device="))) {
@@ -184,7 +186,7 @@ QSGAdaptionBackendData *contextFactory()
 */
 QSGContext *QSGContext::createDefaultContext()
 {
-    QSGAdaptionBackendData *backendData = contextFactory();
+    QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->create(backendData->name);
 #ifndef QT_NO_OPENGL
@@ -205,7 +207,7 @@ QSGContext *QSGContext::createDefaultContext()
 
 QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &image)
 {
-    QSGAdaptionBackendData *backendData = contextFactory();
+    QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createTextureFactoryFromImage(image);
     return 0;
@@ -219,10 +221,19 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
 
 QSGRenderLoop *QSGContext::createWindowManager()
 {
-    QSGAdaptionBackendData *backendData = contextFactory();
+    QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createWindowManager();
     return 0;
+}
+
+void QSGContext::setBackend(const QString &backend)
+{
+    QSGAdaptationBackendData *backendData = qsg_adaptation_data();
+    if (backendData->tried)
+        qWarning("Scenegraph already initialized, setBackend() request ignored");
+
+    backendData->quickWindowBackendRequest = backend;
 }
 
 QT_END_NAMESPACE

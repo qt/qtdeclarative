@@ -181,6 +181,8 @@ public:
     static QSGContext *createDefaultContext();
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
     static QSGRenderLoop *createWindowManager();
+
+    static void setBackend(const QString &backend);
 };
 
 QT_END_NAMESPACE

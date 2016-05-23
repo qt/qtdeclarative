@@ -41,6 +41,7 @@
 #define QQUICKWINDOW_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qsgrendererinterface.h>
 #include <QtCore/qmetatype.h>
 #include <QtGui/qopengl.h>
 #include <QtGui/qwindow.h>
@@ -60,7 +61,6 @@ class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
 class QQuickRenderControl;
-class QSGRendererInterface;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -155,6 +155,9 @@ public:
     qreal effectiveDevicePixelRatio() const;
 
     QSGRendererInterface *rendererInterface() const;
+
+    static void setSceneGraphBackend(QSGRendererInterface::GraphicsAPI api);
+    static void setSceneGraphBackend(const QString &backend);
 
 Q_SIGNALS:
     void frameSwapped();

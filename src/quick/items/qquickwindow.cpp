@@ -78,7 +78,6 @@
 # include <private/qopenglvertexarrayobject_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
-#include <qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -4428,6 +4427,57 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
 {
     Q_D(const QQuickWindow);
     return isSceneGraphInitialized() ? d->context->sceneGraphContext()->rendererInterface(d->context) : nullptr;
+}
+
+/*!
+    Requests a Qt Quick scenegraph backend for the specified graphics \a api.
+    Backends can either be built-in or be installed in form of dynamically
+    loaded plugins.
+
+    \note The call to the function must happen before constructing the first
+    QQuickWindow in the application. It cannot be changed afterwards.
+
+    If \a backend is invalid or an error occurs, the default backend (OpenGL or
+    software, depending on the Qt configuration) is used.
+
+    \since 5.8
+ */
+void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsAPI api)
+{
+    switch (api) {
+    case QSGRendererInterface::Software:
+        setSceneGraphBackend(QStringLiteral("software"));
+        break;
+    case QSGRendererInterface::Direct3D12:
+        setSceneGraphBackend(QStringLiteral("d3d12"));
+        break;
+    default:
+        break;
+    }
+}
+
+/*!
+    Requests the specified Qt Quick scenegraph \a backend. Backends can either
+    be built-in or be installed in form of dynamically loaded plugins.
+
+    \overload
+
+    \note The call to the function must happen before constructing the first
+    QQuickWindow in the application. It cannot be changed afterwards.
+
+    If \a backend is invalid or an error occurs, the default backend (OpenGL or
+    software, depending on the Qt configuration) is used.
+
+    \note Calling this function is equivalent to setting the
+    \c QT_QUICK_BACKEND or \c QMLSCENE_DEVICE environment variables. However, this
+    API is safer to use in applications that spawn other processes as there is
+    no need to worry about environment inheritance.
+
+    \since 5.8
+ */
+void QQuickWindow::setSceneGraphBackend(const QString &backend)
+{
+    QSGContext::setBackend(backend);
 }
 
 #include "moc_qquickwindow.cpp"
