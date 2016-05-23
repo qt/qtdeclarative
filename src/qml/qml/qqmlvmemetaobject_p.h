@@ -74,12 +74,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlVMEMetaData
-{
-    // Make sure this structure is always aligned to int
-    int dummy;
-};
-
 class QQmlVMEMetaObject;
 class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
@@ -139,7 +133,7 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
@@ -161,7 +155,6 @@ protected:
 public:
     QQmlGuardedContextData ctxt;
 
-    const QQmlVMEMetaData *metaData;
     inline int propOffset() const;
     inline int methodOffset() const;
     inline int signalOffset() const;

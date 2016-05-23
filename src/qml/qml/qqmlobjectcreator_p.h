@@ -142,8 +142,7 @@ private:
     QQmlGuardedContextData parentContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
-    const QVector<QQmlPropertyCache *> &propertyCaches;
-    const QVector<QByteArray> &vmeMetaObjectData;
+    const QQmlPropertyCacheVector &propertyCaches;
     QHash<int, int> objectIndexToId;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;

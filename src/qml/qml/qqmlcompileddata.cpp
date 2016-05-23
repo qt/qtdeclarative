@@ -87,7 +87,7 @@ QQmlCompiledData::~QQmlCompiledData()
     resolvedTypes.clear();
 
     for (int ii = 0; ii < propertyCaches.count(); ++ii)
-        if (propertyCaches.at(ii))
+        if (propertyCaches.at(ii).data())
             propertyCaches.at(ii)->release();
 
     for (int ii = 0; ii < scripts.count(); ++ii)

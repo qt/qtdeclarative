@@ -314,10 +314,9 @@ QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObje
 }
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
-                                     QQmlPropertyCache *cache,
-                                     const QQmlVMEMetaData *meta, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
+                                     QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
-      ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta),
+      ctxt(QQmlData::get(obj, true)->outerContext),
       aliasEndpoints(0), compilationUnit(qmlCompilationUnit), compiledObject(0)
 {
     cache->addref();

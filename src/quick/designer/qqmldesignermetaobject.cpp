@@ -79,20 +79,6 @@ struct MetaPropertyData {
     QVector<QPair<QVariant, bool> > m_data;
 };
 
-static QQmlVMEMetaData* fakeMetaData()
-{
-    return new QQmlVMEMetaData;
-}
-
-static const QQmlVMEMetaData* vMEMetaDataForObject(QObject *object)
-{
-    QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
-    if (metaObject)
-        return metaObject->metaData;
-
-    return fakeMetaData();
-}
-
 static QQmlPropertyCache *cacheForObject(QObject *object, QQmlEngine *engine)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
@@ -147,7 +133,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 }
 
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(object, cacheForObject(object, engine), vMEMetaDataForObject(object), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
+    : QQmlVMEMetaObject(object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData),
       m_cache(0)

@@ -80,6 +80,10 @@ class QQmlComponent;
 class QQmlContext;
 class QQmlContextData;
 
+// The vector is indexed by QV4::CompiledData::Object index and the flag
+// indicates whether instantiation of the object requires a VME meta-object.
+typedef QVector<QFlagPointer<QQmlPropertyCache>> QQmlPropertyCacheVector;
+
 // ### Merge with QV4::CompiledData::CompilationUnit
 class Q_AUTOTEST_EXPORT QQmlCompiledData : public QQmlRefCount, public QQmlCleanup
 {
@@ -123,8 +127,7 @@ public:
     QHash<int, TypeReference*> resolvedTypes;
 
     QQmlPropertyCache *rootPropertyCache;
-    QVector<QByteArray> metaObjects;
-    QVector<QQmlPropertyCache *> propertyCaches;
+    QQmlPropertyCacheVector propertyCaches;
     QList<QQmlScriptData *> scripts;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
@@ -139,7 +142,7 @@ public:
     int totalObjectCount; // Number of objects explicitly instantiated
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-    bool isCompositeType() const { return !metaObjects.at(compilationUnit->data->indexOfRootObject).isEmpty(); }
+    bool isCompositeType() const { return propertyCaches.at(compilationUnit->data->indexOfRootObject).flag(); }
 
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);

@@ -248,8 +248,6 @@ private slots:
 
     void earlyIdObjectAccess();
 
-    void dataAlignment();
-
     void deleteSingletons();
 
     void arrayBuffer_data();
@@ -4129,11 +4127,6 @@ void tst_qqmllanguage::earlyIdObjectAccess()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     QVERIFY(o->property("success").toBool());
-}
-
-void tst_qqmllanguage::dataAlignment()
-{
-    QVERIFY(sizeof(QQmlVMEMetaData) % sizeof(int) == 0);
 }
 
 void tst_qqmllanguage::deleteSingletons()
