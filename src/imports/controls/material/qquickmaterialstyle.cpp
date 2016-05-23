@@ -415,6 +415,8 @@ static const QRgb switchDisabledTrackColorLight = 0x1E000000;
 static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
+static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
+static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 
 static QColor alphaBlend(const QColor &bg, const QColor &fg)
 {
@@ -1059,6 +1061,11 @@ QColor QQuickMaterialStyle::toolTextColor() const
     }
 
     return primaryTextColor();
+}
+
+QColor QQuickMaterialStyle::spinBoxDisabledIconColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? spinBoxDisabledIconColorLight : spinBoxDisabledIconColorDark);
 }
 
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const

@@ -126,14 +126,14 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: Math.min(parent.width / 3, parent.width / 3)
             height: 2
-            color: control.Material.primaryTextColor
+            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: Math.min(parent.width / 3, parent.width / 3)
-            color: control.Material.primaryTextColor
+            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
         }
     }
     //! [up.indicator]
@@ -156,7 +156,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.Material.primaryTextColor
+            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
         }
     }
     //! [down.indicator]

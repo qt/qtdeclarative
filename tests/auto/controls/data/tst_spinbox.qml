@@ -89,7 +89,9 @@ TestCase {
         compare(control.stepSize, 1)
         compare(control.editable, false)
         compare(control.up.pressed, false)
+        compare(control.up.indicator.enabled, true)
         compare(control.down.pressed, false)
+        compare(control.down.indicator.enabled, false)
 
         control.destroy()
     }
@@ -118,23 +120,40 @@ TestCase {
         compare(control.from, 0)
         compare(control.to, 100)
         compare(control.value, 50)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
 
         control.value = 1000
         compare(control.value, 100)
+        compare(control.up.indicator.enabled, false)
+        compare(control.down.indicator.enabled, true)
 
         control.value = -1
         compare(control.value, 0)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, false)
 
         control.from = 25
         compare(control.from, 25)
         compare(control.value, 25)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, false)
 
         control.to = 75
         compare(control.to, 75)
         compare(control.value, 25)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, false)
 
         control.value = 50
         compare(control.value, 50)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
+
+        control.to = 40;
+        compare(control.value, 40)
+        compare(control.up.indicator.enabled, false)
+        compare(control.down.indicator.enabled, true)
 
         control.destroy()
     }
@@ -146,15 +165,23 @@ TestCase {
         compare(control.from, 100)
         compare(control.to, -100)
         compare(control.value, 0)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
 
         control.value = 200
         compare(control.value, 100)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, false)
 
         control.value = -200
         compare(control.value, -100)
+        compare(control.up.indicator.enabled, false)
+        compare(control.down.indicator.enabled, true)
 
         control.value = 0
         compare(control.value, 0)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
 
         control.destroy()
     }
@@ -180,9 +207,28 @@ TestCase {
         compare(control.down.pressed, false)
         compare(control.value, 50)
 
+        // Disable the up button and try again.
+        control.value = control.to
+        compare(control.up.indicator.enabled, false)
+
+        mousePress(control.up.indicator)
+        compare(upPressedSpy.count, 2)
+        compare(control.up.pressed, false)
+        compare(downPressedSpy.count, 0)
+        compare(control.down.pressed, false)
+        compare(control.value, control.to)
+
+        mouseRelease(control.up.indicator)
+        compare(upPressedSpy.count, 2)
+        compare(control.up.pressed, false)
+        compare(downPressedSpy.count, 0)
+        compare(control.down.pressed, false)
+        compare(control.value, control.to)
+
         downPressedSpy.target = control.down
         verify(downPressedSpy.valid)
 
+        control.value = 50;
         mousePress(control.down.indicator)
         compare(downPressedSpy.count, 1)
         compare(control.down.pressed, true)
@@ -196,6 +242,24 @@ TestCase {
         compare(upPressedSpy.count, 2)
         compare(control.up.pressed, false)
         compare(control.value, 0)
+
+        // Disable the down button and try again.
+        control.value = control.from
+        compare(control.down.indicator.enabled, false)
+
+        mousePress(control.down.indicator)
+        compare(downPressedSpy.count, 2)
+        compare(control.down.pressed, false)
+        compare(upPressedSpy.count, 2)
+        compare(control.up.pressed, false)
+        compare(control.value, control.from)
+
+        mouseRelease(control.down.indicator)
+        compare(downPressedSpy.count, 2)
+        compare(control.down.pressed, false)
+        compare(upPressedSpy.count, 2)
+        compare(control.up.pressed, false)
+        compare(control.value, control.from)
 
         control.destroy()
     }
@@ -253,32 +317,42 @@ TestCase {
         compare(control.stepSize, 25)
 
         for (var d2 = 1; d2 <= 10; ++d2) {
+            var wasDownEnabled = control.value > control.from
             keyPress(Qt.Key_Down)
-            compare(control.down.pressed, true)
+            compare(control.down.pressed, wasDownEnabled)
             compare(control.up.pressed, false)
-            compare(downPressedSpy.count, ++downPressedCount)
+            if (wasDownEnabled)
+                ++downPressedCount
+            compare(downPressedSpy.count, downPressedCount)
 
             compare(control.value, Math.max(0, 50 - d2 * 25))
 
             keyRelease(Qt.Key_Down)
             compare(control.down.pressed, false)
             compare(control.up.pressed, false)
-            compare(downPressedSpy.count, ++downPressedCount)
+            if (wasDownEnabled)
+                ++downPressedCount
+            compare(downPressedSpy.count, downPressedCount)
         }
         compare(control.value, 0)
 
         for (var i2 = 1; i2 <= 10; ++i2) {
+            var wasUpEnabled = control.value < control.to
             keyPress(Qt.Key_Up)
-            compare(control.up.pressed, true)
+            compare(control.up.pressed, wasUpEnabled)
             compare(control.down.pressed, false)
-            compare(upPressedSpy.count, ++upPressedCount)
+            if (wasUpEnabled)
+                ++upPressedCount
+            compare(upPressedSpy.count, upPressedCount)
 
             compare(control.value, Math.min(99, i2 * 25))
 
             keyRelease(Qt.Key_Up)
             compare(control.down.pressed, false)
             compare(control.up.pressed, false)
-            compare(upPressedSpy.count, ++upPressedCount)
+            if (wasUpEnabled)
+                ++upPressedCount
+            compare(upPressedSpy.count, upPressedCount)
         }
         compare(control.value, 99)
 
@@ -382,6 +456,25 @@ TestCase {
 
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.value, 3)
+
+        control.destroy()
+    }
+
+    function test_initiallyDisabledIndicators_data() {
+        return [
+            { tag: "down disabled", from: 0, value: 0, to: 99, upEnabled: true, downEnabled: false },
+            { tag: "up disabled", from: 0, value: 99, to: 99, upEnabled: false, downEnabled: true },
+            { tag: "inverted, down disabled", from: 99, value: 99, to: 0, upEnabled: true, downEnabled: false },
+            { tag: "inverted, up disabled", from: 99, value: 0, to: 0, upEnabled: false, downEnabled: true }
+        ]
+    }
+
+    function test_initiallyDisabledIndicators(data) {
+        var control = spinBox.createObject(testCase, { from: data.from, value: data.value, to: data.to })
+        verify(control)
+
+        compare(control.up.indicator.enabled, data.upEnabled)
+        compare(control.down.indicator.enabled, data.downEnabled)
 
         control.destroy()
     }
