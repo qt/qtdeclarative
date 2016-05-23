@@ -375,9 +375,17 @@ struct Alias {
         quint32 idIndex; // string index
         quint32 targetObjectId; // object id index (in QQmlContextData::idValues)
     };
-    quint32 propertyIndex;
+    union {
+        quint32 propertyNameIndex; // string index
+        qint32 encodedMetaPropertyIndex;
+    };
     Location location;
     Location referenceLocation;
+
+    bool isObjectAlias() const {
+        Q_ASSERT(flags & Resolved);
+        return encodedMetaPropertyIndex == -1;
+    }
 };
 
 struct Object

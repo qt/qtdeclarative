@@ -1574,7 +1574,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             Q_ASSERT(_objectIndexToIdInScope->contains(targetObjectIndex));
             alias->targetObjectId = _objectIndexToIdInScope->value(targetObjectIndex);
 
-            const QString aliasPropertyValue = stringAt(alias->propertyIndex);
+            const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
 
             QStringRef property;
             QStringRef subProperty;
@@ -1587,7 +1587,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
 
             int propIdx = -1;
-            int propType = 0;
             int notifySignal = -1;
             int flags = 0;
             int type = 0;
@@ -1633,8 +1632,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                         return false;
                     }
 
-                    propType = type;
-
                     int valueTypeIndex =
                         valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
                     if (valueTypeIndex == -1) {
@@ -1665,7 +1662,8 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 }
             }
 
-            QQmlVMEMetaData::AliasData aliasData = { propIdx, propType, flags, notifySignal };
+            alias->encodedMetaPropertyIndex = propIdx;
+            QQmlVMEMetaData::AliasData aliasData = { flags, notifySignal };
 
             typedef QQmlVMEMetaData VMD;
             QByteArray &dynamicData = (*vmeMetaObjectData)[objectIndex];

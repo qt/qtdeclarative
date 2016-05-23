@@ -1133,7 +1133,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
     alias->location.line = loc.startLine;
     alias->location.column = loc.startColumn;
 
-    alias->propertyIndex = emptyStringIndex;
+    alias->propertyNameIndex = emptyStringIndex;
 
     if (!node->statement && !node->binding)
         COMPILE_EXCEPTION(loc, tr("No property alias location"));
@@ -1171,7 +1171,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
      QString propertyValue = aliasReference.value(1);
      if (aliasReference.count() == 3)
          propertyValue += QLatin1Char('.') + aliasReference.at(2);
-     alias->propertyIndex = registerString(propertyValue);
+     alias->propertyNameIndex = registerString(propertyValue);
 
      QQmlJS::AST::SourceLocation errorLocation;
      QString error;

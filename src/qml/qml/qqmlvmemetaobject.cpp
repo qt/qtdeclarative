@@ -150,7 +150,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     } else {
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
         QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
-        if (!d->isObjectAlias()) {
+        if (!aliasData->isObjectAlias()) {
             QQmlContextData *ctxt = metaObject->ctxt;
             QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
             if (!target)
@@ -851,36 +851,46 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 connectAlias(id);
 
-                if (d->isObjectAlias()) {
+                if (aliasData->isObjectAlias()) {
                     *reinterpret_cast<QObject **>(a[0]) = target;
                     return -1;
                 }
+
+                QQmlData *targetDData = QQmlData::get(target, /*create*/false);
+                if (!targetDData)
+                    return -1;
+
+                int coreIndex;
+                const int valueTypePropertyIndex = QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, &coreIndex);
 
                 // Remove binding (if any) on write
                 if(c == QMetaObject::WriteProperty) {
                     int flags = *reinterpret_cast<int*>(a[3]);
                     if (flags & QQmlPropertyPrivate::RemoveBindingOnAliasWrite) {
                         QQmlData *targetData = QQmlData::get(target);
-                        if (targetData && targetData->hasBindingBit(d->propertyIndex()))
-                            QQmlPropertyPrivate::removeBinding(target, d->propertyIdx);
+                        if (targetData && targetData->hasBindingBit(coreIndex))
+                            QQmlPropertyPrivate::removeBinding(target, aliasData->encodedMetaPropertyIndex);
                     }
                 }
 
-                if (d->isValueTypeAlias()) {
+                if (valueTypePropertyIndex != -1) {
+                    if (!targetDData->propertyCache)
+                        return -1;
+                    const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(d->valueType());
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType);
                     Q_ASSERT(valueType);
 
-                    valueType->read(target, d->propertyIndex());
-                    int rv = QMetaObject::metacall(valueType, c, d->valueTypeIndex(), a);
+                    valueType->read(target, coreIndex);
+                    int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
                     if (c == QMetaObject::WriteProperty)
-                        valueType->write(target, d->propertyIndex(), 0x00);
+                        valueType->write(target, coreIndex, 0x00);
 
                     return rv;
 
                 } else {
-                    return QMetaObject::metacall(target, c, d->propertyIndex(), a);
+                    return QMetaObject::metacall(target, c, coreIndex, a);
                 }
 
             }
@@ -1170,19 +1180,12 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
-    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
     *target = ctxt->idValues[aliasData->targetObjectId].data();
     if (!*target)
         return false;
 
-    if (d->isObjectAlias()) {
-    } else if (d->isValueTypeAlias()) {
-        *coreIndex = d->propertyIndex();
-        *valueTypeIndex = d->valueTypeIndex();
-    } else {
-        *coreIndex = d->propertyIndex();
-    }
-
+    if (!aliasData->isObjectAlias())
+        *valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, coreIndex);
     return true;
 }
 
