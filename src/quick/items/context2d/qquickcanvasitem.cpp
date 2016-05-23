@@ -675,10 +675,14 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
     QSGRenderContext *context = QQuickWindowPrivate::get(d->window)->context;
 
     // Rendering to FramebufferObject needs a valid OpenGL context.
-    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid()))
-        sceneGraphInitialized();
-    else
+    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid())) {
+        // Defer the call. In some (arguably incorrect) cases we get here due
+        // to ItemSceneChange with the user-supplied property values not yet
+        // set. Work this around by a deferred invoke. (QTBUG-49692)
+        QMetaObject::invokeMethod(this, "sceneGraphInitialized", Qt::QueuedConnection);
+    } else {
         connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
+    }
 }
 
 void QQuickCanvasItem::updatePolish()
