@@ -1854,6 +1854,14 @@ void QQuickPathView::updatePolish()
     refill();
 }
 
+static inline int currentIndexRemainder(int currentIndex, int modelCount) Q_DECL_NOTHROW
+{
+    if (currentIndex < 0)
+        return modelCount + currentIndex % modelCount;
+    else
+        return currentIndex % modelCount;
+}
+
 void QQuickPathView::componentComplete()
 {
     Q_D(QQuickPathView);
@@ -1865,7 +1873,7 @@ void QQuickPathView::componentComplete()
     if (d->model) {
         d->modelCount = d->model->count();
         if (d->modelCount && d->currentIndex != 0) // an initial value has been provided for currentIndex
-            d->offset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
+            d->offset = qmlMod(d->modelCount - currentIndexRemainder(d->currentIndex, d->modelCount), d->modelCount);
     }
 
     d->createHighlight();
@@ -1939,7 +1947,8 @@ void QQuickPathView::refill()
             qreal endPos;
             int startIdx = 0;
             qreal startPos = 0.0;
-            if (d->items.count()) {
+            const bool wasEmpty = d->items.isEmpty();
+            if (!wasEmpty) {
                 //Find the beginning and end, items may not be in sorted order
                 endPos = -1.0;
                 startPos = 2.0;
@@ -1998,7 +2007,8 @@ void QQuickPathView::refill()
             }
 
             //Prepend
-            idx = startIdx - 1;
+            idx = (wasEmpty ? d->calcCurrentIndex() : startIdx) - 1;
+
             if (idx < 0)
                 idx = d->modelCount - 1;
             nextPos = d->positionOfIndex(idx);

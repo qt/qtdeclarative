@@ -141,6 +141,7 @@ private slots:
     void flickableDelegate();
     void jsArrayChange();
     void qtbug42716();
+    void qtbug53464();
     void addCustomAttribute();
 };
 
@@ -2379,6 +2380,29 @@ void tst_QQuickPathView::qtbug42716()
     }
     itemMiss = findItem<QQuickItem>(pathView, QString("delegate%1").arg(missing2));
     QVERIFY(!itemMiss);
+}
+
+void tst_QQuickPathView::qtbug53464()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("qtbug53464.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathView != Q_NULLPTR);
+    const int currentIndex = pathView->currentIndex();
+    QCOMPARE(currentIndex, 8);
+
+    const int pathItemCount = pathView->pathItemCount();
+    int totalCount = 0;
+    foreach (QQuickItem *item, pathView->childItems()) {
+        if (item->objectName().startsWith(QLatin1String("delegate")))
+            ++totalCount;
+    }
+    QCOMPARE(pathItemCount, totalCount);
 }
 
 void tst_QQuickPathView::addCustomAttribute()
