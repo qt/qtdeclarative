@@ -153,13 +153,14 @@ class QQuickWheelEvent : public QObject
     Q_PROPERTY(QPoint pixelDelta READ pixelDelta)
     Q_PROPERTY(int buttons READ buttons)
     Q_PROPERTY(int modifiers READ modifiers)
+    Q_PROPERTY(bool inverted READ inverted)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
     QQuickWheelEvent(qreal x, qreal y, const QPoint& angleDelta, const QPoint& pixelDelta,
-                     Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers)
+                     Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, bool inverted)
         : _x(x), _y(y), _angleDelta(angleDelta), _pixelDelta(pixelDelta), _buttons(buttons),
-          _modifiers(modifiers), _accepted(true) {}
+          _modifiers(modifiers), _inverted(inverted), _accepted(true) {}
 
     qreal x() const { return _x; }
     qreal y() const { return _y; }
@@ -167,7 +168,7 @@ public:
     QPoint pixelDelta() const { return _pixelDelta; }
     int buttons() const { return _buttons; }
     int modifiers() const { return _modifiers; }
-
+    bool inverted() const { return _inverted; }
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
 
@@ -178,6 +179,7 @@ private:
     QPoint _pixelDelta;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
+    bool _inverted;
     bool _accepted;
 };
 

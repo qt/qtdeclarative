@@ -4628,6 +4628,7 @@ Module {
         Property { name: "pixelDelta"; type: "QPoint"; isReadonly: true }
         Property { name: "buttons"; type: "int"; isReadonly: true }
         Property { name: "modifiers"; type: "int"; isReadonly: true }
+        Property { name: "inverted"; type: "bool" }
         Property { name: "accepted"; type: "bool" }
     }
     Component {
