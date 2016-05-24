@@ -70,7 +70,6 @@ public:
     static void registerNotifyPropertyChangeCallBack(void (*callback)(QObject*, const QQuickDesignerSupport::PropertyName &propertyName));
 
 protected:
-    QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine);
     static QQmlDesignerMetaObject* getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine);
 
     void createNewDynamicProperty(const QString &name);
@@ -95,6 +94,7 @@ protected:
     void copyTypeMetaObject();
 
 private:
+    QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine);
     void init(QObject *, QQmlEngine *engine);
 
     QPointer<QQmlContext> m_context;

@@ -171,8 +171,8 @@ public:
     QPointer<QQmlInstanceModel> model;
     QVariant modelVariant;
     MovementReason moveReason;
-    enum MovementDirection { Shortest, Negative, Positive };
-    MovementDirection moveDirection;
+    QQuickPathView::MovementDirection movementDirection; // default
+    QQuickPathView::MovementDirection moveDirection; // next movement
     QQmlOpenMetaObjectType *attType;
     QQmlComponent *highlightComponent;
     QQuickItem *highlightItem;

@@ -72,6 +72,7 @@ public:
 #ifndef QT_NO_NETWORK
         , reply(0), redirectCount(0)
 #endif
+        , currentSourceSize(0, 0)
     {
     }
 
@@ -87,6 +88,7 @@ public:
     int redirectCount;
 #endif
     QMap<int, QQuickPixmap *> frameMap;
+    QSize currentSourceSize;
 };
 
 QT_END_NAMESPACE

@@ -80,8 +80,10 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQm
     location.column = loc.startColumn;
 
     idIndex = id;
-    indexOfDefaultProperty = -1;
+    indexOfDefaultPropertyOrAlias = -1;
+    defaultPropertyIsAlias = false;
     properties = pool->New<PoolList<Property> >();
+    aliases = pool->New<PoolList<Alias> >();
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
@@ -145,12 +147,39 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
 
     const int index = target->properties->append(prop);
     if (isDefaultProperty) {
-        if (target->indexOfDefaultProperty != -1) {
+        if (target->indexOfDefaultPropertyOrAlias != -1) {
             *errorLocation = defaultToken;
             return tr("Duplicate default property");
         }
-        target->indexOfDefaultProperty = index;
+        target->indexOfDefaultPropertyOrAlias = index;
     }
+    return QString(); // no error
+}
+
+QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation)
+{
+    Object *target = declarationsOverride;
+    if (!target)
+        target = this;
+
+    for (Alias *p = target->aliases->first; p; p = p->next)
+        if (p->nameIndex == alias->nameIndex)
+            return tr("Duplicate alias name");
+
+    if (aliasName.constData()->isUpper())
+        return tr("Alias names cannot begin with an upper case letter");
+
+    const int index = target->aliases->append(alias);
+
+    if (isDefaultProperty) {
+        if (target->indexOfDefaultPropertyOrAlias != -1) {
+            *errorLocation = defaultToken;
+            return tr("Duplicate default property");
+        }
+        target->indexOfDefaultPropertyOrAlias = index;
+        target->defaultPropertyIsAlias = true;
+    }
+
     return QString(); // no error
 }
 
@@ -190,7 +219,7 @@ Binding *Object::findBinding(quint32 nameIndex) const
 
 void Object::insertSorted(Binding *b)
 {
-    Binding *insertionPoint = bindings->findSortedInsertionPoint<QV4::CompiledData::Location, QV4::CompiledData::Binding, &QV4::CompiledData::Binding::valueLocation>(b);
+    Binding *insertionPoint = bindings->findSortedInsertionPoint<quint32, Binding, &Binding::offset>(b);
     bindings->insertAfter(insertionPoint, b);
 }
 
@@ -249,8 +278,8 @@ void Document::collectTypeReferences()
 
 void Document::removeScriptPragmas(QString &script)
 {
-    const QString pragma(QLatin1String("pragma"));
-    const QString library(QLatin1String("library"));
+    const QLatin1String pragma("pragma");
+    const QLatin1String library("library");
 
     QQmlJS::Lexer l(0);
     l.setCode(script, 0);
@@ -268,7 +297,7 @@ void Document::removeScriptPragmas(QString &script)
 
         if (token != QQmlJSGrammar::T_PRAGMA ||
             l.tokenStartLine() != startLine ||
-            script.mid(l.tokenOffset(), l.tokenLength()) != pragma)
+            script.midRef(l.tokenOffset(), l.tokenLength()) != pragma)
             return;
 
         token = l.lex();
@@ -277,7 +306,7 @@ void Document::removeScriptPragmas(QString &script)
             l.tokenStartLine() != startLine)
             return;
 
-        QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
+        const QStringRef pragmaValue = script.midRef(l.tokenOffset(), l.tokenLength());
         int endOffset = l.tokenLength() + l.tokenOffset();
 
         token = l.lex();
@@ -806,130 +835,86 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         }
     } else {
         const QStringRef &memberType = node->memberType;
-        const QStringRef &name = node->name;
-
-        bool typeFound = false;
-        QV4::CompiledData::Property::Type type;
-
         if (memberType == QLatin1String("alias")) {
-            type = QV4::CompiledData::Property::Alias;
-            typeFound = true;
-        }
+            return appendAlias(node);
+        } else {
+            const QStringRef &name = node->name;
 
-        for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
-            const TypeNameToType *t = propTypeNameToTypes + ii;
-            if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                type = t->type;
-                typeFound = true;
+            bool typeFound = false;
+            QV4::CompiledData::Property::Type type;
+
+            for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
+                const TypeNameToType *t = propTypeNameToTypes + ii;
+                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
+                    type = t->type;
+                    typeFound = true;
+                }
             }
-        }
 
-        if (!typeFound && memberType.at(0).isUpper()) {
-            const QStringRef &typeModifier = node->typeModifier;
+            if (!typeFound && memberType.at(0).isUpper()) {
+                const QStringRef &typeModifier = node->typeModifier;
 
-            if (typeModifier.isEmpty()) {
-                type = QV4::CompiledData::Property::Custom;
-            } else if (typeModifier == QLatin1String("list")) {
-                type = QV4::CompiledData::Property::CustomList;
-            } else {
-                recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
+                if (typeModifier.isEmpty()) {
+                    type = QV4::CompiledData::Property::Custom;
+                } else if (typeModifier == QLatin1String("list")) {
+                    type = QV4::CompiledData::Property::CustomList;
+                } else {
+                    recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
+                    return false;
+                }
+                typeFound = true;
+            } else if (!node->typeModifier.isNull()) {
+                recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Unexpected property type modifier"));
                 return false;
             }
-            typeFound = true;
-        } else if (!node->typeModifier.isNull()) {
-            recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Unexpected property type modifier"));
-            return false;
-        }
 
-        if (!typeFound) {
-            recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected property type"));
-            return false;
-        }
-
-        Property *property = New<Property>();
-        property->flags = 0;
-        if (node->isReadonlyMember)
-            property->flags |= QV4::CompiledData::Property::IsReadOnly;
-        property->type = type;
-        if (type >= QV4::CompiledData::Property::Custom)
-            property->customTypeNameIndex = registerString(memberType.toString());
-        else
-            property->customTypeNameIndex = emptyStringIndex;
-
-        const QString propName = name.toString();
-        property->nameIndex = registerString(propName);
-
-        QQmlJS::AST::SourceLocation loc = node->firstSourceLocation();
-        property->location.line = loc.startLine;
-        property->location.column = loc.startColumn;
-
-        property->aliasPropertyValueIndex = emptyStringIndex;
-
-        if (type == QV4::CompiledData::Property::Alias) {
-            if (!node->statement && !node->binding)
-                COMPILE_EXCEPTION(loc, tr("No property alias location"));
-
-            QQmlJS::AST::SourceLocation rhsLoc;
-            if (node->binding)
-                rhsLoc = node->binding->firstSourceLocation();
-            else if (node->statement)
-                rhsLoc = node->statement->firstSourceLocation();
-            else
-                rhsLoc = node->semicolonToken;
-            property->aliasLocation.line = rhsLoc.startLine;
-            property->aliasLocation.column = rhsLoc.startColumn;
-
-            QStringList alias;
-
-            if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(node->statement)) {
-                alias = astNodeToStringList(stmt->expression);
-                if (alias.isEmpty()) {
-                    if (isStatementNodeScript(node->statement)) {
-                        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
-                    } else {
-                        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
-                    }
-                }
-            } else {
-                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+            if (!typeFound) {
+                recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected property type"));
+                return false;
             }
 
-            if (alias.count() < 1 || alias.count() > 3)
-                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+            Property *property = New<Property>();
+            property->flags = 0;
+            if (node->isReadonlyMember)
+                property->flags |= QV4::CompiledData::Property::IsReadOnly;
+            property->type = type;
+            if (type >= QV4::CompiledData::Property::Custom)
+                property->customTypeNameIndex = registerString(memberType.toString());
+            else
+                property->customTypeNameIndex = emptyStringIndex;
 
-             property->aliasIdValueIndex = registerString(alias.first());
+            const QString propName = name.toString();
+            property->nameIndex = registerString(propName);
 
-             QString propertyValue = alias.value(1);
-             if (alias.count() == 3) {
-                 propertyValue += QLatin1Char('.');
-                 propertyValue += alias.at(2);
-             }
-             property->aliasPropertyValueIndex = registerString(propertyValue);
+            QQmlJS::AST::SourceLocation loc = node->firstSourceLocation();
+            property->location.line = loc.startLine;
+            property->location.column = loc.startColumn;
+
+            QQmlJS::AST::SourceLocation errorLocation;
+            QString error;
+
+            if (illegalNames.contains(propName))
+                error = tr("Illegal property name");
+            else
+                error = _object->appendProperty(property, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
+
+            if (!error.isEmpty()) {
+                if (errorLocation.startLine == 0)
+                    errorLocation = node->identifierToken;
+
+                recordError(errorLocation, error);
+                return false;
+            }
+
+            qSwap(_propertyDeclaration, property);
+            if (node->binding) {
+                // process QML-like initializers (e.g. property Object o: Object {})
+                QQmlJS::AST::Node::accept(node->binding, this);
+            } else if (node->statement) {
+                appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
+            }
+            qSwap(_propertyDeclaration, property);
         }
-        QQmlJS::AST::SourceLocation errorLocation;
-        QString error;
-
-        if (illegalNames.contains(propName))
-            error = tr("Illegal property name");
-        else
-            error = _object->appendProperty(property, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
-
-        if (!error.isEmpty()) {
-            if (errorLocation.startLine == 0)
-                errorLocation = node->identifierToken;
-
-            recordError(errorLocation, error);
-            return false;
-        }
-
-        qSwap(_propertyDeclaration, property);
-        if (node->binding) {
-            // process QML-like initializers (e.g. property Object o: Object {})
-            QQmlJS::AST::Node::accept(node->binding, this);
-        } else if (node->statement && type != QV4::CompiledData::Property::Alias) {
-            appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
-        }
-        qSwap(_propertyDeclaration, property);
     }
 
     return false;
@@ -1084,6 +1069,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 {
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->offset = nameLocation.offset;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
@@ -1103,6 +1089,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->offset = nameLocation.offset;
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
 
@@ -1130,6 +1117,79 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
     if (!error.isEmpty()) {
         recordError(qualifiedNameLocation, error);
     }
+}
+
+bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
+{
+    Alias *alias = New<Alias>();
+    alias->flags = 0;
+    if (node->isReadonlyMember)
+        alias->flags |= QV4::CompiledData::Alias::IsReadOnly;
+
+    const QString propName = node->name.toString();
+    alias->nameIndex = registerString(propName);
+
+    QQmlJS::AST::SourceLocation loc = node->firstSourceLocation();
+    alias->location.line = loc.startLine;
+    alias->location.column = loc.startColumn;
+
+    alias->propertyNameIndex = emptyStringIndex;
+
+    if (!node->statement && !node->binding)
+        COMPILE_EXCEPTION(loc, tr("No property alias location"));
+
+    QQmlJS::AST::SourceLocation rhsLoc;
+    if (node->binding)
+        rhsLoc = node->binding->firstSourceLocation();
+    else if (node->statement)
+        rhsLoc = node->statement->firstSourceLocation();
+    else
+        rhsLoc = node->semicolonToken;
+    alias->referenceLocation.line = rhsLoc.startLine;
+    alias->referenceLocation.column = rhsLoc.startColumn;
+
+    QStringList aliasReference;
+
+    if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(node->statement)) {
+        aliasReference = astNodeToStringList(stmt->expression);
+        if (aliasReference.isEmpty()) {
+            if (isStatementNodeScript(node->statement)) {
+                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+            } else {
+                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
+            }
+        }
+    } else {
+        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+    }
+
+    if (aliasReference.count() < 1 || aliasReference.count() > 3)
+        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+
+     alias->idIndex = registerString(aliasReference.first());
+
+     QString propertyValue = aliasReference.value(1);
+     if (aliasReference.count() == 3)
+         propertyValue += QLatin1Char('.') + aliasReference.at(2);
+     alias->propertyNameIndex = registerString(propertyValue);
+
+     QQmlJS::AST::SourceLocation errorLocation;
+     QString error;
+
+     if (illegalNames.contains(propName))
+         error = tr("Illegal property name");
+     else
+         error = _object->appendAlias(alias, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
+
+     if (!error.isEmpty()) {
+         if (errorLocation.startLine == 0)
+             errorLocation = node->identifierToken;
+
+         recordError(errorLocation, error);
+         return false;
+     }
+
+     return false;
 }
 
 Object *IRBuilder::bindingsTarget() const
@@ -1201,8 +1261,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             if (import->qualifierIndex != emptyStringIndex
                 && stringAt(import->qualifierIndex) == currentName) {
                 qualifiedIdElement = qualifiedIdElement->next;
-                currentName += QLatin1Char('.');
-                currentName += qualifiedIdElement->name;
+                currentName += QLatin1Char('.') + qualifiedIdElement->name;
 
                 if (!qualifiedIdElement->name.unicode()->isUpper())
                     COMPILE_EXCEPTION(qualifiedIdElement->firstSourceLocation(), tr("Expected type name"));
@@ -1228,6 +1287,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
         if (!binding) {
             binding = New<Binding>();
             binding->propertyNameIndex = propertyNameIndex;
+            binding->offset = qualifiedIdElement->identifierToken.offset;
             binding->location.line = qualifiedIdElement->identifierToken.startLine;
             binding->location.column = qualifiedIdElement->identifierToken.startColumn;
             binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;
@@ -1313,7 +1373,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     int objectsSize = 0;
     foreach (Object *o, output.objects) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->signalCount(), o->bindingCount());
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1358,7 +1418,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
 
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
         objectToWrite->inheritedTypeNameIndex = o->inheritedTypeNameIndex;
-        objectToWrite->indexOfDefaultProperty = o->indexOfDefaultProperty;
+        objectToWrite->indexOfDefaultPropertyOrAlias = o->indexOfDefaultPropertyOrAlias;
+        objectToWrite->defaultPropertyIsAlias = o->defaultPropertyIsAlias;
         objectToWrite->idIndex = o->idIndex;
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
@@ -1372,6 +1433,10 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectToWrite->nProperties = o->propertyCount();
         objectToWrite->offsetToProperties = nextOffset;
         nextOffset += objectToWrite->nProperties * sizeof(QV4::CompiledData::Property);
+
+        objectToWrite->nAliases = o->aliasCount();
+        objectToWrite->offsetToAliases = nextOffset;
+        nextOffset += objectToWrite->nAliases * sizeof(QV4::CompiledData::Alias);
 
         objectToWrite->nSignals = o->signalCount();
         objectToWrite->offsetToSignals = nextOffset;
@@ -1390,6 +1455,13 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             QV4::CompiledData::Property *propertyToWrite = reinterpret_cast<QV4::CompiledData::Property*>(propertiesPtr);
             *propertyToWrite = *p;
             propertiesPtr += sizeof(QV4::CompiledData::Property);
+        }
+
+        char *aliasesPtr = objectPtr + objectToWrite->offsetToAliases;
+        for (const Alias *a = o->firstAlias(); a; a = a->next) {
+            QV4::CompiledData::Alias *aliasToWrite = reinterpret_cast<QV4::CompiledData::Alias*>(aliasesPtr);
+            *aliasToWrite = *a;
+            aliasesPtr += sizeof(QV4::CompiledData::Alias);
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
@@ -1420,7 +1492,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             signalPtr += size;
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->signalCount(), o->bindingCount());
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
         objectPtr += signalTableSize;
     }
 

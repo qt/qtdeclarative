@@ -107,7 +107,7 @@ public:
 #ifndef QT_NO_IM
         , m_preeditCursor(0)
 #endif
-        , m_blinkPeriod(0)
+        , m_blinkEnabled(false)
         , m_blinkTimer(0)
         , m_maxLength(32767)
         , m_lastCursorPos(-1)
@@ -243,7 +243,7 @@ public:
 #ifndef QT_NO_IM
     int m_preeditCursor;
 #endif
-    int m_blinkPeriod; // 0 for non-blinking cursor
+    bool m_blinkEnabled;
     int m_blinkTimer;
     int m_maxLength;
     int m_lastCursorPos;
@@ -309,8 +309,9 @@ public:
         return !tripleClickTimer.hasExpired(QGuiApplication::styleHints()->mouseDoubleClickInterval());
     }
 
-    void setNativeCursorEnabled(bool enabled) {
-        setCursorBlinkPeriod(enabled && cursorVisible ? QGuiApplication::styleHints()->cursorFlashTime() : 0); }
+    void setNativeCursorEnabled(bool) {
+        updateCursorBlinking();
+    }
 
     int nextMaskBlank(int pos)
     {
@@ -445,7 +446,8 @@ public:
 #endif
     void processKeyEvent(QKeyEvent* ev);
 
-    void setCursorBlinkPeriod(int msec);
+    void setBlinkingCursorEnabled(bool enable);
+    void updateCursorBlinking();
 
     void updateLayout();
     void updateBaselineOffset();

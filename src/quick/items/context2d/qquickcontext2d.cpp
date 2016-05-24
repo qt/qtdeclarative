@@ -66,6 +66,7 @@
 #include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qmath.h>
+#include <QtCore/qvector.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QRunnable>
 #include <QtGui/qguiapplication.h>
@@ -205,7 +206,7 @@ QColor qt_color_from_string(const QV4::Value &name)
     return QColor();
 }
 
-static int qParseFontSizeFromToken(const QString &fontSizeToken, bool &ok)
+static int qParseFontSizeFromToken(const QStringRef &fontSizeToken, bool &ok)
 {
     ok = false;
     float size = fontSizeToken.trimmed().toFloat(&ok);
@@ -221,11 +222,11 @@ static int qParseFontSizeFromToken(const QString &fontSizeToken, bool &ok)
     \c true if successful. If the font size is invalid, \c false is returned
     and a warning is printed.
 */
-static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
+static bool qSetFontSizeFromToken(QFont &font, const QStringRef &fontSizeToken)
 {
-    const QString trimmedToken = fontSizeToken.trimmed();
-    const QString unitStr = trimmedToken.right(2);
-    const QString value = trimmedToken.left(trimmedToken.size() - 2);
+    const QStringRef trimmedToken = fontSizeToken.trimmed();
+    const QStringRef unitStr = trimmedToken.right(2);
+    const QStringRef value = trimmedToken.left(trimmedToken.size() - 2);
     bool ok = false;
     int size = 0;
     if (unitStr == QLatin1String("px")) {
@@ -251,7 +252,7 @@ static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
     each family is separated by spaces. Families with spaces in their name
     must be quoted.
 */
-static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesString)
+static QStringList qExtractFontFamiliesFromString(const QStringRef &fontFamiliesString)
 {
     QStringList extractedFamilies;
     int quoteIndex = -1;
@@ -264,7 +265,7 @@ static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesStr
             } else {
                 if (ch == fontFamiliesString.at(quoteIndex)) {
                     // Found the matching quote. +1/-1 because we don't want the quote as part of the name.
-                    const QString family = fontFamiliesString.mid(quoteIndex + 1, index - quoteIndex - 1);
+                    const QString family = fontFamiliesString.mid(quoteIndex + 1, index - quoteIndex - 1).toString();
                     extractedFamilies.push_back(family);
                     currentFamily.clear();
                     quoteIndex = -1;
@@ -395,16 +396,17 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
     fontSizeEnd += 3;
 
     QFont newFont;
-    if (!qSetFontSizeFromToken(newFont, fontString.mid(fontSizeStart, fontSizeEnd - fontSizeStart)))
+    if (!qSetFontSizeFromToken(newFont, fontString.midRef(fontSizeStart, fontSizeEnd - fontSizeStart)))
         return currentFont;
 
     // We don't want to parse the size twice, so remove it now.
     QString remainingFontString = fontString;
     remainingFontString.remove(fontSizeStart, fontSizeEnd - fontSizeStart);
+    QStringRef remainingFontStringRef(&remainingFontString);
 
     // Next, we have to take any font families out, as QString::split() will ruin quoted family names.
-    const QString fontFamiliesString = remainingFontString.mid(fontSizeStart);
-    remainingFontString.chop(remainingFontString.length() - fontSizeStart);
+    const QStringRef fontFamiliesString = remainingFontStringRef.mid(fontSizeStart);
+    remainingFontStringRef.truncate(fontSizeStart);
     QStringList fontFamilies = qExtractFontFamiliesFromString(fontFamiliesString);
     if (fontFamilies.isEmpty()) {
         return currentFont;
@@ -413,16 +415,16 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
         return currentFont;
 
     // Now that we've removed the messy parts, we can split the font string on spaces.
-    const QString trimmedTokensStr = remainingFontString.trimmed();
+    const QStringRef trimmedTokensStr = remainingFontStringRef.trimmed();
     if (trimmedTokensStr.isEmpty()) {
         // No optional properties.
         return newFont;
     }
-    const QStringList tokens = trimmedTokensStr.split(QLatin1Char(' '));
+    const auto tokens = trimmedTokensStr.split(QLatin1Char(' '));
 
     int usedTokens = NoTokens;
     // Optional properties can be in any order, but font-size and font-family must be last.
-    for (const QString &token : tokens) {
+    for (const QStringRef &token : tokens) {
         if (token.compare(QLatin1String("normal")) == 0) {
             if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
                 // Could be font-style, font-variant or font-weight.
@@ -943,7 +945,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
         pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
         pixelData->d()->image.fill(0x00000000);
     } else {
-        Q_ASSERT(image.width() == int(w) && image.height() == int(h));
+        Q_ASSERT(image.width() == qRound(w) && image.height() == qRound(h));
         pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
@@ -1263,7 +1265,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalAlpha(QV4::CallContext *c
 
     double globalAlpha = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
 
-    if (!qIsFinite(globalAlpha))
+    if (!qt_is_finite(globalAlpha))
         return QV4::Encode::undefined();
 
     if (globalAlpha >= 0.0 && globalAlpha <= 1.0 && r->d()->context->state.globalAlpha != globalAlpha) {
@@ -1547,10 +1549,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
         qreal x1 = ctx->args()[2].toNumber();
         qreal y1 = ctx->args()[3].toNumber();
 
-        if (!qIsFinite(x0)
-         || !qIsFinite(y0)
-         || !qIsFinite(x1)
-         || !qIsFinite(y1)) {
+        if (!qt_is_finite(x0)
+         || !qt_is_finite(y0)
+         || !qt_is_finite(x1)
+         || !qt_is_finite(y1)) {
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
         }
         QQuickContext2DEngineData *ed = engineData(scope.engine);
@@ -1592,12 +1594,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
         qreal y1 = ctx->args()[4].toNumber();
         qreal r1 = ctx->args()[5].toNumber();
 
-        if (!qIsFinite(x0)
-         || !qIsFinite(y0)
-         || !qIsFinite(x1)
-         || !qIsFinite(r0)
-         || !qIsFinite(r1)
-         || !qIsFinite(y1)) {
+        if (!qt_is_finite(x0)
+         || !qt_is_finite(y0)
+         || !qt_is_finite(x1)
+         || !qt_is_finite(r0)
+         || !qt_is_finite(r1)
+         || !qt_is_finite(y1)) {
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
         }
 
@@ -1639,11 +1641,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
         qreal x = ctx->args()[0].toNumber();
         qreal y = ctx->args()[1].toNumber();
         qreal angle = DEGREES(ctx->args()[2].toNumber());
-        if (!qIsFinite(x) || !qIsFinite(y)) {
+        if (!qt_is_finite(x) || !qt_is_finite(y)) {
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
-        if (!qIsFinite(angle)) {
+        if (!qt_is_finite(angle)) {
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
@@ -1894,7 +1896,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineWidth(QV4::CallContext *ctx
 
     qreal w = ctx->argc() ? ctx->args()[0].toNumber() : -1;
 
-    if (w > 0 && qIsFinite(w) && w != r->d()->context->state.lineWidth) {
+    if (w > 0 && qt_is_finite(w) && w != r->d()->context->state.lineWidth) {
         r->d()->context->state.lineWidth = w;
         r->d()->context->buffer()->setLineWidth(w);
     }
@@ -1923,7 +1925,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_miterLimit(QV4::CallContext *ct
 
     qreal ml = ctx->argc() ? ctx->args()[0].toNumber() : -1;
 
-    if (ml > 0 && qIsFinite(ml) && ml != r->d()->context->state.miterLimit) {
+    if (ml > 0 && qt_is_finite(ml) && ml != r->d()->context->state.miterLimit) {
         r->d()->context->state.miterLimit = ml;
         r->d()->context->buffer()->setMiterLimit(ml);
     }
@@ -1952,7 +1954,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_shadowBlur(QV4::CallContext *ct
 
     qreal blur = ctx->argc() ? ctx->args()[0].toNumber() : -1;
 
-    if (blur > 0 && qIsFinite(blur) && blur != r->d()->context->state.shadowBlur) {
+    if (blur > 0 && qt_is_finite(blur) && blur != r->d()->context->state.shadowBlur) {
         r->d()->context->state.shadowBlur = blur;
         r->d()->context->buffer()->setShadowBlur(blur);
     }
@@ -2012,7 +2014,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetX(QV4::CallContext 
     CHECK_CONTEXT_SETTER(r)
 
     qreal offsetX = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
-    if (qIsFinite(offsetX) && offsetX != r->d()->context->state.shadowOffsetX) {
+    if (qt_is_finite(offsetX) && offsetX != r->d()->context->state.shadowOffsetX) {
         r->d()->context->state.shadowOffsetX = offsetX;
         r->d()->context->buffer()->setShadowOffsetX(offsetX);
     }
@@ -2040,7 +2042,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetY(QV4::CallContext 
     CHECK_CONTEXT_SETTER(r)
 
     qreal offsetY = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();
-    if (qIsFinite(offsetY) && offsetY != r->d()->context->state.shadowOffsetY) {
+    if (qt_is_finite(offsetY) && offsetY != r->d()->context->state.shadowOffsetY) {
         r->d()->context->state.shadowOffsetY = offsetY;
         r->d()->context->buffer()->setShadowOffsetY(offsetY);
     }
@@ -2170,7 +2172,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_arc(QV4::CallContext *ctx)
 
         qreal radius = ctx->args()[2].toNumber();
 
-        if (qIsFinite(radius) && radius < 0)
+        if (qt_is_finite(radius) && radius < 0)
            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
 
         r->d()->context->arc(ctx->args()[0].toNumber(),
@@ -2216,7 +2218,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_arcTo(QV4::CallContext *ct
     if (ctx->argc() >= 5) {
         qreal radius = ctx->args()[4].toNumber();
 
-        if (qIsFinite(radius) && radius < 0)
+        if (qt_is_finite(radius) && radius < 0)
            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
 
         r->d()->context->arcTo(ctx->args()[0].toNumber(),
@@ -2279,7 +2281,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_bezierCurveTo(QV4::CallCon
         qreal x = ctx->args()[4].toNumber();
         qreal y = ctx->args()[5].toNumber();
 
-        if (!qIsFinite(cp1x) || !qIsFinite(cp1y) || !qIsFinite(cp2x) || !qIsFinite(cp2y) || !qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(cp1x) || !qt_is_finite(cp1y) || !qt_is_finite(cp2x) || !qt_is_finite(cp2y) || !qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
 
         r->d()->context->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
@@ -2375,7 +2377,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_lineTo(QV4::CallContext *c
         qreal x = ctx->args()[0].toNumber();
         qreal y = ctx->args()[1].toNumber();
 
-        if (!qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
 
         r->d()->context->lineTo(x, y);
@@ -2399,7 +2401,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_moveTo(QV4::CallContext *c
         qreal x = ctx->args()[0].toNumber();
         qreal y = ctx->args()[1].toNumber();
 
-        if (!qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
         r->d()->context->moveTo(x, y);
     }
@@ -2425,7 +2427,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_quadraticCurveTo(QV4::Call
         qreal x = ctx->args()[2].toNumber();
         qreal y = ctx->args()[3].toNumber();
 
-        if (!qIsFinite(cpx) || !qIsFinite(cpy) || !qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(cpx) || !qt_is_finite(cpy) || !qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
 
         r->d()->context->quadraticCurveTo(cpx, cpy, x, y);
@@ -2509,7 +2511,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_text(QV4::CallContext *ctx
         qreal x = ctx->args()[1].toNumber();
         qreal y = ctx->args()[2].toNumber();
 
-        if (!qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
         r->d()->context->text(ctx->args()[0].toQStringNoThrow(), x, y);
     }
@@ -2774,7 +2776,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillText(QV4::CallContext 
     if (ctx->argc() >= 3) {
         qreal x = ctx->args()[1].toNumber();
         qreal y = ctx->args()[2].toNumber();
-        if (!qIsFinite(x) || !qIsFinite(y))
+        if (!qt_is_finite(x) || !qt_is_finite(y))
             return ctx->thisObject().asReturnedValue();
         QPainterPath textPath = r->d()->context->createTextGlyphs(x, y, ctx->args()[0].toQStringNoThrow());
         r->d()->context->buffer()->fill(textPath);
@@ -2973,14 +2975,14 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
         return ctx->thisObject().asReturnedValue();
     }
 
-    if (!qIsFinite(sx)
-     || !qIsFinite(sy)
-     || !qIsFinite(sw)
-     || !qIsFinite(sh)
-     || !qIsFinite(dx)
-     || !qIsFinite(dy)
-     || !qIsFinite(dw)
-     || !qIsFinite(dh))
+    if (!qt_is_finite(sx)
+     || !qt_is_finite(sy)
+     || !qt_is_finite(sw)
+     || !qt_is_finite(sh)
+     || !qt_is_finite(dx)
+     || !qt_is_finite(dy)
+     || !qt_is_finite(dw)
+     || !qt_is_finite(dh))
         return ctx->thisObject().asReturnedValue();
 
     if (sx < 0
@@ -3201,7 +3203,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::CallC
         qreal w = ctx->args()[0].toNumber();
         qreal h = ctx->args()[1].toNumber();
 
-        if (!qIsFinite(w) || !qIsFinite(h))
+        if (!qt_is_finite(w) || !qt_is_finite(h))
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
 
         if (w > 0 && h > 0)
@@ -3227,7 +3229,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(QV4::CallCont
         qreal y = ctx->args()[1].toNumber();
         qreal w = ctx->args()[2].toNumber();
         qreal h = ctx->args()[3].toNumber();
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "getImageData(): Invalid arguments");
 
         if (w <= 0 || h <= 0)
@@ -3259,7 +3261,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::CallCont
     qreal dy = ctx->args()[2].toNumber();
     qreal w, h, dirtyX, dirtyY, dirtyWidth, dirtyHeight;
 
-    if (!qIsFinite(dx) || !qIsFinite(dy))
+    if (!qt_is_finite(dx) || !qt_is_finite(dy))
         V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, arg0);
@@ -3277,7 +3279,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::CallCont
             dirtyWidth = ctx->args()[5].toNumber();
             dirtyHeight = ctx->args()[6].toNumber();
 
-            if (!qIsFinite(dirtyX) || !qIsFinite(dirtyY) || !qIsFinite(dirtyWidth) || !qIsFinite(dirtyHeight))
+            if (!qt_is_finite(dirtyX) || !qt_is_finite(dirtyY) || !qt_is_finite(dirtyWidth) || !qt_is_finite(dirtyHeight))
                 V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
 
@@ -3364,7 +3366,7 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
         } else {
             color = qt_color_from_string(ctx->args()[1]);
         }
-        if (pos < 0.0 || pos > 1.0 || !qIsFinite(pos)) {
+        if (pos < 0.0 || pos > 1.0 || !qt_is_finite(pos)) {
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
         }
 
@@ -3384,7 +3386,7 @@ void QQuickContext2D::scale(qreal x,  qreal y)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y))
+    if (!qt_is_finite(x) || !qt_is_finite(y))
         return;
 
     QTransform newTransform = state.matrix;
@@ -3405,7 +3407,7 @@ void QQuickContext2D::rotate(qreal angle)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(angle))
+    if (!qt_is_finite(angle))
         return;
 
     QTransform newTransform =state.matrix;
@@ -3426,7 +3428,7 @@ void QQuickContext2D::shear(qreal h, qreal v)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(h) || !qIsFinite(v))
+    if (!qt_is_finite(h) || !qt_is_finite(v))
         return ;
 
     QTransform newTransform = state.matrix;
@@ -3447,7 +3449,7 @@ void QQuickContext2D::translate(qreal x, qreal y)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y))
+    if (!qt_is_finite(x) || !qt_is_finite(y))
         return ;
 
     QTransform newTransform = state.matrix;
@@ -3468,7 +3470,7 @@ void QQuickContext2D::transform(qreal a, qreal b, qreal c, qreal d, qreal e, qre
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(a) || !qIsFinite(b) || !qIsFinite(c) || !qIsFinite(d) || !qIsFinite(e) || !qIsFinite(f))
+    if (!qt_is_finite(a) || !qt_is_finite(b) || !qt_is_finite(c) || !qt_is_finite(d) || !qt_is_finite(e) || !qt_is_finite(f))
         return;
 
     QTransform transform(a, b, c, d, e, f);
@@ -3485,7 +3487,7 @@ void QQuickContext2D::transform(qreal a, qreal b, qreal c, qreal d, qreal e, qre
 
 void QQuickContext2D::setTransform(qreal a, qreal b, qreal c, qreal d, qreal e, qreal f)
 {
-    if (!qIsFinite(a) || !qIsFinite(b) || !qIsFinite(c) || !qIsFinite(d) || !qIsFinite(e) || !qIsFinite(f))
+    if (!qt_is_finite(a) || !qt_is_finite(b) || !qt_is_finite(c) || !qt_is_finite(d) || !qt_is_finite(e) || !qt_is_finite(f))
         return;
 
     QTransform ctm = state.matrix;
@@ -3542,7 +3544,7 @@ void QQuickContext2D::fillRect(qreal x, qreal y, qreal w, qreal h)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
         return;
 
     buffer()->fillRect(QRectF(x, y, w, h));
@@ -3553,7 +3555,7 @@ void QQuickContext2D::strokeRect(qreal x, qreal y, qreal w, qreal h)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
         return;
 
     buffer()->strokeRect(QRectF(x, y, w, h));
@@ -3564,7 +3566,7 @@ void QQuickContext2D::clearRect(qreal x, qreal y, qreal w, qreal h)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
         return;
 
     buffer()->clearRect(QRectF(x, y, w, h));
@@ -3575,7 +3577,7 @@ void QQuickContext2D::drawText(const QString& text, qreal x, qreal y, bool fill)
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y))
+    if (!qt_is_finite(x) || !qt_is_finite(y))
         return;
 
     QPainterPath textPath = createTextGlyphs(x, y, text);
@@ -3721,7 +3723,7 @@ void QQuickContext2D::arcTo(qreal x1, qreal y1,
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x1) || !qIsFinite(y1) || !qIsFinite(x2) || !qIsFinite(y2) || !qIsFinite(radius))
+    if (!qt_is_finite(x1) || !qt_is_finite(y1) || !qt_is_finite(x2) || !qt_is_finite(y2) || !qt_is_finite(radius))
         return;
 
     QPointF st(x1, y1);
@@ -3739,7 +3741,7 @@ void QQuickContext2D::rect(qreal x, qreal y, qreal w, qreal h)
 {
     if (!state.invertibleCTM)
         return;
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
         return;
 
     if (!w && !h) {
@@ -3756,7 +3758,7 @@ void QQuickContext2D::roundedRect(qreal x, qreal y,
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h) || !qIsFinite(xr) || !qIsFinite(yr))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h) || !qt_is_finite(xr) || !qt_is_finite(yr))
         return;
 
     if (!w && !h) {
@@ -3772,7 +3774,7 @@ void QQuickContext2D::ellipse(qreal x, qreal y,
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+    if (!qt_is_finite(x) || !qt_is_finite(y) || !qt_is_finite(w) || !qt_is_finite(h))
         return;
 
     if (!w && !h) {
@@ -3798,7 +3800,7 @@ void QQuickContext2D::arc(qreal xc, qreal yc, qreal radius, qreal sar, qreal ear
     if (!state.invertibleCTM)
         return;
 
-    if (!qIsFinite(xc) || !qIsFinite(yc) || !qIsFinite(sar) || !qIsFinite(ear) || !qIsFinite(radius))
+    if (!qt_is_finite(xc) || !qt_is_finite(yc) || !qt_is_finite(sar) || !qt_is_finite(ear) || !qt_is_finite(radius))
         return;
 
     if (sar == ear)
@@ -3937,13 +3939,13 @@ bool QQuickContext2D::isPointInPath(qreal x, qreal y) const
     if (!m_path.elementCount())
         return false;
 
-    if (!qIsFinite(x) || !qIsFinite(y))
+    if (!qt_is_finite(x) || !qt_is_finite(y))
         return false;
 
     QPointF point(x, y);
     QTransform ctm = state.matrix;
     QPointF p = ctm.inverted().map(point);
-    if (!qIsFinite(p.x()) || !qIsFinite(p.y()))
+    if (!qt_is_finite(p.x()) || !qt_is_finite(p.y()))
         return false;
 
     const_cast<QQuickContext2D *>(this)->m_path.setFillRule(state.fillRule);

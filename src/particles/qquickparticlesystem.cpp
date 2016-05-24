@@ -597,6 +597,13 @@ void QQuickParticleSystem::initGroups()
     groupIds.clear();
     nextFreeGroupId = 0;
 
+    for (auto e : qAsConst(m_emitters)) {
+        e->reclaculateGroupId();
+    }
+    foreach (QQuickParticlePainter *p, m_painters) {
+        p->recalculateGroupIds();
+    }
+
     QQuickParticleGroupData *pd = new QQuickParticleGroupData(QString(), this); // Default group
     Q_ASSERT(pd->index == 0);
     Q_UNUSED(pd);

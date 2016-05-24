@@ -41,12 +41,12 @@
 
 inline quint32 stringHash(const QChar* data, int length)
 {
-    return QV4::String::createHashValue(data, length);
+    return QV4::String::createHashValue(data, length, Q_NULLPTR);
 }
 
 inline quint32 stringHash(const char *data, int length)
 {
-    return QV4::String::createHashValue(data, length);
+    return QV4::String::createHashValue(data, length, Q_NULLPTR);
 }
 
 void QHashedString::computeHash() const

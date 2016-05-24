@@ -116,6 +116,8 @@ private:
     uint m_internalFormat;
     uint m_externalFormat;
 
+    int m_atlas_transient_image_threshold;
+
     uint m_allocated : 1;
     uint m_use_bgra_fallback: 1;
 

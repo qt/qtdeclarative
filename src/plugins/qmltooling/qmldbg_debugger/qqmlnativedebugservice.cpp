@@ -704,7 +704,7 @@ bool NativeDebugger::reallyHitTheBreakPoint(const QV4::Function *function, int l
         const BreakPoint &bp = m_service->m_breakHandler->m_breakPoints.at(i);
         if (bp.lineNumber == lineNumber) {
             const QString fileName = function->sourceFile();
-            const QString base = fileName.mid(fileName.lastIndexOf('/') + 1);
+            const QStringRef base = fileName.midRef(fileName.lastIndexOf('/') + 1);
             if (bp.fileName.endsWith(base)) {
                 if (bp.condition.isEmpty() || checkCondition(bp.condition)) {
                     BreakPoint &mbp = m_service->m_breakHandler->m_breakPoints[i];

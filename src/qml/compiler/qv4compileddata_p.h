@@ -351,22 +351,42 @@ struct Property
     enum Type { Var = 0, Variant, Int, Bool, Real, String, Url, Color,
                 Font, Time, Date, DateTime, Rect, Point, Size,
                 Vector2D, Vector3D, Vector4D, Matrix4x4, Quaternion,
-                Alias, Custom, CustomList };
+                Custom, CustomList };
 
     enum Flags {
         IsReadOnly = 0x1
     };
 
     quint32 nameIndex;
-    quint32 type;
-    union {
-        quint32 customTypeNameIndex; // If type >= Custom
-        quint32 aliasIdValueIndex; // If type == Alias
-    };
-    quint32 aliasPropertyValueIndex;
-    quint32 flags; // readonly
+    quint32 type : 31;
+    quint32 flags : 1; // readonly
+    quint32 customTypeNameIndex; // If type >= Custom
     Location location;
-    Location aliasLocation; // If type == Alias
+};
+
+struct Alias {
+    enum Flags {
+        IsReadOnly = 0x1,
+        Resolved = 0x2,
+        AliasPointsToPointerObject = 0x4
+    };
+    quint32 nameIndex : 29;
+    quint32 flags : 3;
+    union {
+        quint32 idIndex; // string index
+        quint32 targetObjectId; // object id index (in QQmlContextData::idValues)
+    };
+    union {
+        quint32 propertyNameIndex; // string index
+        qint32 encodedMetaPropertyIndex;
+    };
+    Location location;
+    Location referenceLocation;
+
+    bool isObjectAlias() const {
+        Q_ASSERT(flags & Resolved);
+        return encodedMetaPropertyIndex == -1;
+    }
 };
 
 struct Object
@@ -376,11 +396,14 @@ struct Object
     // it will be the name of the attached type.
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
-    qint32 indexOfDefaultProperty; // -1 means no default property declared in this object
+    qint32 indexOfDefaultPropertyOrAlias : 31; // -1 means no default property declared in this object
+    quint32 defaultPropertyIsAlias : 1;
     quint32 nFunctions;
     quint32 offsetToFunctions;
     quint32 nProperties;
     quint32 offsetToProperties;
+    quint32 nAliases;
+    quint32 offsetToAliases;
     quint32 nSignals;
     quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32 nBindings;
@@ -392,11 +415,12 @@ struct Object
 //    Signal[]
 //    Binding[]
 
-    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nSignals, int nBindings)
+    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings)
     {
         return ( sizeof(Object)
                  + nFunctions * sizeof(quint32)
                  + nProperties * sizeof(Property)
+                 + nAliases * sizeof(Alias)
                  + nSignals * sizeof(quint32)
                  + nBindings * sizeof(Binding)
                  + 0x7
@@ -411,6 +435,11 @@ struct Object
     const Property *propertyTable() const
     {
         return reinterpret_cast<const Property*>(reinterpret_cast<const char *>(this) + offsetToProperties);
+    }
+
+    const Alias *aliasTable() const
+    {
+        return reinterpret_cast<const Alias*>(reinterpret_cast<const char *>(this) + offsetToAliases);
     }
 
     const Binding *bindingTable() const

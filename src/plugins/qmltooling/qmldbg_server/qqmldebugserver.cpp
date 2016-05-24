@@ -53,6 +53,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 #include <QtCore/QStringList>
+#include <QtCore/QVector>
 #include <QtCore/qwaitcondition.h>
 
 QT_BEGIN_NAMESPACE
@@ -345,40 +346,40 @@ void QQmlDebugServerImpl::parseArguments()
     QString fileName;
     QStringList services;
 
-    const QStringList lstjsDebugArguments = args.split(QLatin1Char(','));
-    QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
-    QStringList::const_iterator argsIt = lstjsDebugArguments.cbegin();
-    for (; argsIt != argsItEnd; ++argsIt) {
-        const QString strArgument = *argsIt;
+    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','));
+    for (auto argsIt = lstjsDebugArguments.begin(), argsItEnd = lstjsDebugArguments.end(); argsIt != argsItEnd; ++argsIt) {
+        const QStringRef &strArgument = *argsIt;
         if (strArgument.startsWith(QLatin1String("port:"))) {
-            portFrom = strArgument.midRef(5).toInt(&ok);
+            portFrom = strArgument.mid(5).toInt(&ok);
             portTo = portFrom;
-            QStringList::const_iterator argsNext = argsIt + 1;
+            const auto argsNext = argsIt + 1;
             if (argsNext == argsItEnd)
                 break;
-            const QString nextArgument = *argsNext;
+            if (ok) {
+                const QString nextArgument = argsNext->toString();
 
-            // Don't use QStringLiteral here. QRegExp has a global cache and will save an implicitly
-            // shared copy of the passed string. That copy isn't properly detached when the library
-            // is unloaded if the original string lives in the library's .rodata
-            if (ok && nextArgument.contains(QRegExp(QLatin1String("^\\s*\\d+\\s*$")))) {
-                portTo = nextArgument.toInt(&ok);
-                ++argsIt;
+                // Don't use QStringLiteral here. QRegExp has a global cache and will save an implicitly
+                // shared copy of the passed string. That copy isn't properly detached when the library
+                // is unloaded if the original string lives in the library's .rodata
+                if (nextArgument.contains(QRegExp(QLatin1String("^\\s*\\d+\\s*$")))) {
+                    portTo = nextArgument.toInt(&ok);
+                    ++argsIt;
+                }
             }
         } else if (strArgument.startsWith(QLatin1String("host:"))) {
-            hostAddress = strArgument.mid(5);
+            hostAddress = strArgument.mid(5).toString();
         } else if (strArgument == QLatin1String("block")) {
             block = true;
         } else if (strArgument.startsWith(QLatin1String("file:"))) {
-            fileName = strArgument.mid(5);
+            fileName = strArgument.mid(5).toString();
             ok = !fileName.isEmpty();
         } else if (strArgument.startsWith(QLatin1String("services:"))) {
-            services.append(strArgument.mid(9));
+            services.append(strArgument.mid(9).toString());
         } else if (!services.isEmpty()) {
-            services.append(strArgument);
+            services.append(strArgument.toString());
         } else {
             const QString message = tr("QML Debugger: Invalid argument \"%1\" detected."
-                                       " Ignoring the same.").arg(strArgument);
+                                       " Ignoring the same.").arg(strArgument.toString());
             qWarning("%s", qPrintable(message));
         }
     }
@@ -423,7 +424,7 @@ void QQmlDebugServerImpl::parseArguments()
             //: Please preserve the line breaks and formatting
             << tr("Sends qDebug() and similar messages over the QML debug\n"
                "\t\t  connection. QtCreator uses this for showing debug\n"
-               "\t\t  messages in the JavaScript console.") << '\n'
+               "\t\t  messages in the debugger console.") << '\n'
            << tr("Other services offered by qmltooling plugins that implement "
                  "QQmlDebugServiceFactory and which can be found in the standard plugin "
                  "paths will also be available and can be specified. If no \"services\" "

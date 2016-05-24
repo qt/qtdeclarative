@@ -60,6 +60,7 @@ private slots:
     void remote_data();
     void sourceSize();
     void sourceSizeChanges();
+    void sourceSizeChanges_intermediate();
     void sourceSizeReadOnly();
     void invalidSource();
     void qtbug_16520();
@@ -205,16 +206,12 @@ void tst_qquickanimatedimage::mirror_notRunning()
 
     int frame = anim->currentFrame();
     bool playing = anim->isPlaying();
-    bool paused = anim->isPlaying();
+    bool paused = anim->isPaused();
 
     anim->setProperty("mirror", true);
     screenshot = window.grabWindow();
 
     screenshot.save("screen.png");
-#if defined(Q_OS_WIN)
-    // QTBUG-36717
-    QSKIP("This test is failing in the CI system under mysterious circumstances");
-#endif
     QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status
@@ -373,6 +370,28 @@ void tst_qquickanimatedimage::sourceSizeChanges()
 
     delete anim;
 }
+
+void tst_qquickanimatedimage::sourceSizeChanges_intermediate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nAnimatedImage { readonly property int testWidth: status === AnimatedImage.Ready ? sourceSize.width : -1; source: srcImage }", QUrl::fromLocalFile(""));
+    QTRY_VERIFY(component.isReady());
+    QQmlContext *ctxt = engine.rootContext();
+    ctxt->setContextProperty("srcImage", "");
+
+    QScopedPointer<QQuickAnimatedImage> anim(qobject_cast<QQuickAnimatedImage*>(component.create()));
+    QVERIFY(anim != 0);
+
+    ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
+    QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
+    QTRY_COMPARE(anim->property("testWidth").toInt(), anim->sourceSize().width());
+
+    ctxt->setContextProperty("srcImage", testFileUrl("hearts_copy.gif"));
+    QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
+    QTRY_COMPARE(anim->property("testWidth").toInt(), anim->sourceSize().width());
+}
+
 
 void tst_qquickanimatedimage::qtbug_16520()
 {

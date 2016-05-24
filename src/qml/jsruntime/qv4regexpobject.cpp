@@ -185,8 +185,7 @@ QRegExp RegExpObject::toQRegExp() const
 
 QString RegExpObject::toString() const
 {
-    QString result = QLatin1Char('/') + source();
-    result += QLatin1Char('/');
+    QString result = QLatin1Char('/') + source() + QLatin1Char('/');
     if (global())
         result += QLatin1Char('g');
     if (value()->ignoreCase)

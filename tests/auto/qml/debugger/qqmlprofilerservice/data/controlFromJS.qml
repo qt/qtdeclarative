@@ -26,10 +26,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQml 2.0
 
-Rectangle {
-    Timer {
+QtObject {
+    property var timer: Timer {
         running: true
         interval: 1
         onTriggered: {
@@ -38,7 +38,7 @@ Rectangle {
         }
     }
 
-    Timer {
+    property var stopTimer: Timer {
         id: stopTimer
         interval: 1000
         onTriggered: {
@@ -47,7 +47,7 @@ Rectangle {
         }
     }
 
-    Timer {
+    property var endTimer: Timer {
         id: endTimer
         interval: 1000
         onTriggered: Qt.quit();

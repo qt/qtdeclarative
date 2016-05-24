@@ -74,69 +74,17 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QML_ALIAS_FLAG_PTR 0x00000001
-
 struct QQmlVMEMetaData
 {
-    short propertyCount;
-    short aliasCount;
-    short signalCount;
-    short methodCount;
     // Make sure this structure is always aligned to int
+    int dummy;
 
     struct AliasData {
-        int contextIdx;
-        int propertyIdx;
-        int propType;
-        int flags;
         int notifySignal;
-
-        bool isObjectAlias() const {
-            return propertyIdx == -1;
-        }
-        bool isPropertyAlias() const {
-            return !isObjectAlias() && valueTypeIndex() == -1;
-        }
-        bool isValueTypeAlias() const {
-            return !isObjectAlias() && valueTypeIndex() != -1;
-        }
-        int propertyIndex() const {
-            int index;
-            QQmlPropertyData::decodeValueTypePropertyIndex(propertyIdx, &index);
-            return index;
-        }
-        int valueTypeIndex() const {
-            return QQmlPropertyData::decodeValueTypePropertyIndex(propertyIdx);
-        }
-        int valueType() const {
-            return (valueTypeIndex() != -1) ? propType : 0;
-        }
     };
-
-    enum {
-        VarPropertyType = -1
-    };
-
-    struct PropertyData {
-        int propertyType;
-    };
-
-    struct MethodData {
-        int runtimeFunctionIndex;
-        int parameterCount;
-        quint16 lineNumber;
-    };
-
-    PropertyData *propertyData() const {
-        return (PropertyData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
-    }
 
     AliasData *aliasData() const {
-        return (AliasData *)(propertyData() + propertyCount);
-    }
-
-    MethodData *methodData() const {
-        return (MethodData *)(aliasData() + aliasCount);
+        return (AliasData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
     }
 };
 
@@ -199,12 +147,11 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     QV4::ReturnedValue vmeMethod(int index);
-    quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, const QV4::Value &function);
     QV4::ReturnedValue vmeProperty(int index);
     void setVMEProperty(int index, const QV4::Value &v);
@@ -230,9 +177,8 @@ public:
 
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    QV4::WeakValue properties;
-    inline void allocateProperties();
-    QV4::MemberData *propertiesAsMemberData();
+    QV4::WeakValue propertyAndMethodStorage;
+    QV4::MemberData *propertyAndMethodStorageAsMemberData();
 
     int readPropertyAsInt(int id);
     bool readPropertyAsBool(int id);
@@ -265,7 +211,6 @@ public:
 
     void connectAlias(int aliasId);
 
-    QV4::PersistentValue *methods;
     QV4::ReturnedValue method(int);
 
     QV4::ReturnedValue readVarProperty(int);
@@ -280,6 +225,12 @@ public:
     QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
 
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
+
+
+    // keep a reference to the compilation unit in order to still
+    // do property access when the context has been invalidated.
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    const QV4::CompiledData::Object *compiledObject;
 };
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)

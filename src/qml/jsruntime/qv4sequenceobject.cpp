@@ -75,6 +75,9 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 
 //  F(elementType, elementTypeName, sequenceType, defaultValue)
 #define FOREACH_QML_SEQUENCE_TYPE(F) \
+    F(int, IntVector, QVector<int>, 0) \
+    F(qreal, RealVector, QVector<qreal>, 0.0) \
+    F(bool, BoolVector, QVector<bool>, false) \
     F(int, Int, QList<int>, 0) \
     F(qreal, Real, QList<qreal>, 0.0) \
     F(bool, Bool, QList<bool>, false) \
@@ -578,6 +581,15 @@ Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
 
 namespace QV4 {
 
+typedef QQmlSequence<QVector<int> > QQmlIntVectorList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlIntVectorList);
+typedef QQmlSequence<QVector<qreal> > QQmlRealVectorList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlRealVectorList);
+typedef QQmlSequence<QVector<bool> > QQmlBoolVectorList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlBoolVectorList);
 typedef QQmlSequence<QStringList> QQmlQStringList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlQStringList);

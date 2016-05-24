@@ -45,6 +45,7 @@
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
+#include <private/qquickpixmapcache_p.h>
 #include <private/qv8engine_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qmimedata.h>
@@ -110,6 +111,8 @@ public:
     bool eventQueued : 1;
     bool overrideActions : 1;
     QPointF hotSpot;
+    QUrl imageSource;
+    QQuickPixmap pixmapLoader;
     QStringList keys;
     QVariantMap externalMimeData;
     QQuickDrag::DragType dragType;
@@ -307,13 +310,14 @@ void QQuickDragAttached::setActive(bool active)
         else if (active) {
             if (d->dragType == QQuickDrag::Internal) {
                 d->start(d->supportedActions);
-            }
-            else if (d->dragType == QQuickDrag::Automatic) {
-                // There are different semantics than start() since startDrag()
-                // may be called after an internal drag is already started.
-                active = true;
+            } else {
+                d->active = true;
                 emit activeChanged();
-                d->startDrag(d->supportedActions);
+                if (d->dragType == QQuickDrag::Automatic) {
+                    // There are different semantics than start() since startDrag()
+                    // may be called after an internal drag is already started.
+                    d->startDrag(d->supportedActions);
+                }
             }
         }
         else
@@ -404,6 +408,43 @@ void QQuickDragAttached::setHotSpot(const QPointF &hotSpot)
             d->updatePosition();
 
         emit hotSpotChanged();
+    }
+}
+
+/*!
+    \qmlattachedproperty QUrl QtQuick::Drag::imageSource
+    \since 5.8
+
+    This property holds the URL of the image which will be used to represent
+    the data during the drag and drop operation. Changing this property after
+    the drag operation has started will have no effect.
+
+    The example below uses an item's contents as a drag image:
+
+    \snippet qml/externaldrag.qml 0
+
+    \sa Item::grabToImage()
+*/
+
+QUrl QQuickDragAttached::imageSource() const
+{
+    Q_D(const QQuickDragAttached);
+    return d->imageSource;
+}
+
+void QQuickDragAttached::setImageSource(const QUrl &url)
+{
+    Q_D(QQuickDragAttached);
+    if (d->imageSource != url) {
+        d->imageSource = url;
+
+        if (url.isEmpty()) {
+            d->pixmapLoader.clear();
+        } else {
+            d->pixmapLoader.load(qmlEngine(this), url);
+        }
+
+        Q_EMIT imageSourceChanged();
     }
 }
 
@@ -726,9 +767,9 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
         mimeData->setData(it.key(), it.value().toString().toUtf8());
 
     drag->setMimeData(mimeData);
-
-    // TODO: how to handle drag image?
-    // drag->setPixmap(iconPixmap);
+    if (pixmapLoader.isReady()) {
+        drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
+    }
 
     emit q->dragStarted();
 

@@ -293,7 +293,7 @@ inline void QQmlEnginePrivate::dereferenceScarceResources()
     // if the refcount is zero, then evaluation of the "top level"
     // expression must have completed.  We can safely release the
     // scarce resources.
-    if (scarceResourcesRefCount == 0) {
+    if (Q_LIKELY(scarceResourcesRefCount == 0)) {
         QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
         if (Q_UNLIKELY(!engine->scarceResources.isEmpty())) {
             cleanupScarceResources();

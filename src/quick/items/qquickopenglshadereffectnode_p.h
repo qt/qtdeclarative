@@ -72,7 +72,6 @@ struct QQuickOpenGLShaderEffectMaterialKey {
     };
 
     QByteArray sourceCode[ShaderTypeCount];
-    const char *className;
 
     bool operator == (const QQuickOpenGLShaderEffectMaterialKey &other) const;
     bool operator != (const QQuickOpenGLShaderEffectMaterialKey &other) const;

@@ -44,7 +44,6 @@
 #include <private/qsgadaptationlayer_p.h>
 
 #include <QtGui/qpixmapcache.h>
-#include <QtCore/qstringbuilder.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qmetaobject.h>
 

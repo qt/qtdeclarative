@@ -984,10 +984,9 @@ ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine
     Scope scope(engine);
     ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex));
     if (!o) {
-        QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(propertyIndex).arg(callData->thisObject.toQStringNoThrow());
+        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
     }
-
     return o->call(callData);
 }
 
@@ -996,7 +995,7 @@ ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engi
     Scope scope(engine);
     ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex));
     if (!o) {
-        QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(propertyIndex).arg(callData->thisObject.toQStringNoThrow());
+        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
     }
 
@@ -1621,6 +1620,351 @@ void Runtime::method_convertThisToObject(ExecutionEngine *engine)
     } else {
         *t = t->toObject(engine)->asReturnedValue();
     }
+}
+
+ReturnedValue Runtime::method_uPlus(const Value &value)
+{
+    TRACE1(value);
+
+    if (value.isNumber())
+        return value.asReturnedValue();
+    if (value.integerCompatible())
+        return Encode(value.int_32());
+
+    double n = value.toNumberImpl();
+    return Encode(n);
+}
+
+ReturnedValue Runtime::method_uMinus(const Value &value)
+{
+    TRACE1(value);
+
+    // +0 != -0, so we need to convert to double when negating 0
+    if (value.isInteger() && value.integerValue())
+        return Encode(-value.integerValue());
+    else {
+        double n = RuntimeHelpers::toNumber(value);
+        return Encode(-n);
+    }
+}
+
+ReturnedValue Runtime::method_complement(const Value &value)
+{
+    TRACE1(value);
+
+    int n = value.toInt32();
+    return Encode((int)~n);
+}
+
+ReturnedValue Runtime::method_uNot(const Value &value)
+{
+    TRACE1(value);
+
+    bool b = value.toBoolean();
+    return Encode(!b);
+}
+
+// binary operators
+ReturnedValue Runtime::method_bitOr(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    int lval = left.toInt32();
+    int rval = right.toInt32();
+    return Encode(lval | rval);
+}
+
+ReturnedValue Runtime::method_bitXor(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    int lval = left.toInt32();
+    int rval = right.toInt32();
+    return Encode(lval ^ rval);
+}
+
+ReturnedValue Runtime::method_bitAnd(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    int lval = left.toInt32();
+    int rval = right.toInt32();
+    return Encode(lval & rval);
+}
+
+#ifndef V4_BOOTSTRAP
+ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+        return add_int32(left.integerValue(), right.integerValue());
+    if (left.isNumber() && right.isNumber())
+        return Primitive::fromDouble(left.asDouble() + right.asDouble()).asReturnedValue();
+
+    return RuntimeHelpers::addHelper(engine, left, right);
+}
+#endif // V4_BOOTSTRAP
+
+ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+        return sub_int32(left.integerValue(), right.integerValue());
+
+    double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
+    double rval = right.isNumber() ? right.asDouble() : right.toNumberImpl();
+
+    return Primitive::fromDouble(lval - rval).asReturnedValue();
+}
+
+ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+        return mul_int32(left.integerValue(), right.integerValue());
+
+    double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
+    double rval = right.isNumber() ? right.asDouble() : right.toNumberImpl();
+
+    return Primitive::fromDouble(lval * rval).asReturnedValue();
+}
+
+ReturnedValue Runtime::method_div(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (Value::integerCompatible(left, right)) {
+        int lval = left.integerValue();
+        int rval = right.integerValue();
+        if (rval != 0 && (lval % rval == 0))
+            return Encode(int(lval / rval));
+        else
+            return Encode(double(lval) / rval);
+    }
+
+    double lval = left.toNumber();
+    double rval = right.toNumber();
+    return Primitive::fromDouble(lval / rval).asReturnedValue();
+}
+
+ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (Value::integerCompatible(left, right) && right.integerValue() != 0) {
+        int intRes = left.integerValue() % right.integerValue();
+        if (intRes != 0 || left.integerValue() >= 0)
+            return Encode(intRes);
+    }
+
+    double lval = RuntimeHelpers::toNumber(left);
+    double rval = RuntimeHelpers::toNumber(right);
+#ifdef fmod
+#  undef fmod
+#endif
+    return Primitive::fromDouble(std::fmod(lval, rval)).asReturnedValue();
+}
+
+ReturnedValue Runtime::method_shl(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    int lval = left.toInt32();
+    int rval = right.toInt32() & 0x1f;
+    return Encode((int)(lval << rval));
+}
+
+ReturnedValue Runtime::method_shr(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    int lval = left.toInt32();
+    unsigned rval = right.toUInt32() & 0x1f;
+    return Encode((int)(lval >> rval));
+}
+
+ReturnedValue Runtime::method_ushr(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    unsigned lval = left.toUInt32();
+    unsigned rval = right.toUInt32() & 0x1f;
+    uint res = lval >> rval;
+
+    return Encode(res);
+}
+
+ReturnedValue Runtime::method_greaterThan(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = method_compareGreaterThan(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_lessThan(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = method_compareLessThan(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_greaterEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = method_compareGreaterEqual(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_lessEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = method_compareLessEqual(left, right);
+    return Encode(r);
+}
+
+Bool Runtime::method_compareEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    if (left.rawValue() == right.rawValue())
+        // NaN != NaN
+        return !left.isNaN();
+
+    if (left.type() == right.type()) {
+        if (!left.isManaged())
+            return false;
+        if (left.isString() == right.isString())
+            return left.cast<Managed>()->isEqualTo(right.cast<Managed>());
+    }
+
+    return RuntimeHelpers::equalHelper(left, right);
+}
+
+ReturnedValue Runtime::method_equal(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = method_compareEqual(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_notEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = !method_compareEqual(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_strictEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = RuntimeHelpers::strictEqual(left, right);
+    return Encode(r);
+}
+
+ReturnedValue Runtime::method_strictNotEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    bool r = ! RuntimeHelpers::strictEqual(left, right);
+    return Encode(r);
+}
+
+Bool Runtime::method_compareNotEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    return !Runtime::method_compareEqual(left, right);
+}
+
+Bool Runtime::method_compareStrictEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    return RuntimeHelpers::strictEqual(left, right);
+}
+
+Bool Runtime::method_compareStrictNotEqual(const Value &left, const Value &right)
+{
+    TRACE2(left, right);
+
+    return ! RuntimeHelpers::strictEqual(left, right);
+}
+
+Bool Runtime::method_toBoolean(const Value &value)
+{
+    return value.toBoolean();
+}
+
+ReturnedValue Runtime::method_accessQmlScopeObjectQRealProperty(const Value &context,
+                                                                QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    qreal rv = 0;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+ReturnedValue Runtime::method_accessQmlScopeObjectIntProperty(const Value &context,
+                                                              QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    int rv = 0;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+ReturnedValue Runtime::method_accessQmlScopeObjectBoolProperty(const Value &context,
+                                                               QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    bool rv = false;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(rv);
+#else
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
+}
+
+ReturnedValue Runtime::method_accessQmlScopeObjectQStringProperty(ExecutionEngine *engine,
+                                                                  const Value &context,
+                                                                  QQmlAccessors *accessors)
+{
+#ifndef V4_BOOTSTRAP
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    QString rv;
+    accessors->read(c.d()->qml->scopeObject, &rv);
+    return QV4::Encode(engine->newString(rv));
+#else
+    Q_UNUSED(engine);
+    Q_UNUSED(context);
+    Q_UNUSED(accessors);
+    return QV4::Encode::undefined();
+#endif
 }
 
 #endif // V4_BOOTSTRAP

@@ -160,13 +160,9 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
             if (i > 0)
                 trace += QLatin1Char('\n');
             const StackFrame &frame = This->d()->stackTrace[i];
-            trace += frame.function;
-            trace += QLatin1Char('@');
-            trace += frame.source;
-            if (frame.line >= 0) {
-                trace += QLatin1Char(':');
-                trace += QString::number(frame.line);
-            }
+            trace += frame.function + QLatin1Char('@') + frame.source;
+            if (frame.line >= 0)
+                trace += QLatin1Char(':') + QString::number(frame.line);
         }
         This->d()->stack = ctx->d()->engine->newString(trace);
     }

@@ -60,24 +60,15 @@ QT_BEGIN_NAMESPACE
 class QQuickAnchorLine
 {
 public:
-    enum AnchorLine {
-        Invalid = 0x0,
-        Left = 0x01,
-        Right = 0x02,
-        Top = 0x04,
-        Bottom = 0x08,
-        HCenter = 0x10,
-        VCenter = 0x20,
-        Baseline = 0x40,
-        Horizontal_Mask = Left | Right | HCenter,
-        Vertical_Mask = Top | Bottom | VCenter | Baseline
-    };
-
-    QQuickAnchorLine() : item(0), anchorLine(Invalid) {}
-    QQuickAnchorLine(QQuickItem *i, AnchorLine l) : item(i), anchorLine(l) {}
+    QQuickAnchorLine() : item(0), anchorLine(QQuickAnchors::InvalidAnchor) {}
+    QQuickAnchorLine(QQuickItem *i, QQuickAnchors::Anchor l) : item(i), anchorLine(l) {}
+    QQuickAnchorLine(QQuickItem *i, uint l)
+        : item(i)
+        , anchorLine(static_cast<QQuickAnchors::Anchor>(l))
+    { Q_ASSERT(l < ((QQuickAnchors::BaselineAnchor << 1) - 1)); }
 
     QQuickItem *item;
-    AnchorLine anchorLine;
+    QQuickAnchors::Anchor anchorLine;
 };
 
 inline bool operator==(const QQuickAnchorLine& a, const QQuickAnchorLine& b)
@@ -90,13 +81,44 @@ class QQuickAnchorsPrivate : public QObjectPrivate, public QQuickItemChangeListe
     Q_DECLARE_PUBLIC(QQuickAnchors)
 public:
     QQuickAnchorsPrivate(QQuickItem *i)
-      : componentComplete(true), updatingMe(false), inDestructor(false), centerAligned(true),
-        leftMarginExplicit(false), rightMarginExplicit(false), topMarginExplicit(false),
-        bottomMarginExplicit(false), updatingHorizontalAnchor(0),
-        updatingVerticalAnchor(0), updatingFill(0), updatingCenterIn(0), item(i), usedAnchors(0), fill(0),
-        centerIn(0), leftMargin(0), rightMargin(0), topMargin(0), bottomMargin(0),
-        margins(0), vCenterOffset(0), hCenterOffset(0), baselineOffset(0)
-
+        : leftMargin(0)
+        , rightMargin(0)
+        , topMargin(0)
+        , bottomMargin(0)
+        , margins(0)
+        , vCenterOffset(0)
+        , hCenterOffset(0)
+        , baselineOffset(0)
+        , item(i)
+        , fill(Q_NULLPTR)
+        , centerIn(Q_NULLPTR)
+        , leftAnchorItem(Q_NULLPTR)
+        , rightAnchorItem(Q_NULLPTR)
+        , topAnchorItem(Q_NULLPTR)
+        , bottomAnchorItem(Q_NULLPTR)
+        , vCenterAnchorItem(Q_NULLPTR)
+        , hCenterAnchorItem(Q_NULLPTR)
+        , baselineAnchorItem(Q_NULLPTR)
+        , leftAnchorLine(QQuickAnchors::InvalidAnchor)
+        , leftMarginExplicit(false)
+        , rightAnchorLine(QQuickAnchors::InvalidAnchor)
+        , rightMarginExplicit(false)
+        , topAnchorLine(QQuickAnchors::InvalidAnchor)
+        , topMarginExplicit(false)
+        , bottomAnchorLine(QQuickAnchors::InvalidAnchor)
+        , bottomMarginExplicit(false)
+        , vCenterAnchorLine(QQuickAnchors::InvalidAnchor)
+        , updatingMe(false)
+        , hCenterAnchorLine(QQuickAnchors::InvalidAnchor)
+        , inDestructor(false)
+        , baselineAnchorLine(QQuickAnchors::InvalidAnchor)
+        , centerAligned(true)
+        , updatingFill(0)
+        , updatingCenterIn(0)
+        , updatingHorizontalAnchor(0)
+        , updatingVerticalAnchor(0)
+        , componentComplete(true)
+        , usedAnchors(QQuickAnchors::InvalidAnchor)
     {
     }
 
@@ -106,19 +128,6 @@ public:
     void addDepend(QQuickItem *);
     void remDepend(QQuickItem *);
     bool isItemComplete() const;
-
-    bool componentComplete:1;
-    bool updatingMe:1;
-    bool inDestructor:1;
-    bool centerAligned:1;
-    bool leftMarginExplicit : 1;
-    bool rightMarginExplicit : 1;
-    bool topMarginExplicit : 1;
-    bool bottomMarginExplicit : 1;
-    uint updatingHorizontalAnchor:2;
-    uint updatingVerticalAnchor:2;
-    uint updatingFill:2;
-    uint updatingCenterIn:2;
 
     void setItemHeight(qreal);
     void setItemWidth(qreal);
@@ -139,27 +148,15 @@ public:
     bool checkVValid() const;
     bool checkHAnchorValid(QQuickAnchorLine anchor) const;
     bool checkVAnchorValid(QQuickAnchorLine anchor) const;
-    bool calcStretch(const QQuickAnchorLine &edge1, const QQuickAnchorLine &edge2, qreal offset1, qreal offset2, QQuickAnchorLine::AnchorLine line, qreal &stretch);
+    bool calcStretch(QQuickItem *edge1Item, QQuickAnchors::Anchor edge1Line,
+                     QQuickItem *edge2Item, QQuickAnchors::Anchor edge2Line,
+                     qreal offset1, qreal offset2, QQuickAnchors::Anchor line, qreal &stretch);
 
     bool isMirrored() const;
     void updateHorizontalAnchors();
     void updateVerticalAnchors();
     void fillChanged();
     void centerInChanged();
-
-    QQuickItem *item;
-    QQuickAnchors::Anchors usedAnchors;
-
-    QQuickItem *fill;
-    QQuickItem *centerIn;
-
-    QQuickAnchorLine left;
-    QQuickAnchorLine right;
-    QQuickAnchorLine top;
-    QQuickAnchorLine bottom;
-    QQuickAnchorLine vCenter;
-    QQuickAnchorLine hCenter;
-    QQuickAnchorLine baseline;
 
     qreal leftMargin;
     qreal rightMargin;
@@ -170,6 +167,44 @@ public:
     qreal hCenterOffset;
     qreal baselineOffset;
 
+    QQuickItem *item;
+
+    QQuickItem *fill;
+    QQuickItem *centerIn;
+
+    QQuickItem *leftAnchorItem;
+    QQuickItem *rightAnchorItem;
+    QQuickItem *topAnchorItem;
+    QQuickItem *bottomAnchorItem;
+    QQuickItem *vCenterAnchorItem;
+    QQuickItem *hCenterAnchorItem;
+    QQuickItem *baselineAnchorItem;
+
+    // The bit fields below are carefully laid out in chunks of 1 byte, so the compiler doesn't
+    // need to generate 2 loads (and combining shifts/ors) to create a single field.
+
+    QQuickAnchors::Anchor leftAnchorLine     : 7;
+    uint leftMarginExplicit                  : 1;
+    QQuickAnchors::Anchor rightAnchorLine    : 7;
+    uint rightMarginExplicit                 : 1;
+    QQuickAnchors::Anchor topAnchorLine      : 7;
+    uint topMarginExplicit                   : 1;
+    QQuickAnchors::Anchor bottomAnchorLine   : 7;
+    uint bottomMarginExplicit                : 1;
+
+    QQuickAnchors::Anchor vCenterAnchorLine  : 7;
+    uint updatingMe                          : 1;
+    QQuickAnchors::Anchor hCenterAnchorLine  : 7;
+    uint inDestructor                        : 1;
+    QQuickAnchors::Anchor baselineAnchorLine : 7;
+    uint centerAligned                       : 1;
+    uint updatingFill                        : 2;
+    uint updatingCenterIn                    : 2;
+    uint updatingHorizontalAnchor            : 2;
+    uint updatingVerticalAnchor              : 2;
+
+    uint componentComplete                   : 1;
+    uint usedAnchors                         : 7; // QQuickAnchors::Anchors
 
     static inline QQuickAnchorsPrivate *get(QQuickAnchors *o) {
         return static_cast<QQuickAnchorsPrivate *>(QObjectPrivate::get(o));

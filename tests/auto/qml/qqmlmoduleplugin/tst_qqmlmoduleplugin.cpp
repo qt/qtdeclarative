@@ -70,6 +70,9 @@ private slots:
     void importStrictModule();
     void importStrictModule_data();
     void importProtectedModule();
+    void importsChildPlugin();
+    void importsChildPlugin2();
+    void importsChildPlugin21();
 
 private:
     QString m_importsDirectory;
@@ -573,6 +576,57 @@ void tst_qqmlmoduleplugin::importProtectedModule()
     QScopedPointer<QObject> object(component.create());
     //qDebug() << component.errorString();
     QVERIFY(object != 0);
+}
+
+void tst_qqmlmoduleplugin::importsChildPlugin()
+{
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+    QTest::ignoreMessage(QtWarningMsg, "child plugin created");
+    QTest::ignoreMessage(QtWarningMsg, "child import worked");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
+    QQmlComponent component(&engine, testFileUrl(QStringLiteral("child.qml")));
+    foreach (QQmlError err, component.errors())
+        qWarning() << err;
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").toInt(),123);
+    delete object;
+}
+
+void tst_qqmlmoduleplugin::importsChildPlugin2()
+{
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+    QTest::ignoreMessage(QtWarningMsg, "child plugin2 created");
+    QTest::ignoreMessage(QtWarningMsg, "child import2 worked");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
+    QQmlComponent component(&engine, testFileUrl(QStringLiteral("child2.qml")));
+    foreach (QQmlError err, component.errors())
+        qWarning() << err;
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").toInt(),123);
+    delete object;
+}
+
+void tst_qqmlmoduleplugin::importsChildPlugin21()
+{
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+    QTest::ignoreMessage(QtWarningMsg, "child plugin2.1 created");
+    QTest::ignoreMessage(QtWarningMsg, "child import2.1 worked");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType.ChildPlugin' does not contain a module identifier directive - it cannot be protected from external registrations.");
+    QQmlComponent component(&engine, testFileUrl(QStringLiteral("child21.qml")));
+    foreach (QQmlError err, component.errors())
+        qWarning() << err;
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").toInt(),123);
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)

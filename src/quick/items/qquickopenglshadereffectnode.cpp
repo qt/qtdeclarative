@@ -334,8 +334,6 @@ const char *QQuickCustomMaterialShader::fragmentShader() const
 
 bool QQuickOpenGLShaderEffectMaterialKey::operator == (const QQuickOpenGLShaderEffectMaterialKey &other) const
 {
-    if (className != other.className)
-        return false;
     for (int shaderType = 0; shaderType < ShaderTypeCount; ++shaderType) {
         if (sourceCode[shaderType] != other.sourceCode[shaderType])
             return false;
@@ -350,7 +348,7 @@ bool QQuickOpenGLShaderEffectMaterialKey::operator != (const QQuickOpenGLShaderE
 
 uint qHash(const QQuickOpenGLShaderEffectMaterialKey &key)
 {
-    uint hash = qHash((const void *)key.className);
+    uint hash = 1;
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
         hash = hash * 31337 + qHash(key.sourceCode[shaderType]);

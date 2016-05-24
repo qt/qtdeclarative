@@ -30,6 +30,7 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
+#include <QJSValueIterator>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qqmlglobal_p.h>
 #include "../../shared/util.h"
@@ -89,6 +90,7 @@ private slots:
     void customValueTypeInQml();
     void gadgetInheritance();
     void toStringConversion();
+    void enumerableProperties();
 
 private:
     QQmlEngine engine;
@@ -1647,6 +1649,25 @@ void tst_qqmlvaluetypes::toStringConversion()
 
     stringConversion = method.callWithInstance(value);
     QCOMPARE(stringConversion.toString(), StringLessGadget_to_QString(g));
+}
+
+void tst_qqmlvaluetypes::enumerableProperties()
+{
+    QJSEngine engine;
+    DerivedGadget g;
+    QJSValue value = engine.toScriptValue(g);
+    QSet<QString> names;
+    QJSValueIterator it(value);
+    while (it.hasNext()) {
+        it.next();
+        const QString name = it.name();
+        QVERIFY(!names.contains(name));
+        names.insert(name);
+    }
+
+    QCOMPARE(names.count(), 2);
+    QVERIFY(names.contains(QStringLiteral("baseProperty")));
+    QVERIFY(names.contains(QStringLiteral("derivedProperty")));
 }
 
 

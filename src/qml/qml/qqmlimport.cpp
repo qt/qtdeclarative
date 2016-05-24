@@ -85,12 +85,11 @@ QString resolveLocalUrl(const QString &url, const QString &relative)
     } else if (relative.at(0) == Slash || !url.contains(Slash)) {
         return relative;
     } else {
-        QString base(url.left(url.lastIndexOf(Slash) + 1));
-
+        const QStringRef baseRef = url.leftRef(url.lastIndexOf(Slash) + 1);
         if (relative == QLatin1String("."))
-            return base;
+            return baseRef.toString();
 
-        base.append(relative);
+        QString base = baseRef + relative;
 
         // Remove any relative directory elements in the path
         int length = base.length();
@@ -192,7 +191,7 @@ void qmlClearEnginePlugins()
 {
     StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
     QMutexLocker lock(&plugins->mutex);
-    foreach (RegisteredPlugin plugin, plugins->values()) {
+    for (auto &plugin : qAsConst(*plugins)) {
         QPluginLoader* loader = plugin.loader;
         if (loader && !loader->unload())
             qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
@@ -303,7 +302,7 @@ public:
                                                       int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
 #ifndef QT_NO_LIBRARY
-   bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
+   bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
 #endif
 };
@@ -483,20 +482,58 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
     return scripts;
 }
 
-/*!
-    Form a complete path to a qmldir file, from a base URL, a module URI and version specification.
-*/
-QString QQmlImports::completeQmldirPath(const QString &uri, const QString &base, int vmaj, int vmin,
-                                        ImportVersion version)
+static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
 {
-    QString url = uri;
-    url.replace(Dot, Slash);
+    QString str;
+    for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
+        if (it != refs.cbegin())
+            str += sep;
+        str += *it;
+    }
+    return str;
+}
 
-    QString dir = base;
-    if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-        dir += Slash;
+/*!
+    Forms complete paths to a qmldir file, from a base URL, a module URI and version specification.
 
-    return dir + url + versionString(vmaj, vmin, version) + Slash_qmldir;
+    For example, QtQml.Models 2.0:
+    - base/QtQml/Models.2.0/qmldir
+    - base/QtQml.2.0/Models/qmldir
+    - base/QtQml/Models.2/qmldir
+    - base/QtQml.2/Models/qmldir
+    - base/QtQml/Models/qmldir
+*/
+QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
+{
+    const QVector<QStringRef> parts = uri.splitRef(Dot, QString::SkipEmptyParts);
+
+    QStringList qmlDirPathsPaths;
+    // fully & partially versioned parts + 1 unversioned for each base path
+    qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
+
+    for (int version = FullyVersioned; version <= Unversioned; ++version) {
+        const QString ver = versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
+
+        for (const QString &path : basePaths) {
+            QString dir = path;
+            if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
+                dir += Slash;
+
+            // append to the end
+            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + Slash_qmldir;
+
+            if (version != Unversioned) {
+                // insert in the middle
+                for (int index = parts.count() - 2; index >= 0; --index) {
+                    qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
+                                            + ver + Slash
+                                            + joinStringRefs(parts.mid(index + 1), Slash) + Slash_qmldir;
+                }
+            }
+        }
+    }
+
+    return qmlDirPathsPaths;
 }
 
 QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
@@ -777,11 +814,11 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
                             QString u1 = import->url;
                             QString u2 = import2->url;
                             if (base) {
-                                QString b = *base;
+                                QStringRef b(base);
                                 int dot = b.lastIndexOf(Dot);
                                 if (dot >= 0) {
                                     b = b.left(dot+1);
-                                    QString l = b.left(dot);
+                                    QStringRef l = b.left(dot);
                                     if (u1.startsWith(b))
                                         u1 = u1.mid(b.count());
                                     else if (u1 == l)
@@ -841,14 +878,34 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
     return 0;
 }
 
+/*!
+    Returns the list of possible versioned URI combinations. For example, if \a uri is
+    QtQml.Models, \a vmaj is 2, and \a vmin is 0, this method returns the following:
+    [QtQml.Models.2.0, QtQml.2.0.Models, QtQml.Models.2, QtQml.2.Models, QtQml.Models]
+ */
+static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
+{
+    QStringList result;
+    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
+        int index = uri.length();
+        do {
+            QString versionUri = uri;
+            versionUri.insert(index, QQmlImports::versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version)));
+            result += versionUri;
+
+            index = uri.lastIndexOf(Dot, index - 1);
+        } while (index > 0 && version != QQmlImports::Unversioned);
+    }
+    return result;
+}
 
 #ifndef QT_NO_LIBRARY
 /*!
-    Get all static plugins that are QML plugins and has a meta data URI that begins with \a uri.
-    Note that if e.g uri == "a", and different plugins have meta data "a", "a.2.1", "a.b.c", all
-    will be added to the result. So the result needs further version matching by the caller.
+    Get all static plugins that are QML plugins and has a meta data URI that matches with one of
+    \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
+    above.
  */
-bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
+bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                                       const QString &qmldirPath, QList<QQmlError> *errors)
 {
     static QVector<QStaticPlugin> plugins;
@@ -856,8 +913,8 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
         // To avoid traversing all static plugins for all imports, we cut down
         // the list the first time called to only contain QML plugins:
         foreach (const QStaticPlugin &plugin, QPluginLoader::staticPlugins()) {
-            if (qobject_cast<QQmlExtensionPlugin *>(plugin.instance()))
-               plugins.append(plugin);
+            if (plugin.metaData().value(QStringLiteral("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
+                plugins.append(plugin);
         }
     }
 
@@ -877,7 +934,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
             }
             // A plugin can be set up to handle multiple URIs, so go through the list:
             foreach (const QJsonValue &metaTagUri, metaTagsUriList) {
-                if (metaTagUri.toString().startsWith(uri)) {
+                if (versionUris.contains(metaTagUri.toString())) {
                     result.append(qMakePair(plugin, metaTagsUriList));
                     break;
                 }
@@ -970,14 +1027,13 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             // versioned to unversioned, we need to compare with differnt version strings. If a module
             // has several plugins, they must all have the same version. Start by populating pluginPairs
             // with relevant plugins to cut the list short early on:
+            const QStringList versionUris = versionUriList(uri, vmaj, vmin);
             QVector<StaticPluginPair> pluginPairs;
-            if (!populatePluginPairVector(pluginPairs, uri, qmldirFilePath, errors))
+            if (!populatePluginPairVector(pluginPairs, uri, versionUris, qmldirFilePath, errors))
                 return false;
 
             const QString basePath = QFileInfo(qmldirPath).absoluteFilePath();
-            for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned && staticPluginsFound == 0; ++version) {
-                QString versionUri = uri + QQmlImports::versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
-
+            for (const QString &versionUri : versionUris) {
                 foreach (const StaticPluginPair &pair, pluginPairs) {
                     foreach (const QJsonValue &metaTagUri, pair.second) {
                         if (versionUri == metaTagUri.toString()) {
@@ -998,6 +1054,8 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         }
                     }
                 }
+                if (staticPluginsFound > 0)
+                    break;
             }
         }
 
@@ -1130,32 +1188,29 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     QStringList localImportPaths = database->importPathList(QQmlImportDatabase::Local);
 
     // Search local import paths for a matching version
-    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
-        foreach (const QString &path, localImportPaths) {
-            QString qmldirPath = QQmlImports::completeQmldirPath(uri, path, vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
+    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(uri, localImportPaths, vmaj, vmin);
+    for (const QString &qmldirPath : qmlDirPaths) {
+        QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
+        if (!absoluteFilePath.isEmpty()) {
+            QString url;
+            const QStringRef absolutePath = absoluteFilePath.leftRef(absoluteFilePath.lastIndexOf(Slash) + 1);
+            if (absolutePath.at(0) == Colon)
+                url = QLatin1String("qrc://") + absolutePath.mid(1);
+            else
+                url = QUrl::fromLocalFile(absolutePath.toString()).toString();
 
-            QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
-            if (!absoluteFilePath.isEmpty()) {
-                QString url;
-                QString absolutePath = absoluteFilePath.left(absoluteFilePath.lastIndexOf(Slash)+1);
-                if (absolutePath.at(0) == Colon)
-                    url = QLatin1String("qrc://") + absolutePath.mid(1);
-                else
-                    url = QUrl::fromLocalFile(absolutePath).toString();
+            QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
+            cache->versionMajor = vmaj;
+            cache->versionMinor = vmin;
+            cache->qmldirFilePath = absoluteFilePath;
+            cache->qmldirPathUrl = url;
+            cache->next = cacheHead;
+            database->qmldirCache.insert(uri, cache);
 
-                QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-                cache->versionMajor = vmaj;
-                cache->versionMinor = vmin;
-                cache->qmldirFilePath = absoluteFilePath;
-                cache->qmldirPathUrl = url;
-                cache->next = cacheHead;
-                database->qmldirCache.insert(uri, cache);
+            *outQmldirFilePath = absoluteFilePath;
+            *outQmldirPathUrl = url;
 
-                *outQmldirFilePath = absoluteFilePath;
-                *outQmldirPathUrl = url;
-
-                return true;
-            }
+            return true;
         }
     }
 
@@ -1647,10 +1702,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
             resolvedPath += Slash;
 
         foreach (const QString &suffix, suffixes) {
-            QString pluginFileName = prefix;
-
-            pluginFileName += baseName;
-            pluginFileName += suffix;
+            QString pluginFileName = prefix + baseName + suffix;
 
             QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + pluginFileName);
             if (!absolutePath.isEmpty())

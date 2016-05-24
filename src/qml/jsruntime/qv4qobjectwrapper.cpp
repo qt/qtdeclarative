@@ -1285,6 +1285,8 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
             return 5;
+        } else if (conversionType == qMetaTypeId<QJSValue>()) {
+            return 0;
         } else {
             return 10;
         }
@@ -1768,17 +1770,13 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) co
     QString result;
     if (const QMetaObject *metaObject = d()->metaObject()) {
 
-        result += QString::fromUtf8(metaObject->className());
-        result += QLatin1String("(0x");
-        result += QString::number((quintptr)d()->object.data(),16);
+        result += QString::fromUtf8(metaObject->className()) +
+                QLatin1String("(0x") + QString::number((quintptr)d()->object.data(),16);
 
         if (d()->object) {
             QString objectName = d()->object->objectName();
-            if (!objectName.isEmpty()) {
-                result += QLatin1String(", \"");
-                result += objectName;
-                result += QLatin1Char('\"');
-            }
+            if (!objectName.isEmpty())
+                result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
         }
 
         result += QLatin1Char(')');

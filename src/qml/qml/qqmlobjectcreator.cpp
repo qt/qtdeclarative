@@ -375,7 +375,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         QString string = binding->valueAsString(qmlUnit);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compiledData->compilationUnit->url().resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -570,7 +570,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(qmlUnit);
-            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->url().resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl() : compiledData->compilationUnit->url().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             argv[0] = reinterpret_cast<void *>(&value);
@@ -664,7 +664,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             if (qmlTypeForObject(_bindingTarget)) {
                 quint32 bindingSkipList = 0;
 
-                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
+                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
@@ -999,7 +999,7 @@ void QQmlObjectCreator::setupFunctions()
 void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setUrl(compiledData->url());
+    error.setUrl(compiledData->compilationUnit->url());
     error.setLine(location.line);
     error.setColumn(location.column);
     error.setDescription(description);
@@ -1037,8 +1037,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (compiledData->isComponent(index)) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
-        Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(QStringLiteral("<component>"),
-                context->url(), obj->location.line, obj->location.column));
+        Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                             compiledData, obj, QStringLiteral("<component>"), context->url()));
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
@@ -1048,8 +1048,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;
         if (type) {
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(type->qmlTypeName(),
-                    context->url(), obj->location.line, obj->location.column));
+            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                                 compiledData, obj, type->qmlTypeName(), context->url()));
             instance = type->create();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1071,8 +1071,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->component);
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(typeRef->component->fileName(),
-                    context->url(), obj->location.line, obj->location.column));
+            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+                                 compiledData, obj, typeRef->component->compilationUnit->fileName(),
+                                 context->url()));
             if (typeRef->component->compilationUnit->data->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1115,7 +1116,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         parserStatus->classBegin();
         // push() the profiler state here, together with the parserStatus, as we'll pop() them
         // together, too.
-        Q_QML_OC_PROFILE(sharedState->profiler, sharedState->profiler.push(profiler));
+        Q_QML_OC_PROFILE(sharedState->profiler, sharedState->profiler.push(obj));
         sharedState->allParserStatusCallbacks.push(parserStatus);
         parserStatus->d = &sharedState->allParserStatusCallbacks.top();
     }
@@ -1288,7 +1289,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (!data.isEmpty()) {
         Q_ASSERT(!cache.isNull());
         // install on _object
-        vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
+        vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()), compiledData->compilationUnit, _compiledObjectIndex);
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
         _ddata->propertyCache = cache;

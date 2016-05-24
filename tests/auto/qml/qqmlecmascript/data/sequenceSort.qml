@@ -64,6 +64,16 @@ Item {
         var actual = msc.reals(realList);
         return checkResults(expected, actual, fn);
     }
+    function doIntVectorTest(intList, fn) {
+        var expected = createExpected(intList, fn);
+        var actual = msc.integerVector(intList);
+        return checkResults(expected, actual, fn);
+    }
+    function doRealVectorTest(realList, fn) {
+        var expected = createExpected(realList, fn);
+        var actual = msc.realVector(realList);
+        return checkResults(expected, actual, fn);
+    }
 
     function test_qtbug_25269(useCustomCompare) {
         return doStringTest( [ "one", "two", "three" ], null );
@@ -91,5 +101,21 @@ Item {
     function test_reals_quickSort(useCustomCompare) {
         var fn = useCustomCompare ? compareNumbers : null;
         return doRealTest( [ -3.4, 1, 10, 4.23, -30.1, 4.24, 4.21, -1, -1, 12, -100, 87.4, 101.3, -8.88888, 7.76, 10.10, 1.1, -1.1, -0, 11, 12.8, 0.001, -11, -0.75, 99999.99, 11.12, 32.3, 3.333333, 9.876 ], fn );
+    }
+    function test_number_vector_insertionSort(useCustomCompare) {
+        var fn = useCustomCompare ? compareNumbers : null;
+        return doIntVectorTest( [ 7, 3, 9, 1, 0, -1, 20, -11 ], fn );
+    }
+    function test_number_vector_quickSort(useCustomCompare) {
+        var fn = useCustomCompare ? compareNumbers : null;
+        return doIntVectorTest( [ 7, 3, 37, 9, 1, 0, -1, 20, -11, -300, -87, 1, 3, -2, 100, 108, 96, 9, 99999, 12, 11, 11, 12, 11, 13, -13, 10, 10, 10, 8, 12 ], fn );
+    }
+    function test_real_vector_insertionSort(useCustomCompare) {
+        var fn = useCustomCompare ? compareNumbers : null;
+        return doRealVectorTest( [ -3.4, 1, 10, 4.23, -30.1, 4.24, 4.21, -1, -1 ], fn );
+    }
+    function test_real_vector_quickSort(useCustomCompare) {
+        var fn = useCustomCompare ? compareNumbers : null;
+        return doRealVectorTest( [ -3.4, 1, 10, 4.23, -30.1, 4.24, 4.21, -1, -1, 12, -100, 87.4, 101.3, -8.88888, 7.76, 10.10, 1.1, -1.1, -0, 11, 12.8, 0.001, -11, -0.75, 99999.99, 11.12, 32.3, 3.333333, 9.876 ], fn );
     }
 }

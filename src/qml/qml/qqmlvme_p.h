@@ -64,8 +64,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qfinitestack_p.h>
 
-#include <private/qqmlprofiler_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QObject;

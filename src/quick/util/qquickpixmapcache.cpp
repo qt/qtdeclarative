@@ -455,13 +455,19 @@ QQuickPixmapReader::~QQuickPixmapReader()
     }
     jobs.clear();
 #ifndef QT_NO_NETWORK
-    QList<QQuickPixmapReply*> activeJobs = networkJobs.values() + asyncResponses.values();
-    foreach (QQuickPixmapReply *reply, activeJobs ) {
+
+    const auto cancelJob = [this](QQuickPixmapReply *reply) {
         if (reply->loading) {
             cancelled.append(reply);
             reply->data = 0;
         }
-    }
+    };
+
+    for (auto *reply : qAsConst(networkJobs))
+        cancelJob(reply);
+
+    for (auto *reply : qAsConst(asyncResponses))
+        cancelJob(reply);
 #endif
     if (threadObject) threadObject->processJobs();
     mutex.unlock();

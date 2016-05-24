@@ -118,7 +118,8 @@ void IdentifierTable::addEntry(Heap::String *str)
 
 Heap::String *IdentifierTable::insertString(const QString &s)
 {
-    uint hash = String::createHashValue(s.constData(), s.length());
+    uint subtype;
+    uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
     uint idx = hash % alloc;
     while (Heap::String *e = entries[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
@@ -128,6 +129,8 @@ Heap::String *IdentifierTable::insertString(const QString &s)
     }
 
     Heap::String *str = engine->newString(s);
+    str->stringHash = hash;
+    str->subtype = subtype;
     addEntry(str);
     return str;
 }
@@ -178,7 +181,8 @@ Identifier *IdentifierTable::identifier(const QString &s)
 
 Identifier *IdentifierTable::identifier(const char *s, int len)
 {
-    uint hash = String::createHashValue(s, len);
+    uint subtype;
+    uint hash = String::createHashValue(s, len, &subtype);
     if (hash == UINT_MAX)
         return identifier(QString::fromUtf8(s, len));
 
@@ -192,6 +196,8 @@ Identifier *IdentifierTable::identifier(const char *s, int len)
     }
 
     Heap::String *str = engine->newString(QString::fromLatin1(s, len));
+    str->stringHash = hash;
+    str->subtype = subtype;
     addEntry(str);
     return str->identifier;
 }

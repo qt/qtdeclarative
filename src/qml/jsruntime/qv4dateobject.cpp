@@ -338,7 +338,7 @@ static inline double currentTime()
 
 static inline double TimeClip(double t)
 {
-    if (! qIsFinite(t) || fabs(t) > 8.64e15)
+    if (! qt_is_finite(t) || fabs(t) > 8.64e15)
         return qt_qnan();
     return Primitive::toInteger(t);
 }

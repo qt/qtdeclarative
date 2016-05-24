@@ -99,6 +99,7 @@ public:
     static void put(Managed *m, String *name, const Value &value);
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes query(const Managed *, String *name);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static QV4::ReturnedValue method_toString(CallContext *ctx);
 

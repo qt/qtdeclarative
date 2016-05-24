@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
 class QtQuick2WindowPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
     QtQuick2WindowPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) Q_DECL_OVERRIDE

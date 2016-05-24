@@ -113,7 +113,7 @@ struct PoolList
         T *insertPos = 0;
 
         for (T *it = first; it; it = it->next) {
-            if (!(it->*sortMember < item->*sortMember))
+            if (!(it->*sortMember <= item->*sortMember))
                 break;
             insertPos = it;
         }
@@ -227,8 +227,17 @@ struct Property : public QV4::CompiledData::Property
 
 struct Binding : public QV4::CompiledData::Binding
 {
+    // The offset in the source file where the binding appeared. This is used for sorting to ensure
+    // that assignments to list properties are done in the correct order. We use the offset here instead
+    // of Binding::location as the latter has limited precision.
+    quint32 offset;
     // Binding's compiledScriptIndex is index in object's functionsAndExpressions
     Binding *next;
+};
+
+struct Alias : public QV4::CompiledData::Alias
+{
+    Alias *next;
 };
 
 struct Function
@@ -266,13 +275,16 @@ struct Q_QML_PRIVATE_EXPORT Object
 public:
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
-    int indexOfDefaultProperty;
+    int indexOfDefaultPropertyOrAlias : 31;
+    int defaultPropertyIsAlias : 1;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
 
     const Property *firstProperty() const { return properties->first; }
     int propertyCount() const { return properties->count; }
+    Alias *firstAlias() const { return aliases->first; }
+    int aliasCount() const { return aliases->count; }
     const Signal *firstSignal() const { return qmlSignals->first; }
     int signalCount() const { return qmlSignals->count; }
     Binding *firstBinding() const { return bindings->first; }
@@ -290,6 +302,7 @@ public:
 
     QString appendSignal(Signal *signal);
     QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
+    QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
     void appendFunction(QmlIR::Function *f);
 
     QString appendBinding(Binding *b, bool isListBinding);
@@ -305,6 +318,7 @@ private:
     friend struct IRLoader;
 
     PoolList<Property> *properties;
+    PoolList<Alias> *aliases;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
@@ -409,6 +423,8 @@ public:
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
+
+    bool appendAlias(QQmlJS::AST::UiPublicMember *node);
 
     Object *bindingsTarget() const;
 

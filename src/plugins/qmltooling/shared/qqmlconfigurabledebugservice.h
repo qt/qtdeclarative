@@ -72,7 +72,7 @@ protected:
     {
         QMutexLocker lock(&m_configMutex);
         m_waitingForConfiguration = false;
-        foreach (QJSEngine *engine, m_waitingEngines)
+        for (QJSEngine *engine : qAsConst(m_waitingEngines))
             emit Base::attachedToEngine(engine);
         m_waitingEngines.clear();
     }

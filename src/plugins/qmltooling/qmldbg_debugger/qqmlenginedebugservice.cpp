@@ -683,11 +683,13 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
     QQmlContext *context = qmlContext(object);
 
     if (object && context) {
-        QString parentProperty = propertyName;
-        if (propertyName.indexOf(QLatin1Char('.')) != -1)
-            parentProperty = propertyName.left(propertyName.indexOf(QLatin1Char('.')));
+        QStringRef parentPropertyRef(&propertyName);
+        const int idx = parentPropertyRef.indexOf(QLatin1Char('.'));
+        if (idx != -1)
+            parentPropertyRef = parentPropertyRef.left(idx);
 
-        if (object->property(parentProperty.toLatin1()).isValid()) {
+        const QByteArray parentProperty = parentPropertyRef.toLatin1();
+        if (object->property(parentProperty).isValid()) {
             QQmlProperty property(object, propertyName);
             QQmlPropertyPrivate::removeBinding(property);
             if (property.isResettable()) {
@@ -700,7 +702,7 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
                 // overwrite with default value
                 if (QQmlType *objType = QQmlMetaType::qmlType(object->metaObject())) {
                     if (QObject *emptyObject = objType->create()) {
-                        if (emptyObject->property(parentProperty.toLatin1()).isValid()) {
+                        if (emptyObject->property(parentProperty).isValid()) {
                             QVariant defaultValue = QQmlProperty(emptyObject, propertyName).read();
                             if (defaultValue.isValid()) {
                                 setBinding(objectId, propertyName, defaultValue, true);
@@ -764,9 +766,14 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
-    int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine(object)->handle());
     QV4::Scope scope(v4);
+
+    int lineNumber = 0;
+    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex));
+    if (oldMethod && oldMethod->d()->function) {
+        lineNumber = oldMethod->d()->function->compiledFunction->location.line;
+    }
     QV4::ScopedValue v(scope, QQmlJavaScriptExpression::evalFunction(contextData, object, jsfunction, contextData->urlString(), lineNumber));
     vmeMetaObject->setVmeMethod(prop->coreIndex, v);
     return true;

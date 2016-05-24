@@ -45,7 +45,9 @@ QT_BEGIN_NAMESPACE
 QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
 {
     static int metatype = qRegisterMetaType<QVector<QQmlProfilerData> >();
+    static int metatype2 = qRegisterMetaType<QQmlProfiler::LocationHash> ();
     Q_UNUSED(metatype);
+    Q_UNUSED(metatype2);
     m_timer.start();
 }
 
@@ -62,8 +64,18 @@ void QQmlProfiler::stopProfiling()
 
 void QQmlProfiler::reportData()
 {
-    emit dataReady(m_data);
-    m_data.clear();
+    LocationHash resolved;
+    resolved.reserve(m_locations.size());
+    for (auto it = m_locations.constBegin(), end = m_locations.constEnd(); it != end; ++it)
+        resolved.insert(it.key(), it.value());
+
+    // This unrefs all the objects. We have to make sure we do this in the GUI thread. Also, it's
+    // a good idea to release the memory before creating the packets to be sent.
+    m_locations.clear();
+
+    QVector<QQmlProfilerData> data;
+    data.swap(m_data);
+    emit dataReady(data, resolved);
 }
 
 QT_END_NAMESPACE

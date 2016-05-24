@@ -81,6 +81,7 @@ QUICKTESTS =  \
     qquickvisualdatamodel \
     qquickview \
     qquickcanvasitem \
+    qquickdesignersupport \
     qquickscreen \
     touchmouse \
     scenegraph

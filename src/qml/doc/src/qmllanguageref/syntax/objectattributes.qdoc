@@ -508,7 +508,7 @@ built-in \l {Rectangle::color} property:
 
 Any object that use this type and refer to its \c color property will be
 referring to the alias rather than the ordinary \l {Rectangle::color} property.
-Internally, however, the red can correctly set its \c color
+Internally, however, the rectangle can correctly set its \c color
 property and refer to the actual defined property rather than the alias.
 
 

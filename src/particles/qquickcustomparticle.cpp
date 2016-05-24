@@ -291,8 +291,6 @@ QQuickOpenGLShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickOpenG
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.vert"));
         s.sourceCode[Key::VertexShader] = builder.source() + s.sourceCode[Key::VertexShader];
 
-        s.className = metaObject()->className();
-
         material->setProgramSource(s);
         material->attributes = m_common.attributes;
         foreach (QQuickOpenGLShaderEffectNode* node, m_nodes)

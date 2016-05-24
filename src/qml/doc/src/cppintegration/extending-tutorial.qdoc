@@ -386,12 +386,26 @@ directory.
 
 \quotefile tutorials/extending-qml/chapter6-plugins/import/import.pro
 
-In this example, the \c Charts directory is located at the same level as the application
-that uses our new import module. This way, the QML engine will find our module
-as the default search path for QML imports includes the directory of the application
-executable. Alternatively, we could control what directories the \l {QML Import Path}
-{QML import path} contains, useful if there are multiple QML applications using the
-same QML imports.
+When building this example on Windows or Linux, the \c Charts directory will be
+located at the same level as the application that uses our new import module.
+This way, the QML engine will find our module as the default search path for QML
+imports includes the directory of the application executable. On OS X, the
+plugin binary is copied to \c Contents/PlugIns in the the application bundle;
+this path is set in \l {tutorials/extending-qml/chapter6-plugins/app.pro}
+{chapter6-plugins/app.pro}:
+
+\quotefromfile tutorials/extending-qml/chapter6-plugins/app.pro
+\skipto osx
+\printuntil }
+
+To account for this, we also need to add this location as a
+\l {QML Import Path}{QML import path} in \c main.cpp:
+
+\snippet tutorials/extending-qml/chapter6-plugins/main.cpp 0
+\dots
+
+Defining custom import paths is useful also when there are multiple
+applications using the same QML imports.
 
 The \c .pro file also contains additional magic to ensure that the
 \l {Module Definition qmldir Files}{module definition qmldir file} is always copied

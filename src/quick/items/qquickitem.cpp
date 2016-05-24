@@ -1632,7 +1632,7 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::EnterKey::type
+    \qmlattachedproperty enumeration QtQuick::EnterKey::type
 
     Holds the type of the Enter key.
 
@@ -2647,7 +2647,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
         QQuickItem *scopeItem = 0;
 
-        if (hasFocus())
+        if (hasFocus() || op->subFocusItem == this)
             scopeFocusedItem = this;
         else if (!isFocusScope() && d->subFocusItem)
             scopeFocusedItem = d->subFocusItem;
@@ -3117,7 +3117,6 @@ QQuickItemPrivate::QQuickItemPrivate()
     , flags(0)
     , widthValid(false)
     , heightValid(false)
-    , baselineOffsetValid(false)
     , componentComplete(true)
     , keepMouse(false)
     , keepTouch(false)
@@ -3192,7 +3191,7 @@ void QQuickItemPrivate::init(QQuickItem *parent)
 
     registerAccessorProperties();
 
-    baselineOffsetValid = false;
+    baselineOffset = 0.0;
 
     if (parent) {
         q->setParentItem(parent);
@@ -4168,6 +4167,23 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
         if (d->extra.isAllocated() && d->extra->enterKeyAttached)
             v = d->extra->enterKeyAttached->type();
         break;
+    case Qt::ImInputItemClipRectangle:
+        if (!(!window() ||!isVisible() || qFuzzyIsNull(opacity()))) {
+            QRectF rect = QRectF(0,0, width(), height());
+            const QQuickItem *par = this;
+            while (QQuickItem *parpar = par->parentItem()) {
+                rect = parpar->mapRectFromItem(par, rect);
+                if (parpar->clip())
+                    rect = rect.intersected(parpar->clipRect());
+                par = parpar;
+            }
+            rect = par->mapRectToScene(rect);
+            // once we have the rect in scene coordinates, clip to window
+            rect = rect.intersected(QRectF(QPoint(0,0), window()->size()));
+            // map it back to local coordinates
+            v = mapRectFromScene(rect);
+        }
+        break;
     default:
         break;
     }
@@ -4179,43 +4195,43 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 QQuickAnchorLine QQuickItemPrivate::left() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Left);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::LeftAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::right() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Right);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::RightAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::horizontalCenter() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::HCenter);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::HCenterAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::top() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Top);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::TopAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::bottom() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Bottom);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::BottomAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::verticalCenter() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::VCenter);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::VCenterAnchor);
 }
 
 QQuickAnchorLine QQuickItemPrivate::baseline() const
 {
     Q_Q(const QQuickItem);
-    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Baseline);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchors::BaselineAnchor);
 }
 
 /*!
@@ -4243,11 +4259,7 @@ QQuickAnchorLine QQuickItemPrivate::baseline() const
 qreal QQuickItem::baselineOffset() const
 {
     Q_D(const QQuickItem);
-    if (d->baselineOffsetValid) {
-        return d->baselineOffset;
-    } else {
-        return 0.0;
-    }
+    return d->baselineOffset;
 }
 
 void QQuickItem::setBaselineOffset(qreal offset)
@@ -4257,7 +4269,6 @@ void QQuickItem::setBaselineOffset(qreal offset)
         return;
 
     d->baselineOffset = offset;
-    d->baselineOffsetValid = true;
 
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         const QQuickItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
@@ -6253,6 +6264,8 @@ QPointF QQuickItem::position() const
 void QQuickItem::setX(qreal v)
 {
     Q_D(QQuickItem);
+    if (qIsNaN(v))
+        return;
     if (d->x == v)
         return;
 
@@ -6268,6 +6281,8 @@ void QQuickItem::setX(qreal v)
 void QQuickItem::setY(qreal v)
 {
     Q_D(QQuickItem);
+    if (qIsNaN(v))
+        return;
     if (d->y == v)
         return;
 

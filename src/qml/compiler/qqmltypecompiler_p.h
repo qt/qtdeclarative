@@ -196,7 +196,11 @@ public:
     bool resolveEnumBindings();
 
 private:
-    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject);
+    bool assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &enumName, int enumValue, bool isQtObject);
+    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
+    {
+        return assignEnumToBinding(binding, QStringRef(&enumName), enumValue, isQtObject);
+    }
     bool tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache,
                                     const QQmlPropertyData *prop,
                                     QmlIR::Binding *binding);

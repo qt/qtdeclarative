@@ -56,7 +56,6 @@
 
 #include <private/qv4value_p.h>
 
-#include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
 
@@ -81,9 +80,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // Add some leading whitespace to account for the binding's column offset.
     // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
     function.fill(QChar(QChar::Space), qMax(column, (quint16)2) - 2);
-    function += QStringLiteral("(function ");
-    function += handlerName;
-    function += QLatin1Char('(');
+    function += QStringLiteral("(function ") + handlerName + QLatin1Char('(');
 
     if (parameterString.isEmpty()) {
         QString error;
@@ -99,10 +96,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     } else
         function += parameterString;
 
-    function += QStringLiteral(") { ");
-    function += expression;
-    function += QStringLiteral(" })");
-
+    function += QStringLiteral(") { ") + expression + QStringLiteral(" })");
     m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
 
     if (m_function.isNullOrUndefined())

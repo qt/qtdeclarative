@@ -105,7 +105,8 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
-    , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
+    , moveReason(Other), movementDirection(QQuickPathView::Shortest), moveDirection(QQuickPathView::Shortest)
+    , attType(0), highlightComponent(0), highlightItem(0)
     , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
     , highlightPosition(0)
     , highlightRangeStart(0), highlightRangeEnd(0)
@@ -790,7 +791,7 @@ QQuickItem *QQuickPathView::currentItem() const
 void QQuickPathView::incrementCurrentIndex()
 {
     Q_D(QQuickPathView);
-    d->moveDirection = QQuickPathViewPrivate::Positive;
+    d->moveDirection = QQuickPathView::Positive;
     setCurrentIndex(currentIndex()+1);
 }
 
@@ -804,7 +805,7 @@ void QQuickPathView::incrementCurrentIndex()
 void QQuickPathView::decrementCurrentIndex()
 {
     Q_D(QQuickPathView);
-    d->moveDirection = QQuickPathViewPrivate::Negative;
+    d->moveDirection = QQuickPathView::Negative;
     setCurrentIndex(currentIndex()-1);
 }
 
@@ -1373,6 +1374,48 @@ void QQuickPathView::setSnapMode(SnapMode mode)
 }
 
 /*!
+    \qmlproperty enumeration QtQuick::PathView::movementDirection
+    \since 5.7
+
+    This property determines the direction in which items move when setting the current index.
+    The possible values are:
+
+    \list
+    \li PathView.Shortest (default) - the items move in the direction that requires the least
+        movement, which could be either \c Negative or \c Positive.
+    \li PathView.Negative - the items move backwards towards their destination.
+    \li PathView.Positive - the items move forwards towards their destination.
+    \endlist
+
+    For example, suppose that there are 5 items in the model, and \l currentIndex is \c 0.
+    If currentIndex is set to \c 2,
+
+    \list
+    \li a \c Positive movement direction will result in the following order: 0, 1, 2
+    \li a \c Negative movement direction will result in the following order: 0, 5, 4, 3, 2
+    \li a \c Shortest movement direction will result in same order with \c Positive .
+    \endlist
+
+    \note this property doesn't affect the movement of \l incrementCurrentIndex() and \l decrementCurrentIndex().
+*/
+QQuickPathView::MovementDirection QQuickPathView::movementDirection() const
+{
+    Q_D(const QQuickPathView);
+    return d->movementDirection;
+}
+
+void QQuickPathView::setMovementDirection(QQuickPathView::MovementDirection dir)
+{
+    Q_D(QQuickPathView);
+    if (dir == d->movementDirection)
+        return;
+    d->movementDirection = dir;
+    if (!d->tl.isActive())
+        d->moveDirection = d->movementDirection;
+    emit movementDirectionChanged();
+}
+
+/*!
     \qmlmethod QtQuick::PathView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
@@ -1910,7 +1953,7 @@ void QQuickPathView::refill()
         if (lcItemViewDelegateLifecycle().isDebugEnabled()) {
             QQuickText *text = qmlobject_cast<QQuickText*>(item);
             if (text)
-                qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ": QQuickText" << text->objectName() << text->text().left(40);
+                qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ": QQuickText" << text->objectName() << text->text().leftRef(40);
             else
                 qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ":" << item;
         }
@@ -2231,6 +2274,7 @@ void QQuickPathView::movementEnding()
         emit movingChanged();
         emit movementEnded();
     }
+    d->moveDirection = d->movementDirection;
 }
 
 // find the item closest to the snap position
@@ -2340,7 +2384,7 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
 
     if (!duration) {
         tl.set(moveOffset, targetOffset);
-    } else if (moveDirection == Positive || (moveDirection == Shortest && targetOffset - offset > modelCount/2.0)) {
+    } else if (moveDirection == QQuickPathView::Positive || (moveDirection == QQuickPathView::Shortest && targetOffset - offset > modelCount/2.0)) {
         qreal distance = modelCount - targetOffset + offset;
         if (targetOffset > moveOffset) {
             tl.move(moveOffset, 0.0, QEasingCurve(QEasingCurve::InQuad), int(duration * offset / distance));
@@ -2349,7 +2393,7 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
         } else {
             tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::InOutQuad), duration);
         }
-    } else if (moveDirection == Negative || targetOffset - offset <= -modelCount/2.0) {
+    } else if (moveDirection == QQuickPathView::Negative || targetOffset - offset <= -modelCount/2.0) {
         qreal distance = modelCount - offset + targetOffset;
         if (targetOffset < moveOffset) {
             tl.move(moveOffset, modelCount, QEasingCurve(targetOffset == 0 ? QEasingCurve::InOutQuad : QEasingCurve::InQuad), int(duration * (modelCount-offset) / distance));
@@ -2361,7 +2405,6 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
     } else {
         tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::InOutQuad), duration);
     }
-    moveDirection = Shortest;
 }
 
 QQuickPathViewAttached *QQuickPathView::qmlAttachedProperties(QObject *obj)

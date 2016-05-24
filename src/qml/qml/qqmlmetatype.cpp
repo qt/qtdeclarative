@@ -1914,14 +1914,11 @@ QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QList<QQmlType*> alltypes = data->nameToType.values();
     QList<QQmlType*> retn;
-    foreach (QQmlType* t, alltypes) {
-        if (t->isSingleton()) {
-            retn.append(t);
-        }
+    for (const auto type : qAsConst(data->nameToType)) {
+        if (type->isSingleton())
+            retn.append(type);
     }
-
     return retn;
 }
 
@@ -1929,9 +1926,9 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    for (QVector<QQmlPrivate::QmlUnitCacheLookupFunction>::ConstIterator it = data->lookupCachedQmlUnit.constBegin(), end = data->lookupCachedQmlUnit.constEnd();
-         it != end; ++it) {
-        if (const QQmlPrivate::CachedQmlUnit *unit = (*it)(uri))
+
+    for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
+        if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri))
             return unit;
     }
     return 0;
@@ -1961,8 +1958,7 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
 
         marker = typeName.indexOf(QLatin1String("_QML_"));
         if (marker != -1) {
-            typeName = typeName.left(marker);
-            typeName += QLatin1Char('*');
+            typeName = typeName.left(marker) + QLatin1Char('*');
             type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
             if (type) {
                 typeName = type->qmlTypeName();

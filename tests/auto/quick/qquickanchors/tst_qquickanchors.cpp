@@ -39,7 +39,6 @@
 #include "../shared/visualtestutil.h"
 
 Q_DECLARE_METATYPE(QQuickAnchors::Anchor)
-Q_DECLARE_METATYPE(QQuickAnchorLine::AnchorLine)
 
 using namespace QQuickVisualTestUtil;
 
@@ -351,14 +350,13 @@ void tst_qquickanchors::illegalSets_data()
 void tst_qquickanchors::reset()
 {
     QFETCH(QString, side);
-    QFETCH(QQuickAnchorLine::AnchorLine, anchorLine);
-    QFETCH(QQuickAnchors::Anchor, usedAnchor);
+    QFETCH(QQuickAnchors::Anchor, anchor);
 
     QQuickItem *baseItem = new QQuickItem;
 
-    QQuickAnchorLine anchor;
-    anchor.item = baseItem;
-    anchor.anchorLine = anchorLine;
+    QQuickAnchorLine anchorLine;
+    anchorLine.item = baseItem;
+    anchorLine.anchorLine = anchor;
 
     QQuickItem *item = new QQuickItem;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -366,11 +364,11 @@ void tst_qquickanchors::reset()
     const QMetaObject *meta = itemPrivate->anchors()->metaObject();
     QMetaProperty p = meta->property(meta->indexOfProperty(side.toUtf8().constData()));
 
-    QVERIFY(p.write(itemPrivate->anchors(), qVariantFromValue(anchor)));
-    QCOMPARE(itemPrivate->anchors()->usedAnchors().testFlag(usedAnchor), true);
+    QVERIFY(p.write(itemPrivate->anchors(), qVariantFromValue(anchorLine)));
+    QCOMPARE(itemPrivate->anchors()->usedAnchors().testFlag(anchor), true);
 
     QVERIFY(p.reset(itemPrivate->anchors()));
-    QCOMPARE(itemPrivate->anchors()->usedAnchors().testFlag(usedAnchor), false);
+    QCOMPARE(itemPrivate->anchors()->usedAnchors().testFlag(anchor), false);
 
     delete item;
     delete baseItem;
@@ -379,17 +377,16 @@ void tst_qquickanchors::reset()
 void tst_qquickanchors::reset_data()
 {
     QTest::addColumn<QString>("side");
-    QTest::addColumn<QQuickAnchorLine::AnchorLine>("anchorLine");
-    QTest::addColumn<QQuickAnchors::Anchor>("usedAnchor");
+    QTest::addColumn<QQuickAnchors::Anchor>("anchor");
 
-    QTest::newRow("left") << "left" << QQuickAnchorLine::Left << QQuickAnchors::LeftAnchor;
-    QTest::newRow("top") << "top" << QQuickAnchorLine::Top << QQuickAnchors::TopAnchor;
-    QTest::newRow("right") << "right" << QQuickAnchorLine::Right << QQuickAnchors::RightAnchor;
-    QTest::newRow("bottom") << "bottom" << QQuickAnchorLine::Bottom << QQuickAnchors::BottomAnchor;
+    QTest::newRow("left") << "left" << QQuickAnchors::LeftAnchor;
+    QTest::newRow("top") << "top" << QQuickAnchors::TopAnchor;
+    QTest::newRow("right") << "right" << QQuickAnchors::RightAnchor;
+    QTest::newRow("bottom") << "bottom" << QQuickAnchors::BottomAnchor;
 
-    QTest::newRow("hcenter") << "horizontalCenter" << QQuickAnchorLine::HCenter << QQuickAnchors::HCenterAnchor;
-    QTest::newRow("vcenter") << "verticalCenter" << QQuickAnchorLine::VCenter << QQuickAnchors::VCenterAnchor;
-    QTest::newRow("baseline") << "baseline" << QQuickAnchorLine::Baseline << QQuickAnchors::BaselineAnchor;
+    QTest::newRow("hcenter") << "horizontalCenter" << QQuickAnchors::HCenterAnchor;
+    QTest::newRow("vcenter") << "verticalCenter" << QQuickAnchors::VCenterAnchor;
+    QTest::newRow("baseline") << "baseline" << QQuickAnchors::BaselineAnchor;
 }
 
 void tst_qquickanchors::resetConvenience()
