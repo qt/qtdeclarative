@@ -38,10 +38,11 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
-#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgimagenode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,7 +82,7 @@ void QQuickMaterialProgressStripAnimatorJob::updateCurrentTime(int time)
     if (!m_node)
         return;
 
-    QSGSimpleRectNode *geometryNode = static_cast<QSGSimpleRectNode *>(m_node->firstChild());
+    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(m_node->firstChild());
     Q_ASSERT(!geometryNode || geometryNode->type() == QSGNode::GeometryNodeType);
     if (!geometryNode)
         return;
@@ -128,7 +129,7 @@ void QQuickMaterialProgressStripAnimatorJob::moveNode(QSGTransformNode *transfor
     matrix.translate(x, 0);
     transformNode->setMatrix(matrix);
 
-    QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(transformNode->firstChild());
+    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(transformNode->firstChild());
     Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
     QRectF r = geometry;
@@ -211,9 +212,11 @@ QSGNode *QQuickMaterialProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePa
     bounds.setHeight(implicitHeight());
     bounds.moveTop((height() - bounds.height()) / 2.0);
 
-    if (!oldNode)
-        oldNode = new QSGSimpleRectNode(bounds, Qt::transparent);
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(bounds);
+    if (!oldNode) {
+        oldNode = window()->createRectangleNode();
+        static_cast<QSGRectangleNode *>(oldNode)->setColor(Qt::transparent);
+    }
+    static_cast<QSGRectangleNode *>(oldNode)->setRect(bounds);
 
     const int count = m_indeterminate ? 2 : 1;
     const qreal w = m_indeterminate ? 0 : m_progress * width();
@@ -225,14 +228,14 @@ QSGNode *QQuickMaterialProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePa
             transformNode = new QSGTransformNode;
             oldNode->appendChildNode(transformNode);
 
-            QSGRectangleNode *rectNode = d->sceneGraphContext()->createRectangleNode();
+            QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
             rectNode->setAntialiasing(true);
             transformNode->appendChildNode(rectNode);
         }
         Q_ASSERT(transformNode->type() == QSGNode::TransformNodeType);
         static_cast<QSGTransformNode *>(transformNode)->setMatrix(QMatrix4x4());
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(transformNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(transformNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(rect);

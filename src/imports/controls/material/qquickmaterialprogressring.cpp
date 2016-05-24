@@ -41,8 +41,8 @@
 #include <QtCore/qset.h>
 #include <QtGui/qpainter.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/qsgsimplerectnode.h>
-#include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgimagenode.h>
 #include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
@@ -77,18 +77,6 @@ private:
     qreal m_devicePixelRatio;
     QSGNode *m_containerNode;
     QQuickWindow *m_window;
-};
-
-class QQuickMaterialRingTexture : public QSGSimpleTextureNode
-{
-public:
-    QQuickMaterialRingTexture();
-    ~QQuickMaterialRingTexture();
-
-    QColor color() const;
-    void setColor(QColor color);
-
-private:
     QColor m_color;
 };
 
@@ -104,14 +92,15 @@ QQuickMaterialProgressRing::~QQuickMaterialProgressRing()
 
 QSGNode *QQuickMaterialProgressRing::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
 {
-    if (!oldNode)
-        oldNode = new QSGSimpleRectNode(boundingRect(), Qt::transparent);
+    if (!oldNode) {
+        oldNode = window()->createRectangleNode();
+        static_cast<QSGRectangleNode *>(oldNode)->setColor(Qt::transparent);
+    }
+    static_cast<QSGRectangleNode *>(oldNode)->setRect(boundingRect());
 
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(boundingRect());
-
-    QQuickMaterialRingTexture *textureNode = static_cast<QQuickMaterialRingTexture*>(oldNode->firstChild());
+    QSGImageNode *textureNode = static_cast<QSGImageNode *>(oldNode->firstChild());
     if (!textureNode) {
-        textureNode = new QQuickMaterialRingTexture;
+        textureNode = window()->createImageNode();
         textureNode->setOwnsTexture(true);
         oldNode->appendChildNode(textureNode);
     }
@@ -120,7 +109,6 @@ QSGNode *QQuickMaterialProgressRing::updatePaintNode(QSGNode *oldNode, QQuickIte
     // so just use a blank image.
     QImage blankImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
     blankImage.fill(Qt::transparent);
-    textureNode->setColor(m_color);
     textureNode->setRect(boundingRect());
     textureNode->setTexture(window()->createTextureFromImage(blankImage));
 
@@ -190,7 +178,7 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
     if (!m_containerNode)
         return;
 
-    QSGSimpleRectNode *rectNode = static_cast<QSGSimpleRectNode*>(m_containerNode->firstChild());
+    QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(m_containerNode->firstChild());
     if (!rectNode)
         return;
 
@@ -205,8 +193,8 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
     painter.setRenderHint(QPainter::Antialiasing);
 
     QPen pen;
-    QQuickMaterialRingTexture *textureNode = static_cast<QQuickMaterialRingTexture*>(rectNode->firstChild());
-    pen.setColor(textureNode->color());
+    QSGImageNode *textureNode = static_cast<QSGImageNode *>(rectNode->firstChild());
+    pen.setColor(m_color);
     pen.setWidth(4 * m_devicePixelRatio);
     painter.setPen(pen);
 
@@ -264,24 +252,7 @@ void QQuickMaterialRingAnimatorJob::nodeWasDestroyed()
 void QQuickMaterialRingAnimatorJob::afterNodeSync()
 {
     m_containerNode = QQuickItemPrivate::get(m_target)->childContainerNode();
-}
-
-QQuickMaterialRingTexture::QQuickMaterialRingTexture()
-{
-}
-
-QQuickMaterialRingTexture::~QQuickMaterialRingTexture()
-{
-}
-
-QColor QQuickMaterialRingTexture::color() const
-{
-    return m_color;
-}
-
-void QQuickMaterialRingTexture::setColor(QColor color)
-{
-    m_color = color;
+    m_color = static_cast<QQuickMaterialProgressRing *>(m_target.data())->color();
 }
 
 QT_END_NAMESPACE

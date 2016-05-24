@@ -37,7 +37,7 @@
 #include "qquickprogressstrip_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/qsgsimplerectnode.h>
+#include <QtQuick/qsgrectanglenode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -129,9 +129,11 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
 
-    if (!oldNode)
-        oldNode = new QSGSimpleRectNode(boundingRect(), Qt::transparent);
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(boundingRect());
+    if (!oldNode) {
+        oldNode = window()->createRectangleNode();
+        static_cast<QSGRectangleNode *>(oldNode)->setColor(Qt::transparent);
+    }
+    static_cast<QSGRectangleNode *>(oldNode)->setRect(boundingRect());
 
     QSGTransformNode *rootTransformNode = static_cast<QSGTransformNode *>(oldNode->firstChild());
     if (!rootTransformNode) {
@@ -155,9 +157,9 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
                 rootTransformNode->appendChildNode(transformNode);
             }
 
-            QSGRectangleNode *rectNode = static_cast<QSGRectangleNode*>(transformNode->firstChild());
+            QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode*>(transformNode->firstChild());
             if (!rectNode) {
-                rectNode = d->sceneGraphContext()->createRectangleNode();
+                rectNode = d->sceneGraphContext()->createInternalRectangleNode();
                 rectNode->setColor(color);
                 transformNode->appendChildNode(rectNode);
             }
@@ -177,9 +179,9 @@ QSGNode *QQuickProgressStrip::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
             rootTransformNode->removeAllChildNodes();
         }
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(rootTransformNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(rootTransformNode->firstChild());
         if (!rectNode) {
-            rectNode = d->sceneGraphContext()->createRectangleNode();
+            rectNode = d->sceneGraphContext()->createInternalRectangleNode();
             rectNode->setColor(color);
             rootTransformNode->appendChildNode(rectNode);
         }
@@ -233,7 +235,7 @@ void QQuickProgressAnimatorJob::updateCurrentTime(int time)
     if (!m_node)
         return;
 
-    QSGSimpleRectNode *rootRectNode = static_cast<QSGSimpleRectNode*>(m_node->firstChild());
+    QSGRectangleNode *rootRectNode = static_cast<QSGRectangleNode *>(m_node->firstChild());
     if (!rootRectNode)
         return;
     Q_ASSERT(rootRectNode->type() == QSGNode::GeometryNodeType);
@@ -250,7 +252,7 @@ void QQuickProgressAnimatorJob::updateCurrentTime(int time)
     const qreal pixelsPerSecond = rootRectNode->rect().width();
 
     for (int i = 0; i < blocks; ++i) {
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode*>(transformNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode*>(transformNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         QMatrix4x4 m;

@@ -241,7 +241,7 @@ QSGNode *QQuickUniversalProgressRing::updatePaintNode(QSGNode *oldNode, UpdatePa
             QSGOpacityNode *opacityNode = new QSGOpacityNode;
             transformNode->appendChildNode(opacityNode);
 
-            QSGRectangleNode *rectNode = d->sceneGraphContext()->createRectangleNode();
+            QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
             rectNode->setAntialiasing(true);
             opacityNode->appendChildNode(rectNode);
         }
@@ -249,7 +249,7 @@ QSGNode *QQuickUniversalProgressRing::updatePaintNode(QSGNode *oldNode, UpdatePa
         QSGNode *opacityNode = transformNode->firstChild();
         Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(opacityNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(rect);

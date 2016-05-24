@@ -39,8 +39,9 @@
 #include <QtCore/qset.h>
 #include <QtGui/qpainter.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/qsgsimplerectnode.h>
+#include <QtQuick/qsgnode.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/qsgrectanglenode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,9 +85,11 @@ QSGNode *QQuickBusyIndicatorRing::updatePaintNode(QSGNode *oldNode, QQuickItem::
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
 
-    if (!oldNode)
-        oldNode = new QSGSimpleRectNode(boundingRect(), Qt::transparent);
-    static_cast<QSGSimpleRectNode *>(oldNode)->setRect(boundingRect());
+    if (!oldNode) {
+        oldNode = window()->createRectangleNode();
+        static_cast<QSGRectangleNode *>(oldNode)->setColor(Qt::transparent);
+    }
+    static_cast<QSGRectangleNode *>(oldNode)->setRect(boundingRect());
 
     QSGTransformNode *rootTransformNode = static_cast<QSGTransformNode *>(oldNode->firstChild());
     if (!rootTransformNode) {
@@ -112,7 +115,7 @@ QSGNode *QQuickBusyIndicatorRing::updatePaintNode(QSGNode *oldNode, QQuickItem::
             QSGOpacityNode *opacityNode = new QSGOpacityNode;
             transformNode->appendChildNode(opacityNode);
 
-            QSGRectangleNode *rectNode = d->sceneGraphContext()->createRectangleNode();
+            QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
             rectNode->setAntialiasing(true);
             rectNode->setColor(color);
             rectNode->setPenColor(color);
@@ -122,7 +125,7 @@ QSGNode *QQuickBusyIndicatorRing::updatePaintNode(QSGNode *oldNode, QQuickItem::
         QSGNode *opacityNode = transformNode->firstChild();
         Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(opacityNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         QPointF pos = QPointF(sz / 2 - circleRadius, sz / 2 - circleRadius);
@@ -178,7 +181,7 @@ void QQuickBusyIndicatorAnimatorJob::updateCurrentTime(int time)
     if (!m_node)
         return;
 
-    QSGSimpleRectNode *rootRectNode = static_cast<QSGSimpleRectNode*>(m_node->firstChild());
+    QSGRectangleNode *rootRectNode = static_cast<QSGRectangleNode *>(m_node->firstChild());
     if (!rootRectNode)
         return;
 
@@ -199,7 +202,7 @@ void QQuickBusyIndicatorAnimatorJob::updateCurrentTime(int time)
         QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode*>(transformNode->firstChild());
         Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode*>(opacityNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode*>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         const bool fill = (firstPhaseProgress > qreal(i) / circles) || (secondPhaseProgress > 0 && secondPhaseProgress < qreal(i) / circles);

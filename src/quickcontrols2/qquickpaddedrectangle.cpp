@@ -184,7 +184,7 @@ QSGNode *QQuickPaddedRectangle::updatePaintNode(QSGNode *node, UpdatePaintNodeDa
     if (!transformNode)
         transformNode = new QSGTransformNode;
 
-    QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(QQuickRectangle::updatePaintNode(transformNode->firstChild(), data));
+    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(QQuickRectangle::updatePaintNode(transformNode->firstChild(), data));
 
     if (rectNode) {
         if (!transformNode->firstChild())

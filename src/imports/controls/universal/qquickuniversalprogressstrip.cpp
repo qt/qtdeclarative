@@ -38,10 +38,10 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
-#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuick/qsgrectanglenode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -106,7 +106,7 @@ void QQuickUniversalProgressStripAnimatorJob::updateCurrentTime(int time)
     if (!m_node)
         return;
 
-    QSGSimpleRectNode *geometryNode = static_cast<QSGSimpleRectNode *>(m_node->firstChild());
+    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(m_node->firstChild());
     Q_ASSERT(!geometryNode || geometryNode->type() == QSGNode::GeometryNodeType);
     if (!geometryNode)
         return;
@@ -286,9 +286,9 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
     if (!m_indeterminate)
         bounds.setWidth(m_progress * bounds.width());
 
-    QSGSimpleRectNode *geometryNode = static_cast<QSGSimpleRectNode *>(oldNode);
+    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(oldNode);
     if (!geometryNode)
-        geometryNode = new QSGSimpleRectNode(bounds, Qt::transparent);
+        geometryNode = window()->createRectangleNode();
     geometryNode->setRect(bounds);
     geometryNode->setColor(m_indeterminate ? Qt::transparent : m_color);
 
@@ -317,7 +317,7 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
             QSGOpacityNode *opacityNode = new QSGOpacityNode;
             ellipseNode->appendChildNode(opacityNode);
 
-            QSGRectangleNode *rectNode = d->sceneGraphContext()->createRectangleNode();
+            QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
             rectNode->setAntialiasing(true);
             rectNode->setRadius(EllipseDiameter / 2);
             opacityNode->appendChildNode(rectNode);
@@ -330,7 +330,7 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
         QSGNode *opacityNode = ellipseNode->firstChild();
         Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-        QSGRectangleNode *rectNode = static_cast<QSGRectangleNode *>(opacityNode->firstChild());
+        QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(QRectF((EllipseCount - i - 1) * (EllipseDiameter + EllipseOffset), (height() - EllipseDiameter) / 2, EllipseDiameter, EllipseDiameter));
