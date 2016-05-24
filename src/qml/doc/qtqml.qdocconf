@@ -4,7 +4,7 @@ project                 = QtQml
 description             = Qt QML Reference Documentation
 version                 = $QT_VERSION
 
-examplesinstallpath     = qtdeclarative/qml
+examplesinstallpath     = qml
 
 qhp.projects            = QtQml
 

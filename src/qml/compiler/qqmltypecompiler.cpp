@@ -137,7 +137,6 @@ bool QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
-    compiledData->metaObjects.reserve(document->objects.count());
     compiledData->propertyCaches.reserve(document->objects.count());
 
     {
@@ -336,30 +335,15 @@ int QQmlTypeCompiler::rootObjectIndex() const
     return document->indexOfRootObject;
 }
 
-void QQmlTypeCompiler::setPropertyCaches(const QVector<QQmlPropertyCache *> &caches)
+void QQmlTypeCompiler::setPropertyCaches(const QQmlPropertyCacheVector &caches)
 {
     compiledData->propertyCaches = caches;
     Q_ASSERT(caches.count() >= document->indexOfRootObject);
-    if (compiledData->rootPropertyCache)
-        compiledData->rootPropertyCache->release();
-    compiledData->rootPropertyCache = caches.at(document->indexOfRootObject);
-    compiledData->rootPropertyCache->addref();
 }
 
-const QVector<QQmlPropertyCache *> &QQmlTypeCompiler::propertyCaches() const
+const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
 {
     return compiledData->propertyCaches;
-}
-
-void QQmlTypeCompiler::setVMEMetaObjects(const QVector<QByteArray> &metaObjects)
-{
-    Q_ASSERT(compiledData->metaObjects.isEmpty());
-    compiledData->metaObjects = metaObjects;
-}
-
-QVector<QByteArray> *QQmlTypeCompiler::vmeMetaObjects() const
-{
-    return &compiledData->metaObjects;
 }
 
 QHash<int, int> *QQmlTypeCompiler::objectIndexToIdForRoot()
@@ -435,7 +419,7 @@ QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompile
 QQmlPropertyCacheCreator::~QQmlPropertyCacheCreator()
 {
     for (int i = 0; i < propertyCaches.count(); ++i)
-        if (QQmlPropertyCache *cache = propertyCaches.at(i))
+        if (QQmlPropertyCache *cache = propertyCaches.at(i).data())
             cache->release();
     propertyCaches.clear();
 }
@@ -443,12 +427,10 @@ QQmlPropertyCacheCreator::~QQmlPropertyCacheCreator()
 bool QQmlPropertyCacheCreator::buildMetaObjects()
 {
     propertyCaches.resize(qmlObjects.count());
-    vmeMetaObjects.resize(qmlObjects.count());
 
     if (!buildMetaObjectRecursively(compiler->rootObjectIndex(), /*referencing object*/-1, /*instantiating binding*/0))
         return false;
 
-    compiler->setVMEMetaObjects(vmeMetaObjects);
     compiler->setPropertyCaches(propertyCaches);
     propertyCaches.clear();
 
@@ -463,7 +445,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     QQmlPropertyData *instantiatingProperty = 0;
     if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
         Q_ASSERT(referencingObjectIndex >= 0);
-        QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex);
+        QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex).data();
         Q_ASSERT(parentCache);
         Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
 
@@ -494,7 +476,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
                 // because interceptors can't go to the shared value type instances.
                 if (instantiatingProperty && QQmlValueTypeFactory::isValueType(instantiatingProperty->propType)) {
                     needVMEMetaObject = false;
-                    if (!ensureMetaObject(referencingObjectIndex))
+                    if (!ensureVMEMetaObject(referencingObjectIndex))
                         return false;
                 }
                 break;
@@ -557,12 +539,14 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
             if (!createMetaObject(objectIndex, obj, baseTypeCache))
                 return false;
         } else {
+            if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
+                oldCache->release();
             propertyCaches[objectIndex] = baseTypeCache;
             baseTypeCache->addref();
         }
     }
 
-    if (propertyCaches.at(objectIndex)) {
+    if (propertyCaches.at(objectIndex).data()) {
         for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
@@ -573,9 +557,10 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     return true;
 }
 
-bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
+bool QQmlPropertyCacheCreator::ensureVMEMetaObject(int objectIndex)
 {
-    if (!vmeMetaObjects.at(objectIndex).isEmpty())
+    const bool willCreateVMEMetaObject = propertyCaches.at(objectIndex).flag();
+    if (willCreateVMEMetaObject)
         return true;
     const QmlIR::Object *obj = qmlObjects.at(objectIndex);
     QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
@@ -589,7 +574,12 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
                                                              obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
                                                              obj->signalCount() + obj->propertyCount() + obj->aliasCount());
+
+    if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
+        oldCache->release();
     propertyCaches[objectIndex] = cache;
+    // Indicate that this object also needs a VME meta-object at run-time
+    propertyCaches[objectIndex].setFlag();
 
     struct TypeData {
         QV4::CompiledData::Property::Type dtype;
@@ -658,10 +648,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         if (d && d->isFinal())
             COMPILE_EXCEPTION(a, tr("Cannot override FINAL property"));
     }
-
-    typedef QQmlVMEMetaData VMD;
-
-    vmeMetaObjects[objectIndex] = QByteArray(sizeof(QQmlVMEMetaData) + obj->aliasCount() * sizeof(VMD::AliasData), 0);
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
     int effectiveMethodIndex = cache->methodIndexCacheStart;
@@ -878,7 +864,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 {
     for (int objectIndex = 0; objectIndex < qmlObjects.count(); ++objectIndex) {
         const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
-        QQmlPropertyCache *cache = propertyCaches.at(objectIndex);
+        QQmlPropertyCache *cache = propertyCaches.at(objectIndex).data();
         if (!cache)
             continue;
         if (QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex)) {
@@ -1086,7 +1072,7 @@ QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
 bool QQmlEnumTypeResolver::resolveEnumBindings()
 {
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches.at(i);
+        QQmlPropertyCache *propertyCache = propertyCaches.at(i).data();
         if (!propertyCache)
             continue;
         const QmlIR::Object *obj = qmlObjects.at(i);
@@ -1272,7 +1258,7 @@ QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
 void QQmlAliasAnnotator::annotateBindingsToAliases()
 {
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches.at(i);
+        QQmlPropertyCache *propertyCache = propertyCaches.at(i).data();
         if (!propertyCache)
             continue;
 
@@ -1304,7 +1290,7 @@ void QQmlScriptStringScanner::scan()
 {
     const int scriptStringMetaType = qMetaTypeId<QQmlScriptString>();
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches.at(i);
+        QQmlPropertyCache *propertyCache = propertyCaches.at(i).data();
         if (!propertyCache)
             continue;
 
@@ -1341,7 +1327,6 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , _objectIndexToIdInScope(0)
     , resolvedTypes(typeCompiler->resolvedTypes())
     , propertyCaches(typeCompiler->propertyCaches())
-    , vmeMetaObjectData(typeCompiler->vmeMetaObjects())
     , objectIndexToIdForRoot(typeCompiler->objectIndexToIdForRoot())
     , objectIndexToIdPerComponent(typeCompiler->objectIndexToIdPerComponent())
 {
@@ -1366,7 +1351,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         } else if (tr->component) {
-            if (tr->component->rootPropertyCache->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
+            if (tr->component->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         }
 
@@ -1436,7 +1421,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         const QmlIR::Object *obj = qmlObjects->at(i);
-        QQmlPropertyCache *cache = propertyCaches.at(i);
+        QQmlPropertyCache *cache = propertyCaches.at(i).data();
         if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
 
@@ -1554,12 +1539,11 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
     foreach (int objectIndex, _objectsWithAliases) {
         const QmlIR::Object *obj = qmlObjects->at(objectIndex);
 
-        QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+        QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex).data();
         Q_ASSERT(propertyCache);
 
         int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();
         int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
-        int effectiveAliasIndex = 0;
 
         int aliasIndex = 0;
         for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
@@ -1587,7 +1571,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
 
             int propIdx = -1;
-            int notifySignal = -1;
             int type = 0;
             bool writable = false;
             bool resettable = false;
@@ -1607,7 +1590,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;
             } else {
-                QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
+                QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex).data();
                 Q_ASSERT(targetCache);
                 QmlIR::PropertyResolver resolver(targetCache);
 
@@ -1622,7 +1605,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 writable = targetProperty->isWritable();
                 resettable = targetProperty->isResettable();
-                notifySignal = targetProperty->notifyIndex;
 
                 if (!subProperty.isEmpty()) {
                     const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
@@ -1662,15 +1644,6 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             }
 
             alias->encodedMetaPropertyIndex = propIdx;
-            QQmlVMEMetaData::AliasData aliasData = { notifySignal };
-
-            typedef QQmlVMEMetaData VMD;
-            QByteArray &dynamicData = (*vmeMetaObjectData)[objectIndex];
-            Q_ASSERT(!dynamicData.isEmpty());
-            VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-            *(vmd->aliasData() + effectiveAliasIndex++) = aliasData;
-
-            Q_ASSERT(dynamicData.isDetached());
 
             if (!(alias->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
                 propertyFlags |= QQmlPropertyData::IsWritable;
@@ -1754,7 +1727,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         return validateObject(componentBinding->value.objectIndex, componentBinding);
     }
 
-    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex).data();
     if (!propertyCache)
         return true;
 
@@ -2348,7 +2321,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
     } else if (property->isQList()) {
         const int listType = enginePrivate->listType(property->propType);
         if (!QQmlMetaType::isInterface(listType)) {
-            QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex).data();
             if (!canCoerce(listType, source)) {
                 recordError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
                 return false;
@@ -2375,7 +2348,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
         bool isAssignable = false;
         // Determine isAssignable value
         if (propertyMetaObject) {
-            QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex).data();
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent();
@@ -2435,7 +2408,7 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
             const QmlIR::Object *obj = qmlObjects.at(objectIndex);
             m.name = stringAt(obj->idIndex);
             m.idIndex = idIt.value();
-            m.type = propertyCaches.at(objectIndex);
+            m.type = propertyCaches.at(objectIndex).data();
 
             QQmlCompiledData::TypeReference *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
             if (tref && tref->isFullyDynamicType)
@@ -2444,7 +2417,7 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
             idMapping << m;
         }
     }
-    v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject));
+    v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject).data());
 
     if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
         return false;
@@ -2459,7 +2432,7 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
 
     QmlIR::Object *object = qmlObjects.at(objectIndex);
     if (object->functionsAndExpressions->count > 0) {
-        QQmlPropertyCache *scopeObject = propertyCaches.at(scopeObjectIndex);
+        QQmlPropertyCache *scopeObject = propertyCaches.at(scopeObjectIndex).data();
         v4CodeGen->beginObjectScope(scopeObject);
 
         QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
@@ -2512,7 +2485,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties()
 
 void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
 {
-    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex).data();
     if (!propertyCache)
         return;
 

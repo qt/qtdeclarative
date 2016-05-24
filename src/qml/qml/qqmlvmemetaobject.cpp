@@ -55,6 +55,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -149,15 +150,23 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         metaObject->activate(metaObject->object, sigIdx, 0);
     } else {
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
-        QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
         if (!aliasData->isObjectAlias()) {
             QQmlContextData *ctxt = metaObject->ctxt;
             QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
             if (!target)
                 return;
 
-            if (d->notifySignal != -1)
-                connect(target, d->notifySignal, ctxt->engine);
+            QQmlData *targetDData = QQmlData::get(target, /*create*/false);
+            if (!targetDData)
+                return;
+            int coreIndex;
+            QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, &coreIndex);
+            const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
+            if (!pd)
+                return;
+
+            if (pd->notifyIndex != -1)
+                connect(target, pd->notifyIndex, ctxt->engine);
         }
 
         metaObject.setFlag();
@@ -305,10 +314,9 @@ QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObje
 }
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
-                                     QQmlPropertyCache *cache,
-                                     const QQmlVMEMetaData *meta, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
+                                     QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
-      ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta),
+      ctxt(QQmlData::get(obj, true)->outerContext),
       aliasEndpoints(0), compilationUnit(qmlCompilationUnit), compiledObject(0)
 {
     cache->addref();
@@ -733,9 +741,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         case QV4::CompiledData::Property::Quaternion:
                             Q_ASSERT(fallbackMetaType != QMetaType::UnknownType);
                             if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
-                                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
-                                if (v)
-                                    QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], fallbackMetaType);
+                                QVariant propertyAsVariant;
+                                if (QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>())
+                                    propertyAsVariant = v->d()->data;
+                                QQml_valueTypeProvider()->readValueType(propertyAsVariant, a[0], fallbackMetaType);
                             }
                             break;
                         case QV4::CompiledData::Property::Var:

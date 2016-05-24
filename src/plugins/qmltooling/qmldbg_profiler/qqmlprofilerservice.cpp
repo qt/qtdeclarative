@@ -54,7 +54,6 @@
 QT_BEGIN_NAMESPACE
 
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlAbstractProfilerAdapter)
-Q_QML_IMPORT_DEBUG_PLUGIN(QQuickProfilerAdapterFactory)
 
 QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QQmlProfilerService>(1, parent),

@@ -56,6 +56,7 @@
 #include <QtCore/qlocale.h>
 #include <QtCore/qobject.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 

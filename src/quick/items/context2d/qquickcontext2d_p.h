@@ -66,6 +66,7 @@
 #include <QtCore/QWaitCondition>
 
 #include <private/qv4value_p.h>
+#include <private/qv4persistent_p.h>
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
 

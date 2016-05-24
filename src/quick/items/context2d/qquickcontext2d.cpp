@@ -58,6 +58,7 @@
 #include <private/qv4domerrors_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <private/qquickwindow_p.h>
 
 #include <private/qv4value_p.h>

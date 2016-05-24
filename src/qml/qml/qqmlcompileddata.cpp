@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
 : engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
-  rootPropertyCache(0), totalBindingsCount(0), totalParserStatusCount(0)
+  totalBindingsCount(0), totalParserStatusCount(0)
 {
     Q_ASSERT(engine);
 }
@@ -86,18 +86,15 @@ QQmlCompiledData::~QQmlCompiledData()
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
 
-    for (int ii = 0; ii < propertyCaches.count(); ++ii)
-        if (propertyCaches.at(ii))
-            propertyCaches.at(ii)->release();
-
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
 
     if (importCache)
         importCache->release();
 
-    if (rootPropertyCache)
-        rootPropertyCache->release();
+    for (int ii = 0; ii < propertyCaches.count(); ++ii)
+        if (propertyCaches.at(ii).data())
+            propertyCaches.at(ii)->release();
 }
 
 void QQmlCompiledData::clear()
@@ -112,7 +109,7 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::propertyCache() const
     if (type)
         return typePropertyCache;
     else
-        return component->rootPropertyCache;
+        return component->rootPropertyCache();
 }
 
 /*!
@@ -127,7 +124,7 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngi
         typePropertyCache->addref();
         return typePropertyCache;
     } else {
-        return component->rootPropertyCache;
+        return component->rootPropertyCache();
     }
 }
 
@@ -149,7 +146,7 @@ void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
     else if (type)
         mo = type->metaObject();
     else if (component)
-        mo = component->rootPropertyCache->firstCppMetaObject();
+        mo = component->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 

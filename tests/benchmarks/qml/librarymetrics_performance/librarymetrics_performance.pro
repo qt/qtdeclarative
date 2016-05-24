@@ -7,3 +7,5 @@ macx:CONFIG -= app_bundle
 
 CONFIG += release
 SOURCES += tst_librarymetrics_performance.cpp
+
+RESOURCES += data

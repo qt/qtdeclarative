@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qv4global_p.h"
+#include "qv4engine_p.h"
 #include "qv4runtime_p.h"
 #ifndef V4_BOOTSTRAP
 #include "qv4object_p.h"

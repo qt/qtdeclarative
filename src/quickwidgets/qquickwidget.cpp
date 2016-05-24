@@ -1176,17 +1176,20 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
-    d->updatePending = false;
     if (!d->useSoftwareRenderer) {
         d->createContext();
-        if (d->offscreenWindow->openglContext())
+        if (d->offscreenWindow->openglContext()) {
             d->render(true);
-        else
+            if (d->updatePending) {
+                d->updatePending = false;
+                update();
+            }
+        } else {
             triggerUpdate();
+        }
     } else {
         triggerUpdate();
     }
-
     QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
     if (!offscreenPrivate->visible) {
         offscreenPrivate->visible = true;
