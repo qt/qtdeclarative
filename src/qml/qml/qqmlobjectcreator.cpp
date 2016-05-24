@@ -1033,7 +1033,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     bool installPropertyCache = true;
 
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
-    if (compiledData->isComponent(index)) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
         Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(

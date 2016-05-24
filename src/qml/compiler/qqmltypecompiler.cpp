@@ -1382,6 +1382,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
         syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
         syntheticComponent->location = binding->valueLocation;
+        syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
         if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
             QQmlCompiledData::TypeReference *typeRef = new QQmlCompiledData::TypeReference;
@@ -1420,7 +1421,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     // on the left hand side is of QQmlComponent type.
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
-        const QmlIR::Object *obj = qmlObjects->at(i);
+        QmlIR::Object *obj = qmlObjects->at(i);
         QQmlPropertyCache *cache = propertyCaches.at(i).data();
         if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
@@ -1439,6 +1440,7 @@ bool QQmlComponentAndAliasResolver::resolve()
             continue;
         }
 
+        obj->flags |= QV4::CompiledData::Object::IsComponent;
         componentRoots.append(i);
 
         if (obj->functionCount() > 0)
@@ -1675,7 +1677,6 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
     , resolvedTypes(*typeCompiler->resolvedTypes())
     , customParsers(typeCompiler->customParserCache())
     , propertyCaches(typeCompiler->propertyCaches())
-    , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
     , customParserBindingsPerObject(typeCompiler->customParserBindings())
     , _seenObjectWithId(false)
 {
@@ -1720,7 +1721,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     if (obj->idIndex != 0)
         _seenObjectWithId = true;
 
-    if (isComponent(objectIndex)) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         Q_ASSERT(obj->nBindings == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->bindingTable();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
@@ -2328,7 +2329,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
             }
         }
         return true;
-    } else if (isComponent(binding->value.objectIndex)) {
+    } else if (qmlUnit->objectAt(binding->value.objectIndex)->flags & QV4::CompiledData::Object::IsComponent) {
         return true;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return true;
@@ -2365,7 +2366,6 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen)
     : QQmlCompilePass(typeCompiler)
-    , objectIndexToIdPerComponent(*typeCompiler->objectIndexToIdPerComponent())
     , resolvedTypes(*typeCompiler->resolvedTypes())
     , customParsers(typeCompiler->customParserCache())
     , qmlObjects(*typeCompiler->qmlObjects())
@@ -2388,10 +2388,10 @@ bool QQmlJSCodeGenerator::generateCodeForComponents()
 
 bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, int> &objectIndexToId)
 {
-    if (isComponent(contextObject)) {
-        const QmlIR::Object *component = qmlObjects.at(contextObject);
-        Q_ASSERT(component->bindingCount() == 1);
-        const QV4::CompiledData::Binding *componentBinding = component->firstBinding();
+    const QmlIR::Object *obj = qmlObjects.at(contextObject);
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+        Q_ASSERT(obj->bindingCount() == 1);
+        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
         contextObject = componentBinding->value.objectIndex;
     }
@@ -2427,10 +2427,10 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
 
 bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
 {
-    if (isComponent(objectIndex))
+    QmlIR::Object *object = qmlObjects.at(objectIndex);
+    if (object->flags & QV4::CompiledData::Object::IsComponent)
         return true;
 
-    QmlIR::Object *object = qmlObjects.at(objectIndex);
     if (object->functionsAndExpressions->count > 0) {
         QQmlPropertyCache *scopeObject = propertyCaches.at(scopeObjectIndex).data();
         v4CodeGen->beginObjectScope(scopeObject);

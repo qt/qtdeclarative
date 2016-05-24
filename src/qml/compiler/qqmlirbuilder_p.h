@@ -280,8 +280,9 @@ struct Q_QML_PRIVATE_EXPORT Object
 public:
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
-    int indexOfDefaultPropertyOrAlias : 31;
-    int defaultPropertyIsAlias : 1;
+    int indexOfDefaultPropertyOrAlias;
+    bool defaultPropertyIsAlias;
+    int flags;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;

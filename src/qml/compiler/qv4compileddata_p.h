@@ -391,13 +391,19 @@ struct Alias {
 
 struct Object
 {
+    enum Flags {
+        NoFlag = 0x0,
+        IsComponent = 0x1 // object was identified to be an explicit or implicit component boundary
+    };
+
     // Depending on the use, this may be the type name to instantiate before instantiating this
     // object. For grouped properties the type name will be empty and for attached properties
     // it will be the name of the attached type.
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
-    qint32 indexOfDefaultPropertyOrAlias : 31; // -1 means no default property declared in this object
+    qint32 flags : 31;
     quint32 defaultPropertyIsAlias : 1;
+    qint32 indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
     quint32 nFunctions;
     quint32 offsetToFunctions;
     quint32 nProperties;

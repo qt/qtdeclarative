@@ -141,7 +141,6 @@ public:
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
     int totalObjectCount; // Number of objects explicitly instantiated
 
-    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
     bool isCompositeType() const { return propertyCaches.at(compilationUnit->data->indexOfRootObject).flag(); }
 
     bool isInitialized() const { return hasEngine(); }

@@ -82,6 +82,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQm
     idIndex = id;
     indexOfDefaultPropertyOrAlias = -1;
     defaultPropertyIsAlias = false;
+    flags = QV4::CompiledData::Object::NoFlag;
     properties = pool->New<PoolList<Property> >();
     aliases = pool->New<PoolList<Alias> >();
     qmlSignals = pool->New<PoolList<Signal> >();
@@ -1419,6 +1420,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectToWrite->inheritedTypeNameIndex = o->inheritedTypeNameIndex;
         objectToWrite->indexOfDefaultPropertyOrAlias = o->indexOfDefaultPropertyOrAlias;
         objectToWrite->defaultPropertyIsAlias = o->defaultPropertyIsAlias;
+        objectToWrite->flags = o->flags;
         objectToWrite->idIndex = o->idIndex;
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;

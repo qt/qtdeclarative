@@ -300,8 +300,6 @@ private:
     bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
     bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
 
-    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
     QQmlEnginePrivate *enginePrivate;
@@ -309,7 +307,6 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QQmlPropertyCacheVector &propertyCaches;
-    const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QBitArray> *customParserBindingsPerObject;
 
     // collected state variables, essentially write-only
@@ -330,9 +327,6 @@ private:
     bool compileComponent(int componentRoot, const QHash<int, int> &objectIndexToId);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
-    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-
-    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QList<QmlIR::Object*> &qmlObjects;
