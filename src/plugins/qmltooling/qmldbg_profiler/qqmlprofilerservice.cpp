@@ -407,20 +407,24 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
 void QQmlProfilerServiceImpl::flush()
 {
     QMutexLocker lock(&m_configMutex);
+    QList<QQmlAbstractProfilerAdapter *> reporting;
 
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
-            profiler->reportData();
+            reporting.append(profiler);
         }
     }
 
     foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
-            profiler->reportData();
+            reporting.append(profiler);
         }
     }
+
+    foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
+        profiler->reportData();
 }
 
 QT_END_NAMESPACE

@@ -135,7 +135,7 @@ public:
     };
 
     QQmlProfilerClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("CanvasFrameRate"), connection)
+        : QQmlDebugClient(QLatin1String("CanvasFrameRate"), connection), lastTimestamp(-1)
     {
     }
 
@@ -144,6 +144,8 @@ public:
     QVector<QQmlProfilerData> jsHeapMessages;
     QVector<QQmlProfilerData> asynchronousMessages;
     QVector<QQmlProfilerData> pixmapMessages;
+
+    qint64 lastTimestamp;
 
     void setTraceState(bool enabled, quint32 flushInterval = 0) {
         QByteArray message;
@@ -343,6 +345,10 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         break;
     }
     QVERIFY(stream.atEnd());
+
+    QVERIFY(data.time >= lastTimestamp);
+    lastTimestamp = data.time;
+
     if (data.messageType == QQmlProfilerClient::PixmapCacheEvent)
         pixmapMessages.append(data);
     else if (data.messageType == QQmlProfilerClient::SceneGraphFrame ||
