@@ -2772,18 +2772,19 @@ void tst_qquicktext::lineLaidOutRelayout()
 
     QVERIFY(!textPrivate->extra.isAllocated());
 
-    qreal maxH = 0;
+    qreal y = 0.0;
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
         QTextLine line = textPrivate->layout.lineAt(i);
         const QRectF r = line.rect();
-        const qreal h = line.height();
         if (r.x() == 0) {
-            QCOMPARE(r.y(), i * h);
-            maxH = qMax(maxH, r.y() + h);
+            QCOMPARE(r.y(), y);
         } else {
+            if (qFuzzyIsNull(r.y()))
+                y = 0.0;
             QCOMPARE(r.x(), myText->width() / 2);
-            QCOMPARE(r.y(), i * h - maxH);
+            QCOMPARE(r.y(), y);
         }
+        y += line.height();
     }
 
     delete window;
