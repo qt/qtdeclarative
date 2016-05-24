@@ -59,19 +59,21 @@ void QQmlProfiler::startProfiling(quint64 features)
 void QQmlProfiler::stopProfiling()
 {
     featuresEnabled = false;
-    reportData();
+    reportData(true);
+    m_locations.clear();
 }
 
-void QQmlProfiler::reportData()
+void QQmlProfiler::reportData(bool trackLocations)
 {
     LocationHash resolved;
     resolved.reserve(m_locations.size());
-    for (auto it = m_locations.constBegin(), end = m_locations.constEnd(); it != end; ++it)
-        resolved.insert(it.key(), it.value());
-
-    // This unrefs all the objects. We have to make sure we do this in the GUI thread. Also, it's
-    // a good idea to release the memory before creating the packets to be sent.
-    m_locations.clear();
+    for (auto it = m_locations.begin(), end = m_locations.end(); it != end; ++it) {
+        if (!trackLocations || !it->sent) {
+            resolved.insert(it.key(), it.value());
+            if (trackLocations)
+                it->sent = true;
+        }
+    }
 
     QVector<QQmlProfilerData> data;
     data.swap(m_data);

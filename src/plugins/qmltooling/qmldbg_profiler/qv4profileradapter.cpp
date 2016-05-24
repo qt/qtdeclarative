@@ -58,7 +58,7 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
     connect(this, SIGNAL(profilingDisabledWhileWaiting()), engine->profiler, SLOT(stopProfiling()),
             Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
+    connect(this, SIGNAL(dataRequested(bool)), engine->profiler, SLOT(reportData(bool)));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
     connect(engine->profiler, SIGNAL(dataReady(QV4::Profiling::FunctionLocationHash,
@@ -105,13 +105,13 @@ qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &mes
     return callNext == -1 ? memoryNext : qMin(callNext, memoryNext);
 }
 
-qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
+qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
+                                        bool trackLocations)
 {
     QQmlDebugPacket d;
 
     // Make it const, so that we cannot accidentally detach it.
     const QVector<QV4::Profiling::FunctionCallProperties> &functionCallData = m_functionCallData;
-    const QV4::Profiling::FunctionLocationHash &functionLocations = m_functionLocations;
 
     while (true) {
         while (!m_stack.isEmpty() &&
@@ -133,17 +133,27 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
                 return finalizeMessages(until, messages, props.start, d);
 
             appendMemoryEvents(props.start, messages, d);
-            auto location = functionLocations.constFind(props.id);
-            Q_ASSERT(location != functionLocations.constEnd());
+            auto location = m_functionLocations.find(props.id);
 
             d << props.start << RangeStart << Javascript;
-            messages.push_back(d.squeezedData());
-            d.clear();
-            d << props.start << RangeLocation << Javascript << location->file << location->line
-              << location->column;
-            messages.push_back(d.squeezedData());
-            d.clear();
-            d << props.start << RangeData << Javascript << location->name;
+            if (trackLocations)
+                d << static_cast<qint64>(props.id);
+            if (location != m_functionLocations.end()) {
+                messages.push_back(d.squeezedData());
+                d.clear();
+                d << props.start << RangeLocation << Javascript << location->file << location->line
+                  << location->column;
+                if (trackLocations)
+                    d << static_cast<qint64>(props.id);
+                messages.push_back(d.squeezedData());
+                d.clear();
+                d << props.start << RangeData << Javascript << location->name;
+
+                if (trackLocations) {
+                    d << static_cast<qint64>(props.id);
+                    m_functionLocations.erase(location);
+                }
+            }
             messages.push_back(d.squeezedData());
             d.clear();
             m_stack.push(props.end);

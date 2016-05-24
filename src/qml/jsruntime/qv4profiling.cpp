@@ -78,7 +78,8 @@ Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(
 void Profiler::stopProfiling()
 {
     featuresEnabled = 0;
-    reportData();
+    reportData(true);
+    m_sentLocations.clear();
 }
 
 bool operator<(const FunctionCall &call1, const FunctionCall &call2)
@@ -88,7 +89,7 @@ bool operator<(const FunctionCall &call1, const FunctionCall &call2)
             (call1.m_end == call2.m_end && call1.m_function < call2.m_function)));
 }
 
-void Profiler::reportData()
+void Profiler::reportData(bool trackLocations)
 {
     std::sort(m_data.begin(), m_data.end());
     QVector<FunctionCallProperties> properties;
@@ -97,9 +98,15 @@ void Profiler::reportData()
 
     foreach (const FunctionCall &call, m_data) {
         properties.append(call.properties());
-        FunctionLocation &location = locations[properties.constLast().id];
-        if (!location.isValid())
-            location = call.resolveLocation();
+        Function *function = call.function();
+        SentMarker &marker = m_sentLocations[reinterpret_cast<quintptr>(function)];
+        if (!trackLocations || !marker.isValid()) {
+            FunctionLocation &location = locations[properties.constLast().id];
+            if (!location.isValid())
+                location = call.resolveLocation();
+            if (trackLocations)
+                marker.setFunction(function);
+        }
     }
 
     emit dataReady(locations, properties, m_memory_data);

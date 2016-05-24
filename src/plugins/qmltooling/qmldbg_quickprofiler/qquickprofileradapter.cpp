@@ -61,8 +61,8 @@ QQuickProfilerAdapter::QQuickProfilerAdapter(QObject *parent) :
             QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
     connect(this, SIGNAL(profilingDisabledWhileWaiting()),
             QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested()),
-            QQuickProfiler::s_instance, SLOT(reportDataImpl()), Qt::DirectConnection);
+    connect(this, SIGNAL(dataRequested(bool)),
+            QQuickProfiler::s_instance, SLOT(reportDataImpl(bool)), Qt::DirectConnection);
     connect(QQuickProfiler::s_instance, SIGNAL(dataReady(QVector<QQuickProfilerData>)),
             this, SLOT(receiveData(QVector<QQuickProfilerData>)), Qt::DirectConnection);
 }
@@ -150,8 +150,10 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
     }
 }
 
-qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
+qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
+                                           bool trackLocations)
 {
+    Q_UNUSED(trackLocations);
     while (next < m_data.size()) {
         if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
             qQuickProfilerDataToByteArrays(m_data[next++], messages);

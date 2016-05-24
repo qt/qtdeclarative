@@ -1017,7 +1017,9 @@ QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
 {
-    QQmlObjectCreationProfiler profiler(sharedState->profiler.profiler);
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+    QQmlObjectCreationProfiler profiler(sharedState->profiler.profiler, obj);
+
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     bool isComponent = false;
@@ -1027,7 +1029,6 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QQmlParserStatus *parserStatus = 0;
     bool installPropertyCache = true;
 
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);

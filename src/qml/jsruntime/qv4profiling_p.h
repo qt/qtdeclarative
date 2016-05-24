@@ -134,6 +134,11 @@ public:
         return *this;
     }
 
+    Function *function() const
+    {
+        return m_function;
+    }
+
     FunctionLocation resolveLocation() const;
     FunctionCallProperties properties() const;
 
@@ -165,6 +170,46 @@ class Q_QML_EXPORT Profiler : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(Profiler)
 public:
+    struct SentMarker {
+        SentMarker() : m_function(nullptr) {}
+
+        SentMarker(const SentMarker &other) : m_function(other.m_function)
+        {
+            if (m_function)
+                m_function->compilationUnit->addref();
+        }
+
+        ~SentMarker()
+        {
+            if (m_function)
+                m_function->compilationUnit->release();
+        }
+
+        SentMarker &operator=(const SentMarker &other)
+        {
+            if (&other != this) {
+                if (m_function)
+                    m_function->compilationUnit->release();
+                m_function = other.m_function;
+                m_function->compilationUnit->addref();
+            }
+            return *this;
+        }
+
+        void setFunction(Function *function)
+        {
+            Q_ASSERT(m_function == nullptr);
+            m_function = function;
+            m_function->compilationUnit->addref();
+        }
+
+        bool isValid() const
+        { return m_function != nullptr; }
+
+    private:
+        Function *m_function;
+    };
+
     Profiler(QV4::ExecutionEngine *engine);
 
     size_t trackAlloc(size_t size, MemoryType type)
@@ -186,7 +231,7 @@ public:
 public slots:
     void stopProfiling();
     void startProfiling(quint64 features);
-    void reportData();
+    void reportData(bool trackLocations);
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
@@ -199,6 +244,7 @@ private:
     QElapsedTimer m_timer;
     QVector<FunctionCall> m_data;
     QVector<MemoryAllocationProperties> m_memory_data;
+    QHash<quintptr, SentMarker> m_sentLocations;
 
     friend class FunctionCallProfiler;
 };
@@ -237,6 +283,7 @@ Q_DECLARE_TYPEINFO(QV4::Profiling::MemoryAllocationProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionLocation, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::Profiler::SentMarker, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)

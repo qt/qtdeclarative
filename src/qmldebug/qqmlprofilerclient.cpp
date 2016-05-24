@@ -70,7 +70,7 @@ void QQmlProfilerClient::sendRecordingStatus(bool record, int engineId, quint32 
     Q_D(const QQmlProfilerClient);
 
     QPacket stream(d->connection->currentDataStreamVersion());
-    stream << record << engineId << d->features << flushInterval;
+    stream << record << engineId << d->features << flushInterval << true;
     sendMessage(stream.data());
 }
 
@@ -205,7 +205,7 @@ inline QQmlProfilerDefinitions::ProfileFeature featureFromRangeType(
 
 void QQmlProfilerClient::messageReceived(const QByteArray &data)
 {
-    Q_D(const QQmlProfilerClient);
+    Q_D(QQmlProfilerClient);
 
     QPacket stream(d->connection->currentDataStreamVersion(), data);
 
@@ -333,12 +333,25 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
                 !(d->features & one << featureFromRangeType(rangeType)))
             return;
 
+        qint64 typeId = 0;
         if (messageType == QQmlProfilerDefinitions::RangeStart) {
             rangeStart(rangeType, time);
+            if (!stream.atEnd()) {
+                stream >> typeId;
+                auto i = d->types.constFind(typeId);
+                if (i != d->types.constEnd()) {
+                    rangeLocation(rangeType, time, i->location);
+                    rangeData(rangeType, time, i->name);
+                }
+            }
         } else if (messageType == QQmlProfilerDefinitions::RangeData) {
             QString data;
             stream >> data;
             rangeData(rangeType, time, data);
+            if (!stream.atEnd()) {
+                stream >> typeId;
+                d->types[typeId].name = data;
+            }
         } else if (messageType == QQmlProfilerDefinitions::RangeLocation) {
             QQmlEventLocation location;
             stream >> location.filename >> location.line;
@@ -347,6 +360,10 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
                 stream >> location.column;
 
             rangeLocation(rangeType, time, location);
+            if (!stream.atEnd()) {
+                stream >> typeId;
+                d->types[typeId].location = location;
+            }
         } else if (messageType == QQmlProfilerDefinitions::RangeEnd) {
             rangeEnd(rangeType, time);
         } else {

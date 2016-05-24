@@ -353,7 +353,7 @@ signals:
 protected slots:
     void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
-    void reportDataImpl();
+    void reportDataImpl(bool trackLocations);
     void setTimer(const QElapsedTimer &t);
 };
 
