@@ -18,6 +18,14 @@
         <file>images/menu@2x.png</file>
         <file>images/menu@3x.png</file>
         <file>images/menu@4x.png</file>
+        <file>images/+material/drawer.png</file>
+        <file>images/+material/drawer@2x.png</file>
+        <file>images/+material/drawer@3x.png</file>
+        <file>images/+material/drawer@4x.png</file>
+        <file>images/+material/menu.png</file>
+        <file>images/+material/menu@2x.png</file>
+        <file>images/+material/menu@3x.png</file>
+        <file>images/+material/menu@4x.png</file>
         <file>images/qt-logo.png</file>
         <file>images/qt-logo@2x.png</file>
         <file>images/qt-logo@3x.png</file>
