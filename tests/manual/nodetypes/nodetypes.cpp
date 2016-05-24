@@ -174,8 +174,9 @@ int main(int argc, char **argv)
 
     qDebug("Available tests:");
     qDebug("  [R] - Rectangles");
-    qDebug("  [4] - A lot of rectangles (perf)");
+    qDebug("  [4] - A lot of rectangles");
     qDebug("  [I] - Images");
+    qDebug("  [5] - A lot of async images");
     qDebug("  [T] - Text");
     qDebug("  [A] - Render thread Animator");
     qDebug("  [L] - Layers");

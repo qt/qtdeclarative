@@ -4,6 +4,7 @@
         <file>Rects.qml</file>
         <file>LotsOfRects.qml</file>
         <file>Images.qml</file>
+        <file>LotsOfImages.qml</file>
         <file>Text.qml</file>
         <file>Animators.qml</file>
         <file>Layers.qml</file>

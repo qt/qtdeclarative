@@ -38,46 +38,36 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.3
 
 Item {
-    focus: true
+    Grid {
+        columns: 20
+        spacing: 4
+        anchors.centerIn: parent
 
-    Loader {
-        anchors.fill: parent
-        id: loader
+        Repeater {
+            model: 500
+
+            Image {
+                source: "qrc:/qt.png"
+
+                // async true, cache false -> there is a separate, new texture for each and every image
+                // and the pixel data reading is done over and over again on a separate thread.
+                asynchronous: true
+                cache: false
+
+                width: 20
+                height: 20
+            }
+        }
     }
 
-    Keys.onPressed: {
-        if (event.key === Qt.Key_S)
-            loader.source = "";
-
-        if (event.key === Qt.Key_R)
-            loader.source = "qrc:/Rects.qml";
-        if (event.key === Qt.Key_4)
-            loader.source = "qrc:/LotsOfRects.qml";
-
-        if (event.key === Qt.Key_I)
-            loader.source = "qrc:/Images.qml";
-        if (event.key === Qt.Key_5)
-            loader.source = "qrc:/LotsOfImages.qml";
-
-        if (event.key === Qt.Key_T)
-            loader.source = "qrc:/Text.qml";
-
-        if (event.key === Qt.Key_A)
-            loader.source = "qrc:/Animators.qml";
-
-        if (event.key === Qt.Key_L)
-            loader.source = "qrc:/Layers.qml";
-
-        if (event.key === Qt.Key_E)
-            loader.source = "qrc:/Effects.qml";
-
-        if (event.key === Qt.Key_P)
-            loader.source = "qrc:/Painter.qml";
-
-        if (event.key === Qt.Key_G)
-            helper.testGrab()
+    Rectangle {
+        width: 100
+        height: 100
+        anchors.centerIn: parent
+        color: "red"
+        NumberAnimation on rotation { from: 0; to: 360; duration: 2000; loops: Animation.Infinite; }
     }
 }
