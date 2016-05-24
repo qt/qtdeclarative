@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-menus.html
     \title Menu Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for menu controls
 
     \annotatedlist qtquickcontrols2-menus
 

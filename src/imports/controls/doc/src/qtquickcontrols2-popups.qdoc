@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-popups.html
     \title Popup Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for popup controls
 
     \annotatedlist qtquickcontrols2-popups
 
@@ -88,5 +90,10 @@
      available elsewhere in the screen.
     \li Keep the tooltip text short so that it does not cover other content
     while being displayed.
+    \endlist
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls 2 Guidelines}
     \endlist
 */

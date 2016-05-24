@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-indicators.html
     \title Indicator Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for indicator controls
 
     Qt Quick Controls 2 offers a selection of indicator-like controls.
 
@@ -65,4 +67,9 @@
     \l ScrollIndicator is a non-interactive indicator that indicates the
     current scroll position, and can be used to scroll to a specific position in a
     \l {Flickable}.
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls 2 Guidelines}
+    \endlist
 */

@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-input.html
     \title Input Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for input controls
 
     Qt Quick Controls 2 offers a variety of input controls for both numeric
     and textual input.
@@ -104,4 +106,9 @@
     \l Tumbler is a spinnable wheel of items that can be selected.
 
     \b {See also} \l {ComboBox Control}.
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls 2 Guidelines}
+    \endlist
 */
