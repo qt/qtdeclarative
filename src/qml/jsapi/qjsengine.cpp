@@ -50,6 +50,7 @@
 #include "private/qv4runtime_p.h"
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugconnector_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>

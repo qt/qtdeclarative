@@ -55,6 +55,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -733,9 +734,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         case QV4::CompiledData::Property::Quaternion:
                             Q_ASSERT(fallbackMetaType != QMetaType::UnknownType);
                             if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
-                                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
-                                if (v)
-                                    QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], fallbackMetaType);
+                                QVariant propertyAsVariant;
+                                if (QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>())
+                                    propertyAsVariant = v->d()->data;
+                                QQml_valueTypeProvider()->readValueType(propertyAsVariant, a[0], fallbackMetaType);
                             }
                             break;
                         case QV4::CompiledData::Property::Var:

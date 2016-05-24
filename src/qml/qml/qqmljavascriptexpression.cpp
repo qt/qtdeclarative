@@ -47,6 +47,7 @@
 #include <private/qv4errorobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 

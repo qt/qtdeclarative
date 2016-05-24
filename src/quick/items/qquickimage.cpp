@@ -44,6 +44,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qnumeric_p.h>
 
 #include <QtCore/qmath.h>
 #include <QtGui/qpainter.h>

@@ -65,6 +65,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlAccessors;
+
 #undef QV4_COUNT_RUNTIME_FUNCTIONS
 
 namespace QV4 {
@@ -101,7 +103,6 @@ enum TypeHint {
     NUMBER_HINT,
     STRING_HINT
 };
-
 
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue objectDefaultValue(const Object *object, int typeHint);

@@ -51,6 +51,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -41,7 +41,7 @@
 #define QQMLDATAMODEL_P_P_H
 
 #include "qqmldelegatemodel_p.h"
-
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlincubator.h>

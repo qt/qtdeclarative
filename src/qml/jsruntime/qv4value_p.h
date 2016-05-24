@@ -56,11 +56,7 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 
-/* We cannot rely on QT_POINTER_SIZE to be set correctly on host builds. In qmldevtools the Value objects
-   are only used to store primitives, never object pointers. So we can use the 64-bit encoding. */
-#ifdef V4_BOOTSTRAP
-#define QV4_USE_64_BIT_VALUE_ENCODING
-#elif QT_POINTER_SIZE == 8
+#if QT_POINTER_SIZE == 8
 #define QV4_USE_64_BIT_VALUE_ENCODING
 #endif
 

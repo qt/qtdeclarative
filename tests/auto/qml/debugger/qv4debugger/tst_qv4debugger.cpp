@@ -39,6 +39,8 @@
 #include <private/qv8engine_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4isel_moth_p.h>
+#include <private/qv4string_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 
 using namespace QV4;
 using namespace QV4::Debugging;

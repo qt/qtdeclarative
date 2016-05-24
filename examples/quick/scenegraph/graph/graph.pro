@@ -1,9 +1,3 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2013-06-11T13:13:18
-#
-#-------------------------------------------------
-
 QT       += core gui quick
 
 TARGET = graph
@@ -32,3 +26,5 @@ OTHER_FILES += \
     shaders/line.fsh \
     shaders/line.vsh
 
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/graph
+INSTALLS += target

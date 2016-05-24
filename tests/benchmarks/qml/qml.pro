@@ -8,6 +8,7 @@ SUBDIRS += \
            qqmlcomponent \
            qqmlimage \
            qqmlmetaproperty \
+           librarymetrics_performance \
 #            script \ ### FIXME: doesn't build
            js
 

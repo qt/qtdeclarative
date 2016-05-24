@@ -102,6 +102,12 @@ public:
 tst_creation::tst_creation()
 {
     qmlRegisterType<TestType>("Qt.test", 1, 0, "TestType");
+
+    // Ensure QtQuick is loaded and imported. Some benchmark like elements() rely on QQmlMetaType::qmlTypeNames() to
+    // be populated.
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nItem{}", QUrl());
+    QScopedPointer<QObject> obj(component.create());
 }
 
 inline QUrl TEST_FILE(const QString &filename)

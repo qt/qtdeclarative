@@ -71,6 +71,7 @@
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <private/qdebug_p.h>
 
 #ifndef QT_NO_CURSOR

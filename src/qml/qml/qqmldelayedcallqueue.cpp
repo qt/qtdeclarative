@@ -43,6 +43,7 @@
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <QQmlError>
 
