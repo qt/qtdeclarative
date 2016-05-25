@@ -105,15 +105,27 @@ void SignalTransition::setSignal(const QJSValue &signal)
     QV4::ExecutionEngine *jsEngine = QV8Engine::getV4(QQmlEngine::contextForObject(this)->engine());
     QV4::Scope scope(jsEngine);
 
-    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
-    Q_ASSERT(qobjectSignal);
+    QObject *sender;
+    QMetaMethod signalMethod;
 
-    QObject *sender = qobjectSignal->object();
-    Q_ASSERT(sender);
-    QMetaMethod metaMethod = sender->metaObject()->method(qobjectSignal->methodIndex());
+    QV4::ScopedValue value(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
+
+    // Did we get the "slot" that can be used to invoke the signal?
+    if (QV4::QObjectMethod *signalSlot = value->as<QV4::QObjectMethod>()) {
+        sender = signalSlot->object();
+        Q_ASSERT(sender);
+        signalMethod = sender->metaObject()->method(signalSlot->methodIndex());
+    } else if (QV4::QmlSignalHandler *signalObject = value->as<QV4::QmlSignalHandler>()) { // or did we get the signal object (the one with the connect()/disconnect() functions) ?
+        sender = signalObject->object();
+        Q_ASSERT(sender);
+        signalMethod = sender->metaObject()->method(signalObject->signalIndex());
+    } else {
+        qmlInfo(this) << tr("Specified signal does not exist.");
+        return;
+    }
 
     QSignalTransition::setSenderObject(sender);
-    QSignalTransition::setSignal(metaMethod.methodSignature());
+    QSignalTransition::setSignal(signalMethod.methodSignature());
 
     connectTriggered();
 }

@@ -166,7 +166,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 };
 
-struct QmlSignalHandler : public QV4::Object
+struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
     V4_PROTOTYPE(signalHandlerPrototype)
