@@ -131,9 +131,9 @@ public:
     QList<QQmlScriptData *> scripts;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-    // index in first hash is component index, hash inside maps from object index in that scope to integer id
-    QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
-    QHash<int, int> objectIndexToIdForRoot;
+    // index in first hash is component index, vector inside contains object indices of objects with id property
+    QHash<int, QVector<quint32>> namedObjectsPerComponent;
+    QVector<quint32> namedObjectsInRootScope;
     // hash key is object index, value is indicies of bindings covered by custom parser
     QHash<int, QBitArray> customParserBindings;
     QHash<int, QBitArray> deferredBindingsPerObject; // index is object index

@@ -346,14 +346,14 @@ const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
     return compiledData->propertyCaches;
 }
 
-QHash<int, int> *QQmlTypeCompiler::objectIndexToIdForRoot()
+QVector<quint32> *QQmlTypeCompiler::namedObjectsInRootScope()
 {
-    return &compiledData->objectIndexToIdForRoot;
+    return &compiledData->namedObjectsInRootScope;
 }
 
-QHash<int, QHash<int, int> > *QQmlTypeCompiler::objectIndexToIdPerComponent()
+QHash<int, QVector<quint32>> *QQmlTypeCompiler::namedObjectsPerComponent()
 {
-    return &compiledData->objectIndexToIdPerComponent;
+    return &compiledData->namedObjectsPerComponent;
 }
 
 QHash<int, QBitArray> *QQmlTypeCompiler::customParserBindings()
@@ -1324,11 +1324,11 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
     , _componentIndex(-1)
-    , _objectIndexToIdInScope(0)
+    , _namedObjectsInScope(0)
     , resolvedTypes(typeCompiler->resolvedTypes())
     , propertyCaches(typeCompiler->propertyCaches())
-    , objectIndexToIdForRoot(typeCompiler->objectIndexToIdForRoot())
-    , objectIndexToIdPerComponent(typeCompiler->objectIndexToIdPerComponent())
+    , namedObjectsInRootScope(typeCompiler->namedObjectsInRootScope())
+    , namedObjectsPerComponent(typeCompiler->namedObjectsPerComponent())
 {
 }
 
@@ -1475,7 +1475,7 @@ bool QQmlComponentAndAliasResolver::resolve()
         _componentIndex = i;
         _idToObjectIndex.clear();
 
-        _objectIndexToIdInScope = &(*objectIndexToIdPerComponent)[componentRoots.at(i)];
+        _namedObjectsInScope = &(*namedObjectsPerComponent)[componentRoots.at(i)];
 
         _objectsWithAliases.clear();
 
@@ -1489,7 +1489,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     // Collect ids and aliases for root
     _componentIndex = -1;
     _idToObjectIndex.clear();
-    _objectIndexToIdInScope = objectIndexToIdForRoot;
+    _namedObjectsInScope = namedObjectsInRootScope;
     _objectsWithAliases.clear();
 
     collectIdsAndAliases(indexOfRootObject);
@@ -1505,15 +1505,16 @@ bool QQmlComponentAndAliasResolver::resolve()
 
 bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
 {
-    const QmlIR::Object *obj = qmlObjects->at(objectIndex);
+    QmlIR::Object *obj = qmlObjects->at(objectIndex);
 
-    if (obj->idIndex != 0) {
-        if (_idToObjectIndex.contains(obj->idIndex)) {
+    if (obj->idNameIndex != 0) {
+        if (_idToObjectIndex.contains(obj->idNameIndex)) {
             recordError(obj->locationOfIdProperty, tr("id is not unique"));
             return false;
         }
-        _idToObjectIndex.insert(obj->idIndex, objectIndex);
-        _objectIndexToIdInScope->insert(objectIndex, _objectIndexToIdInScope->count());
+        _idToObjectIndex.insert(obj->idNameIndex, objectIndex);
+        obj->id = _namedObjectsInScope->count();
+        _namedObjectsInScope->append(objectIndex);
     }
 
     if (obj->aliasCount() > 0)
@@ -1557,8 +1558,9 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             }
             Q_ASSERT(!(alias->flags & QV4::CompiledData::Alias::Resolved));
             alias->flags |= QV4::CompiledData::Alias::Resolved;
-            Q_ASSERT(_objectIndexToIdInScope->contains(targetObjectIndex));
-            alias->targetObjectId = _objectIndexToIdInScope->value(targetObjectIndex);
+            const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
+            Q_ASSERT(targetObject->id >= 0);
+            alias->targetObjectId = targetObject->id;
 
             const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
 
@@ -1718,7 +1720,7 @@ struct BindingFinder
 bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
-    if (obj->idIndex != 0)
+    if (obj->idNameIndex != 0)
         _seenObjectWithId = true;
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
@@ -1959,7 +1961,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
     }
 
-    if (obj->idIndex) {
+    if (obj->idNameIndex) {
         bool notInRevision = false;
         collectedBindingPropertyData << propertyResolver.property(QStringLiteral("id"), &notInRevision);
     }
@@ -2376,17 +2378,17 @@ QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::
 
 bool QQmlJSCodeGenerator::generateCodeForComponents()
 {
-    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent = *compiler->objectIndexToIdPerComponent();
-    for (QHash<int, QHash<int, int> >::ConstIterator component = objectIndexToIdPerComponent.constBegin(), end = objectIndexToIdPerComponent.constEnd();
+    const QHash<int, QVector<quint32>> &namedObjectsPerComponent = *compiler->namedObjectsPerComponent();
+    for (QHash<int, QVector<quint32>>::ConstIterator component = namedObjectsPerComponent.constBegin(), end = namedObjectsPerComponent.constEnd();
          component != end; ++component) {
         if (!compileComponent(component.key(), component.value()))
             return false;
     }
 
-    return compileComponent(compiler->rootObjectIndex(), *compiler->objectIndexToIdForRoot());
+    return compileComponent(compiler->rootObjectIndex(), *compiler->namedObjectsInRootScope());
 }
 
-bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, int> &objectIndexToId)
+bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QVector<quint32> &namedObjects)
 {
     const QmlIR::Object *obj = qmlObjects.at(contextObject);
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
@@ -2397,25 +2399,20 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QHash<int, i
     }
 
     QmlIR::JSCodeGen::ObjectIdMapping idMapping;
-    if (!objectIndexToId.isEmpty()) {
-        idMapping.reserve(objectIndexToId.count());
+    idMapping.reserve(namedObjects.count());
+    for (int i = 0; i < namedObjects.count(); ++i) {
+        const int objectIndex = namedObjects.at(i);
+        QmlIR::JSCodeGen::IdMapping m;
+        const QmlIR::Object *obj = qmlObjects.at(objectIndex);
+        m.name = stringAt(obj->idNameIndex);
+        m.idIndex = obj->id;
+        m.type = propertyCaches.at(objectIndex).data();
 
-        for (QHash<int, int>::ConstIterator idIt = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
-             idIt != end; ++idIt) {
+        QQmlCompiledData::TypeReference *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        if (tref && tref->isFullyDynamicType)
+            m.type = 0;
 
-            const int objectIndex = idIt.key();
-            QmlIR::JSCodeGen::IdMapping m;
-            const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-            m.name = stringAt(obj->idIndex);
-            m.idIndex = idIt.value();
-            m.type = propertyCaches.at(objectIndex).data();
-
-            QQmlCompiledData::TypeReference *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
-            if (tref && tref->isFullyDynamicType)
-                m.type = 0;
-
-            idMapping << m;
-        }
+        idMapping << m;
     }
     v4CodeGen->beginContextScope(idMapping, propertyCaches.at(contextObject).data());
 

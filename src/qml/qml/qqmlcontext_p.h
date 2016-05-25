@@ -151,7 +151,7 @@ public:
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
 
-    mutable QHash<int, int> objectIndexToId;
+    mutable QVector<quint32> namedObjects;
     mutable QV4::IdentifierHash<int> propertyNameCache;
     QV4::IdentifierHash<int> &propertyNames() const;
 
@@ -201,7 +201,7 @@ public:
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(const QHash<int, int> &);
+    void setNamedObjects(const QVector<quint32> &objects);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;

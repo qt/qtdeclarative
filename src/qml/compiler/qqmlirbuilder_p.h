@@ -279,7 +279,8 @@ struct Q_QML_PRIVATE_EXPORT Object
     Q_DECLARE_TR_FUNCTIONS(Object)
 public:
     quint32 inheritedTypeNameIndex;
-    quint32 idIndex;
+    quint32 idNameIndex;
+    int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
     int flags;
@@ -302,7 +303,7 @@ public:
     // specified object. Used for declarations inside group properties.
     Object *declarationsOverride;
 
-    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
 
     QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 

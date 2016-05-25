@@ -72,14 +72,15 @@ using namespace QmlIR;
         return false; \
     }
 
-void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &loc)
+void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &loc)
 {
     inheritedTypeNameIndex = typeNameIndex;
 
     location.line = loc.startLine;
     location.column = loc.startColumn;
 
-    idIndex = id;
+    idNameIndex = idIndex;
+    id = -1;
     indexOfDefaultPropertyOrAlias = -1;
     defaultPropertyIsAlias = false;
     flags = QV4::CompiledData::Object::NoFlag;
@@ -1237,10 +1238,10 @@ bool IRBuilder::setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST
     if (illegalNames.contains(idQString))
         COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
 
-    if (_object->idIndex != emptyStringIndex)
+    if (_object->idNameIndex != emptyStringIndex)
         COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
 
-    _object->idIndex = registerString(idQString);
+    _object->idNameIndex = registerString(idQString);
     _object->locationOfIdProperty.line = idLocation.startLine;
     _object->locationOfIdProperty.column = idLocation.startColumn;
 
@@ -1421,7 +1422,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectToWrite->indexOfDefaultPropertyOrAlias = o->indexOfDefaultPropertyOrAlias;
         objectToWrite->defaultPropertyIsAlias = o->defaultPropertyIsAlias;
         objectToWrite->flags = o->flags;
-        objectToWrite->idIndex = o->idIndex;
+        objectToWrite->idNameIndex = o->idNameIndex;
+        objectToWrite->id = o->id;
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
 

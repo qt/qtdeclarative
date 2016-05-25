@@ -122,7 +122,7 @@ private:
     QString stringAt(int idx) const { return qmlUnit->stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    void registerObjectWithContextById(int objectIndex, QObject *instance) const;
+    void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
     QV4::Heap::QmlContext *currentQmlContext();
 
@@ -143,7 +143,7 @@ private:
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QQmlPropertyCacheVector &propertyCaches;
-    QHash<int, int> objectIndexToId;
+    QVector<quint32> namedObjects;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
     void *activeVMEDataForRootContext;

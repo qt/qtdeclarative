@@ -158,10 +158,10 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     int objectToCreate;
 
     if (subComponentIndex == -1) {
-        objectIndexToId = compiledData->objectIndexToIdForRoot;
+        namedObjects = compiledData->namedObjectsInRootScope;
         objectToCreate = qmlUnit->indexOfRootObject;
     } else {
-        objectIndexToId = compiledData->objectIndexToIdPerComponent[subComponentIndex];
+        namedObjects = compiledData->namedObjectsPerComponent[subComponentIndex];
         const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
         objectToCreate = compObj->bindingTable()->value.objectIndex;
     }
@@ -185,7 +185,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compiledData->totalObjectCount);
 
-    context->setIdPropertyData(objectIndexToId);
+    context->setNamedObjects(namedObjects);
 
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
@@ -637,7 +637,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
     const QV4::CompiledData::BindingPropertyData &propertyData = compiledData->compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
 
-    if (_compiledObject->idIndex) {
+    if (_compiledObject->idNameIndex) {
         const QQmlPropertyData *idProperty = propertyData.last();
         Q_ASSERT(!idProperty || !idProperty->isValid() || idProperty->name(_qobject) == QLatin1String("id"));
         if (idProperty && idProperty->isValid() && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
@@ -645,7 +645,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             idBinding.propertyNameIndex = 0; // Not used
             idBinding.flags = 0;
             idBinding.type = QV4::CompiledData::Binding::Type_String;
-            idBinding.stringIndex = _compiledObject->idIndex;
+            idBinding.stringIndex = _compiledObject->idNameIndex;
             idBinding.location = _compiledObject->location; // ###
             setPropertyValue(idProperty, &idBinding);
         }
@@ -1005,11 +1005,10 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
     errors << error;
 }
 
-void QQmlObjectCreator::registerObjectWithContextById(int objectIndex, QObject *instance) const
+void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const
 {
-    QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(objectIndex);
-    if (idEntry != objectIndexToId.constEnd())
-        context->setIdProperty(idEntry.value(), instance);
+    if (object->id >= 0)
+        context->setIdProperty(object->id, instance);
 }
 
 QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
@@ -1146,7 +1145,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     }
 
     if (isComponent) {
-        registerObjectWithContextById(index, instance);
+        registerObjectWithContextById(obj, instance);
         return instance;
     }
 
@@ -1298,7 +1297,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
 
-    registerObjectWithContextById(_compiledObjectIndex, _qobject);
+    registerObjectWithContextById(_compiledObject, _qobject);
 
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);

@@ -760,12 +760,12 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
     idValues[idx].context = this;
 }
 
-void QQmlContextData::setIdPropertyData(const QHash<int, int> &data)
+void QQmlContextData::setNamedObjects(const QVector<quint32> &objects)
 {
-    Q_ASSERT(objectIndexToId.isEmpty());
-    objectIndexToId = data;
+    Q_ASSERT(namedObjects.isEmpty());
+    namedObjects = objects;
     Q_ASSERT(propertyNameCache.isEmpty());
-    idValueCount = data.count();
+    idValueCount = objects.count();
     idValues = new ContextGuard[idValueCount];
 }
 
@@ -808,13 +808,12 @@ QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
 {
     if (propertyNameCache.isEmpty()) {
         propertyNameCache = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
-        for (QHash<int, int>::ConstIterator it = objectIndexToId.cbegin(), end = objectIndexToId.cend();
-             it != end; ++it) {
-            const QV4::CompiledData::Object *obj = typeCompilationUnit->data->objectAt(it.key());
-            const QString name = typeCompilationUnit->data->stringAt(obj->idIndex);
-            propertyNameCache.add(name, it.value());
+        for (int i = 0; i < namedObjects.count(); ++i) {
+            const QV4::CompiledData::Object *obj = typeCompilationUnit->data->objectAt(namedObjects.at(i));
+            const QString name = typeCompilationUnit->data->stringAt(obj->idNameIndex);
+            propertyNameCache.add(name, obj->id);
         }
-        objectIndexToId.clear();
+        namedObjects.clear();
     }
     return propertyNameCache;
 }

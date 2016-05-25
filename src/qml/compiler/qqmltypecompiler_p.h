@@ -101,8 +101,8 @@ public:
     int rootObjectIndex() const;
     void setPropertyCaches(const QQmlPropertyCacheVector &caches);
     const QQmlPropertyCacheVector &propertyCaches() const;
-    QHash<int, int> *objectIndexToIdForRoot();
-    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
+    QVector<quint32> *namedObjectsInRootScope();
+    QHash<int, QVector<quint32> > *namedObjectsPerComponent();
     QHash<int, QBitArray> *customParserBindings();
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
@@ -275,13 +275,13 @@ protected:
 
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;
-    QHash<int, int> *_objectIndexToIdInScope;
+    QVector<quint32> *_namedObjectsInScope;
     QList<int> _objectsWithAliases;
 
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
-    QHash<int, int> *objectIndexToIdForRoot;
-    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
+    QVector<quint32> *namedObjectsInRootScope;
+    QHash<int, QVector<quint32>> *namedObjectsPerComponent;
 };
 
 class QQmlPropertyValidator : public QQmlCompilePass
@@ -324,7 +324,7 @@ public:
     bool generateCodeForComponents();
 
 private:
-    bool compileComponent(int componentRoot, const QHash<int, int> &objectIndexToId);
+    bool compileComponent(int componentRoot, const QVector<quint32> &namedObjects);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;

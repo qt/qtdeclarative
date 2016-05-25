@@ -2401,7 +2401,7 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::Unit *qmlUnit,
             listElementTypeName = objName; // cache right name for next time
         }
 
-        if (!qmlUnit->stringAt(target->idIndex).isEmpty()) {
+        if (!qmlUnit->stringAt(target->idNameIndex).isEmpty()) {
             error(target->locationOfIdProperty, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
             return false;
         }

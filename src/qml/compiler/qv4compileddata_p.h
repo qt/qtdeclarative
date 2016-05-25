@@ -400,8 +400,9 @@ struct Object
     // object. For grouped properties the type name will be empty and for attached properties
     // it will be the name of the attached type.
     quint32 inheritedTypeNameIndex;
-    quint32 idIndex;
-    qint32 flags : 31;
+    quint32 idNameIndex;
+    qint32 id : 16;
+    qint32 flags : 15;
     quint32 defaultPropertyIsAlias : 1;
     qint32 indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
     quint32 nFunctions;
