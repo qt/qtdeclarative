@@ -43,6 +43,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#define RETAIN_IMAGE
+
 void QSGD3D12Texture::create(const QImage &image, uint flags)
 {
     // ### atlas?
@@ -97,10 +99,16 @@ void QSGD3D12Texture::bind()
     // Called when the texture material updates the pipeline state.
 
     if (!m_createPending && hasMipmaps() != m_createdWithMipMaps) {
+#ifdef RETAIN_IMAGE
         m_engine->releaseTexture(m_id);
         m_id = m_engine->genTexture();
         Q_ASSERT(m_id);
         m_createPending = true;
+#else
+        // ### this can be made working some day (something similar to
+        // queueTextureResize) but skip for now
+        qWarning("D3D12: mipmap property cannot be changed once the texture is created");
+#endif
     }
 
     if (m_createPending) {
@@ -116,6 +124,10 @@ void QSGD3D12Texture::bind()
 
         m_engine->createTexture(m_id, m_image.size(), m_image.format(), createFlags);
         m_engine->queueTextureUpload(m_id, m_image);
+
+#ifndef RETAIN_IMAGE
+        m_image = QImage();
+#endif
     }
 
     // Here we know that the texture is going to be used in the current frame
