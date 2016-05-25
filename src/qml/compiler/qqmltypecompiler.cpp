@@ -348,12 +348,12 @@ const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
 
 QVector<quint32> *QQmlTypeCompiler::namedObjectsInRootScope()
 {
-    return &compiledData->namedObjectsInRootScope;
+    return &m_namedObjectsInRootScope;
 }
 
 QHash<int, QVector<quint32>> *QQmlTypeCompiler::namedObjectsPerComponent()
 {
-    return &compiledData->namedObjectsPerComponent;
+    return &m_namedObjectsPerComponent;
 }
 
 QHash<int, QBitArray> *QQmlTypeCompiler::customParserBindings()
@@ -1441,7 +1441,6 @@ bool QQmlComponentAndAliasResolver::resolve()
         }
 
         obj->flags |= QV4::CompiledData::Object::IsComponent;
-        componentRoots.append(i);
 
         if (obj->functionCount() > 0)
             COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
@@ -1463,13 +1462,19 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (rootBinding->next || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
             COMPILE_EXCEPTION(obj, tr("Invalid component body specification"));
 
-        componentBoundaries.append(rootBinding->value.objectIndex);
+        // We are going to collect ids/aliases and resolve them for the root object as a separate
+        // last pass.
+        if (i != indexOfRootObject) {
+            componentRoots.append(i);
+            componentBoundaries.append(rootBinding->value.objectIndex);
+        }
+
     }
 
     std::sort(componentBoundaries.begin(), componentBoundaries.end());
 
     for (int i = 0; i < componentRoots.count(); ++i) {
-        const QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
+        QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
         const QmlIR::Binding *rootBinding = component->firstBinding();
 
         _componentIndex = i;
@@ -1484,6 +1489,8 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         if (!resolveAliases())
             return false;
+
+        component->namedObjectsInComponent.allocate(pool, *_namedObjectsInScope);
     }
 
     // Collect ids and aliases for root
@@ -1495,6 +1502,9 @@ bool QQmlComponentAndAliasResolver::resolve()
     collectIdsAndAliases(indexOfRootObject);
 
     resolveAliases();
+
+    QmlIR::Object *rootComponent = qmlObjects->at(indexOfRootObject);
+    rootComponent->namedObjectsInComponent.allocate(pool, *_namedObjectsInScope);
 
     // Implicit component insertion may have added objects and thus we also need
     // to extend the symmetric propertyCaches.

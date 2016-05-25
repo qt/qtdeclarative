@@ -85,6 +85,7 @@ struct IdentifierHashEntry {
 struct IdentifierHashData
 {
     IdentifierHashData(int numBits);
+    explicit IdentifierHashData(IdentifierHashData *other);
     ~IdentifierHashData() {
         free(entries);
     }
@@ -115,6 +116,8 @@ struct IdentifierHashBase
     bool contains(const QString &str) const;
     bool contains(String *str) const;
 
+    void detach();
+
 protected:
     IdentifierHashEntry *addEntry(const Identifier *i);
     const IdentifierHashEntry *lookup(const Identifier *identifier) const;
@@ -141,6 +144,7 @@ struct IdentifierHash : public IdentifierHashBase
     }
 
     void add(const QString &str, const T &value);
+    void add(Heap::String *str, const T &value);
 
     inline T value(const QString &str) const;
     inline T value(String *str) const;
@@ -198,6 +202,13 @@ void IdentifierHash<T>::add(const QString &str, const T &value)
 }
 
 template<typename T>
+void IdentifierHash<T>::add(Heap::String *str, const T &value)
+{
+    IdentifierHashEntry *e = addEntry(toIdentifier(str));
+    e->value = value;
+}
+
+template<typename T>
 inline T IdentifierHash<T>::value(const QString &str) const
 {
     return IdentifierHashEntry::get(lookup(str), (T*)0);
@@ -222,7 +233,6 @@ QString IdentifierHash<T>::findId(T value) const
     }
     return QString();
 }
-
 
 }
 

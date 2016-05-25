@@ -158,10 +158,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     int objectToCreate;
 
     if (subComponentIndex == -1) {
-        namedObjects = compiledData->namedObjectsInRootScope;
         objectToCreate = qmlUnit->indexOfRootObject;
     } else {
-        namedObjects = compiledData->namedObjectsPerComponent[subComponentIndex];
         const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
         objectToCreate = compObj->bindingTable()->value.objectIndex;
     }
@@ -170,7 +168,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context->isInternal = true;
     context->imports = compiledData->importCache;
     context->imports->addref();
-    context->typeCompilationUnit = compiledData->compilationUnit;
+    context->initFromTypeCompilationUnit(compiledData->compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 
     if (!sharedState->rootContext) {
@@ -184,8 +182,6 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     Q_ASSERT(sharedState->allJavaScriptObjects || topLevelCreator);
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compiledData->totalObjectCount);
-
-    context->setNamedObjects(namedObjects);
 
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));

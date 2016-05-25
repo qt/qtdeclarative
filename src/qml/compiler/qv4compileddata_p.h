@@ -60,6 +60,7 @@
 #include <private/qv4executableallocator_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -415,6 +416,8 @@ struct Object
     quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32 nBindings;
     quint32 offsetToBindings;
+    quint32 nNamedObjectsInComponent;
+    quint32 offsetToNamedObjectsInComponent;
     Location location;
     Location locationOfIdProperty;
 //    Function[]
@@ -422,7 +425,7 @@ struct Object
 //    Signal[]
 //    Binding[]
 
-    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings)
+    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings, int nNamedObjectsInComponent)
     {
         return ( sizeof(Object)
                  + nFunctions * sizeof(quint32)
@@ -430,6 +433,7 @@ struct Object
                  + nAliases * sizeof(Alias)
                  + nSignals * sizeof(quint32)
                  + nBindings * sizeof(Binding)
+                 + nNamedObjectsInComponent * sizeof(int)
                  + 0x7
                ) & ~0x7;
     }
@@ -459,6 +463,11 @@ struct Object
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const Signal*>(reinterpret_cast<const char*>(this) + offset);
+    }
+
+    const quint32 *namedObjectsInComponentTable() const
+    {
+        return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
     }
 };
 
@@ -652,6 +661,11 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     // property data when initializing bindings, avoiding expensive
     // lookups by string (property name).
     QVector<BindingPropertyData> bindingPropertyDataPerObject;
+
+    // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
+    // this is initialized on-demand by QQmlContextData
+    QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
+    IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();

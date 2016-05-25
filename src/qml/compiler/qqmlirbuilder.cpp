@@ -1369,12 +1369,12 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
 
-    QHash<Object*, quint32> objectOffsets;
+    QHash<const Object*, quint32> objectOffsets;
 
     int objectsSize = 0;
     foreach (Object *o, output.objects) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1414,7 +1414,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     // write objects
     quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
-    foreach (Object *o, output.objects) {
+    for (int i = 0; i < output.objects.count(); ++i) {
+        const Object *o = output.objects.at(i);
         *objectTable++ = objectOffsets.value(o);
 
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
@@ -1448,6 +1449,10 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectToWrite->nBindings = o->bindingCount();
         objectToWrite->offsetToBindings = nextOffset;
         nextOffset += objectToWrite->nBindings * sizeof(QV4::CompiledData::Binding);
+
+        objectToWrite->nNamedObjectsInComponent = o->namedObjectsInComponent.count;
+        objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
+        nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
@@ -1495,7 +1500,12 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             signalPtr += size;
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
+        quint32 *namedObjectInComponentPtr = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
+            *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
+        }
+
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
         objectPtr += signalTableSize;
     }
 
@@ -1512,7 +1522,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     return qmlUnit;
 }
 
-char *QmlUnitGenerator::writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const
 {
     for (const Binding *b = o->firstBinding(); b; b = b->next) {
         if (!(b->*(filter))())

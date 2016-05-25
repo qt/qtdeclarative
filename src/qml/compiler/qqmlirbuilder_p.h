@@ -321,6 +321,8 @@ public:
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
     FixedPoolArray<int> runtimeFunctionIndices;
 
+    FixedPoolArray<quint32> namedObjectsInComponent;
+
 private:
     friend struct IRLoader;
 
@@ -474,7 +476,7 @@ struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
-    char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
+    char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
 };
 
 #ifndef V4_BOOTSTRAP

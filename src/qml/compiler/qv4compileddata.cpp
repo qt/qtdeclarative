@@ -189,6 +189,22 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
     }
 }
 
+IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
+{
+    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
+    if (it == namedObjectsPerComponentCache.end()) {
+        IdentifierHash<int> namedObjectCache(engine);
+        const CompiledData::Object *component = data->objectAt(componentObjectIndex);
+        const quint32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+        for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
+            const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
+            namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
+        }
+        it = namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
+    }
+    return *it;
+}
+
 #endif // V4_BOOTSTRAP
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)

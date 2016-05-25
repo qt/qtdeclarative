@@ -143,7 +143,6 @@ private:
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QQmlPropertyCacheVector &propertyCaches;
-    QVector<quint32> namedObjects;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
     void *activeVMEDataForRootContext;

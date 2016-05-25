@@ -122,6 +122,10 @@ private:
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
+
+    // index in first hash is component index, vector inside contains object indices of objects with id property
+    QHash<int, QVector<quint32>> m_namedObjectsPerComponent;
+    QVector<quint32> m_namedObjectsInRootScope;
 };
 
 struct QQmlCompilePass
