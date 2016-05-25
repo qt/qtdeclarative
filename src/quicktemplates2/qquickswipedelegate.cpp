@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-swipedelegate.gif
 
     If \c swipe.left and \c swipe.right are anchored to the left and
-    right of the \l background item (respectively), they'll behave like this:
+    right of the \l {Control::}{background} item (respectively), they'll behave like this:
 
     \image qtquickcontrols2-swipedelegate-leading-trailing.gif
 
@@ -725,31 +725,31 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
         \li This property holds whether the control is fully exposed after
             having been swiped to the left or right.
 
-            When complete is \c true, any interactive items declared in \l left,
-            \l right, or \l behind will receive mouse events.
+            When complete is \c true, any interactive items declared in \c left,
+            \c right, or \c behind will receive mouse events.
     \row
         \li left
         \li This property holds the left delegate.
 
             The left delegate sits behind both \l {Control::}{contentItem} and
-            \l background. When the SwipeDelegate is swiped to the right, this item
-            will be gradually revealed.
+            \l {Control::}{background}. When the SwipeDelegate is swiped to the right,
+            this item will be gradually revealed.
     \row
         \li behind
         \li This property holds the delegate that is shown when the
             SwipeDelegate is swiped to both the left and right.
 
             As with the \c left and \c right delegates, it sits behind both
-            \l {Control::}{contentItem} and \l background. However, a SwipeDelegate
-            whose \c behind has been set can be continuously swiped from either
-            side, and will always show the same item.
+            \l {Control::}{contentItem} and \l {Control::}{background}. However, a
+            SwipeDelegate whose \c behind has been set can be continuously swiped
+            from either side, and will always show the same item.
     \row
         \li right
         \li This property holds the right delegate.
 
             The right delegate sits behind both \l {Control::}{contentItem} and
-            \l background. When the SwipeDelegate is swiped to the left, this item
-            will be gradually revealed.
+            \l {Control::}{background}. When the SwipeDelegate is swiped to the left,
+            this item will be gradually revealed.
     \row
         \li leftItem
         \li This property holds the item instantiated from the \c left component.
