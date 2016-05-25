@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickContainer
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief A container control base type.
 

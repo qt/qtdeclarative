@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
     \inherits Container
     \instantiates QQuickTabBar
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
     \brief A bar with icons allowing to switch between different views or subtasks.

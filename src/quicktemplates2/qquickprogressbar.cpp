@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickProgressBar
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-indicators
     \brief Indicates the progress of an operation.
 

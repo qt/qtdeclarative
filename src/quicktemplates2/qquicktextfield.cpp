@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
     \inherits TextInput
     \instantiates QQuickTextField
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-input
     \brief A single line text input control.
 

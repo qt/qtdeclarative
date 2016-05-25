@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollBar
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-indicators
     \brief An interactive scroll bar control.
 

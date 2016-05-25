@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickDrawer
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-popups
     \brief Provides a swipe-based side panel.

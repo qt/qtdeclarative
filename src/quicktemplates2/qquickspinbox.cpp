@@ -55,6 +55,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inherits Control
     \instantiates QQuickSpinBox
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup input
     \brief A spinbox control that allows the user to select from a set of preset values.
 

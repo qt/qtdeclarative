@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Pane
     \instantiates QQuickToolBar
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief A container with context-sensitive controls.
 

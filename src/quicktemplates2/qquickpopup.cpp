@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \instantiates QQuickPopup
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-popups
     \brief The base type of popup-like user interface controls.
 

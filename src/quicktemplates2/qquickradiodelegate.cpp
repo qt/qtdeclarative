@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits ItemDelegate
     \instantiates QQuickRadioDelegate
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be checked or unchecked.
 

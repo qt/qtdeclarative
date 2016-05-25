@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Frame
     \instantiates QQuickGroupBox
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief A frame with a logical group of controls.
 

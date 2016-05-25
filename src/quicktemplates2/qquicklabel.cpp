@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
     \inherits Text
     \instantiates QQuickLabel
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup text
     \brief A text label with inherited styling and font.
 

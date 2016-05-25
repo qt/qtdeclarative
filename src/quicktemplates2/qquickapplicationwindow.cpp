@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
     \inherits Window
     \instantiates QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief Provides a top-level application window.
 

@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
     \inherits ItemDelegate
     \instantiates QQuickSwitchDelegate
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-delegates
     \brief An item delegate that can be toggled on or off.
 

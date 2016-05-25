@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickCheckBox
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be checked or unchecked.
 
