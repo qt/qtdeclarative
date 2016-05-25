@@ -12,6 +12,7 @@
         <file>pinchHandler.qml</file>
         <file>pointerDrag.qml</file>
         <file>singlePointHandlerProperties.qml</file>
+        <file>sidebar.qml</file>
         <file>tapHandler.qml</file>
         <file>content/CheckBox.qml</file>
         <file>content/FakeFlickable.qml</file>

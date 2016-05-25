@@ -44,6 +44,7 @@ Window {
         anchors.fill: parent
         Component.onCompleted: {
             addExample("single point handler", "QQuickPointerSingleHandler: test properties copied from events", Qt.resolvedUrl("singlePointHandlerProperties.qml"))
+            addExample("hover", "ensure that a hierarchy of items can share the hover state", Qt.resolvedUrl("sidebar.qml"))
             addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
             addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
             addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
