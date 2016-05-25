@@ -42,6 +42,8 @@
 #include "qquickplatformmenuitem_p.h"
 #include "qquickplatformmenuitemgroup_p.h"
 
+#include "qquickplatformsystemtrayicon_p.h"
+
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -72,6 +74,8 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
     qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
+
+    qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
 }
 
 QT_END_NAMESPACE

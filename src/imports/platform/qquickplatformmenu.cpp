@@ -38,6 +38,7 @@
 #include "qquickplatformmenubar_p.h"
 #include "qquickplatformmenuitem_p.h"
 #include "qquickplatformiconloader_p.h"
+#include "qquickplatformsystemtrayicon_p.h"
 
 #include <QtGui/qicon.h>
 #include <QtGui/qcursor.h>
@@ -127,6 +128,7 @@ QQuickPlatformMenu::QQuickPlatformMenu(QObject *parent)
       m_type(QPlatformMenu::DefaultMenu),
       m_menuBar(nullptr),
       m_parentMenu(nullptr),
+      m_systemTrayIcon(nullptr),
       m_menuItem(nullptr),
       m_iconLoader(nullptr),
       m_handle(nullptr)
@@ -162,10 +164,13 @@ QPlatformMenu * QQuickPlatformMenu::create()
             m_handle = m_menuBar->handle()->createMenu();
         else if (m_parentMenu && m_parentMenu->handle())
             m_handle = m_parentMenu->handle()->createSubMenu();
+        else if (m_systemTrayIcon && m_systemTrayIcon->handle())
+            m_handle = m_systemTrayIcon->handle()->createMenu();
 
         // TODO: implement ^
         // - QCocoaMenuBar::createMenu()
         // - QCocoaMenu::createSubMenu()
+        // - QCocoaSystemTrayIcon::createMenu()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenu();
 
@@ -208,6 +213,8 @@ void QQuickPlatformMenu::sync()
 
     if (m_menuBar && m_menuBar->handle())
         m_menuBar->handle()->syncMenu(m_handle);
+    else if (m_systemTrayIcon && m_systemTrayIcon->handle())
+        m_systemTrayIcon->handle()->updateMenu(m_handle);
 
     for (QQuickPlatformMenuItem *item : m_items)
         item->sync();
@@ -280,6 +287,28 @@ void QQuickPlatformMenu::setParentMenu(QQuickPlatformMenu *menu)
     m_parentMenu = menu;
     destroy();
     emit parentMenuChanged();
+}
+
+/*!
+    \readonly
+    \qmlproperty SystemTrayIcon Qt.labs.platform::Menu::systemTrayIcon
+
+    This property holds the system tray icon that the menu belongs to, or \c null
+    if the menu is not in a system tray icon.
+*/
+QQuickPlatformSystemTrayIcon *QQuickPlatformMenu::systemTrayIcon() const
+{
+    return m_systemTrayIcon;
+}
+
+void QQuickPlatformMenu::setSystemTrayIcon(QQuickPlatformSystemTrayIcon *icon)
+{
+    if (m_systemTrayIcon == icon)
+        return;
+
+    m_systemTrayIcon = icon;
+    destroy();
+    emit systemTrayIconChanged();
 }
 
 /*!
