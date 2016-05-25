@@ -170,7 +170,12 @@ class FixedPoolArray
 public:
     int count;
 
-    void init(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
+    FixedPoolArray()
+        : data(0)
+        , count(0)
+    {}
+
+    void allocate(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
         count = vector.count();
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
@@ -312,7 +317,7 @@ public:
     QString bindingAsString(Document *doc, int scriptIndex) const;
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
-    FixedPoolArray<int> *runtimeFunctionIndices;
+    FixedPoolArray<int> runtimeFunctionIndices;
 
 private:
     friend struct IRLoader;

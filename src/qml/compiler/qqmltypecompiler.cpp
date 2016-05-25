@@ -2451,8 +2451,7 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
         }
 
         QQmlJS::MemoryPool *pool = compiler->memoryPool();
-        object->runtimeFunctionIndices = pool->New<QmlIR::FixedPoolArray<int> >();
-        object->runtimeFunctionIndices->init(pool, runtimeFunctionIndices);
+        object->runtimeFunctionIndices.allocate(pool, runtimeFunctionIndices);
     }
 
     for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
@@ -2551,7 +2550,7 @@ void QQmlJavaScriptBindingExpressionSimplificationPass::reduceTranslationBinding
         if (binding->type != QV4::CompiledData::Binding::Type_Script)
             continue;
 
-        const int irFunctionIndex = obj->runtimeFunctionIndices->at(binding->value.compiledScriptIndex);
+        const int irFunctionIndex = obj->runtimeFunctionIndices.at(binding->value.compiledScriptIndex);
         QV4::IR::Function *irFunction = jsModule->functions.at(irFunctionIndex);
         if (simplifyBinding(irFunction, binding)) {
             irFunctionsToRemove.append(irFunctionIndex);
@@ -2838,10 +2837,8 @@ void QQmlIRFunctionCleanser::clean()
     }
 
     foreach (QmlIR::Object *obj, *compiler->qmlObjects()) {
-        if (!obj->runtimeFunctionIndices)
-            continue;
-        for (int i = 0; i < obj->runtimeFunctionIndices->count; ++i)
-            (*obj->runtimeFunctionIndices)[i] = newFunctionIndices[obj->runtimeFunctionIndices->at(i)];
+        for (int i = 0; i < obj->runtimeFunctionIndices.count; ++i)
+            obj->runtimeFunctionIndices[i] = newFunctionIndices[obj->runtimeFunctionIndices.at(i)];
     }
 }
 

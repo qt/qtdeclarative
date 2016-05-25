@@ -88,7 +88,6 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQm
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
     functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
-    runtimeFunctionIndices = 0;
     declarationsOverride = 0;
 }
 
@@ -1448,7 +1447,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
 
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
-            *functionsTable++ = o->runtimeFunctionIndices->at(f->index);
+            *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
         for (const Property *p = o->firstProperty(); p; p = p->next) {
@@ -1517,7 +1516,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, Object *o, BindingFilter
         QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
         *bindingToWrite = *b;
         if (b->type == QV4::CompiledData::Binding::Type_Script)
-            bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices->at(b->value.compiledScriptIndex);
+            bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices.at(b->value.compiledScriptIndex);
         bindingPtr += sizeof(QV4::CompiledData::Binding);
     }
     return bindingPtr;
