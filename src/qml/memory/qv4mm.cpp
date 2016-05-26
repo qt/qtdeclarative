@@ -382,6 +382,7 @@ static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
+        Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
         Q_ASSERT (h->vtable()->markObjects);
         h->vtable()->markObjects(h, engine);
     }
@@ -438,7 +439,7 @@ void MemoryManager::sweep(bool lastSweep)
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         if (!(*it).isManaged())
             continue;
-        Managed *m = (*it).as<Managed>();
+        Managed *m = (*it).managed();
         if (m->markBit())
             continue;
         // we need to call detroyObject on qobjectwrappers now, so that they can emit the destroyed
@@ -676,7 +677,7 @@ void MemoryManager::collectFromJSStack() const
     Value *v = engine->jsStackBase;
     Value *top = engine->jsStackTop;
     while (v < top) {
-        Managed *m = v->as<Managed>();
+        Managed *m = v->managed();
         if (m && m->inUse())
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(engine);

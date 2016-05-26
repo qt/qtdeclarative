@@ -286,16 +286,22 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     Q_ALWAYS_INLINE String *stringValue() const {
+        if (!isString())
+            return nullptr;
         return m() ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
     }
     Q_ALWAYS_INLINE Object *objectValue() const {
+        if (!isObject())
+            return nullptr;
         return m() ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
     }
     Q_ALWAYS_INLINE Managed *managed() const {
+        if (!isManaged())
+            return nullptr;
         return m() ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
     }
     Q_ALWAYS_INLINE Heap::Base *heapObject() const {
-        return m();
+        return isManaged() ? m() : nullptr;
     }
 
     Q_ALWAYS_INLINE quint64 &rawValueRef() {
@@ -357,7 +363,10 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     template <typename T>
     T *as() {
-        return const_cast<T *>(const_cast<const Value *>(this)->as<T>());
+        if (isManaged())
+            return const_cast<T *>(const_cast<const Value *>(this)->as<T>());
+        else
+            return nullptr;
     }
 
     template<typename T> inline T *cast() {

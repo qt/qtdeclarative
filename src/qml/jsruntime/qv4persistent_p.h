@@ -118,7 +118,7 @@ public:
     Managed *asManaged() const {
         if (!val)
             return 0;
-        return val->as<Managed>();
+        return val->managed();
     }
     template<typename T>
     T *as() const {
@@ -167,7 +167,7 @@ public:
     Managed *asManaged() const {
         if (!val)
             return 0;
-        return val->as<Managed>();
+        return val->managed();
     }
     template <typename T>
     T *as() const {
