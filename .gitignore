@@ -32,6 +32,7 @@
 /tests/benchmarks/objectcount/tst_objectcount
 /tests/manual/fonts/fonts
 /tests/manual/gifs/tst_gifs
+/tests/manual/styles/styles
 /tests/manual/testbench/testbench
 
 /tests/auto/snippets/screenshots/*.png
