@@ -73,8 +73,8 @@
 //#include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickcanvasitem_p.h>
 #include <QtQuick/private/qquickcontext2d_p.h>
-#ifndef QT_NO_OPENGL
 # include "qquickitemgrabresult.h"
+#ifndef QT_NO_OPENGL
 # include "qquicksprite_p.h"
 # include "qquickspritesequence_p.h"
 # include "qquickanimatedsprite_p.h"
@@ -182,9 +182,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickTextInput,3>(uri,2,4,"TextInput");
     qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
-#ifndef QT_NO_OPENGL
     qmlRegisterType<QQuickItemGrabResult>();
-#endif
     qmlRegisterType<QQuickItemLayer>();
     qmlRegisterType<QQuickAnchors>();
     qmlRegisterType<QQuickKeyEvent>();

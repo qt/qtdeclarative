@@ -48,7 +48,6 @@
 #include <private/qquickpixmapcache_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgcontext_p.h>
-#include <private/qsgdefaultrendercontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
