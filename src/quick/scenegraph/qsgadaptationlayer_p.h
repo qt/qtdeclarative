@@ -228,30 +228,11 @@ class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
     Q_OBJECT
 
 public:
-    // Enum values must match ShaderEffect.
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
     enum Status {
         Compiled,
         Uncompiled,
         Error
     };
-
-    virtual ShaderType shaderType() const = 0;
-    virtual int shaderCompilationType() const = 0;
-    virtual int shaderSourceType() const = 0;
 
     virtual bool hasSeparateSamplerAndTextureObjects() const = 0;
 

@@ -79,6 +79,9 @@ public:
     bool isDistanceFieldEnabled() const;
 
     GraphicsApi graphicsApi() const override;
+    ShaderType shaderType() const override;
+    ShaderCompilationTypes shaderCompilationType() const override;
+    ShaderSourceTypes shaderSourceType() const override;
 
 private:
     QMutex m_mutex;

@@ -90,10 +90,6 @@ public:
     bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
     void setSupportsAtlasTextures(bool supports);
 
-    QQuickShaderEffect::ShaderType shaderType() const;
-    QQuickShaderEffect::ShaderCompilationType shaderCompilationType() const;
-    QQuickShaderEffect::ShaderSourceType shaderSourceType() const;
-
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);

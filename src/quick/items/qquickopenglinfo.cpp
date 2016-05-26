@@ -61,6 +61,10 @@ QT_BEGIN_NAMESPACE
     format. When it becomes associated with a surface, all properties
     will update.
 
+    \deprecated
+
+    \warning This type is deprecated. Use GraphicsInfo instead.
+
     \sa ShaderEffect
  */
 QQuickOpenGLInfo::QQuickOpenGLInfo(QQuickItem *item)

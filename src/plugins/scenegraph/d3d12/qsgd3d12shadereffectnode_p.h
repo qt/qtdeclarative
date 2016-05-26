@@ -155,10 +155,6 @@ private:
 class QSGD3D12GuiThreadShaderEffectManager : public QSGGuiThreadShaderEffectManager
 {
 public:
-    ShaderType shaderType() const override;
-    int shaderCompilationType() const override;
-    int shaderSourceType() const override;
-
     bool hasSeparateSamplerAndTextureObjects() const override;
 
     QString log() const override;

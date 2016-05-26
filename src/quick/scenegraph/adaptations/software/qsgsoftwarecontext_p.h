@@ -96,6 +96,9 @@ public:
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 
     GraphicsApi graphicsApi() const override;
+    ShaderType shaderType() const override;
+    ShaderCompilationTypes shaderCompilationType() const override;
+    ShaderSourceTypes shaderSourceType() const override;
 };
 
 QT_END_NAMESPACE

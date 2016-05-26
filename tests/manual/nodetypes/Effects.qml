@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-// Use QtQuick 2.8 to get shaderType and the other new properties
+// Use QtQuick 2.8 to get GraphicsInfo and the other new properties
 import QtQuick 2.8
 
 Item {
@@ -95,9 +95,9 @@ Item {
             property string hlslVertexShaderByteCode: "qrc:/vs_wobble.cso"
             property string hlslPixelShaderByteCode: "qrc:/ps_wobble.cso"
 
-            vertexShader: customVertexShader ? (shaderType === ShaderEffect.HLSL ? hlslVertexShaderByteCode : (shaderType === ShaderEffect.GLSL ? glslVertexShader : "")) : ""
+            vertexShader: customVertexShader ? (GraphicsInfo.shaderType === GraphicsInfo.HLSL ? hlslVertexShaderByteCode : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslVertexShader : "")) : ""
 
-            fragmentShader: shaderType === ShaderEffect.HLSL ? hlslPixelShaderByteCode : (shaderType === ShaderEffect.GLSL ? glslFragmentShader : "")
+            fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL ? hlslPixelShaderByteCode : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslFragmentShader : "")
         }
 
         Image {
@@ -157,10 +157,10 @@ Item {
                             height: eff2.height
                             property variant delta: Qt.size(1.0 / width, 0.0)
                             property variant source: effectSource2
-                            fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow1.cso" : (shaderType === ShaderEffect.GLSL ? eff2.glslShaderPass1 : "")
+                            fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL ? "qrc:/ps_shadow1.cso" : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? eff2.glslShaderPass1 : "")
                         }
                     }
-                    fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow1.cso" : (shaderType === ShaderEffect.GLSL ? eff2.glslShaderPass1: "")
+                    fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL ? "qrc:/ps_shadow1.cso" : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? eff2.glslShaderPass1: "")
                 }
             }
             property real angle: 0
@@ -168,7 +168,7 @@ Item {
             NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
             property variant delta: Qt.size(offset.x / width, offset.y / height)
             property real darkness: 0.5
-            fragmentShader: shaderType === ShaderEffect.HLSL ? "qrc:/ps_shadow2.cso" : (shaderType === ShaderEffect.GLSL ? glslShaderPass2 : "")
+            fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL ? "qrc:/ps_shadow2.cso" : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslShaderPass2 : "")
         }
 
         Column {
@@ -176,11 +176,10 @@ Item {
             Text {
                 color: "yellow"
                 font.pointSize: 24
-                text: "Shader effect is " + (eff.shaderType === ShaderEffect.HLSL ? "HLSL" : (eff.shaderType === ShaderEffect.GLSL ? "GLSL" : "UNKNOWN")) + " based";
+                text: "Shader effect is " + (GraphicsInfo.shaderType === GraphicsInfo.HLSL ? "HLSL" : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? "GLSL" : "UNKNOWN")) + " based";
             }
             Text {
-                // check the inner shader effect's properties as those only get updated later on, once a window gets associated
-                text: innerEff.shaderType + " " + innerEff.shaderCompilationType + " " + innerEff.shaderSourceType
+                text: GraphicsInfo.shaderType + " " + GraphicsInfo.shaderCompilationType + " " + GraphicsInfo.shaderSourceType
             }
         }
     }

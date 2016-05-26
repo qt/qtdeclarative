@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \enum QSGRenderNode::GraphicsApi
+    \enum QSGRendererInterface::GraphicsApi
     \value Unknown An unknown graphics API is in use
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenGL OpenGL ES 2.0 or higher
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
   */
 
 /*!
-    \enum QSGRenderNode::Resource
+    \enum QSGRendererInterface::Resource
     \value Device The graphics device
     \value CommandQueue The graphics command queue used by the scenergaph
     \value CommandList The command list or buffer used by the scenegraph
@@ -84,7 +84,7 @@ QSGRendererInterface::~QSGRendererInterface()
 }
 
 /*!
-    \fn QSGRenderNode::GraphicsApi QSGRenderNode::graphicsApi() const
+    \fn QSGRendererInterface::GraphicsApi QSGRendererInterface::graphicsApi() const
 
     Returns the graphics API that is in use by the Qt Quick scenegraph.
 
@@ -124,5 +124,46 @@ void *QSGRendererInterface::getResource(const char *resource) const
     Q_UNUSED(resource);
     return nullptr;
 }
+
+/*!
+    \fn QSGRendererInterface::ShaderType QSGRendererInterface::shaderType() const
+
+    \return the shading language supported by the Qt Quick backend the
+    application is using.
+
+    \note This function can be called on any thread. However, the renderer
+    interface's lifetime may be tied to the render thread and therefore calling
+    this function from other threads during the process of application shutdown
+    or QQuickWindow closing is likely to become invalid.
+
+    \sa QtQuick::GraphicsInfo
+ */
+
+/*!
+    \fn QSGRendererInterface::ShaderCompilationTypes QSGRendererInterface::shaderCompilationType() const
+
+    \return a bitmask of the shader compilation approaches supported by the Qt
+    Quick backend the application is using.
+
+    \note This function can be called on any thread. However, the renderer
+    interface's lifetime may be tied to the render thread and therefore calling
+    this function from other threads during the process of application shutdown
+    or QQuickWindow closing is likely to become invalid.
+
+    \sa QtQuick::GraphicsInfo
+ */
+
+/*!
+    \fn QSGRendererInterface::ShaderSourceTypes QSGRendererInterface::shaderSourceType() const
+
+    \return a bitmask of the supported ways of providing shader sources.
+
+    \note This function can be called on any thread. However, the renderer
+    interface's lifetime may be tied to the render thread and therefore calling
+    this function from other threads during the process of application shutdown
+    or QQuickWindow closing is likely to become invalid.
+
+    \sa QtQuick::GraphicsInfo
+ */
 
 QT_END_NAMESPACE

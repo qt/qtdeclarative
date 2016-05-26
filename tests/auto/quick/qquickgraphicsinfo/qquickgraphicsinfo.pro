@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_qquickrendererinfo
-SOURCES += tst_qquickrendererinfo.cpp
+TARGET = tst_qquickgraphicsinfo
+SOURCES += tst_qquickgraphicsinfo.cpp
 
 TESTDATA = data/*
 include(../../shared/util.pri)

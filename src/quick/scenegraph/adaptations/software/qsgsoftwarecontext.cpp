@@ -179,4 +179,19 @@ QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const
     return Software;
 }
 
+QSGRendererInterface::ShaderType QSGSoftwareContext::shaderType() const
+{
+    return UnknownShadingLanguage;
+}
+
+QSGRendererInterface::ShaderCompilationTypes QSGSoftwareContext::shaderCompilationType() const
+{
+    return 0;
+}
+
+QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() const
+{
+    return 0;
+}
+
 QT_END_NAMESPACE

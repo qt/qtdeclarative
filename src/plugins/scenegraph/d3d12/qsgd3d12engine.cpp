@@ -545,6 +545,21 @@ void *QSGD3D12Engine::getResource(Resource resource) const
     return d->getResource(resource);
 }
 
+QSGRendererInterface::ShaderType QSGD3D12Engine::shaderType() const
+{
+    return HLSL;
+}
+
+QSGRendererInterface::ShaderCompilationTypes QSGD3D12Engine::shaderCompilationType() const
+{
+    return OfflineCompilation;
+}
+
+QSGRendererInterface::ShaderSourceTypes QSGD3D12Engine::shaderSourceType() const
+{
+    return ShaderByteCode;
+}
+
 static inline quint32 alignedSize(quint32 size, quint32 byteAlign)
 {
     return (size + byteAlign - 1) & ~(byteAlign - 1);

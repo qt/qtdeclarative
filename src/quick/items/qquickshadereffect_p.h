@@ -70,9 +70,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(QString log READ log NOTIFY logChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 1)
-    Q_PROPERTY(ShaderType shaderType READ shaderType NOTIFY shaderTypeChanged REVISION 2)
-    Q_PROPERTY(ShaderCompilationType shaderCompilationType READ shaderCompilationType NOTIFY shaderCompilationTypeChanged REVISION 2)
-    Q_PROPERTY(ShaderSourceType shaderSourceType READ shaderSourceType NOTIFY shaderSourceTypeChanged REVISION 2)
 
 public:
     enum CullMode {
@@ -88,26 +85,6 @@ public:
         Error
     };
     Q_ENUM(Status)
-
-    enum ShaderType {
-        UnknownShadingLanguage,
-        GLSL,
-        HLSL
-    };
-    Q_ENUM(ShaderType)
-
-    enum ShaderCompilationType {
-        RuntimeCompilation = 0x01,
-        OfflineCompilation = 0x02
-    };
-    Q_ENUM(ShaderCompilationType)
-
-    enum ShaderSourceType {
-        ShaderSourceString = 0x01,
-        ShaderSourceFile = 0x02,
-        ShaderByteCode = 0x04
-    };
-    Q_ENUM(ShaderSourceType)
 
     QQuickShaderEffect(QQuickItem *parent = 0);
 
@@ -132,10 +109,6 @@ public:
     QString log() const;
     Status status() const;
 
-    ShaderType shaderType() const;
-    ShaderCompilationType shaderCompilationType() const;
-    ShaderSourceType shaderSourceType() const;
-
     bool isComponentComplete() const;
     QString parseLog();
 
@@ -148,9 +121,6 @@ Q_SIGNALS:
     void logChanged();
     void statusChanged();
     void supportsAtlasTexturesChanged();
-    void shaderTypeChanged();
-    void shaderCompilationTypeChanged();
-    void shaderSourceTypeChanged();
 
 protected:
     bool event(QEvent *e) override;

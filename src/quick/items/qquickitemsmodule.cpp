@@ -80,7 +80,7 @@
 # include "qquickanimatedsprite_p.h"
 # include "qquickopenglinfo_p.h"
 #endif
-#include "qquickrendererinfo_p.h"
+#include "qquickgraphicsinfo_p.h"
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 #include "qquickdrag_p.h"
@@ -294,8 +294,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 
-    qmlRegisterType<QQuickShaderEffect, 2>(uri, 2, 8, "ShaderEffect");
-    qmlRegisterUncreatableType<QQuickRendererInfo>(uri, 2, 8,"RendererInfo", QQuickRendererInfo::tr("RendererInfo is only available via attached properties"));
+    qmlRegisterUncreatableType<QQuickGraphicsInfo>(uri, 2, 8,"GraphicsInfo", QQuickGraphicsInfo::tr("GraphicsInfo is only available via attached properties"));
     qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
 }
 

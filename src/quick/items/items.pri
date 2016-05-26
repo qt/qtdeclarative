@@ -78,7 +78,7 @@ HEADERS += \
     $$PWD/qquickgenericshadereffect_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
-    $$PWD/qquickrendererinfo_p.h \
+    $$PWD/qquickgraphicsinfo_p.h \
     $$PWD/qquickitemgrabresult.h
 
 SOURCES += \
@@ -133,7 +133,7 @@ SOURCES += \
     $$PWD/qquickshadereffect.cpp \
     $$PWD/qquickgenericshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp \
-    $$PWD/qquickrendererinfo.cpp \
+    $$PWD/qquickgraphicsinfo.cpp \
     $$PWD/qquickitemgrabresult.cpp
 
 # Items that depend on OpenGL Renderer

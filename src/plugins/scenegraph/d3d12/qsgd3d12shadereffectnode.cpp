@@ -770,21 +770,6 @@ void QSGD3D12ShaderEffectNode::preprocess()
     }
 }
 
-QSGGuiThreadShaderEffectManager::ShaderType QSGD3D12GuiThreadShaderEffectManager::shaderType() const
-{
-    return HLSL;
-}
-
-int QSGD3D12GuiThreadShaderEffectManager::shaderCompilationType() const
-{
-    return OfflineCompilation;
-}
-
-int QSGD3D12GuiThreadShaderEffectManager::shaderSourceType() const
-{
-    return ShaderByteCode;
-}
-
 bool QSGD3D12GuiThreadShaderEffectManager::hasSeparateSamplerAndTextureObjects() const
 {
     return true;

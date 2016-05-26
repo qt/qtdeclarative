@@ -251,4 +251,19 @@ QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const
     return OpenGL;
 }
 
+QSGRendererInterface::ShaderType QSGDefaultContext::shaderType() const
+{
+    return GLSL;
+}
+
+QSGRendererInterface::ShaderCompilationTypes QSGDefaultContext::shaderCompilationType() const
+{
+    return RuntimeCompilation;
+}
+
+QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() const
+{
+    return ShaderSourceString;
+}
+
 QT_END_NAMESPACE

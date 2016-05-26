@@ -60,13 +60,39 @@ public:
         CommandList
     };
 
+    enum ShaderType {
+        UnknownShadingLanguage,
+        GLSL,
+        HLSL
+    };
+
+    enum ShaderCompilationType {
+        RuntimeCompilation = 0x01,
+        OfflineCompilation = 0x02
+    };
+    Q_DECLARE_FLAGS(ShaderCompilationTypes, ShaderCompilationType)
+
+    enum ShaderSourceType {
+        ShaderSourceString = 0x01,
+        ShaderSourceFile = 0x02,
+        ShaderByteCode = 0x04
+    };
+    Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
+
     virtual ~QSGRendererInterface();
 
     virtual GraphicsApi graphicsApi() const = 0;
 
     virtual void *getResource(Resource resource) const;
     virtual void *getResource(const char *resource) const;
+
+    virtual ShaderType shaderType() const = 0;
+    virtual ShaderCompilationTypes shaderCompilationType() const = 0;
+    virtual ShaderSourceTypes shaderSourceType() const = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderSourceTypes)
 
 QT_END_NAMESPACE
 

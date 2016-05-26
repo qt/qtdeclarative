@@ -57,6 +57,7 @@ QUICKTESTS =  \
     qquickflickable \
     qquickflipable \
     qquickfocusscope \
+    qquickgraphicsinfo \
     qquickgridview \
     qquickimage \
     qquickitem \
@@ -71,7 +72,6 @@ QUICKTESTS =  \
     qquickpincharea \
     qquickpositioners \
     qquickrectangle \
-    qquickrendererinfo \
     qquickrepeater \
     qquickshortcut \
     qquicktext \

@@ -202,33 +202,6 @@ QQuickShaderEffect::Status QQuickGenericShaderEffect::status() const
     return QQuickShaderEffect::Status(mgr->status());
 }
 
-QQuickShaderEffect::ShaderType QQuickGenericShaderEffect::shaderType() const
-{
-    QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
-    if (!mgr)
-        return QQuickShaderEffect::ShaderType(0);
-
-    return QQuickShaderEffect::ShaderType(mgr->shaderType());
-}
-
-QQuickShaderEffect::ShaderCompilationType QQuickGenericShaderEffect::shaderCompilationType() const
-{
-    QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
-    if (!mgr)
-        return QQuickShaderEffect::ShaderCompilationType(0);
-
-    return QQuickShaderEffect::ShaderCompilationType(mgr->shaderCompilationType());
-}
-
-QQuickShaderEffect::ShaderSourceType QQuickGenericShaderEffect::shaderSourceType() const
-{
-    QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
-    if (!mgr)
-        return QQuickShaderEffect::ShaderSourceType(0);
-
-    return QQuickShaderEffect::ShaderSourceType(mgr->shaderSourceType());
-}
-
 void QQuickGenericShaderEffect::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
@@ -381,9 +354,6 @@ void QQuickGenericShaderEffect::backendChanged()
     disconnect(m_item->window(), SIGNAL(sceneGraphInitialized()), this, SLOT(backendChanged()));
     emit m_item->logChanged();
     emit m_item->statusChanged();
-    emit m_item->shaderTypeChanged();
-    emit m_item->shaderCompilationTypeChanged();
-    emit m_item->shaderSourceTypeChanged();
 }
 
 void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)

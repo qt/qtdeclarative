@@ -174,7 +174,7 @@ QT_BEGIN_NAMESPACE
 
     Direct3D backends provide ShaderEffect support with HLSL. The Direct3D 12
     backend requires using at least Shader Model 5.0 both for vertex and pixel
-    shaders. When necessary, the \l shaderType property can be used to decide
+    shaders. When necessary, GraphicsInfo.shaderType can be used to decide
     at runtime what kind of value to assign to \l fragmentShader or
     \l vertexShader.
 
@@ -212,8 +212,8 @@ QT_BEGIN_NAMESPACE
     Unlike with OpenGL, runtime compilation of shader source code may not be
     supported. Backends for modern APIs are likely to prefer offline
     compilation and shipping pre-compiled bytecode with applications instead of
-    inlined shader source strings. See the \l shaderSourceType and
-    \l shaderCompilationType properties.
+    inlined shader source strings. To check what is expected at runtime, use the
+    GraphicsInfo.shaderSourceType and GraphicsInfo.shaderCompilationType properties.
 
     \table 70%
     \row
@@ -399,7 +399,7 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     \c{float4 position : SV_POSITION} (names can differ since linking is done
     based on the semantics).
 
-    \sa vertexShader, shaderType, shaderCompilationType, shaderSourceType
+    \sa vertexShader, GraphicsInfo
 */
 
 QByteArray QQuickShaderEffect::fragmentShader() const
@@ -438,7 +438,7 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
     enough to use the standard \c TEXCOORD0 semantic, for example
     \c{float2 coord : TEXCOORD0}.
 
-    \sa fragmentShader, shaderType, shaderCompilationType, shaderSourceType
+    \sa fragmentShader, GraphicsInfo
 */
 
 QByteArray QQuickShaderEffect::vertexShader() const
@@ -650,118 +650,6 @@ QQuickShaderEffect::Status QQuickShaderEffect::status() const
         return m_glImpl->status();
 #endif
     return m_impl->status();
-}
-
-/*!
-    \qmlproperty enumeration QtQuick::ShaderEffect::shaderType
-
-    This property contains the shading language supported by the current Qt
-    Quick backend the application is using.
-
-    \list
-    \li ShaderEffect.UnknownShadingLanguage - Not yet known due to no window and scenegraph associated
-    \li ShaderEffect.GLSL - GLSL or GLSL ES
-    \li ShaderEffect.HLSL - HLSL
-    \endlist
-
-    \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from
-    ShaderEffect.UnknownShadingLanguage to the actual value after component
-    initialization is complete. This is particularly relevant for ShaderEffect
-    items inside ShaderEffectSource items set as property values.
-
-    \since 5.8
-    \since QtQuick 2.8
-
-    \sa shaderCompilationType, shaderSourceType, vertexShader, fragmentShader
-*/
-
-QQuickShaderEffect::ShaderType QQuickShaderEffect::shaderType() const
-{
-#ifndef QT_NO_OPENGL
-    if (m_glImpl)
-        return GLSL;
-#endif
-    return m_impl->shaderType();
-}
-
-/*!
-    \qmlproperty enumeration QtQuick::ShaderEffect::shaderCompilationType
-
-    This property contains a bitmask of the shader compilation approaches
-    supported by the current Qt Quick backend the application is using.
-
-    \list
-    \li ShaderEffect.RuntimeCompilation
-    \li ShaderEffect.OfflineCompilation
-    \endlist
-
-    With OpenGL the value is ShaderEffect.RuntimeCompilation, which corresponds
-    to the traditional way of using ShaderEffect. Non-OpenGL backends are
-    expected to focus more on ShaderEffect.OfflineCompilation, however.
-
-    \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from \c 0 to the
-    actual bitmask after component initialization is complete. This is
-    particularly relevant for ShaderEffect items inside ShaderEffectSource
-    items set as property values.
-
-    \since 5.8
-    \since QtQuick 2.8
-
-    \sa shaderType, shaderSourceType, vertexShader, fragmentShader
-*/
-
-QQuickShaderEffect::ShaderCompilationType QQuickShaderEffect::shaderCompilationType() const
-{
-#ifndef QT_NO_OPENGL
-    if (m_glImpl)
-        return RuntimeCompilation;
-#endif
-    return m_impl->shaderCompilationType();
-}
-
-/*!
-    \qmlproperty enumeration QtQuick::ShaderEffect::shaderSourceType
-
-    This property contains a bitmask of the supported ways of providing shader
-    sources.
-
-    \list
-    \li ShaderEffect.ShaderSourceString
-    \li ShaderEffect.ShaderSourceFile
-    \li ShaderEffect.ShaderByteCode
-    \endlist
-
-    With OpenGL the value is ShaderEffect.ShaderSourceString, which corresponds
-    to the traditional way of inlining GLSL source code into QML. Other,
-    non-OpenGL Qt Quick backends may however decide not to support inlined
-    shader sources, or even shader sources at all. In this case shaders are
-    expected to be pre-compiled into formats like SPIR-V or D3D shader
-    bytecode.
-
-    \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from \c 0 to the
-    actual bitmask after component initialization is complete. This is
-    particularly relevant for ShaderEffect items inside ShaderEffectSource
-    items set as property values.
-
-    \since 5.8
-    \since QtQuick 2.8
-
-    \sa shaderType, shaderCompilationType, vertexShader, fragmentShader
-*/
-
-QQuickShaderEffect::ShaderSourceType QQuickShaderEffect::shaderSourceType() const
-{
-#ifndef QT_NO_OPENGL
-    if (m_glImpl)
-        return ShaderSourceString;
-#endif
-    return m_impl->shaderSourceType();
 }
 
 bool QQuickShaderEffect::event(QEvent *e)
