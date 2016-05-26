@@ -255,7 +255,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    setupBindings(/*binding skip list*/QBitArray(), /*applyDeferredBindings=*/true);
+    setupBindings(/*applyDeferredBindings=*/true);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);
@@ -622,7 +622,7 @@ static QQmlType *qmlTypeForObject(QObject *object)
     return type;
 }
 
-void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip, bool applyDeferredBindings)
+void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -673,7 +673,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip, bool appl
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-        if (static_cast<int>(i) < bindingsToSkip.size() && bindingsToSkip.testBit(i))
+        if (binding->flags & QV4::CompiledData::Binding::IsCustomParserBinding)
             continue;
 
         if (binding->flags & QV4::CompiledData::Binding::IsDeferredBinding) {
@@ -1125,24 +1125,22 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (isContextObject)
         context->contextObject = instance;
 
-    QBitArray bindingsToSkip;
-    if (customParser) {
-        QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.constFind(index);
-        if (customParserBindings != compiledData->customParserBindings.constEnd()) {
-            customParser->engine = QQmlEnginePrivate::get(engine);
-            customParser->imports = compiledData->importCache;
+    if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
+        customParser->engine = QQmlEnginePrivate::get(engine);
+        customParser->imports = compiledData->importCache;
 
-            QList<const QV4::CompiledData::Binding *> bindings;
-            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
-            for (int i = 0; i < customParserBindings->count(); ++i)
-                if (customParserBindings->testBit(i))
-                    bindings << obj->bindingTable() + i;
-            customParser->applyBindings(instance, compiledData, bindings);
-
-            customParser->engine = 0;
-            customParser->imports = (QQmlTypeNameCache*)0;
-            bindingsToSkip = *customParserBindings;
+        QList<const QV4::CompiledData::Binding *> bindings;
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+        const QV4::CompiledData::Binding *binding = obj->bindingTable();
+        for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+            if (binding->flags & QV4::CompiledData::Binding::IsCustomParserBinding) {
+                bindings << binding;
+            }
         }
+        customParser->applyBindings(instance, compiledData, bindings);
+
+        customParser->engine = 0;
+        customParser->imports = (QQmlTypeNameCache*)0;
     }
 
     if (isComponent) {
@@ -1171,7 +1169,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     qSwap(_qmlContext, qmlContext);
 
-    bool result = populateInstance(index, instance, /*binding target*/instance, /*value type property*/0, bindingsToSkip);
+    bool result = populateInstance(index, instance, /*binding target*/instance, /*value type property*/0);
 
     qSwap(_qmlContext, qmlContext);
     qSwap(_scopeObject, scopeObject);
@@ -1266,7 +1264,7 @@ void QQmlObjectCreator::clear()
     phase = Done;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty, const QBitArray &bindingsToSkip)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty)
 {
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
@@ -1314,7 +1312,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
-    setupBindings(bindingsToSkip);
+    setupBindings();
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

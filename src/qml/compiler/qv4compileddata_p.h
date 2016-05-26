@@ -236,7 +236,8 @@ struct Q_QML_PRIVATE_EXPORT Binding
         IsResolvedEnum = 0x10,
         IsListItem = 0x20,
         IsBindingToAlias = 0x40,
-        IsDeferredBinding = 0x80
+        IsDeferredBinding = 0x80,
+        IsCustomParserBinding = 0x100,
     };
 
     quint32 flags : 16;
@@ -396,7 +397,8 @@ struct Object
     enum Flags {
         NoFlag = 0x0,
         IsComponent = 0x1, // object was identified to be an explicit or implicit component boundary
-        HasDeferredBindings = 0x2 // any of the bindings are deferred
+        HasDeferredBindings = 0x2, // any of the bindings are deferred
+        HasCustomParserBindings = 0x4
     };
 
     // Depending on the use, this may be the type name to instantiate before instantiating this

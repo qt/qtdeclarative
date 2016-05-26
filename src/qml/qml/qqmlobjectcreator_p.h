@@ -111,10 +111,9 @@ private:
     QObject *createInstance(int index, QObject *parent = 0, bool isContextObject = false);
 
     bool populateInstance(int index, QObject *instance,
-                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
-                          const QBitArray &bindingsToSkip = QBitArray());
+                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty);
 
-    void setupBindings(const QBitArray &bindingsToSkip, bool applyDeferredBindings = false);
+    void setupBindings(bool applyDeferredBindings = false);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();

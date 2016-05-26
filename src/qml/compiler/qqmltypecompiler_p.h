@@ -103,7 +103,6 @@ public:
     const QQmlPropertyCacheVector &propertyCaches() const;
     void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
     const QVector<quint32> &componentRoots() const { return m_componentRoots; }
-    QHash<int, QBitArray> *customParserBindings();
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
@@ -280,10 +279,10 @@ protected:
     QQmlPropertyCacheVector propertyCaches;
 };
 
-class QQmlDeferredBindingScanner : public QQmlCompilePass
+class QQmlDeferredAndCustomParserBindingScanner : public QQmlCompilePass
 {
 public:
-    QQmlDeferredBindingScanner(QQmlTypeCompiler *typeCompiler);
+    QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler);
 
     bool scanObject();
 
@@ -292,6 +291,7 @@ private:
 
     QList<QmlIR::Object*> *qmlObjects;
     QQmlPropertyCacheVector propertyCaches;
+    const QHash<int, QQmlCustomParser*> &customParsers;
 
     bool _seenObjectWithId;
 };
@@ -319,7 +319,6 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QQmlPropertyCacheVector &propertyCaches;
-    QHash<int, QBitArray> *customParserBindingsPerObject;
 
     // collected state variables, essentially write-only
     mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
