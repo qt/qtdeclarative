@@ -116,7 +116,7 @@ private:
     QSGD3D12PipelineState m_pipelineState;
     QSGD3D12PipelineState m_freshPipelineState;
 
-    typedef QHash<QSGNode *, QSGD3D12Material::RenderState::DirtyStates> NodeDirtyMap;
+    typedef QHash<QSGNode *, QSGD3D12MaterialRenderState::DirtyStates> NodeDirtyMap;
     NodeDirtyMap m_nodeDirtyMap;
 
     QRect m_activeScissorRect;

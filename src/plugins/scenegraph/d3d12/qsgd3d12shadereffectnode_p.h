@@ -107,7 +107,7 @@ public:
 
     int constantBufferSize() const override;
     void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
-    UpdateResults updatePipeline(const RenderState &state,
+    UpdateResults updatePipeline(const QSGD3D12MaterialRenderState &state,
                                  QSGD3D12PipelineState *pipelineState,
                                  ExtraState *extraState,
                                  quint8 *constantBuffer) override;

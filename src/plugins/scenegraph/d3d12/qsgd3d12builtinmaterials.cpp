@@ -98,7 +98,7 @@ void QSGD3D12VertexColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelin
     pipelineState->shaders.psSize = sizeof(g_PS_VertexColor);
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                             QSGD3D12PipelineState *,
                                                                             ExtraState *,
                                                                             quint8 *constantBuffer)
@@ -158,7 +158,7 @@ void QSGD3D12SmoothColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelin
     pipelineState->shaders.psSize = sizeof(g_PS_SmoothColor);
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12SmoothColorMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12SmoothColorMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                             QSGD3D12PipelineState *,
                                                                             ExtraState *,
                                                                             quint8 *constantBuffer)
@@ -224,7 +224,7 @@ void QSGD3D12TextureMaterial::preparePipeline(QSGD3D12PipelineState *pipelineSta
     pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                         QSGD3D12PipelineState *pipelineState,
                                                                         ExtraState *,
                                                                         quint8 *constantBuffer)
@@ -307,7 +307,7 @@ void QSGD3D12SmoothTextureMaterial::preparePipeline(QSGD3D12PipelineState *pipel
     pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                               QSGD3D12PipelineState *pipelineState,
                                                                               ExtraState *,
                                                                               quint8 *constantBuffer)
@@ -482,7 +482,7 @@ void QSGD3D12TextMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
     pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                      QSGD3D12PipelineState *pipelineState,
                                                                      ExtraState *extraState,
                                                                      quint8 *constantBuffer)

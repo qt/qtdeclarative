@@ -62,37 +62,11 @@ class QSGRenderer;
 // QSGMaterial and its GL program related bits are not suitable. Also, there is
 // no split like with QSGMaterialShader.
 
+typedef QSGMaterialShader::RenderState QSGD3D12MaterialRenderState;
+
 class QSGD3D12Material : public QSGMaterial
 {
 public:
-    struct RenderState {
-        enum DirtyState {
-            DirtyMatrix = 0x0001,
-            DirtyOpacity = 0x0002,
-            DirtyCachedMaterialData = 0x0004,
-            DirtyAll = 0xFFFF
-        };
-        Q_DECLARE_FLAGS(DirtyStates, DirtyState)
-
-        DirtyStates dirtyStates() const { return m_dirty; }
-
-        bool isMatrixDirty() const { return m_dirty & DirtyMatrix; }
-        bool isOpacityDirty() const { return m_dirty & DirtyOpacity; }
-        bool isCachedMaterialDataDirty() const { return m_dirty & DirtyCachedMaterialData; }
-
-        float opacity() const;
-        QMatrix4x4 combinedMatrix() const;
-        QMatrix4x4 modelViewMatrix() const;
-        QMatrix4x4 projectionMatrix() const;
-        QRect viewportRect() const;
-        QRect deviceRect() const;
-        float determinant() const;
-        float devicePixelRatio() const;
-
-        DirtyStates m_dirty = 0;
-        void *m_data = nullptr;
-    };
-
     struct ExtraState {
         QVector4D blendFactor;
     };
@@ -104,11 +78,9 @@ public:
     };
     Q_DECLARE_FLAGS(UpdateResults, UpdateResult)
 
-    static RenderState makeRenderState(QSGRenderer *renderer, RenderState::DirtyStates dirty);
-
     virtual int constantBufferSize() const = 0;
     virtual void preparePipeline(QSGD3D12PipelineState *pipelineState) = 0;
-    virtual UpdateResults updatePipeline(const RenderState &state,
+    virtual UpdateResults updatePipeline(const QSGD3D12MaterialRenderState &state,
                                          QSGD3D12PipelineState *pipelineState,
                                          ExtraState *extraState,
                                          quint8 *constantBuffer) = 0;
@@ -117,7 +89,6 @@ private:
     QSGMaterialShader *createShader() const override; // dummy, QSGMaterialShader is too GL dependent
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Material::RenderState::DirtyStates)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Material::UpdateResults)
 
 QT_END_NAMESPACE

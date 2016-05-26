@@ -130,7 +130,7 @@ void QSGD3D12Renderer::updateMatrices(QSGNode *node, QSGTransformNode *xform)
             updateMatrices(child, tn);
     } else {
         if (node->type() == QSGNode::GeometryNodeType || node->type() == QSGNode::ClipNodeType) {
-            m_nodeDirtyMap[node] |= QSGD3D12Material::RenderState::DirtyMatrix;
+            m_nodeDirtyMap[node] |= QSGD3D12MaterialRenderState::DirtyMatrix;
             QSGBasicGeometryNode *gnode = static_cast<QSGBasicGeometryNode *>(node);
             const QMatrix4x4 *newMatrix = xform ? &xform->combinedMatrix() : nullptr;
             // NB the newMatrix ptr is usually the same as before as it just
@@ -155,7 +155,7 @@ void QSGD3D12Renderer::updateOpacities(QSGNode *node, float inheritedOpacity)
             updateOpacities(child, combined);
     } else {
         if (node->type() == QSGNode::GeometryNodeType) {
-            m_nodeDirtyMap[node] |= QSGD3D12Material::RenderState::DirtyOpacity;
+            m_nodeDirtyMap[node] |= QSGD3D12MaterialRenderState::DirtyOpacity;
             QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(node);
             gn->setInheritedOpacity(inheritedOpacity);
         }
@@ -498,19 +498,19 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
         m->preparePipeline(&m_pipelineState);
     }
 
-    QSGD3D12Material::RenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
+    QSGD3D12MaterialRenderState::DirtyStates dirtyState = m_nodeDirtyMap.value(e.node);
 
     // After a rebuild everything in the cbuffer has to be updated.
     if (!e.cboPrepared) {
         e.cboPrepared = true;
-        dirtyState = QSGD3D12Material::RenderState::DirtyAll;
+        dirtyState = QSGD3D12MaterialRenderState::DirtyAll;
     }
 
     // DirtyMatrix does not include projection matrix changes that can arise
     // due to changing the render target's size (and there is no rebuild).
     // Accommodate for this.
     if (m_projectionChangedDueToDeviceSize)
-        dirtyState |= QSGD3D12Material::RenderState::DirtyMatrix;
+        dirtyState |= QSGD3D12MaterialRenderState::DirtyMatrix;
 
     quint8 *cboPtr = nullptr;
     if (e.cboSize > 0)
@@ -520,7 +520,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
         qDebug() << "dirty state for" << e.node << "is" << dirtyState;
 
     QSGD3D12Material::ExtraState extraState;
-    QSGD3D12Material::UpdateResults updRes = m->updatePipeline(QSGD3D12Material::makeRenderState(this, dirtyState),
+    QSGD3D12Material::UpdateResults updRes = m->updatePipeline(state(dirtyState),
                                                                &m_pipelineState,
                                                                &extraState,
                                                                cboPtr);

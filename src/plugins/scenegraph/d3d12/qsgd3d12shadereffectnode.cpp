@@ -326,7 +326,7 @@ static inline QColor qsg_premultiply_color(const QColor &c)
     return QColor::fromRgbF(c.redF() * c.alphaF(), c.greenF() * c.alphaF(), c.blueF() * c.alphaF(), c.alphaF());
 }
 
-QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(const RenderState &state,
+QSGD3D12Material::UpdateResults QSGD3D12ShaderEffectMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
                                                                              QSGD3D12PipelineState *pipelineState,
                                                                              ExtraState *,
                                                                              quint8 *constantBuffer)
