@@ -564,7 +564,10 @@ void QQuickMaterialStyle::resetPrimary()
     m_customPrimary = false;
     m_explicitPrimary = false;
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-    inheritPrimary(material ? material->m_primary : defaultPrimary, true);
+    if (material)
+        inheritPrimary(material->m_primary, material->m_customPrimary);
+    else
+        inheritPrimary(defaultPrimary, false);
 }
 
 QVariant QQuickMaterialStyle::accent() const
@@ -620,7 +623,10 @@ void QQuickMaterialStyle::resetAccent()
     m_customAccent = false;
     m_explicitAccent = false;
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-    inheritAccent(material ? material->m_accent : defaultAccent, true);
+    if (material)
+        inheritAccent(material->m_accent, material->m_customAccent);
+    else
+        inheritAccent(defaultAccent, false);
 }
 
 QVariant QQuickMaterialStyle::foreground() const
