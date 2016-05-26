@@ -318,7 +318,7 @@ void QSGD3D12ShaderEffectMaterial::preparePipeline(QSGD3D12PipelineState *pipeli
     pipelineState->shaders.ps = reinterpret_cast<const quint8 *>(linker.fs.constData());
     pipelineState->shaders.psSize = linker.fs.size();
 
-    pipelineState->shaders.rootSig.textureViews.resize(textureProviders.count());
+    pipelineState->shaders.rootSig.textureViewCount = textureProviders.count();
 }
 
 static inline QColor qsg_premultiply_color(const QColor &c)

@@ -136,18 +136,26 @@ inline uint qHash(const QSGD3D12TextureView &key, uint seed = 0)
     return key.filter + key.addressModeHoriz + key.addressModeVert;
 }
 
+const int QSGD3D12_MAX_TEXTURE_VIEWS = 8;
+
 struct QSGD3D12RootSignature
 {
-    QVector<QSGD3D12TextureView> textureViews;
+    int textureViewCount = 0;
+    QSGD3D12TextureView textureViews[QSGD3D12_MAX_TEXTURE_VIEWS];
 
     bool operator==(const QSGD3D12RootSignature &other) const {
-        return textureViews == other.textureViews;
+        if (textureViewCount != other.textureViewCount)
+            return false;
+        for (int i = 0; i < textureViewCount; ++i)
+            if (!(textureViews[i] == other.textureViews[i]))
+                return false;
+        return true;
     }
 };
 
 inline uint qHash(const QSGD3D12RootSignature &key, uint seed = 0)
 {
-    return qHash(key.textureViews, seed);
+    return key.textureViewCount + (key.textureViewCount > 0 ? qHash(key.textureViews[0], seed) : 0);
 }
 
 // Shader bytecode blobs and root signature-related data.
@@ -171,6 +179,8 @@ inline uint qHash(const QSGD3D12ShaderState &key, uint seed = 0)
 {
     return qHash(key.vs, seed) + key.vsSize + qHash(key.ps, seed) + key.psSize + qHash(key.rootSig, seed);
 }
+
+const int QSGD3D12_MAX_INPUT_ELEMENTS = 8;
 
 struct QSGD3D12PipelineState
 {
@@ -216,7 +226,8 @@ struct QSGD3D12PipelineState
 
     QSGD3D12ShaderState shaders;
 
-    QVector<QSGD3D12InputElement> inputElements;
+    int inputElementCount = 0;
+    QSGD3D12InputElement inputElements[QSGD3D12_MAX_INPUT_ELEMENTS];
 
     CullMode cullMode = CullNone;
     bool frontCCW = true;
@@ -233,8 +244,8 @@ struct QSGD3D12PipelineState
     TopologyType topologyType = TopologyTypeTriangle;
 
     bool operator==(const QSGD3D12PipelineState &other) const {
-        return shaders == other.shaders
-                && inputElements == other.inputElements
+        bool eq = shaders == other.shaders
+                && inputElementCount == other.inputElementCount
                 && cullMode == other.cullMode
                 && frontCCW == other.frontCCW
                 && colorWrite == other.colorWrite
@@ -248,12 +259,21 @@ struct QSGD3D12PipelineState
                 && (!stencilEnable || stencilDepthFailOp == other.stencilDepthFailOp)
                 && (!stencilEnable || stencilPassOp == other.stencilPassOp)
                 && topologyType == other.topologyType;
+        if (eq) {
+            for (int i = 0; i < inputElementCount; ++i) {
+                if (!(inputElements[i] == other.inputElements[i])) {
+                    eq = false;
+                    break;
+                }
+            }
+        }
+        return eq;
     }
 };
 
 inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
 {
-    return qHash(key.shaders, seed) + qHash(key.inputElements, seed)
+    return qHash(key.shaders, seed) + key.inputElementCount
             + key.cullMode + key.frontCCW
             + key.colorWrite + key.blend
             + key.depthEnable + key.depthWrite

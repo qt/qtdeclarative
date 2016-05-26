@@ -1414,6 +1414,7 @@ void QSGD3D12EnginePrivate::invalidateCachedFrameState()
 {
     tframeData.drawingMode = QSGGeometry::DrawingMode(-1);
     tframeData.currentIndexBuffer = 0;
+    tframeData.activeTextureCount = 0;
     tframeData.drawCount = 0;
     tframeData.lastPso = nullptr;
     tframeData.lastRootSig = nullptr;
@@ -1601,13 +1602,13 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         rootParams[0].Descriptor.RegisterSpace = 0;
         ++rootParamCount;
 
-        if (!pipelineState.shaders.rootSig.textureViews.isEmpty()) {
+        if (pipelineState.shaders.rootSig.textureViewCount > 0) {
             rootParams[rootParamCount].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
             rootParams[rootParamCount].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
             rootParams[rootParamCount].DescriptorTable.NumDescriptorRanges = 1;
             D3D12_DESCRIPTOR_RANGE descRange;
             descRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            descRange.NumDescriptors = pipelineState.shaders.rootSig.textureViews.count();
+            descRange.NumDescriptors = pipelineState.shaders.rootSig.textureViewCount;
             descRange.BaseShaderRegister = 0; // t0, t1, ...
             descRange.RegisterSpace = 0;
             descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -1623,11 +1624,12 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         // that the number of static samplers has to match the number of
         // textures. This is not really ideal in general but works for Quick's use cases.
         // The shaders can still choose to declare and use fewer samplers, if they want to.
-        desc.NumStaticSamplers = pipelineState.shaders.rootSig.textureViews.count();
+        desc.NumStaticSamplers = pipelineState.shaders.rootSig.textureViewCount;
         D3D12_STATIC_SAMPLER_DESC staticSamplers[8];
         int sdIdx = 0;
-        Q_ASSERT(pipelineState.shaders.rootSig.textureViews.count() <= _countof(staticSamplers));
-        for (const QSGD3D12TextureView &tv : qAsConst(pipelineState.shaders.rootSig.textureViews)) {
+        Q_ASSERT(pipelineState.shaders.rootSig.textureViewCount <= _countof(staticSamplers));
+        for (int i = 0; i < pipelineState.shaders.rootSig.textureViewCount; ++i) {
+            const QSGD3D12TextureView &tv(pipelineState.shaders.rootSig.textureViews[i]);
             D3D12_STATIC_SAMPLER_DESC sd = {};
             sd.Filter = D3D12_FILTER(tv.filter);
             sd.AddressU = D3D12_TEXTURE_ADDRESS_MODE(tv.addressModeHoriz);
@@ -1666,10 +1668,10 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-        D3D12_INPUT_ELEMENT_DESC inputElements[8];
-        Q_ASSERT(pipelineState.inputElements.count() <= _countof(inputElements));
+        D3D12_INPUT_ELEMENT_DESC inputElements[QSGD3D12_MAX_INPUT_ELEMENTS];
         int ieIdx = 0;
-        for (const QSGD3D12InputElement &ie : pipelineState.inputElements) {
+        for (int i = 0; i < pipelineState.inputElementCount; ++i) {
+            const QSGD3D12InputElement &ie(pipelineState.inputElements[i]);
             D3D12_INPUT_ELEMENT_DESC ieDesc = {};
             ieDesc.SemanticName = ie.semanticName;
             ieDesc.SemanticIndex = ie.semanticIndex;
@@ -1773,7 +1775,7 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         commandList->SetGraphicsRootSignature(tframeData.lastRootSig);
     }
 
-    if (!pipelineState.shaders.rootSig.textureViews.isEmpty())
+    if (pipelineState.shaders.rootSig.textureViewCount > 0)
         setDescriptorHeaps();
 }
 
@@ -1980,14 +1982,15 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
     }
 
     // Copy the SRVs to a drawcall-dedicated area of the shader-visible descriptor heap.
-    Q_ASSERT(tframeData.activeTextures.count() == tframeData.pipelineState.shaders.rootSig.textureViews.count());
-    if (!tframeData.activeTextures.isEmpty()) {
+    Q_ASSERT(tframeData.activeTextureCount == tframeData.pipelineState.shaders.rootSig.textureViewCount);
+    if (tframeData.activeTextureCount > 0) {
         if (!skip) {
-            ensureGPUDescriptorHeap(tframeData.activeTextures.count());
+            ensureGPUDescriptorHeap(tframeData.activeTextureCount);
             const uint stride = cpuDescHeapManager.handleSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             D3D12_CPU_DESCRIPTOR_HANDLE dst = pfd.gpuCbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
             dst.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
-            for (const TransientFrameData::ActiveTexture &t : qAsConst(tframeData.activeTextures)) {
+            for (int i = 0; i < tframeData.activeTextureCount; ++i) {
+                const TransientFrameData::ActiveTexture &t(tframeData.activeTextures[i]);
                 Q_ASSERT(t.id);
                 const int idx = t.id - 1;
                 const bool isTex = t.type == TransientFrameData::ActiveTexture::TypeTexture;
@@ -2000,9 +2003,9 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
             gpuAddr.ptr += pfd.cbvSrvUavNextFreeDescriptorIndex * stride;
             commandList->SetGraphicsRootDescriptorTable(1, gpuAddr);
 
-            pfd.cbvSrvUavNextFreeDescriptorIndex += tframeData.activeTextures.count();
+            pfd.cbvSrvUavNextFreeDescriptorIndex += tframeData.activeTextureCount;
         }
-        tframeData.activeTextures.clear();
+        tframeData.activeTextureCount = 0;
     }
 
     // Add the draw call.
@@ -2593,8 +2596,10 @@ void QSGD3D12EnginePrivate::useTexture(uint id)
     const int idx = id - 1;
     Q_ASSERT(idx < textures.count() && textures[idx].entryInUse());
 
-    // activeTextures is a vector because the order matters
-    tframeData.activeTextures.append(TransientFrameData::ActiveTexture(TransientFrameData::ActiveTexture::TypeTexture, id));
+    // Within one frame the order of calling this function determines the
+    // texture register (0, 1, ...) so fill up activeTextures accordingly.
+    tframeData.activeTextures[tframeData.activeTextureCount++]
+            = TransientFrameData::ActiveTexture(TransientFrameData::ActiveTexture::TypeTexture, id);
 
     if (textures[idx].fenceValue)
         pframeData[currentPFrameIndex].pendingTextureUploads.insert(id);
@@ -2890,7 +2895,8 @@ void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
             transitionResource(rt.color.Get(), commandList, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 
-    tframeData.activeTextures.append(TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id));
+    tframeData.activeTextures[tframeData.activeTextureCount++] =
+            TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id);
 }
 
 QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)

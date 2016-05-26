@@ -75,7 +75,6 @@ QSGD3D12Renderer::QSGD3D12Renderer(QSGRenderContext *context)
       m_cboData(4096)
 {
     setNodeUpdater(new DummyUpdater);
-    m_freshPipelineState.shaders.rootSig.textureViews.reserve(4);
 }
 
 QSGD3D12Renderer::~QSGD3D12Renderer()
@@ -554,7 +553,7 @@ void QSGD3D12Renderer::renderElement(int elementIndex)
 
 void QSGD3D12Renderer::setInputLayout(const QSGGeometry *g, QSGD3D12PipelineState *pipelineState)
 {
-    pipelineState->inputElements.resize(g->attributeCount());
+    pipelineState->inputElementCount = g->attributeCount();
     const QSGGeometry::Attribute *attrs = g->attributes();
     quint32 offset = 0;
     for (int i = 0; i < g->attributeCount(); ++i) {

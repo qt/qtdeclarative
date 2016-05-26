@@ -221,7 +221,7 @@ void QSGD3D12TextureMaterial::preparePipeline(QSGD3D12PipelineState *pipelineSta
     pipelineState->shaders.ps = g_PS_Texture;
     pipelineState->shaders.psSize = sizeof(g_PS_Texture);
 
-    pipelineState->shaders.rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const RenderState &state,
@@ -304,7 +304,7 @@ void QSGD3D12SmoothTextureMaterial::preparePipeline(QSGD3D12PipelineState *pipel
     pipelineState->shaders.ps = g_PS_SmoothTexture;
     pipelineState->shaders.psSize = sizeof(g_PS_SmoothTexture);
 
-    pipelineState->shaders.rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(const RenderState &state,
@@ -479,7 +479,7 @@ void QSGD3D12TextMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
         pipelineState->shaders.psSize = sizeof(g_PS_StyledText);
     }
 
-    pipelineState->shaders.rootSig.textureViews.resize(1);
+    pipelineState->shaders.rootSig.textureViewCount = 1;
 }
 
 QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const RenderState &state,

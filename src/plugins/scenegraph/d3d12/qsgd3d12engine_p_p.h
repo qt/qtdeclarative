@@ -350,7 +350,8 @@ private:
             ActiveTexture(Type type, uint id) : type(type), id(id) { }
             ActiveTexture() { }
         };
-        QVector<ActiveTexture> activeTextures;
+        int activeTextureCount;
+        ActiveTexture activeTextures[QSGD3D12_MAX_TEXTURE_VIEWS];
         int drawCount;
         ID3D12PipelineState *lastPso;
         ID3D12RootSignature *lastRootSig;
