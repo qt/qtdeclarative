@@ -360,7 +360,6 @@ public:
     void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint());
     void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
-    SIZE_T textureSRV(uint id) const;
     void useTexture(uint id);
 
     uint genRenderTarget();

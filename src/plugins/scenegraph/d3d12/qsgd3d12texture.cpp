@@ -136,10 +136,4 @@ void QSGD3D12Texture::bind()
     m_engine->useTexture(m_id);
 }
 
-SIZE_T QSGD3D12Texture::srv() const
-{
-    Q_ASSERT(m_id);
-    return m_engine->textureSRV(m_id);
-}
-
 QT_END_NAMESPACE

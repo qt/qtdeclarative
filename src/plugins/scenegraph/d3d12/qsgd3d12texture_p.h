@@ -73,8 +73,6 @@ public:
     QRectF normalizedTextureSubRect() const override;
     void bind() override;
 
-    SIZE_T srv() const;
-
 protected:
     QSGD3D12Engine *m_engine;
     QImage m_image;

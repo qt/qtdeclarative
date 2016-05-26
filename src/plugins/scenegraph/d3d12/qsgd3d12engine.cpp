@@ -495,11 +495,6 @@ void QSGD3D12Engine::releaseTexture(uint id)
     d->releaseTexture(id);
 }
 
-SIZE_T QSGD3D12Engine::textureSRV(uint id) const
-{
-    return d->textureSRV(id);
-}
-
 void QSGD3D12Engine::useTexture(uint id)
 {
     d->useTexture(id);
@@ -2575,14 +2570,6 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
             : &pframeData[(currentPFrameIndex + 1) % frameInFlightCount].outOfFramePendingReleases;
 
     pendingReleasesSet->insert(PersistentFrameData::PendingRelease(PersistentFrameData::PendingRelease::TypeTexture, id));
-}
-
-SIZE_T QSGD3D12EnginePrivate::textureSRV(uint id) const
-{
-    Q_ASSERT(id);
-    const int idx = id - 1;
-    Q_ASSERT(idx < textures.count() && textures[idx].entryInUse());
-    return textures[idx].srv.ptr;
 }
 
 void QSGD3D12EnginePrivate::useTexture(uint id)

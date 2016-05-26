@@ -171,7 +171,6 @@ public:
     void queueTextureResize(uint id, const QSize &size);
     void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
     void releaseTexture(uint id);
-    SIZE_T textureSRV(uint id) const;
     void useTexture(uint id);
 
     uint genRenderTarget();
