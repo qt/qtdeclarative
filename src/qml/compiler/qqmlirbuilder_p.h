@@ -188,6 +188,16 @@ public:
         }
     }
 
+    template <typename Container>
+    void allocate(QQmlJS::MemoryPool *pool, const Container &container)
+    {
+        count = container.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+        typename Container::ConstIterator it = container.constBegin();
+        for (int i = 0; i < count; ++i)
+            new (data + i) T(*it++);
+    }
+
     const T &at(int index) const {
         Q_ASSERT(index >= 0 && index < count);
         return data[index];

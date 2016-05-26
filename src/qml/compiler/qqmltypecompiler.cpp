@@ -346,16 +346,6 @@ const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
     return compiledData->propertyCaches;
 }
 
-QVector<quint32> *QQmlTypeCompiler::namedObjectsInRootScope()
-{
-    return &m_namedObjectsInRootScope;
-}
-
-QHash<int, QVector<quint32>> *QQmlTypeCompiler::namedObjectsPerComponent()
-{
-    return &m_namedObjectsPerComponent;
-}
-
 QHash<int, QBitArray> *QQmlTypeCompiler::customParserBindings()
 {
     return &compiledData->customParserBindings;
@@ -1324,11 +1314,8 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
     , _componentIndex(-1)
-    , _namedObjectsInScope(0)
     , resolvedTypes(typeCompiler->resolvedTypes())
     , propertyCaches(typeCompiler->propertyCaches())
-    , namedObjectsInRootScope(typeCompiler->namedObjectsInRootScope())
-    , namedObjectsPerComponent(typeCompiler->namedObjectsPerComponent())
 {
 }
 
@@ -1475,8 +1462,6 @@ bool QQmlComponentAndAliasResolver::resolve()
         _componentIndex = i;
         _idToObjectIndex.clear();
 
-        _namedObjectsInScope = &(*namedObjectsPerComponent)[componentRoots.at(i)];
-
         _objectsWithAliases.clear();
 
         if (!collectIdsAndAliases(rootBinding->value.objectIndex))
@@ -1485,13 +1470,12 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (!resolveAliases())
             return false;
 
-        component->namedObjectsInComponent.allocate(pool, *_namedObjectsInScope);
+        component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
     }
 
     // Collect ids and aliases for root
     _componentIndex = -1;
     _idToObjectIndex.clear();
-    _namedObjectsInScope = namedObjectsInRootScope;
     _objectsWithAliases.clear();
 
     collectIdsAndAliases(indexOfRootObject);
@@ -1499,11 +1483,12 @@ bool QQmlComponentAndAliasResolver::resolve()
     resolveAliases();
 
     QmlIR::Object *rootComponent = qmlObjects->at(indexOfRootObject);
-    rootComponent->namedObjectsInComponent.allocate(pool, *_namedObjectsInScope);
+    rootComponent->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
 
     // Implicit component insertion may have added objects and thus we also need
     // to extend the symmetric propertyCaches.
     compiler->setPropertyCaches(propertyCaches);
+    compiler->setComponentRoots(componentRoots);
 
     return true;
 }
@@ -1517,9 +1502,8 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
             recordError(obj->locationOfIdProperty, tr("id is not unique"));
             return false;
         }
+        obj->id = _idToObjectIndex.count();
         _idToObjectIndex.insert(obj->idNameIndex, objectIndex);
-        obj->id = _namedObjectsInScope->count();
-        _namedObjectsInScope->append(objectIndex);
     }
 
     if (obj->aliasCount() > 0)
@@ -2383,17 +2367,16 @@ QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::
 
 bool QQmlJSCodeGenerator::generateCodeForComponents()
 {
-    const QHash<int, QVector<quint32>> &namedObjectsPerComponent = *compiler->namedObjectsPerComponent();
-    for (QHash<int, QVector<quint32>>::ConstIterator component = namedObjectsPerComponent.constBegin(), end = namedObjectsPerComponent.constEnd();
-         component != end; ++component) {
-        if (!compileComponent(component.key(), component.value()))
+    const QVector<quint32> &componentRoots = compiler->componentRoots();
+    for (int i = 0; i < componentRoots.count(); ++i) {
+        if (!compileComponent(componentRoots.at(i)))
             return false;
     }
 
-    return compileComponent(compiler->rootObjectIndex(), *compiler->namedObjectsInRootScope());
+    return compileComponent(compiler->rootObjectIndex());
 }
 
-bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QVector<quint32> &namedObjects)
+bool QQmlJSCodeGenerator::compileComponent(int contextObject)
 {
     const QmlIR::Object *obj = qmlObjects.at(contextObject);
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
@@ -2404,9 +2387,9 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject, const QVector<quin
     }
 
     QmlIR::JSCodeGen::ObjectIdMapping idMapping;
-    idMapping.reserve(namedObjects.count());
-    for (int i = 0; i < namedObjects.count(); ++i) {
-        const int objectIndex = namedObjects.at(i);
+    idMapping.reserve(obj->namedObjectsInComponent.count);
+    for (int i = 0; i < obj->namedObjectsInComponent.count; ++i) {
+        const int objectIndex = obj->namedObjectsInComponent.at(i);
         QmlIR::JSCodeGen::IdMapping m;
         const QmlIR::Object *obj = qmlObjects.at(objectIndex);
         m.name = stringAt(obj->idNameIndex);
