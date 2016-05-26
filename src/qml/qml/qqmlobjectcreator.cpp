@@ -255,11 +255,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    QBitArray bindingSkipList = compiledData->deferredBindingsPerObject.value(_compiledObjectIndex);
-    for (int i = 0; i < bindingSkipList.count(); ++i)
-        bindingSkipList.setBit(i, !bindingSkipList.testBit(i));
-
-    setupBindings(bindingSkipList);
+    setupBindings(/*binding skip list*/QBitArray(), /*applyDeferredBindings=*/true);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);
@@ -626,7 +622,7 @@ static QQmlType *qmlTypeForObject(QObject *object)
     return type;
 }
 
-void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
+void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip, bool applyDeferredBindings)
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -679,6 +675,14 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
         if (static_cast<int>(i) < bindingsToSkip.size() && bindingsToSkip.testBit(i))
             continue;
+
+        if (binding->flags & QV4::CompiledData::Binding::IsDeferredBinding) {
+            if (!applyDeferredBindings)
+                continue;
+        } else {
+            if (applyDeferredBindings)
+                continue;
+        }
 
         const QQmlPropertyData *property = propertyData.at(i);
 
@@ -1299,28 +1303,18 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    QBitArray bindingSkipList = bindingsToSkip;
-    {
-        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.constFind(_compiledObjectIndex);
-        if (deferredBindings != compiledData->deferredBindingsPerObject.constEnd()) {
-            if (bindingSkipList.isEmpty())
-                bindingSkipList.resize(deferredBindings->count());
-
-            for (int i = 0; i < deferredBindings->count(); ++i)
-                if (deferredBindings->testBit(i))
-                    bindingSkipList.setBit(i);
-            QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
-            deferData->deferredIdx = _compiledObjectIndex;
-            deferData->compiledData = compiledData;
-            deferData->compiledData->addref();
-            deferData->context = context;
-            _ddata->deferredData = deferData;
-        }
+    if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings) {
+        QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
+        deferData->deferredIdx = _compiledObjectIndex;
+        deferData->compiledData = compiledData;
+        deferData->compiledData->addref();
+        deferData->context = context;
+        _ddata->deferredData = deferData;
     }
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
-    setupBindings(bindingSkipList);
+    setupBindings(bindingsToSkip);
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

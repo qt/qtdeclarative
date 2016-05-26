@@ -114,7 +114,7 @@ private:
                           QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
                           const QBitArray &bindingsToSkip = QBitArray());
 
-    void setupBindings(const QBitArray &bindingsToSkip);
+    void setupBindings(const QBitArray &bindingsToSkip, bool applyDeferredBindings = false);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();

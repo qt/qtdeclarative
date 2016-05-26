@@ -133,7 +133,6 @@ public:
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     // hash key is object index, value is indicies of bindings covered by custom parser
     QHash<int, QBitArray> customParserBindings;
-    QHash<int, QBitArray> deferredBindingsPerObject; // index is object index
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
     int totalObjectCount; // Number of objects explicitly instantiated
