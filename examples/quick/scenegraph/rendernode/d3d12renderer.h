@@ -41,35 +41,38 @@
 #ifndef D3D12RENDERER_H
 #define D3D12RENDERER_H
 
-#include "customrenderitem.h"
 #include <qsgrendernode.h>
 
 #ifdef HAS_D3D12
+
+class QQuickItem;
 
 #include <d3d12.h>
 #include <wrl/client.h>
 
 using namespace Microsoft::WRL;
 
-class D3D12Renderer : public CustomRenderer
+class D3D12RenderNode : public QSGRenderNode
 {
 public:
-    D3D12Renderer(QQuickItem *item, QSGRenderNode *node);
-    ~D3D12Renderer();
-    void init() override;
-    void render(const QSGRenderNode::RenderState *state) override;
+    D3D12RenderNode(QQuickItem *item);
+    ~D3D12RenderNode();
+
+    void render(const RenderState *state) override;
+    void releaseResources() override;
 
 private:
+    void init();
+
     QQuickItem *m_item;
-    QSGRenderNode *m_node;
-    ID3D12Device *m_device;
+    ID3D12Device *m_device = nullptr;
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12Resource> vertexBuffer;
     ComPtr<ID3D12Resource> constantBuffer;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    quint8 *vbPtr;
-    quint8 *cbPtr;
+    quint8 *vbPtr = nullptr;
+    quint8 *cbPtr = nullptr;
 };
 
 #endif // HAS_D3D12

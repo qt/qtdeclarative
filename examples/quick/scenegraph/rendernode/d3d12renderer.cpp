@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include "d3d12renderer.h"
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 
@@ -47,15 +48,34 @@
 #include "vs_shader.hlslh"
 #include "ps_shader.hlslh"
 
-D3D12Renderer::D3D12Renderer(QQuickItem *item, QSGRenderNode *node)
-    : m_item(item),
-      m_node(node),
-      vbPtr(nullptr),
-      cbPtr(nullptr)
+D3D12RenderNode::D3D12RenderNode(QQuickItem *item)
+    : m_item(item)
 {
 }
 
-void D3D12Renderer::init()
+D3D12RenderNode::~D3D12RenderNode()
+{
+    releaseResources();
+}
+
+void D3D12RenderNode::releaseResources()
+{
+    if (vbPtr) {
+        vertexBuffer->Unmap(0, nullptr);
+        vbPtr = nullptr;
+    }
+    if (cbPtr) {
+        constantBuffer->Unmap(0, nullptr);
+        cbPtr = nullptr;
+    }
+    constantBuffer = nullptr;
+    vertexBuffer = nullptr;
+    rootSignature = nullptr;
+    pipelineState = nullptr;
+    m_device = nullptr;
+}
+
+void D3D12RenderNode::init()
 {
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
     m_device = static_cast<ID3D12Device *>(rif->getResource(QSGRendererInterface::Device));
@@ -180,22 +200,17 @@ void D3D12Renderer::init()
     }
 }
 
-D3D12Renderer::~D3D12Renderer()
+void D3D12RenderNode::render(const RenderState *state)
 {
-    if (vbPtr)
-        vertexBuffer->Unmap(0, nullptr);
-    if (cbPtr)
-        constantBuffer->Unmap(0, nullptr);
-}
+    if (!m_device)
+        init();
 
-void D3D12Renderer::render(const QSGRenderNode::RenderState *state)
-{
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
     ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(rif->getResource(QSGRendererInterface::CommandList));
     Q_ASSERT(commandList);
 
     const int msize = 16 * sizeof(float);
-    memcpy(cbPtr, m_node->matrix()->constData(), msize);
+    memcpy(cbPtr, matrix()->constData(), msize);
     memcpy(cbPtr + msize, state->projectionMatrix()->constData(), msize);
 
     const QPointF p0(m_item->width() - 1, m_item->height() - 1);

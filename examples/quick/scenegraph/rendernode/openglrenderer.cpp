@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include "openglrenderer.h"
+#include <QQuickItem>
 
 #ifndef QT_NO_OPENGL
 
@@ -46,13 +47,28 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 
-OpenGLRenderer::OpenGLRenderer(QQuickItem *item, QSGRenderNode *node)
-    : m_item(item),
-      m_node(node)
+OpenGLRenderNode::OpenGLRenderNode(QQuickItem *item)
+    : m_item(item)
 {
 }
 
-void OpenGLRenderer::init()
+OpenGLRenderNode::~OpenGLRenderNode()
+{
+    releaseResources();
+}
+
+// No need to reimplement changedStates() since our rendering is so simple,
+// without involving any state changes.
+
+void OpenGLRenderNode::releaseResources()
+{
+    delete m_program;
+    m_program = nullptr;
+    delete m_vbo;
+    m_vbo = nullptr;
+}
+
+void OpenGLRenderNode::init()
 {
     m_program = new QOpenGLShaderProgram;
 
@@ -98,18 +114,15 @@ void OpenGLRenderer::init()
     m_vbo->release();
 }
 
-OpenGLRenderer::~OpenGLRenderer()
+void OpenGLRenderNode::render(const RenderState *state)
 {
-    delete m_program;
-    delete m_vbo;
-}
+    if (!m_program)
+        init();
 
-void OpenGLRenderer::render(const QSGRenderNode::RenderState *state)
-{
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
 
     m_program->bind();
-    m_program->setUniformValue(m_matrixUniform, *state->projectionMatrix() * *m_node->matrix());
+    m_program->setUniformValue(m_matrixUniform, *state->projectionMatrix() * *matrix());
 
     m_vbo->bind();
 

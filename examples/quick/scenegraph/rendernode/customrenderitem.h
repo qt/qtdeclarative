@@ -42,29 +42,6 @@
 #define CUSTOMRENDERITEM_H
 
 #include <QQuickItem>
-#include <QSGRenderNode>
-
-class CustomRenderer
-{
-public:
-    virtual ~CustomRenderer() { }
-    virtual void init() = 0;
-    virtual void render(const QSGRenderNode::RenderState *state) = 0;
-};
-
-class CustomRenderNode : public QSGRenderNode
-{
-public:
-    CustomRenderNode(QQuickItem *item) : m_item(item) { }
-    ~CustomRenderNode();
-
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-
-private:
-    QQuickItem *m_item;
-    CustomRenderer *m_renderer = nullptr;
-};
 
 class CustomRenderItem : public QQuickItem
 {

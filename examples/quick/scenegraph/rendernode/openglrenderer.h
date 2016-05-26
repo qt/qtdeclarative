@@ -41,25 +41,27 @@
 #ifndef OPENGLRENDERER_H
 #define OPENGLRENDERER_H
 
-#include "customrenderitem.h"
 #include <qsgrendernode.h>
 
 #ifndef QT_NO_OPENGL
 
+class QQuickItem;
 class QOpenGLShaderProgram;
 class QOpenGLBuffer;
 
-class OpenGLRenderer : public CustomRenderer
+class OpenGLRenderNode : public QSGRenderNode
 {
 public:
-    OpenGLRenderer(QQuickItem *item, QSGRenderNode *node);
-    ~OpenGLRenderer();
-    void init() override;
-    void render(const QSGRenderNode::RenderState *state) override;
+    OpenGLRenderNode(QQuickItem *item);
+    ~OpenGLRenderNode();
+
+    void render(const RenderState *state) override;
+    void releaseResources() override;
 
 private:
+    void init();
+
     QQuickItem *m_item;
-    QSGRenderNode *m_node;
     QOpenGLShaderProgram *m_program = nullptr;
     int m_matrixUniform;
     QOpenGLBuffer *m_vbo = nullptr;

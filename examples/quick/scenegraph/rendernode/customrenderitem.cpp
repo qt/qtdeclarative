@@ -45,51 +45,6 @@
 #include "openglrenderer.h"
 #include "d3d12renderer.h"
 
-CustomRenderNode::~CustomRenderNode()
-{
-    releaseResources();
-}
-
-void CustomRenderNode::render(const RenderState *state)
-{
-    QSGRendererInterface *ri = m_item->window()->rendererInterface();
-    if (!ri)
-        return;
-
-    if (!m_renderer) {
-        switch (ri->graphicsAPI()) {
-        case QSGRendererInterface::OpenGL:
-#ifndef QT_NO_OPENGL
-            m_renderer = new OpenGLRenderer(m_item, this);
-#endif
-            break;
-        case QSGRendererInterface::Direct3D12:
-#ifdef HAS_D3D12
-            m_renderer = new D3D12Renderer(m_item, this);
-#endif
-            break;
-        default:
-            break;
-        }
-        Q_ASSERT(m_renderer);
-        m_renderer->init();
-    }
-
-    m_renderer->render(state);
-}
-
-// No need to reimplement changedStates() since our rendering is so simple,
-// without involving any state changes.
-
-void CustomRenderNode::releaseResources()
-{
-    if (!m_renderer)
-        return;
-
-    delete m_renderer;
-    m_renderer = nullptr;
-}
-
 CustomRenderItem::CustomRenderItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
@@ -99,9 +54,26 @@ CustomRenderItem::CustomRenderItem(QQuickItem *parent)
 
 QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
-    CustomRenderNode *n = static_cast<CustomRenderNode *>(node);
-    if (!node)
-        n = new CustomRenderNode(this);
+    QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
+    if (!n) {
+        QSGRendererInterface *ri = window()->rendererInterface();
+        if (!ri)
+            return nullptr;
+        switch (ri->graphicsAPI()) {
+            case QSGRendererInterface::OpenGL:
+#ifndef QT_NO_OPENGL
+                n = new OpenGLRenderNode(this);
+                break;
+#endif
+            case QSGRendererInterface::Direct3D12:
+#ifdef HAS_D3D12
+                n = new D3D12RenderNode(this);
+                break;
+#endif
+            default:
+                return nullptr;
+        }
+    }
 
     return n;
 }
