@@ -289,6 +289,8 @@ qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
 // account the circular space.
 bool QQuickPathViewPrivate::isInBound(qreal position, qreal lower, qreal upper) const
 {
+    if (lower == upper)
+        return true;
     if (lower > upper) {
         if (position > upper && position > lower)
             position -= mappedRange;
@@ -2047,27 +2049,33 @@ void QQuickPathView::refill()
                 idx = startIdx;
                 QQuickItem *lastItem = d->items[0];
                 while (idx != endIdx) {
-                    //This gets the reference from the delegate model, and will not re-create
-                    QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
-                    if (!item) {
-                        waiting = true;
-                        break;
-                    }
-                    if (!d->items.contains(item)) { //We found a hole
-                        nextPos = d->positionOfIndex(idx);
-                        qCDebug(lcItemViewDelegateLifecycle) << "middle insert" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
-                        if (d->currentIndex == idx) {
-                            currentVisible = true;
-                            d->currentItemOffset = nextPos;
+                    nextPos = d->positionOfIndex(idx);
+                    if (d->isInBound(nextPos, d->mappedRange - d->mappedCache, 1.0 + d->mappedCache)) {
+                        //This gets the reference from the delegate model, and will not re-create
+                        QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
+                        if (!item) {
+                            waiting = true;
+                            break;
                         }
-                        int lastListIdx = d->items.indexOf(lastItem);
-                        d->items.insert(lastListIdx + 1, item);
-                        d->updateItem(item, nextPos);
-                    } else {
-                        d->releaseItem(item);
+
+                        if (!d->items.contains(item)) { //We found a hole
+                            qCDebug(lcItemViewDelegateLifecycle) << "middle insert" << idx << "@" << nextPos
+                                                                 << (d->currentIndex == idx ? "current" : "")
+                                                                 << "items count was" << d->items.count();
+                            if (d->currentIndex == idx) {
+                                currentVisible = true;
+                                d->currentItemOffset = nextPos;
+                            }
+                            int lastListIdx = d->items.indexOf(lastItem);
+                            d->items.insert(lastListIdx + 1, item);
+                            d->updateItem(item, nextPos);
+                        } else {
+                            d->releaseItem(item);
+                        }
+
+                        lastItem = item;
                     }
 
-                    lastItem = item;
                     ++idx;
                     if (idx >= d->modelCount)
                         idx = 0;

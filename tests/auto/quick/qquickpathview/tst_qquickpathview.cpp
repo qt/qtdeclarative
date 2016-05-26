@@ -140,6 +140,7 @@ private slots:
     void nestedinFlickable();
     void flickableDelegate();
     void jsArrayChange();
+    void qtbug37815();
     void qtbug42716();
     void qtbug53464();
     void addCustomAttribute();
@@ -2332,6 +2333,31 @@ void tst_QQuickPathView::jsArrayChange()
     // no change
     view->setModel(QVariant::fromValue(array2));
     QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuickPathView::qtbug37815()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("qtbug37815.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathView != Q_NULLPTR);
+
+    const int pathItemCount = pathView->pathItemCount();
+    const int cacheItemCount = pathView->cacheItemCount();
+    int totalCount = 0;
+    foreach (QQuickItem *item, pathView->childItems()) {
+        if (item->objectName().startsWith(QLatin1String("delegate")))
+            ++totalCount;
+    }
+    QCOMPARE(pathItemCount + cacheItemCount, totalCount);
 }
 
 /* This bug was one where if you jump the list such that the sole missing item needed to be
