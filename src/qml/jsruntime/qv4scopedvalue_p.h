@@ -82,7 +82,7 @@ struct Scope {
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
 #ifdef V4_USE_VALGRIND
-        VALGRIND_MAKE_MEM_UNDEFINED(mark, engine->jsStackLimit - mark);
+        VALGRIND_MAKE_MEM_UNDEFINED(mark, (engine->jsStackLimit - mark) * sizeof(Value));
 #endif
         engine->jsStackTop = mark;
     }
