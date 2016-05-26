@@ -1409,7 +1409,6 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         binding->value.objectIndex = componentIndex;
 
         componentRoots.append(componentIndex);
-        componentBoundaries.append(syntheticBinding->value.objectIndex);
     }
 }
 
@@ -1464,14 +1463,10 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         // We are going to collect ids/aliases and resolve them for the root object as a separate
         // last pass.
-        if (i != indexOfRootObject) {
+        if (i != indexOfRootObject)
             componentRoots.append(i);
-            componentBoundaries.append(rootBinding->value.objectIndex);
-        }
 
     }
-
-    std::sort(componentBoundaries.begin(), componentBoundaries.end());
 
     for (int i = 0; i < componentRoots.count(); ++i) {
         QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
@@ -1530,14 +1525,14 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
     if (obj->aliasCount() > 0)
         _objectsWithAliases.append(objectIndex);
 
+    // Stop at Component boundary
+    if (obj->flags & QV4::CompiledData::Object::IsComponent && objectIndex != compiler->rootObjectIndex())
+        return true;
+
     for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
             && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
             && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
-            continue;
-
-        // Stop at Component boundary
-        if (std::binary_search(componentBoundaries.constBegin(), componentBoundaries.constEnd(), binding->value.objectIndex))
             continue;
 
         if (!collectIdsAndAliases(binding->value.objectIndex))
