@@ -45,6 +45,8 @@
     does not implement a certain control, the Default style implementation of
     that control is selected.
 
+    \b {See also} \l {Material Style}, \l {Universal Style}
+
     \section1 Related Information
 
     \list
