@@ -83,6 +83,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void checkedButtonChanged();
     void buttonsChanged();
+    Q_REVISION(1) void clicked(QQuickAbstractButton *button);
 
 private:
     Q_DISABLE_COPY(QQuickButtonGroup)

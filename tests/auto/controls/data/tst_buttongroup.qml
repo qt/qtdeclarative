@@ -65,6 +65,11 @@ TestCase {
         signalName: "buttonsChanged"
     }
 
+    SignalSpy {
+        id: clickedSpy
+        signalName: "clicked"
+    }
+
     function init() {
         verify(!checkedButtonSpy.target)
         compare(checkedButtonSpy.count, 0)
@@ -215,6 +220,32 @@ TestCase {
         compare(buttonsSpy.count, 5)
 
         group.destroy()
+    }
+
+    function test_clicked() {
+        var group = buttonGroup.createObject(testCase)
+        verify(group)
+
+        clickedSpy.target = group
+        verify(clickedSpy.valid)
+
+        var button1 = button.createObject(testCase)
+        var button2 = button.createObject(testCase)
+
+        group.addButton(button1)
+        group.addButton(button2)
+
+        button1.clicked()
+        compare(clickedSpy.count, 1)
+        compare(clickedSpy.signalArguments[0][0], button1)
+
+        button2.clicked()
+        compare(clickedSpy.count, 2)
+        compare(clickedSpy.signalArguments[1][0], button2)
+
+        group.destroy()
+        button1.destroy()
+        button2.destroy()
     }
 
     Component {

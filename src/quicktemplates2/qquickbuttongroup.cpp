@@ -123,6 +123,32 @@ QT_BEGIN_NAMESPACE
     \sa RadioButton
 */
 
+/*!
+    \qmlsignal QtQuick.Controls::ButtonGroup::clicked(AbstractButton button)
+    \since QtQuick.Controls 2.1
+
+    This signal is emitted when a \a button in the group has been clicked.
+
+    This signal is convenient for implementing a common signal handler for
+    all buttons in the same group.
+
+    \code
+    ButtonGroup {
+        buttons: column.children
+        onClicked: console.log("clicked:", button.text)
+    }
+
+    Column {
+        id: column
+        Button { text: "First" }
+        Button { text: "Second" }
+        Button { text: "Third" }
+    }
+    \endcode
+
+    \sa AbstractButton::clicked()
+*/
+
 class QQuickButtonGroupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
@@ -131,6 +157,7 @@ public:
     QQuickButtonGroupPrivate() : checkedButton(nullptr) { }
 
     void clear();
+    void buttonClicked();
     void _q_updateCurrent();
 
     static void buttons_append(QQmlListProperty<QQuickAbstractButton> *prop, QQuickAbstractButton *obj);
@@ -146,9 +173,18 @@ void QQuickButtonGroupPrivate::clear()
 {
     for (QQuickAbstractButton *button : qAsConst(buttons)) {
         QQuickAbstractButtonPrivate::get(button)->group = nullptr;
+        QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, this, &QQuickButtonGroupPrivate::buttonClicked);
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::_q_updateCurrent);
     }
     buttons.clear();
+}
+
+void QQuickButtonGroupPrivate::buttonClicked()
+{
+    Q_Q(QQuickButtonGroup);
+    QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(q->sender());
+    if (button)
+        emit q->clicked(button);
 }
 
 void QQuickButtonGroupPrivate::_q_updateCurrent()
@@ -289,6 +325,7 @@ void QQuickButtonGroup::addButton(QQuickAbstractButton *button)
         return;
 
     QQuickAbstractButtonPrivate::get(button)->group = this;
+    QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, d, &QQuickButtonGroupPrivate::buttonClicked);
     QObjectPrivate::connect(button, &QQuickAbstractButton::checkedChanged, d, &QQuickButtonGroupPrivate::_q_updateCurrent);
 
     if (button->isChecked())
@@ -316,6 +353,7 @@ void QQuickButtonGroup::removeButton(QQuickAbstractButton *button)
         return;
 
     QQuickAbstractButtonPrivate::get(button)->group = nullptr;
+    QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, d, &QQuickButtonGroupPrivate::buttonClicked);
     QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, d, &QQuickButtonGroupPrivate::_q_updateCurrent);
 
     if (d->checkedButton == button)
