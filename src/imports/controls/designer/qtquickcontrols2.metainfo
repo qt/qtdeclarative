@@ -1,6 +1,6 @@
 MetaInfo {
     Type {
-        name: "Qt.Quick.Controls.BusyIndicator"
+        name: "QtQuick.Controls.BusyIndicator"
         icon: "images/busyindicator-icon16.png"
 
         ItemLibraryEntry {
@@ -13,7 +13,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Button"
+        name: "QtQuick.Controls.Button"
         icon: "images/button-icon16.png"
 
         ItemLibraryEntry {
@@ -28,7 +28,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.CheckBox"
+        name: "QtQuick.Controls.CheckBox"
         icon: "images/checkbox-icon16.png"
 
         ItemLibraryEntry {
@@ -43,7 +43,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.CheckDelegate"
+        name: "QtQuick.Controls.CheckDelegate"
         icon: "images/checkbox-icon16.png"
 
         ItemLibraryEntry {
@@ -58,7 +58,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.ComboBox"
+        name: "QtQuick.Controls.ComboBox"
         icon: "images/combobox-icon16.png"
 
         ItemLibraryEntry {
@@ -71,7 +71,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Dial"
+        name: "QtQuick.Controls.Dial"
         icon: "images/dial-icon16.png"
 
         ItemLibraryEntry {
@@ -84,7 +84,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Frame"
+        name: "QtQuick.Controls.Frame"
         icon: "images/frame-icon16.png"
 
         ItemLibraryEntry {
@@ -100,7 +100,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.GroupBox"
+        name: "QtQuick.Controls.GroupBox"
         icon: "images/groupbox-icon16.png"
 
         ItemLibraryEntry {
@@ -117,7 +117,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.ItemDelegate"
+        name: "QtQuick.Controls.ItemDelegate"
         icon: "images/itemdelegate-icon16.png"
 
         ItemLibraryEntry {
@@ -132,7 +132,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Label"
+        name: "QtQuick.Controls.Label"
         icon: "images/label-icon16.png"
 
         ItemLibraryEntry {
@@ -147,7 +147,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.PageIndicator"
+        name: "QtQuick.Controls.PageIndicator"
         icon: "images/pageindicator-icon16.png"
 
         ItemLibraryEntry {
@@ -162,7 +162,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Pane"
+        name: "QtQuick.Controls.Pane"
         icon: "images/pane-icon16.png"
 
         ItemLibraryEntry {
@@ -178,7 +178,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.ProgressBar"
+        name: "QtQuick.Controls.ProgressBar"
         icon: "images/progressbar-icon16.png"
 
         ItemLibraryEntry {
@@ -193,7 +193,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.RadioButton"
+        name: "QtQuick.Controls.RadioButton"
         icon: "images/radiobutton-icon16.png"
 
         ItemLibraryEntry {
@@ -208,7 +208,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.RadioDelegate"
+        name: "QtQuick.Controls.RadioDelegate"
         icon: "images/radiobutton-icon16.png"
 
         ItemLibraryEntry {
@@ -223,7 +223,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Slider"
+        name: "QtQuick.Controls.Slider"
         icon: "images/slider-icon16.png"
 
         ItemLibraryEntry {
@@ -238,7 +238,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.SpinBox"
+        name: "QtQuick.Controls.SpinBox"
         icon: "images/spinbox-icon16.png"
 
         ItemLibraryEntry {
@@ -251,7 +251,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Switch"
+        name: "QtQuick.Controls.Switch"
         icon: "images/switch-icon16.png"
 
         ItemLibraryEntry {
@@ -266,7 +266,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.TextArea"
+        name: "QtQuick.Controls.TextArea"
         icon: "images/textarea-icon16.png"
 
         ItemLibraryEntry {
@@ -281,7 +281,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.TextField"
+        name: "QtQuick.Controls.TextField"
         icon: "images/textfield-icon16.png"
 
         ItemLibraryEntry {
@@ -296,7 +296,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.ToolButton"
+        name: "QtQuick.Controls.ToolButton"
         icon: "images/toolbutton-icon16.png"
 
         ItemLibraryEntry {
@@ -311,7 +311,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.ToolBar"
+        name: "QtQuick.Controls.ToolBar"
         icon: "images/toolbar-icon16.png"
 
         ItemLibraryEntry {
@@ -326,7 +326,7 @@ MetaInfo {
     }
 
     Type {
-        name: "Qt.Quick.Controls.Tumbler"
+        name: "QtQuick.Controls.Tumbler"
         icon: "images/tumbler-icon16.png"
 
         ItemLibraryEntry {

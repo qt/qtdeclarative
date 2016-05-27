@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
     \inherits Window
     \instantiates QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief Provides a top-level application window.
 
@@ -454,8 +455,8 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 /*!
     \qmlpropertygroup QtQuick.Controls::ApplicationWindow::overlay
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.modal
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay.modeless
+    \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modal
+    \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modeless
 
     This property holds the window overlay item. Popups are automatically
     reparented to the overlay.
@@ -466,15 +467,14 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
         \li Description
     \row
         \li overlay.modal
-        \li This property holds a visual item that implements background
-            dimming for modal popups. It is stacked below the top-most open
-            modal popup, or hidden when there are no modal popups open.
+        \li This property holds a component to use as a visual item that implements
+            background dimming for modal popups. It is created for and stacked below
+            visible modal popups.
     \row
         \li overlay.modeless
-        \li This property holds a visual item that implements background
-            dimming for modeless popups. It is stacked below the top-most
-            open modeless dimming popup, or hidden when there are no modeless
-            dimming popups open.
+        \li This property holds a component to use as a visual item that implements
+            background dimming for modeless popups. It is created for and stacked below
+            visible dimming popups.
     \endtable
 
     \sa Popup::modal, Popup::dim

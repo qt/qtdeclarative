@@ -54,9 +54,9 @@ Window {
         text: "SwipeDelegate"
         anchors.centerIn: parent
 
-        exposure.left: null
-        exposure.right: null
-        exposure.behind: Rectangle {
+        swipe.left: null
+        swipe.right: null
+        swipe.behind: Rectangle {
             width: swipeDelegate.width
             height: swipeDelegate.height
             color: swipeDelegate.pressed ? "#333" : "#444"

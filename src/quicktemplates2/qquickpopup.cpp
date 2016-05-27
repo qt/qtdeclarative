@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \instantiates QQuickPopup
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-popups
     \brief The base type of popup-like user interface controls.
 
@@ -145,6 +146,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , contentHeight(0)
     , closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside)
     , parentItem(nullptr)
+    , dimmer(nullptr)
     , window(nullptr)
     , enter(nullptr)
     , exit(nullptr)
@@ -1782,6 +1784,22 @@ void QQuickPopup::setFiltersChildMouseEvents(bool filter)
 {
     Q_D(QQuickPopup);
     d->popupItem->setFiltersChildMouseEvents(filter);
+}
+
+/*!
+    \qmlmethod QtQuick.Controls::Popup::forceActiveFocus(reason = Qt.OtherFocusReason)
+
+    Forces active focus on the popup with the given \a reason.
+
+    This method sets focus on the popup and ensures that all ancestor
+    \l FocusScope objects in the object hierarchy are also given \l focus.
+
+    \sa activeFocus, Qt::FocusReason
+*/
+void QQuickPopup::forceActiveFocus(Qt::FocusReason reason)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->forceActiveFocus(reason);
 }
 
 void QQuickPopup::classBegin()

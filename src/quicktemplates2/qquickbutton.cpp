@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickButton
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-buttons
     \brief A push-button control that can be clicked by the user.
 

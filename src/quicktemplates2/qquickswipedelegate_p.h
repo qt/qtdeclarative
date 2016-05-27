@@ -53,17 +53,17 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSwipeDelegatePrivate;
-class QQuickSwipeExposure;
+class QQuickSwipe;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickSwipeExposure *exposure READ exposure CONSTANT)
+    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT)
 
 public:
     explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);
 
-    QQuickSwipeExposure *exposure() const;
+    QQuickSwipe *swipe() const;
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
@@ -82,13 +82,13 @@ private:
     Q_DECLARE_PRIVATE(QQuickSwipeDelegate)
 };
 
-class QQuickSwipeExposurePrivate;
+class QQuickSwipePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeExposure : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
-    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
     Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
     Q_PROPERTY(QQmlComponent *behind READ behind WRITE setBehind NOTIFY behindChanged FINAL)
     Q_PROPERTY(QQmlComponent *right READ right WRITE setRight NOTIFY rightChanged FINAL)
@@ -97,13 +97,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeExposure : public QObject
     Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
 
 public:
-    explicit QQuickSwipeExposure(QQuickSwipeDelegate *control);
+    explicit QQuickSwipe(QQuickSwipeDelegate *control);
 
     qreal position() const;
     void setPosition(qreal position);
 
-    bool isActive() const;
-    void setActive(bool active);
+    bool isComplete() const;
+    void setComplete(bool complete);
 
     QQmlComponent *left() const;
     void setLeft(QQmlComponent *left);
@@ -125,7 +125,7 @@ public:
 
 Q_SIGNALS:
     void positionChanged();
-    void activeChanged();
+    void completeChanged();
     void leftChanged();
     void behindChanged();
     void rightChanged();
@@ -134,8 +134,8 @@ Q_SIGNALS:
     void rightItemChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickSwipeExposure)
-    Q_DECLARE_PRIVATE(QQuickSwipeExposure)
+    Q_DISABLE_COPY(QQuickSwipe)
+    Q_DECLARE_PRIVATE(QQuickSwipe)
 };
 
 QT_END_NAMESPACE

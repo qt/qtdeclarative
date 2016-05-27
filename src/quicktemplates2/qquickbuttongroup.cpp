@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \instantiates QQuickButtonGroup
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup utilities
     \brief A mutually-exclusive group of checkable controls.
 

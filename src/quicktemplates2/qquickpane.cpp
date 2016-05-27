@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPane
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief Provides a background matching with the application style and theme.
 

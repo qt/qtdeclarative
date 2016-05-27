@@ -55,6 +55,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inherits Control
     \instantiates QQuickSpinBox
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup input
     \brief A spinbox control that allows the user to select from a set of preset values.
 
@@ -103,6 +104,11 @@ public:
     void updateValue();
 
     int effectiveStepSize() const;
+
+    bool upEnabled() const;
+    void updateUpEnabled();
+    bool downEnabled() const;
+    void updateDownEnabled();
 
     void startRepeatDelay();
     void startPressRepeat();
@@ -154,6 +160,36 @@ int QQuickSpinBoxPrivate::effectiveStepSize() const
     return from > to ? -1 * stepSize : stepSize;
 }
 
+bool QQuickSpinBoxPrivate::upEnabled() const
+{
+    const QQuickItem *upIndicator = up->indicator();
+    return upIndicator && upIndicator->isEnabled();
+}
+
+void QQuickSpinBoxPrivate::updateUpEnabled()
+{
+    QQuickItem *upIndicator = up->indicator();
+    if (!upIndicator)
+        return;
+
+    upIndicator->setEnabled(from < to ? value < to : value > to);
+}
+
+bool QQuickSpinBoxPrivate::downEnabled() const
+{
+    const QQuickItem *downIndicator = down->indicator();
+    return downIndicator && downIndicator->isEnabled();
+}
+
+void QQuickSpinBoxPrivate::updateDownEnabled()
+{
+    QQuickItem *downIndicator = down->indicator();
+    if (!downIndicator)
+        return;
+
+    downIndicator->setEnabled(from < to ? value > from : value < from);
+}
+
 void QQuickSpinBoxPrivate::startRepeatDelay()
 {
     Q_Q(QQuickSpinBox);
@@ -186,8 +222,8 @@ bool QQuickSpinBoxPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent 
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    up->setPressed(ui && ui->contains(ui->mapFromItem(child, event->pos())));
-    down->setPressed(di && di->contains(di->mapFromItem(child, event->pos())));
+    up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(child, event->pos())));
+    down->setPressed(di && di->isEnabled() && di->contains(di->mapFromItem(child, event->pos())));
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
@@ -201,8 +237,8 @@ bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    up->setPressed(ui && ui->contains(ui->mapFromItem(child, event->pos())));
-    down->setPressed(di && di->contains(di->mapFromItem(child, event->pos())));
+    up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(child, event->pos())));
+    down->setPressed(di && di->isEnabled() && di->contains(di->mapFromItem(child, event->pos())));
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
@@ -325,6 +361,10 @@ void QQuickSpinBox::setValue(int value)
         return;
 
     d->value = value;
+
+    d->updateUpEnabled();
+    d->updateDownEnabled();
+
     emit valueChanged();
 }
 
@@ -545,15 +585,19 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Up:
-        increase();
-        d->up->setPressed(true);
-        event->accept();
+        if (d->upEnabled()) {
+            increase();
+            d->up->setPressed(true);
+            event->accept();
+        }
         break;
 
     case Qt::Key_Down:
-        decrease();
-        d->down->setPressed(true);
-        event->accept();
+        if (d->downEnabled()) {
+            decrease();
+            d->down->setPressed(true);
+            event->accept();
+        }
         break;
 
     default:
@@ -646,6 +690,14 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
         setValue(oldValue + qRound(d->effectiveStepSize() * delta));
         event->setAccepted(d->value != oldValue);
     }
+}
+
+void QQuickSpinBox::componentComplete()
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::componentComplete();
+    d->updateUpEnabled();
+    d->updateDownEnabled();
 }
 
 void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)

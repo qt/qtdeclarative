@@ -886,24 +886,24 @@ Module {
         }
     }
     Component {
-        name: "QQuickSwipeDelegate"
-        defaultProperty: "data"
-        prototype: "QQuickItemDelegate"
-        exports: ["QtQuick.Templates/SwipeDelegate 2.0"]
-        exportMetaObjectRevisions: [0]
-        Property { name: "exposure"; type: "QQuickSwipeExposure"; isReadonly: true; isPointer: true }
-    }
-    Component {
-        name: "QQuickSwipeExposure"
+        name: "QQuickSwipe"
         prototype: "QObject"
         Property { name: "position"; type: "double"; isReadonly: true }
-        Property { name: "active"; type: "bool"; isReadonly: true }
+        Property { name: "complete"; type: "bool"; isReadonly: true }
         Property { name: "left"; type: "QQmlComponent"; isPointer: true }
         Property { name: "behind"; type: "QQmlComponent"; isPointer: true }
         Property { name: "right"; type: "QQmlComponent"; isPointer: true }
         Property { name: "leftItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "behindItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "rightItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+    }
+    Component {
+        name: "QQuickSwipeDelegate"
+        defaultProperty: "data"
+        prototype: "QQuickItemDelegate"
+        exports: ["QtQuick.Templates/SwipeDelegate 2.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "swipe"; type: "QQuickSwipe"; isReadonly: true; isPointer: true }
     }
     Component {
         name: "QQuickSwipeView"

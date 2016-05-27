@@ -105,13 +105,11 @@ void tst_popup::overlay()
     QVERIFY(overlayPressedSignal.isValid());
     QVERIFY(overlayReleasedSignal.isValid());
 
-    QTest::mousePress(window, Qt::LeftButton);
-    QCOMPARE(overlayPressedSignal.count(), 1);
-    QCOMPARE(overlayReleasedSignal.count(), 0);
+    QVERIFY(!overlay->isVisible()); // no popups open
 
-    QTest::mouseRelease(window, Qt::LeftButton);
-    QCOMPARE(overlayPressedSignal.count(), 1);
-    QCOMPARE(overlayReleasedSignal.count(), 0); // no modal popups open
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(overlayPressedSignal.count(), 0);
+    QCOMPARE(overlayReleasedSignal.count(), 0);
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
@@ -119,10 +117,27 @@ void tst_popup::overlay()
     QQuickButton *button = helper.window->property("button").value<QQuickButton*>();
     QVERIFY(button);
 
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QCOMPARE(overlayPressedSignal.count(), 1);
+    QCOMPARE(overlayReleasedSignal.count(), 0);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QCOMPARE(overlayPressedSignal.count(), 1);
+    QCOMPARE(overlayReleasedSignal.count(), 0); // no modal-popups open
+
+    popup->close();
+    QVERIFY(!popup->isVisible());
+    QVERIFY(!overlay->isVisible());
+
     popup->setModal(true);
 
     popup->open();
     QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
 
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     QCOMPARE(overlayPressedSignal.count(), 2);
@@ -133,6 +148,7 @@ void tst_popup::overlay()
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
     QVERIFY(!popup->isVisible());
+    QVERIFY(overlay->isVisible());
 }
 
 void tst_popup::windowChange()

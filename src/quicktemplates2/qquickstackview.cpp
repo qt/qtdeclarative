@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickStackView
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
     \brief Provides a stack-based navigation model.

@@ -53,7 +53,6 @@ T.SpinBox {
     padding: 6
     leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: padding + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
-    opacity: control.enabled ? 1 : 0.3
 
     //! [validator]
     validator: IntValidator {
@@ -67,6 +66,7 @@ T.SpinBox {
     contentItem: TextInput {
         z: 2
         text: control.textFromValue(control.value, control.locale)
+        opacity: control.enabled ? 1 : 0.3
 
         font: control.font
         color: "#353637"
@@ -105,14 +105,14 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.enabled ? "#353637" : "#bdbebf"
+            color: enabled ? "#353637" : "#bdbebf"
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: parent.width / 3
-            color: control.enabled ? "#353637" : "#bdbebf"
+            color: enabled ? "#353637" : "#bdbebf"
         }
     }
     //! [up.indicator]
@@ -130,13 +130,14 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.enabled ? "#353637" : "#bdbebf"
+            color: enabled ? "#353637" : "#bdbebf"
         }
     }
     //! [down.indicator]
 
     //! [background]
     background: Rectangle {
+        opacity: control.enabled ? 1 : 0.3
         implicitWidth: 140
         border.color: "#e0e0e0"
     }
