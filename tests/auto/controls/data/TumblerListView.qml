@@ -38,60 +38,16 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
-import QtQuick.Window 2.2
-import QtQuick.Controls 2.1
+import QtQuick 2.6
 
-Window {
-    width: frame.implicitWidth + 10
-    height: frame.implicitHeight + 10
-    visible: true
+ListView {
+    anchors.fill: parent
+    model: parent.model
+    delegate: parent.delegate
 
-    function formatText(count, modelData) {
-        var data = count === 12 ? modelData + 1 : modelData;
-        return data.toString().length < 2 ? "0" + data : data;
-    }
-
-    Component {
-        id: delegateComponent
-
-        Label {
-            text: formatText(Tumbler.tumbler.count, modelData)
-            opacity: 1.0 - Math.abs(Tumbler.displacement) / (Tumbler.tumbler.visibleItemCount / 2)
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-    }
-
-    Frame {
-        id: frame
-        padding: 0
-        anchors.centerIn: parent
-
-        Row {
-            id: row
-
-            Tumbler {
-                id: hoursTumbler
-                visibleItemCount: 5
-                model: 12
-                delegate: delegateComponent
-            }
-
-            Tumbler {
-                id: minutesTumbler
-                visibleItemCount: 5
-                model: 60
-                delegate: delegateComponent
-            }
-
-            Tumbler {
-                id: amPmTumbler
-                visibleItemCount: 5
-                wrap: false
-                model: ["AM", "PM"]
-                delegate: delegateComponent
-            }
-        }
-    }
+    snapMode: ListView.SnapToItem
+    highlightRangeMode: ListView.StrictlyEnforceRange
+    preferredHighlightBegin: height / 2 - (height / parent.visibleItemCount / 2)
+    preferredHighlightEnd: height / 2  + (height / parent.visibleItemCount / 2)
+    clip: true
 }

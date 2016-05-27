@@ -181,6 +181,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");
     qmlRegisterType<QQuickSwipeView, 1>(uri, 2, 1, "SwipeView");
+    qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
 }
 
 QT_END_NAMESPACE

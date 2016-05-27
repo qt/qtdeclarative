@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -38,60 +38,26 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
-import QtQuick.Window 2.2
-import QtQuick.Controls 2.1
+import QtQuick 2.6
 
-Window {
-    width: frame.implicitWidth + 10
-    height: frame.implicitHeight + 10
-    visible: true
+PathView {
+    id: pathView
+    model: parent.model
+    delegate: parent.delegate
+    clip: true
+    pathItemCount: parent.visibleItemCount + 1
+    preferredHighlightBegin: 0.5
+    preferredHighlightEnd: 0.5
+    dragMargin: width / 2
 
-    function formatText(count, modelData) {
-        var data = count === 12 ? modelData + 1 : modelData;
-        return data.toString().length < 2 ? "0" + data : data;
-    }
-
-    Component {
-        id: delegateComponent
-
-        Label {
-            text: formatText(Tumbler.tumbler.count, modelData)
-            opacity: 1.0 - Math.abs(Tumbler.displacement) / (Tumbler.tumbler.visibleItemCount / 2)
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+    path: Path {
+        startX: pathView.width / 2
+        startY: -pathView.delegateHeight / 2
+        PathLine {
+            x: pathView.width / 2
+            y: pathView.pathItemCount * pathView.delegateHeight - pathView.delegateHeight / 2
         }
     }
 
-    Frame {
-        id: frame
-        padding: 0
-        anchors.centerIn: parent
-
-        Row {
-            id: row
-
-            Tumbler {
-                id: hoursTumbler
-                visibleItemCount: 5
-                model: 12
-                delegate: delegateComponent
-            }
-
-            Tumbler {
-                id: minutesTumbler
-                visibleItemCount: 5
-                model: 60
-                delegate: delegateComponent
-            }
-
-            Tumbler {
-                id: amPmTumbler
-                visibleItemCount: 5
-                wrap: false
-                model: ["AM", "PM"]
-                delegate: delegateComponent
-            }
-        }
-    }
+    property real delegateHeight: parent.availableHeight / parent.visibleItemCount
 }

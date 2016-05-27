@@ -697,4 +697,13 @@
         \image qtquickcontrols2-tumbler-custom.png
 
         \snippet qtquickcontrols2-tumbler-custom.qml file
+
+        If you want to define your own contentItem, use either a \l ListView or
+        \l PathView as the root item. For a wrapping Tumbler, use PathView:
+
+        \snippet qtquickcontrols2-tumbler-pathView.qml contentItem
+
+        For a non-wrapping Tumbler, use ListView:
+
+        \snippet qtquickcontrols2-tumbler-listView.qml contentItem
 */

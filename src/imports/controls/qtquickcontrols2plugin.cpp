@@ -49,6 +49,7 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
+#include <QtQuickControls2/private/qquicktumblerview_p.h>
 
 #include "qquickbusyindicatorring_p.h"
 #include "qquickdialring_p.h"
@@ -142,6 +143,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("Slider.qml")), uri, 2, 1, "Slider");
     qmlRegisterType(selector.select(QStringLiteral("StackView.qml")), uri, 2, 1, "StackView");
     qmlRegisterType(selector.select(QStringLiteral("SwipeView.qml")), uri, 2, 1, "SwipeView");
+    qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 2, 1, "Tumbler");
 }
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -156,6 +158,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickProgressStrip>(import, 2, 0, "ProgressStrip");
     qmlRegisterType<QQuickProgressAnimator>(import, 2, 0, "ProgressStripAnimator");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
+    qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");

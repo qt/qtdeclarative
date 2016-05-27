@@ -55,15 +55,32 @@ TestCase {
     readonly property real implicitTumblerHeight: 200
     readonly property real defaultImplicitDelegateHeight: implicitTumblerHeight / 3
     readonly property real defaultListViewTumblerOffset: -defaultImplicitDelegateHeight
+    readonly property real tumblerDelegateHeight: tumbler ? tumbler.availableHeight / tumbler.visibleItemCount : 0
+    property Item tumblerView: null
+
+    Component {
+        id: tumblerComponent
+
+        Tumbler {}
+    }
 
     function init() {
-        tumbler = Qt.createQmlObject("import QtQuick.Controls 2.0; Tumbler { }", testCase, "");
-        verify(tumbler, "Tumbler: failed to create an instance");
-        compare(tumbler.contentItem.parent, tumbler);
+        createTumbler();
     }
 
     function cleanup() {
         tumbler.destroy();
+        tumblerView = null;
+    }
+
+    function createTumbler(args) {
+        if (args === undefined)
+            tumbler = tumblerComponent.createObject(testCase);
+        else
+            tumbler = tumblerComponent.createObject(testCase, args);
+        verify(tumbler, "Tumbler: failed to create an instance");
+        tumblerView = findView(tumbler);
+        verify(tumblerView);
     }
 
     function tumblerXCenter() {
@@ -76,24 +93,45 @@ TestCase {
 
     // visualItemIndex is from 0 to the amount of visible items.
     function itemCenterPos(visualItemIndex) {
-        var halfDelegateHeight = tumbler.contentItem.delegateHeight / 2;
+        var halfDelegateHeight = tumblerDelegateHeight / 2;
         var yCenter = tumbler.y + tumbler.topPadding + halfDelegateHeight
-            + (tumbler.contentItem.delegateHeight * visualItemIndex);
+            + (tumblerDelegateHeight * visualItemIndex);
         return Qt.point(tumblerXCenter(), yCenter);
     }
 
     function checkItemSizes() {
-        var contentChildren = tumbler.contentItem.hasOwnProperty("contentItem")
-            ? tumbler.contentItem.contentItem.children : tumbler.contentItem.children;
+        var contentChildren = tumbler.wrap ? tumblerView.children : tumblerView.contentItem.children;
         verify(contentChildren.length >= tumbler.count);
         for (var i = 0; i < contentChildren.length; ++i) {
-            compare(contentChildren[i].width, tumbler.width);
-            compare(contentChildren[i].height, tumbler.contentItem.delegateHeight);
+            compare(contentChildren[i].width, tumbler.availableWidth);
+            compare(contentChildren[i].height, tumblerDelegateHeight);
         }
     }
 
-    function tst_dynamicContentItemChange() {
-        // test that currentIndex is maintained between contentItem changes...
+    function findView(parent) {
+        for (var i = 0; i < parent.children.length; ++i) {
+            var child = parent.children[i];
+            if (child.hasOwnProperty("currentIndex")) {
+                return child;
+            }
+
+            return findView(child);
+        }
+
+        return null;
+    }
+
+    property Component noAttachedPropertiesDelegate: Text {
+        text: modelData
+    }
+
+    function test_wrapWithoutAttachedProperties() {
+        verify(tumbler.wrap);
+
+        tumbler.delegate = noAttachedPropertiesDelegate;
+        // Shouldn't assert.
+        tumbler.wrap = false;
+        verify(findView(tumbler));
     }
 
     function test_currentIndex() {
@@ -104,14 +142,15 @@ TestCase {
 
         // Set it through user interaction.
         var pos = Qt.point(tumblerXCenter(), tumbler.height / 2);
-        mouseDrag(tumbler, pos.x, pos.y, 0, -tumbler.contentItem.delegateHeight / 2, Qt.LeftButton, Qt.NoModifier, 200);
-        compare(tumbler.currentIndex, 1);
-        compare(tumbler.contentItem.currentIndex, 1);
+        mouseDrag(tumbler, pos.x, pos.y, 0, tumbler.height / 3, Qt.LeftButton, Qt.NoModifier, 200);
+        tryCompare(tumblerView, "offset", 1);
+        compare(tumbler.currentIndex, 4);
+        compare(tumblerView.currentIndex, 4);
 
         // Set it manually.
         tumbler.currentIndex = 2;
         tryCompare(tumbler, "currentIndex", 2);
-        compare(tumbler.contentItem.currentIndex, 2);
+        compare(tumblerView.currentIndex, 2);
 
         // PathView has 0 as its currentIndex in this case for some reason.
         tumbler.model = null;
@@ -121,52 +160,116 @@ TestCase {
         tryCompare(tumbler, "currentIndex", 0);
     }
 
+    Component {
+        id: currentIndexTumbler
+
+        Tumbler {
+            model: 5
+            currentIndex: 2
+        }
+    }
+
+    Component {
+        id: currentIndexTumblerNoWrap
+
+        Tumbler {
+            model: 5
+            currentIndex: 2
+            wrap: false
+        }
+    }
+
+    Component {
+        id: currentIndexTumblerNoWrapReversedOrder
+
+        Tumbler {
+            model: 5
+            wrap: false
+            currentIndex: 2
+        }
+    }
+
+    function test_currentIndexAtCreation_data() {
+        return [
+            { tag: "wrap: true", currentIndex: 2, wrap: true, component: currentIndexTumbler },
+            { tag: "wrap: false", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrap },
+            // Order of property assignments shouldn't matter
+            { tag: "wrap: false, reversed property assignment order", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrapReversedOrder }
+        ]
+    }
+
+    function test_currentIndexAtCreation(data) {
+        // Test setting currentIndex at creation time
+        var tumbler = data.component.createObject(testCase);
+        verify(tumbler);
+        compare(tumbler.currentIndex, data.currentIndex);
+
+        tumblerView = findView(tumbler);
+        // TODO: replace once QTBUG-19708 is fixed.
+        for (var delay = 1000; delay >= 0; delay -= 50) {
+            if (tumblerView.currentItem)
+                break;
+            wait(50);
+        }
+        verify(tumblerView.currentItem);
+        compare(tumblerView.currentIndex, data.currentIndex);
+        compare(tumblerView.currentItem.text, data.currentIndex.toString());
+
+        if (data.wrap) {
+            compare(tumblerView.offset, tumblerView.count - data.currentIndex);
+        } else {
+            compare(tumblerView.contentY, tumblerDelegateHeight * data.currentIndex - tumblerView.preferredHighlightBegin);
+        }
+
+        tumbler.destroy();
+    }
+
     function test_keyboardNavigation() {
         tumbler.model = 5;
         tumbler.forceActiveFocus();
-        tumbler.contentItem.highlightMoveDuration = 0;
+        tumblerView.highlightMoveDuration = 0;
 
         // Navigate upwards through entire wheel.
         for (var j = 0; j < tumbler.count - 1; ++j) {
             keyClick(Qt.Key_Up, Qt.NoModifier);
-            tryCompare(tumbler.contentItem, "offset", j + 1);
+            tryCompare(tumblerView, "offset", j + 1);
             compare(tumbler.currentIndex, tumbler.count - 1 - j);
         }
 
         keyClick(Qt.Key_Up, Qt.NoModifier);
-        tryCompare(tumbler.contentItem, "offset", 0);
+        tryCompare(tumblerView, "offset", 0);
         compare(tumbler.currentIndex, 0);
 
         // Navigate downwards through entire wheel.
         for (j = 0; j < tumbler.count - 1; ++j) {
             keyClick(Qt.Key_Down, Qt.NoModifier);
-            tryCompare(tumbler.contentItem, "offset", tumbler.count - 1 - j);
+            tryCompare(tumblerView, "offset", tumbler.count - 1 - j);
             compare(tumbler.currentIndex, j + 1);
         }
 
         keyClick(Qt.Key_Down, Qt.NoModifier);
-        tryCompare(tumbler.contentItem, "offset", 0);
+        tryCompare(tumblerView, "offset", 0);
         compare(tumbler.currentIndex, 0);
     }
 
     function test_itemsCorrectlyPositioned() {
         tumbler.model = 4;
         tumbler.height = 120;
-        compare(tumbler.contentItem.delegateHeight, 40);
+        compare(tumblerDelegateHeight, 40);
         checkItemSizes();
 
-        wait(tumbler.contentItem.highlightMoveDuration);
+        wait(tumblerView.highlightMoveDuration);
         var firstItemCenterPos = itemCenterPos(1);
-        var firstItem = tumbler.contentItem.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
+        var firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
         var actualPos = testCase.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding + 40);
 
         tumbler.forceActiveFocus();
         keyClick(Qt.Key_Down);
-        tryCompare(tumbler.contentItem, "offset", 3.0);
+        tryCompare(tumblerView, "offset", 3.0);
         firstItemCenterPos = itemCenterPos(0);
-        firstItem = tumbler.contentItem.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
+        firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
         verify(firstItem);
         // Test QTBUG-40298.
         actualPos = testCase.mapFromItem(firstItem, 0, 0);
@@ -174,12 +277,12 @@ TestCase {
         compare(actualPos.y, tumbler.topPadding);
 
         var secondItemCenterPos = itemCenterPos(1);
-        var secondItem = tumbler.contentItem.itemAt(secondItemCenterPos.x, secondItemCenterPos.y);
+        var secondItem = tumblerView.itemAt(secondItemCenterPos.x, secondItemCenterPos.y);
         verify(secondItem);
         verify(firstItem.y < secondItem.y);
 
         var thirdItemCenterPos = itemCenterPos(2);
-        var thirdItem = tumbler.contentItem.itemAt(thirdItemCenterPos.x, thirdItemCenterPos.y);
+        var thirdItem = tumblerView.itemAt(thirdItemCenterPos.x, thirdItemCenterPos.y);
         verify(thirdItem);
         verify(firstItem.y < thirdItem.y);
         verify(secondItem.y < thirdItem.y);
@@ -214,11 +317,11 @@ TestCase {
         compare(tumbler.yearTumbler.currentIndex, 0);
         compare(tumbler.yearTumbler.count, 100);
 
-        verify(tumbler.dayTumbler.contentItem.children.length >= tumbler.dayTumbler.visibleItemCount);
-        verify(tumbler.monthTumbler.contentItem.children.length >= tumbler.monthTumbler.visibleItemCount);
+        verify(findView(tumbler.dayTumbler).children.length >= tumbler.dayTumbler.visibleItemCount);
+        verify(findView(tumbler.monthTumbler).children.length >= tumbler.monthTumbler.visibleItemCount);
         // TODO: do this properly somehow
         wait(100);
-        verify(tumbler.yearTumbler.contentItem.children.length >= tumbler.yearTumbler.visibleItemCount);
+        verify(findView(tumbler.yearTumbler).children.length >= tumbler.yearTumbler.visibleItemCount);
 
         // March.
         tumbler.monthTumbler.currentIndex = 2;
@@ -295,18 +398,32 @@ TestCase {
         tumbler.model = data.count;
         compare(tumbler.count, data.count);
 
-        var delegate = findChild(tumbler.contentItem, "delegate" + data.index);
+        var delegate = findChild(tumblerView, "delegate" + data.index);
         verify(delegate);
 
-        tumbler.contentItem.offset = data.offset;
+        tumblerView.offset = data.offset;
         compare(delegate.displacement, data.expectedDisplacement);
 
         // test displacement after adding and removing items
     }
 
+    function test_wrap() {
+        tumbler.model = 5;
+        compare(tumbler.count, 5);
+
+        tumbler.currentIndex = 2;
+        compare(tumblerView.currentIndex, 2);
+
+        tumbler.wrap = false;
+        tumblerView = findView(tumbler);
+        compare(tumbler.count, 5);
+        compare(tumbler.currentIndex, 2);
+        compare(tumblerView.currentIndex, 2);
+    }
+
     Component {
-        id: listViewTumblerComponent
-        //! [contentItem]
+        id: customListViewTumblerComponent
+
         Tumbler {
             id: listViewTumbler
 
@@ -322,7 +439,95 @@ TestCase {
                 clip: true
             }
         }
-        //! [contentItem]
+    }
+
+    Component {
+        id: customPathViewTumblerComponent
+
+        Tumbler {
+            id: pathViewTumbler
+
+            contentItem: PathView {
+                id: pathView
+                model: pathViewTumbler.model
+                delegate: pathViewTumbler.delegate
+                clip: true
+                pathItemCount: pathViewTumbler.visibleItemCount + 1
+                preferredHighlightBegin: 0.5
+                preferredHighlightEnd: 0.5
+                dragMargin: width / 2
+
+                path: Path {
+                    startX: pathView.width / 2
+                    startY: -pathView.delegateHeight / 2
+                    PathLine {
+                        x: pathView.width / 2
+                        y: pathView.pathItemCount * pathView.delegateHeight - pathView.delegateHeight / 2
+                    }
+                }
+
+                property real delegateHeight: pathViewTumbler.availableHeight / pathViewTumbler.visibleItemCount
+            }
+        }
+    }
+
+    function test_customContentItemAtConstruction_data() {
+        return [
+            { tag: "ListView", component: customListViewTumblerComponent },
+            { tag: "PathView", component: customPathViewTumblerComponent }
+        ];
+    }
+
+    function test_customContentItemAtConstruction(data) {
+        var tumbler = data.component.createObject(testCase);
+        // Shouldn't assert.
+
+        tumbler.model = 5;
+        compare(tumbler.count, 5);
+
+        tumbler.currentIndex = 2;
+        var tumblerView = findView(tumbler);
+        compare(tumblerView.currentIndex, 2);
+
+        tumblerView.incrementCurrentIndex();
+        compare(tumblerView.currentIndex, 3);
+        compare(tumbler.currentIndex, 3);
+
+        // Shouldn't have any affect.
+        tumbler.wrap = false;
+        compare(tumbler.count, 5);
+        compare(tumblerView.currentIndex, 3);
+        compare(tumbler.currentIndex, 3);
+
+        tumbler.destroy();
+    }
+
+    function test_customContentItemAfterConstruction_data() {
+        return [
+            { tag: "ListView", componentPath: "TumblerListView.qml" },
+            { tag: "PathView", componentPath: "TumblerPathView.qml" }
+        ];
+    }
+
+    function test_customContentItemAfterConstruction(data) {
+        tumbler.model = 5;
+        compare(tumbler.count, 5);
+
+        tumbler.currentIndex = 2;
+        compare(tumblerView.currentIndex, 2);
+
+        var contentItemComponent = Qt.createComponent(data.componentPath);
+        compare(contentItemComponent.status, Component.Ready);
+
+        var customContentItem = contentItemComponent.createObject(tumbler);
+        tumbler.contentItem = customContentItem;
+        compare(tumbler.count, 5);
+        tumblerView = findView(tumbler);
+        compare(tumblerView.currentIndex, 2);
+
+        tumblerView.incrementCurrentIndex();
+        compare(tumblerView.currentIndex, 3);
+        compare(tumbler.currentIndex, 3);
     }
 
     function test_displacementListView_data() {
@@ -363,21 +568,16 @@ TestCase {
     }
 
     function test_displacementListView(data) {
-        tumbler.destroy();
-        // Sanity check that they're aren't any children at this stage.
-        tryCompare(testCase.children, "length", 0);
-
-        tumbler = listViewTumblerComponent.createObject(testCase);
-        verify(tumbler);
-
+        tumbler.wrap = false;
         tumbler.delegate = displacementDelegate;
         tumbler.model = 5;
         compare(tumbler.count, 5);
         // Ensure assumptions about the tumbler used in our data() function are correct.
-        compare(tumbler.contentItem.contentY, -defaultImplicitDelegateHeight);
+        tumblerView = findView(tumbler);
+        compare(tumblerView.contentY, -defaultImplicitDelegateHeight);
         var delegateCount = 0;
-        var listView = tumbler.contentItem;
-        var listViewContentItem = tumbler.contentItem.contentItem;
+        var listView = tumblerView;
+        var listViewContentItem = tumblerView.contentItem;
 
         // We use the mouse instead of setting contentY directly, otherwise the
         // items snap back into place. This doesn't seem to be an issue for
@@ -436,18 +636,15 @@ TestCase {
     }
 
     function test_listViewFlickAboveBounds(data) {
-        tumbler.destroy();
-
-        tumbler = listViewTumblerComponent.createObject(testCase);
-        verify(tumbler);
-
+        tumbler.wrap = false;
         tumbler.delegate = displacementDelegate;
         tumbler.model = data.model;
+        tumblerView = findView(tumbler);
 
         mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
 
         // Ensure it's stationary.
-        var listView = tumbler.contentItem;
+        var listView = tumblerView;
         compare(listView.contentY, defaultListViewTumblerOffset);
 
         // We could just move up until the contentY changed, but this is safer.
@@ -512,9 +709,9 @@ TestCase {
 
         for (var delegateIndex = 0; delegateIndex < data.visibleItemCount; ++delegateIndex) {
             if (data.expectedYPositions.hasOwnProperty(delegateIndex)) {
-                var delegate = findChild(tumbler.contentItem, "delegate" + delegateIndex);
+                var delegate = findChild(tumblerView, "delegate" + delegateIndex);
                 verify(delegate, "Delegate found at index " + delegateIndex);
-                var expectedYPos = data.expectedYPositions[delegateIndex] * tumbler.contentItem.delegateHeight;
+                var expectedYPos = data.expectedYPositions[delegateIndex] * tumblerDelegateHeight;
                 compare(delegate.mapToItem(tumbler.contentItem, 0, 0).y, expectedYPos);
             }
         }
@@ -528,12 +725,6 @@ TestCase {
         property real displacement: Tumbler.displacement
     }
 
-    property Component gridViewComponent: GridView {}
-    property Component simpleDisplacementDelegate: Text {
-        property real displacement: Tumbler.displacement
-        property int index: -1
-    }
-
     function test_attachedProperties() {
         // TODO: crashes somewhere in QML's guts
 //        tumbler.model = 5;
@@ -542,18 +733,12 @@ TestCase {
 //        // Cause displacement to be changed. The warning isn't triggered if we don't do this.
 //        tumbler.contentItem.offset += 1;
 
-        ignoreWarning("Tumbler: attached properties must be accessed from within a delegate item that has a parent");
+        ignoreWarning("Tumbler: attached properties must be accessed through a delegate item that has a parent");
         noParentDelegateComponent.createObject(null);
 
         ignoreWarning("Tumbler: attempting to access attached property on item without an \"index\" property");
         var object = noParentDelegateComponent.createObject(testCase);
         object.destroy();
-
-        // Should not be any warnings from this, as ListView, for example, doesn't produce warnings for the same code.
-        var gridView = gridViewComponent.createObject(testCase);
-        object = simpleDisplacementDelegate.createObject(gridView);
-        object.destroy();
-        gridView.destroy();
     }
 
     property Component paddingDelegate: Text {
@@ -650,8 +835,8 @@ TestCase {
         }
 
         // Force new items to be created, as there was a bug where the path was correct until this happened.
-        compare(tumbler.contentItem.offset, 0);
+        compare(tumblerView.offset, 0);
         ++tumbler.currentIndex;
-        tryCompare(tumbler.contentItem, "offset", 4, tumbler.contentItem.highlightMoveDuration * 2);
+        tryCompare(tumblerView, "offset", 4, tumblerView.highlightMoveDuration * 2);
     }
 }

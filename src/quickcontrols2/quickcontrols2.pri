@@ -6,7 +6,8 @@ HEADERS += \
     $$PWD/qquickstyleplugin_p.h \
     $$PWD/qquickstyleselector_p.h \
     $$PWD/qquickstyleselector_p_p.h \
-    $$PWD/qquickpaddedrectangle_p.h
+    $$PWD/qquickpaddedrectangle_p.h \
+    $$PWD/qquicktumblerview_p.h
 
 SOURCES += \
     $$PWD/qquickcolorimageprovider.cpp \
@@ -15,4 +16,5 @@ SOURCES += \
     $$PWD/qquickstyleattached.cpp \
     $$PWD/qquickstyleplugin.cpp \
     $$PWD/qquickstyleselector.cpp \
-    $$PWD/qquickpaddedrectangle.cpp
+    $$PWD/qquickpaddedrectangle.cpp \
+    $$PWD/qquicktumblerview.cpp

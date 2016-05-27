@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick.Templates 2.1 as T
 import QtQuick.Controls.Universal 2.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 
 T.Tumbler {
     id: control
@@ -54,22 +55,16 @@ T.Tumbler {
         verticalAlignment: Text.AlignVCenter
     }
 
-    contentItem: PathView {
-        id: pathView
+    contentItem: TumblerView {
+        id: tumblerView
         model: control.model
         delegate: control.delegate
-        clip: true
-        pathItemCount: control.visibleItemCount + 1
-        preferredHighlightBegin: 0.5
-        preferredHighlightEnd: 0.5
-        dragMargin: width / 2
-
         path: Path {
-            startX: pathView.width / 2
-            startY: -pathView.delegateHeight / 2
+            startX: tumblerView.width / 2
+            startY: -tumblerView.delegateHeight / 2
             PathLine {
-                x: pathView.width / 2
-                y: pathView.pathItemCount * pathView.delegateHeight - pathView.delegateHeight / 2
+                x: tumblerView.width / 2
+                y: (control.visibleItemCount + 1) * tumblerView.delegateHeight - tumblerView.delegateHeight / 2
             }
         }
 

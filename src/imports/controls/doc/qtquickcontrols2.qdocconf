@@ -38,7 +38,6 @@ exampledirs += ../../../../examples/quickcontrols2 \
                ../ \
                ../../../quicktemplates2 \
                ../../calendar \
-               ../../../../tests/auto/controls/data \
                snippets
 
 examplesinstallpath = quickcontrols2

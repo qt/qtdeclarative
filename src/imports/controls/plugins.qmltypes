@@ -2055,7 +2055,7 @@ Module {
         name: "QQuickTumbler"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/Tumbler 2.0"]
+        exports: ["QtQuick.Templates/Tumbler 2.1"]
         exportMetaObjectRevisions: [0]
         attachedType: "QQuickTumblerAttached"
         Property { name: "model"; type: "QVariant" }
@@ -2064,6 +2064,7 @@ Module {
         Property { name: "currentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "visibleItemCount"; type: "int" }
+        Property { name: "wrap"; type: "bool" }
     }
     Component {
         name: "QQuickTumblerAttached"

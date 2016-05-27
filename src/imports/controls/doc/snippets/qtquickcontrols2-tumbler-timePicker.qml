@@ -38,18 +38,22 @@
 **
 ****************************************************************************/
 
+//! [tumbler]
 import QtQuick 2.8
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 
-Window {
+Rectangle {
     width: frame.implicitWidth + 10
     height: frame.implicitHeight + 10
-    visible: true
 
     function formatText(count, modelData) {
         var data = count === 12 ? modelData + 1 : modelData;
         return data.toString().length < 2 ? "0" + data : data;
+    }
+
+    FontMetrics {
+        id: fontMetrics
     }
 
     Component {
@@ -60,6 +64,7 @@ Window {
             opacity: 1.0 - Math.abs(Tumbler.displacement) / (Tumbler.tumbler.visibleItemCount / 2)
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+            font.pixelSize: fontMetrics.font.pixelSize * 1.25
         }
     }
 
@@ -95,3 +100,4 @@ Window {
         }
     }
 }
+//! [tumbler]

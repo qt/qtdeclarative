@@ -66,6 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 1)
 
 public:
     explicit QQuickTumbler(QQuickItem *parent = nullptr);
@@ -86,6 +87,9 @@ public:
     int visibleItemCount() const;
     void setVisibleItemCount(int visibleItemCount);
 
+    bool wrap() const;
+    void setWrap(bool wrap);
+
     static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -95,6 +99,7 @@ Q_SIGNALS:
     void currentItemChanged();
     void delegateChanged();
     void visibleItemCountChanged();
+    Q_REVISION(1) void wrapChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -108,6 +113,7 @@ private:
 
     Q_PRIVATE_SLOT(d_func(), void _q_updateItemWidths())
     Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
+    Q_PRIVATE_SLOT(d_func(), void _q_onViewCurrentIndexChanged())
 };
 
 class QQuickTumblerAttachedPrivate;
