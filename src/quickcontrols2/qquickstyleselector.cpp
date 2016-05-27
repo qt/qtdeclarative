@@ -66,33 +66,6 @@ static QStringList allSelectors(const QString &style = QString())
     return selectors;
 }
 
-static QString selectionHelper(const QString &path, const QString &fileName, const QStringList &selectors)
-{
-    /* selectionHelper does a depth-first search of possible selected files. Because there is strict
-       selector ordering in the API, we can stop checking as soon as we find the file in a directory
-       which does not contain any other valid selector directories.
-    */
-    Q_ASSERT(path.isEmpty() || path.endsWith(QLatin1Char('/')));
-
-    for (const QString &s : selectors) {
-        QString prospectiveBase = path + s + QLatin1Char('/');
-        QStringList remainingSelectors = selectors;
-        remainingSelectors.removeAll(s);
-        if (!QDir(prospectiveBase).exists())
-            continue;
-        QString prospectiveFile = selectionHelper(prospectiveBase, fileName, remainingSelectors);
-        if (!prospectiveFile.isEmpty())
-            return prospectiveFile;
-    }
-
-    // If we reach here there were no successful files found at a lower level in this branch, so we
-    // should check this level as a potential result.
-    const QString result = path + fileName;
-    if (!QFileInfo::exists(result))
-        return QString();
-    return result;
-}
-
 QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 {
     QFileInfo fi(filePath);
@@ -101,8 +74,8 @@ QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
         return filePath;
 
     const QString path = fi.path();
-    const QString ret = selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
-                                        fi.fileName(), allSelectors(style));
+    const QString ret = QFileSelectorPrivate::selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
+                                                              fi.fileName(), allSelectors(style), QChar());
 
     if (!ret.isEmpty())
         return ret;
@@ -140,7 +113,7 @@ QString QQuickStyleSelector::select(const QString &fileName) const
         if (QFile::exists(stylePath + fileName)) {
             // the style name is included to the path, so exclude it from the selectors.
             // the rest of the selectors (os, locale) are still valid, though.
-            const QString selectedPath = selectionHelper(stylePath, fileName, allSelectors());
+            const QString selectedPath = QFileSelectorPrivate::selectionHelper(stylePath, fileName, allSelectors(), QChar());
             if (selectedPath.startsWith(QLatin1Char(':')))
                 return QLatin1String("qrc") + selectedPath;
             return QUrl::fromLocalFile(QFileInfo(selectedPath).absoluteFilePath()).toString();
