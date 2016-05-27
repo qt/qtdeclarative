@@ -215,7 +215,7 @@ Item {
 
        The current shadow based on the elevation.
      */
-    readonly property var _shadow: _shadows[elevation]
+    readonly property var _shadow: _shadows[Math.max(0, Math.min(elevation, _shadows.length - 1))]
 
     // Nest the shadows and source view in two items rendered as a layer
     // so the shadow is not clipped by the bounds of the source view
