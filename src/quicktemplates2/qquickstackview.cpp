@@ -988,4 +988,42 @@ QQuickStackView::Status QQuickStackAttached::status() const
     return d->element ? d->element->status : QQuickStackView::Inactive;
 }
 
+/*!
+    \qmlattachedsignal QtQuick.Controls::StackView::activated()
+    \since QtQuick.Controls 2.1
+
+    This attached signal is emitted when the item it's attached to is activated in the stack.
+
+    \sa status
+*/
+
+/*!
+    \qmlattachedsignal QtQuick.Controls::StackView::deactivated()
+    \since QtQuick.Controls 2.1
+
+    This attached signal is emitted when the item it's attached to is deactivated in the stack.
+
+    \sa status
+*/
+
+/*!
+    \qmlattachedsignal QtQuick.Controls::StackView::activating()
+    \since QtQuick.Controls 2.1
+
+    This attached signal is emitted when the item it's attached to is in the process of being
+    activated in the stack.
+
+    \sa status
+*/
+
+/*!
+    \qmlattachedsignal QtQuick.Controls::StackView::deactivating()
+    \since QtQuick.Controls 2.1
+
+    This attached signal is emitted when the item it's attached to is in the process of being
+    dectivated in the stack.
+
+    \sa status
+*/
+
 QT_END_NAMESPACE

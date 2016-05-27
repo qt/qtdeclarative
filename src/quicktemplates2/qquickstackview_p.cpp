@@ -221,8 +221,28 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
 
     status = value;
     QQuickStackAttached *attached = attachedStackObject(this);
-    if (attached)
-        emit attached->statusChanged();
+    if (!attached)
+        return;
+
+    switch (value) {
+    case QQuickStackView::Inactive:
+        emit attached->deactivated();
+        break;
+    case QQuickStackView::Deactivating:
+        emit attached->deactivating();
+        break;
+    case QQuickStackView::Activating:
+        emit attached->activating();
+        break;
+    case QQuickStackView::Active:
+        emit attached->activated();
+        break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    emit attached->statusChanged();
 }
 
 void QQuickStackElement::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)

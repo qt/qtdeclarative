@@ -59,6 +59,11 @@ TestCase {
         StackView { }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_initialItem() {
         var control1 = stackView.createObject(testCase)
         verify(control1)
@@ -853,6 +858,62 @@ TestCase {
         var rect = control.push(rectangle, {color: "#ff0000"})
         compare(rect.color, "#ff0000")
         compare(rect.initialColor, "#ff0000")
+
+        control.destroy()
+    }
+
+    Component {
+        id: signalTest
+        Control {
+            id: ctrl
+            property SignalSpy activatedSpy: SignalSpy { target: ctrl.StackView; signalName: "activated" }
+            property SignalSpy activatingSpy: SignalSpy { target: ctrl.StackView; signalName: "activating" }
+            property SignalSpy deactivatedSpy: SignalSpy { target: ctrl.StackView; signalName: "deactivated" }
+            property SignalSpy deactivatingSpy: SignalSpy { target: ctrl.StackView; signalName: "deactivating" }
+        }
+    }
+
+    function test_signals() {
+        var control = stackView.createObject(testCase)
+        verify(control)
+
+        var item1 = signalTest.createObject(control)
+        compare(item1.StackView.status, StackView.Inactive)
+        control.push(item1)
+        compare(item1.StackView.status, StackView.Active)
+        compare(item1.activatedSpy.count, 1)
+        compare(item1.activatingSpy.count, 1)
+        compare(item1.deactivatedSpy.count, 0)
+        compare(item1.deactivatingSpy.count, 0)
+
+        var item2 = signalTest.createObject(control)
+        compare(item2.StackView.status, StackView.Inactive)
+        control.push(item2)
+        compare(item2.StackView.status, StackView.Activating)
+        compare(item2.activatedSpy.count, 0)
+        compare(item2.activatingSpy.count, 1)
+        compare(item2.deactivatedSpy.count, 0)
+        compare(item2.deactivatingSpy.count, 0)
+        compare(item1.StackView.status, StackView.Deactivating)
+        compare(item1.activatedSpy.count, 1)
+        compare(item1.activatingSpy.count, 1)
+        compare(item1.deactivatedSpy.count, 0)
+        compare(item1.deactivatingSpy.count, 1)
+        tryCompare(item2.activatedSpy, "count", 1)
+        tryCompare(item1.deactivatedSpy, "count", 1)
+
+        control.pop()
+        compare(item2.StackView.status, StackView.Deactivating)
+        compare(item2.activatedSpy.count, 1)
+        compare(item2.activatingSpy.count, 1)
+        compare(item2.deactivatedSpy.count, 0)
+        compare(item2.deactivatingSpy.count, 1)
+        compare(item1.StackView.status, StackView.Activating)
+        compare(item1.activatedSpy.count, 1)
+        compare(item1.activatingSpy.count, 2)
+        compare(item1.deactivatedSpy.count, 1)
+        compare(item1.deactivatingSpy.count, 1)
+        tryCompare(item1.activatedSpy, "count", 2)
 
         control.destroy()
     }

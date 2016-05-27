@@ -175,6 +175,10 @@ Q_SIGNALS:
     void indexChanged();
     void viewChanged();
     void statusChanged();
+    Q_REVISION(1) void activated();
+    Q_REVISION(1) void activating();
+    Q_REVISION(1) void deactivated();
+    Q_REVISION(1) void deactivating();
 
 private:
     Q_DISABLE_COPY(QQuickStackAttached)
