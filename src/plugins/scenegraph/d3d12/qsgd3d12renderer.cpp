@@ -135,7 +135,7 @@ void QSGD3D12Renderer::updateMatrices(QSGNode *node, QSGTransformNode *xform)
             const QMatrix4x4 *newMatrix = xform ? &xform->combinedMatrix() : nullptr;
             // NB the newMatrix ptr is usually the same as before as it just
             // references the transform node's own matrix.
-            gnode->setMatrix(newMatrix);
+            gnode->setRendererMatrix(newMatrix);
         }
         QSGNODE_TRAVERSE(node)
             updateMatrices(child, xform);
@@ -203,7 +203,7 @@ void QSGD3D12Renderer::buildRenderList(QSGNode *node, QSGClipNode *clip)
 
         m_renderList.add(e);
 
-        gn->setClipList(clip);
+        gn->setRendererClipList(clip);
         if (node->type() == QSGNode::ClipNodeType)
             clip = static_cast<QSGClipNode *>(node);
     } else if (node->type() == QSGNode::RenderNodeType) {

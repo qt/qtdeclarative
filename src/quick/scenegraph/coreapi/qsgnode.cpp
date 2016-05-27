@@ -778,6 +778,18 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
     \internal
  */
 
+/*!
+    \fn void QSGBasicGeometryNode::setRendererMatrix(const QMatrix4x4 *m)
+
+    \internal
+ */
+
+/*!
+    \fn void QSGBasicGeometryNode::setRendererClipList(const QSGClipNode *c)
+
+    \internal
+ */
+
 
 /*!
     Sets the geometry of this node to \a geometry.

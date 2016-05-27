@@ -356,17 +356,17 @@ void Updater::visitClipNode(Node *n)
     if (m_roots.last() && m_added > 0)
         renderer->registerBatchRoot(n, m_roots.last());
 
-    cn->m_clip_list = m_current_clip;
+    cn->setRendererClipList(m_current_clip);
     m_current_clip = cn;
     m_roots << n;
     m_rootMatrices.add(m_rootMatrices.last() * *m_combined_matrix_stack.last());
     extra->matrix = m_rootMatrices.last();
-    cn->m_matrix = &extra->matrix;
+    cn->setRendererMatrix(&extra->matrix);
     m_combined_matrix_stack << &m_identityMatrix;
 
     SHADOWNODE_TRAVERSE(n) visitNode(child);
 
-    m_current_clip = cn->m_clip_list;
+    m_current_clip = cn->clipList();
     m_rootMatrices.pop_back();
     m_combined_matrix_stack.pop_back();
     m_roots.pop_back();
@@ -459,8 +459,8 @@ void Updater::visitGeometryNode(Node *n)
 {
     QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(n->sgNode);
 
-    gn->m_matrix = m_combined_matrix_stack.last();
-    gn->m_clip_list = m_current_clip;
+    gn->setRendererMatrix(m_combined_matrix_stack.last());
+    gn->setRendererClipList(m_current_clip);
     gn->setInheritedOpacity(m_opacity_stack.last());
 
     if (m_added) {
