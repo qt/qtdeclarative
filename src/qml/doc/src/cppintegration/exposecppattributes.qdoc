@@ -119,13 +119,13 @@ from C++:
 
 \code
  int main(int argc, char *argv[]) {
-     QCoreApplication app(argc, argv);
+     QGuiApplication app(argc, argv);
 
-     QQmlEngine engine;
+     QQuickView view;
      Message msg;
-     engine.rootContext()->setContextProperty("msg", &msg);
-     QQmlComponent component(&engine, QUrl::fromLocalFile("MyItem.qml"));
-     component.create();
+     view.engine()->rootContext()->setContextProperty("msg", &msg);
+     view.setSource(QUrl::fromLocalFile("MyItem.qml"));
+     view.show();
 
      return app.exec();
  }
