@@ -130,7 +130,7 @@
         \li C++
     \endtable
 
-    \b {* No hover support}
+    \b {* No hover effects}
 
     \section2 Porting Qt Quick Controls Code
 
@@ -180,15 +180,18 @@
     This works with both modules, and will reduce the amount of work needed
     when the migration begins.
 
-    \section3 Type Changes
+    \section3 Type Comparison Table
 
     \table
     \header
-        \li Qt Quick Controls
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls 1, Qt Quick Extras
+        \li Qt Quick Controls 2, Qt Labs Calendar
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {AbstractButton}
     \row
         \li \l [QML QtQuickControls] {Action}
-        \li No equivalent; see \l [QML QtQuick] {Shortcut} instead.
+        \li \span {} {\mdash \nbsp \sub {(see \l [QML QtQuick] {Shortcut} instead)}}
     \row
         \li \l [QML QtQuickControls] {ApplicationWindow}
         \li \l [QML QtQuickControls2] {ApplicationWindow}
@@ -199,23 +202,52 @@
         \li \l [QML QtQuickControls] {Button}
         \li \l [QML QtQuickControls2] {Button}
     \row
+        \li \l [QML QtQuickExtras] {CircularGauge}
+        \li \mdash
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Control}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Container}
+    \row
         \li \l [QML QtQuickControls] {Calendar}
-        \li No equivalent; see \l [QML] {MonthGrid}, \l [QML] {DayOfWeekRow} and \l [QML] {WeekNumberColumn} instead.
+        \li \l [QML QtLabsCalendar] {MonthGrid},
+            \l [QML QtLabsCalendar] {DayOfWeekRow},
+            \l [QML QtLabsCalendar] {WeekNumberColumn}
     \row
         \li \l [QML QtQuickControls] {CheckBox}
         \li \l [QML QtQuickControls2] {CheckBox}
     \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {CheckDelegate}
+    \row
         \li \l [QML QtQuickControls] {ComboBox}
         \li \l [QML QtQuickControls2] {ComboBox}
+    \row
+        \li \l [QML QtQuickExtras] {DelayButton}
+        \li \mdash
+    \row
+        \li \l [QML QtQuickExtras] {Dial}
+        \li \l [QML QtQuickControls2] {Dial}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Drawer}
     \row
         \li \l [QML QtQuickControls] {ExclusiveGroup}
         \li \l [QML QtQuickControls2] {ButtonGroup}
     \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Frame}
+    \row
+        \li \l [QML QtQuickExtras] {Gauge}
+        \li \mdash
+    \row
         \li \l [QML QtQuickControls] {GroupBox}
-
-        \li \l [QtQuickControls2] {GroupBox}, or \l [QML QtQuickControls2] {Frame}
-            if a title is not required.
-
+        \li \l [QML QtQuickControls2] {GroupBox}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ItemDelegate}
     \row
         \li \l [QML QtQuickControls] {Label}
         \li \l [QML QtQuickControls2] {Label}
@@ -223,11 +255,38 @@
         \li \l [QML QtQuickControls] {Menu}
         \li \l [QML QtQuickControls2] {Menu}
     \row
+        \li \l [QML QtQuickControls] {MenuItem}
+        \li \l [QML QtQuickControls2] {MenuItem}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Page}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {PageIndicator}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Pane}
+    \row
+        \li \l [QML QtQuickExtras] {Picture}
+        \li \mdash
+    \row
+        \li \l [QML QtQuickExtras] {PieMenu}
+        \li \mdash
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Popup}
+    \row
         \li \l [QML QtQuickControls] {ProgressBar}
         \li \l [QML QtQuickControls2] {ProgressBar}
     \row
         \li \l [QML QtQuickControls] {RadioButton}
         \li \l [QML QtQuickControls2] {RadioButton}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {RadioDelegate}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {RangeSlider}
     \row
         \li \l [QML QtQuickControls] {ScrollView}
         \li \l [QML QtQuickControls2] {ScrollBar},
@@ -239,24 +298,36 @@
         \li \l [QML QtQuickControls] {SpinBox}
         \li \l [QML QtQuickControls2] {SpinBox}
     \row
-        \li \l [QML QtQuickControls] {Stack},
-            \l [QML QtQuickControls] {StackView},
-            \l [QML QtQuickControls] {StackViewDelegate}
+        \li \l [QML QtQuickControls] {StackView},
+            \l [QML QtQuickControls] {StackViewDelegate},
+            \l [QML QtQuickControls] {Stack}
         \li \l [QML QtQuickControls2] {StackView}
     \row
         \li \l [QML QtQuickControls] {StatusBar}
-        \li No equivalent
+        \li \mdash
+    \row
+        \li \l [QML QtQuickExtras] {StatusIndicator}
+        \li \mdash
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwipeDelegate}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwipeView}
     \row
         \li \l [QML QtQuickControls] {Switch}
         \li \l [QML QtQuickControls2] {Switch}
     \row
-        \li \l [QML QtQuickControls] {Tab},
-            \l [QML QtQuickControls] {TabView}
-        \li \l [QML QtQuickControls2] {TabBar} in combination with, for example,
-            \l [QML QtQuickControls2] {SwipeView}.
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwitchDelegate}
+    \row
+        \li \l [QML QtQuickControls] {TabView},
+            \l [QML QtQuickControls] {Tab}
+        \li \l [QML QtQuickControls2] {TabBar},
+            \l [QML QtQuickControls2] {TabButton}
     \row
         \li \l [QML QtQuickControls] {TableView}
-        \li No equivalent
+        \li \mdash
     \row
         \li \l [QML QtQuickControls] {TextArea}
         \li \l [QML QtQuickControls2] {TextArea}
@@ -264,21 +335,32 @@
         \li \l [QML QtQuickControls] {TextField}
         \li \l [QML QtQuickControls2] {TextField}
     \row
+        \li \l [QML QtQuickExtras] {ToggleButton}
+        \li \mdash
+    \row
         \li \l [QML QtQuickControls] {ToolBar}
         \li \l [QML QtQuickControls2] {ToolBar}
     \row
         \li \l [QML QtQuickControls] {ToolButton}
         \li \l [QML QtQuickControls2] {ToolButton}
     \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ToolTip}
+    \row
         \li \l [QML QtQuickControls] {TreeView}
-        \li No equivalent
+        \li \mdash
+    \row
+        \li \l [QML QtQuickExtras] {Tumbler},
+            \l [QML QtQuickExtras] {TumblerColumn}
+        \li \l [QML QtQuickControls2] {Tumbler}
     \endtable
 
     \section1 Related Information
 
     \list
       \li \l{Qt Quick}
-      \li \l{Qt Quick Controls}
       \li \l{Qt Quick Controls 2 QML Types}
+      \li \l{Qt Quick Controls QML Types}
+      \li \l{Qt Quick Extras QML Types}
     \endlist
 */
