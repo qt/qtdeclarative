@@ -137,8 +137,6 @@ bool QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
-    compiledData->propertyCaches.reserve(document->objects.count());
-
     {
         QQmlPropertyCacheCreator propertyCacheBuilder(this);
         if (!propertyCacheBuilder.buildMetaObjects())
@@ -242,9 +240,10 @@ bool QQmlTypeCompiler::compile()
     document->javaScriptCompilationUnit->data = qmlUnit;
 
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
+    compiledData->compilationUnit->propertyCaches = m_propertyCaches;
 
     // Add to type registry of composites
-    if (compiledData->isCompositeType())
+    if (compiledData->compilationUnit->isCompositeType())
         engine->registerInternalCompositeType(compiledData);
     else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
@@ -289,7 +288,7 @@ bool QQmlTypeCompiler::compile()
     compiledData->totalParserStatusCount = parserStatusCount;
     compiledData->totalObjectCount = objectCount;
 
-    Q_ASSERT(compiledData->propertyCaches.count() == static_cast<int>(compiledData->compilationUnit->data->nObjects));
+    Q_ASSERT(compiledData->compilationUnit->propertyCaches.count() == static_cast<int>(compiledData->compilationUnit->data->nObjects));
 
     return errors.isEmpty();
 }
@@ -343,13 +342,13 @@ int QQmlTypeCompiler::rootObjectIndex() const
 
 void QQmlTypeCompiler::setPropertyCaches(const QQmlPropertyCacheVector &caches)
 {
-    compiledData->propertyCaches = caches;
+    m_propertyCaches = caches;
     Q_ASSERT(caches.count() >= document->indexOfRootObject);
 }
 
 const QQmlPropertyCacheVector &QQmlTypeCompiler::propertyCaches() const
 {
-    return compiledData->propertyCaches;
+    return m_propertyCaches;
 }
 
 QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
@@ -1334,7 +1333,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         } else if (tr->component) {
-            if (tr->component->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
+            if (tr->component->compilationUnit->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         }
 

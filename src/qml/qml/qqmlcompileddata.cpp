@@ -91,10 +91,6 @@ QQmlCompiledData::~QQmlCompiledData()
 
     if (importCache)
         importCache->release();
-
-    for (int ii = 0; ii < propertyCaches.count(); ++ii)
-        if (propertyCaches.at(ii).data())
-            propertyCaches.at(ii)->release();
 }
 
 void QQmlCompiledData::clear()
@@ -109,7 +105,7 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::propertyCache() const
     if (type)
         return typePropertyCache;
     else
-        return component->rootPropertyCache();
+        return component->compilationUnit->rootPropertyCache();
 }
 
 /*!
@@ -124,7 +120,7 @@ QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngi
         typePropertyCache->addref();
         return typePropertyCache;
     } else {
-        return component->rootPropertyCache();
+        return component->compilationUnit->rootPropertyCache();
     }
 }
 
@@ -146,7 +142,7 @@ void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
     else if (type)
         mo = type->metaObject();
     else if (component)
-        mo = component->rootPropertyCache()->firstCppMetaObject();
+        mo = component->compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 

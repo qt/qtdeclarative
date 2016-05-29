@@ -73,7 +73,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     : phase(Startup)
     , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
-    , propertyCaches(compiledData->propertyCaches)
+    , propertyCaches(compiledData->compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
     init(parentContext);
@@ -97,7 +97,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     : phase(Startup)
     , compiledData(compiledData)
     , resolvedTypes(compiledData->resolvedTypes)
-    , propertyCaches(compiledData->propertyCaches)
+    , propertyCaches(compiledData->compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(0)
 {
     init(parentContext);

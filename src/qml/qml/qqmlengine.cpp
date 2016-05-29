@@ -2227,7 +2227,7 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
     Locker locker(this);
     QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->rootPropertyCache());
+        return QQmlMetaObject((*iter)->compilationUnit->rootPropertyCache());
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type?type->baseMetaObject():0);
@@ -2239,7 +2239,7 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
     Locker locker(this);
     QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->rootPropertyCache());
+        return QQmlMetaObject((*iter)->compilationUnit->rootPropertyCache());
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type?type->metaObject():0);
@@ -2251,7 +2251,7 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     Locker locker(this);
     QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->rootPropertyCache();
+        return (*iter)->compilationUnit->rootPropertyCache();
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         locker.unlock();
@@ -2264,7 +2264,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     Locker locker(this);
     QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->rootPropertyCache();
+        return (*iter)->compilationUnit->rootPropertyCache();
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         locker.unlock();
@@ -2274,7 +2274,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
 
 void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
 {
-    QByteArray name = data->rootPropertyCache()->className();
+    QByteArray name = data->compilationUnit->rootPropertyCache()->className();
 
     QByteArray ptr = name + '*';
     QByteArray lst = "QQmlListProperty<" + name + '>';

@@ -123,6 +123,7 @@ private:
 
     // index in first hash is component index, vector inside contains object indices of objects with id property
     QVector<quint32> m_componentRoots;
+    QQmlPropertyCacheVector m_propertyCaches;
 };
 
 struct QQmlCompilePass

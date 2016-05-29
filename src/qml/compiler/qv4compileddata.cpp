@@ -165,6 +165,12 @@ void CompilationUnit::unlink()
 {
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
+
+    for (int ii = 0; ii < propertyCaches.count(); ++ii)
+        if (propertyCaches.at(ii).data())
+            propertyCaches.at(ii)->release();
+    propertyCaches.clear();
+
     engine = 0;
     free(runtimeStrings);
     runtimeStrings = 0;

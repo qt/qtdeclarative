@@ -61,11 +61,16 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qv4identifier_p.h>
+#include <private/qflagpointer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyCache;
 class QQmlPropertyData;
+
+// The vector is indexed by QV4::CompiledData::Object index and the flag
+// indicates whether instantiation of the object requires a VME meta-object.
+typedef QVector<QFlagPointer<QQmlPropertyCache>> QQmlPropertyCacheVector;
 
 namespace QmlIR {
 struct Document;
@@ -660,6 +665,10 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
+
+    QQmlPropertyCacheVector propertyCaches;
+    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject).data(); }
+    bool isCompositeType() const { return propertyCaches.at(data->indexOfRootObject).flag(); }
 
     // index is object index. This allows fast access to the
     // property data when initializing bindings, avoiding expensive

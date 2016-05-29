@@ -494,7 +494,7 @@ QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     if (!td || !td->isComplete())
         return 0;
     QQmlCompiledData *cd = td->compiledData();
-    const QMetaObject *mo = cd->rootPropertyCache()->firstCppMetaObject();
+    const QMetaObject *mo = cd->compilationUnit->rootPropertyCache()->firstCppMetaObject();
     return QQmlMetaType::qmlType(mo);
 }
 
