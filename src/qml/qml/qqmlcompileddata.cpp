@@ -74,69 +74,10 @@ QQmlCompiledData::~QQmlCompiledData()
         QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
 
     clear();
-
-    for (QHash<int, TypeReference*>::Iterator resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
-         resolvedType != end; ++resolvedType) {
-        if ((*resolvedType)->component)
-            (*resolvedType)->component->release();
-        if ((*resolvedType)->typePropertyCache)
-            (*resolvedType)->typePropertyCache->release();
-    }
-    qDeleteAll(resolvedTypes);
-    resolvedTypes.clear();
 }
 
 void QQmlCompiledData::clear()
 {
-}
-
-/*!
-Returns the property cache, if one alread exists.  The cache is not referenced.
-*/
-QQmlPropertyCache *QQmlCompiledData::TypeReference::propertyCache() const
-{
-    if (type)
-        return typePropertyCache;
-    else
-        return component->compilationUnit->rootPropertyCache();
-}
-
-/*!
-Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
-*/
-QQmlPropertyCache *QQmlCompiledData::TypeReference::createPropertyCache(QQmlEngine *engine)
-{
-    if (typePropertyCache) {
-        return typePropertyCache;
-    } else if (type) {
-        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
-        typePropertyCache->addref();
-        return typePropertyCache;
-    } else {
-        return component->compilationUnit->rootPropertyCache();
-    }
-}
-
-template <typename T>
-bool qtTypeInherits(const QMetaObject *mo) {
-    while (mo) {
-        if (mo == &T::staticMetaObject)
-            return true;
-        mo = mo->superClass();
-    }
-    return false;
-}
-
-void QQmlCompiledData::TypeReference::doDynamicTypeCheck()
-{
-    const QMetaObject *mo = 0;
-    if (typePropertyCache)
-        mo = typePropertyCache->firstCppMetaObject();
-    else if (type)
-        mo = type->metaObject();
-    else if (component)
-        mo = component->compilationUnit->rootPropertyCache()->firstCppMetaObject();
-    isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
 void QQmlCompiledData::initialize(QQmlEngine *engine)

@@ -72,6 +72,9 @@ class QQmlPropertyCache;
 class QQmlPropertyData;
 class QQmlTypeNameCache;
 class QQmlScriptData;
+class QQmlType;
+class QQmlCompiledData;
+class QQmlEngine;
 
 // The vector is indexed by QV4::CompiledData::Object index and the flag
 // indicates whether instantiation of the object requires a VME meta-object.
@@ -693,6 +696,33 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int totalObjectCount; // Number of objects explicitly instantiated
 
     QVector<QQmlScriptData *> dependentScripts;
+
+    struct ResolvedTypeReference
+    {
+        ResolvedTypeReference()
+            : type(0), typePropertyCache(0), component(0)
+            , majorVersion(0)
+            , minorVersion(0)
+            , isFullyDynamicType(false)
+        {}
+
+        QQmlType *type;
+        QQmlPropertyCache *typePropertyCache;
+        QQmlCompiledData *component;
+
+        int majorVersion;
+        int minorVersion;
+        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+        // therefore cannot have a property cache installed when instantiated.
+        bool isFullyDynamicType;
+
+        QQmlPropertyCache *propertyCache() const;
+        QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+
+        void doDynamicTypeCheck();
+    };
+    // map from name index
+    QHash<int, ResolvedTypeReference*> resolvedTypes;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();

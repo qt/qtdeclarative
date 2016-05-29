@@ -317,6 +317,11 @@ public:
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
 
+        // There might be JS function objects around that hold a last ref to the compilation unit that's
+        // keeping the type compilation data (CompilationUnit) around. Let's collect them as well so that
+        // trim works well.
+        engine->collectGarbage();
+
         engine->trimComponentCache();
     }
 

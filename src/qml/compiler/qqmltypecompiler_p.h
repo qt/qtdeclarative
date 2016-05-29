@@ -96,7 +96,7 @@ public:
     QUrl url() const { return typeData->finalUrl(); }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
-    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes();
     QList<QmlIR::Object*> *qmlObjects();
     int rootObjectIndex() const;
     void setPropertyCaches(const QQmlPropertyCacheVector &caches);
@@ -121,6 +121,7 @@ private:
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> m_resolvedTypes;
 
     // index in first hash is component index, vector inside contains object indices of objects with id property
     QVector<quint32> m_componentRoots;
@@ -156,7 +157,7 @@ protected:
     QQmlEnginePrivate *enginePrivate;
     const QList<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
-    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
 };
 
@@ -179,7 +180,7 @@ private:
     const QList<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QSet<QString> &illegalNames;
     const QQmlPropertyCacheVector &propertyCaches;
 };
@@ -210,7 +211,7 @@ private:
     const QList<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector propertyCaches;
     const QQmlImports *imports;
-    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes;
 };
 
 class QQmlCustomParserScriptIndexer: public QQmlCompilePass
@@ -277,7 +278,7 @@ protected:
     QHash<int, int> _idToObjectIndex;
     QList<int> _objectsWithAliases;
 
-    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
 };
 
@@ -318,7 +319,7 @@ private:
 
     QQmlEnginePrivate *enginePrivate;
     const QV4::CompiledData::Unit *qmlUnit;
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QQmlPropertyCacheVector &propertyCaches;
 
@@ -338,7 +339,7 @@ private:
     bool compileComponent(int componentRoot);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QList<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector &propertyCaches;

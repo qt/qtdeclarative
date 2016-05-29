@@ -72,7 +72,7 @@ struct ActiveOCRestorer
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, void *activeVMEDataForRootContext)
     : phase(Startup)
     , compiledData(compiledData)
-    , resolvedTypes(compiledData->resolvedTypes)
+    , resolvedTypes(compiledData->compilationUnit->resolvedTypes)
     , propertyCaches(compiledData->compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
@@ -96,7 +96,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState)
     : phase(Startup)
     , compiledData(compiledData)
-    , resolvedTypes(compiledData->resolvedTypes)
+    , resolvedTypes(compiledData->compilationUnit->resolvedTypes)
     , propertyCaches(compiledData->compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(0)
 {
@@ -708,7 +708,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
-        QQmlCompiledData::TypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
+        QV4::CompiledData::CompilationUnit::ResolvedTypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
         Q_ASSERT(tr);
         QQmlType *attachedType = tr->type;
         if (!attachedType) {
@@ -1042,7 +1042,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
     } else {
-        QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        QV4::CompiledData::CompilationUnit::ResolvedTypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;

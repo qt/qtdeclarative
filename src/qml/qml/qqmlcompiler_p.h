@@ -93,33 +93,6 @@ public:
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
-    struct TypeReference
-    {
-        TypeReference()
-            : type(0), typePropertyCache(0), component(0)
-            , majorVersion(0)
-            , minorVersion(0)
-            , isFullyDynamicType(false)
-        {}
-
-        QQmlType *type;
-        QQmlPropertyCache *typePropertyCache;
-        QQmlCompiledData *component;
-
-        int majorVersion;
-        int minorVersion;
-        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-        // therefore cannot have a property cache installed when instantiated.
-        bool isFullyDynamicType;
-
-        QQmlPropertyCache *propertyCache() const;
-        QQmlPropertyCache *createPropertyCache(QQmlEngine *);
-
-        void doDynamicTypeCheck();
-    };
-    // map from name index
-    QHash<int, TypeReference*> resolvedTypes;
-
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
     bool isInitialized() const { return hasEngine(); }

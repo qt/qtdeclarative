@@ -48,6 +48,9 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlcompiler_p.h>
+#include <QQmlPropertyMap>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -180,6 +183,16 @@ void CompilationUnit::unlink()
     dependentScripts.clear();
 
     importCache = nullptr;
+
+    for (auto resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
+         resolvedType != end; ++resolvedType) {
+        if ((*resolvedType)->component)
+            (*resolvedType)->component->release();
+        if ((*resolvedType)->typePropertyCache)
+            (*resolvedType)->typePropertyCache->release();
+    }
+    qDeleteAll(resolvedTypes);
+    resolvedTypes.clear();
 
     engine = 0;
     free(runtimeStrings);
@@ -318,6 +331,57 @@ QString Binding::valueAsScriptString(const Unit *unit) const
     else
         return valueAsString(unit);
 }
+
+#ifndef V4_BOOTSTRAP
+/*!
+Returns the property cache, if one alread exists.  The cache is not referenced.
+*/
+QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
+{
+    if (type)
+        return typePropertyCache;
+    else
+        return component->compilationUnit->rootPropertyCache();
+}
+
+/*!
+Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
+*/
+QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+{
+    if (typePropertyCache) {
+        return typePropertyCache;
+    } else if (type) {
+        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
+        typePropertyCache->addref();
+        return typePropertyCache;
+    } else {
+        return component->compilationUnit->rootPropertyCache();
+    }
+}
+
+template <typename T>
+bool qtTypeInherits(const QMetaObject *mo) {
+    while (mo) {
+        if (mo == &T::staticMetaObject)
+            return true;
+        mo = mo->superClass();
+    }
+    return false;
+}
+
+void CompilationUnit::ResolvedTypeReference::doDynamicTypeCheck()
+{
+    const QMetaObject *mo = 0;
+    if (typePropertyCache)
+        mo = typePropertyCache->firstCppMetaObject();
+    else if (type)
+        mo = type->metaObject();
+    else if (component)
+        mo = component->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
+}
+#endif
 
 }
 
