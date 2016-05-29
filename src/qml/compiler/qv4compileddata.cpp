@@ -171,6 +171,8 @@ void CompilationUnit::unlink()
             propertyCaches.at(ii)->release();
     propertyCaches.clear();
 
+    importCache = nullptr;
+
     engine = 0;
     free(runtimeStrings);
     runtimeStrings = 0;

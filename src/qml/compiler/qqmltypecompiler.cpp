@@ -65,16 +65,16 @@ QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *
 
 bool QQmlTypeCompiler::compile()
 {
-    compiledData->importCache = new QQmlTypeNameCache;
+    importCache = new QQmlTypeNameCache;
 
     foreach (const QString &ns, typeData->namespaces())
-        compiledData->importCache->add(ns);
+        importCache->add(ns);
 
     // Add any Composite Singletons that were used to the import cache
     foreach (const QQmlTypeData::TypeReference &singleton, typeData->compositeSingletons())
-        compiledData->importCache->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
+        importCache->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
 
-    typeData->imports().populateCache(compiledData->importCache);
+    typeData->imports().populateCache(importCache.data());
 
     const QHash<int, QQmlTypeData::TypeReference> &resolvedTypes = typeData->resolvedTypeRefs();
     for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
@@ -185,7 +185,7 @@ bool QQmlTypeCompiler::compile()
             qualifier = qualifier.mid(lastDotIndex+1);
         }
 
-        compiledData->importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
+        importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
         QQmlScriptData *scriptData = script.script->scriptData();
         scriptData->addref();
         compiledData->scripts << scriptData;
@@ -215,7 +215,7 @@ bool QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, compiledData->importCache, &document->jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, importCache, &document->jsGenerator.stringTable);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return false;
@@ -241,6 +241,7 @@ bool QQmlTypeCompiler::compile()
 
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
     compiledData->compilationUnit->propertyCaches = m_propertyCaches;
+    compiledData->compilationUnit->importCache = importCache;
 
     // Add to type registry of composites
     if (compiledData->compilationUnit->isCompositeType())

@@ -89,8 +89,6 @@ public:
 
     QQmlEngine *engine;
 
-    QQmlTypeNameCache *importCache;
-
     int metaTypeId;
     int listMetaTypeId;
     bool isRegisteredWithEngine;

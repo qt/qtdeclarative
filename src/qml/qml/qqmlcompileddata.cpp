@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
-: engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
+: engine(engine), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
   totalBindingsCount(0), totalParserStatusCount(0)
 {
     Q_ASSERT(engine);
@@ -88,9 +88,6 @@ QQmlCompiledData::~QQmlCompiledData()
 
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
-
-    if (importCache)
-        importCache->release();
 }
 
 void QQmlCompiledData::clear()

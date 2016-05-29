@@ -117,6 +117,7 @@ private:
     QQmlEnginePrivate *engine;
     QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
+    QQmlRefPointer<QQmlTypeNameCache> importCache;
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
