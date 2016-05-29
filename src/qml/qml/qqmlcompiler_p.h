@@ -120,8 +120,6 @@ public:
     // map from name index
     QHash<int, TypeReference*> resolvedTypes;
 
-    QList<QQmlScriptData *> scripts;
-
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
     bool isInitialized() const { return hasEngine(); }

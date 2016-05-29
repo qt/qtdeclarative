@@ -47,6 +47,7 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmltypeloader_p.h>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -173,6 +174,10 @@ void CompilationUnit::unlink()
         if (propertyCaches.at(ii).data())
             propertyCaches.at(ii)->release();
     propertyCaches.clear();
+
+    for (int ii = 0; ii < dependentScripts.count(); ++ii)
+        dependentScripts.at(ii)->release();
+    dependentScripts.clear();
 
     importCache = nullptr;
 

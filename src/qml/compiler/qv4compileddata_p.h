@@ -71,6 +71,7 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyCache;
 class QQmlPropertyData;
 class QQmlTypeNameCache;
+class QQmlScriptData;
 
 // The vector is indexed by QV4::CompiledData::Object index and the flag
 // indicates whether instantiation of the object requires a VME meta-object.
@@ -690,6 +691,8 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
     int totalObjectCount; // Number of objects explicitly instantiated
+
+    QVector<QQmlScriptData *> dependentScripts;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();

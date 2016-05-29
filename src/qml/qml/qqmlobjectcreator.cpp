@@ -183,12 +183,12 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compiledData->compilationUnit->totalObjectCount);
 
-    if (subComponentIndex == -1 && compiledData->scripts.count()) {
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
+    if (subComponentIndex == -1 && compiledData->compilationUnit->dependentScripts.count()) {
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->compilationUnit->dependentScripts.count()));
         context->importedScripts.set(v4, scripts);
         QV4::ScopedValue v(scope);
-        for (int i = 0; i < compiledData->scripts.count(); ++i) {
-            QQmlScriptData *s = compiledData->scripts.at(i);
+        for (int i = 0; i < compiledData->compilationUnit->dependentScripts.count(); ++i) {
+            QQmlScriptData *s = compiledData->compilationUnit->dependentScripts.at(i);
             scripts->putIndexed(i, (v = s->scriptValueForContext(context)));
         }
     } else if (sharedState->creationContext) {

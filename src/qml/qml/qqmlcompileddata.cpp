@@ -84,9 +84,6 @@ QQmlCompiledData::~QQmlCompiledData()
     }
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
-
-    for (int ii = 0; ii < scripts.count(); ++ii)
-        scripts.at(ii)->release();
 }
 
 void QQmlCompiledData::clear()

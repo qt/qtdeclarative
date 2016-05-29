@@ -172,7 +172,8 @@ bool QQmlTypeCompiler::compile()
 
     // Collect imported scripts
     const QList<QQmlTypeData::ScriptReference> &scripts = typeData->resolvedScripts();
-    compiledData->scripts.reserve(scripts.count());
+    QVector<QQmlScriptData *> dependentScripts;
+    dependentScripts.reserve(scripts.count());
     for (int scriptIndex = 0; scriptIndex < scripts.count(); ++scriptIndex) {
         const QQmlTypeData::ScriptReference &script = scripts.at(scriptIndex);
 
@@ -188,7 +189,7 @@ bool QQmlTypeCompiler::compile()
         importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
         QQmlScriptData *scriptData = script.script->scriptData();
         scriptData->addref();
-        compiledData->scripts << scriptData;
+        dependentScripts << scriptData;
     }
 
     // Resolve component boundaries and aliases
@@ -242,6 +243,7 @@ bool QQmlTypeCompiler::compile()
     compiledData->compilationUnit = document->javaScriptCompilationUnit;
     compiledData->compilationUnit->propertyCaches = m_propertyCaches;
     compiledData->compilationUnit->importCache = importCache;
+    compiledData->compilationUnit->dependentScripts = dependentScripts;
 
     // Add to type registry of composites
     if (compiledData->compilationUnit->isCompositeType())
