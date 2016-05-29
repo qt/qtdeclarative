@@ -115,9 +115,10 @@ public:
         IsSignalHandler    = 0x00800000, // Function is a signal handler
         IsOverload         = 0x01000000, // Function is an overload of another function
         IsCloned           = 0x02000000, // The function was marked as cloned
+        IsConstructor      = 0x04000000, // The function was marked is a constructor
 
         // Internal QQmlPropertyCache flags
-        NotFullyResolved   = 0x04000000, // True if the type data is to be lazily resolved
+        NotFullyResolved   = 0x08000000, // True if the type data is to be lazily resolved
 
         // Flags that are set based on the propType field
         PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
@@ -156,6 +157,7 @@ public:
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
     bool isCloned() const { return flags & IsCloned; }
+    bool isConstructor() const { return flags & IsConstructor; }
 
     bool hasOverride() const { return !(flags & IsValueTypeVirtual) &&
                                       !(flags & HasAccessors) &&
@@ -437,6 +439,8 @@ public:
 
 protected:
     QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
+    int *methodParameterTypes(const QMetaMethod &method, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
+
 };
 
 class QQmlObjectOrGadget: public QQmlMetaObject
@@ -455,6 +459,20 @@ public:
 
 private:
     QBiPointer<QObject, void> ptr;
+
+protected:
+    QQmlObjectOrGadget(const QMetaObject* metaObject)
+        : QQmlMetaObject(metaObject)
+    {}
+
+};
+
+class QQmlStaticMetaObject : public QQmlObjectOrGadget {
+public:
+    QQmlStaticMetaObject(const QMetaObject* metaObject)
+        : QQmlObjectOrGadget(metaObject)
+    {}
+    int *constructorParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
 };
 
 QQmlPropertyData::QQmlPropertyData()

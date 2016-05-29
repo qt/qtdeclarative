@@ -94,6 +94,14 @@ struct QObjectMethod : FunctionObject {
     const QMetaObject *metaObject();
 };
 
+struct QMetaObjectWrapper : FunctionObject {
+    QMetaObjectWrapper(const QMetaObject* metaObject);
+    const QMetaObject* metaObject;
+    QVector<QQmlPropertyData> constructors;
+
+    void ensureConstructorsCache();
+};
+
 struct QmlSignalHandler : Object {
     QmlSignalHandler(QObject *object, int signalIndex);
     QPointer<QObject> object;
@@ -192,6 +200,26 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
+};
+
+
+struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
+{
+    V4_OBJECT2(QMetaObjectWrapper, QV4::FunctionObject)
+    V4_NEEDS_DESTROY
+
+    static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
+    static ReturnedValue construct(const Managed *, CallData *callData);
+    static bool isEqualTo(Managed *a, Managed *b);
+
+    const QMetaObject *metaObject() const { return d()->metaObject; }
+
+private:
+    void init(ExecutionEngine *engine);
+    ReturnedValue constructInternal(CallData *callData) const;
+    ReturnedValue callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
+    ReturnedValue callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
+
 };
 
 struct QmlSignalHandler : public QV4::Object

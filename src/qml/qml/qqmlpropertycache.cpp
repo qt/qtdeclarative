@@ -184,10 +184,16 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 {
     coreIndex = m.methodIndex();
     arguments = 0;
+
+    propType = m.returnType();
+
     flags |= IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= IsSignal;
-    propType = m.returnType();
+    else if (m.methodType() == QMetaMethod::Constructor) {
+        flags |= IsConstructor;
+        propType = QMetaType::QObjectStar;
+    }
 
     if (m.parameterCount()) {
         flags |= HasArguments;
@@ -206,11 +212,15 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 {
     coreIndex = m.methodIndex();
+    propType = QMetaType::Void;
     arguments = 0;
     flags |= IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= IsSignal;
-    propType = QMetaType::Void;
+    else if (m.methodType() == QMetaMethod::Constructor) {
+        flags |= IsConstructor;
+        propType = QMetaType::QObjectStar;
+    }
 
     const char *returnType = m.typeName();
     if (!returnType)
@@ -1508,44 +1518,59 @@ int *QQmlMetaObject::methodParameterTypes(int index, QVarLengthArray<int, 9> &du
 
     } else {
         QMetaMethod m = _m.asT2()->method(index);
-        int argc = m.parameterCount();
-        dummy.resize(argc + 1);
-        dummy[0] = argc;
-        QList<QByteArray> argTypeNames; // Only loaded if needed
+        return methodParameterTypes(m, dummy, unknownTypeError);
 
-        for (int ii = 0; ii < argc; ++ii) {
-            int type = m.parameterType(ii);
-            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
-            if (flags & QMetaType::IsEnumeration)
-                type = QVariant::Int;
-            else if (type == QMetaType::UnknownType ||
-                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-                      type != qMetaTypeId<QJSValue>())) {
-                //the UserType clause is to catch registered QFlags)
-                if (argTypeNames.isEmpty())
-                    argTypeNames = m.parameterTypes();
-                type = EnumType(_m.asT2(), argTypeNames.at(ii), type);
-            }
-            if (type == QMetaType::UnknownType) {
-                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                return 0;
-            }
-            dummy[ii + 1] = type;
-        }
-
-        return dummy.data();
     }
+}
+
+int* QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const {
+    int argc = m.parameterCount();
+    dummy.resize(argc + 1);
+    dummy[0] = argc;
+    QList<QByteArray> argTypeNames; // Only loaded if needed
+
+    for (int ii = 0; ii < argc; ++ii) {
+        int type = m.parameterType(ii);
+        QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+        if (flags & QMetaType::IsEnumeration)
+            type = QVariant::Int;
+        else if (type == QMetaType::UnknownType ||
+                 (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                  type != qMetaTypeId<QJSValue>())) {
+            //the UserType clause is to catch registered QFlags)
+            if (argTypeNames.isEmpty())
+                argTypeNames = m.parameterTypes();
+            type = EnumType(_m.asT2(), argTypeNames.at(ii), type);
+        }
+        if (type == QMetaType::UnknownType) {
+            if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
+            return 0;
+        }
+        dummy[ii + 1] = type;
+    }
+
+    return dummy.data();
 }
 
 void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv) const
 {
-    if (ptr.isT1())
+    if (ptr.isNull()) {
+        const QMetaObject *metaObject = _m.asT2();
+        metaObject->d.static_metacall(0, type, index, argv);
+    }
+    else if (ptr.isT1()) {
         QMetaObject::metacall(ptr.asT1(), type, index, argv);
+    }
     else {
         const QMetaObject *metaObject = _m.asT1()->metaObject();
         QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &index);
         metaObject->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
     }
+}
+
+int* QQmlStaticMetaObject::constructorParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const {
+    QMetaMethod m = _m.asT2()->constructor(index);
+    return methodParameterTypes(m, dummy, unknownTypeError);
 }
 
 QT_END_NAMESPACE

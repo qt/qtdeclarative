@@ -75,6 +75,7 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1114,7 +1115,8 @@ private:
 }
 
 static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, int returnType, int argCount,
-                                        int *argTypes, QV4::ExecutionEngine *engine, QV4::CallData *callArgs)
+                                        int *argTypes, QV4::ExecutionEngine *engine, QV4::CallData *callArgs,
+                                         QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
 {
     if (argCount > 0) {
         // Convert all arguments.
@@ -1126,7 +1128,7 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
         for (int ii = 0; ii < args.count(); ++ii)
             argData[ii] = args[ii].dataPtr();
 
-        object.metacall(QMetaObject::InvokeMetaMethod, index, argData.data());
+        object.metacall(callType, index, argData.data());
 
         return args[0].toValue(engine);
 
@@ -1137,14 +1139,14 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
 
         void *args[] = { arg.dataPtr() };
 
-        object.metacall(QMetaObject::InvokeMetaMethod, index, args);
+        object.metacall(callType, index, args);
 
         return arg.toValue(engine);
 
     } else {
 
         void *args[] = { 0 };
-        object.metacall(QMetaObject::InvokeMetaMethod, index, args);
+        object.metacall(callType, index, args);
         return Encode::undefined();
 
     }
@@ -1354,7 +1356,8 @@ static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
 }
 
 static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
-                                      QV4::ExecutionEngine *engine, QV4::CallData *callArgs)
+                                      QV4::ExecutionEngine *engine, QV4::CallData *callArgs,
+                                      QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
 {
     QByteArray unknownTypeError;
 
@@ -1371,7 +1374,10 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
         int *args = 0;
         QVarLengthArray<int, 9> dummy;
 
-        args = object.methodParameterTypes(data.coreIndex, dummy, &unknownTypeError);
+        if (data.isConstructor())
+            args = static_cast<const QQmlStaticMetaObject&>(object).constructorParameterTypes(data.coreIndex, dummy, &unknownTypeError);
+        else
+            args = object.methodParameterTypes(data.coreIndex, dummy, &unknownTypeError);
 
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
@@ -1384,11 +1390,11 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
             return engine->throwError(error);
         }
 
-        return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
+        return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs, callType);
 
     } else {
 
-        return CallMethod(object, data.coreIndex, returnType, 0, 0, engine, callArgs);
+        return CallMethod(object, data.coreIndex, returnType, 0, 0, engine, callArgs, callType);
 
     }
 }
@@ -1407,7 +1413,8 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         score is constructed by adding the matchScore() result for each of the parameters.
 */
 static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
-                                         QV4::ExecutionEngine *engine, QV4::CallData *callArgs, const QQmlPropertyCache *propertyCache)
+                                         QV4::ExecutionEngine *engine, QV4::CallData *callArgs, const QQmlPropertyCache *propertyCache,
+                                         QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
 {
     int argumentCount = callArgs->argc;
 
@@ -1457,7 +1464,7 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
     } while ((attempt = RelatedMethod(object, attempt, dummy, propertyCache)) != 0);
 
     if (best.isValid()) {
-        return CallPrecise(object, best, engine, callArgs);
+        return CallPrecise(object, best, engine, callArgs, callType);
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         const QQmlPropertyData *candidate = &data;
@@ -1883,6 +1890,169 @@ void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
 }
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
+
+
+Heap::QMetaObjectWrapper::QMetaObjectWrapper(const QMetaObject *metaObject)
+    : metaObject(metaObject) {
+
+}
+
+void Heap::QMetaObjectWrapper::ensureConstructorsCache() {
+
+    const int count = metaObject->constructorCount();
+    if (constructors.size() != count) {
+        constructors.clear();
+        constructors.reserve(count);
+
+        for (int i = 0; i < count; ++i) {
+            QMetaMethod method = metaObject->constructor(i);
+            QQmlPropertyData d;
+            d.load(method);
+            d.coreIndex = i;
+            constructors << d;
+        }
+    }
+}
+
+
+ReturnedValue QMetaObjectWrapper::create(ExecutionEngine *engine, const QMetaObject* metaObject) {
+
+     QV4::Scope scope(engine);
+     Scoped<QMetaObjectWrapper> mo(scope, engine->memoryManager->allocObject<QV4::QMetaObjectWrapper>(metaObject)->asReturnedValue());
+     mo->init(engine);
+     return mo->asReturnedValue();
+}
+
+void QMetaObjectWrapper::init(ExecutionEngine *) {
+    const QMetaObject & mo = *d()->metaObject;
+
+    for (int i = 0; i < mo.enumeratorCount(); i++) {
+        QMetaEnum Enum = mo.enumerator(i);
+        for (int k = 0; k < Enum.keyCount(); k++) {
+            const char* key = Enum.key(k);
+            const int value = Enum.value(k);
+            defineReadonlyProperty(QLatin1String(key), Primitive::fromInt32(value));
+        }
+    }
+}
+
+ReturnedValue QMetaObjectWrapper::construct(const Managed *m, CallData *callData)
+{
+    const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(m);
+    return This->constructInternal(callData);
+}
+
+ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
+
+    d()->ensureConstructorsCache();
+
+    ExecutionEngine *v4 = engine();
+    const QMetaObject* mo = d()->metaObject;
+    if (d()->constructors.isEmpty()) {
+        return v4->throwTypeError(QStringLiteral("%1 has no invokable constructor")
+                                      .arg(QLatin1String(mo->className())));
+    }
+
+    Scope scope(v4);
+    Scoped<QObjectWrapper> object(scope);
+
+    if (d()->constructors.size() == 1) {
+        object = callConstructor(d()->constructors.first(), v4, callData);
+    }
+    else {
+        object = callOverloadedConstructor(v4, callData);
+    }
+    Scoped<QMetaObjectWrapper> metaObject(scope, this);
+    object->defineDefaultProperty(v4->id_constructor(), metaObject);
+    object->setPrototype(const_cast<QMetaObjectWrapper*>(this));
+    return object.asReturnedValue();
+
+}
+
+ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
+
+    const QMetaObject* mo = d()->metaObject;
+    const QQmlStaticMetaObject object(mo);
+    return CallPrecise(object, data, engine, callArgs, QMetaObject::InvokeMetaMethod);
+}
+
+
+ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
+    const int numberOfConstructors = d()->constructors.size();
+    const int argumentCount = callArgs->argc;
+    const QQmlStaticMetaObject object(d()->metaObject);
+
+    QQmlPropertyData best;
+    int bestParameterScore = INT_MAX;
+    int bestMatchScore = INT_MAX;
+
+    QV4::Scope scope(engine);
+    QV4::ScopedValue v(scope);
+
+    for (int i = 0; i < numberOfConstructors; i++) {
+        const QQmlPropertyData & attempt = d()->constructors.at(i);
+        QVarLengthArray<int, 9> dummy;
+        int methodArgumentCount = 0;
+        int *methodArgTypes = 0;
+        if (attempt.hasArguments()) {
+            int *args = object.constructorParameterTypes(attempt.coreIndex, dummy, 0);
+            if (!args) // Must be an unknown argument
+                continue;
+
+            methodArgumentCount = args[0];
+            methodArgTypes = args + 1;
+        }
+
+        if (methodArgumentCount > argumentCount)
+            continue; // We don't have sufficient arguments to call this method
+
+        int methodParameterScore = argumentCount - methodArgumentCount;
+        if (methodParameterScore > bestParameterScore)
+            continue; // We already have a better option
+
+        int methodMatchScore = 0;
+        for (int ii = 0; ii < methodArgumentCount; ++ii)
+            methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
+
+        if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
+            best = attempt;
+            bestParameterScore = methodParameterScore;
+            bestMatchScore = methodMatchScore;
+        }
+
+        if (bestParameterScore == 0 && bestMatchScore == 0)
+            break; // We can't get better than that
+    };
+
+    if (best.isValid()) {
+        return CallPrecise(object, best, engine, callArgs, QMetaObject::CreateInstance);
+    } else {
+        QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
+        for (int i = 0; i < numberOfConstructors; i++) {
+            const QQmlPropertyData & candidate = d()->constructors.at(i);
+            error += QLatin1String("\n    ") +
+                    QString::fromUtf8(d()->metaObject->constructor(candidate.coreIndex)
+                                      .methodSignature());
+        }
+
+        return engine->throwError(error);
+    }
+}
+
+bool QMetaObjectWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    Q_ASSERT(a->as<QMetaObjectWrapper>());
+    QMetaObjectWrapper *aMetaObject = a->as<QMetaObjectWrapper>();
+    QMetaObjectWrapper *bMetaObject = b->as<QMetaObjectWrapper>();
+    if (!bMetaObject)
+        return true;
+    return aMetaObject->metaObject() == bMetaObject->metaObject();
+}
+
+DEFINE_OBJECT_VTABLE(QMetaObjectWrapper);
+
+
+
 
 Heap::QmlSignalHandler::QmlSignalHandler(QObject *object, int signalIndex)
     : object(object)

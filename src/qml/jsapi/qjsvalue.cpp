@@ -1234,6 +1234,28 @@ QObject *QJSValue::toQObject() const
 }
 
 /*!
+  \since 5.8
+
+ * If this QJSValue is a QMetaObject, returns the QMetaObject pointer
+ * that the QJSValue represents; otherwise, returns 0.
+ *
+ * \sa isQMetaObject()
+ */
+const QMetaObject *QJSValue::toQMetaObject() const
+{
+    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
+    if (!engine)
+        return 0;
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QMetaObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
+    if (!wrapper)
+        return 0;
+
+    return wrapper->metaObject();
+}
+
+
+/*!
   Returns a QDateTime representation of this value, in local time.
   If this QJSValue is not a date, or the value of the date is NaN
   (Not-a-Number), an invalid QDateTime is returned.
@@ -1284,6 +1306,20 @@ bool QJSValue::isQObject() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     return val && val->as<QV4::QObjectWrapper>() != 0;
+}
+
+/*!
+  \since 5.8
+
+  Returns true if this QJSValue is a QMetaObject; otherwise returns
+  false.
+
+  \sa toQMetaObject(), QJSEngine::newQMetaObject()
+*/
+bool QJSValue::isQMetaObject() const
+{
+    QV4::Value *val = QJSValuePrivate::getValue(this);
+    return val && val->as<QV4::QMetaObjectWrapper>() != 0;
 }
 
 QT_END_NAMESPACE

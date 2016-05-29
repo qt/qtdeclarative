@@ -73,6 +73,7 @@ private slots:
     void newQObject();
     void newQObject_ownership();
     void newQObject_deletedEngine();
+    void newQMetaObject();
     void exceptionInSlot();
     void globalObjectProperties();
     void globalObjectEquals();
@@ -710,6 +711,104 @@ void tst_QJSEngine::newQObject_deletedEngine()
         engine.globalObject().setProperty("obj", object);
     }
     QTRY_VERIFY(spy.count());
+}
+
+class TestQMetaObject : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(int called READ called)
+public:
+    enum Enum1 {
+        Zero = 0,
+        One,
+        Two
+    };
+    enum Enum2 {
+        A = 0,
+        B,
+        C
+    };
+    Q_ENUMS(Enum1 Enum2)
+
+    Q_INVOKABLE TestQMetaObject()
+        : m_called(1) {
+    }
+    Q_INVOKABLE TestQMetaObject(int)
+        : m_called(2) {
+    }
+    Q_INVOKABLE TestQMetaObject(QString)
+        : m_called(3) {
+    }
+    Q_INVOKABLE TestQMetaObject(QString, int)
+        : m_called(4) {
+    }
+    int called() const {
+        return m_called;
+    }
+private:
+    int m_called;
+};
+
+void tst_QJSEngine::newQMetaObject() {
+    {
+        QJSEngine engine;
+        QJSValue metaObject = engine.newQMetaObject(&TestQMetaObject::staticMetaObject);
+        QCOMPARE(metaObject.isNull(), false);
+        QCOMPARE(metaObject.isObject(), true);
+        QCOMPARE(metaObject.isQObject(), false);
+        QCOMPARE(metaObject.isCallable(), true);
+        QCOMPARE(metaObject.isQMetaObject(), true);
+
+        QCOMPARE(metaObject.toQMetaObject(), &TestQMetaObject::staticMetaObject);
+
+        QVERIFY(metaObject.strictlyEquals(engine.newQMetaObject<TestQMetaObject>()));
+
+
+        {
+        auto result = metaObject.callAsConstructor();
+        if (result.isError())
+            qDebug() << result.toString();
+        QCOMPARE(result.isError(), false);
+        QCOMPARE(result.isNull(), false);
+        QCOMPARE(result.isObject(), true);
+        QCOMPARE(result.isQObject(), true);
+        QVERIFY(result.property("constructor").strictlyEquals(metaObject));
+        QVERIFY(result.prototype().strictlyEquals(metaObject));
+
+
+        QCOMPARE(result.property("called").toInt(), 1);
+
+        }
+
+        QJSValue integer(42);
+        QJSValue string("foo");
+
+        {
+            auto result = metaObject.callAsConstructor({integer});
+            QCOMPARE(result.property("called").toInt(), 2);
+        }
+
+        {
+            auto result = metaObject.callAsConstructor({string});
+            QCOMPARE(result.property("called").toInt(), 3);
+        }
+
+        {
+            auto result = metaObject.callAsConstructor({string, integer});
+            QCOMPARE(result.property("called").toInt(), 4);
+        }
+    }
+
+    {
+        QJSEngine engine;
+        QJSValue metaObject = engine.newQMetaObject(&TestQMetaObject::staticMetaObject);
+        QCOMPARE(metaObject.property("Zero").toInt(), 0);
+        QCOMPARE(metaObject.property("One").toInt(), 1);
+        QCOMPARE(metaObject.property("Two").toInt(), 2);
+        QCOMPARE(metaObject.property("A").toInt(), 0);
+        QCOMPARE(metaObject.property("B").toInt(), 1);
+        QCOMPARE(metaObject.property("C").toInt(), 2);
+    }
+
 }
 
 void tst_QJSEngine::exceptionInSlot()
