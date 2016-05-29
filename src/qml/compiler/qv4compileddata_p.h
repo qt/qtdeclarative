@@ -724,6 +724,11 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     // map from name index
     QHash<int, ResolvedTypeReference*> resolvedTypes;
 
+    int metaTypeId;
+    int listMetaTypeId;
+    bool isRegisteredWithEngine;
+
+
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
 

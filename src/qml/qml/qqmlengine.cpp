@@ -641,12 +641,12 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     for (TypePropertyCacheIt iter = typePropertyCache.cbegin(), end = typePropertyCache.cend(); iter != end; ++iter)
         (*iter)->release();
     for (CompositeTypesIt iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
-        iter.value()->isRegisteredWithEngine = false;
+        iter.value()->compilationUnit->isRegisteredWithEngine = false;
 
         // since unregisterInternalCompositeType() will not be called in this
         // case, we have to clean up the type registration manually
-        QMetaType::unregisterType(iter.value()->metaTypeId);
-        QMetaType::unregisterType(iter.value()->listMetaTypeId);
+        QMetaType::unregisterType(iter.value()->compilationUnit->metaTypeId);
+        QMetaType::unregisterType(iter.value()->compilationUnit->listMetaTypeId);
     }
     delete profiler;
 }
@@ -2292,9 +2292,9 @@ void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
                                                      static_cast<QMetaObject*>(0));
 
-    data->metaTypeId = ptr_type;
-    data->listMetaTypeId = lst_type;
-    data->isRegisteredWithEngine = true;
+    data->compilationUnit->metaTypeId = ptr_type;
+    data->compilationUnit->listMetaTypeId = lst_type;
+    data->compilationUnit->isRegisteredWithEngine = true;
 
     Locker locker(this);
     m_qmlLists.insert(lst_type, ptr_type);
@@ -2303,10 +2303,10 @@ void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
     m_compositeTypes.insert(ptr_type, data);
 }
 
-void QQmlEnginePrivate::unregisterInternalCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
 {
-    int ptr_type = data->metaTypeId;
-    int lst_type = data->listMetaTypeId;
+    int ptr_type = compilationUnit->metaTypeId;
+    int lst_type = compilationUnit->listMetaTypeId;
 
     Locker locker(this);
     m_qmlLists.remove(lst_type);

@@ -254,11 +254,11 @@ bool QQmlTypeCompiler::compile()
         auto *typeRef = m_resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (typeRef->component) {
-            compiledData->metaTypeId = typeRef->component->metaTypeId;
-            compiledData->listMetaTypeId = typeRef->component->listMetaTypeId;
+            compiledData->compilationUnit->metaTypeId = typeRef->component->compilationUnit->metaTypeId;
+            compiledData->compilationUnit->listMetaTypeId = typeRef->component->compilationUnit->listMetaTypeId;
         } else {
-            compiledData->metaTypeId = typeRef->type->typeId();
-            compiledData->listMetaTypeId = typeRef->type->qListTypeId();
+            compiledData->compilationUnit->metaTypeId = typeRef->type->typeId();
+            compiledData->compilationUnit->listMetaTypeId = typeRef->type->qListTypeId();
         }
     }
 
@@ -507,7 +507,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
                     Q_ASSERT(tdata->isComplete());
 
                     QQmlCompiledData *data = tdata->compiledData();
-                    qmltype = QQmlMetaType::qmlType(data->metaTypeId);
+                    qmltype = QQmlMetaType::qmlType(data->compilationUnit->metaTypeId);
 
                     tdata->release();
                 }
@@ -717,7 +717,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
                         QQmlCompiledData *data = tdata->compiledData();
 
-                        paramTypes[i + 1] = data->metaTypeId;
+                        paramTypes[i + 1] = data->compilationUnit->metaTypeId;
 
                         tdata->release();
                     } else {
@@ -801,9 +801,9 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                 QQmlCompiledData *data = tdata->compiledData();
 
                 if (p->type == QV4::CompiledData::Property::Custom) {
-                    propertyType = data->metaTypeId;
+                    propertyType = data->compilationUnit->metaTypeId;
                 } else {
-                    propertyType = data->listMetaTypeId;
+                    propertyType = data->compilationUnit->listMetaTypeId;
                 }
 
                 tdata->release();
@@ -887,7 +887,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                         Q_ASSERT(tdata->isComplete());
 
                         QQmlCompiledData *data = tdata->compiledData();
-                        type = QQmlMetaType::qmlType(data->metaTypeId);
+                        type = QQmlMetaType::qmlType(data->compilationUnit->metaTypeId);
 
                         tdata->release();
                     }
@@ -1577,7 +1577,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 if (typeRef->type)
                     type = typeRef->type->typeId();
                 else
-                    type = typeRef->component->metaTypeId;
+                    type = typeRef->component->compilationUnit->metaTypeId;
 
                 alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;

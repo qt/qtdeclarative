@@ -1698,7 +1698,7 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         if (tdata->isComplete()) {
             auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
             newResolver->owner = resolver->owner;
-            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compiledData()->compilationUnit->metaTypeId));
             newResolver->flags |= AllPropertiesAreFinal;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }

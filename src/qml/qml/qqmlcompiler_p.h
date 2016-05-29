@@ -89,10 +89,6 @@ public:
 
     QQmlEngine *engine;
 
-    int metaTypeId;
-    int listMetaTypeId;
-    bool isRegisteredWithEngine;
-
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
     bool isInitialized() const { return hasEngine(); }

@@ -74,6 +74,9 @@ CompilationUnit::CompilationUnit()
     , totalBindingsCount(0)
     , totalParserStatusCount(0)
     , totalObjectCount(0)
+    , metaTypeId(-1)
+    , listMetaTypeId(-1)
+    , isRegisteredWithEngine(false)
 {}
 
 CompilationUnit::~CompilationUnit()
@@ -172,6 +175,13 @@ void CompilationUnit::unlink()
 {
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
+
+    if (isRegisteredWithEngine) {
+        Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && !propertyCaches.at(data->indexOfRootObject).isNull());
+        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(propertyCaches.at(data->indexOfRootObject)->engine);
+        qmlEngine->unregisterInternalCompositeType(this);
+        isRegisteredWithEngine = false;
+    }
 
     for (int ii = 0; ii < propertyCaches.count(); ++ii)
         if (propertyCaches.at(ii).data())

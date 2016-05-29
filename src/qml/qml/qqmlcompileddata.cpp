@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
-: engine(engine), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false)
+: engine(engine)
 {
     Q_ASSERT(engine);
 }
@@ -70,9 +70,6 @@ void QQmlCompiledData::destroy()
 
 QQmlCompiledData::~QQmlCompiledData()
 {
-    if (isRegisteredWithEngine)
-        QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
-
     clear();
 }
 
