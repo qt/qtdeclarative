@@ -1137,7 +1137,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 bindings << binding;
             }
         }
-        customParser->applyBindings(instance, compiledData, bindings);
+        customParser->applyBindings(instance, compiledData->compilationUnit.data(), bindings);
 
         customParser->engine = 0;
         customParser->imports = (QQmlTypeNameCache*)0;

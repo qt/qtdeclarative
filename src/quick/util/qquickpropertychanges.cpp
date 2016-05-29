@@ -202,7 +202,7 @@ public:
 
     QPointer<QObject> object;
     QList<const QV4::CompiledData::Binding *> bindings;
-    QQmlRefPointer<QQmlCompiledData> cdata;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
     bool decoded : 1;
     bool restore : 1;
@@ -258,7 +258,7 @@ void QQuickPropertyChangesPrivate::decode()
         return;
 
     foreach (const QV4::CompiledData::Binding *binding, bindings)
-        decodeBinding(QString(), cdata->compilationUnit->data, binding);
+        decodeBinding(QString(), compilationUnit->data, binding);
 
     bindings.clear();
 
@@ -288,7 +288,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
         handler->property = prop;
         handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                               QQmlContextData::get(qmlContext(q)), object, cdata->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]));
+                                                               QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]));
         signalReplacements << handler;
         return;
     }
@@ -338,12 +338,12 @@ void QQuickPropertyChangesParser::verifyBindings(const QV4::CompiledData::Unit *
         verifyList(qmlUnit, props.at(ii));
 }
 
-void QQuickPropertyChangesParser::applyBindings(QObject *obj, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQuickPropertyChangesParser::applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQuickPropertyChangesPrivate *p =
         static_cast<QQuickPropertyChangesPrivate *>(QObjectPrivate::get(obj));
     p->bindings = bindings;
-    p->cdata = cdata;
+    p->compilationUnit = compilationUnit;
     p->decoded = false;
 }
 
@@ -456,7 +456,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             QQmlBinding *newBinding = 0;
             if (e.id != QQmlBinding::Invalid) {
                 QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-                QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->cdata->compilationUnit->runtimeFunctions[e.id]));
+                QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->compilationUnit->runtimeFunctions[e.id]));
                 newBinding = new QQmlBinding(function, object(), context);
             }
 //            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this)) : 0;

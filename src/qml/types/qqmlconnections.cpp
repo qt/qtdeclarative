@@ -67,7 +67,7 @@ public:
     bool ignoreUnknownSignals;
     bool componentcomplete;
 
-    QQmlRefPointer<QQmlCompiledData> cdata;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     QList<const QV4::CompiledData::Binding *> bindings;
 };
 
@@ -258,11 +258,11 @@ void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::Unit *qmlUni
     }
 }
 
-void QQmlConnectionsParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlConnectionsParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlConnectionsPrivate *p =
         static_cast<QQmlConnectionsPrivate *>(QObjectPrivate::get(object));
-    p->cdata = cdata;
+    p->compilationUnit = compilationUnit;
     p->bindings = bindings;
 }
 
@@ -278,7 +278,7 @@ void QQmlConnections::connectSignals()
     QQmlData *ddata = QQmlData::get(this);
     QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
 
-    const QV4::CompiledData::Unit *qmlUnit = d->cdata->compilationUnit->data;
+    const QV4::CompiledData::Unit *qmlUnit = d->compilationUnit->data;
     foreach (const QV4::CompiledData::Binding *binding, d->bindings) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
         QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
@@ -291,7 +291,7 @@ void QQmlConnections::connectSignals()
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target, signalIndex,
-                                              ctxtdata, this, d->cdata->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
+                                              ctxtdata, this, d->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

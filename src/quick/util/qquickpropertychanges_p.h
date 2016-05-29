@@ -104,7 +104,7 @@ public:
     void verifyList(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
 
     virtual void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
-    virtual void applyBindings(QObject *obj, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings);
+    virtual void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
 };
 
 

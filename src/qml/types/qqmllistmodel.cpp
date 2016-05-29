@@ -2508,13 +2508,13 @@ void QQmlListModelParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit,
     }
 }
 
-void QQmlListModelParser::applyBindings(QObject *obj, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlListModelParser::applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 
     rv->m_engine = QV8Engine::getV4(qmlEngine(rv));
 
-    const QV4::CompiledData::Unit *qmlUnit = cdata->compilationUnit->data;
+    const QV4::CompiledData::Unit *qmlUnit = compilationUnit->data;
 
     bool setRoles = false;
 

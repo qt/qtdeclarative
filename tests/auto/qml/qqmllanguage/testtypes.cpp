@@ -110,11 +110,11 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-void CustomBindingParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+void CustomBindingParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
-    customBinding->cdata = cdata;
+    customBinding->compilationUnit = compilationUnit;
     customBinding->bindings = bindings;
 }
 
@@ -123,14 +123,14 @@ void CustomBinding::componentComplete()
     Q_ASSERT(m_target);
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
-        QString name = cdata->compilationUnit->data->stringAt(binding->propertyNameIndex);
+        QString name = compilationUnit->data->stringAt(binding->propertyNameIndex);
 
         int bindingId = binding->value.compiledScriptIndex;
 
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
         QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-        QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, m_target, cdata->compilationUnit->runtimeFunctions[bindingId]));
+        QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, m_target, compilationUnit->runtimeFunctions[bindingId]));
         QQmlBinding *qmlBinding = new QQmlBinding(function, m_target, context);
 
         QQmlProperty property(m_target, name, qmlContext(this));
@@ -169,7 +169,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
     }
 }
 
-void SimpleObjectCustomParser::applyBindings(QObject *object, QQmlCompiledData *, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
     Q_ASSERT(o);
