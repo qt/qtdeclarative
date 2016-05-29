@@ -278,16 +278,16 @@ bool QQmlTypeCompiler::compile()
             }
             ++objectCount;
             if (typeRef->component) {
-                bindingCount += typeRef->component->totalBindingsCount;
-                parserStatusCount += typeRef->component->totalParserStatusCount;
-                objectCount += typeRef->component->totalObjectCount;
+                bindingCount += typeRef->component->compilationUnit->totalBindingsCount;
+                parserStatusCount += typeRef->component->compilationUnit->totalParserStatusCount;
+                objectCount += typeRef->component->compilationUnit->totalObjectCount;
             }
         }
     }
 
-    compiledData->totalBindingsCount = bindingCount;
-    compiledData->totalParserStatusCount = parserStatusCount;
-    compiledData->totalObjectCount = objectCount;
+    compiledData->compilationUnit->totalBindingsCount = bindingCount;
+    compiledData->compilationUnit->totalParserStatusCount = parserStatusCount;
+    compiledData->compilationUnit->totalObjectCount = objectCount;
 
     Q_ASSERT(compiledData->compilationUnit->propertyCaches.count() == static_cast<int>(compiledData->compilationUnit->data->nObjects));
 

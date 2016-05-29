@@ -67,6 +67,9 @@ CompilationUnit::CompilationUnit()
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
+    , totalBindingsCount(0)
+    , totalParserStatusCount(0)
+    , totalObjectCount(0)
 {}
 
 CompilationUnit::~CompilationUnit()

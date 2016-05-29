@@ -124,10 +124,6 @@ public:
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
-    int totalBindingsCount; // Number of bindings used in this type
-    int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
-    int totalObjectCount; // Number of objects explicitly instantiated
-
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
 

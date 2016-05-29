@@ -55,8 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
-: engine(engine), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
-  totalBindingsCount(0), totalParserStatusCount(0)
+: engine(engine), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false)
 {
     Q_ASSERT(engine);
 }

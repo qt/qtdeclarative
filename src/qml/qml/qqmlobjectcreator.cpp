@@ -81,16 +81,16 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     sharedState = new QQmlObjectCreatorSharedState;
     topLevelCreator = true;
     sharedState->componentAttached = 0;
-    sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
-    sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
-    sharedState->allCreatedObjects.allocate(compiledData->totalObjectCount);
+    sharedState->allCreatedBindings.allocate(compiledData->compilationUnit->totalBindingsCount);
+    sharedState->allParserStatusCallbacks.allocate(compiledData->compilationUnit->totalParserStatusCount);
+    sharedState->allCreatedObjects.allocate(compiledData->compilationUnit->totalObjectCount);
     sharedState->allJavaScriptObjects = 0;
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
 
     QQmlProfiler *profiler = QQmlEnginePrivate::get(engine)->profiler;
     Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
-            sharedState->profiler.init(profiler, compiledData->totalParserStatusCount));
+            sharedState->profiler.init(profiler, compiledData->compilationUnit->totalParserStatusCount));
 }
 
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlObjectCreatorSharedState *inheritedSharedState)
@@ -181,7 +181,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     Q_ASSERT(sharedState->allJavaScriptObjects || topLevelCreator);
     if (topLevelCreator)
-        sharedState->allJavaScriptObjects = scope.alloc(compiledData->totalObjectCount);
+        sharedState->allJavaScriptObjects = scope.alloc(compiledData->compilationUnit->totalObjectCount);
 
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
@@ -236,7 +236,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 
     Q_ASSERT(topLevelCreator);
     Q_ASSERT(!sharedState->allJavaScriptObjects);
-    sharedState->allJavaScriptObjects = valueScope.alloc(compiledData->totalObjectCount);
+    sharedState->allJavaScriptObjects = valueScope.alloc(compiledData->compilationUnit->totalObjectCount);
 
     QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc(1));
 
