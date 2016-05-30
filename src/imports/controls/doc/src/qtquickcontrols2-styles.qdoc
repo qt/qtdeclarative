@@ -83,7 +83,7 @@
 
     \section2 Using QQuickStyle in C++
 
-    \l QQuickStyle provides API configuring a specific style. The following
+    \l QQuickStyle provides API for configuring a specific style. The following
     example runs a Qt Quick Controls 2 application with the Material style:
 
     \code

@@ -40,6 +40,7 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickbusyindicator_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickcheckbox_p.h>
 #include <QtQuickTemplates2/private/qquickcheckdelegate_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
@@ -111,6 +112,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickApplicationWindowAttached>();
     qmlRegisterType<QQuickBusyIndicator>(uri, 2, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 2, 0, "Button");
+    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
+    qmlRegisterType<QQuickButtonGroupAttached>();
     qmlRegisterType<QQuickCheckBox>(uri, 2, 0, "CheckBox");
     qmlRegisterType<QQuickCheckDelegate>(uri, 2, 0, "CheckDelegate");
     qmlRegisterType<QQuickComboBox>(uri, 2, 0, "ComboBox");
@@ -135,11 +138,14 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickRangeSlider>(uri, 2, 0, "RangeSlider");
     qmlRegisterType<QQuickRangeSliderNode>();
     qmlRegisterType<QQuickScrollBar>(uri, 2, 0, "ScrollBar");
+    qmlRegisterType<QQuickScrollBarAttached>();
     qmlRegisterType<QQuickScrollIndicator>(uri, 2, 0, "ScrollIndicator");
+    qmlRegisterType<QQuickScrollIndicatorAttached>();
     qmlRegisterType<QQuickSlider>(uri, 2, 0, "Slider");
     qmlRegisterType<QQuickSpinBox>(uri, 2, 0, "SpinBox");
     qmlRegisterType<QQuickSpinButton>();
     qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
+    qmlRegisterType<QQuickStackAttached>();
     qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipe>();
     qmlRegisterType<QQuickSwipeViewAttached>();

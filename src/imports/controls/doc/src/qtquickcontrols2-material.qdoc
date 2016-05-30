@@ -44,6 +44,12 @@
         \li \l {theme-attached-prop}{\b theme} : enumeration
     \endlist
 
+    \section1 Attached Methods
+
+    \list
+        \li color \l {color-attached-method}{\b color}(enumeration predefined)
+    \endlist
+
     \section1 Detailed Description
     \target detailed-desc-material
 
@@ -200,6 +206,8 @@
     \value Material.Grey \stylecolor {#9E9E9E} {}
     \value Material.BlueGrey \stylecolor {#607D8B} {}
 
+    \b {See also} \l {Default Style}, \l {Universal Style}
+
     \section1 Attached Property Documentation
 
     \styleproperty {Material.accent} {color} {accent-attached-prop}
@@ -256,6 +264,24 @@
     \value Material.Dark Dark theme
 
     \endstyleproperty
+
+    \section1 Attached Method Documentation
+
+    \stylemethod {color} {color} {enumeration} {predefined} {color-attached-method}
+    \target color-attached-method
+    This attached method returns the color value of the specified \l {pre-defined colors}
+    {pre-defined color}.
+
+    \qml
+    import QtQuick 2.0
+    import QtQuick.Controls.Material 2.0
+
+    Rectangle {
+        color: Material.color(Material.Red)
+    }
+    \endqml
+
+    \endstylemethod
 
     \section1 Related Information
 
