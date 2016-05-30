@@ -53,6 +53,8 @@
     The \l Menu control displays a vertical list of items that can be selected. It can
     be used for offering a list of actions that can be taken in a given context.
 
+    \b {See also} \l {Drawer Control}.
+
     \section1 Popup Control
 
     \image qtquickcontrols2-popup-settings.png
@@ -76,7 +78,7 @@
     \image qtquickcontrols2-tooltip.png
 
     \l ToolTip shows a short piece of text that informs the user of a control's
-    function.
+    function. It is typically placed above or below the parent control.
 
     Recommendations:
     \list

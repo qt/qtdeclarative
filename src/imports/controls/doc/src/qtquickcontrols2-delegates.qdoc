@@ -52,5 +52,15 @@
     \l RadioDelegate presents a checkable control that can be toggled on
     (checked) or off (unchecked). Radio delegates are typically used to select
     one option from a set of options.
+
+    \b {See also} \l {RadioButton Control}.
+
+    \section1 SwitchDelegate Control
+
+    \image qtquickcontrols2-switchdelegate.gif
+
+    \l SwitchDelegate presents a switchable delegate that can be toggled on or off.
+
+    \b {See also} \l {Switch Control}.
 */
 

@@ -47,8 +47,8 @@
 
     \image qtquickcontrols2-pageindicator.png
 
-    \l PageIndicator is used to indicate the currently active page in
-    a container of multiple pages.
+    \l BusyIndicator can be used to show that an operation is in progress,
+    and that the UI has to wait for the operation to complete.
 
     \section1 ScrollBar Control
 
@@ -63,5 +63,6 @@
     \image qtquickcontrols2-scrollindicator.png
 
     \l ScrollIndicator is a non-interactive indicator that indicates the
-    current scroll position in a \l Flickable.
+    current scroll position, and can be used to scroll to a specific position in a
+    \l {Flickable}.
 */

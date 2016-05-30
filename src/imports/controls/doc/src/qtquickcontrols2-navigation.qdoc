@@ -40,17 +40,29 @@
 
     \image qtquickcontrols2-stackview-wireframe.png
 
-    \l StackView provides a stack-based navigation model.
+    \l StackView provides a stack-based navigation model which can be used
+    with a set of interlinked pages. StackView works according to a last-in
+    first-out principle: the page pushed last on the stack is the one visible.
+    Popping a page removes the last page and makes the previous one visible.
 
     \section1 SwipeView Control
 
     \image qtquickcontrols2-swipeview-wireframe.png
 
-    \l SwipeView provides a swipe-based navigation model.
+    \l SwipeView provides a navigation model that simplifies horizontal paged
+    scrolling. The page indicator on the bottom shows which is the presently
+    active page.
 
-    \section1 TabBar and TabButton Controls
+    \section1 TabBar
 
     \image qtquickcontrols2-tabbar-wireframe.png
 
-    \l TabBar and \l TabButton provide a tab-based navigation model.
+    \l TabBar is a bar with icons or text that allows the user to switch
+    between different subtasks, views, or modes.
+
+    \section1 TabButton Control
+
+    \image qtquickcontrols2-tabbutton.png
+
+    \l TabButton is a button with a layout suitable for a TabBar control.
 */
