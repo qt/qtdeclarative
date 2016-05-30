@@ -86,6 +86,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
+Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
@@ -7079,6 +7080,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
         }
     }
 
+    qCDebug(DBG_HOVER_TRACE) << q << hasHoverInChild << "->" << hasHover;
     hasHoverInChild = hasHover;
     QQuickItem *parent = q->parentItem();
     if (parent) {

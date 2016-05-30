@@ -69,6 +69,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
@@ -2720,6 +2721,7 @@ QString QQuickText::hoveredLink() const
 void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
 {
     Q_Q(QQuickText);
+    qCDebug(DBG_HOVER_TRACE) << q;
     QString link;
     if (isLinkHoveredConnected()) {
         if (event->type() != QEvent::HoverLeave)

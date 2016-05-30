@@ -54,6 +54,8 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
+Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
+
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
@@ -1129,6 +1131,7 @@ void QQuickMouseArea::setHovered(bool h)
 {
     Q_D(QQuickMouseArea);
     if (d->hovered != h) {
+        qCDebug(DBG_HOVER_TRACE) << this << d->hovered <<  "->" << h;
         d->hovered = h;
         emit hoveredChanged();
         d->hovered ? emit entered() : emit exited();

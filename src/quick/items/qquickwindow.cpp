@@ -85,6 +85,7 @@ Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch")
 Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target")
 Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse")
 Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
+Q_LOGGING_CATEGORY(DBG_HOVER_TRACE, "qt.quick.hover.trace")
 Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
 
@@ -1751,6 +1752,7 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
     }
 
     qCDebug(DBG_MOUSE) << "QQuickWindow::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
+    qCDebug(DBG_HOVER_TRACE) << this;
 
 #ifndef QT_NO_CURSOR
     d->updateCursor(event->windowPos());
@@ -1787,6 +1789,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             return false;
     }
 
+    qCDebug(DBG_HOVER_TRACE) << q << item << scenePos << lastScenePos << "hasHoverInChild" << itemPrivate->hasHoverInChild;
     if (itemPrivate->hasHoverInChild) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
