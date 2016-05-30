@@ -61,7 +61,7 @@ class NoisyShader : public QSGSimpleMaterialShader<NoisyMaterial>
     QSG_DECLARE_SIMPLE_SHADER(NoisyShader, NoisyMaterial)
 
 public:
-    NoisyShader() {
+    NoisyShader() : id_color(-1), id_texture(-1), id_textureSize(-1) {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/noisy.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/noisy.fsh");
     }
