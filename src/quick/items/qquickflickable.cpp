@@ -1580,13 +1580,13 @@ qreal QQuickFlickable::minXExtent() const
 qreal QQuickFlickable::maxXExtent() const
 {
     Q_D(const QQuickFlickable);
-    return qMin<qreal>(0, width() - vWidth() - d->hData.endMargin);
+    return qMin<qreal>(minXExtent(), width() - vWidth() - d->hData.endMargin);
 }
 /* returns -ve */
 qreal QQuickFlickable::maxYExtent() const
 {
     Q_D(const QQuickFlickable);
-    return qMin<qreal>(0, height() - vHeight() - d->vData.endMargin);
+    return qMin<qreal>(minYExtent(), height() - vHeight() - d->vData.endMargin);
 }
 
 void QQuickFlickable::componentComplete()
