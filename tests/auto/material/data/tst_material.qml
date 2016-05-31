@@ -162,6 +162,14 @@ TestCase {
         }
     }
 
+    // need to be synced with QQuickMaterialStyle::themeShade()
+    function themeshade(theme) {
+        if (theme === Material.Light)
+            return Material.Shade500
+        else
+            return Material.Shade200
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -183,8 +191,8 @@ TestCase {
         control.Material.foreground = Material.Blue
         control.Material.theme = Material.Dark
         compare(control.Material.primary, Material.color(Material.Green))
-        compare(control.Material.accent, Material.color(Material.Brown))
-        compare(control.Material.background, Material.color(Material.Red))
+        compare(control.Material.accent, Material.color(Material.Brown, themeshade(control.Material.theme)))
+        compare(control.Material.background, Material.color(Material.Red, themeshade(control.Material.theme)))
         compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
         control.destroy()
@@ -194,8 +202,8 @@ TestCase {
         var control = styledButton.createObject(testCase)
         verify(control)
         compare(control.Material.primary, Material.color(Material.DeepOrange))
-        compare(control.Material.accent, Material.color(Material.DeepPurple))
-        compare(control.Material.background, Material.color(Material.Green))
+        compare(control.Material.accent, Material.color(Material.DeepPurple, themeshade(control.Material.theme)))
+        compare(control.Material.background, Material.color(Material.Green, themeshade(control.Material.theme)))
         compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
         control.Material.primary = undefined
@@ -396,8 +404,8 @@ TestCase {
         compare(container.menu.Material.primary, Material.color(Material.Blue))
         compare(child.Material.primary, Material.color(Material.Blue))
         compare(container.Material.accent, Material.color(Material.Red))
-        compare(container.menu.Material.accent, Material.color(Material.Red))
-        compare(child.Material.accent, Material.color(Material.Red))
+        compare(container.menu.Material.accent, Material.color(Material.Red, themeshade(container.menu.Material.theme)))
+        compare(child.Material.accent, Material.color(Material.Red, themeshade(child.Material.theme)))
         container.destroy()
     }
 
@@ -421,8 +429,8 @@ TestCase {
         compare(window.combo.Material.primary, Material.color(Material.Blue))
         compare(child.Material.primary, Material.color(Material.Blue))
         compare(window.Material.accent, Material.color(Material.Red))
-        compare(window.combo.Material.accent, Material.color(Material.Red))
-        compare(child.Material.accent, Material.color(Material.Red))
+        compare(window.combo.Material.accent, Material.color(Material.Red, themeshade(window.combo.Material.theme)))
+        compare(child.Material.accent, Material.color(Material.Red, themeshade(child.Material.theme)))
         window.destroy()
     }
 
