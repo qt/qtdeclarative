@@ -57,7 +57,7 @@ Q_QML_DEBUG_PLUGIN_LOADER(QQmlAbstractProfilerAdapter)
 
 QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QQmlProfilerService>(1, parent),
-    m_waitingForStop(false)
+    m_waitingForStop(false), m_useMessageTypes(false)
 {
     m_timer.start();
     QQmlAbstractProfilerAdapter *quickAdapter =
@@ -309,7 +309,7 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     m_waitingForStop = true;
 
     foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
-        profiler->reportData();
+        profiler->reportData(m_useMessageTypes);
 
     foreach (QQmlAbstractProfilerAdapter *profiler, stopping)
         profiler->stopProfiling();
@@ -343,7 +343,8 @@ void QQmlProfilerServiceImpl::sendMessages()
         m_startTimes.erase(m_startTimes.begin());
         qint64 next = first->sendMessages(m_startTimes.isEmpty() ?
                                               std::numeric_limits<qint64>::max() :
-                                              m_startTimes.begin().key(), messages);
+                                              m_startTimes.begin().key(), messages,
+                                          m_useMessageTypes);
         if (next != -1)
             m_startTimes.insert(next, first);
 
@@ -418,6 +419,8 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
             disconnect(this, SIGNAL(stopFlushTimer()), &m_flushTimer, SLOT(stop()));
         }
     }
+    if (!stream.atEnd())
+        stream >> m_useMessageTypes;
 
     // If engineId == -1 objectForId() and then the cast will return 0.
     if (enabled)
@@ -435,14 +438,14 @@ void QQmlProfilerServiceImpl::flush()
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
-            profiler->reportData();
+            profiler->reportData(m_useMessageTypes);
         }
     }
 
     foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
-            profiler->reportData();
+            profiler->reportData(m_useMessageTypes);
         }
     }
 }

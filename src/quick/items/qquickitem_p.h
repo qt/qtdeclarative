@@ -56,6 +56,7 @@
 #include "qquickanchors_p.h"
 #include "qquickanchors_p_p.h"
 #include "qquickitemchangelistener_p.h"
+#include "qquickevents_p_p.h"
 
 #include "qquickwindow_p.h"
 
@@ -777,6 +778,7 @@ public:
     QQuickItem *imeItem;
     QList<QQuickItem *> targets;
     QQuickItem *item;
+    QQuickKeyEvent theKeyEvent;
 };
 
 class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter

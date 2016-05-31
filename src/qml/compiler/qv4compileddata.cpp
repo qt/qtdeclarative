@@ -47,6 +47,7 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmltypeloader_p.h>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -67,6 +68,9 @@ CompilationUnit::CompilationUnit()
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
+    , totalBindingsCount(0)
+    , totalParserStatusCount(0)
+    , totalObjectCount(0)
 {}
 
 CompilationUnit::~CompilationUnit()
@@ -165,6 +169,18 @@ void CompilationUnit::unlink()
 {
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
+
+    for (int ii = 0; ii < propertyCaches.count(); ++ii)
+        if (propertyCaches.at(ii).data())
+            propertyCaches.at(ii)->release();
+    propertyCaches.clear();
+
+    for (int ii = 0; ii < dependentScripts.count(); ++ii)
+        dependentScripts.at(ii)->release();
+    dependentScripts.clear();
+
+    importCache = nullptr;
+
     engine = 0;
     free(runtimeStrings);
     runtimeStrings = 0;
@@ -187,6 +203,22 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(e);
     }
+}
+
+IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
+{
+    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
+    if (it == namedObjectsPerComponentCache.end()) {
+        IdentifierHash<int> namedObjectCache(engine);
+        const CompiledData::Object *component = data->objectAt(componentObjectIndex);
+        const quint32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+        for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
+            const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
+            namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
+        }
+        it = namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
+    }
+    return *it;
 }
 
 #endif // V4_BOOTSTRAP

@@ -1355,7 +1355,8 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
         d->inPress = false;
     }
 
-    QQuickKeyEvent ke(*event);
+    QQuickKeyEvent &ke = d->theKeyEvent;
+    ke.reset(*event);
     QByteArray keySignal = keyToSignal(event->key());
     if (!keySignal.isEmpty()) {
         keySignal += "(QQuickKeyEvent*)";
@@ -1398,7 +1399,8 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
         d->inRelease = false;
     }
 
-    QQuickKeyEvent ke(*event);
+    QQuickKeyEvent &ke = d->theKeyEvent;
+    ke.reset(*event);
     emit released(&ke);
     event->setAccepted(ke.isAccepted());
 

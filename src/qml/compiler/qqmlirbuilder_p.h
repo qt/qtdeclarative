@@ -170,7 +170,12 @@ class FixedPoolArray
 public:
     int count;
 
-    void init(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
+    FixedPoolArray()
+        : data(0)
+        , count(0)
+    {}
+
+    void allocate(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
         count = vector.count();
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
@@ -181,6 +186,16 @@ public:
         } else {
             memcpy(data, static_cast<const void*>(vector.constData()), count * sizeof(T));
         }
+    }
+
+    template <typename Container>
+    void allocate(QQmlJS::MemoryPool *pool, const Container &container)
+    {
+        count = container.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+        typename Container::ConstIterator it = container.constBegin();
+        for (int i = 0; i < count; ++i)
+            new (data + i) T(*it++);
     }
 
     const T &at(int index) const {
@@ -274,9 +289,11 @@ struct Q_QML_PRIVATE_EXPORT Object
     Q_DECLARE_TR_FUNCTIONS(Object)
 public:
     quint32 inheritedTypeNameIndex;
-    quint32 idIndex;
-    int indexOfDefaultPropertyOrAlias : 31;
-    int defaultPropertyIsAlias : 1;
+    quint32 idNameIndex;
+    int id;
+    int indexOfDefaultPropertyOrAlias;
+    bool defaultPropertyIsAlias;
+    int flags;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
@@ -296,7 +313,7 @@ public:
     // specified object. Used for declarations inside group properties.
     Object *declarationsOverride;
 
-    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
 
     QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
@@ -312,7 +329,9 @@ public:
     QString bindingAsString(Document *doc, int scriptIndex) const;
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
-    FixedPoolArray<int> *runtimeFunctionIndices;
+    FixedPoolArray<int> runtimeFunctionIndices;
+
+    FixedPoolArray<quint32> namedObjectsInComponent;
 
 private:
     friend struct IRLoader;
@@ -467,7 +486,7 @@ struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
-    char *writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const;
+    char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
 };
 
 #ifndef V4_BOOTSTRAP

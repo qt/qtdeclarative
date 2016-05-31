@@ -52,6 +52,7 @@
 //
 
 #include "qquickitem_p.h"
+#include "qquickevents_p_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtCore/qbasictimer.h>
@@ -107,6 +108,8 @@ public:
 #ifndef QT_NO_CURSOR
     QCursor *cursor;
 #endif
+    QQuickMouseEvent quickMouseEvent;
+    QQuickWheelEvent quickWheelEvent;
 };
 
 QT_END_NAMESPACE

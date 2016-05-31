@@ -114,7 +114,7 @@ void QV4DebuggerAgent::addDebugger(QV4Debugger *debugger)
 
     debugger->setBreakOnThrow(m_breakOnThrow);
 
-    foreach (const BreakPoint &breakPoint, m_breakPoints.values())
+    for (const BreakPoint &breakPoint : qAsConst(m_breakPoints))
         if (breakPoint.enabled)
             debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
 

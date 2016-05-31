@@ -56,12 +56,20 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QQmlProfilerRangeType
+{
+    QQmlEventLocation location;
+    QString name;
+};
+
 class QQmlProfilerClientPrivate : public QQmlDebugClientPrivate
 {
     Q_DECLARE_PUBLIC(QQmlProfilerClient)
 public:
     QQmlProfilerClientPrivate(QQmlDebugConnection *connection);
     quint64 features;
+
+    QHash<qint64, QQmlProfilerRangeType> types;
 };
 
 QT_END_NAMESPACE

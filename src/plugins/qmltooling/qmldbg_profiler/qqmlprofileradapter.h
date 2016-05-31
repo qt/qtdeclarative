@@ -60,7 +60,8 @@ class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {
     Q_OBJECT
 public:
     QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine);
-    qint64 sendMessages(qint64 until, QList<QByteArray> &messages) Q_DECL_OVERRIDE;
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
+                        bool trackLocations) Q_DECL_OVERRIDE;
 
 public slots:
     void receiveData(const QVector<QQmlProfilerData> &new_data,

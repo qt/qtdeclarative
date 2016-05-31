@@ -126,7 +126,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     data.updatePending = false;
 
     if (!data.grabOnly) {
-        cd->flushDelayedTouchEvent();
+        cd->flushFrameSynchronousEvents();
         // Event delivery/processing triggered the window to be deleted or stop rendering.
         if (!m_windows.contains(window))
             return;

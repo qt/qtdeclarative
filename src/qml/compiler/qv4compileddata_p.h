@@ -60,11 +60,22 @@
 #include <private/qv4executableallocator_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qv4identifier_p.h>
+#include <private/qflagpointer_p.h>
+#ifndef V4_BOOTSTRAP
+#include <private/qqmltypenamecache_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyCache;
 class QQmlPropertyData;
+class QQmlTypeNameCache;
+class QQmlScriptData;
+
+// The vector is indexed by QV4::CompiledData::Object index and the flag
+// indicates whether instantiation of the object requires a VME meta-object.
+typedef QVector<QFlagPointer<QQmlPropertyCache>> QQmlPropertyCacheVector;
 
 namespace QmlIR {
 struct Document;
@@ -234,7 +245,9 @@ struct Q_QML_PRIVATE_EXPORT Binding
         InitializerForReadOnlyDeclaration = 0x8,
         IsResolvedEnum = 0x10,
         IsListItem = 0x20,
-        IsBindingToAlias = 0x40
+        IsBindingToAlias = 0x40,
+        IsDeferredBinding = 0x80,
+        IsCustomParserBinding = 0x100,
     };
 
     quint32 flags : 16;
@@ -391,13 +404,22 @@ struct Alias {
 
 struct Object
 {
+    enum Flags {
+        NoFlag = 0x0,
+        IsComponent = 0x1, // object was identified to be an explicit or implicit component boundary
+        HasDeferredBindings = 0x2, // any of the bindings are deferred
+        HasCustomParserBindings = 0x4
+    };
+
     // Depending on the use, this may be the type name to instantiate before instantiating this
     // object. For grouped properties the type name will be empty and for attached properties
     // it will be the name of the attached type.
     quint32 inheritedTypeNameIndex;
-    quint32 idIndex;
-    qint32 indexOfDefaultPropertyOrAlias : 31; // -1 means no default property declared in this object
+    quint32 idNameIndex;
+    qint32 id : 16;
+    qint32 flags : 15;
     quint32 defaultPropertyIsAlias : 1;
+    qint32 indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
     quint32 nFunctions;
     quint32 offsetToFunctions;
     quint32 nProperties;
@@ -408,6 +430,8 @@ struct Object
     quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32 nBindings;
     quint32 offsetToBindings;
+    quint32 nNamedObjectsInComponent;
+    quint32 offsetToNamedObjectsInComponent;
     Location location;
     Location locationOfIdProperty;
 //    Function[]
@@ -415,7 +439,7 @@ struct Object
 //    Signal[]
 //    Binding[]
 
-    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings)
+    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings, int nNamedObjectsInComponent)
     {
         return ( sizeof(Object)
                  + nFunctions * sizeof(quint32)
@@ -423,6 +447,7 @@ struct Object
                  + nAliases * sizeof(Alias)
                  + nSignals * sizeof(quint32)
                  + nBindings * sizeof(Binding)
+                 + nNamedObjectsInComponent * sizeof(int)
                  + 0x7
                ) & ~0x7;
     }
@@ -452,6 +477,11 @@ struct Object
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const Signal*>(reinterpret_cast<const char*>(this) + offset);
+    }
+
+    const quint32 *namedObjectsInComponentTable() const
+    {
+        return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
     }
 };
 
@@ -641,10 +671,28 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
 
+    // QML specific fields
+    QQmlPropertyCacheVector propertyCaches;
+    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject).data(); }
+    bool isCompositeType() const { return propertyCaches.at(data->indexOfRootObject).flag(); }
+
+    QQmlRefPointer<QQmlTypeNameCache> importCache;
+
     // index is object index. This allows fast access to the
     // property data when initializing bindings, avoiding expensive
     // lookups by string (property name).
     QVector<BindingPropertyData> bindingPropertyDataPerObject;
+
+    // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
+    // this is initialized on-demand by QQmlContextData
+    QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
+    IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
+
+    int totalBindingsCount; // Number of bindings used in this type
+    int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
+    int totalObjectCount; // Number of objects explicitly instantiated
+
+    QVector<QQmlScriptData *> dependentScripts;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();

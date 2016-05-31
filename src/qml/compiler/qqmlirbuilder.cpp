@@ -72,23 +72,24 @@ using namespace QmlIR;
         return false; \
     }
 
-void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int id, const QQmlJS::AST::SourceLocation &loc)
+void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &loc)
 {
     inheritedTypeNameIndex = typeNameIndex;
 
     location.line = loc.startLine;
     location.column = loc.startColumn;
 
-    idIndex = id;
+    idNameIndex = idIndex;
+    id = -1;
     indexOfDefaultPropertyOrAlias = -1;
     defaultPropertyIsAlias = false;
+    flags = QV4::CompiledData::Object::NoFlag;
     properties = pool->New<PoolList<Property> >();
     aliases = pool->New<PoolList<Alias> >();
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
     functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
-    runtimeFunctionIndices = 0;
     declarationsOverride = 0;
 }
 
@@ -1237,10 +1238,10 @@ bool IRBuilder::setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST
     if (illegalNames.contains(idQString))
         COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
 
-    if (_object->idIndex != emptyStringIndex)
+    if (_object->idNameIndex != emptyStringIndex)
         COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
 
-    _object->idIndex = registerString(idQString);
+    _object->idNameIndex = registerString(idQString);
     _object->locationOfIdProperty.line = idLocation.startLine;
     _object->locationOfIdProperty.column = idLocation.startColumn;
 
@@ -1368,12 +1369,12 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
 
-    QHash<Object*, quint32> objectOffsets;
+    QHash<const Object*, quint32> objectOffsets;
 
     int objectsSize = 0;
     foreach (Object *o, output.objects) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1413,14 +1414,17 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     // write objects
     quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
-    foreach (Object *o, output.objects) {
+    for (int i = 0; i < output.objects.count(); ++i) {
+        const Object *o = output.objects.at(i);
         *objectTable++ = objectOffsets.value(o);
 
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
         objectToWrite->inheritedTypeNameIndex = o->inheritedTypeNameIndex;
         objectToWrite->indexOfDefaultPropertyOrAlias = o->indexOfDefaultPropertyOrAlias;
         objectToWrite->defaultPropertyIsAlias = o->defaultPropertyIsAlias;
-        objectToWrite->idIndex = o->idIndex;
+        objectToWrite->flags = o->flags;
+        objectToWrite->idNameIndex = o->idNameIndex;
+        objectToWrite->id = o->id;
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
 
@@ -1446,9 +1450,13 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
         objectToWrite->offsetToBindings = nextOffset;
         nextOffset += objectToWrite->nBindings * sizeof(QV4::CompiledData::Binding);
 
+        objectToWrite->nNamedObjectsInComponent = o->namedObjectsInComponent.count;
+        objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
+        nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
+
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
-            *functionsTable++ = o->runtimeFunctionIndices->at(f->index);
+            *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
         for (const Property *p = o->firstProperty(); p; p = p->next) {
@@ -1492,7 +1500,12 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
             signalPtr += size;
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount());
+        quint32 *namedObjectInComponentPtr = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
+            *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
+        }
+
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
         objectPtr += signalTableSize;
     }
 
@@ -1509,7 +1522,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     return qmlUnit;
 }
 
-char *QmlUnitGenerator::writeBindings(char *bindingPtr, Object *o, BindingFilter filter) const
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const
 {
     for (const Binding *b = o->firstBinding(); b; b = b->next) {
         if (!(b->*(filter))())
@@ -1517,7 +1530,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, Object *o, BindingFilter
         QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
         *bindingToWrite = *b;
         if (b->type == QV4::CompiledData::Binding::Type_Script)
-            bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices->at(b->value.compiledScriptIndex);
+            bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices.at(b->value.compiledScriptIndex);
         bindingPtr += sizeof(QV4::CompiledData::Binding);
     }
     return bindingPtr;

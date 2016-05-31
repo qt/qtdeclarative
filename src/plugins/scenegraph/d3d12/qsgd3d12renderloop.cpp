@@ -1089,7 +1089,7 @@ void QSGD3D12RenderLoop::polishAndSync(WindowData *w, bool inExpose)
     }
 
     // Flush pending touch events.
-    QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
+    QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
     // The delivery of the event might have caused the window to stop rendering
     w = windowFor(windows, window);
     if (!w || !w->thread || !w->thread->exposedWindow) {

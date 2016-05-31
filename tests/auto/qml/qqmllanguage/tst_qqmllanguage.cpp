@@ -108,6 +108,7 @@ private slots:
     void bindTypeToJSValue();
     void customParserTypes();
     void rootAsQmlComponent();
+    void rootItemIsComponent();
     void inlineQmlComponents();
     void idProperty();
     void autoNotifyConnection();
@@ -1193,6 +1194,19 @@ void tst_qqmllanguage::rootAsQmlComponent()
     QVERIFY(object != 0);
     QCOMPARE(object->property("x"), QVariant(11));
     QCOMPARE(object->getChildren()->count(), 2);
+}
+
+void tst_qqmllanguage::rootItemIsComponent()
+{
+    QQmlComponent component(&engine, testFileUrl("rootItemIsComponent.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(qobject_cast<QQmlComponent*>(root.data()));
+    QScopedPointer<QObject> other(qobject_cast<QQmlComponent*>(root.data())->create());
+    QVERIFY(!other.isNull());
+    QQmlContext *context = qmlContext(other.data());
+    QVERIFY(context);
+    QCOMPARE(context->nameForObject(other.data()), QStringLiteral("blah"));
 }
 
 // Tests that components can be specified inline

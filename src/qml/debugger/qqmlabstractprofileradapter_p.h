@@ -71,13 +71,13 @@ public:
     virtual ~QQmlAbstractProfilerAdapter() {}
     void setService(QQmlProfilerService *new_service) { service = new_service; }
 
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) = 0;
+    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages, bool trackLocations) = 0;
 
     void startProfiling(quint64 features);
 
     void stopProfiling();
 
-    void reportData() { emit dataRequested(); }
+    void reportData(bool trackLocations) { emit dataRequested(trackLocations); }
 
     void stopWaiting() { waiting = false; }
     void startWaiting() { waiting = true; }
@@ -94,7 +94,7 @@ signals:
     void profilingDisabled();
     void profilingDisabledWhileWaiting();
 
-    void dataRequested();
+    void dataRequested(bool trackLocations);
     void referenceTimeKnown(const QElapsedTimer &timer);
 
 protected:

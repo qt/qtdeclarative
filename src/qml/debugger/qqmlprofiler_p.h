@@ -146,26 +146,27 @@ public:
     // Unfortunately we have to resolve the locations right away because the QML context might not
     // be available anymore when we send the data.
     struct RefLocation : public Location {
-        RefLocation() : Location(), locationType(MaximumRangeType), ref(nullptr)
+        RefLocation() : Location(), locationType(MaximumRangeType), ref(nullptr), sent(false)
         {}
 
         RefLocation(QQmlBinding *binding, QV4::FunctionObject *function) :
             Location(function->sourceLocation()), locationType(Binding),
-            ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt)
+            ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
         {}
 
         RefLocation(QQmlCompiledData *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
                     const QString &type) :
             Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
-            locationType(Creating), ref(ref)
+            locationType(Creating), ref(ref), sent(false)
         {}
 
         RefLocation(QQmlBoundSignalExpression *ref) :
-            Location(ref->sourceLocation()), locationType(HandlingSignal), ref(ref)
+            Location(ref->sourceLocation()), locationType(HandlingSignal), ref(ref), sent(false)
         {}
 
         RefLocation(QQmlDataBlob *ref) :
-            Location(QQmlSourceLocation(), ref->url()), locationType(Compiling), ref(ref)
+            Location(QQmlSourceLocation(), ref->url()), locationType(Compiling), ref(ref),
+            sent(false)
         {}
 
         bool isValid() const
@@ -175,6 +176,7 @@ public:
 
         RangeType locationType;
         QQmlRefPointer<QQmlRefCount> ref;
+        bool sent;
     };
 
     typedef QHash<quintptr, Location> LocationHash;
@@ -217,11 +219,6 @@ public:
             location = RefLocation(expression);
     }
 
-    void startCreating()
-    {
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(), 1 << RangeStart, Creating));
-    }
-
     void startCreating(const QV4::CompiledData::Object *obj)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
@@ -233,10 +230,6 @@ public:
                         const QUrl &url, const QString &type)
     {
         quintptr locationId(id(obj));
-        m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
-                                       (1 << RangeLocation | 1 << RangeData),
-                                       Creating, locationId));
-
         RefLocation &location = m_locations[locationId];
         if (!location.isValid())
             location = RefLocation(ref, url, obj, type);
@@ -261,7 +254,7 @@ public:
 public slots:
     void startProfiling(quint64 features);
     void stopProfiling();
-    void reportData();
+    void reportData(bool trackLocations);
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
@@ -363,9 +356,10 @@ private:
 class QQmlObjectCreationProfiler {
 public:
 
-    QQmlObjectCreationProfiler(QQmlProfiler *profiler) : profiler(profiler)
+    QQmlObjectCreationProfiler(QQmlProfiler *profiler, const QV4::CompiledData::Object *obj)
+        : profiler(profiler)
     {
-        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, startCreating());
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, startCreating(obj));
     }
 
     ~QQmlObjectCreationProfiler()

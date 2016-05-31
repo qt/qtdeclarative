@@ -382,7 +382,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         return;
 
     if (!data.grabOnly) {
-        cd->flushDelayedTouchEvent();
+        cd->flushFrameSynchronousEvents();
         // Event delivery/processing triggered the window to be deleted or stop rendering.
         if (!m_windows.contains(window))
             return;

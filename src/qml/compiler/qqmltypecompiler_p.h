@@ -101,13 +101,11 @@ public:
     int rootObjectIndex() const;
     void setPropertyCaches(const QQmlPropertyCacheVector &caches);
     const QQmlPropertyCacheVector &propertyCaches() const;
-    QHash<int, int> *objectIndexToIdForRoot();
-    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent();
-    QHash<int, QBitArray> *customParserBindings();
+    void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
+    const QVector<quint32> &componentRoots() const { return m_componentRoots; }
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
-    void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
     void setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData);
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
@@ -119,9 +117,14 @@ private:
     QQmlEnginePrivate *engine;
     QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
+    QQmlRefPointer<QQmlTypeNameCache> importCache;
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
+
+    // index in first hash is component index, vector inside contains object indices of objects with id property
+    QVector<quint32> m_componentRoots;
+    QQmlPropertyCacheVector m_propertyCaches;
 };
 
 struct QQmlCompilePass
@@ -268,20 +271,31 @@ protected:
     const int indexOfRootObject;
 
     // indices of the objects that are actually Component {}
-    QVector<int> componentRoots;
-    // indices of objects that are the beginning of a new component
-    // scope. This is sorted and used for binary search.
-    QVector<quint32> componentBoundaries;
+    QVector<quint32> componentRoots;
 
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;
-    QHash<int, int> *_objectIndexToIdInScope;
     QList<int> _objectsWithAliases;
 
     QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
-    QHash<int, int> *objectIndexToIdForRoot;
-    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
+};
+
+class QQmlDeferredAndCustomParserBindingScanner : public QQmlCompilePass
+{
+public:
+    QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler);
+
+    bool scanObject();
+
+private:
+    bool scanObject(int objectIndex);
+
+    QList<QmlIR::Object*> *qmlObjects;
+    QQmlPropertyCacheVector propertyCaches;
+    const QHash<int, QQmlCustomParser*> &customParsers;
+
+    bool _seenObjectWithId;
 };
 
 class QQmlPropertyValidator : public QQmlCompilePass
@@ -300,8 +314,6 @@ private:
     bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
     bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
 
-    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
     QQmlEnginePrivate *enginePrivate;
@@ -309,12 +321,8 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QQmlPropertyCacheVector &propertyCaches;
-    const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
-    QHash<int, QBitArray> *customParserBindingsPerObject;
 
     // collected state variables, essentially write-only
-    mutable QHash<int, QBitArray> _deferredBindingsPerObject;
-    mutable bool _seenObjectWithId;
     mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
 };
 
@@ -327,12 +335,9 @@ public:
     bool generateCodeForComponents();
 
 private:
-    bool compileComponent(int componentRoot, const QHash<int, int> &objectIndexToId);
+    bool compileComponent(int componentRoot);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
-    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
-
-    const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QList<QmlIR::Object*> &qmlObjects;

@@ -415,4 +415,26 @@ Item {
     \endqml
 */
 
+/*!
+    \qmlproperty int QtQuick::WheelEvent::inverted
+
+    Returns whether the delta values delivered with the event are inverted.
+
+    Normally, a vertical wheel will produce a WheelEvent with positive delta
+    values if the top of the wheel is rotating away from the hand operating it.
+    Similarly, a horizontal wheel movement will produce a QWheelEvent with
+    positive delta values if the top of the wheel is moved to the left.
+
+    However, on some platforms this is configurable, so that the same
+    operations described above will produce negative delta values (but with the
+    same magnitude). For instance, in a QML component (such as a tumbler or a
+    slider) where it is appropriate to synchronize the movement or rotation of
+    an item with the direction of the wheel, regardless of the system settings,
+    the wheel event handler can use the inverted property to decide whether to
+    negate the angleDelta or pixelDelta values.
+
+    \note Many platforms provide no such information. On such platforms
+    \l inverted always returns false.
+*/
+
 QT_END_NAMESPACE

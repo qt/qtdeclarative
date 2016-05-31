@@ -456,7 +456,7 @@ void QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache()
 {
     QQuickOpenGLShaderEffectMaterialCache *cache = QQuickOpenGLShaderEffectMaterialCache::get(false);
     if (cache) {
-        qDeleteAll(cache->cache.values());
+        qDeleteAll(cache->cache);
         delete cache;
     }
 }

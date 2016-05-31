@@ -145,7 +145,7 @@ void SignalTransition::invoke()
 
 void SignalTransition::connectTriggered()
 {
-    if (!m_complete || !m_cdata)
+    if (!m_complete || !m_compilationUnit)
         return;
 
     QObject *target = senderObject();
@@ -165,7 +165,7 @@ void SignalTransition::connectTriggered()
 
     QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target, signalIndex,
-                                              ctxtdata, this, m_cdata->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
+                                              ctxtdata, this, m_compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
     if (expression)
         expression->setNotifyOnValueChanged(false);
     m_signalExpression = expression;
@@ -190,10 +190,10 @@ void SignalTransitionParser::verifyBindings(const QV4::CompiledData::Unit *qmlUn
     }
 }
 
-void SignalTransitionParser::applyBindings(QObject *object, QQmlCompiledData *cdata, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SignalTransitionParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SignalTransition *st = qobject_cast<SignalTransition*>(object);
-    st->m_cdata = cdata;
+    st->m_compilationUnit = compilationUnit;
     st->m_bindings = bindings;
 }
 

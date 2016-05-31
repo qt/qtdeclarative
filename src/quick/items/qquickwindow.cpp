@@ -2028,7 +2028,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
     }
 }
 
-void QQuickWindowPrivate::flushDelayedTouchEvent()
+void QQuickWindowPrivate::flushFrameSynchronousEvents()
 {
     if (delayedTouch) {
         deliverDelayedTouchEvent();
@@ -2038,6 +2038,17 @@ void QQuickWindowPrivate::flushDelayedTouchEvent()
         QQmlAnimationTimer *ut = QQmlAnimationTimer::instance();
         if (ut && ut->hasStartAnimationPending())
             ut->startAnimations();
+    }
+
+    // Once per frame, send a synthetic hover, in case items have changed position.
+    // For instance, during animation (including the case of a ListView
+    // whose delegates contain MouseAreas), a MouseArea needs to know
+    // whether it has moved into a position where it is now under the cursor.
+    if (!mouseGrabberItem && !lastMousePosition.isNull()) {
+        bool accepted = false;
+        bool delivered = deliverHoverEvent(contentItem, lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), accepted);
+        if (!delivered)
+            clearHover(); // take care of any exits
     }
 }
 

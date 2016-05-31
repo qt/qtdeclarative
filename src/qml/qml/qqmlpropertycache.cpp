@@ -452,7 +452,12 @@ QQmlPropertyCache *QQmlPropertyCache::parent() const
 
 void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
 {
+    if (_parent == newParent)
+        return;
+    if (_parent)
+        _parent->release();
     _parent = newParent;
+    _parent->addref();
 }
 
 // Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by

@@ -111,10 +111,9 @@ private:
     QObject *createInstance(int index, QObject *parent = 0, bool isContextObject = false);
 
     bool populateInstance(int index, QObject *instance,
-                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
-                          const QBitArray &bindingsToSkip = QBitArray());
+                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty);
 
-    void setupBindings(const QBitArray &bindingsToSkip);
+    void setupBindings(bool applyDeferredBindings = false);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
@@ -122,7 +121,7 @@ private:
     QString stringAt(int idx) const { return qmlUnit->stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    void registerObjectWithContextById(int objectIndex, QObject *instance) const;
+    void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
     QV4::Heap::QmlContext *currentQmlContext();
 
@@ -143,7 +142,6 @@ private:
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QQmlPropertyCacheVector &propertyCaches;
-    QHash<int, int> objectIndexToId;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
     void *activeVMEDataForRootContext;

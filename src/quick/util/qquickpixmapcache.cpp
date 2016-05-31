@@ -922,15 +922,13 @@ QQuickPixmapStore::~QQuickPixmapStore()
 #ifndef QT_NO_DEBUG
     int leakedPixmaps = 0;
 #endif
-    QList<QQuickPixmapData*> cachedData = m_cache.values();
-
     // Prevent unreferencePixmap() from assuming it needs to kick
     // off the cache expiry timer, as we're shrinking the cache
     // manually below after releasing all the pixmaps.
     m_timerId = -2;
 
     // unreference all (leaked) pixmaps
-    foreach (QQuickPixmapData* pixmap, cachedData) {
+    for (auto *pixmap : qAsConst(m_cache)) {
         int currRefCount = pixmap->refCount;
         if (currRefCount) {
 #ifndef QT_NO_DEBUG

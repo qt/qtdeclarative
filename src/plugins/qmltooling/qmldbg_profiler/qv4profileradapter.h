@@ -67,7 +67,8 @@ class QV4ProfilerAdapter : public QQmlAbstractProfilerAdapter {
 public:
     QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine);
 
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
+    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
+                                bool trackLocations) override;
 
 signals:
     void v4ProfilingEnabled(quint64 v4Features);
