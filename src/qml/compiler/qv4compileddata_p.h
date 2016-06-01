@@ -734,6 +734,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     void markObjects(QV4::ExecutionEngine *e);
 
+    void destroy() Q_DECL_OVERRIDE;
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
 #endif // V4_BOOTSTRAP

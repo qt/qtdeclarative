@@ -222,6 +222,17 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
     }
 }
 
+void CompilationUnit::destroy()
+{
+    QQmlEngine *qmlEngine = 0;
+    if (engine)
+        qmlEngine = engine->qmlEngine();
+    if (qmlEngine)
+        QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
+    else
+        delete this;
+}
+
 IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
 {
     auto it = namedObjectsPerComponentCache.find(componentObjectIndex);

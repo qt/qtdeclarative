@@ -60,14 +60,6 @@ QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
     Q_ASSERT(engine);
 }
 
-void QQmlCompiledData::destroy()
-{
-    if (engine && compilationUnit && compilationUnit->engine)
-        QQmlEnginePrivate::deleteInEngineThread(engine, this);
-    else
-        delete this;
-}
-
 QQmlCompiledData::~QQmlCompiledData()
 {
 }

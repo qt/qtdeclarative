@@ -91,9 +91,6 @@ public:
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
-protected:
-    virtual void destroy(); // From QQmlRefCount
-
 private:
     QQmlCompiledData(const QQmlCompiledData &other);
     QQmlCompiledData &operator=(const QQmlCompiledData &other);
