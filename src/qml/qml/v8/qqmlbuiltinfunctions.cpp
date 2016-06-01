@@ -2003,16 +2003,16 @@ ReturnedValue GlobalExtensions::method_string_arg(CallContext *ctx)
 \since 5.8
 Use this function to eliminate redundant calls to a function or signal.
 
-The function passed as the first argument to \l{QML:Qt::callLater()}{Qt.callLater()}
+The function passed as the first argument to Qt.callLater()
 will be called later, once the QML engine returns to the event loop.
 
 When this function is called multiple times in quick succession with the
 same function as its first argument, that function will be called only once.
 
 For example:
-\snippet doc/src/snippets/qml/qtLater.qml 0
+\snippet qml/qtLater.qml 0
 
-Any additional arguments passed to \l{QML:Qt::callLater()}{Qt.callLater()} will
+Any additional arguments passed to Qt.callLater() will
 be passed on to the function invoked. Note that if redundant calls
 are eliminated, then only the last set of arguments will be passed to the
 function.
