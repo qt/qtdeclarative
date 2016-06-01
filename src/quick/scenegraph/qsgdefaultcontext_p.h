@@ -78,7 +78,7 @@ public:
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
-    GraphicsAPI graphicsAPI() const override;
+    GraphicsApi graphicsApi() const override;
 
 private:
     QMutex m_mutex;

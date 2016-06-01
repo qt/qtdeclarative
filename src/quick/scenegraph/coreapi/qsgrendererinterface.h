@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QSGRendererInterface
 {
 public:
-    enum GraphicsAPI {
+    enum GraphicsApi {
         Unknown,
         Software,
         OpenGL,
@@ -62,7 +62,7 @@ public:
 
     virtual ~QSGRendererInterface();
 
-    virtual GraphicsAPI graphicsAPI() const = 0;
+    virtual GraphicsApi graphicsApi() const = 0;
 
     virtual void *getResource(Resource resource) const;
     virtual void *getResource(const char *resource) const;

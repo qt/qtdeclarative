@@ -59,7 +59,7 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         QSGRendererInterface *ri = window()->rendererInterface();
         if (!ri)
             return nullptr;
-        switch (ri->graphicsAPI()) {
+        switch (ri->graphicsApi()) {
             case QSGRendererInterface::OpenGL:
 #ifndef QT_NO_OPENGL
                 n = new OpenGLRenderNode(this);

@@ -58,7 +58,7 @@ void tst_QQuickRendererInfo::testProperties()
     QVERIFY(obj);
 
     QSGRendererInterface *rif = view.rendererInterface();
-    const int expectedAPI = rif ? rif->graphicsAPI() : QSGRendererInterface::Unknown;
+    const int expectedAPI = rif ? rif->graphicsApi() : QSGRendererInterface::Unknown;
 
     QCOMPARE(obj->property("api").toInt(), expectedAPI);
 }

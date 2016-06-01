@@ -373,7 +373,7 @@ public:
     void simulateDeviceLoss();
 
     // QSGRendererInterface
-    GraphicsAPI graphicsAPI() const override;
+    GraphicsApi graphicsApi() const override;
     void *getResource(Resource resource) const override;
 
 private:

@@ -393,7 +393,7 @@ void tst_qquickwindow::openglContextCreatedSignal()
     window.show();
     QTest::qWaitForWindowExposed(&window);
 
-    if (window.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
     QVERIFY(spy.size() > 0);
@@ -1240,7 +1240,7 @@ void tst_qquickwindow::headless()
     // Verify that the window is alive and kicking
     QVERIFY(window->isSceneGraphInitialized());
 
-    const bool isGL = window->rendererInterface()->graphicsAPI() == QSGRendererInterface::OpenGL;
+    const bool isGL = window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
 
     // Store the visual result
     QImage originalContent = window->grabWindow();
@@ -1614,7 +1614,7 @@ void tst_qquickwindow::hideThenDelete()
 
         QTest::qWaitForWindowExposed(&window);
         const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
-        const bool isGL = window.rendererInterface()->graphicsAPI() == QSGRendererInterface::OpenGL;
+        const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
 #ifndef QT_NO_OPENGL
         if (isGL)
             openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
@@ -2044,7 +2044,7 @@ void tst_qquickwindow::defaultSurfaceFormat()
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
-    if (window.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
     const QSurfaceFormat reqFmt = window.requestedFormat();
@@ -2182,7 +2182,7 @@ void tst_qquickwindow::testRenderJob()
         QCOMPARE(completedJobs.size(), 1);
 
 #ifndef QT_NO_OPENGL
-        if (window.rendererInterface()->graphicsAPI() == QSGRendererInterface::OpenGL) {
+        if (window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
             // Do a synchronized GL job.
             GLubyte readPixel[4] = {0, 0, 0, 0};
             GlRenderJob *glJob = new GlRenderJob(readPixel);

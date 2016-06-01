@@ -3223,7 +3223,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
     Q_D(const QQuickWindow);
     if (d->context && d->context->isValid()) {
         QSGRendererInterface *rif = d->context->sceneGraphContext()->rendererInterface(d->context);
-        if (rif && rif->graphicsAPI() == QSGRendererInterface::OpenGL) {
+        if (rif && rif->graphicsApi() == QSGRendererInterface::OpenGL) {
             auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
             return openglRenderContext->openglContext();
         }
@@ -4453,7 +4453,7 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
 
     \since 5.8
  */
-void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsAPI api)
+void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
 {
     switch (api) {
     case QSGRendererInterface::Software:

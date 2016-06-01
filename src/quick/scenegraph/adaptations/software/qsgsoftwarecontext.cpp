@@ -174,7 +174,7 @@ QSGRendererInterface *QSGSoftwareContext::rendererInterface(QSGRenderContext *re
     return this;
 }
 
-QSGRendererInterface::GraphicsAPI QSGSoftwareContext::graphicsAPI() const
+QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const
 {
     return Software;
 }

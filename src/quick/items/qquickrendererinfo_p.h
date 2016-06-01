@@ -63,23 +63,23 @@ class QQuickWindow;
 class QQuickRendererInfo : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(GraphicsAPI api READ api NOTIFY apiChanged FINAL)
+    Q_PROPERTY(GraphicsApi api READ api NOTIFY apiChanged FINAL)
 
 public:
     // must match QSGRendererInterface
-    enum GraphicsAPI {
+    enum GraphicsApi {
         Unknown,
         Software,
         OpenGL,
         Direct3D12
     };
-    Q_ENUM(GraphicsAPI)
+    Q_ENUM(GraphicsApi)
 
     QQuickRendererInfo(QQuickItem *item = 0);
 
     static QQuickRendererInfo *qmlAttachedProperties(QObject *object);
 
-    GraphicsAPI api() const { return m_api; }
+    GraphicsApi api() const { return m_api; }
 
 Q_SIGNALS:
     void apiChanged();
@@ -90,7 +90,7 @@ private Q_SLOTS:
 
 private:
     QPointer<QQuickWindow> m_window;
-    GraphicsAPI m_api;
+    GraphicsApi m_api;
 };
 
 QT_END_NAMESPACE

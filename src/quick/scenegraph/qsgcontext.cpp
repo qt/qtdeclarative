@@ -318,7 +318,7 @@ QSize QSGContext::minimumFBOSize() const
     Returns a pointer to the (presumably) global renderer interface.
 
     \note This function may be called on the gui thread in order to get access
-    to QSGRendererInterface::graphicsAPI().
+    to QSGRendererInterface::graphicsApi().
  */
 QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderContext)
 {

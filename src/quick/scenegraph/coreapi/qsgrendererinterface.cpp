@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \enum QSGRenderNode::GraphicsAPI
+    \enum QSGRenderNode::GraphicsApi
     \value Unknown An unknown graphics API is in use
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenGL OpenGL ES 2.0 or higher
@@ -84,7 +84,7 @@ QSGRendererInterface::~QSGRendererInterface()
 }
 
 /*!
-    \fn QSGRenderNode::GraphicsAPI QSGRenderNode::graphicsAPI() const
+    \fn QSGRenderNode::GraphicsApi QSGRenderNode::graphicsApi() const
 
     Returns the graphics API that is in use by the Qt Quick scenegraph.
 

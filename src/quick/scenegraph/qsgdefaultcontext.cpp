@@ -246,7 +246,7 @@ QSGRendererInterface *QSGDefaultContext::rendererInterface(QSGRenderContext *ren
     return this;
 }
 
-QSGRendererInterface::GraphicsAPI QSGDefaultContext::graphicsAPI() const
+QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const
 {
     return OpenGL;
 }

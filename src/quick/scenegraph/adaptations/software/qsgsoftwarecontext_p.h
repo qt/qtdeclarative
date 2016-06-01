@@ -95,7 +95,7 @@ public:
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 
-    GraphicsAPI graphicsAPI() const override;
+    GraphicsApi graphicsApi() const override;
 };
 
 QT_END_NAMESPACE

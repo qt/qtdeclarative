@@ -96,12 +96,12 @@ QQuickRendererInfo *QQuickRendererInfo::qmlAttachedProperties(QObject *object)
 
 void QQuickRendererInfo::updateInfo()
 {
-    GraphicsAPI newAPI = Unknown;
+    GraphicsApi newAPI = Unknown;
 
     if (m_window && m_window->isSceneGraphInitialized()) {
         QSGRendererInterface *rif = m_window->rendererInterface();
         if (rif)
-            newAPI = GraphicsAPI(rif->graphicsAPI()); // this function is safe to call on the gui/main thread too
+            newAPI = GraphicsApi(rif->graphicsApi()); // this function is safe to call on the gui/main thread too
     }
 
     if (m_api != newAPI) {

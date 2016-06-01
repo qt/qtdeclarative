@@ -535,7 +535,7 @@ void QSGD3D12Engine::simulateDeviceLoss()
     d->simulateDeviceLoss();
 }
 
-QSGRendererInterface::GraphicsAPI QSGD3D12Engine::graphicsAPI() const
+QSGRendererInterface::GraphicsApi QSGD3D12Engine::graphicsApi() const
 {
     return Direct3D12;
 }

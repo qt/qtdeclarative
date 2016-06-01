@@ -100,7 +100,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
 
     // Check if the Software Adaptation is being used
     auto sgRendererInterface = offscreenWindow->rendererInterface();
-    if (sgRendererInterface && sgRendererInterface->graphicsAPI() == QSGRendererInterface::Software)
+    if (sgRendererInterface && sgRendererInterface->graphicsApi() == QSGRendererInterface::Software)
         useSoftwareRenderer = true;
 
     if (!useSoftwareRenderer) {

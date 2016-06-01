@@ -439,7 +439,7 @@ void tst_SceneGraph::render()
     QQuickView dummy;
     dummy.show();
     QTest::qWaitForWindowExposed(&dummy);
-    if (dummy.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+    if (dummy.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         QSKIP("Skipping complex rendering tests due to not running with OpenGL");
     dummy.hide();
 
@@ -506,7 +506,7 @@ void tst_SceneGraph::hideWithOtherContext()
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-        if (view.rendererInterface()->graphicsAPI() != QSGRendererInterface::OpenGL)
+        if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
             QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
         renderingOnMainThread = view.openglContext()->thread() == QGuiApplication::instance()->thread();
