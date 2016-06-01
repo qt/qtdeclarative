@@ -81,7 +81,7 @@ class QQmlContext;
 class QQmlContextData;
 
 // ### Merge with QV4::CompiledData::CompilationUnit
-class Q_AUTOTEST_EXPORT QQmlCompiledData : public QQmlRefCount, public QQmlCleanup
+class Q_AUTOTEST_EXPORT QQmlCompiledData : public QQmlRefCount
 {
 public:
     QQmlCompiledData(QQmlEngine *engine);
@@ -91,12 +91,8 @@ public:
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
-    bool isInitialized() const { return hasEngine(); }
-    void initialize(QQmlEngine *);
-
 protected:
     virtual void destroy(); // From QQmlRefCount
-    virtual void clear(); // From QQmlCleanup
 
 private:
     QQmlCompiledData(const QQmlCompiledData &other);

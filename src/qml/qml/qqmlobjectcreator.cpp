@@ -112,8 +112,8 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
     engine = parentContext->engine;
     v4 = QV8Engine::getV4(engine);
 
-    if (!compiledData->isInitialized())
-        compiledData->initialize(engine);
+    if (compiledData->compilationUnit && !compiledData->compilationUnit->engine)
+        compiledData->compilationUnit->linkToEngine(v4);
 
     qmlUnit = compiledData->compilationUnit->data;
     context = 0;
