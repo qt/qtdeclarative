@@ -16,7 +16,6 @@ SUBDIRS =   quick-accessibility \
             scenegraph \
             shadereffects \
             text \
-            textureprovider \
             threading \
             touchinteraction \
             tutorials \
@@ -29,7 +28,9 @@ SUBDIRS =   quick-accessibility \
 
 #OpenGL Support Required
 contains(QT_CONFIG, opengl(es1|es2)?) {
-    SUBDIRS += rendercontrol
+    SUBDIRS += \
+    textureprovider \
+    rendercontrol
 }
 
 # Widget dependent examples
