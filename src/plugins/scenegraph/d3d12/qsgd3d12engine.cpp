@@ -43,7 +43,7 @@
 #include <QString>
 #include <QColor>
 #include <qmath.h>
-#include <QtCore/private/qsimd_p.h>
+#include <qalgorithms.h>
 
 // Comment out to disable DeviceLossTester functionality in order to reduce
 // code size and improve startup perf a tiny bit.
@@ -92,7 +92,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DES
         if (heap.type == type) {
             for (int bucket = 0; bucket < _countof(heap.freeMap); ++bucket)
                 if (heap.freeMap[bucket]) {
-                    unsigned long freePos = _bit_scan_forward(heap.freeMap[bucket]);
+                    uint freePos = qCountTrailingZeroBits(heap.freeMap[bucket]);
                     heap.freeMap[bucket] &= ~(1UL << freePos);
                     if (Q_UNLIKELY(debug_render()))
                         qDebug("descriptor handle type %x reserve in bucket %d index %d", type, bucket, freePos);
