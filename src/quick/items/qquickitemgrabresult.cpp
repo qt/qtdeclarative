@@ -240,8 +240,7 @@ void QQuickItemGrabResult::render()
         return;
 
     d->texture->setRect(QRectF(0, d->itemSize.height(), d->itemSize.width(), -d->itemSize.height()));
-    QSGContext *sg = QSGRenderContext::from(QOpenGLContext::currentContext())->sceneGraphContext();
-    const QSize minSize = sg->minimumFBOSize();
+    const QSize minSize = QQuickWindowPrivate::get(d->window.data())->context->sceneGraphContext()->minimumFBOSize();
     d->texture->setSize(QSize(qMax(minSize.width(), d->textureSize.width()),
                               qMax(minSize.height(), d->textureSize.height())));
     d->texture->scheduleUpdate();

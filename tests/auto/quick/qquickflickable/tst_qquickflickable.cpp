@@ -1137,7 +1137,9 @@ void tst_qquickflickable::flickOnRelease()
     QTRY_VERIFY(!flickable->isMoving());
 
 #ifdef Q_OS_MAC
+# ifndef QT_NO_OPENGL
     QEXPECT_FAIL("", "QTBUG-26094 stopping on a full pixel doesn't work on OS X", Continue);
+# endif
 #endif
     // Stop on a full pixel after user interaction
     QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));

@@ -44,6 +44,8 @@
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QRunnable>
+#include <QOpenGLFunctions>
+#include <QSGRendererInterface>
 
 struct TouchEventData {
     QEvent::Type type;
@@ -290,8 +292,9 @@ private slots:
         QWindowSystemInterface::registerTouchDevice(touchDeviceWithVelocity);
     }
     void cleanup();
-
+#ifndef QT_NO_OPENGL
     void openglContextCreatedSignal();
+#endif
     void aboutToStopSignal();
 
     void constantUpdates();
@@ -371,14 +374,14 @@ private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
 };
-
+#ifndef QT_NO_OPENGL
 Q_DECLARE_METATYPE(QOpenGLContext *);
-
+#endif
 void tst_qquickwindow::cleanup()
 {
     QVERIFY(QGuiApplication::topLevelWindows().isEmpty());
 }
-
+#ifndef QT_NO_OPENGL
 void tst_qquickwindow::openglContextCreatedSignal()
 {
     qRegisterMetaType<QOpenGLContext *>();
@@ -390,12 +393,15 @@ void tst_qquickwindow::openglContextCreatedSignal()
     window.show();
     QTest::qWaitForWindowExposed(&window);
 
+    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+        QSKIP("Skipping OpenGL context test due to not running with OpenGL");
+
     QVERIFY(spy.size() > 0);
 
     QVariant ctx = spy.at(0).at(0);
     QCOMPARE(qvariant_cast<QOpenGLContext *>(ctx), window.openglContext());
 }
-
+#endif
 void tst_qquickwindow::aboutToStopSignal()
 {
     QQuickWindow window;
@@ -437,8 +443,7 @@ void tst_qquickwindow::constantUpdatesOnWindow_data()
     window.setGeometry(100, 100, 300, 200);
     window.show();
     QTest::qWaitForWindowExposed(&window);
-    bool threaded = window.openglContext()->thread() != QGuiApplication::instance()->thread();
-
+    const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
     if (threaded) {
         QTest::newRow("blocked, beforeRender") << true << QByteArray(SIGNAL(beforeRendering()));
         QTest::newRow("blocked, afterRender") << true << QByteArray(SIGNAL(afterRendering()));
@@ -1228,13 +1233,14 @@ void tst_qquickwindow::headless()
 
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->isVisible());
-    bool threaded = window->openglContext()->thread() != QThread::currentThread();
-
+    const bool threaded = QQuickWindowPrivate::get(window)->context->thread() != QThread::currentThread();
     QSignalSpy initialized(window, SIGNAL(sceneGraphInitialized()));
     QSignalSpy invalidated(window, SIGNAL(sceneGraphInvalidated()));
 
     // Verify that the window is alive and kicking
-    QVERIFY(window->openglContext() != 0);
+    QVERIFY(window->isSceneGraphInitialized());
+
+    const bool isGL = window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
 
     // Store the visual result
     QImage originalContent = window->grabWindow();
@@ -1244,15 +1250,16 @@ void tst_qquickwindow::headless()
     window->releaseResources();
 
     if (threaded) {
-        QTRY_COMPARE(invalidated.size(), 1);
-        QVERIFY(!window->openglContext());
+        QTRY_VERIFY(invalidated.size() >= 1);
+        if (isGL)
+            QVERIFY(!window->isSceneGraphInitialized());
     }
-
+#ifndef QT_NO_OPENGL
     if (QGuiApplication::platformName() == QLatin1String("windows")
         && QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
         QSKIP("Crashes on Windows/ANGLE, QTBUG-42967");
     }
-
+#endif
     // Destroy the native windowing system buffers
     window->destroy();
     QVERIFY(!window->handle());
@@ -1263,7 +1270,8 @@ void tst_qquickwindow::headless()
 
     if (threaded)
         QTRY_COMPARE(initialized.size(), 1);
-    QVERIFY(window->openglContext() != 0);
+
+    QVERIFY(window->isSceneGraphInitialized());
 
     // Verify that the visual output is the same
     QImage newContent = window->grabWindow();
@@ -1284,8 +1292,7 @@ void tst_qquickwindow::noUpdateWhenNothingChanges()
     // the initial expose with a second expose or more. Let these go
     // through before we let the test continue.
     QTest::qWait(100);
-
-    if (window.openglContext()->thread() == QGuiApplication::instance()->thread()) {
+    if (QQuickWindowPrivate::get(&window)->context->thread() == QGuiApplication::instance()->thread()) {
         QSKIP("Only threaded renderloop implements this feature");
         return;
     }
@@ -1592,7 +1599,6 @@ void tst_qquickwindow::hideThenDelete()
 
     QSignalSpy *openglDestroyed = 0;
     QSignalSpy *sgInvalidated = 0;
-    bool threaded = false;
 
     {
         QQuickWindow window;
@@ -1607,9 +1613,13 @@ void tst_qquickwindow::hideThenDelete()
         window.show();
 
         QTest::qWaitForWindowExposed(&window);
-        threaded = window.openglContext()->thread() != QThread::currentThread();
+        const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
+        const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
+#ifndef QT_NO_OPENGL
+        if (isGL)
+            openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
+#endif
 
-        openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
         sgInvalidated = new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated()));
 
         window.hide();
@@ -1617,6 +1627,9 @@ void tst_qquickwindow::hideThenDelete()
         QTRY_VERIFY(!window.isExposed());
 
         if (threaded) {
+            if (!isGL)
+                QSKIP("Skipping persistency verification due to not running with OpenGL");
+
             if (!persistentSG) {
                 QVERIFY(sgInvalidated->size() > 0);
                 if (!persistentGL)
@@ -1631,7 +1644,10 @@ void tst_qquickwindow::hideThenDelete()
     }
 
     QVERIFY(sgInvalidated->size() > 0);
-    QVERIFY(openglDestroyed->size() > 0);
+#ifndef QT_NO_OPENGL
+    if (openglDestroyed)
+        QVERIFY(openglDestroyed->size() > 0);
+#endif
 }
 
 void tst_qquickwindow::showHideAnimate()
@@ -2028,6 +2044,9 @@ void tst_qquickwindow::defaultSurfaceFormat()
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
+    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+        QSKIP("Skipping OpenGL context test due to not running with OpenGL");
+
     const QSurfaceFormat reqFmt = window.requestedFormat();
     QCOMPARE(format.swapInterval(), reqFmt.swapInterval());
     QCOMPARE(format.redBufferSize(), reqFmt.redBufferSize());
@@ -2036,12 +2055,13 @@ void tst_qquickwindow::defaultSurfaceFormat()
     QCOMPARE(format.profile(), reqFmt.profile());
     QCOMPARE(int(format.options()), int(reqFmt.options()));
 
+#ifndef QT_NO_OPENGL
     // Depth and stencil should be >= what has been requested. For real. But use
     // the context since the window's surface format is only partially updated
     // on most platforms.
     QVERIFY(window.openglContext()->format().depthBufferSize() >= 16);
     QVERIFY(window.openglContext()->format().stencilBufferSize() >= 8);
-
+#endif
     QSurfaceFormat::setDefaultFormat(savedDefaultFormat);
 }
 
@@ -2090,7 +2110,7 @@ public:
     }
     static int deleted;
 };
-
+#ifndef QT_NO_OPENGL
 class GlRenderJob : public QRunnable
 {
 public:
@@ -2112,7 +2132,7 @@ public:
     QMutex *mutex;
     QWaitCondition *condition;
 };
-
+#endif
 int RenderJob::deleted = 0;
 
 void tst_qquickwindow::testRenderJob()
@@ -2161,25 +2181,29 @@ void tst_qquickwindow::testRenderJob()
         QTRY_COMPARE(RenderJob::deleted, 1);
         QCOMPARE(completedJobs.size(), 1);
 
-        // Do a synchronized GL job.
-        GLubyte readPixel[4] = {0, 0, 0, 0};
-        GlRenderJob *glJob = new GlRenderJob(readPixel);
-        if (window.openglContext()->thread() != QThread::currentThread()) {
-            QMutex mutex;
-            QWaitCondition condition;
-            glJob->mutex = &mutex;
-            glJob->condition = &condition;
-            mutex.lock();
-            window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
-            condition.wait(&mutex);
-            mutex.unlock();
-        } else {
-            window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
+#ifndef QT_NO_OPENGL
+        if (window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
+            // Do a synchronized GL job.
+            GLubyte readPixel[4] = {0, 0, 0, 0};
+            GlRenderJob *glJob = new GlRenderJob(readPixel);
+            if (window.openglContext()->thread() != QThread::currentThread()) {
+                QMutex mutex;
+                QWaitCondition condition;
+                glJob->mutex = &mutex;
+                glJob->condition = &condition;
+                mutex.lock();
+                window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
+                condition.wait(&mutex);
+                mutex.unlock();
+            } else {
+                window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
+            }
+            QCOMPARE(int(readPixel[0]), 255);
+            QCOMPARE(int(readPixel[1]), 0);
+            QCOMPARE(int(readPixel[2]), 0);
+            QCOMPARE(int(readPixel[3]), 255);
         }
-        QCOMPARE(int(readPixel[0]), 255);
-        QCOMPARE(int(readPixel[1]), 0);
-        QCOMPARE(int(readPixel[2]), 0);
-        QCOMPARE(int(readPixel[3]), 255);
+#endif
     }
 
     // Verify that jobs are deleted when window is not rendered at all
@@ -2197,7 +2221,6 @@ void tst_qquickwindow::testRenderJob()
 
 class EventCounter : public QQuickRectangle
 {
-    Q_OBJECT
 public:
     EventCounter(QQuickItem *parent = 0)
         : QQuickRectangle(parent)

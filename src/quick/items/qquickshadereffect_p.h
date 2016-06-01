@@ -52,51 +52,12 @@
 //
 
 #include <QtQuick/qquickitem.h>
-
-#include <QtQuick/qsgmaterial.h>
 #include <private/qtquickglobal_p.h>
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qquickshadereffectnode_p.h>
-#include "qquickshadereffectmesh_p.h"
-
-#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-const char *qtPositionAttributeName();
-const char *qtTexCoordAttributeName();
-
-class QSGContext;
-class QSignalMapper;
-class QQuickCustomMaterialShader;
-
-// Common class for QQuickShaderEffect and QQuickCustomParticle.
-struct Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectCommon
-{
-    typedef QQuickShaderEffectMaterialKey Key;
-    typedef QQuickShaderEffectMaterial::UniformData UniformData;
-
-    ~QQuickShaderEffectCommon();
-    void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
-    void connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
-    void updateParseLog(bool ignoreAttributes);
-    void lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code);
-    void updateShader(QQuickItem *item, Key::ShaderType shaderType);
-    void updateMaterial(QQuickShaderEffectNode *node, QQuickShaderEffectMaterial *material,
-                        bool updateUniforms, bool updateUniformValues, bool updateTextureProviders);
-    void updateWindow(QQuickWindow *window);
-
-    // Called by slots in QQuickShaderEffect:
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(QQuickItem *item, int mappedId, bool *textureProviderChanged);
-
-    Key source;
-    QVector<QByteArray> attributes;
-    QVector<UniformData> uniformData[Key::ShaderTypeCount];
-    QVector<QSignalMapper *> signalMappers[Key::ShaderTypeCount];
-    QString parseLog;
-};
-
+class QQuickOpenGLShaderEffect;
+class QQuickGenericShaderEffect;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
 {
@@ -111,16 +72,14 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 1)
 
 public:
-    enum CullMode
-    {
-        NoCulling = QQuickShaderEffectMaterial::NoCulling,
-        BackFaceCulling = QQuickShaderEffectMaterial::BackFaceCulling,
-        FrontFaceCulling = QQuickShaderEffectMaterial::FrontFaceCulling
+    enum CullMode {
+        NoCulling,
+        BackFaceCulling,
+        FrontFaceCulling
     };
     Q_ENUM(CullMode)
 
-    enum Status
-    {
+    enum Status {
         Compiled,
         Uncompiled,
         Error
@@ -128,32 +87,30 @@ public:
     Q_ENUM(Status)
 
     QQuickShaderEffect(QQuickItem *parent = 0);
-    ~QQuickShaderEffect();
 
-    QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
+    QByteArray fragmentShader() const;
     void setFragmentShader(const QByteArray &code);
 
-    QByteArray vertexShader() const { return m_common.source.sourceCode[Key::VertexShader]; }
+    QByteArray vertexShader() const;
     void setVertexShader(const QByteArray &code);
 
-    bool blending() const { return m_blending; }
+    bool blending() const;
     void setBlending(bool enable);
 
     QVariant mesh() const;
     void setMesh(const QVariant &mesh);
 
-    CullMode cullMode() const { return m_cullMode; }
+    CullMode cullMode() const;
     void setCullMode(CullMode face);
 
-    QString log() const { return m_log; }
-    Status status() const { return m_status; }
-
-    bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
+    bool supportsAtlasTextures() const;
     void setSupportsAtlasTextures(bool supports);
 
-    QString parseLog();
+    QString log() const;
+    Status status() const;
 
-    bool event(QEvent *) Q_DECL_OVERRIDE;
+    bool isComponentComplete() const;
+    QString parseLog();
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -166,44 +123,17 @@ Q_SIGNALS:
     void supportsAtlasTexturesChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
-
-private Q_SLOTS:
-    void updateGeometry();
-    void updateGeometryIfAtlased();
-    void updateLogAndStatus(const QString &log, int status);
-    void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
+    bool event(QEvent *e) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) override;
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
-    friend class QQuickCustomMaterialShader;
-    friend class QQuickShaderEffectNode;
-
-    typedef QQuickShaderEffectMaterialKey Key;
-    typedef QQuickShaderEffectMaterial::UniformData UniformData;
-
-    QSize m_meshResolution;
-    QQuickShaderEffectMesh *m_mesh;
-    QQuickGridMesh m_defaultMesh;
-    CullMode m_cullMode;
-    QString m_log;
-    Status m_status;
-
-    QQuickShaderEffectCommon m_common;
-
-    uint m_blending : 1;
-    uint m_dirtyUniforms : 1;
-    uint m_dirtyUniformValues : 1;
-    uint m_dirtyTextureProviders : 1;
-    uint m_dirtyProgram : 1;
-    uint m_dirtyParseLog : 1;
-    uint m_dirtyMesh : 1;
-    uint m_dirtyGeometry : 1;
-    uint m_customVertexShader : 1;
-    uint m_supportsAtlasTextures : 1;
+#ifndef QT_NO_OPENGL
+    QQuickOpenGLShaderEffect *m_glImpl;
+#endif
+    QQuickGenericShaderEffect *m_impl;
 };
 
 QT_END_NAMESPACE

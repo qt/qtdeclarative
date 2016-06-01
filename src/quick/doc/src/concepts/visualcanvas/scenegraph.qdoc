@@ -31,9 +31,10 @@
 
 \section1 The Scene Graph in Qt Quick
 
-Qt Quick 2 makes use of a dedicated scene graph based on OpenGL ES 2.0
-or OpenGL 2.0 for its rendering. Using a scene graph for graphics
-rather than the traditional imperative painting systems (QPainter and
+Qt Quick 2 makes use of a dedicated scene graph based and a series of
+adpatations of which the default uses OpenGL ES 2.0 or OpenGL 2.0 for
+its rendering. Using a scene graph for graphics rather than the
+traditional imperative painting systems (QPainter and
 similar), means the scene to be rendered can be retained between
 frames and the complete set of primitives to render is known before
 rendering starts. This opens up for a number of optimizations, such as
@@ -61,6 +62,11 @@ the items. Once it has been set up, it can be manipulated and rendered
 independently of the state of the items. On many platforms, the scene
 graph will even be rendered on a dedicated render thread while the GUI
 thread is preparing the next frame's state.
+
+\note Much of the information listed on this page is specific to the
+default OpenGL adaptation of the Qt Quick Scene graph. For more information
+about the different scene graph adaptations see
+\l{qtquick-visualcanvas-adaptations.html}{Scene Graph Adaptations}.
 
 
 \section1 Qt Quick Scene Graph Structure

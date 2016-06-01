@@ -92,6 +92,7 @@ void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool h
         texture->setRect(referencedItem->boundingRect());
         texture->setSize(referencedItem->boundingRect().size().toSize());
         texture->setRecursive(true);
+#ifndef QT_NO_OPENGL
 #ifndef QT_OPENGL_ES
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL)
             texture->setFormat(GL_RGBA8);
@@ -99,6 +100,7 @@ void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool h
             texture->setFormat(GL_RGBA);
 #else
         texture->setFormat(GL_RGBA);
+#endif
 #endif
         texture->setHasMipmaps(false);
 

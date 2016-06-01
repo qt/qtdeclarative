@@ -43,7 +43,7 @@
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcontext2d_p.h>
 #include <private/qquickcontext2dtexture_p.h>
-#include <qsgsimpletexturenode.h>
+#include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtGui/QGuiApplication>
 
@@ -59,24 +59,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCanvasNode : public QSGSimpleTextureNode
-{
-public:
-    QQuickCanvasNode() {
-        qsgnode_set_description(this, QStringLiteral("canvasnode"));
-        setOwnsTexture(false);
-    }
-
-    ~QQuickCanvasNode() {
-        delete texture();
-    }
-};
-
 class QQuickCanvasTextureProvider : public QSGTextureProvider
 {
 public:
-    QQuickCanvasNode *node;
-    QSGTexture *texture() const Q_DECL_OVERRIDE { return node ? node->texture() : 0; }
+    QSGTexture *tex;
+    QSGTexture *texture() const Q_DECL_OVERRIDE { return tex; }
     void fireTextureChanged() { emit textureChanged(); }
 };
 
@@ -187,7 +174,8 @@ public:
     QUrl baseUrl;
     QMap<int, QV4::PersistentValue> animationCallbacks;
     mutable QQuickCanvasTextureProvider *textureProvider;
-    QQuickCanvasNode *node;
+    QSGImageNode *node;
+    QSGTexture *nodeTexture;
 };
 
 QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
@@ -203,6 +191,7 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , renderStrategy(QQuickCanvasItem::Immediate)
     , textureProvider(0)
     , node(0)
+    , nodeTexture(0)
 {
     implicitAntialiasing = true;
 }
@@ -256,17 +245,18 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     The Canvas item supports two render targets: \c Canvas.Image and
     \c Canvas.FramebufferObject.
 
-    The \c Canvas.Image render target is a \a QImage object.  This render
-    target supports background thread rendering, allowing complex or long
-    running painting to be executed without blocking the UI.
+    The \c Canvas.Image render target is a \a QImage object. This render target
+    supports background thread rendering, allowing complex or long running
+    painting to be executed without blocking the UI. This is the only render
+    target that is supported by all Qt Quick backends.
 
     The Canvas.FramebufferObject render target utilizes OpenGL hardware
     acceleration rather than rendering into system memory, which in many cases
-    results in faster rendering. Canvas.FramebufferObject relies on the
-    OpenGL extensions \c GL_EXT_framebuffer_multisample and
-    \c GL_EXT_framebuffer_blit for antialiasing. It will also use more
-    graphics memory when rendering strategy is anything other than
-    Canvas.Cooperative.
+    results in faster rendering. Canvas.FramebufferObject relies on the OpenGL
+    extensions \c GL_EXT_framebuffer_multisample and \c GL_EXT_framebuffer_blit
+    for antialiasing. It will also use more graphics memory when rendering
+    strategy is anything other than Canvas.Cooperative. Framebuffer objects may
+    not be available with Qt Quick backends other than OpenGL.
 
     The default render target is Canvas.Image and the default renderStrategy is
     Canvas.Immediate.
@@ -301,7 +291,14 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
     classes that consume texture providers.
 
-    \sa Context2D
+    \note In general large canvases, frequent updates, and animation should be
+    avoided with the Canvas.Image render target. This is because with
+    accelerated graphics APIs each update will lead to a texture upload. Also,
+    if possible, prefer QQuickPaintedItem and implement drawing in C++ via
+    QPainter instead of the more expensive and likely less performing
+    JavaScript and Context2D approach.
+
+    \sa Context2D QQuickPaintedItem
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
@@ -735,16 +732,16 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     if (!d->context || d->canvasWindow.size().isEmpty()) {
         if (d->textureProvider) {
-            d->textureProvider->node = 0;
+            d->textureProvider->tex = 0;
             d->textureProvider->fireTextureChanged();
         }
         delete oldNode;
         return 0;
     }
 
-    QQuickCanvasNode *node = static_cast<QQuickCanvasNode*>(oldNode);
+    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
     if (!node) {
-        node = new QQuickCanvasNode();
+        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createImageNode();
         d->node = node;
     }
 
@@ -761,22 +758,27 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     QQuickContext2D *ctx = qobject_cast<QQuickContext2D *>(d->context);
     QQuickContext2DTexture *factory = ctx->texture();
-    QSGTexture *texture = factory->textureForNextFrame(node->texture(), window());
+    QSGTexture *texture = factory->textureForNextFrame(d->nodeTexture, window());
     if (!texture) {
         delete node;
         d->node = 0;
+        delete d->nodeTexture;
+        d->nodeTexture = 0;
         if (d->textureProvider) {
-            d->textureProvider->node = 0;
+            d->textureProvider->tex = 0;
             d->textureProvider->fireTextureChanged();
         }
         return 0;
     }
 
+    d->nodeTexture = texture;
     node->setTexture(texture);
-    node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
+    node->setTargetRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
+    node->setInnerTargetRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
+    node->update();
 
     if (d->textureProvider) {
-        d->textureProvider->node = node;
+        d->textureProvider->tex = d->nodeTexture;
         d->textureProvider->fireTextureChanged();
     }
     return node;
@@ -796,14 +798,17 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
         return QQuickItem::textureProvider();
 
     Q_D(const QQuickCanvasItem);
+#ifndef QT_NO_OPENGL
     QQuickWindow *w = window();
-    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+    if (!w || !w->isSceneGraphInitialized()
+            || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {
         qWarning("QQuickCanvasItem::textureProvider: can only be queried on the rendering thread of an exposed window");
         return 0;
     }
+#endif
     if (!d->textureProvider)
         d->textureProvider = new QQuickCanvasTextureProvider;
-    d->textureProvider->node = d->node;
+    d->textureProvider->tex = d->nodeTexture;
     return d->textureProvider;
 }
 

@@ -40,7 +40,7 @@
 #include "qquickframebufferobject.h"
 
 #include <QtGui/QOpenGLFramebufferObject>
-
+#include <QtGui/QOpenGLFunctions>
 #include <private/qquickitem_p.h>
 
 #include <QSGSimpleTextureNode>

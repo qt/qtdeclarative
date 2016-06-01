@@ -39,8 +39,9 @@
 
 #include "qquickdesignerwindowmanager_p.h"
 #include "private/qquickwindow_p.h"
-#include <QtGui/QOpenGLContext>
-
+#ifndef QT_NO_OPENGL
+# include <QtQuick/private/qsgdefaultrendercontext_p.h>
+#endif
 #include <QtQuick/QQuickWindow>
 
 QT_BEGIN_NAMESPACE
@@ -48,7 +49,7 @@ QT_BEGIN_NAMESPACE
 QQuickDesignerWindowManager::QQuickDesignerWindowManager()
     : m_sgContext(QSGContext::createDefaultContext())
 {
-    m_renderContext.reset(new QSGRenderContext(m_sgContext.data()));
+    m_renderContext.reset(m_sgContext.data()->createRenderContext());
 }
 
 void QQuickDesignerWindowManager::show(QQuickWindow *window)
@@ -66,6 +67,7 @@ void QQuickDesignerWindowManager::windowDestroyed(QQuickWindow *)
 
 void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
 {
+#ifndef QT_NO_OPENGL
     if (!m_openGlContext) {
         m_openGlContext.reset(new QOpenGLContext());
         m_openGlContext->setFormat(window->requestedFormat());
@@ -76,6 +78,9 @@ void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
     } else {
         m_openGlContext->makeCurrent(window);
     }
+#else
+    Q_UNUSED(window)
+#endif
 }
 
 void QQuickDesignerWindowManager::exposureChanged(QQuickWindow *)

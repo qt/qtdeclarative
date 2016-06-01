@@ -154,8 +154,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
             p->bindAttributeLocation(attr[i], i);
     }
     p->bindAttributeLocation("_qt_order", i);
-    context->compile(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
-    context->initialize(s);
+    context->compileShader(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
+    context->initializeShader(s);
     if (!p->isLinked())
         return 0;
 
@@ -188,8 +188,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
-    context->compile(s, material);
-    context->initialize(s);
+    context->compileShader(s, material);
+    context->initializeShader(s);
 
     shader = new Shader();
     shader->program = s;
@@ -356,17 +356,17 @@ void Updater::visitClipNode(Node *n)
     if (m_roots.last() && m_added > 0)
         renderer->registerBatchRoot(n, m_roots.last());
 
-    cn->m_clip_list = m_current_clip;
+    cn->setRendererClipList(m_current_clip);
     m_current_clip = cn;
     m_roots << n;
     m_rootMatrices.add(m_rootMatrices.last() * *m_combined_matrix_stack.last());
     extra->matrix = m_rootMatrices.last();
-    cn->m_matrix = &extra->matrix;
+    cn->setRendererMatrix(&extra->matrix);
     m_combined_matrix_stack << &m_identityMatrix;
 
     SHADOWNODE_TRAVERSE(n) visitNode(child);
 
-    m_current_clip = cn->m_clip_list;
+    m_current_clip = cn->clipList();
     m_rootMatrices.pop_back();
     m_combined_matrix_stack.pop_back();
     m_roots.pop_back();
@@ -459,8 +459,8 @@ void Updater::visitGeometryNode(Node *n)
 {
     QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(n->sgNode);
 
-    gn->m_matrix = m_combined_matrix_stack.last();
-    gn->m_clip_list = m_current_clip;
+    gn->setRendererMatrix(m_combined_matrix_stack.last());
+    gn->setRendererClipList(m_current_clip);
     gn->setInheritedOpacity(m_opacity_stack.last());
 
     if (m_added) {
@@ -746,8 +746,9 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGRenderContext *ctx)
+Renderer::Renderer(QSGDefaultRenderContext *ctx)
     : QSGRenderer(ctx)
+    , m_context(ctx)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)
     , m_nextRenderOrder(0)
@@ -807,7 +808,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
 
     // If rendering with an OpenGL Core profile context, we need to create a VAO
     // to hold our vertex specification state.
-    if (context()->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+    if (m_context->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
         m_vao = new QOpenGLVertexArrayObject(this);
         m_vao->create();
     }
@@ -1101,7 +1102,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
             if (m_renderNodeElements.isEmpty()) {
                 static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-                m_useDepthBuffer = useDepth && context()->openglContext()->format().depthBufferSize() > 0;
+                m_useDepthBuffer = useDepth && m_context->openglContext()->format().depthBufferSize() > 0;
             }
         }
     }
@@ -2760,6 +2761,21 @@ void Renderer::render()
         m_vao->release();
 }
 
+struct RenderNodeState : public QSGRenderNode::RenderState
+{
+    const QMatrix4x4 *projectionMatrix() const override { return m_projectionMatrix; }
+    QRect scissorRect() const { return m_scissorRect; }
+    bool scissorEnabled() const { return m_scissorEnabled; }
+    int stencilValue() const { return m_stencilValue; }
+    bool stencilEnabled() const { return m_stencilEnabled; }
+
+    const QMatrix4x4 *m_projectionMatrix;
+    QRect m_scissorRect;
+    bool m_scissorEnabled;
+    int m_stencilValue;
+    bool m_stencilEnabled;
+};
+
 void Renderer::renderRenderNode(Batch *batch)
 {
     if (Q_UNLIKELY(debug_render()))
@@ -2771,24 +2787,25 @@ void Renderer::renderRenderNode(Batch *batch)
     setActiveShader(0, 0);
 
     QSGNode *clip = e->renderNode->parent();
-    e->renderNode->m_clip_list = 0;
+    QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
+    rd->m_clip_list = 0;
     while (clip != rootNode()) {
         if (clip->type() == QSGNode::ClipNodeType) {
-            e->renderNode->m_clip_list = static_cast<QSGClipNode *>(clip);
+            rd->m_clip_list = static_cast<QSGClipNode *>(clip);
             break;
         }
         clip = clip->parent();
     }
 
-    updateClip(e->renderNode->m_clip_list, batch);
+    updateClip(rd->m_clip_list, batch);
 
-    QSGRenderNode::RenderState state;
+    RenderNodeState state;
     QMatrix4x4 pm = projectionMatrix();
-    state.projectionMatrix = &pm;
-    state.scissorEnabled = m_currentClipType & ScissorClip;
-    state.stencilEnabled = m_currentClipType & StencilClip;
-    state.scissorRect = m_currentScissorRect;
-    state.stencilValue = m_currentStencilValue;
+    state.m_projectionMatrix = &pm;
+    state.m_scissorEnabled = m_currentClipType & ScissorClip;
+    state.m_stencilEnabled = m_currentClipType & StencilClip;
+    state.m_scissorRect = m_currentScissorRect;
+    state.m_stencilValue = m_currentStencilValue;
 
     QSGNode *xform = e->renderNode->parent();
     QMatrix4x4 matrix;
@@ -2804,13 +2821,13 @@ void Renderer::renderRenderNode(Batch *batch)
         }
         xform = xform->parent();
     }
-    e->renderNode->m_matrix = &matrix;
+    rd->m_matrix = &matrix;
 
     QSGNode *opacity = e->renderNode->parent();
-    e->renderNode->m_opacity = 1.0;
+    rd->m_opacity = 1.0;
     while (opacity != rootNode()) {
         if (opacity->type() == QSGNode::OpacityNodeType) {
-            e->renderNode->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
+            rd->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
             break;
         }
         opacity = opacity->parent();
@@ -2822,12 +2839,17 @@ void Renderer::renderRenderNode(Batch *batch)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    e->renderNode->render(state);
-
-    e->renderNode->m_matrix = 0;
-    e->renderNode->m_clip_list = 0;
-
     QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
+
+    GLuint prevFbo = 0;
+    if (changes & QSGRenderNode::RenderTargetState)
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *) &prevFbo);
+
+    e->renderNode->render(&state);
+
+    rd->m_matrix = 0;
+    rd->m_clip_list = 0;
+
     if (changes & QSGRenderNode::ViewportState) {
         QRect r = viewportRect();
         glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
@@ -2861,6 +2883,8 @@ void Renderer::renderRenderNode(Batch *batch)
         glDisable(GL_CULL_FACE);
     }
 
+    if (changes & QSGRenderNode::RenderTargetState)
+        glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
 }
 
 class VisualizeShader : public QOpenGLShaderProgram

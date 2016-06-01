@@ -29,7 +29,6 @@
 #include "mainwindow.h"
 #include "splineeditor.h"
 #include <QtQuick/QQuickView>
-#include <QtQuick>
 #include <QtQml/QQmlContext>
 #include <QEasingCurve>
 #include <QHBoxLayout>

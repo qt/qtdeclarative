@@ -43,8 +43,8 @@
 #include <QtGui/qcolor.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qsize.h>
-#include <QtCore/qvariant.h>
-#include <QtGui/qopenglfunctions.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qbytearray.h>
 
 #ifndef QQUICKSHADEREFFECTMESH_P_H
 #define QQUICKSHADEREFFECTMESH_P_H
@@ -62,6 +62,9 @@
 
 QT_BEGIN_NAMESPACE
 
+const char *qtPositionAttributeName();
+const char *qtTexCoordAttributeName();
+
 class QSGGeometry;
 class QRectF;
 
@@ -70,8 +73,10 @@ class QQuickShaderEffectMesh : public QObject
     Q_OBJECT
 public:
     QQuickShaderEffectMesh(QObject *parent = 0);
-    // If 'geometry' != 0, 'attributes' is the same as last time the function was called.
-    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &rect) = 0;
+    virtual bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) = 0;
+    // If 'geometry' != 0, 'attrCount' is the same as last time the function was called.
+    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                        const QRectF &srcRect, const QRectF &rect) = 0;
     // If updateGeometry() fails, the reason should appear in the log.
     virtual QString log() const { return QString(); }
 
@@ -86,7 +91,9 @@ class QQuickGridMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
 public:
     QQuickGridMesh(QObject *parent = 0);
-    QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &rect) Q_DECL_OVERRIDE;
+    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) Q_DECL_OVERRIDE;
+    QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                const QRectF &srcRect, const QRectF &rect) Q_DECL_OVERRIDE;
     QString log() const  Q_DECL_OVERRIDE { return m_log; }
 
     void setResolution(const QSize &res);
@@ -111,7 +118,10 @@ class QQuickBorderImageMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
 public:
     QQuickBorderImageMesh(QObject *parent = 0);
-    QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &rect) Q_DECL_OVERRIDE;
+
+    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
+    QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                const QRectF &srcRect, const QRectF &rect) override;
 
     QQuickScaleGrid *border();
 

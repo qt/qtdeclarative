@@ -502,7 +502,7 @@ QQuickRotationAnimator::RotationDirection QQuickRotationAnimator::direction() co
     Q_D(const QQuickRotationAnimator);
     return d->direction;
 }
-
+#ifndef QT_NO_OPENGL
 /*!
     \qmltype UniformAnimator
     \instantiates QQuickUniformAnimator
@@ -580,5 +580,6 @@ QQuickAnimatorJob *QQuickUniformAnimator::createJob() const
     job->setUniform(u.toLatin1());
     return job;
 }
+#endif
 
 QT_END_NAMESPACE

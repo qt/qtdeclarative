@@ -38,10 +38,11 @@
 ****************************************************************************/
 
 #include "qquickcontext2dtile_p.h"
-
-#include <QOpenGLFramebufferObject>
-#include <QOpenGLFramebufferObjectFormat>
-#include <QOpenGLPaintDevice>
+#ifndef QT_NO_OPENGL
+# include <QOpenGLFramebufferObject>
+# include <QOpenGLFramebufferObjectFormat>
+# include <QOpenGLPaintDevice>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -96,7 +97,7 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
 
     return 0;
 }
-
+#ifndef QT_NO_OPENGL
 QQuickContext2DFBOTile::QQuickContext2DFBOTile()
     : QQuickContext2DTile()
     , m_fbo(0)
@@ -146,7 +147,7 @@ void QQuickContext2DFBOTile::setRect(const QRect& r)
         m_fbo = new QOpenGLFramebufferObject(r.size(), format);
     }
 }
-
+#endif
 
 QQuickContext2DImageTile::QQuickContext2DImageTile()
     : QQuickContext2DTile()

@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSHADEREFFECTNODE_P_H
-#define QQUICKSHADEREFFECTNODE_P_H
+#ifndef QQUICKOPENGLSHADEREFFECTNODE_P_H
+#define QQUICKOPENGLSHADEREFFECTNODE_P_H
 
 //
 //  W A R N I N G
@@ -56,13 +56,14 @@
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/qquickitem.h>
 #include <private/qtquickglobal_p.h>
+#include <private/qquickshadereffect_p.h>
 
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QQuickShaderEffectMaterialKey {
+struct QQuickOpenGLShaderEffectMaterialKey {
     enum ShaderType
     {
         VertexShader,
@@ -72,15 +73,15 @@ struct QQuickShaderEffectMaterialKey {
 
     QByteArray sourceCode[ShaderTypeCount];
 
-    bool operator == (const QQuickShaderEffectMaterialKey &other) const;
-    bool operator != (const QQuickShaderEffectMaterialKey &other) const;
+    bool operator == (const QQuickOpenGLShaderEffectMaterialKey &other) const;
+    bool operator != (const QQuickOpenGLShaderEffectMaterialKey &other) const;
 };
 
-uint qHash(const QQuickShaderEffectMaterialKey &key);
+uint qHash(const QQuickOpenGLShaderEffectMaterialKey &key);
 
 class QQuickCustomMaterialShader;
-class QQuickShaderEffectNode;
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMaterial : public QSGMaterial
+class QQuickOpenGLShaderEffectNode;
+class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectMaterial : public QSGMaterial
 {
 public:
     struct UniformData
@@ -94,25 +95,18 @@ public:
         bool operator == (const UniformData &other) const;
     };
 
-    enum CullMode
-    {
-        NoCulling,
-        BackFaceCulling,
-        FrontFaceCulling
-    };
-
-    explicit QQuickShaderEffectMaterial(QQuickShaderEffectNode *node = 0);
+    explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = 0);
     QSGMaterialType *type() const Q_DECL_OVERRIDE;
     QSGMaterialShader *createShader() const Q_DECL_OVERRIDE;
     int compare(const QSGMaterial *other) const Q_DECL_OVERRIDE;
 
     QVector<QByteArray> attributes;
-    QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
+    QVector<UniformData> uniforms[QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount];
     QVector<QSGTextureProvider *> textureProviders;
-    CullMode cullMode;
+    QQuickShaderEffect::CullMode cullMode;
     bool geometryUsesTextureSubRect;
 
-    void setProgramSource(const QQuickShaderEffectMaterialKey &source);
+    void setProgramSource(const QQuickOpenGLShaderEffectMaterialKey &source);
     void updateTextures() const;
     void invalidateTextureProvider(QSGTextureProvider *provider);
 
@@ -127,21 +121,21 @@ protected:
     // type. The type is cleaned up in cleanupMaterialCache() which is called
     // when the GL context is shut down.
     QSGMaterialType *m_type;
-    QQuickShaderEffectMaterialKey m_source;
+    QQuickOpenGLShaderEffectMaterialKey m_source;
 
-    QQuickShaderEffectNode *m_node;
+    QQuickOpenGLShaderEffectNode *m_node;
     bool m_emittedLogChanged;
 };
 
 
 class QSGShaderEffectMesh;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectNode : public QObject, public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectNode : public QObject, public QSGGeometryNode
 {
     Q_OBJECT
 public:
-    QQuickShaderEffectNode();
-    virtual ~QQuickShaderEffectNode();
+    QQuickOpenGLShaderEffectNode();
+    virtual ~QQuickOpenGLShaderEffectNode();
 
     void preprocess() Q_DECL_OVERRIDE;
 
@@ -156,4 +150,4 @@ private Q_SLOTS:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSHADEREFFECTNODE_P_H
+#endif // QQUICKOPENGLSHADEREFFECTNODE_P_H

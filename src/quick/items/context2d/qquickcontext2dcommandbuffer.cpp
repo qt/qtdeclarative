@@ -42,9 +42,11 @@
 #include <qqml.h>
 #include <QtCore/QMutex>
 #include <QtQuick/qsgtexture.h>
-#include <QtGui/QOpenGLContext>
 #include <QtGui/QPaintEngine>
-#include <QtGui/private/qopenglpaintengine_p.h>
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+# include <QtGui/private/qopenglpaintengine_p.h>
+#endif
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))
 

@@ -28,14 +28,19 @@
 
 #include <qtest.h>
 
+#ifndef QT_NO_OPENGL
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#endif
 
 #include <QtQuick>
 #include <QtQml>
 
+#ifndef QT_NO_OPENGL
 #include <private/qopenglcontext_p.h>
+#endif
+
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
 
@@ -99,9 +104,9 @@ private slots:
 
     void render_data();
     void render();
-
+#ifndef QT_NO_OPENGL
     void hideWithOtherContext();
-
+#endif
     void createTextureFromImage_data();
     void createTextureFromImage();
 
@@ -121,6 +126,7 @@ void tst_SceneGraph::initTestCase()
     QSGRenderLoop *loop = QSGRenderLoop::instance();
     qDebug() << "RenderLoop:        " << loop;
 
+#ifndef QT_NO_OPENGL
     QOpenGLContext context;
     context.setFormat(loop->sceneGraphContext()->defaultSurfaceFormat());
     context.create();
@@ -153,6 +159,7 @@ void tst_SceneGraph::initTestCase()
     qDebug() << "Broken Mipmap:    " << m_brokenMipmapSupport;
 
     context.doneCurrent();
+#endif
 }
 
 QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1)
@@ -178,12 +185,17 @@ QImage showAndGrab(const QString &file, int w, int h)
 // Assumes the images are opaque white...
 bool containsSomethingOtherThanWhite(const QImage &image)
 {
-    Q_ASSERT(image.format() == QImage::Format_ARGB32_Premultiplied
-             || image.format() == QImage::Format_RGB32);
-    int w = image.width();
-    int h = image.height();
+    QImage img;
+    if (image.format() != QImage::Format_ARGB32_Premultiplied
+             || image.format() != QImage::Format_RGB32)
+        img = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    else
+        img = image;
+
+    int w = img.width();
+    int h = img.height();
     for (int y=0; y<h; ++y) {
-        const uint *pixels = (const uint *) image.constScanLine(y);
+        const uint *pixels = (const uint *) img.constScanLine(y);
         for (int x=0; x<w; ++x)
             if (pixels[x] != 0xffffffff)
                 return true;
@@ -216,24 +228,26 @@ void tst_SceneGraph::manyWindows_data()
     QTest::newRow("rects,subwindow,sharing") << QStringLiteral("manyWindows_rects.qml") << false << true;
 }
 
+#ifndef QT_NO_OPENGL
 struct ShareContextResetter {
 public:
     ~ShareContextResetter() { qt_gl_set_global_share_context(0); }
 };
+#endif
 
 void tst_SceneGraph::manyWindows()
 {
     QFETCH(QString, file);
     QFETCH(bool, toplevel);
     QFETCH(bool, shared);
-
+#ifndef QT_NO_OPENGL
     QOpenGLContext sharedGLContext;
     ShareContextResetter cleanup; // To avoid dangling pointer in case of test-failure.
     if (shared) {
         QVERIFY(sharedGLContext.create());
         qt_gl_set_global_share_context(&sharedGLContext);
     }
-
+#endif
     QScopedPointer<QWindow> parent;
     if (!toplevel) {
         parent.reset(new QWindow());
@@ -422,6 +436,13 @@ void tst_SceneGraph::render_data()
 
 void tst_SceneGraph::render()
 {
+    QQuickView dummy;
+    dummy.show();
+    QTest::qWaitForWindowExposed(&dummy);
+    if (dummy.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+        QSKIP("Skipping complex rendering tests due to not running with OpenGL");
+    dummy.hide();
+
     QFETCH(QString, file);
     QFETCH(QList<Sample>, baseStage);
     QFETCH(QList<Sample>, finalStage);
@@ -464,6 +485,7 @@ void tst_SceneGraph::render()
     }
 }
 
+#ifndef QT_NO_OPENGL
 // Testcase for QTBUG-34898. We make another context current on another surface
 // in the GUI thread and hide the QQuickWindow while the other context is
 // current on the other window.
@@ -484,6 +506,9 @@ void tst_SceneGraph::hideWithOtherContext()
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
 
+        if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+            QSKIP("Skipping OpenGL context test due to not running with OpenGL");
+
         renderingOnMainThread = view.openglContext()->thread() == QGuiApplication::instance()->thread();
 
         // Make the local context current on the local window...
@@ -496,6 +521,7 @@ void tst_SceneGraph::hideWithOtherContext()
     // GL calls to a new frame (see QOpenGLContext docs).
     QVERIFY(!renderingOnMainThread || QOpenGLContext::currentContext() != &context);
 }
+#endif
 
 void tst_SceneGraph::createTextureFromImage_data()
 {
@@ -521,6 +547,9 @@ void tst_SceneGraph::createTextureFromImage()
     QFETCH(bool, expectedAlpha);
 
     QQuickView view;
+    view.show();
+    QTest::qWaitForWindowExposed(&view);
+
     QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
 }

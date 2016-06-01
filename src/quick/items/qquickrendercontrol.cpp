@@ -44,7 +44,11 @@
 #include <QtCore/QTime>
 #include <QtQuick/private/qquickanimatorcontroller_p.h>
 
-#include <QtGui/QOpenGLContext>
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+# include <QtQuick/private/qsgdefaultrendercontext_p.h>
+# include <QtQuick/private/qquickopenglshadereffectnode_p.h>
+#endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
@@ -54,12 +58,11 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtCore/private/qobject_p.h>
 
-#include <private/qquickshadereffectnode_p.h>
 
 QT_BEGIN_NAMESPACE
-
+#ifndef QT_NO_OPENGL
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-
+#endif
 /*!
   \class QQuickRenderControl
 
@@ -134,7 +137,7 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate()
         qAddPostRoutine(cleanup);
         sg = QSGContext::createDefaultContext();
     }
-    rc = new QSGRenderContext(sg);
+    rc = sg->createRenderContext();
 }
 
 void QQuickRenderControlPrivate::cleanup()
@@ -183,7 +186,9 @@ void QQuickRenderControlPrivate::windowDestroyed()
         delete QQuickWindowPrivate::get(window)->animationController;
         QQuickWindowPrivate::get(window)->animationController = 0;
 
-        QQuickShaderEffectMaterial::cleanupMaterialCache();
+#ifndef QT_NO_OPENGL
+        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#endif
 
         window = 0;
     }
@@ -213,8 +218,9 @@ void QQuickRenderControl::prepareThread(QThread *targetThread)
  */
 void QQuickRenderControl::initialize(QOpenGLContext *gl)
 {
-    Q_D(QQuickRenderControl);
 
+    Q_D(QQuickRenderControl);
+#ifndef QT_NO_OPENGL
     if (!d->window) {
         qWarning("QQuickRenderControl::initialize called with no associated window");
         return;
@@ -229,9 +235,10 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
     // It cannot be done here since the surface to use may not be the
     // surface belonging to window. In fact window may not have a native
     // window/surface at all.
-
     d->rc->initialize(gl);
-
+#else
+    Q_UNUSED(gl)
+#endif
     d->initialized = true;
 }
 
@@ -363,7 +370,11 @@ QImage QQuickRenderControl::grab()
         return QImage();
 
     render();
+#ifndef QT_NO_OPENGL
     QImage grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
+#else
+    QImage grabContent = d->window->grabWindow();
+#endif
     return grabContent;
 }
 

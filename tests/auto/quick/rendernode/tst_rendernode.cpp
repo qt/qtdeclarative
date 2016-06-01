@@ -66,12 +66,12 @@ private slots:
 class ClearNode : public QSGRenderNode
 {
 public:
-    virtual StateFlags changedStates()
+    StateFlags changedStates() const override
     {
         return ColorState;
     }
 
-    virtual void render(const RenderState &)
+    void render(const RenderState *) override
     {
         // If clip has been set, scissoring will make sure the right area is cleared.
         QOpenGLContext::currentContext()->functions()->glClearColor(color.redF(), color.greenF(), color.blueF(), 1.0f);
@@ -122,13 +122,13 @@ class MessUpNode : public QSGRenderNode, protected QOpenGLFunctions
 public:
     MessUpNode() : initialized(false) { }
 
-    virtual StateFlags changedStates()
+    StateFlags changedStates() const override
     {
         return StateFlags(DepthState) | StencilState | ScissorState | ColorState | BlendState
-                | CullState | ViewportState;
+                | CullState | ViewportState | RenderTargetState;
     }
 
-    virtual void render(const RenderState &)
+    void render(const RenderState *) override
     {
         if (!initialized) {
             initializeOpenGLFunctions();
@@ -152,6 +152,9 @@ public:
         glGetIntegerv(GL_FRONT_FACE, &frontFace);
         glFrontFace(frontFace == GL_CW ? GL_CCW : GL_CW);
         glEnable(GL_CULL_FACE);
+        GLuint fbo;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
     bool initialized;
@@ -257,8 +260,8 @@ void tst_rendernode::messUpState()
 class StateRecordingRenderNode : public QSGRenderNode
 {
 public:
-    StateFlags changedStates() { return StateFlags(-1); }
-    void render(const RenderState &) {
+    StateFlags changedStates() const override { return StateFlags(-1); }
+    void render(const RenderState *) override {
         matrices[name] = *matrix();
 
     }

@@ -76,7 +76,9 @@ private slots:
     void statusChanges_data();
     void sourceSizeChanges();
     void progressAndStatusChanges();
+#ifndef QT_NO_OPENGL
     void borderImageMesh();
+#endif
 
 private:
     QQmlEngine engine;
@@ -576,7 +578,7 @@ void tst_qquickborderimage::progressAndStatusChanges()
 
     delete obj;
 }
-
+#ifndef QT_NO_OPENGL
 void tst_qquickborderimage::borderImageMesh()
 {
     QQuickView *window = new QQuickView;
@@ -591,7 +593,7 @@ void tst_qquickborderimage::borderImageMesh()
 
     QVERIFY(QQuickVisualTestUtil::compareImages(mesh, nonmesh));
 }
-
+#endif
 QTEST_MAIN(tst_qquickborderimage)
 
 #include "tst_qquickborderimage.moc"

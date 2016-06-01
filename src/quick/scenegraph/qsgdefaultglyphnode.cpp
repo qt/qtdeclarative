@@ -40,59 +40,11 @@
 #include "qsgdefaultglyphnode_p.h"
 #include "qsgdefaultglyphnode_p_p.h"
 
-#include <qopenglshaderprogram.h>
-#include <private/qfont_p.h>
-
 QT_BEGIN_NAMESPACE
 
-QSGDefaultGlyphNode::QSGDefaultGlyphNode()
-    : m_style(QQuickText::Normal)
-    , m_material(0)
-    , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
+void QSGDefaultGlyphNode::setMaterialColor(const QColor &color)
 {
-    m_geometry.setDrawingMode(GL_TRIANGLES);
-    setGeometry(&m_geometry);
-}
-
-QSGDefaultGlyphNode::~QSGDefaultGlyphNode()
-{
-    delete m_material;
-}
-
-void QSGDefaultGlyphNode::setColor(const QColor &color)
-{
-    m_color = color;
-    if (m_material != 0) {
-        m_material->setColor(color);
-        markDirty(DirtyMaterial);
-    }
-}
-
-void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
-{
-    if (m_material != 0)
-        delete m_material;
-
-    m_position = position;
-    m_glyphs = glyphs;
-
-#ifdef QSG_RUNTIME_DESCRIPTION
-    qsgnode_set_description(this, QLatin1String("glyphs"));
-#endif
-}
-
-void QSGDefaultGlyphNode::setStyle(QQuickText::TextStyle style)
-{
-    if (m_style == style)
-        return;
-    m_style = style;
-}
-
-void QSGDefaultGlyphNode::setStyleColor(const QColor &color)
-{
-    if (m_styleColor == color)
-        return;
-    m_styleColor = color;
+    static_cast<QSGTextMaskMaterial *>(m_material)->setColor(color);
 }
 
 void QSGDefaultGlyphNode::update()
@@ -120,11 +72,12 @@ void QSGDefaultGlyphNode::update()
         m_material = material;
     }
 
-    m_material->setColor(m_color);
+    QSGTextMaskMaterial *textMaskMaterial = static_cast<QSGTextMaskMaterial *>(m_material);
+    textMaskMaterial->setColor(m_color);
 
     QRectF boundingRect;
-    m_material->populate(m_position, m_glyphs.glyphIndexes(), m_glyphs.positions(), geometry(),
-                         &boundingRect, &m_baseLine, margins);
+    textMaskMaterial->populate(m_position, m_glyphs.glyphIndexes(), m_glyphs.positions(), geometry(),
+                               &boundingRect, &m_baseLine, margins);
     setBoundingRect(boundingRect);
 
     setMaterial(m_material);

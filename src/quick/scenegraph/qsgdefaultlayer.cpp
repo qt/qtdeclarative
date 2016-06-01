@@ -40,8 +40,12 @@
 
 #include <private/qqmlglobal_p.h>
 #include <private/qsgrenderer_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
 
-#include <QOpenGLFramebufferObject>
+#include <QtGui/QOpenGLFramebufferObject>
+#include <QtGui/QOpenGLFunctions>
+
+#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
 DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
@@ -95,7 +99,6 @@ QSGDefaultLayer::QSGDefaultLayer(QSGRenderContext *context)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
-    , m_context(context)
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -106,6 +109,7 @@ QSGDefaultLayer::QSGDefaultLayer(QSGRenderContext *context)
     , m_mirrorHorizontal(false)
     , m_mirrorVertical(true)
 {
+    m_context = static_cast<QSGDefaultRenderContext *>(context);
 }
 
 QSGDefaultLayer::~QSGDefaultLayer()

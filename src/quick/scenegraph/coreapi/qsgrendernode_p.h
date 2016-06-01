@@ -51,63 +51,22 @@
 // We mean it.
 //
 
-#include "qsgnode.h"
-#include <private/qtquickglobal_p.h>
+#include <QtQuick/qsgnode.h>
+#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QSGBatchRenderer {
-    class Renderer;
-}
-
-class Q_QUICK_PRIVATE_EXPORT QSGRenderNode : public QSGNode
+class QSGRenderNodePrivate
 {
 public:
-    enum StateFlag
-    {
-        DepthState = 0x01, // depth mask, depth test enable, depth func, clear depth
-        StencilState = 0x02, // stencil mask, stencil test enable, stencil op, stencil func, clear stencil
-        ScissorState = 0x04, // scissor enable, scissor test enable
-        ColorState = 0x08, // clear color, color mask
-        BlendState = 0x10, // blend enable, blend func
-        CullState = 0x20, // front face, cull face enable
-        ViewportState = 0x40 // viewport
-    };
-    Q_DECLARE_FLAGS(StateFlags, StateFlag)
+    QSGRenderNodePrivate();
 
-    struct RenderState
-    {
-        // The model-view matrix can be retrieved with matrix().
-        // The opacity can be retrieved with inheritedOpacity().
-        const QMatrix4x4 *projectionMatrix;
-        QRect scissorRect;
-        int stencilValue;
-
-        bool stencilEnabled;
-        bool scissorEnabled;
-    };
-
-    QSGRenderNode();
-
-    virtual StateFlags changedStates() = 0;
-    virtual void render(const RenderState &state) = 0;
-
-    const QMatrix4x4 *matrix() const { return m_matrix; }
-    const QSGClipNode *clipList() const { return m_clip_list; }
-
-    void setInheritedOpacity(qreal opacity);
-    qreal inheritedOpacity() const { return m_opacity; }
-
-private:
-    friend class QSGNodeUpdater;
-    friend class QSGBatchRenderer::Renderer;
+    static QSGRenderNodePrivate *get(QSGRenderNode *node) { return node->d; }
 
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;
     qreal m_opacity;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderNode::StateFlags)
 
 QT_END_NAMESPACE
 

@@ -1,14 +1,21 @@
 TEMPLATE = subdirs
+
+contains(QT_CONFIG, opengl(es1|es2)?) {
+    SUBDIRS += \
+            graph \
+            simplematerial \
+            sgengine \
+            textureinsgnode \
+            openglunderqml \
+            textureinsgnode \
+            textureinthread \
+            twotextureproviders
+}
+
 SUBDIRS += \
         customgeometry \
-        graph \
-        openglunderqml \
-        sgengine \
-        simplematerial \
-        textureinsgnode \
-        textureinthread \
-        threadedanimation \
-        twotextureproviders
+        rendernode \
+        threadedanimation
 
 EXAMPLE_FILES += \
     shared

@@ -87,7 +87,7 @@ public:
 
     QList<QQmlError> errors() const;
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
     QSize initialSize() const;
 
     void setFormat(const QSurfaceFormat &format);
@@ -115,34 +115,35 @@ private Q_SLOTS:
     void triggerUpdate();
 
 protected:
-    virtual void resizeEvent(QResizeEvent *);
-    virtual void timerEvent(QTimerEvent*);
+    void resizeEvent(QResizeEvent *) override;
+    void timerEvent(QTimerEvent*) override;
 
-    virtual void keyPressEvent(QKeyEvent *);
-    virtual void keyReleaseEvent(QKeyEvent *);
-    virtual void mousePressEvent(QMouseEvent *);
-    virtual void mouseReleaseEvent(QMouseEvent *);
-    virtual void mouseMoveEvent(QMouseEvent *);
-    virtual void mouseDoubleClickEvent(QMouseEvent *);
+    void keyPressEvent(QKeyEvent *) override;
+    void keyReleaseEvent(QKeyEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
+    void mouseDoubleClickEvent(QMouseEvent *) override;
 
-    virtual void showEvent(QShowEvent *);
-    virtual void hideEvent(QHideEvent *);
+    void showEvent(QShowEvent *) override;
+    void hideEvent(QHideEvent *) override;
 
-    virtual void focusInEvent(QFocusEvent * event);
-    virtual void focusOutEvent(QFocusEvent * event);
+    void focusInEvent(QFocusEvent * event) override;
+    void focusOutEvent(QFocusEvent * event) override;
 
 #ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *);
+    void wheelEvent(QWheelEvent *) override;
 #endif
 
 #ifndef QT_NO_DRAGANDDROP
-    virtual void dragEnterEvent(QDragEnterEvent *);
-    virtual void dragMoveEvent(QDragMoveEvent *);
-    virtual void dragLeaveEvent(QDragLeaveEvent *);
-    virtual void dropEvent(QDropEvent *);
+    void dragEnterEvent(QDragEnterEvent *) override;
+    void dragMoveEvent(QDragMoveEvent *) override;
+    void dragLeaveEvent(QDragLeaveEvent *) override;
+    void dropEvent(QDropEvent *) override;
 #endif
 
-    bool event(QEvent *);
+    bool event(QEvent *) override;
+    void paintEvent(QPaintEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickWidget)
