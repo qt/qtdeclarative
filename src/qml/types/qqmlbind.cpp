@@ -289,6 +289,7 @@ void QQmlBind::setValue(const QVariant &v)
 
 /*!
     \qmlproperty bool QtQml::Binding::delayed
+    \since 5.8
 
     This property holds whether the binding should be delayed.
 
