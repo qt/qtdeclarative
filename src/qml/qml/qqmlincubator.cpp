@@ -132,7 +132,7 @@ QQmlIncubationController *QQmlEngine::incubationController() const
 
 QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m)
     : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-      result(0), compiledData(0), waitingOnMe(0)
+      result(0), enginePriv(0), compiledData(0), waitingOnMe(0)
 {
 }
 
@@ -146,7 +146,6 @@ void QQmlIncubatorPrivate::clear()
     if (next.isInList()) {
         next.remove();
         Q_ASSERT(compiledData);
-        QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(compiledData->engine);
         compiledData->release();
         compiledData = 0;
         enginePriv->incubatorCount--;
@@ -157,6 +156,7 @@ void QQmlIncubatorPrivate::clear()
         compiledData->release();
         compiledData = 0;
     }
+    enginePriv = 0;
     if (!rootContext.isNull()) {
         rootContext->activeVMEData = 0;
         rootContext = 0;
@@ -286,9 +286,8 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 
     QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(this);
-
-    QQmlEngine *engine = compiledData->engine;
-    QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
+    // get a copy of the engine pointer as it might get reset;
+    QQmlEnginePrivate *enginePriv = this->enginePriv;
 
     if (!vmeGuard.isOK()) {
         QQmlError error;
@@ -563,10 +562,9 @@ void QQmlIncubator::clear()
     if (s == Null)
         return;
 
-    QQmlEnginePrivate *enginePriv = 0;
+    QQmlEnginePrivate *enginePriv = d->enginePriv;
     if (s == Loading) {
         Q_ASSERT(d->compiledData);
-        enginePriv = QQmlEnginePrivate::get(d->compiledData->engine);
         if (d->result) d->result->deleteLater();
         d->result = 0;
     }

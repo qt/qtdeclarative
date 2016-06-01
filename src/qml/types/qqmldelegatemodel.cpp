@@ -1921,6 +1921,7 @@ void QQmlDelegateModelItem::incubateObject(
 
     incubatorPriv->compiledData = componentPriv->cc;
     incubatorPriv->compiledData->addref();
+    incubatorPriv->enginePriv = enginePriv;
     incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->cc, componentPriv->creationContext));
     incubatorPriv->subComponentToCreate = componentPriv->start;
 

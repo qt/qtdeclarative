@@ -85,6 +85,7 @@ public:
 
     QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
+    QQmlEnginePrivate *enginePriv;
     QQmlCompiledData *compiledData;
     QScopedPointer<QQmlObjectCreator> creator;
     int subComponentToCreate;

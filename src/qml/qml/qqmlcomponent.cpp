@@ -1051,6 +1051,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 
     p->compiledData = d->cc;
     p->compiledData->addref();
+    p->enginePriv = enginePriv;
     p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext, p.data()));
     p->subComponentToCreate = d->start;
 
