@@ -272,6 +272,7 @@ Item {
         }
 
         function test_asyncLoaderCurrentIndexChange() {
+            skip("more details in QTBUG-53780")
             for (var i = 0; i < 500; i++) {
                 asyncLoaderCurrentIndexListView.currentIndex = 0;
                 asyncLoaderCurrentIndexListView.currentIndex = 1;
@@ -284,6 +285,7 @@ Item {
         }
 
         function test_asyncListViewLoader() {
+            skip("more details in QTBUG-53780")
             for (var i = 0; i < 50; i++) {
                 wait(10);
                 asyncListViewLoaderView.currentIndex = 0;

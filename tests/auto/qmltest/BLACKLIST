@@ -3,3 +3,10 @@
 *
 [SelfTests::test_blacklistWithData:test2]
 *
+[tst_grabImage::test_equals]
+linux
+[Text::test_linecount]
+osx
+windows
+[TextInput::test_doublevalidators]
+osx
