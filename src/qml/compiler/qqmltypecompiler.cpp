@@ -55,15 +55,14 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::Document *parsedQML)
+QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML)
     : engine(engine)
-    , compiledData(compiledData)
     , typeData(typeData)
     , document(parsedQML)
 {
 }
 
-bool QQmlTypeCompiler::compile()
+QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 {
     importCache = new QQmlTypeNameCache;
 
@@ -89,10 +88,10 @@ bool QQmlTypeCompiler::compile()
                 error.setColumn(resolvedType->location.column);
                 error.setLine(resolvedType->location.line);
                 recordError(error);
-                return false;
+                return nullptr;
             }
-            ref->component = resolvedType->typeData->compiledData();
-            ref->component->addref();
+            ref->compilationUnit = resolvedType->typeData->compilationUnit();
+            ref->compilationUnit->addref();
         } else if (qmlType) {
             ref->type = qmlType;
             Q_ASSERT(ref->type);
@@ -106,7 +105,7 @@ bool QQmlTypeCompiler::compile()
                 error.setColumn(resolvedType->location.column);
                 error.setLine(resolvedType->location.line);
                 recordError(error);
-                return false;
+                return nullptr;
             }
 
             if (ref->type->containsRevisionedAttributes()) {
@@ -117,7 +116,7 @@ bool QQmlTypeCompiler::compile()
                     cacheError.setColumn(resolvedType->location.column);
                     cacheError.setLine(resolvedType->location.line);
                     recordError(cacheError);
-                    return false;
+                    return nullptr;
                 }
                 ref->typePropertyCache->addref();
             }
@@ -140,7 +139,7 @@ bool QQmlTypeCompiler::compile()
     {
         QQmlPropertyCacheCreator propertyCacheBuilder(this);
         if (!propertyCacheBuilder.buildMetaObjects())
-            return false;
+            return nullptr;
     }
 
     {
@@ -151,13 +150,13 @@ bool QQmlTypeCompiler::compile()
     {
         SignalHandlerConverter converter(this);
         if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations())
-            return false;
+            return nullptr;
     }
 
     {
         QQmlEnumTypeResolver enumResolver(this);
         if (!enumResolver.resolveEnumBindings())
-            return false;
+            return nullptr;
     }
 
     {
@@ -198,13 +197,13 @@ bool QQmlTypeCompiler::compile()
         // Scan for components, determine their scopes and resolve aliases within the scope.
         QQmlComponentAndAliasResolver resolver(this);
         if (!resolver.resolve())
-            return false;
+            return nullptr;
     }
 
     {
         QQmlDeferredAndCustomParserBindingScanner deferredAndCustomParserBindingScanner(this);
         if (!deferredAndCustomParserBindingScanner.scanObject())
-            return false;
+            return nullptr;
     }
 
     // Compile JS binding expressions and signal handlers
@@ -219,7 +218,7 @@ bool QQmlTypeCompiler::compile()
         QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, importCache, &document->jsGenerator.stringTable);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
-            return false;
+            return nullptr;
 
         QQmlJavaScriptBindingExpressionSimplificationPass pass(this);
         pass.reduceTranslationBindings();
@@ -240,32 +239,33 @@ bool QQmlTypeCompiler::compile()
     // The js unit owns the data and will free the qml unit.
     document->javaScriptCompilationUnit->data = qmlUnit;
 
-    compiledData->compilationUnit = document->javaScriptCompilationUnit;
-    compiledData->compilationUnit->propertyCaches = m_propertyCaches;
-    compiledData->compilationUnit->importCache = importCache;
-    compiledData->compilationUnit->dependentScripts = dependentScripts;
-    compiledData->compilationUnit->resolvedTypes = m_resolvedTypes;
+    QV4::CompiledData::CompilationUnit *compilationUnit = document->javaScriptCompilationUnit;
+    compilationUnit = document->javaScriptCompilationUnit;
+    compilationUnit->propertyCaches = m_propertyCaches;
+    compilationUnit->importCache = importCache;
+    compilationUnit->dependentScripts = dependentScripts;
+    compilationUnit->resolvedTypes = m_resolvedTypes;
 
     // Add to type registry of composites
-    if (compiledData->compilationUnit->isCompositeType())
-        engine->registerInternalCompositeType(compiledData);
+    if (compilationUnit->isCompositeType())
+        engine->registerInternalCompositeType(compilationUnit);
     else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
         auto *typeRef = m_resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
-        if (typeRef->component) {
-            compiledData->compilationUnit->metaTypeId = typeRef->component->compilationUnit->metaTypeId;
-            compiledData->compilationUnit->listMetaTypeId = typeRef->component->compilationUnit->listMetaTypeId;
+        if (typeRef->compilationUnit) {
+            compilationUnit->metaTypeId = typeRef->compilationUnit->metaTypeId;
+            compilationUnit->listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
         } else {
-            compiledData->compilationUnit->metaTypeId = typeRef->type->typeId();
-            compiledData->compilationUnit->listMetaTypeId = typeRef->type->qListTypeId();
+            compilationUnit->metaTypeId = typeRef->type->typeId();
+            compilationUnit->listMetaTypeId = typeRef->type->qListTypeId();
         }
     }
 
     // Sanity check property bindings
     QQmlPropertyValidator validator(this);
     if (!validator.validate())
-        return false;
+        return nullptr;
 
     // Collect some data for instantiation later.
     int bindingCount = 0;
@@ -280,21 +280,24 @@ bool QQmlTypeCompiler::compile()
                     ++parserStatusCount;
             }
             ++objectCount;
-            if (typeRef->component) {
-                bindingCount += typeRef->component->compilationUnit->totalBindingsCount;
-                parserStatusCount += typeRef->component->compilationUnit->totalParserStatusCount;
-                objectCount += typeRef->component->compilationUnit->totalObjectCount;
+            if (typeRef->compilationUnit) {
+                bindingCount += typeRef->compilationUnit->totalBindingsCount;
+                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount;
+                objectCount += typeRef->compilationUnit->totalObjectCount;
             }
         }
     }
 
-    compiledData->compilationUnit->totalBindingsCount = bindingCount;
-    compiledData->compilationUnit->totalParserStatusCount = parserStatusCount;
-    compiledData->compilationUnit->totalObjectCount = objectCount;
+    compilationUnit->totalBindingsCount = bindingCount;
+    compilationUnit->totalParserStatusCount = parserStatusCount;
+    compilationUnit->totalObjectCount = objectCount;
 
-    Q_ASSERT(compiledData->compilationUnit->propertyCaches.count() == static_cast<int>(compiledData->compilationUnit->data->nObjects));
+    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));
 
-    return errors.isEmpty();
+    if (errors.isEmpty())
+        return compilationUnit;
+    else
+        return nullptr;
 }
 
 void QQmlTypeCompiler::recordError(const QQmlError &error)
@@ -321,7 +324,7 @@ QV4::IR::Module *QQmlTypeCompiler::jsIRModule() const
 
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 {
-    return compiledData->compilationUnit->data;
+    return document->javaScriptCompilationUnit->data;
 }
 
 const QQmlImports *QQmlTypeCompiler::imports() const
@@ -372,7 +375,7 @@ const QV4::Compiler::StringTableGenerator *QQmlTypeCompiler::stringPool() const
 
 void QQmlTypeCompiler::setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData)
 {
-    compiledData->compilationUnit->bindingPropertyDataPerObject = propertyData;
+    document->javaScriptCompilationUnit->bindingPropertyDataPerObject = propertyData;
 }
 
 QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scriptIndex) const
@@ -506,8 +509,8 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
 
-                    QQmlCompiledData *data = tdata->compiledData();
-                    qmltype = QQmlMetaType::qmlType(data->compilationUnit->metaTypeId);
+                    auto compilationUnit = tdata->compilationUnit();
+                    qmltype = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
 
                     tdata->release();
                 }
@@ -715,9 +718,9 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
-                        QQmlCompiledData *data = tdata->compiledData();
+                        auto compilationUnit = tdata->compilationUnit();
 
-                        paramTypes[i + 1] = data->compilationUnit->metaTypeId;
+                        paramTypes[i + 1] = compilationUnit->metaTypeId;
 
                         tdata->release();
                     } else {
@@ -798,12 +801,12 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                 Q_ASSERT(tdata);
                 Q_ASSERT(tdata->isComplete());
 
-                QQmlCompiledData *data = tdata->compiledData();
+                auto compilationUnit = tdata->compilationUnit();
 
                 if (p->type == QV4::CompiledData::Property::Custom) {
-                    propertyType = data->compilationUnit->metaTypeId;
+                    propertyType = compilationUnit->metaTypeId;
                 } else {
-                    propertyType = data->compilationUnit->listMetaTypeId;
+                    propertyType = compilationUnit->listMetaTypeId;
                 }
 
                 tdata->release();
@@ -886,8 +889,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
-                        QQmlCompiledData *data = tdata->compiledData();
-                        type = QQmlMetaType::qmlType(data->compilationUnit->metaTypeId);
+                        auto compilationUnit = tdata->compilationUnit();
+                        type = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
 
                         tdata->release();
                     }
@@ -1336,8 +1339,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (QQmlType *targetType = tr->type) {
             if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
                 continue;
-        } else if (tr->component) {
-            if (tr->component->compilationUnit->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
+        } else if (tr->compilationUnit) {
+            if (tr->compilationUnit->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         }
 
@@ -1577,7 +1580,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 if (typeRef->type)
                     type = typeRef->type->typeId();
                 else
-                    type = typeRef->component->compilationUnit->metaTypeId;
+                    type = typeRef->compilationUnit->metaTypeId;
 
                 alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
                 propertyFlags |= QQmlPropertyData::IsQObjectDerived;

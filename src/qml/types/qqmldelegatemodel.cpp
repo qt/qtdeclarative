@@ -48,7 +48,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlincubator_p.h>
-#include <private/qqmlcompiler_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -1919,10 +1918,10 @@ void QQmlDelegateModelItem::incubateObject(
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
     QQmlComponentPrivate *componentPriv = QQmlComponentPrivate::get(component);
 
-    incubatorPriv->compiledData = componentPriv->cc;
-    incubatorPriv->compiledData->addref();
+    incubatorPriv->compilationUnit = componentPriv->compilationUnit;
+    incubatorPriv->compilationUnit->addref();
     incubatorPriv->enginePriv = enginePriv;
-    incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->cc, componentPriv->creationContext));
+    incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->compilationUnit, componentPriv->creationContext));
     incubatorPriv->subComponentToCreate = componentPriv->start;
 
     enginePriv->incubate(*incubationTask, forContext);

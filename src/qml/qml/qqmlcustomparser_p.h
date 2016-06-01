@@ -60,7 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlCompiledData;
 class QQmlPropertyValidator;
 class QQmlEnginePrivate;
 

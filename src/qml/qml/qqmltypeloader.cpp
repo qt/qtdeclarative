@@ -45,7 +45,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlthread_p.h>
-#include <private/qqmlcompiler_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
@@ -2047,7 +2046,7 @@ const QList<QQmlTypeData::TypeReference> &QQmlTypeData::compositeSingletons() co
     return m_compositeSingletons;
 }
 
-QQmlCompiledData *QQmlTypeData::compiledData() const
+QV4::CompiledData::CompilationUnit *QQmlTypeData::compilationUnit() const
 {
     return m_compiledData;
 }
@@ -2304,13 +2303,12 @@ void QQmlTypeData::compile()
 {
     Q_ASSERT(m_compiledData == 0);
 
-    m_compiledData = new QQmlCompiledData(typeLoader()->engine());
-
-    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, m_document.data());
-    if (!compiler.compile()) {
+    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data());
+    m_compiledData = compiler.compile();
+    if (m_compiledData) {
+        m_compiledData->addref();
+    } else {
         setError(compiler.compilationErrors());
-        m_compiledData->release();
-        m_compiledData = 0;
     }
 }
 

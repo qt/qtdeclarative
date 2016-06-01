@@ -41,7 +41,6 @@
 #include <QtQml/qqmlpropertyvaluesource.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlproperty.h>
-#include <private/qqmlcompiler_p.h>
 #include <private/qqmlcustomparser_p.h>
 
 QVariant myCustomVariantTypeConverter(const QString &data);

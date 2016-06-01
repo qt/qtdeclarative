@@ -64,12 +64,13 @@
 #include <private/qobject_p.h>
 
 #include "qqmlguard_p.h"
-#include "qqmlcompiler_p.h"
 #include "qqmlcontext_p.h"
+#include "qqmlpropertycache_p.h"
 
 #include <private/qv8engine_p.h>
 #include <private/qflagpointer_p.h>
 
+#include <private/qv4object_p.h>
 #include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -44,7 +44,7 @@
 #include "qqmlengine_p.h"
 #include "qqmlcontext_p.h"
 #include "qqmlscriptstring_p.h"
-#include "qqmlcompiler_p.h"
+#include "qqmlbinding_p.h"
 #include <private/qv8engine_p.h>
 
 #include <QtCore/qdebug.h>

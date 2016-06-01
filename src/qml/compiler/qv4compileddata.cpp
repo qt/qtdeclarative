@@ -49,7 +49,6 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlcompiler_p.h>
 #include <QQmlPropertyMap>
 #endif
 #include <private/qqmlirbuilder_p.h>
@@ -190,8 +189,8 @@ void CompilationUnit::unlink()
 
     for (auto resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
          resolvedType != end; ++resolvedType) {
-        if ((*resolvedType)->component)
-            (*resolvedType)->component->release();
+        if ((*resolvedType)->compilationUnit)
+            (*resolvedType)->compilationUnit->release();
         if ((*resolvedType)->typePropertyCache)
             (*resolvedType)->typePropertyCache->release();
     }
@@ -356,7 +355,7 @@ QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
     if (type)
         return typePropertyCache;
     else
-        return component->compilationUnit->rootPropertyCache();
+        return compilationUnit->rootPropertyCache();
 }
 
 /*!
@@ -371,7 +370,7 @@ QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::createPropertyCache(Q
         typePropertyCache->addref();
         return typePropertyCache;
     } else {
-        return component->compilationUnit->rootPropertyCache();
+        return compilationUnit->rootPropertyCache();
     }
 }
 
@@ -392,8 +391,8 @@ void CompilationUnit::ResolvedTypeReference::doDynamicTypeCheck()
         mo = typePropertyCache->firstCppMetaObject();
     else if (type)
         mo = type->metaObject();
-    else if (component)
-        mo = component->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    else if (compilationUnit)
+        mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 #endif

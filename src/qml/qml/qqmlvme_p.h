@@ -69,7 +69,6 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QJSValue;
 class QQmlScriptData;
-class QQmlCompiledData;
 class QQmlContextData;
 
 namespace QQmlVMETypes {
@@ -84,10 +83,9 @@ namespace QQmlVMETypes {
     struct State {
         enum Flag { Deferred = 0x00000001 };
 
-        State() : flags(0), context(0), compiledData(0), instructionStream(0) {}
+        State() : flags(0), context(0), instructionStream(0) {}
         quint32 flags;
         QQmlContextData *context;
-        QQmlCompiledData *compiledData;
         const char *instructionStream;
         QBitField bindingSkipList;
     };

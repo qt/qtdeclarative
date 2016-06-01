@@ -59,7 +59,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlCompiledData;
 class QQmlIncubator;
 class QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator
 {
@@ -86,7 +85,7 @@ public:
     QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
     QQmlEnginePrivate *enginePriv;
-    QQmlCompiledData *compiledData;
+    QV4::CompiledData::CompilationUnit *compilationUnit;
     QScopedPointer<QQmlObjectCreator> creator;
     int subComponentToCreate;
     QQmlVMEGuard vmeGuard;

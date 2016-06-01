@@ -12,7 +12,6 @@ SOURCES += \
     $$PWD/qqmlpropertyvalueinterceptor.cpp \
     $$PWD/qqmlproxymetaobject.cpp \
     $$PWD/qqmlvme.cpp \
-    $$PWD/qqmlcompileddata.cpp \
     $$PWD/qqmlboundsignal.cpp \
     $$PWD/qqmlmetatype.cpp \
     $$PWD/qqmlstringconverters.cpp \
@@ -71,7 +70,6 @@ HEADERS += \
     $$PWD/qqmlparserstatus.h \
     $$PWD/qqmlproxymetaobject_p.h \
     $$PWD/qqmlvme_p.h \
-    $$PWD/qqmlcompiler_p.h \
     $$PWD/qqmlengine_p.h \
     $$PWD/qqmlexpression_p.h \
     $$PWD/qqmlprivate.h \

@@ -42,7 +42,6 @@
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlinfo.h"
-#include "qqmlcompiler_p.h"
 #include "qqmldata_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>

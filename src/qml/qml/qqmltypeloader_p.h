@@ -77,7 +77,6 @@ class QQmlScriptData;
 class QQmlScriptBlob;
 class QQmlQmldirData;
 class QQmlTypeLoader;
-class QQmlCompiledData;
 class QQmlComponentPrivate;
 class QQmlTypeData;
 class QQmlTypeLoader;
@@ -428,7 +427,7 @@ public:
     const QSet<QString> &namespaces() const;
     const QList<TypeReference> &compositeSingletons() const;
 
-    QQmlCompiledData *compiledData() const;
+    QV4::CompiledData::CompilationUnit *compilationUnit() const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -468,7 +467,7 @@ private:
     QHash<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
-    QQmlCompiledData *m_compiledData;
+    QV4::CompiledData::CompilationUnit *m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 

@@ -73,7 +73,6 @@ class QQmlPropertyData;
 class QQmlTypeNameCache;
 class QQmlScriptData;
 class QQmlType;
-class QQmlCompiledData;
 class QQmlEngine;
 
 // The vector is indexed by QV4::CompiledData::Object index and the flag
@@ -700,7 +699,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     struct ResolvedTypeReference
     {
         ResolvedTypeReference()
-            : type(0), typePropertyCache(0), component(0)
+            : type(0), typePropertyCache(0), compilationUnit(0)
             , majorVersion(0)
             , minorVersion(0)
             , isFullyDynamicType(false)
@@ -708,7 +707,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
         QQmlType *type;
         QQmlPropertyCache *typePropertyCache;
-        QQmlCompiledData *component;
+        QV4::CompiledData::CompilationUnit *compilationUnit;
 
         int majorVersion;
         int minorVersion;

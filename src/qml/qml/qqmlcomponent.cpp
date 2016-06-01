@@ -41,7 +41,6 @@
 #include "qqmlcomponent_p.h"
 #include "qqmlcomponentattached_p.h"
 
-#include "qqmlcompiler_p.h"
 #include "qqmlcontext_p.h"
 #include "qqmlengine_p.h"
 #include "qqmlvme_p.h"
@@ -335,14 +334,13 @@ void QQmlComponentPrivate::typeDataProgress(QQmlTypeData *, qreal p)
 void QQmlComponentPrivate::fromTypeData(QQmlTypeData *data)
 {
     url = data->finalUrl();
-    QQmlCompiledData *c = data->compiledData();
+    compilationUnit = data->compilationUnit();
 
-    if (!c) {
+    if (!compilationUnit) {
         Q_ASSERT(data->isError());
         state.errors = data->errors();
     } else {
-        cc = c;
-        cc->addref();
+        compilationUnit->addref();
     }
 
     data->release();
@@ -356,9 +354,9 @@ void QQmlComponentPrivate::clear()
         typeData = 0;
     }
 
-    if (cc) {
-        cc->release();
-        cc = 0;
+    if (compilationUnit) {
+        compilationUnit->release();
+        compilationUnit = 0;
     }
 }
 
@@ -393,8 +391,8 @@ QQmlComponent::~QQmlComponent()
         d->typeData->unregisterCallback(d);
         d->typeData->release();
     }
-    if (d->cc)
-        d->cc->release();
+    if (d->compilationUnit)
+        d->compilationUnit->release();
 }
 
 /*!
@@ -422,7 +420,7 @@ QQmlComponent::Status QQmlComponent::status() const
         return Loading;
     else if (!d->state.errors.isEmpty())
         return Error;
-    else if (d->engine && d->cc)
+    else if (d->engine && d->compilationUnit)
         return Ready;
     else
         return Null;
@@ -564,14 +562,14 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 /*!
     \internal
 */
-QQmlComponent::QQmlComponent(QQmlEngine *engine, QQmlCompiledData *cc, int start, QObject *parent)
+QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *compilationUnit, int start, QObject *parent)
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->cc = cc;
-    cc->addref();
+    d->compilationUnit = compilationUnit;
+    compilationUnit->addref();
     d->start = start;
-    d->url = cc->compilationUnit->url();
+    d->url = compilationUnit->url();
     d->progress = 1.0;
 }
 
@@ -864,7 +862,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
-    state.creator.reset(new QQmlObjectCreator(context, cc, creationContext));
+    state.creator.reset(new QQmlObjectCreator(context, compilationUnit, creationContext));
     rv = state.creator->create(start);
     if (!rv)
         state.errors = state.creator->errors;
@@ -905,7 +903,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     Q_ASSERT(ddata->deferredData);
     QQmlData::DeferredData *deferredData = ddata->deferredData;
     QQmlContextData *creationContext = 0;
-    state->creator.reset(new QQmlObjectCreator(deferredData->context->parent, deferredData->compiledData, creationContext));
+    state->creator.reset(new QQmlObjectCreator(deferredData->context->parent, deferredData->compilationUnit, creationContext));
     if (!state->creator->populateDeferredProperties(object))
         state->errors << state->creator->errors;
 }
@@ -1049,10 +1047,10 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 
-    p->compiledData = d->cc;
-    p->compiledData->addref();
+    p->compilationUnit = d->compilationUnit;
+    p->compilationUnit->addref();
     p->enginePriv = enginePriv;
-    p->creator.reset(new QQmlObjectCreator(contextData, d->cc, d->creationContext, p.data()));
+    p->creator.reset(new QQmlObjectCreator(contextData, d->compilationUnit, d->creationContext, p.data()));
     p->subComponentToCreate = d->start;
 
     enginePriv->incubate(incubator, forContextData);

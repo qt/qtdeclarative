@@ -27,8 +27,6 @@
 ****************************************************************************/
 #include "testtypes.h"
 
-#include <private/qqmlcompiler_p.h>
-
 static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)

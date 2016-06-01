@@ -71,7 +71,6 @@ QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQmlEngine;
-class QQmlCompiledData;
 
 class QQmlComponentAttached;
 class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public QQmlTypeData::TypeDataCallback
@@ -80,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), depthIncreased(false) {}
+        : typeData(0), progress(0.), start(-1), compilationUnit(0), engine(0), creationContext(0), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -98,7 +97,7 @@ public:
     qreal progress;
 
     int start;
-    QQmlCompiledData *cc;
+    QV4::CompiledData::CompilationUnit *compilationUnit;
 
     struct ConstructionState {
         ConstructionState()

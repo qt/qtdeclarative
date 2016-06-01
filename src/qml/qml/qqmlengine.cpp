@@ -42,7 +42,6 @@
 #include "qqmlcomponentattached_p.h"
 
 #include "qqmlcontext_p.h"
-#include "qqmlcompiler_p.h"
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlexpression.h"
@@ -619,7 +618,6 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
     typedef QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::const_iterator TypePropertyCacheIt;
-    typedef QHash<int, QQmlCompiledData *>::const_iterator CompositeTypesIt;
 
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
@@ -640,13 +638,13 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     for (TypePropertyCacheIt iter = typePropertyCache.cbegin(), end = typePropertyCache.cend(); iter != end; ++iter)
         (*iter)->release();
-    for (CompositeTypesIt iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
-        iter.value()->compilationUnit->isRegisteredWithEngine = false;
+    for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
+        iter.value()->isRegisteredWithEngine = false;
 
         // since unregisterInternalCompositeType() will not be called in this
         // case, we have to clean up the type registration manually
-        QMetaType::unregisterType(iter.value()->compilationUnit->metaTypeId);
-        QMetaType::unregisterType(iter.value()->compilationUnit->listMetaTypeId);
+        QMetaType::unregisterType(iter.value()->metaTypeId);
+        QMetaType::unregisterType(iter.value()->listMetaTypeId);
     }
     delete profiler;
 }
@@ -682,7 +680,7 @@ QQmlData::QQmlData()
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
-      lineNumber(0), columnNumber(0), jsEngineId(0), compiledData(0), deferredData(0),
+      lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0), deferredData(0),
       propertyCache(0), guards(0), extendedData(0)
 {
     init();
@@ -1411,7 +1409,7 @@ void qmlExecuteDeferred(QObject *object)
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
 
         // Release the reference for the deferral action (we still have one from construction)
-        data->deferredData->compiledData->release();
+        data->deferredData->compilationUnit->release();
         delete data->deferredData;
         data->deferredData = 0;
 
@@ -1642,13 +1640,13 @@ void QQmlData::destroyed(QObject *object)
     if (bindings && !bindings->ref.deref())
         delete bindings;
 
-    if (compiledData) {
-        compiledData->release();
-        compiledData = 0;
+    if (compilationUnit) {
+        compilationUnit->release();
+        compilationUnit = 0;
     }
 
     if (deferredData) {
-        deferredData->compiledData->release();
+        deferredData->compilationUnit->release();
         delete deferredData;
         deferredData = 0;
     }
@@ -2225,9 +2223,9 @@ int QQmlEnginePrivate::listType(int t) const
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
+    auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->compilationUnit->rootPropertyCache());
+        return QQmlMetaObject((*iter)->rootPropertyCache());
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type?type->baseMetaObject():0);
@@ -2237,9 +2235,9 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
+    auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->compilationUnit->rootPropertyCache());
+        return QQmlMetaObject((*iter)->rootPropertyCache());
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type?type->metaObject():0);
@@ -2249,9 +2247,9 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
+    auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->compilationUnit->rootPropertyCache();
+        return (*iter)->rootPropertyCache();
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         locker.unlock();
@@ -2262,9 +2260,9 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
+    auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->compilationUnit->rootPropertyCache();
+        return (*iter)->rootPropertyCache();
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         locker.unlock();
@@ -2272,9 +2270,9 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     }
 }
 
-void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
 {
-    QByteArray name = data->compilationUnit->rootPropertyCache()->className();
+    QByteArray name = compilationUnit->rootPropertyCache()->className();
 
     QByteArray ptr = name + '*';
     QByteArray lst = "QQmlListProperty<" + name + '>';
@@ -2292,15 +2290,15 @@ void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
                                                      static_cast<QMetaObject*>(0));
 
-    data->compilationUnit->metaTypeId = ptr_type;
-    data->compilationUnit->listMetaTypeId = lst_type;
-    data->compilationUnit->isRegisteredWithEngine = true;
+    compilationUnit->metaTypeId = ptr_type;
+    compilationUnit->listMetaTypeId = lst_type;
+    compilationUnit->isRegisteredWithEngine = true;
 
     Locker locker(this);
     m_qmlLists.insert(lst_type, ptr_type);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(ptr_type, data);
+    m_compositeTypes.insert(ptr_type, compilationUnit);
 }
 
 void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)

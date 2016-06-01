@@ -42,7 +42,6 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
-#include <private/qqmlcompiler_p.h>
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>

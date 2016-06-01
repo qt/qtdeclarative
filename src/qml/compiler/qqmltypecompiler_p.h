@@ -53,13 +53,12 @@
 #include <qglobal.h>
 #include <qqmlerror.h>
 #include <qhash.h>
-#include <private/qqmlcompiler_p.h>
+#include <private/qqmltypeloader_p.h>
 #include <private/qqmlirbuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlEnginePrivate;
-class QQmlCompiledData;
 class QQmlError;
 class QQmlTypeData;
 class QQmlImports;
@@ -79,9 +78,9 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::Document *document);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document);
 
-    bool compile();
+    QV4::CompiledData::CompilationUnit *compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(const QQmlError &error);
@@ -115,7 +114,6 @@ public:
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
-    QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
     QQmlRefPointer<QQmlTypeNameCache> importCache;
     QmlIR::Document *document;

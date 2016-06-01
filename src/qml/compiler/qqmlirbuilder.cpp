@@ -49,7 +49,6 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlcompiler_p.h>
 #endif
 
 #ifdef CONST
@@ -1698,7 +1697,7 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         if (tdata->isComplete()) {
             auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
             newResolver->owner = resolver->owner;
-            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compiledData()->compilationUnit->metaTypeId));
+            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compilationUnit()->metaTypeId));
             newResolver->flags |= AllPropertiesAreFinal;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }

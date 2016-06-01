@@ -32,7 +32,6 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
-#include <QtQml/private/qqmlcompiler_p.h>
 #include "../../shared/util.h"
 
 class tst_QQMLTypeLoader : public QQmlDataTest
@@ -82,7 +81,7 @@ void tst_QQMLTypeLoader::trimCache()
 
         QQmlTypeData *data = loader.getType(url);
         if (i % 5 == 0) // keep references to some of them so that they aren't trimmed
-            data->compiledData()->addref();
+            data->compilationUnit()->addref();
 
         data->release();
     }

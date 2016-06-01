@@ -44,7 +44,6 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
-#include <private/qqmlcompiler_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
@@ -493,8 +492,8 @@ QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
     if (!td || !td->isComplete())
         return 0;
-    QQmlCompiledData *cd = td->compiledData();
-    const QMetaObject *mo = cd->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
+    const QMetaObject *mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     return QQmlMetaType::qmlType(mo);
 }
 

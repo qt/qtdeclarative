@@ -51,7 +51,6 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
 #include <private/qv4value_p.h>

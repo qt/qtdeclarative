@@ -50,7 +50,6 @@
 #include "qqmldata_p.h"
 #include "qqmlstringconverters_p.h"
 #include "qqmllist_p.h"
-#include "qqmlcompiler_p.h"
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"

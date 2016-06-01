@@ -63,7 +63,6 @@ QT_BEGIN_NAMESPACE
 template <class Key, class T> class QHash;
 class QQmlEngine;
 class QQmlGuardImpl;
-class QQmlCompiledData;
 class QQmlAbstractBinding;
 class QQmlBoundSignal;
 class QQmlContext;
@@ -72,6 +71,13 @@ class QQmlContextData;
 class QQmlNotifier;
 class QQmlDataExtended;
 class QQmlNotifierEndpoint;
+
+namespace QV4 {
+namespace CompiledData {
+struct CompilationUnit;
+}
+}
+
 // This class is structured in such a way, that simply zero'ing it is the
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QQmlInstruction::CreateSimpleObject instruction.
@@ -179,10 +185,10 @@ public:
 
     struct DeferredData {
         unsigned int deferredIdx;
-        QQmlCompiledData *compiledData;//Not always the same as the other compiledData
+        QV4::CompiledData::CompilationUnit *compilationUnit;//Not always the same as the other compilation unit
         QQmlContextData *context;//Could be either context or outerContext
     };
-    QQmlCompiledData *compiledData;
+    QV4::CompiledData::CompilationUnit *compilationUnit;
     DeferredData *deferredData;
 
     QV4::WeakValue jsWrapper;

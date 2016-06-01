@@ -55,7 +55,6 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qqmlbinding_p.h>
-#include <private/qqmlcompiler_p.h>
 #include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
 
@@ -154,7 +153,7 @@ public:
             ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
         {}
 
-        RefLocation(QQmlCompiledData *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
+        RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
                     const QString &type) :
             Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
             locationType(Creating), ref(ref), sent(false)
@@ -226,7 +225,7 @@ public:
                                        Creating, id(obj)));
     }
 
-    void updateCreating(const QV4::CompiledData::Object *obj, QQmlCompiledData *ref,
+    void updateCreating(const QV4::CompiledData::Object *obj, QV4::CompiledData::CompilationUnit *ref,
                         const QUrl &url, const QString &type)
     {
         quintptr locationId(id(obj));
@@ -367,7 +366,7 @@ public:
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, endRange<QQmlProfilerDefinitions::Creating>());
     }
 
-    void update(QQmlCompiledData *ref, const QV4::CompiledData::Object *obj,
+    void update(QV4::CompiledData::CompilationUnit *ref, const QV4::CompiledData::Object *obj,
                 const QString &typeName, const QUrl &url)
     {
         profiler->updateCreating(obj, ref, url, typeName);
