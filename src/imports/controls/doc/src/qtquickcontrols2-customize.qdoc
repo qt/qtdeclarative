@@ -585,7 +585,7 @@
 
         SwipeDelegate consists of six visual items: \l {Control::background}{background},
         \l {Control::contentItem}{content item}, \l {AbstractButton::indicator}{indicator},
-        \c exposure.left, \c exposure.right, and \c exposure.behind.
+        \c swipe.left, \c swipe.right, and \c swipe.behind.
 
         \image qtquickcontrols2-swipedelegate-custom.png
 

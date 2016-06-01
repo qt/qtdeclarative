@@ -54,6 +54,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inherits Control
     \instantiates QQuickAbstractButton
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-buttons
     \brief Base type of all button controls.
 
@@ -62,7 +63,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     radio buttons and check boxes. As an abstract control, it has no delegate
     implementations, leaving them to the types that derive from it.
 
-    TODO: ButtonGroup usage
+    \sa ButtonGroup
 */
 
 /*!
@@ -448,7 +449,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Button::toggle()
+    \qmlmethod void QtQuick.Controls::AbstractButton::toggle()
 
     Toggles the checked state of the button.
 */

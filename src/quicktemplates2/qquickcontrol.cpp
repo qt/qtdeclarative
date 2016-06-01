@@ -63,6 +63,7 @@ QT_BEGIN_NAMESPACE
     \inherits Item
     \instantiates QQuickControl
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \brief The base type of user interface controls.
 
     Control is the base type of user interface controls.  It receives input

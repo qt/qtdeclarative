@@ -70,13 +70,13 @@ Pane {
             text: labelText
             width: parent.width
 
-            onClicked: if (exposure.active) view.model.remove(ourIndex)
+            onClicked: if (swipe.complete) view.model.remove(ourIndex)
 
             Component {
                 id: removeComponent
 
                 Rectangle {
-                    color: swipeDelegate.exposed && swipeDelegate.pressed ? "#333" : "#444"
+                    color: swipeDelegate.swipe.complete && swipeDelegate.pressed ? "#333" : "#444"
                     width: parent.width
                     height: parent.height
                     clip: true
@@ -90,8 +90,8 @@ Pane {
                 }
             }
 
-            exposure.left: removeComponent
-            exposure.right: removeComponent
+            swipe.left: removeComponent
+            swipe.right: removeComponent
         }
     }
 

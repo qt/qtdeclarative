@@ -32,7 +32,7 @@
     The Universal Style is based on the Microsoft Universal Design Guidelines.
     \l {detailed-desc-universal}{More...}
 
-    \styleimport {QtQuick.Controls.Universal 2.0}
+    \styleimport {QtQuick.Controls.Universal 2.0} {Qt 5.7}
 
     \section1 Attached Properties
 
@@ -41,6 +41,12 @@
         \li \l {background-attached-prop}{\b background} : color
         \li \l {foreground-attached-prop}{\b foreground} : color
         \li \l {theme-attached-prop}{\b theme} : enumeration
+    \endlist
+
+    \section1 Attached Methods
+
+    \list
+        \li color \l {color-attached-method}{\b color}(enumeration predefined)
     \endlist
 
     \section1 Detailed Description
@@ -159,6 +165,8 @@
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
+    \b {See also} \l {Default Style}, \l {Material Style}
+
     \section1 Attached Property Documentation
 
     \styleproperty {Universal.accent} {color} {accent-attached-prop}
@@ -224,6 +232,24 @@
     property, the value is never \c System, but the actual theme.
 
     \endstyleproperty
+
+    \section1 Attached Method Documentation
+
+    \stylemethod {color} {color} {enumeration} {predefined} {color-attached-method}
+    \target color-attached-method
+    This attached method returns the color value of the specified \l {pre-defined colors}
+    {pre-defined color}.
+
+    \qml
+    import QtQuick 2.0
+    import QtQuick.Controls.Universal 2.0
+
+    Rectangle {
+        color: Universal.color(Universal.Red)
+    }
+    \endqml
+
+    \endstylemethod
 
     \section1 Related Information
 

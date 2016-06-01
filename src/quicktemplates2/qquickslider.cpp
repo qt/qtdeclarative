@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickSlider
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-input
     \brief Selects a value by sliding a handle along a track.
 

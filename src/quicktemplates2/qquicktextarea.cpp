@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
     \inherits TextEdit
     \instantiates QQuickTextArea
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-input
     \brief A multi line text input control.
 

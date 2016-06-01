@@ -29,11 +29,46 @@
     \page qtquickcontrols2-styles.html
     \title Styling Qt Quick Controls 2
 
-    Qt Quick Controls 2 comes with a selection of styles. The \l {Default Style}
-    {Default} style is a simple and light-weight all-round style that offers
-    the maximum performance for Qt Quick Controls 2. The more advanced
-    \l {Universal Style}{Universal} and \l {Material Style}{Material} styles
-    offer an appealing design, but require more system resources.
+    Qt Quick Controls 2 comes with a selection of styles.
+
+    \raw HTML
+    <table style="background:transparent; border:0px">
+      <tr>
+        <td style="border:0px">
+          <a href="qtquickcontrols2-default.html">
+            <img src="images/qtquickcontrols2-default.png" width="45%"/>
+          </a>
+        </td>
+        <td style="border:0px">
+          <a href="qtquickcontrols2-material.html">
+            <img src="images/qtquickcontrols2-material.png" width="75%"/>
+          </a>
+        </td>
+        <td style="border:0px">
+          <a href="qtquickcontrols2-universal.html">
+            <img src="images/qtquickcontrols2-universal.png" width="75%"/>
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:0px">
+          The <a href="qtquickcontrols2-default.html">Default</a> style is
+          a simple and light-weight all-round style that offers the maximum
+          performance for Qt Quick Controls 2.
+        </td>
+        <td style="border:0px">
+          The <a href="qtquickcontrols2-material.html">Material</a> style offers an appealing design
+          based on the <a href="https://www.google.com/design/spec/material-design/introduction.html">
+          Google Material Design Guidelines</a>, but requires more system resources than the Default style.
+        </td>
+        <td style="border:0px">
+          The <a href="qtquickcontrols2-universal.html">Universal</a> style offers an appealing design
+          based on the <a href="https://dev.windows.com/design">Microsoft Universal Design Guidelines</a>,
+          but requires more system resources than the Default style.
+        </td>
+      </tr>
+    </table>
+    \endraw
 
     \section1 Using Styles in Qt Quick Controls 2
 
@@ -48,7 +83,7 @@
 
     \section2 Using QQuickStyle in C++
 
-    \l QQuickStyle provides API configuring a specific style. The following
+    \l QQuickStyle provides API for configuring a specific style. The following
     example runs a Qt Quick Controls 2 application with the Material style:
 
     \code

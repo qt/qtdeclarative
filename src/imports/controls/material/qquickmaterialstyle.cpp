@@ -415,6 +415,8 @@ static const QRgb switchDisabledTrackColorLight = 0x1E000000;
 static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
 static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
+static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
+static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 
 static QColor alphaBlend(const QColor &bg, const QColor &fg)
 {
@@ -574,7 +576,10 @@ void QQuickMaterialStyle::resetPrimary()
     m_customPrimary = false;
     m_explicitPrimary = false;
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-    inheritPrimary(material ? material->m_primary : defaultPrimary, true);
+    if (material)
+        inheritPrimary(material->m_primary, material->m_customPrimary);
+    else
+        inheritPrimary(defaultPrimary, false);
 }
 
 QVariant QQuickMaterialStyle::accent() const
@@ -630,7 +635,10 @@ void QQuickMaterialStyle::resetAccent()
     m_customAccent = false;
     m_explicitAccent = false;
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
-    inheritAccent(material ? material->m_accent : defaultAccent, true);
+    if (material)
+        inheritAccent(material->m_accent, material->m_customAccent);
+    else
+        inheritAccent(defaultAccent, false);
 }
 
 QVariant QQuickMaterialStyle::foreground() const
@@ -1071,6 +1079,11 @@ QColor QQuickMaterialStyle::toolTextColor() const
     }
 
     return primaryTextColor();
+}
+
+QColor QQuickMaterialStyle::spinBoxDisabledIconColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? spinBoxDisabledIconColorLight : spinBoxDisabledIconColorDark);
 }
 
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const

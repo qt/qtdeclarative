@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickToolTip
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-popups
     \brief Provides tool tips for any control.
 

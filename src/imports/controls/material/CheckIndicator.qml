@@ -42,7 +42,7 @@ Rectangle {
     implicitWidth: 18
     implicitHeight: 18
     color: "transparent"
-    border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
+    border.color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
     border.width: control.checked ? width / 2 : 2
     radius: 2
 
@@ -81,14 +81,30 @@ Rectangle {
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/check.png"
         fillMode: Image.PreserveAspectFit
 
-        scale: control.checked ? 1 : 0
+        scale: control.checkState === Qt.Checked ? 1 : 0
         Behavior on scale { NumberAnimation { duration: 100 } }
     }
 
-    states: State {
-        name: "checked"
-        when: control.checked
+    Rectangle {
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: 12
+        height: 3
+
+        scale: control.checkState === Qt.PartiallyChecked ? 1 : 0
+        Behavior on scale { NumberAnimation { duration: 100 } }
     }
+
+    states: [
+        State {
+            name: "checked"
+            when: control.checkState === Qt.Checked
+        },
+        State {
+            name: "partiallychecked"
+            when: control.checkState === Qt.PartiallyChecked
+        }
+    ]
 
     transitions: Transition {
         SequentialAnimation {

@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
     \instantiates QQuickMenu
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-menus
     \ingroup qtquickcontrols2-popups
     \brief A menu control that can be used as a context menu or popup menu.

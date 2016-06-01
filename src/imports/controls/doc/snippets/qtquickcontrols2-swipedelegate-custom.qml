@@ -37,7 +37,7 @@ SwipeDelegate {
         id: component
 
         Rectangle {
-            color: control.exposure.active && control.down ? "#333" : "#444"
+            color: control.swipe.complete && control.down ? "#333" : "#444"
             width: parent.width
             height: parent.height
             clip: true
@@ -50,8 +50,8 @@ SwipeDelegate {
         }
     }
 
-    exposure.left: component
-    exposure.right: component
+    swipe.left: component
+    swipe.right: component
 
     contentItem: Text {
         text: control.text

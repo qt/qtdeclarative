@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollIndicator
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-indicators
     \brief A non-interactive scroll indicator control.
 

@@ -106,8 +106,8 @@ T.SpinBox {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             source: "image://universal/" + (control.mirrored ? "left" : "right") + "arrow/"
-                    + (!control.enabled ? control.Universal.chromeDisabledLowColor :
-                                          control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
+                    + (!enabled ? control.Universal.chromeDisabledLowColor :
+                                  control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
             sourceSize.width: width
             sourceSize.height: height
         }
@@ -134,8 +134,8 @@ T.SpinBox {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             source: "image://universal/" + (control.mirrored ? "right" : "left") + "arrow/"
-                    + (!control.enabled ? control.Universal.chromeDisabledLowColor :
-                                          control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
+                    + (!enabled ? control.Universal.chromeDisabledLowColor :
+                                  control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor)
             sourceSize.width: width
             sourceSize.height: height
         }

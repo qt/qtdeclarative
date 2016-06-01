@@ -35,15 +35,16 @@
 ****************************************************************************/
 
 #include "qquicktoolbar_p.h"
-#include "qquickframe_p_p.h"
+#include "qquickpane_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ToolBar
-    \inherits Frame
+    \inherits Pane
     \instantiates QQuickToolBar
     \inqmlmodule QtQuick.Controls
+    \since 5.7
     \ingroup qtquickcontrols2-containers
     \brief A container with context-sensitive controls.
 
@@ -90,7 +91,7 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, {Container Controls}
 */
 
-class QQuickToolBarPrivate : public QQuickFramePrivate
+class QQuickToolBarPrivate : public QQuickPanePrivate
 {
 public:
     QQuickToolBarPrivate() : position(QQuickToolBar::Header) { }
@@ -99,7 +100,7 @@ public:
 };
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
-    QQuickFrame(*(new QQuickToolBarPrivate), parent)
+    QQuickPane(*(new QQuickToolBarPrivate), parent)
 {
 }
 

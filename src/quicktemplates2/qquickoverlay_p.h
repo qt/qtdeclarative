@@ -53,22 +53,23 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQuickOverlayPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
-    Q_PROPERTY(QQuickItem *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
+    Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
+    Q_PROPERTY(QQmlComponent *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = nullptr);
 
-    QQuickItem *modal() const;
-    void setModal(QQuickItem *modal);
+    QQmlComponent *modal() const;
+    void setModal(QQmlComponent *modal);
 
-    QQuickItem *modeless() const;
-    void setModeless(QQuickItem *modeless);
+    QQmlComponent *modeless() const;
+    void setModeless(QQmlComponent *modeless);
 
 Q_SIGNALS:
     void modalChanged();
