@@ -1327,29 +1327,8 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
         bool ok = false;
         QVariant v;
-        if (variantType == QVariant::String) {
-            const QString &str = value.toString();
-            const bool targetIsChar = (propertyType == qMetaTypeId<QChar>()
-                                       || propertyType == qMetaTypeId<char>()
-                                       || propertyType == qMetaTypeId<unsigned char>());
-            // If the string contains only one character and the target is a char, try converting it.
-            if (targetIsChar) {
-                if (str.size() != 1)
-                    return false; // We can only convert if the string contains exactly one character.
-
-                const QChar &qChar = str.at(0);
-                if (propertyType == qMetaTypeId<QChar>()) {
-                    v = qChar;
-                    ok = true;
-                } else if (propertyType == qMetaTypeId<char>() || propertyType == qMetaTypeId<unsigned char>()) {
-                    const char c = qChar.toLatin1();
-                    v = c;
-                    ok = (qChar == c);
-                }
-            } else {
-                v = QQmlStringConverters::variantFromString(str, propertyType, &ok);
-            }
-        }
+        if (variantType == QVariant::String)
+            v = QQmlStringConverters::variantFromString(value.toString(), propertyType, &ok);
 
         if (!ok) {
             v = value;

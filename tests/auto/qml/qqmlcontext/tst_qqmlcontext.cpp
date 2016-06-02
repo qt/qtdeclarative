@@ -66,6 +66,7 @@ private slots:
     void qtbug_22535();
     void evalAfterInvalidate();
     void qobjectDerived();
+    void qtbug_49232();
 
 private:
     QQmlEngine engine;
@@ -205,6 +206,8 @@ class TestObject : public QObject
     Q_PROPERTY(int a READ a NOTIFY aChanged)
     Q_PROPERTY(int b READ b NOTIFY bChanged)
     Q_PROPERTY(int c READ c NOTIFY cChanged)
+    Q_PROPERTY(char d READ d NOTIFY dChanged)
+    Q_PROPERTY(uchar e READ e NOTIFY eChanged)
 
 public:
     TestObject() : _a(10), _b(10), _c(10) {}
@@ -218,15 +221,25 @@ public:
     int c() const { return _c; }
     void setC(int c) { _c = c; emit cChanged(); }
 
+    char d() const { return _d; }
+    void setD(char d) { _d = d; emit dChanged(); }
+
+    uchar e() const { return _e; }
+    void setE(uchar e) { _e = e; emit eChanged(); }
+
 signals:
     void aChanged();
     void bChanged();
     void cChanged();
+    void dChanged();
+    void eChanged();
 
 private:
     int _a;
     int _b;
     int _c;
+    char _d;
+    uchar _e;
 };
 
 #define TEST_CONTEXT_PROPERTY(ctxt, name, value) \
@@ -697,6 +710,22 @@ void tst_qqmlcontext::qobjectDerived()
     Q_UNUSED(o1);
 
     QCOMPARE(command.count, 2);
+}
+
+void tst_qqmlcontext::qtbug_49232()
+{
+    TestObject testObject;
+    testObject.setD('a');
+    testObject.setE(97);
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty("TestObject", &testObject);
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; QtObject { property int valueOne: TestObject.d; property int valueTwo: TestObject.e }", QUrl());
+    QScopedPointer<QObject> obj(component.create());
+
+    QCOMPARE(obj->property("valueOne"), QVariant('a'));
+    QCOMPARE(obj->property("valueTwo"), QVariant(97));
 }
 
 QTEST_MAIN(tst_qqmlcontext)
