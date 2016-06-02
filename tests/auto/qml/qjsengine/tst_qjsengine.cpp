@@ -193,6 +193,8 @@ private slots:
 
     void v4FunctionWithoutQML();
 
+    void withNoContext();
+
 signals:
     void testSignal();
 };
@@ -3838,6 +3840,13 @@ void tst_QJSEngine::v4FunctionWithoutQML()
     QVERIFY(!obj.called);
     wrapper.property("callMe").call();
     QVERIFY(obj.called);
+}
+
+void tst_QJSEngine::withNoContext()
+{
+    // Don't crash (QTBUG-53794)
+    QJSEngine engine;
+    engine.evaluate("with (noContext) true");
 }
 
 QTEST_MAIN(tst_QJSEngine)

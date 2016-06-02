@@ -2718,6 +2718,9 @@ bool Codegen::visit(WithStatement *ast)
 
     _function->hasWith = true;
 
+    const int withObject = _block->newTemp();
+    _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
+
     // need an exception handler for with to cleanup the with scope
     IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(exceptionHandler());
     withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
@@ -2732,8 +2735,6 @@ bool Codegen::visit(WithStatement *ast)
 
     _block->JUMP(withBlock);
     _block = withBlock;
-    int withObject = _block->newTemp();
-    _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(withObject));
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
