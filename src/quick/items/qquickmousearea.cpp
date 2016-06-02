@@ -52,7 +52,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), pressed(0)
+  propagateComposedEvents(false), overThreshold(false), pressed(0)
 #ifndef QT_NO_DRAGANDDROP
   , drag(0)
 #endif
@@ -715,7 +715,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
             curLocalPos = event->windowPos();
         }
 
-        if (keepMouseGrab() && d->stealMouse && !d->drag->active())
+        if (keepMouseGrab() && d->stealMouse && d->overThreshold && !d->drag->active())
             d->drag->setActive(true);
 
         QPointF startPos = d->drag->target()->parentItem()
@@ -741,14 +741,17 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         if (d->drag->active())
             d->drag->target()->setPosition(dragPos);
 
-        if (!keepMouseGrab()
-                && (QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(), Qt::XAxis, event, d->drag->threshold())
-                || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event, d->drag->threshold()))) {
-            setKeepMouseGrab(true);
-            d->stealMouse = true;
-
+        if (!d->overThreshold && (QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(), Qt::XAxis, event, d->drag->threshold())
+                                  || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event, d->drag->threshold())))
+        {
+            d->overThreshold = true;
             if (d->drag->smoothed())
                 d->startScene = event->windowPos();
+        }
+
+        if (!keepMouseGrab() && d->overThreshold) {
+            setKeepMouseGrab(true);
+            d->stealMouse = true;
         }
 
         d->moved = true;
@@ -767,6 +770,7 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);
     d->stealMouse = false;
+    d->overThreshold = false;
     if (!d->enabled && !d->pressed) {
         QQuickItem::mouseReleaseEvent(event);
     } else {
@@ -875,6 +879,7 @@ void QQuickMouseArea::ungrabMouse()
         d->pressed = 0;
         d->stealMouse = false;
         d->doubleClick = false;
+        d->overThreshold = false;
         setKeepMouseGrab(false);
 
 #ifndef QT_NO_DRAGANDDROP
