@@ -758,9 +758,14 @@ void QQuickWidgetPrivate::updateSize()
             q->resize(newSize);
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
-        if (!qFuzzyCompare(q->width(), root->width()))
+        bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
+        bool needToUpdateHeight = !qFuzzyCompare(q->height(), root->height());
+
+        if (needToUpdateWidth && needToUpdateHeight)
+            root->setSize(QSizeF(q->width(), q->height()));
+        else if (needToUpdateWidth)
             root->setWidth(q->width());
-        if (!qFuzzyCompare(q->height(), root->height()))
+        else if (needToUpdateHeight)
             root->setHeight(q->height());
     }
 }
