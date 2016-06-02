@@ -503,56 +503,60 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const QSGD3
     }
     p += TEXT_CB_SIZE_0;
 
-    if (state.isCachedMaterialDataDirty() || m_lastGlyphCacheSize != glyphCache()->currentSize()) {
-        m_lastGlyphCacheSize = glyphCache()->currentSize();
-        const float textureScale[2] = { 1.0f / m_lastGlyphCacheSize.width(),
-                                        1.0f / m_lastGlyphCacheSize.height() };
+    const QSize sz = glyphCache()->currentSize();
+    const float textureScale[] = { 1.0f / sz.width(), 1.0f / sz.height() };
+    if (state.isCachedMaterialDataDirty() || memcmp(p, textureScale, TEXT_CB_SIZE_1)) {
         memcpy(p, textureScale, TEXT_CB_SIZE_1);
         r |= UpdatedConstantBuffer;
     }
     p += TEXT_CB_SIZE_1;
 
     const float dpr = m_rc->engine()->windowDevicePixelRatio();
-    if (state.isCachedMaterialDataDirty() || m_lastDpr != dpr) {
-        m_lastDpr = dpr;
+    if (state.isCachedMaterialDataDirty() || memcmp(p, &dpr, TEXT_CB_SIZE_2)) {
         memcpy(p, &dpr, TEXT_CB_SIZE_2);
         r |= UpdatedConstantBuffer;
     }
     p += TEXT_CB_SIZE_2;
 
-    if (state.isOpacityDirty() || m_lastColor != m_color) {
-        m_lastColor = m_color;
-        if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
-            const QVector4D color = qsg_premultiply(m_color, state.opacity());
-            const float alpha = color.w();
+    if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
+        const QVector4D color = qsg_premultiply(m_color, state.opacity());
+        const float alpha = color.w();
+        if (state.isOpacityDirty() || memcmp(p, &alpha, TEXT_CB_SIZE_3)) {
             memcpy(p, &alpha, TEXT_CB_SIZE_3);
-        } else if (glyphCache()->glyphFormat() == QFontEngine::Format_ARGB) {
-            const float opacity = m_color.w() * state.opacity();
-            memcpy(p, &opacity, TEXT_CB_SIZE_3);
-        } else {
-            const QVector4D color = qsg_premultiply(m_color, state.opacity());
-            const float f[4] = { color.x(), color.y(), color.z(), color.w() };
-            memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
+            r |= UpdatedConstantBuffer;
         }
-        r |= UpdatedConstantBuffer;
+    } else if (glyphCache()->glyphFormat() == QFontEngine::Format_ARGB) {
+        const float opacity = m_color.w() * state.opacity();
+        if (state.isOpacityDirty() || memcmp(p, &opacity, TEXT_CB_SIZE_3)) {
+            memcpy(p, &opacity, TEXT_CB_SIZE_3);
+            r |= UpdatedConstantBuffer;
+        }
+    } else {
+        const QVector4D color = qsg_premultiply(m_color, state.opacity());
+        const float f[] = { color.x(), color.y(), color.z(), color.w() };
+        if (state.isOpacityDirty() || memcmp(p, f, TEXT_CB_SIZE_4)) {
+            memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
+            r |= UpdatedConstantBuffer;
+        }
     }
     p += TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
 
-    if (m_styleType == Styled && (state.isCachedMaterialDataDirty() || m_lastStyleShift != m_styleShift)) {
-        m_lastStyleShift = m_styleShift;
-        const float f[2] = { m_styleShift.x(), m_styleShift.y() };
-        memcpy(p, f, TEXT_CB_SIZE_5);
-        r |= UpdatedConstantBuffer;
+    if (m_styleType == Styled) {
+        const float f[] = { m_styleShift.x(), m_styleShift.y() };
+        if (state.isCachedMaterialDataDirty() || memcmp(p, f, TEXT_CB_SIZE_5)) {
+            memcpy(p, f, TEXT_CB_SIZE_5);
+            r |= UpdatedConstantBuffer;
+        }
     }
     p += TEXT_CB_SIZE_5 + TEXT_CB_SIZE_5_PADDING;
 
-    if ((m_styleType == Styled || m_styleType == Outlined)
-            && (state.isOpacityDirty() || m_lastStyleColor != m_styleColor)) {
-        m_lastStyleColor = m_styleColor;
+    if (m_styleType == Styled || m_styleType == Outlined) {
         const QVector4D color = qsg_premultiply(m_styleColor, state.opacity());
-        const float f[4] = { color.x(), color.y(), color.z(), color.w() };
-        memcpy(p, f, TEXT_CB_SIZE_6);
-        r |= UpdatedConstantBuffer;
+        const float f[] = { color.x(), color.y(), color.z(), color.w() };
+        if (state.isOpacityDirty() || memcmp(p, f, TEXT_CB_SIZE_6)) {
+            memcpy(p, f, TEXT_CB_SIZE_6);
+            r |= UpdatedConstantBuffer;
+        }
     }
 
     QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);
