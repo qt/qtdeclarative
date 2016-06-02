@@ -70,7 +70,7 @@ QQuickGraphicsInfo::QQuickGraphicsInfo(QQuickItem *item)
     , m_shaderSourceType(ShaderSourceType(0))
     , m_majorVersion(2)
     , m_minorVersion(0)
-    , m_profile(NoProfile)
+    , m_profile(OpenGLNoProfile)
     , m_renderableType(SurfaceFormatUnspecified)
 {
     connect(item, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(setWindow(QQuickWindow*)));
@@ -211,9 +211,9 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
 
     The possible values are:
     \list
-    \li GraphicsInfo.NoProfile (default) - OpenGL version is lower than 3.2 or OpenGL is not in use.
-    \li GraphicsInfo.CoreProfile - Functionality deprecated in OpenGL version 3.0 is not available.
-    \li GraphicsInfo.CompatibilityProfile - Functionality from earlier OpenGL versions is available.
+    \li GraphicsInfo.OpenGLNoProfile (default) - OpenGL version is lower than 3.2 or OpenGL is not in use.
+    \li GraphicsInfo.OpenGLCoreProfile - Functionality deprecated in OpenGL version 3.0 is not available.
+    \li GraphicsInfo.OpenGLCompatibilityProfile - Functionality from earlier OpenGL versions is available.
     \endlist
 
     Reusable QML components will typically use this property in bindings in order to
@@ -275,7 +275,7 @@ void QQuickGraphicsInfo::updateInfo()
         m_minorVersion = format.minorVersion();
         emit minorVersionChanged();
     }
-    ContextProfile profile = static_cast<ContextProfile>(format.profile());
+    OpenGLContextProfile profile = static_cast<OpenGLContextProfile>(format.profile());
     if (m_profile != profile) {
         m_profile = profile;
         emit profileChanged();
