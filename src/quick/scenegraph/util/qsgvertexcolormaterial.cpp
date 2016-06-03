@@ -107,6 +107,9 @@ void QSGVertexColorMaterialShader::initialize()
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
+    \warning This utility class is only functional when running with the OpenGL
+    backend of the Qt Quick scenegraph.
+
     The vertex color material will give each vertex in a geometry a color. Pixels between
     vertices will be linearly interpolated. The colors can contain transparency.
 

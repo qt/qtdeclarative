@@ -125,6 +125,9 @@ void FlatColorMaterialShader::initialize()
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
+    \warning This utility class is only functional when running with the OpenGL
+    backend of the Qt Quick scenegraph.
+
     The flat color material will fill every pixel in a geometry using
     a solid color. The color can contain transparency.
 

@@ -127,6 +127,9 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
+    \warning This utility class is only functional when running with the OpenGL
+    backend of the Qt Quick scenegraph.
+
     The opaque textured material will fill every pixel in a geometry with
     the supplied texture. The material does not respect the opacity of the
     QSGMaterialShader::RenderState, so opacity nodes in the parent chain
@@ -320,6 +323,9 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     rendering textured geometry in the scene graph.
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
+
+    \warning This utility class is only functional when running with the OpenGL
+    backend of the Qt Quick scenegraph.
 
     The textured material will fill every pixel in a geometry with
     the supplied texture.
