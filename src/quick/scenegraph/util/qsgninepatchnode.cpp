@@ -37,51 +37,41 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
-
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+#include "qsgninepatchnode.h"
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
+/*!
+  \class QSGNinePatchNode
+  \inmodule QtQuick
+  \since 5.8
+  \internal
+ */
 
-class Q_QUICK_EXPORT QSGEngine : public QObject
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
-public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+/*!
+    \fn void QSGNinePatchNode::setTexture(QSGTexture *texture)
+    \internal
+ */
 
-    explicit QSGEngine(QObject *parent = Q_NULLPTR);
-    ~QSGEngine();
+/*!
+    \fn void QSGNinePatchNode::setBounds(const QRectF &bounds)
+    \internal
+ */
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
+/*!
+    \fn void QSGNinePatchNode::setDevicePixelRatio(qreal ratio)
+    \internal
+ */
 
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
-};
+/*!
+    \fn void QSGNinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal bottom)
+    \internal
+ */
+
+
+/*!
+    \fn void QSGNinePatchNode::update()
+    \internal
+ */
 
 QT_END_NAMESPACE
-
-#endif // QSGENGINE_H

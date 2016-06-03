@@ -55,7 +55,7 @@
 #include <QtQuick/qsgtextureprovider.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qsgdefaultimagenode_p.h>
+#include <private/qsgdefaultinternalimagenode_p.h>
 #include <private/qquickitemchangelistener_p.h>
 
 #include "qpointer.h"

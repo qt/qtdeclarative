@@ -40,10 +40,10 @@
 #include "qsgsoftwarerenderablenodeupdater_p.h"
 
 #include "qsgabstractsoftwarerenderer_p.h"
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
@@ -100,6 +100,12 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGGeometryNode *node)
         return updateRenderableNode(QSGSoftwareRenderableNode::SimpleRect, rectNode);
     } else if (QSGSimpleTextureNode *tn = dynamic_cast<QSGSimpleTextureNode *>(node)) {
         return updateRenderableNode(QSGSoftwareRenderableNode::SimpleTexture, tn);
+    } else if (QSGNinePatchNode *nn = dynamic_cast<QSGNinePatchNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::NinePatch, nn);
+    } else if (QSGRectangleNode *rn = dynamic_cast<QSGRectangleNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::SimpleRectangle, rn);
+    } else if (QSGImageNode *n = dynamic_cast<QSGImageNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::SimpleImage, n);
     } else {
         // We dont know, so skip
         return false;
@@ -122,12 +128,12 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGOpacityNode *)
     m_opacityState.pop();
 }
 
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGImageNode *node)
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGInternalImageNode *node)
 {
     return updateRenderableNode(QSGSoftwareRenderableNode::Image, node);
 }
 
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGImageNode *)
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGInternalImageNode *)
 {
 }
 
@@ -140,12 +146,12 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGPainterNode *)
 {
 }
 
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGRectangleNode *node)
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGInternalRectangleNode *node)
 {
     return updateRenderableNode(QSGSoftwareRenderableNode::Rectangle, node);
 }
 
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRectangleNode *)
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGInternalRectangleNode *)
 {
 }
 
@@ -155,15 +161,6 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGGlyphNode *node)
 }
 
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGGlyphNode *)
-{
-}
-
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGNinePatchNode *node)
-{
-    return updateRenderableNode(QSGSoftwareRenderableNode::NinePatch, node);
-}
-
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGNinePatchNode *)
 {
 }
 

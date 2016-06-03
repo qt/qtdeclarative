@@ -148,6 +148,11 @@ QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(cons
     return r;
 }
 
+QSGD3D12FlatColorMaterial::QSGD3D12FlatColorMaterial()
+    : m_color(QColor(255, 255, 255))
+{
+}
+
 QSGMaterialType QSGD3D12FlatColorMaterial::mtype;
 
 QSGMaterialType *QSGD3D12FlatColorMaterial::type() const
@@ -351,6 +356,12 @@ QSGD3D12Material::UpdateResults QSGD3D12TextureMaterial::updatePipeline(const QS
     m_texture->bind();
 
     return r;
+}
+
+void QSGD3D12TextureMaterial::setTexture(QSGTexture *texture)
+{
+    m_texture = texture;
+    setFlag(Blending, m_texture ? m_texture->hasAlphaChannel() : false);
 }
 
 QSGD3D12SmoothTextureMaterial::QSGD3D12SmoothTextureMaterial()

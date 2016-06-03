@@ -37,87 +37,59 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12imagenode_p.h"
+#include "qsgdefaultrectanglenode_p.h"
+#include "qsgflatcolormaterial.h"
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12ImageNode::QSGD3D12ImageNode()
+// Unlike our predecessor, QSGSimpleRectNode, use QSGVertexColorMaterial
+// instead of Flat in order to allow better batching in the renderer.
+
+QSGDefaultRectangleNode::QSGDefaultRectangleNode()
+    : m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 4)
+    , m_color(QColor(255, 255, 255))
 {
+    QSGGeometry::updateColoredRectGeometry(&m_geometry, QRectF());
     setMaterial(&m_material);
+    setGeometry(&m_geometry);
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("rectangle"));
+#endif
 }
 
-void QSGD3D12ImageNode::setFiltering(QSGTexture::Filtering filtering)
+void QSGDefaultRectangleNode::setRect(const QRectF &rect)
 {
-    if (m_material.filtering() == filtering)
-        return;
-
-    m_material.setFiltering(filtering);
-    m_smoothMaterial.setFiltering(filtering);
-    markDirty(DirtyMaterial);
+    QSGGeometry::updateColoredRectGeometry(&m_geometry, rect);
+    markDirty(QSGNode::DirtyGeometry);
 }
 
-void QSGD3D12ImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+QRectF QSGDefaultRectangleNode::rect() const
 {
-    if (m_material.mipmapFiltering() == filtering)
-        return;
-
-    m_material.setMipmapFiltering(filtering);
-    m_smoothMaterial.setMipmapFiltering(filtering);
-    markDirty(DirtyMaterial);
+    const QSGGeometry::ColoredPoint2D *pts = m_geometry.vertexDataAsColoredPoint2D();
+    return QRectF(pts[0].x,
+                  pts[0].y,
+                  pts[3].x - pts[0].x,
+                  pts[3].y - pts[0].y);
 }
 
-void QSGD3D12ImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
+void QSGDefaultRectangleNode::setColor(const QColor &color)
 {
-    if (m_material.verticalWrapMode() == wrapMode)
-        return;
-
-    m_material.setVerticalWrapMode(wrapMode);
-    m_smoothMaterial.setVerticalWrapMode(wrapMode);
-    markDirty(DirtyMaterial);
-}
-
-void QSGD3D12ImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
-{
-    if (m_material.horizontalWrapMode() == wrapMode)
-        return;
-
-    m_material.setHorizontalWrapMode(wrapMode);
-    m_smoothMaterial.setHorizontalWrapMode(wrapMode);
-    markDirty(DirtyMaterial);
-}
-
-void QSGD3D12ImageNode::updateMaterialAntialiasing()
-{
-    if (m_antialiasing)
-        setMaterial(&m_smoothMaterial);
-    else
-        setMaterial(&m_material);
-}
-
-void QSGD3D12ImageNode::setMaterialTexture(QSGTexture *texture)
-{
-    m_material.setTexture(texture);
-    m_smoothMaterial.setTexture(texture);
-}
-
-QSGTexture *QSGD3D12ImageNode::materialTexture() const
-{
-    return m_material.texture();
-}
-
-bool QSGD3D12ImageNode::updateMaterialBlending()
-{
-    const bool alpha = m_material.flags() & QSGMaterial::Blending;
-    if (materialTexture() && alpha != materialTexture()->hasAlphaChannel()) {
-        m_material.setFlag(QSGMaterial::Blending, !alpha);
-        return true;
+    if (color != m_color) {
+        m_color = color;
+        QSGGeometry::ColoredPoint2D *pts = m_geometry.vertexDataAsColoredPoint2D();
+        for (int i = 0; i < 4; ++i) {
+            pts[i].r = uchar(qRound(m_color.redF() * m_color.alphaF() * 255));
+            pts[i].g = uchar(qRound(m_color.greenF() * m_color.alphaF() * 255));
+            pts[i].b = uchar(qRound(m_color.blueF() * m_color.alphaF() * 255));
+            pts[i].a = uchar(qRound(m_color.alphaF() * 255));
+        }
+        markDirty(QSGNode::DirtyGeometry);
     }
-    return false;
 }
 
-bool QSGD3D12ImageNode::supportsWrap(const QSize &) const
+QColor QSGDefaultRectangleNode::color() const
 {
-    return true;
+    return m_color;
 }
 
 QT_END_NAMESPACE

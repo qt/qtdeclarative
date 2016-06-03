@@ -40,8 +40,8 @@
 #include "qsgdefaultcontext_p.h"
 
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
-#include <QtQuick/private/qsgdefaultrectanglenode_p.h>
-#include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>
+#include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
 #include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
@@ -49,6 +49,9 @@
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QtQuick/private/qsgdefaultlayer_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
+#include <QtQuick/private/qsgdefaultrectanglenode_p.h>
+#include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgdefaultninepatchnode_p.h>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFramebufferObject>
@@ -60,13 +63,13 @@
 QT_BEGIN_NAMESPACE
 
 namespace QSGMultisampleAntialiasing {
-    class ImageNode : public QSGDefaultImageNode {
+    class ImageNode : public QSGDefaultInternalImageNode {
     public:
         void setAntialiasing(bool) { }
     };
 
 
-    class RectangleNode : public QSGDefaultRectangleNode {
+    class RectangleNode : public QSGDefaultInternalRectangleNode {
     public:
         void setAntialiasing(bool) { }
     };
@@ -170,18 +173,18 @@ QSGRenderContext *QSGDefaultContext::createRenderContext()
     return new QSGDefaultRenderContext(this);
 }
 
-QSGRectangleNode *QSGDefaultContext::createRectangleNode()
+QSGInternalRectangleNode *QSGDefaultContext::createInternalRectangleNode()
 {
     return m_antialiasingMethod == MsaaAntialiasing
             ? new QSGMultisampleAntialiasing::RectangleNode
-            : new QSGDefaultRectangleNode;
+            : new QSGDefaultInternalRectangleNode;
 }
 
-QSGImageNode *QSGDefaultContext::createImageNode()
+QSGInternalImageNode *QSGDefaultContext::createInternalImageNode()
 {
     return m_antialiasingMethod == MsaaAntialiasing
             ? new QSGMultisampleAntialiasing::ImageNode
-            : new QSGDefaultImageNode;
+            : new QSGDefaultInternalImageNode;
 }
 
 QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
@@ -198,15 +201,6 @@ QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc, bool pref
         node->setPreferredAntialiasingMode(m_distanceFieldAntialiasing);
         return node;
     }
-}
-
-/*!
- * Factory function for scene graph backends of the QStyle stylable elements. Returns a
- * null pointer if the backend doesn't provide its own node type.
- */
-QSGNinePatchNode *QSGDefaultContext::createNinePatchNode()
-{
-    return nullptr;
 }
 
 QSGLayer *QSGDefaultContext::createLayer(QSGRenderContext *renderContext)
@@ -244,6 +238,21 @@ QSGRendererInterface *QSGDefaultContext::rendererInterface(QSGRenderContext *ren
 {
     Q_UNUSED(renderContext);
     return this;
+}
+
+QSGRectangleNode *QSGDefaultContext::createRectangleNode()
+{
+    return new QSGDefaultRectangleNode;
+}
+
+QSGImageNode *QSGDefaultContext::createImageNode()
+{
+    return new QSGDefaultImageNode;
+}
+
+QSGNinePatchNode *QSGDefaultContext::createNinePatchNode()
+{
+    return new QSGDefaultNinePatchNode;
 }
 
 QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const

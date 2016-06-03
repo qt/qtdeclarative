@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -38,102 +37,16 @@
 **
 ****************************************************************************/
 
-#include "qsgdefaultrectanglenode_p.h"
-
-#include <QtQuick/qsgvertexcolormaterial.h>
-#include <QtQuick/qsgtexturematerial.h>
-
-#include <QtQuick/private/qsgcontext_p.h>
-
-#include <QtCore/qmath.h>
-#include <QtCore/qvarlengtharray.h>
+#include "qsgd3d12internalrectanglenode_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class SmoothColorMaterialShader : public QSGMaterialShader
-{
-public:
-    SmoothColorMaterialShader();
-
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
-
-private:
-    virtual void initialize();
-
-    int m_matrixLoc;
-    int m_opacityLoc;
-    int m_pixelSizeLoc;
-};
-
-SmoothColorMaterialShader::SmoothColorMaterialShader()
-    : QSGMaterialShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothcolor.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothcolor.frag"));
-}
-
-void SmoothColorMaterialShader::updateState(const RenderState &state, QSGMaterial *, QSGMaterial *oldEffect)
-{
-    if (state.isOpacityDirty())
-        program()->setUniformValue(m_opacityLoc, state.opacity());
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
-
-    if (oldEffect == 0) {
-        // The viewport is constant, so set the pixel size uniform only once.
-        QRect r = state.viewportRect();
-        program()->setUniformValue(m_pixelSizeLoc, 2.0f / r.width(), 2.0f / r.height());
-    }
-}
-
-char const *const *SmoothColorMaterialShader::attributeNames() const
-{
-    static char const *const attributes[] = {
-        "vertex",
-        "vertexColor",
-        "vertexOffset",
-        0
-    };
-    return attributes;
-}
-
-void SmoothColorMaterialShader::initialize()
-{
-    m_matrixLoc = program()->uniformLocation("matrix");
-    m_opacityLoc = program()->uniformLocation("opacity");
-    m_pixelSizeLoc = program()->uniformLocation("pixelSize");
-}
-
-QSGSmoothColorMaterial::QSGSmoothColorMaterial()
-{
-    setFlag(RequiresFullMatrixExceptTranslate, true);
-    setFlag(Blending, true);
-}
-
-int QSGSmoothColorMaterial::compare(const QSGMaterial *) const
-{
-    return 0;
-}
-
-QSGMaterialType *QSGSmoothColorMaterial::type() const
-{
-    static QSGMaterialType type;
-    return &type;
-}
-
-QSGMaterialShader *QSGSmoothColorMaterial::createShader() const
-{
-    return new SmoothColorMaterialShader;
-}
-
-QSGDefaultRectangleNode::QSGDefaultRectangleNode()
+QSGD3D12InternalRectangleNode::QSGD3D12InternalRectangleNode()
 {
     setMaterial(&m_material);
 }
 
-void QSGDefaultRectangleNode::updateMaterialAntialiasing()
+void QSGD3D12InternalRectangleNode::updateMaterialAntialiasing()
 {
     if (m_antialiasing)
         setMaterial(&m_smoothMaterial);
@@ -141,7 +54,7 @@ void QSGDefaultRectangleNode::updateMaterialAntialiasing()
         setMaterial(&m_material);
 }
 
-void QSGDefaultRectangleNode::updateMaterialBlending(QSGNode::DirtyState *state)
+void QSGD3D12InternalRectangleNode::updateMaterialBlending(QSGNode::DirtyState *state)
 {
     // smoothed material is always blended, so no change in material state
     if (material() == &m_material) {

@@ -37,51 +37,63 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
 
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+#ifndef QSGBASICINTERNALRECTANGLENODE_P_H
+#define QSGBASICINTERNALRECTANGLENODE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+class Q_QUICK_PRIVATE_EXPORT QSGBasicInternalRectangleNode : public QSGInternalRectangleNode
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
 public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    QSGBasicInternalRectangleNode();
 
-    explicit QSGEngine(QObject *parent = Q_NULLPTR);
-    ~QSGEngine();
+    void setRect(const QRectF &rect) override;
+    void setColor(const QColor &color) override;
+    void setPenColor(const QColor &color) override;
+    void setPenWidth(qreal width) override;
+    void setGradientStops(const QGradientStops &stops) override;
+    void setRadius(qreal radius) override;
+    void setAntialiasing(bool antialiasing) override;
+    void setAligned(bool aligned) override;
+    void update() override;
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
+protected:
+    virtual bool supportsAntialiasing() const { return true; }
+    virtual void updateMaterialAntialiasing() = 0;
+    virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
 
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
+    void updateGeometry();
+    void updateGradientTexture();
+
+    QRectF m_rect;
+    QGradientStops m_gradient_stops;
+    QColor m_color;
+    QColor m_border_color;
+    qreal m_radius;
+    qreal m_pen_width;
+
+    uint m_aligned : 1;
+    uint m_antialiasing : 1;
+    uint m_gradient_is_opaque : 1;
+    uint m_dirty_geometry : 1;
+
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGENGINE_H
+#endif

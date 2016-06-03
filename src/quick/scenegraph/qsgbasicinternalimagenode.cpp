@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qsgbasicimagenode_p.h"
+#include "qsgbasicinternalimagenode_p.h"
 
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qmath.h>
@@ -65,7 +65,7 @@ namespace
     }
 }
 
-QSGBasicImageNode::QSGBasicImageNode()
+QSGBasicInternalImageNode::QSGBasicInternalImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
     , m_antialiasing(false)
@@ -77,11 +77,11 @@ QSGBasicImageNode::QSGBasicImageNode()
     setGeometry(&m_geometry);
 
 #ifdef QSG_RUNTIME_DESCRIPTION
-    qsgnode_set_description(this, QLatin1String("image"));
+    qsgnode_set_description(this, QLatin1String("internalimage"));
 #endif
 }
 
-void QSGBasicImageNode::setTargetRect(const QRectF &rect)
+void QSGBasicInternalImageNode::setTargetRect(const QRectF &rect)
 {
     if (rect == m_targetRect)
         return;
@@ -89,7 +89,7 @@ void QSGBasicImageNode::setTargetRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setInnerTargetRect(const QRectF &rect)
+void QSGBasicInternalImageNode::setInnerTargetRect(const QRectF &rect)
 {
     if (rect == m_innerTargetRect)
         return;
@@ -97,7 +97,7 @@ void QSGBasicImageNode::setInnerTargetRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setInnerSourceRect(const QRectF &rect)
+void QSGBasicInternalImageNode::setInnerSourceRect(const QRectF &rect)
 {
     if (rect == m_innerSourceRect)
         return;
@@ -105,7 +105,7 @@ void QSGBasicImageNode::setInnerSourceRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setSubSourceRect(const QRectF &rect)
+void QSGBasicInternalImageNode::setSubSourceRect(const QRectF &rect)
 {
     if (rect == m_subSourceRect)
         return;
@@ -113,7 +113,7 @@ void QSGBasicImageNode::setSubSourceRect(const QRectF &rect)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setTexture(QSGTexture *texture)
+void QSGBasicInternalImageNode::setTexture(QSGTexture *texture)
 {
     Q_ASSERT(texture);
 
@@ -126,7 +126,7 @@ void QSGBasicImageNode::setTexture(QSGTexture *texture)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setAntialiasing(bool antialiasing)
+void QSGBasicInternalImageNode::setAntialiasing(bool antialiasing)
 {
     if (antialiasing == m_antialiasing)
         return;
@@ -142,7 +142,7 @@ void QSGBasicImageNode::setAntialiasing(bool antialiasing)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicImageNode::setMirror(bool mirror)
+void QSGBasicInternalImageNode::setMirror(bool mirror)
 {
     if (mirror == m_mirror)
         return;
@@ -151,13 +151,13 @@ void QSGBasicImageNode::setMirror(bool mirror)
 }
 
 
-void QSGBasicImageNode::update()
+void QSGBasicInternalImageNode::update()
 {
     if (m_dirtyGeometry)
         updateGeometry();
 }
 
-void QSGBasicImageNode::preprocess()
+void QSGBasicInternalImageNode::preprocess()
 {
     bool doDirty = false;
     QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(materialTexture());
@@ -200,7 +200,7 @@ static inline void appendQuad(quint16 **indices, quint16 topLeft, quint16 topRig
     *(*indices)++ = topLeft;
 }
 
-QSGGeometry *QSGBasicImageNode::updateGeometry(const QRectF &targetRect,
+QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                                                const QRectF &innerTargetRect,
                                                const QRectF &sourceRect,
                                                const QRectF &innerSourceRect,
@@ -458,7 +458,7 @@ QSGGeometry *QSGBasicImageNode::updateGeometry(const QRectF &targetRect,
     return geometry;
 }
 
-void QSGBasicImageNode::updateGeometry()
+void QSGBasicInternalImageNode::updateGeometry()
 {
     Q_ASSERT(!m_targetRect.isEmpty());
     const QSGTexture *t = materialTexture();

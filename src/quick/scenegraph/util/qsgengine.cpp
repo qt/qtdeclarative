@@ -221,4 +221,45 @@ QSGRendererInterface *QSGEngine::rendererInterface() const
             : nullptr;
 }
 
+/*!
+    Creates a simple rectangle node. When the scenegraph is not initialized, the return value is null.
+
+    This is cross-backend alternative to constructing a QSGSimpleRectNode directly.
+
+    \since 5.8
+    \sa QSGRectangleNode
+ */
+QSGRectangleNode *QSGEngine::createRectangleNode() const
+{
+    Q_D(const QSGEngine);
+    return d->sgRenderContext->isValid() ? d->sgRenderContext->sceneGraphContext()->createRectangleNode() : nullptr;
+}
+
+/*!
+    Creates a simple image node. When the scenegraph is not initialized, the return value is null.
+
+    This is cross-backend alternative to constructing a QSGSimpleTextureNode directly.
+
+    \since 5.8
+    \sa QSGImageNode
+ */
+
+QSGImageNode *QSGEngine::createImageNode() const
+{
+    Q_D(const QSGEngine);
+    return d->sgRenderContext->isValid() ? d->sgRenderContext->sceneGraphContext()->createImageNode() : nullptr;
+}
+
+/*!
+    Creates a nine patch node. When the scenegraph is not initialized, the return value is null.
+
+    \since 5.8
+ */
+
+QSGNinePatchNode *QSGEngine::createNinePatchNode() const
+{
+    Q_D(const QSGEngine);
+    return d->sgRenderContext->isValid() ? d->sgRenderContext->sceneGraphContext()->createNinePatchNode() : nullptr;
+}
+
 QT_END_NAMESPACE

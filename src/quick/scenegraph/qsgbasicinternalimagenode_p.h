@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGSOFTWAREIMAGENODE_H
-#define QSGSOFTWAREIMAGENODE_H
+#ifndef QSGBASICINTERNALIMAGENODE_P_H
+#define QSGBASICINTERNALIMAGENODE_P_H
 
 //
 //  W A R N I N G
@@ -52,96 +52,58 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgtexturematerial_p.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QSGSoftwareHelpers {
-
-typedef QVarLengthArray<QPainter::PixmapFragment, 16> QPixmapFragmentsArray;
-
-struct QTileRules
-{
-    inline QTileRules(Qt::TileRule horizontalRule, Qt::TileRule verticalRule)
-            : horizontal(horizontalRule), vertical(verticalRule) {}
-    inline QTileRules(Qt::TileRule rule = Qt::StretchTile)
-            : horizontal(rule), vertical(rule) {}
-    Qt::TileRule horizontal;
-    Qt::TileRule vertical;
-};
-
-#ifndef Q_QDOC
-// For internal use only.
-namespace QDrawBorderPixmap
-{
-    enum DrawingHint
-    {
-        OpaqueTopLeft = 0x0001,
-        OpaqueTop = 0x0002,
-        OpaqueTopRight = 0x0004,
-        OpaqueLeft = 0x0008,
-        OpaqueCenter = 0x0010,
-        OpaqueRight = 0x0020,
-        OpaqueBottomLeft = 0x0040,
-        OpaqueBottom = 0x0080,
-        OpaqueBottomRight = 0x0100,
-        OpaqueCorners = OpaqueTopLeft | OpaqueTopRight | OpaqueBottomLeft | OpaqueBottomRight,
-        OpaqueEdges = OpaqueTop | OpaqueLeft | OpaqueRight | OpaqueBottom,
-        OpaqueFrame = OpaqueCorners | OpaqueEdges,
-        OpaqueAll = OpaqueCenter | OpaqueFrame
-    };
-
-    Q_DECLARE_FLAGS(DrawingHints, DrawingHint)
-}
-#endif
-
-void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMargins,
-                       const QPixmap &pixmap, const QRect &sourceRect,const QMargins &sourceMargins,
-                       const QTileRules &rules, QDrawBorderPixmap::DrawingHints hints);
-
-} // QSGSoftwareHelpers namespace
-
-class QSGSoftwareImageNode : public QSGImageNode
+class Q_QUICK_PRIVATE_EXPORT QSGBasicInternalImageNode : public QSGInternalImageNode
 {
 public:
-    QSGSoftwareImageNode();
+    QSGBasicInternalImageNode();
 
     void setTargetRect(const QRectF &rect) override;
     void setInnerTargetRect(const QRectF &rect) override;
     void setInnerSourceRect(const QRectF &rect) override;
     void setSubSourceRect(const QRectF &rect) override;
     void setTexture(QSGTexture *texture) override;
+    void setAntialiasing(bool antialiasing) override;
     void setMirror(bool mirror) override;
-    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
-    void setFiltering(QSGTexture::Filtering filtering) override;
-    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
-    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
     void update() override;
-
     void preprocess() override;
 
-    void paint(QPainter *painter);
+    static QSGGeometry *updateGeometry(const QRectF &targetRect,
+                                       const QRectF &innerTargetRect,
+                                       const QRectF &sourceRect,
+                                       const QRectF &innerSourceRect,
+                                       const QRectF &subSourceRect,
+                                       QSGGeometry *geometry,
+                                       bool mirror = false,
+                                       bool antialiasing = false);
 
-    QRectF rect() const;
+protected:
+    virtual void updateMaterialAntialiasing() = 0;
+    virtual void setMaterialTexture(QSGTexture *texture) = 0;
+    virtual QSGTexture *materialTexture() const = 0;
+    virtual bool updateMaterialBlending() = 0;
+    virtual bool supportsWrap(const QSize &size) const = 0;
 
-private:
-    const QPixmap &pixmap() const;
+    void updateGeometry();
 
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
     QRectF m_innerSourceRect;
     QRectF m_subSourceRect;
 
-    QSGTexture *m_texture;
-    QPixmap m_cachedMirroredPixmap;
+    uint m_antialiasing : 1;
+    uint m_mirror : 1;
+    uint m_dirtyGeometry : 1;
 
-    bool m_mirror;
-    bool m_smooth;
-    bool m_tileHorizontal;
-    bool m_tileVertical;
-    bool m_cachedMirroredPixmapIsDirty;
+    QSGGeometry m_geometry;
+
+    QSGDynamicTexture *m_dynamicTexture;
+    QSize m_dynamicTextureSize;
+    QRectF m_dynamicTextureSubRect;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGSOFTWAREIMAGENODE_H
+#endif

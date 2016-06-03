@@ -37,38 +37,50 @@
 **
 ****************************************************************************/
 
-#ifndef QSGD3D12RECTANGLENODE_P_H
-#define QSGD3D12RECTANGLENODE_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgbasicrectanglenode_p.h>
-#include "qsgd3d12builtinmaterials_p.h"
+#include "qsgrectanglenode.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12RectangleNode : public QSGBasicRectangleNode
-{
-public:
-    QSGD3D12RectangleNode();
+/*!
+  \class QSGRectangleNode
 
-private:
-    void updateMaterialAntialiasing() override;
-    void updateMaterialBlending(QSGNode::DirtyState *state) override;
+  \brief The QSGRectangleNode class is a convenience class for drawing
+  solid filled rectangles using scenegraph.
+  \inmodule QtQuick
+  \since 5.8
+ */
 
-    QSGD3D12VertexColorMaterial m_material;
-    QSGD3D12SmoothColorMaterial m_smoothMaterial;
-};
+/*!
+    \fn void QSGRectangleNode::setRect(const QRectF &rect)
+
+    Sets the rectangle of this rect node to \a rect.
+ */
+
+/*!
+    \fn void QSGRectangleNode::setRect(qreal x, qreal y, qreal w, qreal h)
+    \overload
+
+    Sets the rectangle of this rect node to begin at (\a x, \a y) and have
+    width \a w and height \a h.
+ */
+
+/*!
+    \fn QRectF QSGRectangleNode::rect() const
+
+    Returns the rectangle that this rect node covers.
+ */
+
+/*!
+    \fn void QSGRectangleNode::setColor(const QColor &color)
+
+    Sets the color of this rectangle to \a color. The default color will be
+    white.
+ */
+
+/*!
+    \fn QColor QSGRectangleNode::color() const
+
+    Returns the color of this rectangle.
+ */
 
 QT_END_NAMESPACE
-
-#endif // QSGD3D12RECTANGLENODE_P_H

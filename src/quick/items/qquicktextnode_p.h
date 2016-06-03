@@ -68,7 +68,7 @@ class QColor;
 class QTextDocument;
 class QSGContext;
 class QRawFont;
-class QSGRectangleNode;
+class QSGInternalRectangleNode;
 class QSGClipNode;
 class QSGTexture;
 
@@ -106,7 +106,7 @@ public:
 
     void setCursor(const QRectF &rect, const QColor &color);
     void clearCursor();
-    QSGRectangleNode *cursorNode() const { return m_cursorNode; }
+    QSGInternalRectangleNode *cursorNode() const { return m_cursorNode; }
 
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                             QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
@@ -118,7 +118,7 @@ public:
     void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
 
 private:
-    QSGRectangleNode *m_cursorNode;
+    QSGInternalRectangleNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
     bool m_useNativeRenderer;

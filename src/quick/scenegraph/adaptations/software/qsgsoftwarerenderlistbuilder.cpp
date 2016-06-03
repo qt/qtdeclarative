@@ -41,10 +41,10 @@
 
 #include "qsgsoftwarerenderablenode_p.h"
 #include "qsgabstractsoftwarerenderer_p.h"
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
@@ -95,12 +95,12 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGOpacityNode *)
 {
 }
 
-bool QSGSoftwareRenderListBuilder::visit(QSGImageNode *node)
+bool QSGSoftwareRenderListBuilder::visit(QSGInternalImageNode *node)
 {
     return addRenderableNode(node);
 }
 
-void QSGSoftwareRenderListBuilder::endVisit(QSGImageNode *)
+void QSGSoftwareRenderListBuilder::endVisit(QSGInternalImageNode *)
 {
 }
 
@@ -113,12 +113,12 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGPainterNode *)
 {
 }
 
-bool QSGSoftwareRenderListBuilder::visit(QSGRectangleNode *node)
+bool QSGSoftwareRenderListBuilder::visit(QSGInternalRectangleNode *node)
 {
     return addRenderableNode(node);
 }
 
-void QSGSoftwareRenderListBuilder::endVisit(QSGRectangleNode *)
+void QSGSoftwareRenderListBuilder::endVisit(QSGInternalRectangleNode *)
 {
 }
 
@@ -128,15 +128,6 @@ bool QSGSoftwareRenderListBuilder::visit(QSGGlyphNode *node)
 }
 
 void QSGSoftwareRenderListBuilder::endVisit(QSGGlyphNode *)
-{
-}
-
-bool QSGSoftwareRenderListBuilder::visit(QSGNinePatchNode *node)
-{
-    return addRenderableNode(node);
-}
-
-void QSGSoftwareRenderListBuilder::endVisit(QSGNinePatchNode *)
 {
 }
 

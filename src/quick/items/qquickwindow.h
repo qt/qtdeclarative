@@ -61,6 +61,9 @@ class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
 class QQuickRenderControl;
+class QSGRectangleNode;
+class QSGImageNode;
+class QSGNinePatchNode;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -158,6 +161,10 @@ public:
 
     static void setSceneGraphBackend(QSGRendererInterface::GraphicsApi api);
     static void setSceneGraphBackend(const QString &backend);
+
+    QSGRectangleNode *createRectangleNode() const;
+    QSGImageNode *createImageNode() const;
+    QSGNinePatchNode *createNinePatchNode() const;
 
 Q_SIGNALS:
     void frameSwapped();

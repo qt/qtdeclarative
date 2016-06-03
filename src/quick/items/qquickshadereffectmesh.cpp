@@ -42,7 +42,7 @@
 #include "qquickshadereffect_p.h"
 #include "qquickscalegrid_p_p.h"
 #include "qquickborderimage_p_p.h"
-#include <QtQuick/private/qsgbasicimagenode_p.h>
+#include <QtQuick/private/qsgbasicinternalimagenode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -335,8 +335,8 @@ QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, int at
                                    innerSourceRect.width() * sourceRect.width(),
                                    innerSourceRect.height() * sourceRect.height());
 
-    geometry = QSGBasicImageNode::updateGeometry(targetRect, innerTargetRect, sourceRect,
-                                                 modifiedInnerSourceRect, subSourceRect, geometry);
+    geometry = QSGBasicInternalImageNode::updateGeometry(targetRect, innerTargetRect, sourceRect,
+                                                         modifiedInnerSourceRect, subSourceRect, geometry);
 
     return geometry;
 }

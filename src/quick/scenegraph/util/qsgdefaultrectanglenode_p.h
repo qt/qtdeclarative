@@ -37,51 +37,43 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+#ifndef QSGDEFAULTRECTANGLENODE_P_H
+#define QSGDEFAULTRECTANGLENODE_P_H
 
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtGui/qcolor.h>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgvertexcolormaterial.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+class QSGDefaultRectangleNode : public QSGRectangleNode
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
 public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    QSGDefaultRectangleNode();
 
-    explicit QSGEngine(QObject *parent = Q_NULLPTR);
-    ~QSGEngine();
+    void setRect(const QRectF &rect) override;
+    QRectF rect() const override;
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
+    void setColor(const QColor &color) override;
+    QColor color() const override;
 
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
+private:
+    QSGVertexColorMaterial m_material;
+    QSGGeometry m_geometry;
+    QColor m_color;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGENGINE_H
+#endif // QSGDEFAULTRECTANGLENODE_P_H

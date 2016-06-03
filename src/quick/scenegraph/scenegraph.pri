@@ -52,7 +52,10 @@ HEADERS += \
     $$PWD/util/qsgsimplematerial.h \
     $$PWD/util/qsgtexturematerial.h \
     $$PWD/util/qsgtexturematerial_p.h \
-    $$PWD/util/qsgvertexcolormaterial.h
+    $$PWD/util/qsgvertexcolormaterial.h \
+    $$PWD/util/qsgrectanglenode.h \
+    $$PWD/util/qsgimagenode.h \
+    $$PWD/util/qsgninepatchnode.h
 
 SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
@@ -65,7 +68,11 @@ SOURCES += \
     $$PWD/util/qsgflatcolormaterial.cpp \
     $$PWD/util/qsgsimplematerial.cpp \
     $$PWD/util/qsgtexturematerial.cpp \
-    $$PWD/util/qsgvertexcolormaterial.cpp
+    $$PWD/util/qsgvertexcolormaterial.cpp \
+    $$PWD/util/qsgrectanglenode.cpp \
+    $$PWD/util/qsgimagenode.cpp \
+    $$PWD/util/qsgninepatchnode.cpp
+
 contains(QT_CONFIG, opengl(es1|es2)?) {
     HEADERS += \
         $$PWD/util/qsgdepthstencilbuffer_p.h \
@@ -83,8 +90,8 @@ HEADERS += \
     $$PWD/qsgadaptationlayer_p.h \
     $$PWD/qsgcontext_p.h \
     $$PWD/qsgcontextplugin_p.h \
-    $$PWD/qsgbasicrectanglenode_p.h \
-    $$PWD/qsgbasicimagenode_p.h \
+    $$PWD/qsgbasicinternalrectanglenode_p.h \
+    $$PWD/qsgbasicinternalimagenode_p.h \
     $$PWD/qsgbasicglyphnode_p.h \
     $$PWD/qsgrenderloop_p.h
 
@@ -92,8 +99,8 @@ SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
     $$PWD/qsgcontext.cpp \
     $$PWD/qsgcontextplugin.cpp \
-    $$PWD/qsgbasicrectanglenode.cpp \
-    $$PWD/qsgbasicimagenode.cpp \
+    $$PWD/qsgbasicinternalrectanglenode.cpp \
+    $$PWD/qsgbasicinternalimagenode.cpp \
     $$PWD/qsgbasicglyphnode.cpp \
     $$PWD/qsgrenderloop.cpp
 
@@ -104,11 +111,14 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qsgdefaultdistancefieldglyphcache.cpp \
         $$PWD/qsgdistancefieldglyphnode.cpp \
         $$PWD/qsgdistancefieldglyphnode_p.cpp \
-        $$PWD/qsgdefaultimagenode.cpp \
-        $$PWD/qsgdefaultrectanglenode.cpp \
+        $$PWD/qsgdefaultinternalimagenode.cpp \
+        $$PWD/qsgdefaultinternalrectanglenode.cpp \
         $$PWD/qsgdefaultrendercontext.cpp \
         $$PWD/qsgdefaultcontext.cpp \
         $$PWD/util/qsgdefaultpainternode.cpp \
+        $$PWD/util/qsgdefaultrectanglenode.cpp \
+        $$PWD/util/qsgdefaultimagenode.cpp \
+        $$PWD/util/qsgdefaultninepatchnode.cpp \
         $$PWD/qsgdefaultlayer.cpp \
         $$PWD/qsgthreadedrenderloop.cpp \
         $$PWD/qsgwindowsrenderloop.cpp
@@ -118,11 +128,14 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qsgdistancefieldglyphnode_p.h \
         $$PWD/qsgdistancefieldglyphnode_p_p.h \
         $$PWD/qsgdefaultglyphnode_p_p.h \
-        $$PWD/qsgdefaultimagenode_p.h \
-        $$PWD/qsgdefaultrectanglenode_p.h \
+        $$PWD/qsgdefaultinternalimagenode_p.h \
+        $$PWD/qsgdefaultinternalrectanglenode_p.h \
         $$PWD/qsgdefaultrendercontext_p.h \
         $$PWD/qsgdefaultcontext_p.h \
         $$PWD/util/qsgdefaultpainternode_p.h \
+        $$PWD/util/qsgdefaultrectanglenode_p.h \
+        $$PWD/util/qsgdefaultimagenode_p.h \
+        $$PWD/util/qsgdefaultninepatchnode_p.h \
         $$PWD/qsgdefaultlayer_p.h \
         $$PWD/qsgthreadedrenderloop_p.h \
         $$PWD/qsgwindowsrenderloop_p.h

@@ -38,8 +38,8 @@
 ****************************************************************************/
 
 
-#ifndef QSGDEFAULTRECTANGLENODE_P_H
-#define QSGDEFAULTRECTANGLENODE_P_H
+#ifndef QSGDEFAULTINTERNALRECTANGLENODE_P_H
+#define QSGDEFAULTINTERNALRECTANGLENODE_P_H
 
 //
 //  W A R N I N G
@@ -53,7 +53,7 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicrectanglenode_p.h>
+#include <private/qsgbasicinternalrectanglenode_p.h>
 #include <QtQuick/qsgvertexcolormaterial.h>
 
 QT_BEGIN_NAMESPACE
@@ -72,10 +72,10 @@ protected:
     QSGMaterialShader *createShader() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRectangleNode : public QSGBasicRectangleNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalRectangleNode : public QSGBasicInternalRectangleNode
 {
 public:
-    QSGDefaultRectangleNode();
+    QSGDefaultInternalRectangleNode();
 
 private:
     void updateMaterialAntialiasing() override;

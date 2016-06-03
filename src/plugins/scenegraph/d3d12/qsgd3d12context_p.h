@@ -61,11 +61,10 @@ public:
     QSGD3D12Context(QObject *parent = 0) : QSGContext(parent) { }
 
     QSGRenderContext *createRenderContext() override;
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
+    QSGInternalRectangleNode *createInternalRectangleNode() override;
+    QSGInternalImageNode *createInternalImageNode() override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *renderContext, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager() override;
     QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
@@ -73,6 +72,9 @@ public:
     QSize minimumFBOSize() const override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGNinePatchNode *createNinePatchNode() override;
 };
 
 QT_END_NAMESPACE

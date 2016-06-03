@@ -1354,8 +1354,8 @@ QSGNode *QQuickMouseArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (!qmlVisualTouchDebugging())
         return 0;
 
-    QSGRectangleNode *rectangle = static_cast<QSGRectangleNode *>(oldNode);
-    if (!rectangle) rectangle = d->sceneGraphContext()->createRectangleNode();
+    QSGInternalRectangleNode *rectangle = static_cast<QSGInternalRectangleNode *>(oldNode);
+    if (!rectangle) rectangle = d->sceneGraphContext()->createInternalRectangleNode();
 
     rectangle->setRect(QRectF(0, 0, width(), height()));
     rectangle->setColor(QColor(255, 0, 0, 50));

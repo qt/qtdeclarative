@@ -174,7 +174,7 @@ public:
     QUrl baseUrl;
     QMap<int, QV4::PersistentValue> animationCallbacks;
     mutable QQuickCanvasTextureProvider *textureProvider;
-    QSGImageNode *node;
+    QSGInternalImageNode *node;
     QSGTexture *nodeTexture;
 };
 
@@ -743,9 +743,9 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
+    QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
-        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createImageNode();
+        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createInternalImageNode();
         d->node = node;
     }
 

@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGSOFTWARERECTANGLENODE_H
-#define QSGSOFTWARERECTANGLENODE_H
+#ifndef QSGDEFAULTIMAGENODE_P_H
+#define QSGDEFAULTIMAGENODE_P_H
 
 //
 //  W A R N I N G
@@ -51,53 +51,54 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
-
-#include <QPen>
-#include <QBrush>
-#include <QPixmap>
+#include <QtQuick/private/qtquickglobal_p.h>
+#include <QtQuick/qsgimagenode.h>
+#include <QtQuick/qsggeometry.h>
+#include <QtQuick/qsgtexturematerial.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGSoftwareRectangleNode : public QSGRectangleNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGImageNode
 {
 public:
-    QSGSoftwareRectangleNode();
+    QSGDefaultImageNode();
+    ~QSGDefaultImageNode();
 
     void setRect(const QRectF &rect) override;
-    void setColor(const QColor &color) override;
-    void setPenColor(const QColor &color) override;
-    void setPenWidth(qreal width) override;
-    void setGradientStops(const QGradientStops &stops) override;
-    void setRadius(qreal radius) override;
-    void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing) }
-    void setAligned(bool aligned) override;
+    QRectF rect() const override;
 
-    void update() override;
+    void setSourceRect(const QRectF &r) override;
+    QRectF sourceRect() const override;
 
-    void paint(QPainter *);
+    void setTexture(QSGTexture *texture) override;
+    QSGTexture *texture() const override;
 
-    bool isOpaque() const;
-    QRectF rect() const;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    QSGTexture::Filtering filtering() const override;
+
+    void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode) override;
+    TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
+
+    void setOwnsTexture(bool owns) override;
+    bool ownsTexture() const override;
+
+    static void rebuildGeometry(QSGGeometry *g,
+                                QSGTexture *texture,
+                                const QRectF &rect,
+                                QRectF sourceRect,
+                                TextureCoordinatesTransformMode texCoordMode);
+
 private:
-    void paintRectangle(QPainter *painter, const QRect &rect);
-    void generateCornerPixmap();
-
-    QRect m_rect;
-    QColor m_color;
-    QColor m_penColor;
-    double m_penWidth;
-    QGradientStops m_stops;
-    double m_radius;
-    QPen m_pen;
-    QBrush m_brush;
-
-    bool m_cornerPixmapIsDirty;
-    QPixmap m_cornerPixmap;
-
-    int m_devicePixelRatio;
+    QSGGeometry m_geometry;
+    QSGOpaqueTextureMaterial m_opaque_material;
+    QSGTextureMaterial m_material;
+    QRectF m_rect;
+    QRectF m_sourceRect;
+    TextureCoordinatesTransformMode m_texCoordMode;
+    uint m_isAtlasTexture : 1;
+    uint m_ownsTexture : 1;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGSOFTWARERECTANGLENODE_H
+#endif // QSGDEFAULTIMAGENODE_P_H

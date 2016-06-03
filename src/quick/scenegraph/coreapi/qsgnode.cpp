@@ -1466,8 +1466,6 @@ void QSGNodeVisitor::visitChildren(QSGNode *n)
         visitNode(c);
 }
 
-
-
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 {

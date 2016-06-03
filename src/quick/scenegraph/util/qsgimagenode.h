@@ -37,51 +37,49 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+#ifndef QSGIMAGENODE_H
+#define QSGIMAGENODE_H
 
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qsgnode.h>
+#include <QtQuick/qsgtexture.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+class Q_QUICK_EXPORT QSGImageNode : public QSGGeometryNode
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
 public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
+    virtual ~QSGImageNode() { }
+
+    virtual void setRect(const QRectF &rect) = 0;
+    inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }
+    virtual QRectF rect() const = 0;
+
+    virtual void setSourceRect(const QRectF &r) = 0;
+    inline void setSourceRect(qreal x, qreal y, qreal w, qreal h) { setSourceRect(QRectF(x, y, w, h)); }
+    virtual QRectF sourceRect() const = 0;
+
+    virtual void setTexture(QSGTexture *texture) = 0;
+    virtual QSGTexture *texture() const = 0;
+
+    virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
+    virtual QSGTexture::Filtering filtering() const = 0;
+
+    enum TextureCoordinatesTransformFlag {
+        NoTransform        = 0x00,
+        MirrorHorizontally = 0x01,
+        MirrorVertically   = 0x02
     };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    Q_DECLARE_FLAGS(TextureCoordinatesTransformMode, TextureCoordinatesTransformFlag)
 
-    explicit QSGEngine(QObject *parent = Q_NULLPTR);
-    ~QSGEngine();
+    virtual void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode) = 0;
+    virtual TextureCoordinatesTransformMode textureCoordinatesTransform() const = 0;
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
-
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
+    virtual void setOwnsTexture(bool owns) = 0;
+    virtual bool ownsTexture() const = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGImageNode::TextureCoordinatesTransformMode)
 
 QT_END_NAMESPACE
 
-#endif // QSGENGINE_H
+#endif // QSGIMAGENODE_H

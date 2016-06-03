@@ -37,36 +37,38 @@
 **
 ****************************************************************************/
 
-#include "qsgd3d12rectanglenode_p.h"
+#ifndef QSGD3D12INTERNALRECTANGLENODE_P_H
+#define QSGD3D12INTERNALRECTANGLENODE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qsgbasicinternalrectanglenode_p.h>
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QSGD3D12RectangleNode::QSGD3D12RectangleNode()
+class QSGD3D12InternalRectangleNode : public QSGBasicInternalRectangleNode
 {
-    setMaterial(&m_material);
-}
+public:
+    QSGD3D12InternalRectangleNode();
 
-void QSGD3D12RectangleNode::updateMaterialAntialiasing()
-{
-    if (m_antialiasing)
-        setMaterial(&m_smoothMaterial);
-    else
-        setMaterial(&m_material);
-}
+private:
+    void updateMaterialAntialiasing() override;
+    void updateMaterialBlending(QSGNode::DirtyState *state) override;
 
-void QSGD3D12RectangleNode::updateMaterialBlending(QSGNode::DirtyState *state)
-{
-    // smoothed material is always blended, so no change in material state
-    if (material() == &m_material) {
-        bool wasBlending = (m_material.flags() & QSGMaterial::Blending);
-        bool isBlending = (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
-                           || (m_color.alpha() < 255 && m_color.alpha() != 0)
-                           || (m_pen_width > 0 && m_border_color.alpha() < 255);
-        if (wasBlending != isBlending) {
-            m_material.setFlag(QSGMaterial::Blending, isBlending);
-            *state |= QSGNode::DirtyMaterial;
-        }
-    }
-}
+    QSGD3D12VertexColorMaterial m_material;
+    QSGD3D12SmoothColorMaterial m_smoothMaterial;
+};
 
 QT_END_NAMESPACE
+
+#endif // QSGD3D12INTERNALRECTANGLENODE_P_H

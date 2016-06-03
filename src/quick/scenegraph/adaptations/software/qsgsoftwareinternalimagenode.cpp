@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qsgsoftwareimagenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
 
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwarelayer_p.h"
@@ -315,7 +315,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
 
 } // QSGSoftwareHelpers namespace
 
-QSGSoftwareImageNode::QSGSoftwareImageNode()
+QSGSoftwareInternalImageNode::QSGSoftwareInternalImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
     , m_texture(0)
@@ -330,7 +330,7 @@ QSGSoftwareImageNode::QSGSoftwareImageNode()
 }
 
 
-void QSGSoftwareImageNode::setTargetRect(const QRectF &rect)
+void QSGSoftwareInternalImageNode::setTargetRect(const QRectF &rect)
 {
     if (rect == m_targetRect)
         return;
@@ -338,7 +338,7 @@ void QSGSoftwareImageNode::setTargetRect(const QRectF &rect)
     markDirty(DirtyGeometry);
 }
 
-void QSGSoftwareImageNode::setInnerTargetRect(const QRectF &rect)
+void QSGSoftwareInternalImageNode::setInnerTargetRect(const QRectF &rect)
 {
     if (rect == m_innerTargetRect)
         return;
@@ -346,7 +346,7 @@ void QSGSoftwareImageNode::setInnerTargetRect(const QRectF &rect)
     markDirty(DirtyGeometry);
 }
 
-void QSGSoftwareImageNode::setInnerSourceRect(const QRectF &rect)
+void QSGSoftwareInternalImageNode::setInnerSourceRect(const QRectF &rect)
 {
     if (rect == m_innerSourceRect)
         return;
@@ -354,7 +354,7 @@ void QSGSoftwareImageNode::setInnerSourceRect(const QRectF &rect)
     markDirty(DirtyGeometry);
 }
 
-void QSGSoftwareImageNode::setSubSourceRect(const QRectF &rect)
+void QSGSoftwareInternalImageNode::setSubSourceRect(const QRectF &rect)
 {
     if (rect == m_subSourceRect)
         return;
@@ -362,14 +362,14 @@ void QSGSoftwareImageNode::setSubSourceRect(const QRectF &rect)
     markDirty(DirtyGeometry);
 }
 
-void QSGSoftwareImageNode::setTexture(QSGTexture *texture)
+void QSGSoftwareInternalImageNode::setTexture(QSGTexture *texture)
 {
     m_texture = texture;
     m_cachedMirroredPixmapIsDirty = true;
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareImageNode::setMirror(bool mirror)
+void QSGSoftwareInternalImageNode::setMirror(bool mirror)
 {
     if (m_mirror != mirror) {
         m_mirror = mirror;
@@ -378,11 +378,11 @@ void QSGSoftwareImageNode::setMirror(bool mirror)
     }
 }
 
-void QSGSoftwareImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
+void QSGSoftwareInternalImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
 {
 }
 
-void QSGSoftwareImageNode::setFiltering(QSGTexture::Filtering filtering)
+void QSGSoftwareInternalImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
     bool smooth = (filtering == QSGTexture::Linear);
     if (smooth == m_smooth)
@@ -392,7 +392,7 @@ void QSGSoftwareImageNode::setFiltering(QSGTexture::Filtering filtering)
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
+void QSGSoftwareInternalImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 {
     bool tileHorizontal = (wrapMode == QSGTexture::Repeat);
     if (tileHorizontal == m_tileHorizontal)
@@ -402,7 +402,7 @@ void QSGSoftwareImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
+void QSGSoftwareInternalImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
     bool tileVertical = (wrapMode == QSGTexture::Repeat);
     if (tileVertical == m_tileVertical)
@@ -412,7 +412,7 @@ void QSGSoftwareImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareImageNode::update()
+void QSGSoftwareInternalImageNode::update()
 {
     if (m_cachedMirroredPixmapIsDirty) {
         if (m_mirror) {
@@ -426,7 +426,7 @@ void QSGSoftwareImageNode::update()
     }
 }
 
-void QSGSoftwareImageNode::preprocess()
+void QSGSoftwareInternalImageNode::preprocess()
 {
     bool doDirty = false;
     QSGLayer *t = qobject_cast<QSGLayer *>(m_texture);
@@ -450,7 +450,7 @@ static Qt::TileRule getTileRule(qreal factor)
 }
 
 
-void QSGSoftwareImageNode::paint(QPainter *painter)
+void QSGSoftwareInternalImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
@@ -483,12 +483,12 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
     }
 }
 
-QRectF QSGSoftwareImageNode::rect() const
+QRectF QSGSoftwareInternalImageNode::rect() const
 {
     return m_targetRect;
 }
 
-const QPixmap &QSGSoftwareImageNode::pixmap() const
+const QPixmap &QSGSoftwareInternalImageNode::pixmap() const
 {
     if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture)) {
         return pt->pixmap();

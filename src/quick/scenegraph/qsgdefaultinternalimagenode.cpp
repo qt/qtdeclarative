@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qsgdefaultimagenode_p.h"
+#include "qsgdefaultinternalimagenode_p.h"
 #include <private/qsgmaterialshader_p.h>
 #include <private/qsgtexturematerial_p.h>
 #include <QtGui/qopenglfunctions.h>
@@ -117,13 +117,13 @@ void SmoothTextureMaterialShader::initialize()
     QSGTextureMaterialShader::initialize();
 }
 
-QSGDefaultImageNode::QSGDefaultImageNode()
+QSGDefaultInternalImageNode::QSGDefaultInternalImageNode()
 {
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
 }
 
-void QSGDefaultImageNode::setFiltering(QSGTexture::Filtering filtering)
+void QSGDefaultInternalImageNode::setFiltering(QSGTexture::Filtering filtering)
 {
     if (m_material.filtering() == filtering)
         return;
@@ -134,7 +134,7 @@ void QSGDefaultImageNode::setFiltering(QSGTexture::Filtering filtering)
     markDirty(DirtyMaterial);
 }
 
-void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+void QSGDefaultInternalImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
 {
     if (m_material.mipmapFiltering() == filtering)
         return;
@@ -145,7 +145,7 @@ void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
     markDirty(DirtyMaterial);
 }
 
-void QSGDefaultImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
+void QSGDefaultInternalImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
     if (m_material.verticalWrapMode() == wrapMode)
         return;
@@ -156,7 +156,7 @@ void QSGDefaultImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
     markDirty(DirtyMaterial);
 }
 
-void QSGDefaultImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
+void QSGDefaultInternalImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 {
     if (m_material.horizontalWrapMode() == wrapMode)
         return;
@@ -167,7 +167,7 @@ void QSGDefaultImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
     markDirty(DirtyMaterial);
 }
 
-void QSGDefaultImageNode::updateMaterialAntialiasing()
+void QSGDefaultInternalImageNode::updateMaterialAntialiasing()
 {
     if (m_antialiasing) {
         setMaterial(&m_smoothMaterial);
@@ -178,19 +178,19 @@ void QSGDefaultImageNode::updateMaterialAntialiasing()
     }
 }
 
-void QSGDefaultImageNode::setMaterialTexture(QSGTexture *texture)
+void QSGDefaultInternalImageNode::setMaterialTexture(QSGTexture *texture)
 {
     m_material.setTexture(texture);
     m_materialO.setTexture(texture);
     m_smoothMaterial.setTexture(texture);
 }
 
-QSGTexture *QSGDefaultImageNode::materialTexture() const
+QSGTexture *QSGDefaultInternalImageNode::materialTexture() const
 {
     return m_material.texture();
 }
 
-bool QSGDefaultImageNode::updateMaterialBlending()
+bool QSGDefaultInternalImageNode::updateMaterialBlending()
 {
     const bool alpha = m_material.flags() & QSGMaterial::Blending;
     if (materialTexture() && alpha != materialTexture()->hasAlphaChannel()) {
@@ -206,7 +206,7 @@ inline static bool isPowerOfTwo(int x)
     return x == (x & -x);
 }
 
-bool QSGDefaultImageNode::supportsWrap(const QSize &size) const
+bool QSGDefaultInternalImageNode::supportsWrap(const QSize &size) const
 {
     bool wrapSupported = true;
 

@@ -268,9 +268,9 @@ void QSGContext::renderContextInvalidated(QSGRenderContext *)
 /*!
     Convenience factory function for creating a colored rectangle with the given geometry.
  */
-QSGRectangleNode *QSGContext::createRectangleNode(const QRectF &rect, const QColor &c)
+QSGInternalRectangleNode *QSGContext::createInternalRectangleNode(const QRectF &rect, const QColor &c)
 {
-    QSGRectangleNode *node = createRectangleNode();
+    QSGInternalRectangleNode *node = createInternalRectangleNode();
     node->setRect(rect);
     node->setColor(c);
     node->update();

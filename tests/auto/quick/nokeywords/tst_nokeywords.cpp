@@ -51,8 +51,8 @@
 #ifndef QT_NO_OPENGL
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
-#include <QtQuick/private/qsgdefaultimagenode_p.h>
-#include <QtQuick/private/qsgdefaultrectanglenode_p.h>
+#include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
+#include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>

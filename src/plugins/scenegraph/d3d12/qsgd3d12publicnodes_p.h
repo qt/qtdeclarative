@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGBASICIMAGENODE_P_H
-#define QSGBASICIMAGENODE_P_H
+#ifndef QSGD3D12PUBLICNODES_P_H
+#define QSGD3D12PUBLICNODES_P_H
 
 //
 //  W A R N I N G
@@ -51,57 +51,81 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgimagenode.h>
+#include <QtQuick/qsgninepatchnode.h>
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGBasicImageNode : public QSGImageNode
+class QSGD3D12RectangleNode : public QSGRectangleNode
 {
 public:
-    QSGBasicImageNode();
+    QSGD3D12RectangleNode();
 
-    void setTargetRect(const QRectF &rect) override;
-    void setInnerTargetRect(const QRectF &rect) override;
-    void setInnerSourceRect(const QRectF &rect) override;
-    void setSubSourceRect(const QRectF &rect) override;
-    void setTexture(QSGTexture *texture) override;
-    void setAntialiasing(bool antialiasing) override;
-    void setMirror(bool mirror) override;
-    void update() override;
-    void preprocess() override;
+    void setRect(const QRectF &rect) override;
+    QRectF rect() const override;
 
-    static QSGGeometry *updateGeometry(const QRectF &targetRect,
-                                       const QRectF &innerTargetRect,
-                                       const QRectF &sourceRect,
-                                       const QRectF &innerSourceRect,
-                                       const QRectF &subSourceRect,
-                                       QSGGeometry *geometry,
-                                       bool mirror = false,
-                                       bool antialiasing = false);
+    void setColor(const QColor &color) override;
+    QColor color() const override;
 
-protected:
-    virtual void updateMaterialAntialiasing() = 0;
-    virtual void setMaterialTexture(QSGTexture *texture) = 0;
-    virtual QSGTexture *materialTexture() const = 0;
-    virtual bool updateMaterialBlending() = 0;
-    virtual bool supportsWrap(const QSize &size) const = 0;
-
-    void updateGeometry();
-
-    QRectF m_targetRect;
-    QRectF m_innerTargetRect;
-    QRectF m_innerSourceRect;
-    QRectF m_subSourceRect;
-
-    uint m_antialiasing : 1;
-    uint m_mirror : 1;
-    uint m_dirtyGeometry : 1;
-
+private:
     QSGGeometry m_geometry;
+    QSGD3D12FlatColorMaterial m_material;
+};
 
-    QSGDynamicTexture *m_dynamicTexture;
-    QSize m_dynamicTextureSize;
-    QRectF m_dynamicTextureSubRect;
+class QSGD3D12ImageNode : public QSGImageNode
+{
+public:
+    QSGD3D12ImageNode();
+    ~QSGD3D12ImageNode();
+
+    void setRect(const QRectF &rect) override;
+    QRectF rect() const override;
+
+    void setSourceRect(const QRectF &r) override;
+    QRectF sourceRect() const override;
+
+    void setTexture(QSGTexture *texture) override;
+    QSGTexture *texture() const override;
+
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    QSGTexture::Filtering filtering() const override;
+
+    void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode) override;
+    TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
+
+    void setOwnsTexture(bool owns) override;
+    bool ownsTexture() const override;
+
+private:
+    QSGGeometry m_geometry;
+    QSGD3D12TextureMaterial m_material;
+    QRectF m_rect;
+    QRectF m_sourceRect;
+    TextureCoordinatesTransformMode m_texCoordMode;
+    uint m_isAtlasTexture : 1;
+    uint m_ownsTexture : 1;
+};
+
+class QSGD3D12NinePatchNode : public QSGNinePatchNode
+{
+public:
+    QSGD3D12NinePatchNode();
+    ~QSGD3D12NinePatchNode();
+
+    void setTexture(QSGTexture *texture) override;
+    void setBounds(const QRectF &bounds) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
+    void update() override;
+
+private:
+    QSGGeometry m_geometry;
+    QSGD3D12TextureMaterial m_material;
+    QRectF m_bounds;
+    qreal m_devicePixelRatio;
+    QVector4D m_padding;
 };
 
 QT_END_NAMESPACE

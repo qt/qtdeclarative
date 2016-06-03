@@ -76,11 +76,10 @@ class TextureReference;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 class QOpenGLContext;
-class QSGImageNode;
+class QSGInternalImageNode;
 class QSGPainterNode;
-class QSGRectangleNode;
+class QSGInternalRectangleNode;
 class QSGGlyphNode;
-class QSGNinePatchNode;
 class QSGRootNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
@@ -97,16 +96,14 @@ public:
     virtual void endVisit(QSGGeometryNode *) = 0;
     virtual bool visit(QSGOpacityNode *) = 0;
     virtual void endVisit(QSGOpacityNode *) = 0;
-    virtual bool visit(QSGImageNode *) = 0;
-    virtual void endVisit(QSGImageNode *) = 0;
+    virtual bool visit(QSGInternalImageNode *) = 0;
+    virtual void endVisit(QSGInternalImageNode *) = 0;
     virtual bool visit(QSGPainterNode *) = 0;
     virtual void endVisit(QSGPainterNode *) = 0;
-    virtual bool visit(QSGRectangleNode *) = 0;
-    virtual void endVisit(QSGRectangleNode *) = 0;
+    virtual bool visit(QSGInternalRectangleNode *) = 0;
+    virtual void endVisit(QSGInternalRectangleNode *) = 0;
     virtual bool visit(QSGGlyphNode *) = 0;
     virtual void endVisit(QSGGlyphNode *) = 0;
-    virtual bool visit(QSGNinePatchNode *) = 0;
-    virtual void endVisit(QSGNinePatchNode *) = 0;
     virtual bool visit(QSGRootNode *) = 0;
     virtual void endVisit(QSGRootNode *) = 0;
 
@@ -122,7 +119,7 @@ public:
     virtual void accept(QSGNodeVisitorEx *) = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGVisitableNode
+class Q_QUICK_PRIVATE_EXPORT QSGInternalRectangleNode : public QSGVisitableNode
 {
 public:
     virtual void setRect(const QRectF &rect) = 0;
@@ -140,7 +137,7 @@ public:
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGVisitableNode
+class Q_QUICK_PRIVATE_EXPORT QSGInternalImageNode : public QSGVisitableNode
 {
 public:
     virtual void setTargetRect(const QRectF &rect) = 0;
@@ -182,19 +179,6 @@ public:
     virtual QImage toImage() const = 0;
     virtual void update() = 0;
     virtual QSGTexture *texture() const = 0;
-
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGNinePatchNode : public QSGVisitableNode
-{
-public:
-    virtual void setTexture(QSGTexture *texture) = 0;
-    virtual void setBounds(const QRectF &bounds) = 0;
-    virtual void setDevicePixelRatio(qreal ratio) = 0;
-    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom) = 0;
-
-    virtual void update() = 0;
 
     virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };

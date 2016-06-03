@@ -37,46 +37,26 @@
 **
 ****************************************************************************/
 
-#ifndef QSGD3D12IMAGENODE_P_H
-#define QSGD3D12IMAGENODE_P_H
+#ifndef QSGRECTANGLENODE_H
+#define QSGRECTANGLENODE_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qsgbasicimagenode_p.h>
-#include "qsgd3d12builtinmaterials_p.h"
+#include <QtQuick/qsgnode.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGD3D12ImageNode : public QSGBasicImageNode
+class Q_QUICK_EXPORT QSGRectangleNode : public QSGGeometryNode
 {
 public:
-    QSGD3D12ImageNode();
+    virtual ~QSGRectangleNode() { }
 
-    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
-    void setFiltering(QSGTexture::Filtering filtering) override;
-    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
-    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    virtual void setRect(const QRectF &rect) = 0;
+    inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }
+    virtual QRectF rect() const = 0;
 
-    void updateMaterialAntialiasing() override;
-    void setMaterialTexture(QSGTexture *texture) override;
-    QSGTexture *materialTexture() const override;
-    bool updateMaterialBlending() override;
-    bool supportsWrap(const QSize &size) const override;
-
-private:
-    QSGD3D12TextureMaterial m_material;
-    QSGD3D12SmoothTextureMaterial m_smoothMaterial;
+    virtual void setColor(const QColor &color) = 0;
+    virtual QColor color() const = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGD3D12IMAGENODE_P_H
+#endif // QSGRECTANGLENODE_H

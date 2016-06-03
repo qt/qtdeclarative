@@ -66,11 +66,10 @@
 QT_BEGIN_NAMESPACE
 
 class QSGContextPrivate;
-class QSGRectangleNode;
-class QSGImageNode;
+class QSGInternalRectangleNode;
+class QSGInternalImageNode;
 class QSGPainterNode;
 class QSGGlyphNode;
-class QSGNinePatchNode;
 class QSGRenderer;
 class QSGDistanceFieldGlyphCache;
 class QQuickWindow;
@@ -85,6 +84,9 @@ class QQuickPaintedItem;
 class QSGRendererInterface;
 class QSGShaderEffectNode;
 class QSGGuiThreadShaderEffectManager;
+class QSGRectangleNode;
+class QSGImageNode;
+class QSGNinePatchNode;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -163,12 +165,11 @@ public:
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
     virtual QSGRenderContext *createRenderContext() = 0;
 
-    QSGRectangleNode *createRectangleNode(const QRectF &rect, const QColor &c);
-    virtual QSGRectangleNode *createRectangleNode() = 0;
-    virtual QSGImageNode *createImageNode() = 0;
+    QSGInternalRectangleNode *createInternalRectangleNode(const QRectF &rect, const QColor &c);
+    virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
+    virtual QSGInternalImageNode *createInternalImageNode() = 0;
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
-    virtual QSGNinePatchNode *createNinePatchNode() = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
@@ -179,6 +180,10 @@ public:
     virtual QSurfaceFormat defaultSurfaceFormat() const = 0;
 
     virtual QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext);
+
+    virtual QSGRectangleNode *createRectangleNode() = 0;
+    virtual QSGImageNode *createImageNode() = 0;
+    virtual QSGNinePatchNode *createNinePatchNode() = 0;
 
     static QSGContext *createDefaultContext();
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);

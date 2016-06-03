@@ -6,10 +6,10 @@ SOURCES += \
     $$PWD/qsgsoftwarecontext.cpp \
     $$PWD/qsgabstractsoftwarerenderer.cpp \
     $$PWD/qsgsoftwareglyphnode.cpp \
-    $$PWD/qsgsoftwareimagenode.cpp \
-    $$PWD/qsgsoftwareninepatchnode.cpp \
+    $$PWD/qsgsoftwareinternalimagenode.cpp \
+    $$PWD/qsgsoftwarepublicnodes.cpp \
     $$PWD/qsgsoftwarepainternode.cpp \
-    $$PWD/qsgsoftwarerectanglenode.cpp \
+    $$PWD/qsgsoftwareinternalrectanglenode.cpp \
     $$PWD/qsgsoftwarepixmaprenderer.cpp \
     $$PWD/qsgsoftwarepixmaptexture.cpp \
     $$PWD/qsgsoftwarerenderablenode.cpp \
@@ -24,12 +24,12 @@ HEADERS += \
     $$PWD/qsgsoftwarecontext_p.h \
     $$PWD/qsgabstractsoftwarerenderer_p.h \
     $$PWD/qsgsoftwareglyphnode_p.h \
-    $$PWD/qsgsoftwareimagenode_p.h \
-    $$PWD/qsgsoftwareninepatchnode_p.h \
+    $$PWD/qsgsoftwareinternalimagenode_p.h \
+    $$PWD/qsgsoftwarepublicnodes_p.h \
     $$PWD/qsgsoftwarepainternode_p.h \
     $$PWD/qsgsoftwarepixmaprenderer_p.h \
     $$PWD/qsgsoftwarepixmaptexture_p.h \
-    $$PWD/qsgsoftwarerectanglenode_p.h \
+    $$PWD/qsgsoftwareinternalrectanglenode_p.h \
     $$PWD/qsgsoftwarerenderablenode_p.h \
     $$PWD/qsgsoftwarerenderablenodeupdater_p.h \
     $$PWD/qsgsoftwarerenderer_p.h \

@@ -37,9 +37,8 @@
 **
 ****************************************************************************/
 
-
-#ifndef QSGBASICRECTANGLENODE_P_H
-#define QSGBASICRECTANGLENODE_P_H
+#ifndef QSGDEFAULTNINEPATCHNODE_P_H
+#define QSGDEFAULTNINEPATCHNODE_P_H
 
 //
 //  W A R N I N G
@@ -52,48 +51,36 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
+#include <private/qtquickglobal_p.h>
+#include <QtQuick/qsgninepatchnode.h>
+#include <QtQuick/qsggeometry.h>
+#include <QtQuick/qsgtexturematerial.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGBasicRectangleNode : public QSGRectangleNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultNinePatchNode : public QSGNinePatchNode
 {
 public:
-    QSGBasicRectangleNode();
+    QSGDefaultNinePatchNode();
+    ~QSGDefaultNinePatchNode();
 
-    void setRect(const QRectF &rect) override;
-    void setColor(const QColor &color) override;
-    void setPenColor(const QColor &color) override;
-    void setPenWidth(qreal width) override;
-    void setGradientStops(const QGradientStops &stops) override;
-    void setRadius(qreal radius) override;
-    void setAntialiasing(bool antialiasing) override;
-    void setAligned(bool aligned) override;
+    void setTexture(QSGTexture *texture) override;
+    void setBounds(const QRectF &bounds) override;
+    void setDevicePixelRatio(qreal ratio) override;
+    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
     void update() override;
 
-protected:
-    virtual bool supportsAntialiasing() const { return true; }
-    virtual void updateMaterialAntialiasing() = 0;
-    virtual void updateMaterialBlending(QSGNode::DirtyState *state) = 0;
+    static void rebuildGeometry(QSGTexture *texture, QSGGeometry *geometry, const QVector4D &padding,
+                                const QRectF &bounds, qreal dpr);
 
-    void updateGeometry();
-    void updateGradientTexture();
-
-    QRectF m_rect;
-    QGradientStops m_gradient_stops;
-    QColor m_color;
-    QColor m_border_color;
-    qreal m_radius;
-    qreal m_pen_width;
-
-    uint m_aligned : 1;
-    uint m_antialiasing : 1;
-    uint m_gradient_is_opaque : 1;
-    uint m_dirty_geometry : 1;
-
+private:
+    QRectF m_bounds;
+    qreal m_devicePixelRatio;
+    QVector4D m_padding;
     QSGGeometry m_geometry;
+    QSGTextureMaterial m_material;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGDEFAULTNINEPATCHNODE_P_H

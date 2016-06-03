@@ -54,15 +54,17 @@
 #include <QtGui/QRegion>
 #include <QtCore/QRect>
 #include <QtGui/QTransform>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgimagenode.h>
+#include <QtQuick/qsgninepatchnode.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGNode;
 class QSGSimpleRectNode;
 class QSGSimpleTextureNode;
-class QSGSoftwareImageNode;
+class QSGSoftwareInternalImageNode;
 class QSGSoftwarePainterNode;
-class QSGSoftwareRectangleNode;
+class QSGSoftwareInternalRectangleNode;
 class QSGSoftwareGlyphNode;
 class QSGSoftwareNinePatchNode;
 
@@ -77,7 +79,9 @@ public:
         Painter,
         Rectangle,
         Glyph,
-        NinePatch
+        NinePatch,
+        SimpleRectangle,
+        SimpleImage
     };
 
     QSGSoftwareRenderableNode(NodeType type, QSGNode *node);
@@ -112,11 +116,13 @@ private:
     union RenderableNodeHandle {
         QSGSimpleRectNode *simpleRectNode;
         QSGSimpleTextureNode *simpleTextureNode;
-        QSGSoftwareImageNode *imageNode;
+        QSGSoftwareInternalImageNode *imageNode;
         QSGSoftwarePainterNode *painterNode;
-        QSGSoftwareRectangleNode *rectangleNode;
+        QSGSoftwareInternalRectangleNode *rectangleNode;
         QSGSoftwareGlyphNode *glpyhNode;
         QSGSoftwareNinePatchNode *ninePatchNode;
+        QSGRectangleNode *simpleRectangleNode;
+        QSGImageNode *simpleImageNode;
     };
 
     const NodeType m_nodeType;

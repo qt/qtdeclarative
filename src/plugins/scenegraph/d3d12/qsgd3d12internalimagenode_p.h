@@ -37,9 +37,8 @@
 **
 ****************************************************************************/
 
-
-#ifndef QSGDEFAULTIMAGENODE_P_H
-#define QSGDEFAULTIMAGENODE_P_H
+#ifndef QSGD3D12INTERNALIMAGENODE_P_H
+#define QSGD3D12INTERNALIMAGENODE_P_H
 
 //
 //  W A R N I N G
@@ -52,28 +51,15 @@
 // We mean it.
 //
 
-#include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicimagenode_p.h>
-#include <QtQuick/qsgtexturematerial.h>
+#include <private/qsgbasicinternalimagenode_p.h>
+#include "qsgd3d12builtinmaterials_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
+class QSGD3D12InternalImageNode : public QSGBasicInternalImageNode
 {
 public:
-    QSGSmoothTextureMaterial();
-
-    void setTexture(QSGTexture *texture);
-
-protected:
-    QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGBasicImageNode
-{
-public:
-    QSGDefaultImageNode();
+    QSGD3D12InternalImageNode();
 
     void setMipmapFiltering(QSGTexture::Filtering filtering) override;
     void setFiltering(QSGTexture::Filtering filtering) override;
@@ -87,11 +73,10 @@ public:
     bool supportsWrap(const QSize &size) const override;
 
 private:
-    QSGOpaqueTextureMaterial m_material;
-    QSGTextureMaterial m_materialO;
-    QSGSmoothTextureMaterial m_smoothMaterial;
+    QSGD3D12TextureMaterial m_material;
+    QSGD3D12SmoothTextureMaterial m_smoothMaterial;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSGD3D12INTERNALIMAGENODE_P_H

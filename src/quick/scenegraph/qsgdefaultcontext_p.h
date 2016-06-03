@@ -66,14 +66,16 @@ public:
     void renderContextInitialized(QSGRenderContext *renderContext) override;
     void renderContextInvalidated(QSGRenderContext *) override;
     QSGRenderContext *createRenderContext() override;
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
+    QSGInternalRectangleNode *createInternalRectangleNode() override;
+    QSGInternalImageNode *createInternalImageNode() override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGNinePatchNode *createNinePatchNode() override;
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;

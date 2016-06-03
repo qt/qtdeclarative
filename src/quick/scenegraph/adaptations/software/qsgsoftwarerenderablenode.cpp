@@ -39,10 +39,10 @@
 
 #include "qsgsoftwarerenderablenode_p.h"
 
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
@@ -68,19 +68,25 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
         m_handle.simpleTextureNode = static_cast<QSGSimpleTextureNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Image:
-        m_handle.imageNode = static_cast<QSGSoftwareImageNode*>(node);
+        m_handle.imageNode = static_cast<QSGSoftwareInternalImageNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Painter:
         m_handle.painterNode = static_cast<QSGSoftwarePainterNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Rectangle:
-        m_handle.rectangleNode = static_cast<QSGSoftwareRectangleNode*>(node);
+        m_handle.rectangleNode = static_cast<QSGSoftwareInternalRectangleNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Glyph:
         m_handle.glpyhNode = static_cast<QSGSoftwareGlyphNode*>(node);
         break;
     case QSGSoftwareRenderableNode::NinePatch:
         m_handle.ninePatchNode = static_cast<QSGSoftwareNinePatchNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        m_handle.simpleRectangleNode = static_cast<QSGRectangleNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        m_handle.simpleImageNode = static_cast<QSGImageNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Invalid:
         m_handle.simpleRectNode = nullptr;
@@ -150,6 +156,22 @@ void QSGSoftwareRenderableNode::update()
         m_isOpaque = false;
 
         boundingRect = m_handle.ninePatchNode->bounds().toRect();
+        break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        if (m_handle.simpleRectangleNode->color().alpha() == 255 && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.simpleRectangleNode->rect().toRect();
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        if (!m_handle.simpleImageNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.simpleImageNode->rect().toRect();
         break;
     default:
         break;
@@ -222,6 +244,12 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
         break;
     case QSGSoftwareRenderableNode::NinePatch:
         m_handle.ninePatchNode->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        static_cast<QSGSoftwareRectangleNode *>(m_handle.simpleRectangleNode)->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        static_cast<QSGSoftwareImageNode *>(m_handle.simpleImageNode)->paint(painter);
         break;
     default:
         break;

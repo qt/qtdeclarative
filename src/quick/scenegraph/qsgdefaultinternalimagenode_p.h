@@ -37,73 +37,61 @@
 **
 ****************************************************************************/
 
-#include "qsgsoftwareninepatchnode_p.h"
-#include "qsgsoftwarepixmaptexture_p.h"
-#include "qsgsoftwareimagenode_p.h"
+
+#ifndef QSGDEFAULTINTERNALIMAGENODE_P_H
+#define QSGDEFAULTINTERNALIMAGENODE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qsgadaptationlayer_p.h>
+#include <private/qsgbasicinternalimagenode_p.h>
+#include <QtQuick/qsgtexturematerial.h>
 
 QT_BEGIN_NAMESPACE
 
-QSGSoftwareNinePatchNode::QSGSoftwareNinePatchNode()
+class Q_QUICK_PRIVATE_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
 {
-    setMaterial((QSGMaterial*)1);
-    setGeometry((QSGGeometry*)1);
-}
+public:
+    QSGSmoothTextureMaterial();
 
-void QSGSoftwareNinePatchNode::setTexture(QSGTexture *texture)
+    void setTexture(QSGTexture *texture);
+
+protected:
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalImageNode : public QSGBasicInternalImageNode
 {
-    QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(texture);
-    if (!pt) {
-        qWarning() << "Image used with invalid texture format.";
-        return;
-    }
-    m_pixmap = pt->pixmap();
-    markDirty(DirtyMaterial);
-}
+public:
+    QSGDefaultInternalImageNode();
 
-void QSGSoftwareNinePatchNode::setBounds(const QRectF &bounds)
-{
-    if (m_bounds == bounds)
-        return;
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
+    void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) override;
 
-    m_bounds = bounds;
-    markDirty(DirtyGeometry);
-}
+    void updateMaterialAntialiasing() override;
+    void setMaterialTexture(QSGTexture *texture) override;
+    QSGTexture *materialTexture() const override;
+    bool updateMaterialBlending() override;
+    bool supportsWrap(const QSize &size) const override;
 
-void QSGSoftwareNinePatchNode::setDevicePixelRatio(qreal ratio)
-{
-    if (m_pixelRatio == ratio)
-        return;
-
-    m_pixelRatio = ratio;
-    markDirty(DirtyGeometry);
-}
-
-void QSGSoftwareNinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal bottom)
-{
-    QMargins margins(qRound(left), qRound(top), qRound(right), qRound(bottom));
-    if (m_margins == margins)
-        return;
-
-    m_margins = QMargins(qRound(left), qRound(top), qRound(right), qRound(bottom));
-    markDirty(DirtyGeometry);
-}
-
-void QSGSoftwareNinePatchNode::update()
-{
-}
-
-void QSGSoftwareNinePatchNode::paint(QPainter *painter)
-{
-    if (m_margins.isNull())
-        painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
-    else
-        QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_bounds.toRect(), m_margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
-                                              m_margins, Qt::StretchTile, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(0));
-}
-
-QRectF QSGSoftwareNinePatchNode::bounds() const
-{
-    return m_bounds;
-}
+private:
+    QSGOpaqueTextureMaterial m_material;
+    QSGTextureMaterial m_materialO;
+    QSGSmoothTextureMaterial m_smoothMaterial;
+};
 
 QT_END_NAMESPACE
+
+#endif

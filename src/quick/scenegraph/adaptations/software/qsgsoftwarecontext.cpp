@@ -39,12 +39,12 @@
 
 #include "qsgsoftwarecontext_p.h"
 
-#include "qsgsoftwarerectanglenode_p.h"
-#include "qsgsoftwareimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarerenderer_p.h"
 
@@ -52,11 +52,6 @@
 #include <QtCore/QElapsedTimer>
 
 #include <QtGui/QWindow>
-
-#include <QtQuick/QSGFlatColorMaterial>
-#include <QtQuick/QSGVertexColorMaterial>
-#include <QtQuick/QSGOpaqueTextureMaterial>
-#include <QtQuick/QSGTextureMaterial>
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.
@@ -93,14 +88,14 @@ QSGSoftwareContext::QSGSoftwareContext(QObject *parent)
 {
 }
 
-QSGRectangleNode *QSGSoftwareContext::createRectangleNode()
+QSGInternalRectangleNode *QSGSoftwareContext::createInternalRectangleNode()
 {
-    return new QSGSoftwareRectangleNode();
+    return new QSGSoftwareInternalRectangleNode();
 }
 
-QSGImageNode *QSGSoftwareContext::createImageNode()
+QSGInternalImageNode *QSGSoftwareContext::createInternalImageNode()
 {
-    return new QSGSoftwareImageNode();
+    return new QSGSoftwareInternalImageNode();
 }
 
 QSGPainterNode *QSGSoftwareContext::createPainterNode(QQuickPaintedItem *item)
@@ -113,11 +108,6 @@ QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, bool pre
     Q_UNUSED(rc);
     Q_UNUSED(preferNativeGlyphNode);
     return new QSGSoftwareGlyphNode();
-}
-
-QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
-{
-    return new QSGSoftwareNinePatchNode();
 }
 
 QSGLayer *QSGSoftwareContext::createLayer(QSGRenderContext *renderContext)
@@ -167,6 +157,21 @@ QSGRendererInterface *QSGSoftwareContext::rendererInterface(QSGRenderContext *re
 {
     Q_UNUSED(renderContext);
     return this;
+}
+
+QSGRectangleNode *QSGSoftwareContext::createRectangleNode()
+{
+    return new QSGSoftwareRectangleNode;
+}
+
+QSGImageNode *QSGSoftwareContext::createImageNode()
+{
+    return new QSGSoftwareImageNode;
+}
+
+QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
+{
+    return new QSGSoftwareNinePatchNode;
 }
 
 QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const

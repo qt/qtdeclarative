@@ -726,6 +726,27 @@ void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect,
     v[3].ty = textureRect.bottom();
 }
 
+/*!
+    Updates the geometry \a g with the coordinates in \a rect.
+
+    The function assumes the geometry object contains a single triangle strip
+    of QSGGeometry::ColoredPoint2D vertices
+ */
+void QSGGeometry::updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect)
+{
+    ColoredPoint2D *v = g->vertexDataAsColoredPoint2D();
+    v[0].x = rect.left();
+    v[0].y = rect.top();
+
+    v[1].x = rect.left();
+    v[1].y = rect.bottom();
+
+    v[2].x = rect.right();
+    v[2].y = rect.top();
+
+    v[3].x = rect.right();
+    v[3].y = rect.bottom();
+}
 
 
 /*!

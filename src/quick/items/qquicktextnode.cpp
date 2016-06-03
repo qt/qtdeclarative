@@ -136,7 +136,7 @@ void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
         delete m_cursorNode;
 
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    m_cursorNode =  sg->sceneGraphContext()->createRectangleNode(rect, color);
+    m_cursorNode =  sg->sceneGraphContext()->createInternalRectangleNode(rect, color);
     appendChildNode(m_cursorNode);
 }
 
@@ -151,14 +151,14 @@ void QQuickTextNode::clearCursor()
 void QQuickTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
 {
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    appendChildNode(sg->sceneGraphContext()->createRectangleNode(rect, color));
+    appendChildNode(sg->sceneGraphContext()->createInternalRectangleNode(rect, color));
 }
 
 
 void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
 {
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    QSGImageNode *node = sg->sceneGraphContext()->createImageNode();
+    QSGInternalImageNode *node = sg->sceneGraphContext()->createInternalImageNode();
     QSGTexture *texture = sg->createTexture(image);
     m_textures.append(texture);
     node->setTargetRect(rect);

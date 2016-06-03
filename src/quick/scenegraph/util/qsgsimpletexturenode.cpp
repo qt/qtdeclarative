@@ -97,6 +97,11 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
 
   \warning The simple texture node class must have a texture before being
   added to the scene graph to be rendered.
+
+  \warning This utility class is only functional when running with the OpenGL
+  or software backends of the Qt Quick scenegraph. For a proper cross-platform
+  alternative prefer using QSGSimpleImageNode via
+  QQuickWindow::createSimpleImageNode() or QSGEngine::createSimpleImageNode().
 */
 
 /*!

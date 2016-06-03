@@ -37,51 +37,67 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+#ifndef QSGSOFTWAREINTERNALRECTANGLENODE_H
+#define QSGSOFTWAREINTERNALRECTANGLENODE_H
 
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qsgadaptationlayer_p.h>
+
+#include <QPen>
+#include <QBrush>
+#include <QPixmap>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+class QSGSoftwareInternalRectangleNode : public QSGInternalRectangleNode
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
 public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    QSGSoftwareInternalRectangleNode();
 
-    explicit QSGEngine(QObject *parent = Q_NULLPTR);
-    ~QSGEngine();
+    void setRect(const QRectF &rect) override;
+    void setColor(const QColor &color) override;
+    void setPenColor(const QColor &color) override;
+    void setPenWidth(qreal width) override;
+    void setGradientStops(const QGradientStops &stops) override;
+    void setRadius(qreal radius) override;
+    void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing) }
+    void setAligned(bool aligned) override;
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
+    void update() override;
 
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
+    void paint(QPainter *);
+
+    bool isOpaque() const;
+    QRectF rect() const;
+private:
+    void paintRectangle(QPainter *painter, const QRect &rect);
+    void generateCornerPixmap();
+
+    QRect m_rect;
+    QColor m_color;
+    QColor m_penColor;
+    double m_penWidth;
+    QGradientStops m_stops;
+    double m_radius;
+    QPen m_pen;
+    QBrush m_brush;
+
+    bool m_cornerPixmapIsDirty;
+    QPixmap m_cornerPixmap;
+
+    int m_devicePixelRatio;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGENGINE_H
+#endif // QSGSOFTWAREINTERNALRECTANGLENODE_H

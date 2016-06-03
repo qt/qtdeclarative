@@ -84,10 +84,9 @@ QSGD3D12PainterNode::QSGD3D12PainterNode(QQuickPaintedItem *item)
       m_dirtyGeometry(false),
       m_dirtyContents(false)
 {
-    m_material.setFlag(QSGMaterial::Blending);
+    setGeometry(&m_geometry);
     m_material.setTexture(m_texture);
     setMaterial(&m_material);
-    setGeometry(&m_geometry);
 }
 
 QSGD3D12PainterNode::~QSGD3D12PainterNode()

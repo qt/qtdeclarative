@@ -37,46 +37,26 @@
 **
 ****************************************************************************/
 
-#ifndef QSGSOFTWARENINEPATCHNODE_H
-#define QSGSOFTWARENINEPATCHNODE_H
+#ifndef QSGNINEPATCHNODE_H
+#define QSGNINEPATCHNODE_H
 
-#include <private/qsgadaptationlayer_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtQuick/qsgnode.h>
+#include <QtQuick/qsgtexture.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGSoftwareNinePatchNode : public QSGNinePatchNode
+class Q_QUICK_EXPORT QSGNinePatchNode : public QSGGeometryNode
 {
 public:
-    QSGSoftwareNinePatchNode();
+    virtual ~QSGNinePatchNode() { }
 
-    void setTexture(QSGTexture *texture) override;
-    void setBounds(const QRectF &bounds) override;
-    void setDevicePixelRatio(qreal ratio) override;
-    void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
-    void update() override;
-
-    void paint(QPainter *painter);
-
-    QRectF bounds() const;
-
-private:
-    QPixmap m_pixmap;
-    QRectF m_bounds;
-    qreal m_pixelRatio;
-    QMargins m_margins;
+    virtual void setTexture(QSGTexture *texture) = 0;
+    virtual void setBounds(const QRectF &bounds) = 0;
+    virtual void setDevicePixelRatio(qreal ratio) = 0;
+    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom) = 0;
+    virtual void update() = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGSOFTWARENINEPATCHNODE_H
+#endif // QSGNINEPATCHNODE_H

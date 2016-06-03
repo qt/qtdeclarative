@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qsgbasicrectanglenode_p.h"
+#include "qsgbasicinternalrectanglenode_p.h"
 
 #include <QtCore/qmath.h>
 
@@ -96,7 +96,7 @@ namespace
     }
 }
 
-QSGBasicRectangleNode::QSGBasicRectangleNode()
+QSGBasicInternalRectangleNode::QSGBasicInternalRectangleNode()
     : m_radius(0)
     , m_pen_width(0)
     , m_aligned(true)
@@ -108,11 +108,11 @@ QSGBasicRectangleNode::QSGBasicRectangleNode()
     setGeometry(&m_geometry);
 
 #ifdef QSG_RUNTIME_DESCRIPTION
-    qsgnode_set_description(this, QLatin1String("rectangle"));
+    qsgnode_set_description(this, QLatin1String("internalrectangle"));
 #endif
 }
 
-void QSGBasicRectangleNode::setRect(const QRectF &rect)
+void QSGBasicInternalRectangleNode::setRect(const QRectF &rect)
 {
     if (rect == m_rect)
         return;
@@ -120,7 +120,7 @@ void QSGBasicRectangleNode::setRect(const QRectF &rect)
     m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setColor(const QColor &color)
+void QSGBasicInternalRectangleNode::setColor(const QColor &color)
 {
     if (color == m_color)
         return;
@@ -129,7 +129,7 @@ void QSGBasicRectangleNode::setColor(const QColor &color)
         m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setPenColor(const QColor &color)
+void QSGBasicInternalRectangleNode::setPenColor(const QColor &color)
 {
     if (color == m_border_color)
         return;
@@ -138,7 +138,7 @@ void QSGBasicRectangleNode::setPenColor(const QColor &color)
         m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setPenWidth(qreal width)
+void QSGBasicInternalRectangleNode::setPenWidth(qreal width)
 {
     if (width == m_pen_width)
         return;
@@ -147,7 +147,7 @@ void QSGBasicRectangleNode::setPenWidth(qreal width)
 }
 
 
-void QSGBasicRectangleNode::setGradientStops(const QGradientStops &stops)
+void QSGBasicInternalRectangleNode::setGradientStops(const QGradientStops &stops)
 {
     if (stops.constData() == m_gradient_stops.constData())
         return;
@@ -160,7 +160,7 @@ void QSGBasicRectangleNode::setGradientStops(const QGradientStops &stops)
     m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setRadius(qreal radius)
+void QSGBasicInternalRectangleNode::setRadius(qreal radius)
 {
     if (radius == m_radius)
         return;
@@ -168,7 +168,7 @@ void QSGBasicRectangleNode::setRadius(qreal radius)
     m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setAntialiasing(bool antialiasing)
+void QSGBasicInternalRectangleNode::setAntialiasing(bool antialiasing)
 {
     if (!supportsAntialiasing())
         return;
@@ -187,7 +187,7 @@ void QSGBasicRectangleNode::setAntialiasing(bool antialiasing)
     m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::setAligned(bool aligned)
+void QSGBasicInternalRectangleNode::setAligned(bool aligned)
 {
     if (aligned == m_aligned)
         return;
@@ -195,7 +195,7 @@ void QSGBasicRectangleNode::setAligned(bool aligned)
     m_dirty_geometry = true;
 }
 
-void QSGBasicRectangleNode::update()
+void QSGBasicInternalRectangleNode::update()
 {
     if (m_dirty_geometry) {
         updateGeometry();
@@ -207,7 +207,7 @@ void QSGBasicRectangleNode::update()
     }
 }
 
-void QSGBasicRectangleNode::updateGeometry()
+void QSGBasicInternalRectangleNode::updateGeometry()
 {
     float width = float(m_rect.width());
     float height = float(m_rect.height());

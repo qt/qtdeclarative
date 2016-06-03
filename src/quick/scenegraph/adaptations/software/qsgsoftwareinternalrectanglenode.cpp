@@ -37,14 +37,14 @@
 **
 ****************************************************************************/
 
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include <qmath.h>
 
 #include <QtGui/QPainter>
 
 QT_BEGIN_NAMESPACE
 
-QSGSoftwareRectangleNode::QSGSoftwareRectangleNode()
+QSGSoftwareInternalRectangleNode::QSGSoftwareInternalRectangleNode()
     : m_penWidth(0)
     , m_radius(0)
     , m_cornerPixmapIsDirty(true)
@@ -56,7 +56,7 @@ QSGSoftwareRectangleNode::QSGSoftwareRectangleNode()
     setGeometry((QSGGeometry*)1);
 }
 
-void QSGSoftwareRectangleNode::setRect(const QRectF &rect)
+void QSGSoftwareInternalRectangleNode::setRect(const QRectF &rect)
 {
     QRect alignedRect = rect.toAlignedRect();
     if (m_rect != alignedRect) {
@@ -65,7 +65,7 @@ void QSGSoftwareRectangleNode::setRect(const QRectF &rect)
     }
 }
 
-void QSGSoftwareRectangleNode::setColor(const QColor &color)
+void QSGSoftwareInternalRectangleNode::setColor(const QColor &color)
 {
     if (m_color != color) {
         m_color = color;
@@ -74,7 +74,7 @@ void QSGSoftwareRectangleNode::setColor(const QColor &color)
     }
 }
 
-void QSGSoftwareRectangleNode::setPenColor(const QColor &color)
+void QSGSoftwareInternalRectangleNode::setPenColor(const QColor &color)
 {
     if (m_penColor != color) {
         m_penColor = color;
@@ -83,7 +83,7 @@ void QSGSoftwareRectangleNode::setPenColor(const QColor &color)
     }
 }
 
-void QSGSoftwareRectangleNode::setPenWidth(qreal width)
+void QSGSoftwareInternalRectangleNode::setPenWidth(qreal width)
 {
     if (m_penWidth != width) {
         m_penWidth = width;
@@ -113,7 +113,7 @@ static QGradientStop interpolateStop(const QGradientStop &firstStop, const QGrad
     return newStop;
 }
 
-void QSGSoftwareRectangleNode::setGradientStops(const QGradientStops &stops)
+void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &stops)
 {
     //normalize stops
     bool needsNormalization = false;
@@ -186,7 +186,7 @@ void QSGSoftwareRectangleNode::setGradientStops(const QGradientStops &stops)
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareRectangleNode::setRadius(qreal radius)
+void QSGSoftwareInternalRectangleNode::setRadius(qreal radius)
 {
     if (m_radius != radius) {
         m_radius = radius;
@@ -195,11 +195,11 @@ void QSGSoftwareRectangleNode::setRadius(qreal radius)
     }
 }
 
-void QSGSoftwareRectangleNode::setAligned(bool /*aligned*/)
+void QSGSoftwareInternalRectangleNode::setAligned(bool /*aligned*/)
 {
 }
 
-void QSGSoftwareRectangleNode::update()
+void QSGSoftwareInternalRectangleNode::update()
 {
     if (!m_penWidth || m_penColor == Qt::transparent) {
         m_pen = Qt::NoPen;
@@ -223,7 +223,7 @@ void QSGSoftwareRectangleNode::update()
     }
 }
 
-void QSGSoftwareRectangleNode::paint(QPainter *painter)
+void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
 {
     //We can only check for a device pixel ratio change when we know what
     //paint device is being used.
@@ -265,7 +265,7 @@ void QSGSoftwareRectangleNode::paint(QPainter *painter)
 
 }
 
-bool QSGSoftwareRectangleNode::isOpaque() const
+bool QSGSoftwareInternalRectangleNode::isOpaque() const
 {
     if (m_radius > 0.0f)
         return false;
@@ -283,13 +283,13 @@ bool QSGSoftwareRectangleNode::isOpaque() const
     return true;
 }
 
-QRectF QSGSoftwareRectangleNode::rect() const
+QRectF QSGSoftwareInternalRectangleNode::rect() const
 {
     //TODO: double check that this is correct.
     return m_rect;
 }
 
-void QSGSoftwareRectangleNode::paintRectangle(QPainter *painter, const QRect &rect)
+void QSGSoftwareInternalRectangleNode::paintRectangle(QPainter *painter, const QRect &rect)
 {
     //Radius should never exceeds half of the width or half of the height
     int radius = qFloor(qMin(qMin(rect.width(), rect.height()) * 0.5, m_radius));
@@ -411,7 +411,7 @@ void QSGSoftwareRectangleNode::paintRectangle(QPainter *painter, const QRect &re
     painter->setRenderHints(previousRenderHints);
 }
 
-void QSGSoftwareRectangleNode::generateCornerPixmap()
+void QSGSoftwareInternalRectangleNode::generateCornerPixmap()
 {
     //Generate new corner Pixmap
     int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
