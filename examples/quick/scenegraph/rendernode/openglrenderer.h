@@ -57,6 +57,7 @@ public:
 
     void render(const RenderState *state) override;
     void releaseResources() override;
+    StateFlags changedStates() const override;
 
 private:
     void init();
@@ -64,6 +65,7 @@ private:
     QQuickItem *m_item;
     QOpenGLShaderProgram *m_program = nullptr;
     int m_matrixUniform;
+    int m_opacityUniform;
     QOpenGLBuffer *m_vbo = nullptr;
 };
 

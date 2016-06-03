@@ -83,7 +83,7 @@ void D3D12RenderNode::init()
 
     D3D12_ROOT_PARAMETER rootParameter;
     rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter.Descriptor.ShaderRegister = 0; // b0
     rootParameter.Descriptor.RegisterSpace = 0;
 
@@ -123,11 +123,19 @@ void D3D12RenderNode::init()
     rastDesc.CullMode = D3D12_CULL_MODE_BACK;
     rastDesc.FrontCounterClockwise = TRUE; // Vertices are given CCW
 
-    // No blending, just enable color write.
-    D3D12_RENDER_TARGET_BLEND_DESC defaultRenderTargetBlendDesc = {};
-    defaultRenderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    // Enable color write and blending (premultiplied alpha). The latter is
+    // needed because the example changes the item's opacity and we pass
+    // inheritedOpacity() into the pixel shader. If that wasn't the case,
+    // blending could have stayed disabled.
+    const D3D12_RENDER_TARGET_BLEND_DESC premulBlendDesc = {
+        TRUE, FALSE,
+        D3D12_BLEND_ONE, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
+        D3D12_BLEND_ONE, D3D12_BLEND_INV_SRC_ALPHA, D3D12_BLEND_OP_ADD,
+        D3D12_LOGIC_OP_NOOP,
+        D3D12_COLOR_WRITE_ENABLE_ALL
+    };
     D3D12_BLEND_DESC blendDesc = {};
-    blendDesc.RenderTarget[0] = defaultRenderTargetBlendDesc;
+    blendDesc.RenderTarget[0] = premulBlendDesc;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
@@ -177,7 +185,7 @@ void D3D12RenderNode::init()
     }
 
     vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    vertexBufferView.StrideInBytes = (2 + 3) * sizeof(float);
+    vertexBufferView.StrideInBytes = vertexBufferSize / 3;
     vertexBufferView.SizeInBytes = vertexBufferSize;
 
     bufDesc.Width = 256;
@@ -198,6 +206,14 @@ void D3D12RenderNode::init()
         qWarning("Map failed (constant buffer)");
         return;
     }
+
+    float *vp = reinterpret_cast<float *>(vbPtr);
+    vp += 2;
+    *vp++ = 1.0f; *vp++ = 0.0f; *vp++ = 0.0f;
+    vp += 2;
+    *vp++ = 0.0f; *vp++ = 1.0f; *vp++ = 0.0f;
+    vp += 2;
+    *vp++ = 0.0f; *vp++ = 0.0f; *vp++ = 1.0f;
 }
 
 void D3D12RenderNode::render(const RenderState *state)
@@ -212,6 +228,8 @@ void D3D12RenderNode::render(const RenderState *state)
     const int msize = 16 * sizeof(float);
     memcpy(cbPtr, matrix()->constData(), msize);
     memcpy(cbPtr + msize, state->projectionMatrix()->constData(), msize);
+    const float opacity = inheritedOpacity();
+    memcpy(cbPtr + 2 * msize, &opacity, sizeof(float));
 
     const QPointF p0(m_item->width() - 1, m_item->height() - 1);
     const QPointF p1(0, 0);
@@ -220,15 +238,12 @@ void D3D12RenderNode::render(const RenderState *state)
     float *vp = reinterpret_cast<float *>(vbPtr);
     *vp++ = p0.x();
     *vp++ = p0.y();
-    *vp++ = 1.0f; *vp++ = 0.0f; *vp++ = 0.0f;
-
+    vp += 3;
     *vp++ = p1.x();
     *vp++ = p1.y();
-    *vp++ = 0.0f; *vp++ = 1.0f; *vp++ = 0.0f;
-
+    vp += 3;
     *vp++ = p2.x();
     *vp++ = p2.y();
-    *vp++ = 0.0f; *vp++ = 0.0f; *vp++ = 1.0f;
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->SetGraphicsRootSignature(rootSignature.Get());
@@ -237,8 +252,9 @@ void D3D12RenderNode::render(const RenderState *state)
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
     commandList->DrawInstanced(3, 1, 0, 0);
-
-    // we won't implement changedStates() since no viewport/scissor/stencil/blend related commands were added
 }
+
+// No need to reimplement changedStates() because no relevant commands are
+// added to the command list in render().
 
 #endif // HAS_D3D12
