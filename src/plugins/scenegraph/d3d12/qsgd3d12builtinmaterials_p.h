@@ -77,6 +77,27 @@ private:
     static QSGMaterialType mtype;
 };
 
+class QSGD3D12FlatColorMaterial : public QSGD3D12Material
+{
+public:
+    QSGMaterialType *type() const override;
+    int compare(const QSGMaterial *other) const override;
+
+    int constantBufferSize() const override;
+    void preparePipeline(QSGD3D12PipelineState *pipelineState) override;
+    UpdateResults updatePipeline(const QSGD3D12MaterialRenderState &state,
+                                 QSGD3D12PipelineState *pipelineState,
+                                 ExtraState *extraState,
+                                 quint8 *constantBuffer) override;
+
+    void setColor(const QColor &color);
+    QColor color() const { return m_color; }
+
+private:
+    static QSGMaterialType mtype;
+    QColor m_color;
+};
+
 class QSGD3D12SmoothColorMaterial : public QSGD3D12Material
 {
 public:

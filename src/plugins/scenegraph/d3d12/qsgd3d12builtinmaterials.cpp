@@ -45,6 +45,8 @@
 
 #include "vs_vertexcolor.hlslh"
 #include "ps_vertexcolor.hlslh"
+#include "vs_flatcolor.hlslh"
+#include "ps_flatcolor.hlslh"
 #include "vs_smoothcolor.hlslh"
 #include "ps_smoothcolor.hlslh"
 #include "vs_texture.hlslh"
@@ -65,6 +67,31 @@ QT_BEGIN_NAMESPACE
 // NB! In HLSL constant buffer data is packed into 4-byte boundaries and, more
 // importantly, it is packed so that it does not cross a 16-byte (float4)
 // boundary. Hence the need for padding in some cases.
+
+static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
+{
+    const float o = c.w() * globalOpacity;
+    return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
+}
+
+static inline QVector4D qsg_premultiply(const QColor &c, float globalOpacity)
+{
+    const float o = c.alphaF() * globalOpacity;
+    return QVector4D(c.redF() * o, c.greenF() * o, c.blueF() * o, o);
+}
+
+static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
+{
+    if (a.x() != b.x())
+        return a.x() > b.x() ? 1 : -1;
+    if (a.y() != b.y())
+        return a.y() > b.y() ? 1 : -1;
+    if (a.z() != b.z())
+        return a.z() > b.z() ? 1 : -1;
+    if (a.w() != b.w())
+        return a.w() > b.w() ? 1 : -1;
+    return 0;
+}
 
 QSGMaterialType QSGD3D12VertexColorMaterial::mtype;
 
@@ -119,6 +146,67 @@ QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(cons
     }
 
     return r;
+}
+
+QSGMaterialType QSGD3D12FlatColorMaterial::mtype;
+
+QSGMaterialType *QSGD3D12FlatColorMaterial::type() const
+{
+    return &QSGD3D12FlatColorMaterial::mtype;
+}
+
+int QSGD3D12FlatColorMaterial::compare(const QSGMaterial *other) const
+{
+    Q_ASSERT(other && type() == other->type());
+    const QSGD3D12FlatColorMaterial *o = static_cast<const QSGD3D12FlatColorMaterial *>(other);
+    return m_color.rgba() - o->color().rgba();
+}
+
+static const int FLAT_COLOR_CB_SIZE_0 = 16 * sizeof(float); // float4x4
+static const int FLAT_COLOR_CB_SIZE_1 = 4 * sizeof(float); // float4
+static const int FLAT_COLOR_CB_SIZE = FLAT_COLOR_CB_SIZE_0 + FLAT_COLOR_CB_SIZE_1;
+
+int QSGD3D12FlatColorMaterial::constantBufferSize() const
+{
+    return QSGD3D12Engine::alignedConstantBufferSize(FLAT_COLOR_CB_SIZE);
+}
+
+void QSGD3D12FlatColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
+{
+    pipelineState->shaders.vs = g_VS_FlatColor;
+    pipelineState->shaders.vsSize = sizeof(g_VS_FlatColor);
+    pipelineState->shaders.ps = g_PS_FlatColor;
+    pipelineState->shaders.psSize = sizeof(g_PS_FlatColor);
+}
+
+QSGD3D12Material::UpdateResults QSGD3D12FlatColorMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
+                                                                          QSGD3D12PipelineState *,
+                                                                          ExtraState *,
+                                                                          quint8 *constantBuffer)
+{
+    QSGD3D12Material::UpdateResults r = 0;
+    quint8 *p = constantBuffer;
+
+    if (state.isMatrixDirty()) {
+        memcpy(p, state.combinedMatrix().constData(), FLAT_COLOR_CB_SIZE_0);
+        r |= UpdatedConstantBuffer;
+    }
+    p += FLAT_COLOR_CB_SIZE_0;
+
+    const QVector4D color = qsg_premultiply(m_color, state.opacity());
+    const float f[] = { color.x(), color.y(), color.z(), color.w() };
+    if (state.isOpacityDirty() || memcmp(p, f, FLAT_COLOR_CB_SIZE_1)) {
+        memcpy(p, f, FLAT_COLOR_CB_SIZE_1);
+        r |= UpdatedConstantBuffer;
+    }
+
+    return r;
+}
+
+void QSGD3D12FlatColorMaterial::setColor(const QColor &color)
+{
+    m_color = color;
+    setFlag(Blending, m_color.alpha() != 0xFF);
 }
 
 QSGD3D12SmoothColorMaterial::QSGD3D12SmoothColorMaterial()
@@ -354,25 +442,6 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
     m_texture->bind();
 
     return r;
-}
-
-static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
-{
-    float o = c.w() * globalOpacity;
-    return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
-}
-
-static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
-{
-    if (a.x() != b.x())
-        return a.x() > b.x() ? 1 : -1;
-    if (a.y() != b.y())
-        return a.y() > b.y() ? 1 : -1;
-    if (a.z() != b.z())
-        return a.z() > b.z() ? 1 : -1;
-    if (a.w() != b.w())
-        return a.w() > b.w() ? 1 : -1;
-    return 0;
 }
 
 QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderContext *rc,

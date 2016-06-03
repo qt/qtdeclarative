@@ -8,6 +8,16 @@ vertexcolor_pshader.header = ps_vertexcolor.hlslh
 vertexcolor_pshader.entry = PS_VertexColor
 vertexcolor_pshader.type = ps_5_0
 
+flatcolor_VSPS = $$PWD/flatcolor.hlsl
+flatcolor_vshader.input = flatcolor_VSPS
+flatcolor_vshader.header = vs_flatcolor.hlslh
+flatcolor_vshader.entry = VS_FlatColor
+flatcolor_vshader.type = vs_5_0
+flatcolor_pshader.input = flatcolor_VSPS
+flatcolor_pshader.header = ps_flatcolor.hlslh
+flatcolor_pshader.entry = PS_FlatColor
+flatcolor_pshader.type = ps_5_0
+
 stencilclip_VSPS = $$PWD/stencilclip.hlsl
 stencilclip_vshader.input = stencilclip_VSPS
 stencilclip_vshader.header = vs_stencilclip.hlslh
@@ -106,6 +116,7 @@ tdr_cshader.type = cs_5_0
 
 HLSL_SHADERS = \
     vertexcolor_vshader vertexcolor_pshader \
+    flatcolor_vshader flatcolor_pshader \
     stencilclip_vshader stencilclip_pshader \
     smoothcolor_vshader smoothcolor_pshader \
     texture_vshader texture_pshader \
