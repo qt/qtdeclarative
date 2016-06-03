@@ -167,7 +167,6 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context = new QQmlContextData;
     context->isInternal = true;
     context->imports = compilationUnit->importCache;
-    context->imports->addref();
     context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 

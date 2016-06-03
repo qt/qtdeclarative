@@ -524,7 +524,7 @@ QQmlContextData::QQmlContextData(QQmlContext *ctxt)
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false),
   isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
   publicContext(ctxt), activeVMEData(0), componentObjectIndex(-1),
-  contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
+  contextObject(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0)
 {
@@ -627,9 +627,6 @@ void QQmlContextData::destroy()
         contextGuard = next;
     }
     contextGuards = 0;
-
-    if (imports)
-        imports->release();
 
     delete [] idValues;
 

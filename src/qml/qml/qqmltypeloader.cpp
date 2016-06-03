@@ -2552,10 +2552,6 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         ctxt->importedScripts = effectiveCtxt->importedScripts;
     }
 
-    if (ctxt->imports) {
-        ctxt->imports->addref();
-    }
-
     if (effectiveCtxt) {
         ctxt->setParent(effectiveCtxt, true);
     } else {
