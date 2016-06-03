@@ -2197,10 +2197,12 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
 
-    Setting this value can improve the smoothness of scrolling behavior at the expense
-    of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer objects and bindings in a delegate, the faster a view can be
-    scrolled.
+    \note Setting this property is not a replacement for creating efficient delegates.
+    It can improve the smoothness of scrolling behavior at the expense of additional
+    memory usage. The fewer objects and bindings in a delegate, the faster a
+    view can be scrolled. It is important to realize that setting a cacheBuffer
+    will only postpone issues caused by slow-loading delegates, it is not a
+    solution for this scenario.
 
     The cacheBuffer operates outside of any display margins specified by
     displayMarginBeginning or displayMarginEnd.
