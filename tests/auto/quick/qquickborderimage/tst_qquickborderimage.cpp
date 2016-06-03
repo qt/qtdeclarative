@@ -246,6 +246,11 @@ void tst_qquickborderimage::mirror()
 
     image->setProperty("mirror", true);
     screenshot = window->grabWindow();
+
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("QTBUG-53823");
     QCOMPARE(screenshot, srcPixmap);
 
     delete window;
