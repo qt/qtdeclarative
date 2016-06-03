@@ -319,8 +319,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
       ctxt(QQmlData::get(obj, true)->outerContext),
       aliasEndpoints(0), compilationUnit(qmlCompilationUnit), compiledObject(0)
 {
-    cache->addref();
-
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
     if (compilationUnit && qmlObjectId >= 0) {
@@ -345,8 +343,6 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     delete [] aliasEndpoints;
 
     qDeleteAll(varObjectGuards);
-
-    cache->release();
 }
 
 QV4::MemberData *QQmlVMEMetaObject::propertyAndMethodStorageAsMemberData()

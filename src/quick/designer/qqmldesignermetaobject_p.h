@@ -101,7 +101,6 @@ private:
     QQmlOpenMetaObjectType *m_type;
     QScopedPointer<MetaPropertyData> m_data;
     //QAbstractDynamicMetaObject *m_parent;
-    QQmlPropertyCache *m_cache;
 
     friend class QQuickDesignerSupportProperties;
 };

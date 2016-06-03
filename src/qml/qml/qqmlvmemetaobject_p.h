@@ -111,7 +111,7 @@ protected:
 
 public:
     QObject *object;
-    QQmlPropertyCache *cache;
+    QQmlRefPointer<QQmlPropertyCache> cache;
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
 
     QQmlPropertyValueInterceptor *interceptors;

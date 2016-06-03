@@ -120,13 +120,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
 
-    m_cache = QQmlEnginePrivate::get(engine)->cache(this);
-
-    if (m_cache != cache) {
-        m_cache->addref();
-        cache->release();
-        cache = m_cache;
-    }
+    cache = QQmlEnginePrivate::get(engine)->cache(this);
 
     nodeInstanceMetaObjectList.insert(this, true);
     hasAssignedMetaObjectData = true;
@@ -135,8 +129,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
     : QQmlVMEMetaObject(object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
-      m_data(new MetaPropertyData),
-      m_cache(0)
+      m_data(new MetaPropertyData)
 {
     init(object, engine);
 
@@ -146,8 +139,8 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
         cache->setParent(ddata->propertyCache);
         cache->invalidate(engine, this);
         ddata->propertyCache->release();
-        ddata->propertyCache = m_cache;
-        m_cache->addref();
+        ddata->propertyCache = cache;
+        ddata->propertyCache->addref();
     }
 
 }
@@ -168,9 +161,9 @@ void QQmlDesignerMetaObject::createNewDynamicProperty(const QString &name)
     Q_UNUSED(id);
 
     //Updating cache
-    QQmlPropertyCache *oldParent = m_cache->parent();
+    QQmlPropertyCache *oldParent = cache->parent();
     QQmlEnginePrivate::get(m_context->engine())->cache(this)->invalidate(m_context->engine(), this);
-    m_cache->setParent(oldParent);
+    cache->setParent(oldParent);
 
     QQmlProperty property(myObject(), name, m_context);
     Q_ASSERT(property.isValid());
