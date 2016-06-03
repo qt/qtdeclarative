@@ -85,7 +85,7 @@ public:
     QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
     QQmlEnginePrivate *enginePriv;
-    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     QScopedPointer<QQmlObjectCreator> creator;
     int subComponentToCreate;
     QQmlVMEGuard vmeGuard;

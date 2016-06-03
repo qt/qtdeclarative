@@ -339,8 +339,6 @@ void QQmlComponentPrivate::fromTypeData(QQmlTypeData *data)
     if (!compilationUnit) {
         Q_ASSERT(data->isError());
         state.errors = data->errors();
-    } else {
-        compilationUnit->addref();
     }
 
     data->release();
@@ -354,10 +352,7 @@ void QQmlComponentPrivate::clear()
         typeData = 0;
     }
 
-    if (compilationUnit) {
-        compilationUnit->release();
-        compilationUnit = 0;
-    }
+    compilationUnit = nullptr;
 }
 
 /*!
@@ -391,8 +386,6 @@ QQmlComponent::~QQmlComponent()
         d->typeData->unregisterCallback(d);
         d->typeData->release();
     }
-    if (d->compilationUnit)
-        d->compilationUnit->release();
 }
 
 /*!
@@ -567,7 +560,6 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationU
 {
     Q_D(QQmlComponent);
     d->compilationUnit = compilationUnit;
-    compilationUnit->addref();
     d->start = start;
     d->url = compilationUnit->url();
     d->progress = 1.0;
@@ -1048,7 +1040,6 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 
     p->compilationUnit = d->compilationUnit;
-    p->compilationUnit->addref();
     p->enginePriv = enginePriv;
     p->creator.reset(new QQmlObjectCreator(contextData, d->compilationUnit, d->creationContext, p.data()));
     p->subComponentToCreate = d->start;

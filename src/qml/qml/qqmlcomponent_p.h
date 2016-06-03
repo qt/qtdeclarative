@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : typeData(0), progress(0.), start(-1), compilationUnit(0), engine(0), creationContext(0), depthIncreased(false) {}
+        : typeData(0), progress(0.), start(-1), engine(0), creationContext(0), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -97,7 +97,7 @@ public:
     qreal progress;
 
     int start;
-    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
     struct ConstructionState {
         ConstructionState()

@@ -131,7 +131,7 @@ QQmlIncubationController *QQmlEngine::incubationController() const
 
 QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m)
     : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-      result(0), enginePriv(0), compilationUnit(0), waitingOnMe(0)
+      result(0), enginePriv(0), waitingOnMe(0)
 {
 }
 
@@ -142,18 +142,13 @@ QQmlIncubatorPrivate::~QQmlIncubatorPrivate()
 
 void QQmlIncubatorPrivate::clear()
 {
+    compilationUnit = nullptr;
     if (next.isInList()) {
         next.remove();
-        Q_ASSERT(compilationUnit);
-        compilationUnit->release();
-        compilationUnit = 0;
         enginePriv->incubatorCount--;
         QQmlIncubationController *controller = enginePriv->incubationController;
         if (controller)
              controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
-    } else if (compilationUnit) {
-        compilationUnit->release();
-        compilationUnit = 0;
     }
     enginePriv = 0;
     if (!rootContext.isNull()) {
@@ -570,7 +565,7 @@ void QQmlIncubator::clear()
 
     d->clear();
 
-    Q_ASSERT(d->compilationUnit == 0);
+    Q_ASSERT(d->compilationUnit.isNull());
     Q_ASSERT(d->waitingOnMe.data() == 0);
     Q_ASSERT(d->waitingFor.isEmpty());
 
