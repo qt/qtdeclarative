@@ -257,6 +257,15 @@ static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
     return qmlsqldatabase_rows_index(r, scope.engine, ctx->argc() ? ctx->args()[0].toUInt32() : 0);
 }
 
+static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValue &value)
+{
+    // toVariant() maps a null JS value to QVariant(VoidStar), but the SQL module
+    // expects a null variant. (this is because of QTBUG-40880)
+    if (value->isNull())
+        return QVariant();
+    return engine->toVariant(value, /*typehint*/-1);
+}
+
 static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
@@ -287,8 +296,9 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                 ScopedArrayObject array(scope, values);
                 quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);
-                for (quint32 ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, scope.engine->toVariant((v = array->getIndexed(ii)), -1));
+                for (quint32 ii = 0; ii < size; ++ii) {
+                    query.bindValue(ii, toSqlVariant(scope.engine, (v = array->getIndexed(ii))));
+                }
             } else if (values->as<Object>()) {
                 ScopedObject object(scope, values);
                 ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
@@ -298,7 +308,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     key = it.nextPropertyName(val);
                     if (key->isNull())
                         break;
-                    QVariant v = scope.engine->toVariant(val, -1);
+                    QVariant v = toSqlVariant(scope.engine, val);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
                     } else {
@@ -307,7 +317,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     }
                 }
             } else {
-                query.bindValue(0, scope.engine->toVariant(values, -1));
+                query.bindValue(0, toSqlVariant(scope.engine, values));
             }
         }
         if (query.exec()) {
