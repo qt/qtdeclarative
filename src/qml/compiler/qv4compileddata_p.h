@@ -656,7 +656,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     virtual ~CompilationUnit();
 #endif
 
-    Unit *data;
+    const Unit *data;
 
     // Called only when building QML, when we build the header for JS first and append QML data
     virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);

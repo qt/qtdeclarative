@@ -82,7 +82,7 @@ CompilationUnit::~CompilationUnit()
 {
     unlink();
     if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
-        free(data);
+        free(const_cast<Unit *>(data));
     data = 0;
 }
 

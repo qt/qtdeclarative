@@ -2074,7 +2074,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlTypeData *td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        QV4::CompiledData::Unit *qmlUnit = td->compilationUnit()->data;
+        const QV4::CompiledData::Unit *qmlUnit = td->compilationUnit()->data;
         Q_ASSERT(qmlUnit);
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
         QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
