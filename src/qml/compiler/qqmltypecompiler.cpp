@@ -91,7 +91,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
                 return nullptr;
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
-            ref->compilationUnit->addref();
         } else if (qmlType) {
             ref->type = qmlType;
             Q_ASSERT(ref->type);
@@ -118,7 +117,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
                     recordError(cacheError);
                     return nullptr;
                 }
-                ref->typePropertyCache->addref();
             }
         }
         ref->majorVersion = resolvedType->majorVersion;

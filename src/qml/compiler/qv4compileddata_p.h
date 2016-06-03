@@ -64,6 +64,7 @@
 #include <private/qflagpointer_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qqmltypenamecache_p.h>
+#include <private/qqmlpropertycache_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -699,15 +700,15 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     struct ResolvedTypeReference
     {
         ResolvedTypeReference()
-            : type(0), typePropertyCache(0), compilationUnit(0)
+            : type(0)
             , majorVersion(0)
             , minorVersion(0)
             , isFullyDynamicType(false)
         {}
 
         QQmlType *type;
-        QQmlPropertyCache *typePropertyCache;
-        QV4::CompiledData::CompilationUnit *compilationUnit;
+        QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 
         int majorVersion;
         int minorVersion;

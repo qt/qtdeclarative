@@ -187,13 +187,6 @@ void CompilationUnit::unlink()
 
     importCache = nullptr;
 
-    for (auto resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
-         resolvedType != end; ++resolvedType) {
-        if ((*resolvedType)->compilationUnit)
-            (*resolvedType)->compilationUnit->release();
-        if ((*resolvedType)->typePropertyCache)
-            (*resolvedType)->typePropertyCache->release();
-    }
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
 
@@ -367,7 +360,6 @@ QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::createPropertyCache(Q
         return typePropertyCache;
     } else if (type) {
         typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
-        typePropertyCache->addref();
         return typePropertyCache;
     } else {
         return compilationUnit->rootPropertyCache();
