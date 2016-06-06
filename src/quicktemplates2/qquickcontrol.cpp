@@ -71,6 +71,8 @@ QT_BEGIN_NAMESPACE
     the screen.
 
     \image qtquickcontrols2-control.png
+
+    \sa ApplicationWindow, Container
 */
 
 static bool isKeyFocusReason(Qt::FocusReason reason)

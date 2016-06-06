@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
 
-    \sa {Popup Controls}
+    \sa {Popup Controls}, ApplicationWindow
 */
 
 /*!
