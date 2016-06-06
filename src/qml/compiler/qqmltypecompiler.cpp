@@ -64,7 +64,7 @@ QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *type
 
 QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 {
-    importCache = new QQmlTypeNameCache;
+    importCache.adopt(new QQmlTypeNameCache);
 
     foreach (const QString &ns, typeData->namespaces())
         importCache->add(ns);
