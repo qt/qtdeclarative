@@ -171,6 +171,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
+
+    // QtQuick.Controls 2.1 (Qt 5.8)
+    qmlRegisterType<QQuickSwipeView>(uri, 2, 1, "SwipeView");
 }
 
 QT_END_NAMESPACE

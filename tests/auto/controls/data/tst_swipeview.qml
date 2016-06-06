@@ -407,6 +407,8 @@ TestCase {
             property int index: SwipeView.index
             property SwipeView view: SwipeView.view
             property bool isCurrentItem: SwipeView.isCurrentItem
+            property bool isNextItem: SwipeView.isNextItem
+            property bool isPreviousItem: SwipeView.isPreviousItem
         }
     }
 
@@ -427,11 +429,15 @@ TestCase {
             compare(control.itemAt(i).text, titles[i])
             compare(control.itemAt(i).SwipeView.index, i)
             compare(control.itemAt(i).SwipeView.isCurrentItem, i === 0)
+            compare(control.itemAt(i).SwipeView.isNextItem, i === 1)
+            compare(control.itemAt(i).SwipeView.isPreviousItem, false)
         }
 
         control.currentIndex = data.currentBefore
         for (i = 0; i < control.count; ++i) {
             compare(control.itemAt(i).SwipeView.isCurrentItem, i === data.currentBefore)
+            compare(control.itemAt(i).SwipeView.isNextItem, i === data.currentBefore + 1)
+            compare(control.itemAt(i).SwipeView.isPreviousItem, i === data.currentBefore - 1)
         }
 
         control.moveItem(data.from, data.to)
@@ -448,6 +454,8 @@ TestCase {
             compare(control.itemAt(i).text, titles[i])
             compare(control.itemAt(i).SwipeView.index, i);
             compare(control.itemAt(i).SwipeView.isCurrentItem, i === data.currentAfter)
+            compare(control.itemAt(i).SwipeView.isNextItem, i === data.currentAfter + 1)
+            compare(control.itemAt(i).SwipeView.isPreviousItem, i === data.currentAfter - 1)
         }
 
         control.destroy()
@@ -492,12 +500,16 @@ TestCase {
         compare(page.view, null);
         compare(page.index, -1);
         compare(page.isCurrentItem, false);
+        compare(page.isNextItem, false);
+        compare(page.isPreviousItem, false);
         page.destroy();
 
         page = pageAttached.createObject(null);
         compare(page.view, null);
         compare(page.index, -1);
         compare(page.isCurrentItem, false);
+        compare(page.isNextItem, false);
+        compare(page.isPreviousItem, false);
 
         control.insertItem(0, page);
         compare(control.count, 1);
@@ -505,6 +517,8 @@ TestCase {
         compare(page.view, control);
         compare(page.index, 0);
         compare(page.isCurrentItem, true);
+        compare(page.isNextItem, false);
+        compare(page.isPreviousItem, false);
 
         control.removeItem(0);
         compare(control.count, 0);
@@ -512,6 +526,8 @@ TestCase {
         compare(page.view, null);
         compare(page.index, -1);
         compare(page.isCurrentItem, false);
+        compare(page.isNextItem, false);
+        compare(page.isPreviousItem, false);
 
         control.destroy();
     }

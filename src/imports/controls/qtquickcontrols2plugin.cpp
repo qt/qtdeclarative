@@ -134,6 +134,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ToolButton.qml")), uri, 2, 0, "ToolButton");
     qmlRegisterType(selector.select(QStringLiteral("ToolTip.qml")), uri, 2, 0, "ToolTip");
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 2, 0, "Tumbler");
+
+    // QtQuick.Controls 2.1 (Qt 5.8)
+    qmlRegisterType(selector.select(QStringLiteral("SwipeView.qml")), uri, 2, 1, "SwipeView");
 }
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)

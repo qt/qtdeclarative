@@ -69,6 +69,29 @@ QT_BEGIN_NAMESPACE
     \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
     pages dynamically at run time.
 
+    It is generally not advisable to add excessive amounts of pages to a
+    SwipeView. However, when the amount of pages grows larger, or individual
+    pages are relatively complex, it may be desired free up resources by
+    unloading pages that are outside the reach. The following example presents
+    how to use \l Loader to keep a maximum of three pages simultaneously
+    instantiated.
+
+    \code
+    SwipeView {
+        Repeater {
+            model: 6
+            Loader {
+                active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
+                sourceComponent: Text {
+                    text: index
+                    Component.onCompleted: console.log("created:", index)
+                    Component.onDestruction: console.log("destroyed:", index)
+                }
+            }
+        }
+    }
+    \endcode
+
     \note SwipeView takes over the geometry management of items added to the
           view. Using anchors on the items is not supported, and any \c width
           or \c height assignment will be overridden by the view. Notice that
@@ -165,6 +188,26 @@ void QQuickSwipeView::itemAdded(int, QQuickItem *item)
 */
 
 /*!
+    \qmlattachedproperty bool QtQuick.Controls::SwipeView::isNextItem
+    \since QtQuick.Controls 2.1
+    \readonly
+
+    This attached property is \c true if this child is the next item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
+    \qmlattachedproperty bool QtQuick.Controls::SwipeView::isPreviousItem
+    \since QtQuick.Controls 2.1
+    \readonly
+
+    This attached property is \c true if this child is the previous item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
     \qmlattachedproperty SwipeView QtQuick.Controls::SwipeView::view
     \readonly
 
@@ -181,7 +224,7 @@ public:
         item(item),
         swipeView(nullptr),
         index(-1),
-        isCurrent(false)
+        currentIndex(-1)
     {
     }
 
@@ -196,19 +239,16 @@ public:
     void itemDestroyed(QQuickItem *) override;
 
     void updateIndex();
-    void updateIsCurrent();
+    void updateCurrentIndex();
 
     void setView(QQuickSwipeView *view);
     void setIndex(int i);
-    void setIsCurrent(bool current);
+    void setCurrentIndex(int i);
 
     QQuickItem *item;
     QQuickSwipeView *swipeView;
     int index;
-    // Better to store this so that we don't need to lump its calculation
-    // together with index's calculation, as it would otherwise need to know
-    // the old index to know if it should emit the change signal.
-    bool isCurrent;
+    int currentIndex;
 };
 
 void QQuickSwipeViewAttachedPrivate::updateIndex()
@@ -216,9 +256,9 @@ void QQuickSwipeViewAttachedPrivate::updateIndex()
     setIndex(swipeView ? QQuickSwipeViewPrivate::get(swipeView)->contentModel->indexOf(item, nullptr) : -1);
 }
 
-void QQuickSwipeViewAttachedPrivate::updateIsCurrent()
+void QQuickSwipeViewAttachedPrivate::updateCurrentIndex()
 {
-    setIsCurrent(swipeView ? swipeView->currentIndex() == index : false);
+    setCurrentIndex(swipeView ? swipeView->currentIndex() : -1);
 }
 
 void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
@@ -231,7 +271,7 @@ void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
         p->removeItemChangeListener(this, QQuickItemPrivate::Children);
 
         disconnect(swipeView, &QQuickSwipeView::currentIndexChanged,
-            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+            this, &QQuickSwipeViewAttachedPrivate::updateCurrentIndex);
         disconnect(swipeView, &QQuickSwipeView::contentChildrenChanged,
             this, &QQuickSwipeViewAttachedPrivate::updateIndex);
     }
@@ -243,7 +283,7 @@ void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
         p->addItemChangeListener(this, QQuickItemPrivate::Children);
 
         connect(swipeView, &QQuickSwipeView::currentIndexChanged,
-            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+            this, &QQuickSwipeViewAttachedPrivate::updateCurrentIndex);
         connect(swipeView, &QQuickSwipeView::contentChildrenChanged,
             this, &QQuickSwipeViewAttachedPrivate::updateIndex);
     }
@@ -252,17 +292,26 @@ void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
     emit q->viewChanged();
 
     updateIndex();
-    updateIsCurrent();
+    updateCurrentIndex();
 }
 
-void QQuickSwipeViewAttachedPrivate::setIsCurrent(bool current)
+void QQuickSwipeViewAttachedPrivate::setCurrentIndex(int i)
 {
-    if (current == isCurrent)
+    if (i == currentIndex)
         return;
 
-    isCurrent = current;
     Q_Q(QQuickSwipeViewAttached);
-    emit q->isCurrentItemChanged();
+    const bool wasCurrent = q->isCurrentItem();
+    const bool wasNext = q->isNextItem();
+    const bool wasPrevious = q->isPreviousItem();
+
+    currentIndex = i;
+    if (wasCurrent != q->isCurrentItem())
+        emit q->isCurrentItemChanged();
+    if (wasNext != q->isNextItem())
+        emit q->isNextItemChanged();
+    if (wasPrevious != q->isPreviousItem())
+        emit q->isPreviousItemChanged();
 }
 
 void QQuickSwipeViewAttachedPrivate::setIndex(int i)
@@ -350,7 +399,19 @@ int QQuickSwipeViewAttached::index() const
 bool QQuickSwipeViewAttached::isCurrentItem() const
 {
     Q_D(const QQuickSwipeViewAttached);
-    return d->swipeView ? d->swipeView->currentIndex() == d->index : false;
+    return d->index != -1 && d->currentIndex != -1 && d->index == d->currentIndex;
+}
+
+bool QQuickSwipeViewAttached::isNextItem() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->index != -1 && d->currentIndex != -1 && d->index == d->currentIndex + 1;
+}
+
+bool QQuickSwipeViewAttached::isPreviousItem() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->index != -1 && d->currentIndex != -1 && d->index == d->currentIndex - 1;
 }
 
 QT_END_NAMESPACE

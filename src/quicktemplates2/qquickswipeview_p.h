@@ -80,6 +80,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
+    Q_PROPERTY(bool isNextItem READ isNextItem NOTIFY isNextItemChanged FINAL REVISION 1)
+    Q_PROPERTY(bool isPreviousItem READ isPreviousItem NOTIFY isPreviousItemChanged FINAL REVISION 1)
     Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
 
 public:
@@ -88,11 +90,15 @@ public:
 
     int index() const;
     bool isCurrentItem() const;
+    bool isNextItem() const;
+    bool isPreviousItem() const;
     QQuickSwipeView *view() const;
 
 Q_SIGNALS:
     void indexChanged();
     void isCurrentItemChanged();
+    void isNextItemChanged();
+    void isPreviousItemChanged();
     void viewChanged();
 
 private:

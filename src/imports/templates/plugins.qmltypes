@@ -918,6 +918,8 @@ Module {
         prototype: "QObject"
         Property { name: "index"; type: "int"; isReadonly: true }
         Property { name: "isCurrentItem"; type: "bool"; isReadonly: true }
+        Property { name: "isPreviousItem"; type: "bool"; isReadonly: true }
+        Property { name: "isNextItem"; type: "bool"; isReadonly: true }
         Property { name: "view"; type: "QQuickSwipeView"; isReadonly: true; isPointer: true }
     }
     Component {
