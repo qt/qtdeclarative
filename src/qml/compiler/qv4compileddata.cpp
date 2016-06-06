@@ -50,6 +50,7 @@
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
 #include <QQmlPropertyMap>
+#include <QSaveFile>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -265,6 +266,63 @@ void CompilationUnit::updateBindingAndObjectCounters()
     totalBindingsCount = bindingCount;
     totalParserStatusCount = parserStatusCount;
     totalObjectCount = objectCount;
+}
+
+bool CompilationUnit::saveToDisk(QString *errorString)
+{
+    errorString->clear();
+
+    const QUrl unitUrl = url();
+    if (!unitUrl.isLocalFile()) {
+        *errorString = QStringLiteral("File has to be a local file.");
+        return false;
+    }
+
+    // Foo.qml -> Foo.qmlc
+    QSaveFile cacheFile(unitUrl.toLocalFile() + QLatin1Char('c'));
+    if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    QByteArray modifiedUnit;
+    modifiedUnit.resize(data->unitSize);
+    memcpy(modifiedUnit.data(), data, data->unitSize);
+    const char *dataPtr = modifiedUnit.data();
+    Unit *unitPtr;
+    memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
+    unitPtr->flags |= Unit::StaticData;
+
+    prepareCodeOffsetsForDiskStorage(unitPtr);
+
+    qint64 headerWritten = cacheFile.write(modifiedUnit);
+    if (headerWritten != modifiedUnit.size()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    if (!saveCodeToDisk(&cacheFile, unitPtr, errorString))
+        return false;
+
+    if (!cacheFile.commit()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    return true;
+}
+
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(Unit *unit)
+{
+    Q_UNUSED(unit);
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const Unit *unit, QString *errorString)
+{
+    Q_UNUSED(device);
+    Q_UNUSED(unit);
+    *errorString = QStringLiteral("Saving code to disk is not supported in this configuration");
+    return false;
 }
 #endif // V4_BOOTSTRAP
 

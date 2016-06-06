@@ -81,7 +81,9 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
 
-    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
+    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
+    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
+    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
 
     // Coderef + execution engine
 

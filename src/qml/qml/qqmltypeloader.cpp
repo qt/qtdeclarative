@@ -97,6 +97,7 @@
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
+DEFINE_BOOL_CONFIG_OPTION(diskCache, QML_DISK_CACHE);
 
 QT_BEGIN_NAMESPACE
 
@@ -2314,6 +2315,12 @@ void QQmlTypeData::compile()
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
         return;
+    }
+    if (diskCache()) {
+        QString errorString;
+        if (!m_compiledData->saveToDisk(&errorString)) {
+            qDebug() << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
+        }
     }
 }
 

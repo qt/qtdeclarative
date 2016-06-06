@@ -79,6 +79,53 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     }
 }
 
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
+{
+    const int codeAlignment = 16;
+    quint64 offset = WTF::roundUpToMultipleOf(codeAlignment, unit->unitSize);
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        CompiledData::Function *compiledFunction = const_cast<CompiledData::Function *>(unit->functionAt(i));
+        compiledFunction->codeOffset = offset;
+        compiledFunction->codeSize = codeRefs.at(i).size();
+        offset = WTF::roundUpToMultipleOf(codeAlignment, offset + compiledFunction->codeSize);
+    }
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString)
+{
+    Q_ASSERT(device->pos() == unit->unitSize);
+    Q_ASSERT(device->atEnd());
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+
+    QByteArray padding;
+
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        const CompiledData::Function *compiledFunction = unit->functionAt(i);
+
+        if (device->pos() > qint64(compiledFunction->codeOffset)) {
+            *errorString = QStringLiteral("Invalid state of cache file to write.");
+            return false;
+        }
+
+        const quint64 paddingSize = compiledFunction->codeOffset - device->pos();
+        padding.fill(0, paddingSize);
+        qint64 written = device->write(padding);
+        if (written != padding.size()) {
+            *errorString = device->errorString();
+            return false;
+        }
+
+        const void *undecoratedCodePtr = codeRefs.at(i).code().dataLocation();
+        written = device->write(reinterpret_cast<const char *>(undecoratedCodePtr), compiledFunction->codeSize);
+        if (written != qint64(compiledFunction->codeSize)) {
+            *errorString = device->errorString();
+            return false;
+        }
+    }
+    return true;
+}
+
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)

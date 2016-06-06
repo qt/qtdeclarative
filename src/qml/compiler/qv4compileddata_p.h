@@ -69,6 +69,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QIODevice;
 class QQmlPropertyCache;
 class QQmlPropertyData;
 class QQmlTypeNameCache;
@@ -206,6 +207,11 @@ struct Function
     quint32 nDependingScopeProperties;
     quint32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
     // Qml Extensions End
+
+    // Absolute offset into file where the code for this function is located. Only used when the function
+    // is serialized.
+    quint64 codeOffset;
+    quint64 codeSize;
 
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
@@ -830,8 +836,13 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     void markObjects(QV4::ExecutionEngine *e);
 
     void destroy() Q_DECL_OVERRIDE;
+
+    bool saveToDisk(QString *errorString);
+
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
+    virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
+    virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
 #endif // V4_BOOTSTRAP
 };
 

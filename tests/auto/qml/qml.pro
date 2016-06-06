@@ -61,7 +61,8 @@ PRIVATETESTS += \
     v4misc \
     qqmltranslation \
     qqmlimport \
-    qqmlobjectmodel
+    qqmlobjectmodel \
+    qmldiskcache
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

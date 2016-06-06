@@ -362,6 +362,9 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *ir
     function->location.line = irFunction->line;
     function->location.column = irFunction->column;
 
+    function->codeOffset = 0;
+    function->codeSize = 0;
+
     // write formals
     quint32 *formals = (quint32 *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->formals.size(); ++i)
