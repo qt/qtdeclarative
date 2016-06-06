@@ -1594,3 +1594,10 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
         runtimeFunctions[i] = runtimeFunction;
     }
 }
+
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new Moth::CompilationUnit);
+    return result;
+}

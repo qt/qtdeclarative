@@ -441,10 +441,12 @@ protected:
     virtual QString stringAt(int index) const;
 
 private:
+    bool tryLoadFromDiskCache();
     void continueLoadFromIR();
     void resolveTypes();
     QQmlCompileError buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const;
     void compile();
+    void rebuildTypeAndPropertyCaches();
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);

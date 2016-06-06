@@ -290,6 +290,7 @@ public:
     { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return true; }
+    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE;
 };
 
 } // end of namespace JIT

@@ -845,6 +845,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
+    QScopedPointer<QIODevice> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
@@ -877,11 +878,13 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     void destroy() Q_DECL_OVERRIDE;
 
     bool saveToDisk(QString *errorString);
+    bool loadFromDisk(const QUrl &url, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
     virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
     virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
+    virtual bool memoryMapCode(QString *errorString);
 #endif // V4_BOOTSTRAP
 };
 

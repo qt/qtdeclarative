@@ -107,6 +107,7 @@ public:
     virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
+    virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() = 0;
 };
 
 namespace IR {
