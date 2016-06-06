@@ -467,7 +467,7 @@ private:
     QHash<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
-    QV4::CompiledData::CompilationUnit *m_compiledData;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 

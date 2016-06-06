@@ -2008,7 +2008,7 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
-   m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
+   m_typesResolved(false), m_implicitImport(0), m_implicitImportLoaded(false)
 {
 
 }
@@ -2026,9 +2026,6 @@ QQmlTypeData::~QQmlTypeData()
         if (QQmlTypeData *tdata = it->typeData)
             tdata->release();
     }
-
-    if (m_compiledData)
-        m_compiledData->release();
 }
 
 const QList<QQmlTypeData::ScriptReference> &QQmlTypeData::resolvedScripts() const
@@ -2048,7 +2045,7 @@ const QList<QQmlTypeData::TypeReference> &QQmlTypeData::compositeSingletons() co
 
 QV4::CompiledData::CompilationUnit *QQmlTypeData::compilationUnit() const
 {
-    return m_compiledData;
+    return m_compiledData.data();
 }
 
 void QQmlTypeData::registerCallback(TypeDataCallback *callback)
@@ -2301,14 +2298,13 @@ QString QQmlTypeData::stringAt(int index) const
 
 void QQmlTypeData::compile()
 {
-    Q_ASSERT(m_compiledData == 0);
+    Q_ASSERT(m_compiledData.isNull());
 
     QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data());
     m_compiledData = compiler.compile();
-    if (m_compiledData) {
-        m_compiledData->addref();
-    } else {
+    if (!m_compiledData) {
         setError(compiler.compilationErrors());
+        return;
     }
 }
 
