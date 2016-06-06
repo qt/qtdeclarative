@@ -268,7 +268,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         if (function == irModule->rootFunction)
             unit->indexOfRootFunction = i;
 
-        const int bytes = writeFunction(f, i, function);
+        const int bytes = writeFunction(f, function);
         f += bytes;
     }
 
@@ -307,13 +307,12 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     return unit;
 }
 
-int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::Function *irFunction)
+int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *irFunction)
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
     quint32 currentOffset = sizeof(QV4::CompiledData::Function);
 
-    function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
     function->flags = 0;
     if (irFunction->hasDirectEval)

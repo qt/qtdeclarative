@@ -179,9 +179,8 @@ struct Function
         HasCatchOrWith      = 0x10
     };
 
-    quint32 index; // in CompilationUnit's function table
+    quint8 flags;
     quint32 nameIndex;
-    qint64 flags;
     quint32 nFormals;
     quint32 formalsOffset;
     quint32 nLocals;
