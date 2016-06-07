@@ -331,12 +331,12 @@ QSGNode::~QSGNode()
     to the scene graph and will cause the preprocess() function to be called
     for every frame the node is rendered.
 
-    The preprocess function is called before the update pass that propegates
+    The preprocess function is called before the update pass that propagates
     opacity and transformations through the scene graph. That means that
     functions like QSGOpacityNode::combinedOpacity() and
     QSGTransformNode::combinedMatrix() will not contain up-to-date values.
     If such values are changed during the preprocess, these changes will be
-    propegated through the scene graph before it is rendered.
+    propagated through the scene graph before it is rendered.
 
     \warning Beware of deleting nodes while they are being preprocessed. It is
     possible, with a small performance hit, to delete a single node during its
@@ -1331,7 +1331,7 @@ const qreal OPACITY_THRESHOLD = 0.001;
     Sets the opacity of this node to \a opacity.
 
     Before rendering the graph, the renderer will do an update pass
-    over the subtree to propegate the opacity to its children.
+    over the subtree to propagate the opacity to its children.
 
     The value will be bounded to the range 0 to 1.
  */
