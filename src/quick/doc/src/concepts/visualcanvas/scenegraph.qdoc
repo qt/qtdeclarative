@@ -214,7 +214,7 @@ user input. An event is posted to the render thread to initiate a new
 frame.
 
 \li The render thread prepares to draw a new frame and makes the
-OpenGL context current and initiates a blocks on the GUI thread.
+OpenGL context current and initiates a block on the GUI thread.
 
 \li While the render thread is preparing the new frame, the GUI thread
 calls QQuickItem::updatePolish() to do final touch-up of items before
