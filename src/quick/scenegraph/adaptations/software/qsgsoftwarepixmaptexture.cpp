@@ -41,11 +41,17 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGSoftwarePixmapTexture::QSGSoftwarePixmapTexture(const QImage &image)
+QSGSoftwarePixmapTexture::QSGSoftwarePixmapTexture(const QImage &image, uint flags)
+{
     // Prevent pixmap format conversion to reduce memory consumption
     // and surprises in calling code. (See QTBUG-47328)
-    : m_pixmap(QPixmap::fromImage(image, Qt::NoFormatConversion))
-{
+    if (flags & QSGRenderContext::CreateTexture_Alpha) {
+        //If texture should have an alpha
+        m_pixmap = QPixmap::fromImage(image, Qt::NoFormatConversion);
+    } else {
+        //Force opaque texture
+        m_pixmap = QPixmap::fromImage(image.convertToFormat(QImage::Format_RGB32), Qt::NoFormatConversion);
+    }
 }
 
 QSGSoftwarePixmapTexture::QSGSoftwarePixmapTexture(const QPixmap &pixmap)

@@ -153,8 +153,7 @@ void QSGSoftwareRenderContext::invalidate()
 
 QSGTexture *QSGSoftwareRenderContext::createTexture(const QImage &image, uint flags) const
 {
-    Q_UNUSED(flags)
-    return new QSGSoftwarePixmapTexture(image);
+    return new QSGSoftwarePixmapTexture(image, flags);
 }
 
 QSGRenderer *QSGSoftwareRenderContext::createRenderer()
