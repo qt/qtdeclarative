@@ -145,7 +145,7 @@ public:
 
 #endif // Windows on x86
 
-#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD))
+#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD) || OS(QNX))
     enum { RegAllocIsSupported = 1 };
 
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
