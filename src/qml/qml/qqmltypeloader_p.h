@@ -457,6 +457,7 @@ private:
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
 
     QScopedPointer<QmlIR::Document> m_document;
+    QV4::CompiledData::TypeReferenceMap m_typeReferences;
 
     QList<ScriptReference> m_scripts;
 

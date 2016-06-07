@@ -251,31 +251,6 @@ static void replaceWithSpace(QString &str, int idx, int n)
         *data++ = space;
 }
 
-void Document::collectTypeReferences()
-{
-    foreach (Object *obj, objects) {
-        if (obj->inheritedTypeNameIndex != emptyStringIndex) {
-            QV4::CompiledData::TypeReference &r = typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
-            r.needsCreation = true;
-            r.errorWhenNotFound = true;
-        }
-
-        for (const Property *prop = obj->firstProperty(); prop; prop = prop->next) {
-            if (prop->type >= QV4::CompiledData::Property::Custom) {
-                // ### FIXME: We could report the more accurate location here by using prop->location, but the old
-                // compiler can't and the tests expect it to be the object location right now.
-                QV4::CompiledData::TypeReference &r = typeReferences.add(prop->customTypeNameIndex, obj->location);
-                r.errorWhenNotFound = true;
-            }
-        }
-
-        for (const Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
-                typeReferences.add(binding->propertyNameIndex, binding->location);
-        }
-    }
-}
-
 void Document::removeScriptPragmas(QString &script)
 {
     const QLatin1String pragma("pragma");

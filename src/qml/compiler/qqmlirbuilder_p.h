@@ -161,6 +161,35 @@ struct PoolList
         }
         return result;
     }
+
+    struct Iterator {
+        T *ptr;
+
+        explicit Iterator(T *p) : ptr(p) {}
+
+        T *operator->() {
+            return ptr;
+        }
+
+        const T *operator->() const {
+            return ptr;
+        }
+
+        void operator++() {
+            ptr = ptr->next;
+        }
+
+        bool operator==(const Iterator &rhs) const {
+            return ptr == rhs.ptr;
+        }
+
+        bool operator!=(const Iterator &rhs) const {
+            return ptr != rhs.ptr;
+        }
+    };
+
+    Iterator begin() { return Iterator(first); }
+    Iterator end() { return Iterator(nullptr); }
 };
 
 template <typename T>
@@ -309,6 +338,11 @@ public:
     const Function *firstFunction() const { return functions->first; }
     int functionCount() const { return functions->count; }
 
+    PoolList<Binding>::Iterator bindingsBegin() const { return bindings->begin(); }
+    PoolList<Binding>::Iterator bindingsEnd() const { return bindings->end(); }
+    PoolList<Property>::Iterator propertiesBegin() const { return properties->begin(); }
+    PoolList<Property>::Iterator propertiesEnd() const { return properties->end(); }
+
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
     Object *declarationsOverride;
@@ -369,9 +403,6 @@ struct Q_QML_PRIVATE_EXPORT Document
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
     QHash<int, QStringList> extraSignalParameters;
-
-    QV4::CompiledData::TypeReferenceMap typeReferences;
-    void collectTypeReferences();
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }

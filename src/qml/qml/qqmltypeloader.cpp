@@ -2133,6 +2133,7 @@ void QQmlTypeData::done()
         compile();
 
     m_document.reset();
+    m_typeReferences.clear();
     m_implicitImport = 0;
 }
 
@@ -2200,7 +2201,7 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
 
 void QQmlTypeData::continueLoadFromIR()
 {
-    m_document->collectTypeReferences();
+    m_typeReferences.collectFromObjects(m_document->objects.constBegin(), m_document->objects.constEnd());
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
     // For remote URLs, we don't delay the loading of the implicit import
@@ -2357,7 +2358,7 @@ void QQmlTypeData::resolveTypes()
         }
     }
 
-    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_document->typeReferences.constBegin(), end = m_document->typeReferences.constEnd();
+    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_typeReferences.constBegin(), end = m_typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {
 
         TypeReference ref; // resolved reference

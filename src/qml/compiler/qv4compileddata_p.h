@@ -633,6 +633,37 @@ struct TypeReferenceMap : QHash<int, TypeReference>
             return *it;
         return *insert(nameIndex, loc);
     }
+
+    template <typename CompiledObject>
+    void collectFromObject(const CompiledObject *obj)
+    {
+        if (obj->inheritedTypeNameIndex != 0) {
+            TypeReference &r = this->add(obj->inheritedTypeNameIndex, obj->location);
+            r.needsCreation = true;
+            r.errorWhenNotFound = true;
+        }
+
+        for (auto prop = obj->propertiesBegin(), propEnd = obj->propertiesEnd(); prop != propEnd; ++prop) {
+            if (prop->type >= QV4::CompiledData::Property::Custom) {
+                // ### FIXME: We could report the more accurate location here by using prop->location, but the old
+                // compiler can't and the tests expect it to be the object location right now.
+                TypeReference &r = this->add(prop->customTypeNameIndex, obj->location);
+                r.errorWhenNotFound = true;
+            }
+        }
+
+        for (auto binding = obj->bindingsBegin(), bindingEnd = obj->bindingsEnd(); binding != bindingEnd; ++binding) {
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
+                this->add(binding->propertyNameIndex, binding->location);
+        }
+    }
+
+    template <typename Iterator>
+    void collectFromObjects(Iterator it, Iterator end)
+    {
+        for (; it != end; ++it)
+            collectFromObject(*it);
+    }
 };
 
 // index is per-object binding index
