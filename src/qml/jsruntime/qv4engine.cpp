@@ -969,7 +969,7 @@ ReturnedValue ExecutionEngine::throwReferenceError(const Value &value)
 {
     Scope scope(this);
     ScopedString s(scope, value.toString(this));
-    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    QString msg = s->toQString() + QLatin1String(" is not defined");
     ScopedObject error(scope, newReferenceErrorObject(msg));
     return throwError(error);
 }
@@ -993,7 +993,7 @@ ReturnedValue ExecutionEngine::throwRangeError(const Value &value)
 {
     Scope scope(this);
     ScopedString s(scope, value.toString(this));
-    QString msg = s->toQString() + QStringLiteral(" out of range");
+    QString msg = s->toQString() + QLatin1String(" out of range");
     ScopedObject error(scope, newRangeErrorObject(msg));
     return throwError(error);
 }

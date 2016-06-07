@@ -754,7 +754,7 @@ void Object::internalPut(String *name, const Value &value)
 
   reject:
     if (engine()->current->strictMode) {
-        QString message = QStringLiteral("Cannot assign to read-only property \"") +
+        QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
         engine()->throwTypeError(message);
     }

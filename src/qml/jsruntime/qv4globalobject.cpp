@@ -520,7 +520,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(CallContext *ctx)
     if (trimmed.startsWith(QLatin1String("Infinity"))
             || trimmed.startsWith(QLatin1String("+Infinity")))
         return Encode(Q_INFINITY);
-    if (trimmed.startsWith(QStringLiteral("-Infinity")))
+    if (trimmed.startsWith(QLatin1String("-Infinity")))
         return Encode(-Q_INFINITY);
     QByteArray ba = trimmed.toLatin1();
     bool ok;

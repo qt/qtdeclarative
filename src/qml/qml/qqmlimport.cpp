@@ -913,7 +913,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
         // To avoid traversing all static plugins for all imports, we cut down
         // the list the first time called to only contain QML plugins:
         foreach (const QStaticPlugin &plugin, QPluginLoader::staticPlugins()) {
-            if (plugin.metaData().value(QStringLiteral("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
+            if (plugin.metaData().value(QLatin1String("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
                 plugins.append(plugin);
         }
     }
@@ -921,7 +921,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     foreach (const QStaticPlugin &plugin, plugins) {
         // Since a module can list more than one plugin, we keep iterating even after we found a match.
         if (QQmlExtensionPlugin *instance = qobject_cast<QQmlExtensionPlugin *>(plugin.instance())) {
-            const QJsonArray metaTagsUriList = plugin.metaData().value(QStringLiteral("uri")).toArray();
+            const QJsonArray metaTagsUriList = plugin.metaData().value(QLatin1String("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
                     QQmlError error;
@@ -1817,7 +1817,7 @@ void QQmlImportDatabase::addImportPath(const QString& path)
     } else if (path.startsWith(QLatin1Char(':'))) {
         // qrc directory, e.g. :/foo
         // need to convert to a qrc url, e.g. qrc:/foo
-        cPath = QStringLiteral("qrc") + path;
+        cPath = QLatin1String("qrc") + path;
         cPath.replace(Backslash, Slash);
     } else if (url.isRelative() ||
                (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path

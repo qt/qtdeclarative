@@ -203,7 +203,7 @@ int qt_v4DebuggerHook(const char *json)
 
     QJsonDocument doc = QJsonDocument::fromJson(json);
     QJsonObject ob = doc.object();
-    QByteArray command = ob.value(QStringLiteral("command")).toString().toUtf8();
+    QByteArray command = ob.value(QLatin1String("command")).toString().toUtf8();
 
     if (command == "protocolVersion") {
         return ProtocolVersion; // Version number.
@@ -217,17 +217,17 @@ int qt_v4DebuggerHook(const char *json)
     if (command == "insertBreakpoint") {
         Breakpoint bp;
         bp.bpNumber = ++qt_v4BreakpointCount;
-        bp.lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
-        bp.engineName = ob.value(QStringLiteral("engineName")).toString();
-        bp.fullName = ob.value(QStringLiteral("fullName")).toString();
-        bp.condition = ob.value(QStringLiteral("condition")).toString();
+        bp.lineNumber = ob.value(QLatin1String("lineNumber")).toString().toInt();
+        bp.engineName = ob.value(QLatin1String("engineName")).toString();
+        bp.fullName = ob.value(QLatin1String("fullName")).toString();
+        bp.condition = ob.value(QLatin1String("condition")).toString();
         qt_v4Breakpoints.append(bp);
         return bp.bpNumber;
     }
 
     if (command == "removeBreakpoint") {
-        int lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
-        QString fullName = ob.value(QStringLiteral("fullName")).toString();
+        int lineNumber = ob.value(QLatin1String("lineNumber")).toString().toInt();
+        QString fullName = ob.value(QLatin1String("fullName")).toString();
         if (qt_v4Breakpoints.last().matches(fullName, lineNumber)) {
             qt_v4Breakpoints.removeLast();
             return Success;

@@ -1669,7 +1669,7 @@ void QQmlData::destroyed(QObject *object)
                 QString source = expr->expression();
                 if (source.size() > 100) {
                     source.truncate(96);
-                    source.append(QStringLiteral(" ..."));
+                    source.append(QLatin1String(" ..."));
                 }
                 locationString.append(source);
             } else {

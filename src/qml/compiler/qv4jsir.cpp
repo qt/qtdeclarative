@@ -929,15 +929,15 @@ QString IRPrinter::escape(const QString &s)
     for (int i = 0; i < s.length(); ++i) {
         const QChar ch = s.at(i);
         if (ch == QLatin1Char('\n'))
-            r += QStringLiteral("\\n");
+            r += QLatin1String("\\n");
         else if (ch == QLatin1Char('\r'))
-            r += QStringLiteral("\\r");
+            r += QLatin1String("\\r");
         else if (ch == QLatin1Char('\\'))
-            r += QStringLiteral("\\\\");
+            r += QLatin1String("\\\\");
         else if (ch == QLatin1Char('"'))
-            r += QStringLiteral("\\\"");
+            r += QLatin1String("\\\"");
         else if (ch == QLatin1Char('\''))
-            r += QStringLiteral("\\'");
+            r += QLatin1String("\\'");
         else
             r += ch;
     }

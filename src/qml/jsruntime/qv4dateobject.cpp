@@ -565,7 +565,7 @@ static inline QString ToString(double t)
 {
     if (std::isnan(t))
         return QStringLiteral("Invalid Date");
-    QString str = ToDateTime(t, Qt::LocalTime).toString() + QStringLiteral(" GMT");
+    QString str = ToDateTime(t, Qt::LocalTime).toString() + QLatin1String(" GMT");
     double tzoffset = LocalTZA + DaylightSavingTA(t);
     if (tzoffset) {
         int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);

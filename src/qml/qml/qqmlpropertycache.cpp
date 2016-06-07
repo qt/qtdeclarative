@@ -622,7 +622,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             setNamedProperty(methodName, ii, data, (old != 0));
 
             if (data->isSignal()) {
-                QHashedString on(QStringLiteral("on") % methodName.at(0).toUpper() % methodName.midRef(1));
+                QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % methodName.midRef(1));
                 setNamedProperty(on, ii, sigdata, (old != 0));
                 ++signalHandlerIndex;
             }

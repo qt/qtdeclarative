@@ -643,34 +643,37 @@ struct Stringify
 
 static QString quote(const QString &str)
 {
-    QString product = QStringLiteral("\"");
-    for (int i = 0; i < str.length(); ++i) {
+    QString product;
+    const int length = str.length();
+    product.reserve(length + 2);
+    product += QLatin1Char('"');
+    for (int i = 0; i < length; ++i) {
         QChar c = str.at(i);
         switch (c.unicode()) {
         case '"':
-            product += QStringLiteral("\\\"");
+            product += QLatin1String("\\\"");
             break;
         case '\\':
-            product += QStringLiteral("\\\\");
+            product += QLatin1String("\\\\");
             break;
         case '\b':
-            product += QStringLiteral("\\b");
+            product += QLatin1String("\\b");
             break;
         case '\f':
-            product += QStringLiteral("\\f");
+            product += QLatin1String("\\f");
             break;
         case '\n':
-            product += QStringLiteral("\\n");
+            product += QLatin1String("\\n");
             break;
         case '\r':
-            product += QStringLiteral("\\r");
+            product += QLatin1String("\\r");
             break;
         case '\t':
-            product += QStringLiteral("\\t");
+            product += QLatin1String("\\t");
             break;
         default:
             if (c.unicode() <= 0x1f) {
-                product += QStringLiteral("\\u00");
+                product += QLatin1String("\\u00");
                 product += (c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0')) +
                         QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
             } else {
@@ -806,10 +809,10 @@ QString Stringify::JO(Object *o)
     if (partial.isEmpty()) {
         result = QStringLiteral("{}");
     } else if (gap.isEmpty()) {
-        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QLatin1Char('}');
+        result = QLatin1Char('{') + partial.join(QLatin1Char(',')) + QLatin1Char('}');
     } else {
-        QString separator = QStringLiteral(",\n") + indent;
-        result = QStringLiteral("{\n") + indent + partial.join(separator) + QLatin1Char('\n')
+        QString separator = QLatin1String(",\n") + indent;
+        result = QLatin1String("{\n") + indent + partial.join(separator) + QLatin1Char('\n')
                  + stepback + QLatin1Char('}');
     }
 
@@ -852,10 +855,10 @@ QString Stringify::JA(ArrayObject *a)
     if (partial.isEmpty()) {
         result = QStringLiteral("[]");
     } else if (gap.isEmpty()) {
-        result = QStringLiteral("[") + partial.join(QLatin1Char(',')) + QStringLiteral("]");
+        result = QLatin1Char('[') + partial.join(QLatin1Char(',')) + QLatin1Char(']');
     } else {
-        QString separator = QStringLiteral(",\n") + indent;
-        result = QStringLiteral("[\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("]");
+        QString separator = QLatin1String(",\n") + indent;
+        result = QLatin1String("[\n") + indent + partial.join(separator) + QLatin1Char('\n') + stepback + QLatin1Char(']');
     }
 
     indent = stepback;

@@ -81,7 +81,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // Add some leading whitespace to account for the binding's column offset.
     // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
     function.fill(QChar(QChar::Space), qMax(column, (quint16)2) - 2);
-    function += QStringLiteral("(function ") + handlerName + QLatin1Char('(');
+    function += QLatin1String("(function ") + handlerName + QLatin1Char('(');
 
     if (parameterString.isEmpty()) {
         QString error;
@@ -97,7 +97,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     } else
         function += parameterString;
 
-    function += QStringLiteral(") { ") + expression + QStringLiteral(" })");
+    function += QLatin1String(") { ") + expression + QLatin1String(" })");
     m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
 
     if (m_function.isNullOrUndefined())

@@ -1654,7 +1654,7 @@ void QQmlDelegateModelItemMetaType::initializeMetaObject()
 
     int notifierId = 0;
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
-        QString propertyName = QStringLiteral("in") + groupNames.at(i);
+        QString propertyName = QLatin1String("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
         builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
@@ -1662,7 +1662,7 @@ void QQmlDelegateModelItemMetaType::initializeMetaObject()
         propertyBuilder.setWritable(true);
     }
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
-        const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
+        const QString propertyName = groupNames.at(i) + QLatin1String("Index");
         builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
                 propertyName.toUtf8(), "int", notifierId);
@@ -1710,7 +1710,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     for (int i = 2; i < groupNames.count(); ++i) {
-        QString propertyName = QStringLiteral("in") + groupNames.at(i);
+        QString propertyName = QLatin1String("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
         s = v4->newString(propertyName);
         p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, i + 1, QQmlDelegateModelItem::get_member)));
@@ -1718,7 +1718,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
         proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     }
     for (int i = 2; i < groupNames.count(); ++i) {
-        const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
+        const QString propertyName = groupNames.at(i) + QLatin1String("Index");
         s = v4->newString(propertyName);
         p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, i + 1, QQmlDelegateModelItem::get_index)));
         p->setSetter(0);
