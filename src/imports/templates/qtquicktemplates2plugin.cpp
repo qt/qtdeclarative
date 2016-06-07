@@ -173,9 +173,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
 
     // QtQuick.Controls 2.1 (Qt 5.8)
-    qmlRegisterType<QQuickButtonGroup>(uri, 2, 1, "ButtonGroup");
-    qmlRegisterType<QQuickStackView>(uri, 2, 1, "StackView");
-    qmlRegisterType<QQuickSwipeView>(uri, 2, 1, "SwipeView");
+    qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
+    qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");
+    qmlRegisterType<QQuickSwipeView, 1>(uri, 2, 1, "SwipeView");
 }
 
 QT_END_NAMESPACE
