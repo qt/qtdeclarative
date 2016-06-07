@@ -97,8 +97,8 @@ public:
 Q_SIGNALS:
     void indexChanged();
     void isCurrentItemChanged();
-    void isNextItemChanged();
-    void isPreviousItemChanged();
+    /*Q_REVISION(1)*/ void isNextItemChanged();
+    /*Q_REVISION(1)*/ void isPreviousItemChanged();
     void viewChanged();
 
 private:
