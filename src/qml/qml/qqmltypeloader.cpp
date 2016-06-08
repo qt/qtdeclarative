@@ -1961,7 +1961,8 @@ void QQmlTypeLoader::trimCache()
         QList<TypeCache::Iterator> unneededTypes;
         for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
             QQmlTypeData *typeData = iter.value();
-            if (typeData->m_compiledData && typeData->m_compiledData->count() == 1) {
+            if (typeData->m_compiledData && typeData->count() == 1
+                    && typeData->m_compiledData->count() == 1) {
                 // There are no live objects of this type
                 unneededTypes.append(iter);
             }
