@@ -120,7 +120,7 @@ QT_BEGIN_NAMESPACE
     More advanced use cases can be handled using the \c addButton() and
     \c removeButton() methods.
 
-    \sa RadioButton
+    \sa RadioButton, {Button Controls}
 */
 
 class QQuickButtonGroupPrivate : public QObjectPrivate
