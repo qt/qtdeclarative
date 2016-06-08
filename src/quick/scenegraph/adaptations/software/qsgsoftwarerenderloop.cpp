@@ -229,6 +229,7 @@ QImage QSGSoftwareRenderLoop::grab(QQuickWindow *window)
     renderWindow(window);
 
     QImage grabbed = grabContent;
+    grabbed.detach();
     grabContent = QImage();
     return grabbed;
 }
