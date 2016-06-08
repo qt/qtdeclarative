@@ -30,6 +30,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/qsgrendererinterface.h>
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qopenglfunctions.h>
 
@@ -91,19 +92,21 @@ private:
 
     bool m_isMesaSoftwareRasterizer;
     int m_mesaVersion;
+    bool m_isOpenGLRenderer;
 };
 
 tst_QQuickItemLayer::tst_QQuickItemLayer()
     : m_isMesaSoftwareRasterizer(false)
     , m_mesaVersion(0)
+    , m_isOpenGLRenderer(true)
 {
 }
 
 void tst_QQuickItemLayer::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    QWindow window;
 #ifndef QT_NO_OPENGL
+    QWindow window;
     QOpenGLContext context;
     window.setSurfaceType(QWindow::OpenGLSurface);
     window.create();
@@ -131,9 +134,13 @@ void tst_QQuickItemLayer::initTestCase()
             m_mesaVersion = QT_VERSION_CHECK(major, minor, patch);
         }
     }
-#else
     window.create();
 #endif
+    QQuickView view;
+    view.showNormal();
+    QTest::qWaitForWindowExposed(&view);
+    if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+        m_isOpenGLRenderer = false;
 }
 
 // The test draws a red and a blue box next to each other and tests that the
@@ -206,6 +213,9 @@ void tst_QQuickItemLayer::layerSourceRect()
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QImage fb = runTest("SourceRect.qml");
 
     // Check that the edges are converted to blue
@@ -226,6 +236,10 @@ void tst_QQuickItemLayer::layerIsTextureProvider()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QImage fb = runTest("TextureProvider.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
@@ -258,6 +272,9 @@ void tst_QQuickItemLayer::layerVisibility()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QFETCH(bool, visible);
     QFETCH(bool, effect);
@@ -307,6 +324,9 @@ void tst_QQuickItemLayer::layerZOrder()
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QFETCH(bool, effect);
 
     QQuickView view;
@@ -340,6 +360,9 @@ void tst_QQuickItemLayer::changeZOrder()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QFETCH(bool, layered);
     QFETCH(bool, effect);
@@ -408,6 +431,10 @@ void tst_QQuickItemLayer::changeSamplerName()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QImage fb = runTest("SamplerNameChange.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
 }
@@ -416,6 +443,9 @@ void tst_QQuickItemLayer::itemEffect()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QImage fb = runTest("ItemEffect.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(199, 0), qRgb(0xff, 0, 0));
@@ -450,6 +480,9 @@ void tst_QQuickItemLayer::textureMirroring_data()
 void tst_QQuickItemLayer::textureMirroring()
 {
     QFETCH(int, mirroring);
+
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QQuickView view;
     view.setSource(testFileUrl("TextureMirroring.qml"));
