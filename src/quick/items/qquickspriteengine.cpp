@@ -399,6 +399,15 @@ QImage QQuickSpriteEngine::assembledImage()
 
         QImage img = state->m_pix.image();
 
+        {
+            const QSize frameSize(state->m_frameWidth, state->m_frameHeight);
+            if (!(img.size() - frameSize).isValid()) {
+                qmlInfo(state).nospace() << "SpriteEngine: Invalid frame size " << frameSize << "."
+                                            " It's bigger than image size " << img.size() << ".";
+                return QImage();
+            }
+        }
+
         //Check that the frame sizes are the same within one sprite
         if (!state->m_frameWidth)
             state->m_frameWidth = img.width() / state->frames();
