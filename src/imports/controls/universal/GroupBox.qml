@@ -53,11 +53,8 @@ T.GroupBox {
     padding: 12
     topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [label]
     label: Text {
         x: control.leftPadding
         width: control.availableWidth
@@ -71,9 +68,7 @@ T.GroupBox {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [label]
 
-    //! [background]
     background: Rectangle {
         y: control.topPadding - control.padding
         width: parent.width
@@ -82,5 +77,4 @@ T.GroupBox {
         color: "transparent"
         border.color: control.Universal.chromeDisabledLowColor
     }
-    //! [background]
 }

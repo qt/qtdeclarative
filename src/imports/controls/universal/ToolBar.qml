@@ -47,14 +47,10 @@ T.ToolBar {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 48 // AppBarThemeCompactHeight
         color: control.Universal.chromeMediumColor
     }
-    //! [background]
 }

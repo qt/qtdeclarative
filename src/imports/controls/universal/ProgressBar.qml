@@ -47,7 +47,6 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: ProgressStrip {
         id: strip
         implicitHeight: 10
@@ -63,9 +62,7 @@ T.ProgressBar {
             running: control.visible && control.indeterminate
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 10
@@ -78,5 +75,4 @@ T.ProgressBar {
         visible: !control.indeterminate
         color: control.Universal.baseLowColor
     }
-    //! [background]
 }

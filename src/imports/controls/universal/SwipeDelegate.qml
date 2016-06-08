@@ -54,7 +54,6 @@ T.SwipeDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -78,9 +77,7 @@ T.SwipeDelegate {
             }
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Universal.background
 
@@ -105,5 +102,4 @@ T.SwipeDelegate {
             }
         }
     }
-    //! [background]
 }

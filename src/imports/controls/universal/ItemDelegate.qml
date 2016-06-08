@@ -54,7 +54,6 @@ T.ItemDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -69,9 +68,7 @@ T.ItemDelegate {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         visible: control.down || control.highlighted || control.visualFocus
         color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
@@ -84,5 +81,4 @@ T.ItemDelegate {
         }
 
     }
-    //! [background]
 }

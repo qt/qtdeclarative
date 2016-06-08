@@ -41,48 +41,36 @@ import QtQuick.Controls.Universal 2.0
 T.StackView {
     id: control
 
-    //! [popEnter]
     popEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
             NumberAnimation { property: "x"; from: (control.mirrored ? -0.3 : 0.3) * -control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
-    //! [popEnter]
 
-    //! [popExit]
     popExit: Transition {
         NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.OutQuint }
     }
-    //! [popExit]
 
-    //! [pushEnter]
     pushEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
             NumberAnimation { property: "x"; from: (control.mirrored ? -0.3 : 0.3) * control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
-    //! [pushEnter]
 
-    //! [pushExit]
     pushExit: Transition {
         NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.OutQuint }
     }
-    //! [pushExit]
 
-    //! [replaceEnter]
     replaceEnter: Transition {
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.InQuint }
             NumberAnimation { property: "x"; from: (control.mirrored ? -0.3 : 0.3) * control.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
         }
     }
-    //! [replaceEnter]
 
-    //! [replaceExit]
     replaceExit: Transition {
         NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.OutQuint }
     }
-    //! [replaceExit]
 }

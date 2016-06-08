@@ -52,7 +52,6 @@ T.Slider {
 
     property bool useSystemFocusVisuals: true
 
-    //! [handle]
     handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -65,9 +64,7 @@ T.Slider {
         radius: 4
         color: control.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [handle]
 
-    //! [background]
     background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
@@ -99,5 +96,4 @@ T.Slider {
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [background]
 }

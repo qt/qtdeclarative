@@ -44,7 +44,6 @@ T.Dial {
     implicitWidth: 100
     implicitHeight: 100
 
-    //! [background]
     background: Rectangle {
         x: control.width / 2 - width / 2
         y: control.height / 2 - height / 2
@@ -55,9 +54,7 @@ T.Dial {
         border.color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumColor
         border.width: 2
     }
-    //! [background]
 
-    //! [handle]
     handle: Rectangle {
         implicitWidth: 20
         implicitHeight: 20
@@ -80,5 +77,4 @@ T.Dial {
             }
         ]
     }
-    //! [handle]
 }

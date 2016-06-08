@@ -53,7 +53,6 @@ T.Button {
 
     property bool useSystemFocusVisuals: true
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -64,9 +63,7 @@ T.Button {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 32
         implicitHeight: 32
@@ -76,5 +73,4 @@ T.Button {
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor
     }
-    //! [background]
 }

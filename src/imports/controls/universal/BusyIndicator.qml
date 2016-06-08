@@ -45,7 +45,6 @@ T.BusyIndicator {
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
 
-    //! [contentItem]
     contentItem: ProgressRing {
         id: ring
 
@@ -62,5 +61,4 @@ T.BusyIndicator {
             running: control.visible && control.running
         }
     }
-    //! [contentItem]
 }

@@ -79,7 +79,6 @@ T.TextField {
         elide: Text.ElideRight
     }
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 60 // TextControlThemeMinWidth - 4 (border)
         implicitHeight: 28 // TextControlThemeMinHeight - 4 (border)
@@ -89,5 +88,4 @@ T.TextField {
                        control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
         color: control.enabled ? control.Universal.background : control.Universal.baseLowColor
     }
-    //! [background]
 }
