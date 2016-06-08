@@ -1,6 +1,7 @@
 Qt 5.7 introduces many new features and improvements as well as bugfixes
-over the 5.6.x series. For more details, refer to the online documentation
-included in this distribution. The documentation is also available online:
+over the 5.6.x series. Also, there is a change in the licensing terms.
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
 
   http://doc.qt.io/qt-5/index.html
 
@@ -14,6 +15,21 @@ corresponding to tasks in the Qt Bug Tracker:
 
 Each of these identifiers can be entered in the bug tracker to obtain more
 information about a particular change.
+
+****************************************************************************
+*                          Important License Changes                       *
+****************************************************************************
+
+  This module is no longer available under LGPLv2.1. The libraries are
+  now available under the following licenses:
+    * Commercial License
+    * GNU General Public License v2.0 (LICENSE.GPL2) and later
+    * GNU Lesser General Public License v3.0 (LICENSE.LGPL3)
+
+  The tools are now available under the following licenses:
+    * Commercial License
+    * GNU General Public License 3.0 (LICENSE.GPL3) with exceptions
+      described in The Qt Company GPL Exception 1.0 (LICENSE.GPL3-EXCEPT)
 
 ****************************************************************************
 *                   Important Behavior Changes                             *
