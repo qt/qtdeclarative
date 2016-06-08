@@ -68,12 +68,12 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->metaObjects)
+    , sharedState(new QQmlObjectCreatorSharedState)
+    , topLevelCreator(true)
     , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
     init(parentContext);
 
-    sharedState = new QQmlObjectCreatorSharedState;
-    topLevelCreator = true;
     sharedState->componentAttached = 0;
     sharedState->allCreatedBindings.allocate(compiledData->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compiledData->totalParserStatusCount);
@@ -93,12 +93,11 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompile
     , resolvedTypes(compiledData->resolvedTypes)
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->metaObjects)
+    , sharedState(inheritedSharedState)
+    , topLevelCreator(false)
     , activeVMEDataForRootContext(0)
 {
     init(parentContext);
-
-    sharedState = inheritedSharedState;
-    topLevelCreator = false;
 }
 
 void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
