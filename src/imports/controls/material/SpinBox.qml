@@ -58,15 +58,12 @@ T.SpinBox {
     leftPadding: (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
-    //! [validator]
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
         top: Math.max(control.from, control.to)
     }
-    //! [validator]
 
-    //! [contentItem]
     contentItem: TextInput {
         text: control.textFromValue(control.value, control.locale)
 
@@ -106,9 +103,7 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
-    //! [contentItem]
 
-    //! [up.indicator]
     up.indicator: PaddedRectangle {
         x: control.mirrored ? 0 : parent.width - width
         implicitWidth: 48
@@ -136,9 +131,7 @@ T.SpinBox {
             color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
         }
     }
-    //! [up.indicator]
 
-    //! [down.indicator]
     down.indicator: PaddedRectangle {
         x: control.mirrored ? parent.width - width : 0
         implicitWidth: 48
@@ -159,9 +152,7 @@ T.SpinBox {
             color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
         }
     }
-    //! [down.indicator]
 
-    //! [background]
     background: Item {
         implicitWidth: 192
         implicitHeight: 48
@@ -174,5 +165,4 @@ T.SpinBox {
             color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
         }
     }
-    //! [background]
 }

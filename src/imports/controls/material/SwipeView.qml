@@ -45,7 +45,6 @@ T.SwipeView {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: ListView {
         model: control.contentModel
         currentIndex: control.currentIndex
@@ -60,5 +59,4 @@ T.SwipeView {
         preferredHighlightEnd: 0
         highlightMoveDuration: 250
     }
-    //! [contentItem]
 }

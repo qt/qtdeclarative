@@ -51,7 +51,6 @@ T.Slider {
 
     padding: 6
 
-    //! [handle]
     handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
@@ -59,9 +58,7 @@ T.Slider {
         handleHasFocus: control.visualFocus
         handlePressed: control.pressed
     }
-    //! [handle]
 
-    //! [background]
     background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
@@ -83,5 +80,4 @@ T.Slider {
             color: control.Material.accentColor
         }
     }
-    //! [background]
 }

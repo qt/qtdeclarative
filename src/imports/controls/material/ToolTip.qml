@@ -68,21 +68,17 @@ T.ToolTip {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.InQuad; duration: 500 }
     }
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
         // TODO: wrapMode: Label.Wrap
         color: control.Material.primaryTextColor
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 32
         color: control.Material.tooltipColor
         opacity: 0.9
         radius: 2
     }
-    //! [background]
 }

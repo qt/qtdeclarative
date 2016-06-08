@@ -50,11 +50,8 @@ T.Pane {
 
     padding: 12
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Material.backgroundColor
 
@@ -63,5 +60,4 @@ T.Pane {
             elevation: control.Material.elevation
         }
     }
-    //! [background]
 }

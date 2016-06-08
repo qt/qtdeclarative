@@ -54,15 +54,12 @@ T.CheckDelegate {
     bottomPadding: 14
     spacing: 16
 
-    //! [indicator]
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
@@ -75,14 +72,11 @@ T.CheckDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 48
 
         visible: control.down || control.highlighted
         color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
     }
-    //! [background]
 }

@@ -49,15 +49,11 @@ T.Frame {
 
     padding: 12
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         radius: 3
         color: "transparent"
         border.color: control.Material.frameColor
     }
-    //! [background]
 }

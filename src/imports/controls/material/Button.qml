@@ -57,7 +57,6 @@ T.Button {
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -68,9 +67,7 @@ T.Button {
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
@@ -106,5 +103,4 @@ T.Button {
             elevation: control.Material.elevation
         }
     }
-    //! [background]
 }

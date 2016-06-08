@@ -48,19 +48,11 @@ T.Drawer {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    //! [enter]
     enter: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [enter]
-
-    //! [exit]
     exit: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [exit]
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Material.dialogColor
 
@@ -70,5 +62,4 @@ T.Drawer {
             fullHeight: true
         }
     }
-    //! [background]
 }

@@ -47,7 +47,6 @@ T.BusyIndicator {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: ProgressRing {
         id: ring
         x: control.leftPadding + (control.availableWidth - width) / 2
@@ -68,5 +67,4 @@ T.BusyIndicator {
             running: control.visible && control.running
         }
     }
-    //! [contentItem]
 }

@@ -54,15 +54,12 @@ T.CheckBox {
     topPadding: padding + 7
     bottomPadding: padding + 7
 
-    //! [indicator]
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
@@ -75,5 +72,4 @@ T.CheckBox {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 }

@@ -51,7 +51,6 @@ T.ItemDelegate {
     padding: 16
     spacing: 16
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -64,14 +63,11 @@ T.ItemDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 48
 
         visible: control.down || control.highlighted
         color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
     }
-    //! [background]
 }

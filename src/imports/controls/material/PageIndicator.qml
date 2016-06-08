@@ -49,7 +49,6 @@ T.PageIndicator {
     padding: 6
     spacing: 6
 
-    //! [delegate]
     delegate: Rectangle {
         implicitWidth: 8
         implicitHeight: 8
@@ -60,9 +59,7 @@ T.PageIndicator {
         opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }
     }
-    //! [delegate]
 
-    //! [contentItem]
     contentItem: Row {
         spacing: control.spacing
 
@@ -71,5 +68,4 @@ T.PageIndicator {
             delegate: control.delegate
         }
     }
-    //! [contentItem]
 }

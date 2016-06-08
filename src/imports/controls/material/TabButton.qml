@@ -49,7 +49,6 @@ T.TabButton {
 
     padding: 12
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -58,11 +57,8 @@ T.TabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Item {
         implicitHeight: 48
     }
-    //! [background]
 }
