@@ -248,7 +248,7 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
         eventHashStr = getHashStringForQmlEvent(eventLocation, type);
     } else {
         const QString filePath = QUrl(eventLocation.filename).path();
-        displayName = filePath.mid(
+        displayName = filePath.midRef(
                     filePath.lastIndexOf(QLatin1Char('/')) + 1) +
                     QLatin1Char(':') + QString::number(eventLocation.line);
         eventHashStr = getHashStringForQmlEvent(eventLocation, type);
@@ -327,8 +327,8 @@ void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventTy
 
     QString filePath = QUrl(location).path();
 
-    QString eventHashStr = filePath.mid(filePath.lastIndexOf(QLatin1Char('/')) + 1) +
-            QStringLiteral(":") + QString::number(type);
+    const QString eventHashStr = filePath.midRef(filePath.lastIndexOf(QLatin1Char('/')) + 1)
+            + QLatin1Char(':') + QString::number(type);
     QmlRangeEventData *newEvent;
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
