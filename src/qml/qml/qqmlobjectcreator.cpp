@@ -114,6 +114,7 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
     context = 0;
     _qobject = 0;
     _scopeObject = 0;
+    _bindingTarget = 0;
     _valueTypeProperty = 0;
     _compiledObject = 0;
     _compiledObjectIndex = -1;
