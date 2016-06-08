@@ -2,3 +2,6 @@
 *
 [enforceRange_withoutHighlight]
 osx
+#QTBUG-53863
+[populateTransitions]
+opensuse-42.1
