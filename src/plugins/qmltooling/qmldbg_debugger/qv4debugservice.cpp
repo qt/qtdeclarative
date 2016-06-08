@@ -90,7 +90,7 @@ public:
         TRACE_PROTOCOL(qDebug() << "handling command" << command() << "...");
 
         req = request;
-        seq = req.value(QStringLiteral("seq"));
+        seq = req.value(QLatin1String("seq"));
         debugService = s;
 
         handleRequest();
@@ -128,7 +128,7 @@ protected:
 
     void createErrorResponse(const QString &msg)
     {
-        QJsonValue command = req.value(QStringLiteral("command"));
+        QJsonValue command = req.value(QLatin1String("command"));
         response.insert(QStringLiteral("command"), command);
         addRequestSequence();
         addSuccess(false);
@@ -154,9 +154,9 @@ public:
 
     virtual void handleRequest()
     {
-        QString msg = QStringLiteral("unimplemented command \"");
-        msg += req.value(QStringLiteral("command")).toString();
-        msg += QLatin1Char('"');
+        QString msg = QLatin1String("unimplemented command \"")
+                + req.value(QLatin1String("command")).toString()
+                + QLatin1Char('"');
         createErrorResponse(msg);
     }
 };
@@ -189,23 +189,23 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject args = req.value(QStringLiteral("arguments")).toObject();
+        QJsonObject args = req.value(QLatin1String("arguments")).toObject();
         if (args.isEmpty())
             return;
 
-        QString type = args.value(QStringLiteral("type")).toString();
-        if (type != QStringLiteral("scriptRegExp")) {
+        QString type = args.value(QLatin1String("type")).toString();
+        if (type != QLatin1String("scriptRegExp")) {
             createErrorResponse(QStringLiteral("breakpoint type \"%1\" is not implemented").arg(type));
             return;
         }
 
-        QString fileName = args.value(QStringLiteral("target")).toString();
+        QString fileName = args.value(QLatin1String("target")).toString();
         if (fileName.isEmpty()) {
             createErrorResponse(QStringLiteral("breakpoint has no file name"));
             return;
         }
 
-        int line = args.value(QStringLiteral("line")).toInt(-1);
+        int line = args.value(QLatin1String("line")).toInt(-1);
         if (line < 0) {
             createErrorResponse(QStringLiteral("breakpoint has an invalid line number"));
             return;
@@ -240,11 +240,11 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject args = req.value(QStringLiteral("arguments")).toObject();
+        QJsonObject args = req.value(QLatin1String("arguments")).toObject();
         if (args.isEmpty())
             return;
 
-        int id = args.value(QStringLiteral("breakpoint")).toInt(-1);
+        int id = args.value(QLatin1String("breakpoint")).toInt(-1);
         if (id < 0) {
             createErrorResponse(QStringLiteral("breakpoint has an invalid number"));
             return;
@@ -274,9 +274,9 @@ public:
     {
         // decypher the payload:
 
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        int fromFrame = arguments.value(QStringLiteral("fromFrame")).toInt(0);
-        int toFrame = arguments.value(QStringLiteral("toFrame")).toInt(fromFrame + 10);
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        int fromFrame = arguments.value(QLatin1String("fromFrame")).toInt(0);
+        int toFrame = arguments.value(QLatin1String("toFrame")).toInt(fromFrame + 10);
         // no idea what the bottom property is for, so we'll ignore it.
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
@@ -306,8 +306,8 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        const int frameNr = arguments.value(QStringLiteral("number")).toInt(
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        const int frameNr = arguments.value(QLatin1String("number")).toInt(
                     debugService->selectedFrame());
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
@@ -348,10 +348,10 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        const int frameNr = arguments.value(QStringLiteral("frameNumber")).toInt(
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        const int frameNr = arguments.value(QLatin1String("frameNumber")).toInt(
                     debugService->selectedFrame());
-        const int scopeNr = arguments.value(QStringLiteral("number")).toInt(0);
+        const int scopeNr = arguments.value(QLatin1String("number")).toInt(0);
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
@@ -393,8 +393,8 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        QJsonArray handles = arguments.value(QStringLiteral("handles")).toArray();
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        QJsonArray handles = arguments.value(QLatin1String("handles")).toArray();
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
@@ -433,7 +433,7 @@ public:
     virtual void handleRequest()
     {
         // decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
@@ -445,17 +445,17 @@ public:
         if (arguments.empty()) {
             debugger->resume(QV4Debugger::FullThrottle);
         } else {
-            QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-            QString stepAction = arguments.value(QStringLiteral("stepaction")).toString();
-            const int stepcount = arguments.value(QStringLiteral("stepcount")).toInt(1);
+            QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+            QString stepAction = arguments.value(QLatin1String("stepaction")).toString();
+            const int stepcount = arguments.value(QLatin1String("stepcount")).toInt(1);
             if (stepcount != 1)
                 qWarning() << "Step count other than 1 is not supported.";
 
-            if (stepAction == QStringLiteral("in")) {
+            if (stepAction == QLatin1String("in")) {
                 debugger->resume(QV4Debugger::StepIn);
-            } else if (stepAction == QStringLiteral("out")) {
+            } else if (stepAction == QLatin1String("out")) {
                 debugger->resume(QV4Debugger::StepOut);
-            } else if (stepAction == QStringLiteral("next")) {
+            } else if (stepAction == QLatin1String("next")) {
                 debugger->resume(QV4Debugger::StepOver);
             } else {
                 createErrorResponse(QStringLiteral("continue command has invalid stepaction"));
@@ -499,13 +499,13 @@ public:
         bool wasEnabled = debugService->debuggerAgent.breakOnThrow();
 
         //decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        QString type = arguments.value(QStringLiteral("type")).toString();
-        bool enabled = arguments.value(QStringLiteral("number")).toBool(!wasEnabled);
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        QString type = arguments.value(QLatin1String("type")).toString();
+        bool enabled = arguments.value(QLatin1String("number")).toBool(!wasEnabled);
 
-        if (type == QStringLiteral("all")) {
+        if (type == QLatin1String("all")) {
             // that's fine
-        } else if (type == QStringLiteral("uncaught")) {
+        } else if (type == QLatin1String("uncaught")) {
             createErrorResponse(QStringLiteral("breaking only on uncaught exceptions is not supported yet"));
             return;
         } else {
@@ -537,8 +537,8 @@ public:
     virtual void handleRequest()
     {
         //decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        int types = arguments.value(QStringLiteral("types")).toInt(-1);
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        int types = arguments.value(QLatin1String("types")).toInt(-1);
         if (types < 0 || types > 7) {
             createErrorResponse(QStringLiteral("invalid types value in scripts command"));
             return;
@@ -608,8 +608,8 @@ public:
 
     virtual void handleRequest()
     {
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        QString expression = arguments.value(QStringLiteral("expression")).toString();
+        QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
+        QString expression = arguments.value(QLatin1String("expression")).toString();
         int frame = -1;
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
@@ -624,7 +624,7 @@ public:
             }
             debugger = debuggers.first();
         } else {
-            frame = arguments.value(QStringLiteral("frame")).toInt(0);
+            frame = arguments.value(QLatin1String("frame")).toInt(0);
         }
 
         ExpressionEvalJob job(debugger->engine(), frame, expression, debugger->collector());
@@ -802,9 +802,9 @@ void QV4DebugServiceImpl::handleV8Request(const QByteArray &payload)
 
     QJsonDocument request = QJsonDocument::fromJson(payload);
     QJsonObject o = request.object();
-    QJsonValue type = o.value(QStringLiteral("type"));
-    if (type.toString() == QStringLiteral("request")) {
-        QJsonValue command = o.value(QStringLiteral("command"));
+    QJsonValue type = o.value(QLatin1String("type"));
+    if (type.toString() == QLatin1String("request")) {
+        QJsonValue command = o.value(QLatin1String("command"));
         V8CommandHandler *h = v8CommandHandler(command.toString());
         if (h)
             h->handle(o, this);

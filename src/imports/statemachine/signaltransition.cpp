@@ -178,7 +178,7 @@ void SignalTransitionParser::verifyBindings(const QV4::CompiledData::Unit *qmlUn
 
         QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
 
-        if (propName != QStringLiteral("onTriggered")) {
+        if (propName != QLatin1String("onTriggered")) {
             error(props.at(ii), SignalTransition::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
             return;
         }

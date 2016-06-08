@@ -248,7 +248,7 @@ void QuickTestResult::setDataTag(const QString &tag)
     if (!tag.isEmpty()) {
         QTestData *data = &(QTest::newRow(tag.toUtf8().constData()));
         QTestResult::setCurrentTestData(data);
-        QTestPrivate::checkBlackLists((testCaseName() + QStringLiteral("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
+        QTestPrivate::checkBlackLists((testCaseName() + QLatin1String("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
         emit dataTagChanged();
     } else {
         QTestResult::setCurrentTestData(0);
