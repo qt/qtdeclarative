@@ -58,7 +58,6 @@ QT_BEGIN_NAMESPACE
 
 class QQmlContext;
 class QQmlComponent;
-class QQmlIncubator;
 
 class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuickItemChangeListener
 {
@@ -93,7 +92,6 @@ public:
     bool heightValid;
     QQmlContext *context;
     QQmlComponent *component;
-    QQmlIncubator *incubator;
     QQuickStackView *view;
     QPointer<QQuickItem> originalParent;
     QQuickStackView::Status status;

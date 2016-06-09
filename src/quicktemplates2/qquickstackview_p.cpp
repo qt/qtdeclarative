@@ -72,7 +72,7 @@ private:
 
 QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(nullptr),
     index(-1), init(false), removal(false), ownItem(false), ownComponent(false), widthValid(false), heightValid(false),
-    context(nullptr), component(nullptr), incubator(nullptr), view(nullptr),
+    context(nullptr), component(nullptr), view(nullptr),
     status(QQuickStackView::Inactive)
 {
 }
@@ -107,7 +107,6 @@ QQuickStackElement::~QQuickStackElement()
     }
 
     delete context;
-    delete incubator;
 }
 
 QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickStackView *view)
@@ -144,9 +143,8 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         context = new QQmlContext(creationContext);
         context->setContextObject(parent);
 
-        delete incubator;
-        incubator = new QQuickStackIncubator(this);
-        component->create(*incubator, context);
+        QQuickStackIncubator incubator(this);
+        component->create(incubator, context);
         if (component->isError())
             qWarning() << qPrintable(component->errorString().trimmed());
     } else {
