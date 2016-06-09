@@ -12,6 +12,7 @@ QMAKE_TARGET_DESCRIPTION = "Quick D3D12 Renderer for Qt."
 SOURCES += \
     $$PWD/qsgd3d12adaptation.cpp \
     $$PWD/qsgd3d12renderloop.cpp \
+    $$PWD/qsgd3d12threadedrenderloop.cpp \
     $$PWD/qsgd3d12renderer.cpp \
     $$PWD/qsgd3d12context.cpp \
     $$PWD/qsgd3d12rendercontext.cpp \
@@ -33,6 +34,7 @@ NO_PCH_SOURCES += \
 HEADERS += \
     $$PWD/qsgd3d12adaptation_p.h \
     $$PWD/qsgd3d12renderloop_p.h \
+    $$PWD/qsgd3d12threadedrenderloop_p.h \
     $$PWD/qsgd3d12renderer_p.h \
     $$PWD/qsgd3d12context_p.h \
     $$PWD/qsgd3d12rendercontext_p.h \

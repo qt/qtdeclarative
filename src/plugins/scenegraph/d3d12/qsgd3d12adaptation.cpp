@@ -39,6 +39,7 @@
 
 #include "qsgd3d12adaptation_p.h"
 #include "qsgd3d12renderloop_p.h"
+#include "qsgd3d12threadedrenderloop_p.h"
 #include "qsgd3d12context_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -68,6 +69,16 @@ QSGContextFactoryInterface::Flags QSGD3D12Adaptation::flags(const QString &) con
 
 QSGRenderLoop *QSGD3D12Adaptation::createWindowManager()
 {
+    static bool threaded = false;
+    static bool envChecked = false;
+    if (!envChecked) {
+        envChecked = true;
+        threaded = qgetenv("QSG_RENDER_LOOP") == QByteArrayLiteral("threaded");
+    }
+
+    if (threaded)
+        return new QSGD3D12ThreadedRenderLoop;
+
     return new QSGD3D12RenderLoop;
 }
 

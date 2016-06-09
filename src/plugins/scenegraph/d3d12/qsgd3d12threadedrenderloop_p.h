@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGD3D12RENDERLOOP_P_H
-#define QSGD3D12RENDERLOOP_P_H
+#ifndef QSGD3D12THREADEDRENDERLOOP_P_H
+#define QSGD3D12THREADEDRENDERLOOP_P_H
 
 //
 //  W A R N I N G
@@ -58,12 +58,15 @@ QT_BEGIN_NAMESPACE
 class QSGD3D12Engine;
 class QSGD3D12Context;
 class QSGD3D12RenderContext;
+class QSGD3D12RenderThread;
 
-class QSGD3D12RenderLoop : public QSGRenderLoop
+class QSGD3D12ThreadedRenderLoop : public QSGRenderLoop
 {
+    Q_OBJECT
+
 public:
-    QSGD3D12RenderLoop();
-    ~QSGD3D12RenderLoop();
+    QSGD3D12ThreadedRenderLoop();
+    ~QSGD3D12ThreadedRenderLoop();
 
     void show(QQuickWindow *window) override;
     void hide(QQuickWindow *window) override;
@@ -88,25 +91,39 @@ public:
     void postJob(QQuickWindow *window, QRunnable *job) override;
 
     QSurface::SurfaceType windowSurfaceType() const override;
+    bool interleaveIncubation() const override;
     int flags() const override;
 
+    bool event(QEvent *e) override;
+
+public Q_SLOTS:
+    void onAnimationStarted();
+    void onAnimationStopped();
+
 private:
-    void renderWindow(QQuickWindow *window);
-
-    QSGD3D12Context *sg;
-
     struct WindowData {
-        QSGD3D12RenderContext *rc = nullptr;
-        QSGD3D12Engine *engine = nullptr;
-        bool updatePending = false;
-        bool grabOnly = false;
+        QQuickWindow *window;
+        QSGD3D12RenderThread *thread;
+        uint updateDuringSync : 1;
+        uint forceRenderPass : 1;
     };
 
-    QHash<QQuickWindow *, WindowData> m_windows;
+    void startOrStopAnimationTimer();
+    void handleExposure(QQuickWindow *window);
+    void handleObscurity(WindowData *w);
+    void scheduleUpdate(WindowData *w);
+    void handleResourceRelease(WindowData *w, bool destroying);
+    void polishAndSync(WindowData *w, bool inExpose);
 
-    QImage m_grabContent;
+    QSGD3D12Context *sg;
+    QAnimationDriver *anim;
+    int animationTimer = 0;
+    bool lockedForSync = false;
+    QVector<WindowData> windows;
+
+    friend class QSGD3D12RenderThread;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGD3D12RENDERLOOP_P_H
+#endif // QSGD3D12THREADEDRENDERLOOP_P_H
