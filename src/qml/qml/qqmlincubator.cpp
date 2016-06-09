@@ -434,7 +434,7 @@ example shows a simple use of QQmlIncubator.
 QQmlIncubator incubator;
 component->create(incubator);
 
-while (incubator.isReady()) {
+while (!incubator.isReady()) {
     QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
 }
 
