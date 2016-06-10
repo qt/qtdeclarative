@@ -525,10 +525,12 @@ void QQuickStackView::pop(QQmlV4Function *args)
         QV4::ScopedValue value(scope, (*args)[0]);
         if (value->isNull()) {
             enter = d->elements.value(0);
-        } else if (!value->isUndefined() && !value->isInt32()) {
-            enter = d->findElement(value);
+        } else if (const QV4::QObjectWrapper *o = value->as<QV4::QObjectWrapper>()) {
+            QQuickItem *item = qobject_cast<QQuickItem *>(o->object());
+            enter = d->findElement(item);
             if (!enter) {
-                qmlInfo(this) << "pop: unknown argument: " << value->toQString(); // TODO: safe?
+                if (item != d->currentItem)
+                    qmlInfo(this) << "pop: unknown argument: " << value->toQString(); // TODO: safe?
                 args->setReturnValue(QV4::Encode::null());
                 d->elements.push(exit); // restore
                 return;
