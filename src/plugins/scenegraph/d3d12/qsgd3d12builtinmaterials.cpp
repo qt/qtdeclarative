@@ -45,6 +45,8 @@
 
 #include "vs_vertexcolor.hlslh"
 #include "ps_vertexcolor.hlslh"
+#include "vs_flatcolor.hlslh"
+#include "ps_flatcolor.hlslh"
 #include "vs_smoothcolor.hlslh"
 #include "ps_smoothcolor.hlslh"
 #include "vs_texture.hlslh"
@@ -65,6 +67,31 @@ QT_BEGIN_NAMESPACE
 // NB! In HLSL constant buffer data is packed into 4-byte boundaries and, more
 // importantly, it is packed so that it does not cross a 16-byte (float4)
 // boundary. Hence the need for padding in some cases.
+
+static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
+{
+    const float o = c.w() * globalOpacity;
+    return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
+}
+
+static inline QVector4D qsg_premultiply(const QColor &c, float globalOpacity)
+{
+    const float o = c.alphaF() * globalOpacity;
+    return QVector4D(c.redF() * o, c.greenF() * o, c.blueF() * o, o);
+}
+
+static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
+{
+    if (a.x() != b.x())
+        return a.x() > b.x() ? 1 : -1;
+    if (a.y() != b.y())
+        return a.y() > b.y() ? 1 : -1;
+    if (a.z() != b.z())
+        return a.z() > b.z() ? 1 : -1;
+    if (a.w() != b.w())
+        return a.w() > b.w() ? 1 : -1;
+    return 0;
+}
 
 QSGMaterialType QSGD3D12VertexColorMaterial::mtype;
 
@@ -119,6 +146,67 @@ QSGD3D12Material::UpdateResults QSGD3D12VertexColorMaterial::updatePipeline(cons
     }
 
     return r;
+}
+
+QSGMaterialType QSGD3D12FlatColorMaterial::mtype;
+
+QSGMaterialType *QSGD3D12FlatColorMaterial::type() const
+{
+    return &QSGD3D12FlatColorMaterial::mtype;
+}
+
+int QSGD3D12FlatColorMaterial::compare(const QSGMaterial *other) const
+{
+    Q_ASSERT(other && type() == other->type());
+    const QSGD3D12FlatColorMaterial *o = static_cast<const QSGD3D12FlatColorMaterial *>(other);
+    return m_color.rgba() - o->color().rgba();
+}
+
+static const int FLAT_COLOR_CB_SIZE_0 = 16 * sizeof(float); // float4x4
+static const int FLAT_COLOR_CB_SIZE_1 = 4 * sizeof(float); // float4
+static const int FLAT_COLOR_CB_SIZE = FLAT_COLOR_CB_SIZE_0 + FLAT_COLOR_CB_SIZE_1;
+
+int QSGD3D12FlatColorMaterial::constantBufferSize() const
+{
+    return QSGD3D12Engine::alignedConstantBufferSize(FLAT_COLOR_CB_SIZE);
+}
+
+void QSGD3D12FlatColorMaterial::preparePipeline(QSGD3D12PipelineState *pipelineState)
+{
+    pipelineState->shaders.vs = g_VS_FlatColor;
+    pipelineState->shaders.vsSize = sizeof(g_VS_FlatColor);
+    pipelineState->shaders.ps = g_PS_FlatColor;
+    pipelineState->shaders.psSize = sizeof(g_PS_FlatColor);
+}
+
+QSGD3D12Material::UpdateResults QSGD3D12FlatColorMaterial::updatePipeline(const QSGD3D12MaterialRenderState &state,
+                                                                          QSGD3D12PipelineState *,
+                                                                          ExtraState *,
+                                                                          quint8 *constantBuffer)
+{
+    QSGD3D12Material::UpdateResults r = 0;
+    quint8 *p = constantBuffer;
+
+    if (state.isMatrixDirty()) {
+        memcpy(p, state.combinedMatrix().constData(), FLAT_COLOR_CB_SIZE_0);
+        r |= UpdatedConstantBuffer;
+    }
+    p += FLAT_COLOR_CB_SIZE_0;
+
+    const QVector4D color = qsg_premultiply(m_color, state.opacity());
+    const float f[] = { color.x(), color.y(), color.z(), color.w() };
+    if (state.isOpacityDirty() || memcmp(p, f, FLAT_COLOR_CB_SIZE_1)) {
+        memcpy(p, f, FLAT_COLOR_CB_SIZE_1);
+        r |= UpdatedConstantBuffer;
+    }
+
+    return r;
+}
+
+void QSGD3D12FlatColorMaterial::setColor(const QColor &color)
+{
+    m_color = color;
+    setFlag(Blending, m_color.alpha() != 0xFF);
 }
 
 QSGD3D12SmoothColorMaterial::QSGD3D12SmoothColorMaterial()
@@ -356,25 +444,6 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
     return r;
 }
 
-static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
-{
-    float o = c.w() * globalOpacity;
-    return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
-}
-
-static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)
-{
-    if (a.x() != b.x())
-        return a.x() > b.x() ? 1 : -1;
-    if (a.y() != b.y())
-        return a.y() > b.y() ? 1 : -1;
-    if (a.z() != b.z())
-        return a.z() > b.z() ? 1 : -1;
-    if (a.w() != b.w())
-        return a.w() > b.w() ? 1 : -1;
-    return 0;
-}
-
 QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderContext *rc,
                                            const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
     : m_styleType(styleType),
@@ -503,56 +572,60 @@ QSGD3D12Material::UpdateResults QSGD3D12TextMaterial::updatePipeline(const QSGD3
     }
     p += TEXT_CB_SIZE_0;
 
-    if (state.isCachedMaterialDataDirty() || m_lastGlyphCacheSize != glyphCache()->currentSize()) {
-        m_lastGlyphCacheSize = glyphCache()->currentSize();
-        const float textureScale[2] = { 1.0f / m_lastGlyphCacheSize.width(),
-                                        1.0f / m_lastGlyphCacheSize.height() };
+    const QSize sz = glyphCache()->currentSize();
+    const float textureScale[] = { 1.0f / sz.width(), 1.0f / sz.height() };
+    if (state.isCachedMaterialDataDirty() || memcmp(p, textureScale, TEXT_CB_SIZE_1)) {
         memcpy(p, textureScale, TEXT_CB_SIZE_1);
         r |= UpdatedConstantBuffer;
     }
     p += TEXT_CB_SIZE_1;
 
     const float dpr = m_rc->engine()->windowDevicePixelRatio();
-    if (state.isCachedMaterialDataDirty() || m_lastDpr != dpr) {
-        m_lastDpr = dpr;
+    if (state.isCachedMaterialDataDirty() || memcmp(p, &dpr, TEXT_CB_SIZE_2)) {
         memcpy(p, &dpr, TEXT_CB_SIZE_2);
         r |= UpdatedConstantBuffer;
     }
     p += TEXT_CB_SIZE_2;
 
-    if (state.isOpacityDirty() || m_lastColor != m_color) {
-        m_lastColor = m_color;
-        if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
-            const QVector4D color = qsg_premultiply(m_color, state.opacity());
-            const float alpha = color.w();
+    if (glyphCache()->glyphFormat() == QFontEngine::Format_A32) {
+        const QVector4D color = qsg_premultiply(m_color, state.opacity());
+        const float alpha = color.w();
+        if (state.isOpacityDirty() || memcmp(p, &alpha, TEXT_CB_SIZE_3)) {
             memcpy(p, &alpha, TEXT_CB_SIZE_3);
-        } else if (glyphCache()->glyphFormat() == QFontEngine::Format_ARGB) {
-            const float opacity = m_color.w() * state.opacity();
-            memcpy(p, &opacity, TEXT_CB_SIZE_3);
-        } else {
-            const QVector4D color = qsg_premultiply(m_color, state.opacity());
-            const float f[4] = { color.x(), color.y(), color.z(), color.w() };
-            memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
+            r |= UpdatedConstantBuffer;
         }
-        r |= UpdatedConstantBuffer;
+    } else if (glyphCache()->glyphFormat() == QFontEngine::Format_ARGB) {
+        const float opacity = m_color.w() * state.opacity();
+        if (state.isOpacityDirty() || memcmp(p, &opacity, TEXT_CB_SIZE_3)) {
+            memcpy(p, &opacity, TEXT_CB_SIZE_3);
+            r |= UpdatedConstantBuffer;
+        }
+    } else {
+        const QVector4D color = qsg_premultiply(m_color, state.opacity());
+        const float f[] = { color.x(), color.y(), color.z(), color.w() };
+        if (state.isOpacityDirty() || memcmp(p, f, TEXT_CB_SIZE_4)) {
+            memcpy(p + TEXT_CB_SIZE_3, f, TEXT_CB_SIZE_4);
+            r |= UpdatedConstantBuffer;
+        }
     }
     p += TEXT_CB_SIZE_3 + TEXT_CB_SIZE_4;
 
-    if (m_styleType == Styled && (state.isCachedMaterialDataDirty() || m_lastStyleShift != m_styleShift)) {
-        m_lastStyleShift = m_styleShift;
-        const float f[2] = { m_styleShift.x(), m_styleShift.y() };
-        memcpy(p, f, TEXT_CB_SIZE_5);
-        r |= UpdatedConstantBuffer;
+    if (m_styleType == Styled) {
+        const float f[] = { m_styleShift.x(), m_styleShift.y() };
+        if (state.isCachedMaterialDataDirty() || memcmp(p, f, TEXT_CB_SIZE_5)) {
+            memcpy(p, f, TEXT_CB_SIZE_5);
+            r |= UpdatedConstantBuffer;
+        }
     }
     p += TEXT_CB_SIZE_5 + TEXT_CB_SIZE_5_PADDING;
 
-    if ((m_styleType == Styled || m_styleType == Outlined)
-            && (state.isOpacityDirty() || m_lastStyleColor != m_styleColor)) {
-        m_lastStyleColor = m_styleColor;
+    if (m_styleType == Styled || m_styleType == Outlined) {
         const QVector4D color = qsg_premultiply(m_styleColor, state.opacity());
-        const float f[4] = { color.x(), color.y(), color.z(), color.w() };
-        memcpy(p, f, TEXT_CB_SIZE_6);
-        r |= UpdatedConstantBuffer;
+        const float f[] = { color.x(), color.y(), color.z(), color.w() };
+        if (state.isOpacityDirty() || memcmp(p, f, TEXT_CB_SIZE_6)) {
+            memcpy(p, f, TEXT_CB_SIZE_6);
+            r |= UpdatedConstantBuffer;
+        }
     }
 
     QSGD3D12TextureView &tv(pipelineState->shaders.rootSig.textureViews[0]);

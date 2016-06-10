@@ -57,9 +57,6 @@ OpenGLRenderNode::~OpenGLRenderNode()
     releaseResources();
 }
 
-// No need to reimplement changedStates() since our rendering is so simple,
-// without involving any state changes.
-
 void OpenGLRenderNode::releaseResources()
 {
     delete m_program;
@@ -84,8 +81,9 @@ void OpenGLRenderNode::init()
 
     static const char *fragmentShaderSource =
         "varying lowp vec4 col;\n"
+        "uniform lowp float opacity;\n"
         "void main() {\n"
-        "   gl_FragColor = col;\n"
+        "   gl_FragColor = col * opacity;\n"
         "}\n";
 
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -95,6 +93,7 @@ void OpenGLRenderNode::init()
     m_program->link();
 
     m_matrixUniform = m_program->uniformLocation("matrix");
+    m_opacityUniform = m_program->uniformLocation("opacity");
 
     const int VERTEX_SIZE = 6 * sizeof(GLfloat);
 
@@ -123,6 +122,7 @@ void OpenGLRenderNode::render(const RenderState *state)
 
     m_program->bind();
     m_program->setUniformValue(m_matrixUniform, *state->projectionMatrix() * *matrix());
+    m_program->setUniformValue(m_opacityUniform, float(inheritedOpacity()));
 
     m_vbo->bind();
 
@@ -140,7 +140,15 @@ void OpenGLRenderNode::render(const RenderState *state)
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
 
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     f->glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
+{
+    return BlendState;
 }
 
 #endif // QT_NO_OPENGL

@@ -59,7 +59,7 @@ class QSGSoftwarePixmapTexture : public QSGTexture
 {
     Q_OBJECT
 public:
-    QSGSoftwarePixmapTexture(const QImage &image);
+    QSGSoftwarePixmapTexture(const QImage &image, uint flags);
     QSGSoftwarePixmapTexture(const QPixmap &pixmap);
 
     int textureId() const override;

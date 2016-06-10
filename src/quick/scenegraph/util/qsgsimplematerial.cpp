@@ -41,10 +41,13 @@
     \class QSGSimpleMaterialShader
 
     \brief The QSGSimpleMaterialShader class provides a convenient way of
-    building custom materials for the scene graph.
+    building custom OpenGL-based materials for the scene graph.
 
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
+
+    \warning This utility class is only functional when running with the OpenGL
+    backend of the Qt Quick scenegraph.
 
     Where the QSGMaterial and QSGMaterialShader API requires a bit of
     boilerplate code to create a functioning material, the

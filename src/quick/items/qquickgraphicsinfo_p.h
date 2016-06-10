@@ -72,7 +72,7 @@ class QQuickGraphicsInfo : public QObject
 
     Q_PROPERTY(int majorVersion READ majorVersion NOTIFY majorVersionChanged FINAL)
     Q_PROPERTY(int minorVersion READ minorVersion NOTIFY minorVersionChanged FINAL)
-    Q_PROPERTY(ContextProfile profile READ profile NOTIFY profileChanged FINAL)
+    Q_PROPERTY(OpenGLContextProfile profile READ profile NOTIFY profileChanged FINAL)
     Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
 
 public:
@@ -104,12 +104,12 @@ public:
     };
     Q_ENUM(ShaderSourceType)
 
-    enum ContextProfile {
-        NoProfile = QSurfaceFormat::NoProfile,
-        CoreProfile = QSurfaceFormat::CoreProfile,
-        CompatibilityProfile = QSurfaceFormat::CompatibilityProfile
+    enum OpenGLContextProfile {
+        OpenGLNoProfile = QSurfaceFormat::NoProfile,
+        OpenGLCoreProfile = QSurfaceFormat::CoreProfile,
+        OpenGLCompatibilityProfile = QSurfaceFormat::CompatibilityProfile
     };
-    Q_ENUM(ContextProfile)
+    Q_ENUM(OpenGLContextProfile)
 
     enum RenderableType {
         SurfaceFormatUnspecified = QSurfaceFormat::DefaultRenderableType,
@@ -129,7 +129,7 @@ public:
 
     int majorVersion() const { return m_majorVersion; }
     int minorVersion() const { return m_minorVersion; }
-    ContextProfile profile() const { return m_profile; }
+    OpenGLContextProfile profile() const { return m_profile; }
     RenderableType renderableType() const { return m_renderableType; }
 
 Q_SIGNALS:
@@ -155,7 +155,7 @@ private:
     ShaderSourceType m_shaderSourceType;
     int m_majorVersion;
     int m_minorVersion;
-    ContextProfile m_profile;
+    OpenGLContextProfile m_profile;
     RenderableType m_renderableType;
 };
 

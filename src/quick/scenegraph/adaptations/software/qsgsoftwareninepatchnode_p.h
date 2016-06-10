@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGSoftwareNinePatchNode : public QSGNinePatchNode
 {
-public:    
+public:
     QSGSoftwareNinePatchNode();
 
     void setTexture(QSGTexture *texture) override;
