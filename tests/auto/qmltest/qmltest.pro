@@ -10,5 +10,5 @@ importFiles.files = borderimage  buttonclick  createbenchmark  events  qqmlbindi
 importFiles.path = .
 DEPLOYMENT += importFiles
 
-CONFIG+=insignificant_test # QTBUG-33723
-
+# Please do not make this test insignificant again, thanks.
+# Just skip those unstable ones. See also QTBUG-33723.

@@ -830,8 +830,10 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : 0;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
+    QQuickItem *oldActiveFocusItem = 0;
     QQuickItem *currentActiveFocusItem = activeFocusItem;
     QQuickItem *newActiveFocusItem = 0;
+    bool sendFocusIn = false;
 
     lastFocusReason = reason;
 
@@ -839,7 +841,6 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
 
     // Does this change the active focus?
     if (item == contentItem || scopePrivate->activeFocus) {
-        QQuickItem *oldActiveFocusItem = 0;
         oldActiveFocusItem = activeFocusItem;
         if (item->isEnabled()) {
             newActiveFocusItem = item;
@@ -858,8 +859,6 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
 #endif
 
             activeFocusItem = 0;
-            QFocusEvent event(QEvent::FocusOut, reason);
-            q->sendEvent(oldActiveFocusItem, &event);
 
             QQuickItem *afi = oldActiveFocusItem;
             while (afi && afi != scope) {
@@ -904,7 +903,19 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
             afi = afi->parentItem();
         }
         updateFocusItemTransform();
+        sendFocusIn = true;
+    }
 
+    // Now that all the state is changed, emit signals & events
+    // We must do this last, as this process may result in further changes to
+    // focus.
+    if (oldActiveFocusItem) {
+        QFocusEvent event(QEvent::FocusOut, reason);
+        q->sendEvent(oldActiveFocusItem, &event);
+    }
+
+    // Make sure that the FocusOut didn't result in another focus change.
+    if (sendFocusIn && activeFocusItem == newActiveFocusItem) {
         QFocusEvent event(QEvent::FocusIn, reason);
         q->sendEvent(newActiveFocusItem, &event);
     }
@@ -957,9 +968,6 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         activeFocusItem = 0;
 
         if (oldActiveFocusItem) {
-            QFocusEvent event(QEvent::FocusOut, reason);
-            q->sendEvent(oldActiveFocusItem, &event);
-
             QQuickItem *afi = oldActiveFocusItem;
             while (afi && afi != scope) {
                 if (QQuickItemPrivate::get(afi)->activeFocus) {
@@ -989,7 +997,18 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(newActiveFocusItem == scope);
         activeFocusItem = scope;
         updateFocusItemTransform();
+    }
 
+    // Now that all the state is changed, emit signals & events
+    // We must do this last, as this process may result in further changes to
+    // focus.
+    if (oldActiveFocusItem) {
+        QFocusEvent event(QEvent::FocusOut, reason);
+        q->sendEvent(oldActiveFocusItem, &event);
+    }
+
+    // Make sure that the FocusOut didn't result in another focus change.
+    if (newActiveFocusItem && activeFocusItem == newActiveFocusItem) {
         QFocusEvent event(QEvent::FocusIn, reason);
         q->sendEvent(newActiveFocusItem, &event);
     }

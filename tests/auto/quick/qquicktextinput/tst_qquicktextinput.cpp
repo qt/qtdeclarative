@@ -153,6 +153,7 @@ private slots:
 #endif
     void readOnly();
     void focusOnPress();
+    void focusOnPressOnlyOneItem();
 
     void openInputPanel();
     void setHAlignClearCache();
@@ -3466,6 +3467,46 @@ void tst_qquicktextinput::focusOnPress()
     QCOMPARE(activeFocusSpy.count(), 3);
     QCOMPARE(textInputObject->selectedText(), textInputObject->text());
     QTest::mouseRelease(&window, Qt::LeftButton, noModifiers);
+}
+
+void tst_qquicktextinput::focusOnPressOnlyOneItem()
+{
+    QQuickView window(testFileUrl("focusOnlyOneOnPress.qml"));
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QQuickTextInput *first = window.rootObject()->findChild<QQuickTextInput*>("first");
+    QQuickTextInput *second = window.rootObject()->findChild<QQuickTextInput*>("second");
+    QQuickTextInput *third = window.rootObject()->findChild<QQuickTextInput*>("third");
+
+    // second is focused onComplete
+    QVERIFY(second->hasActiveFocus());
+
+    // and first will try focus when we press it
+    QVERIFY(first->focusOnPress());
+
+    // write some text to start editing
+    QTest::keyClick(&window, Qt::Key_A);
+
+    // click the first input. naturally, we are giving focus on press, but
+    // second's editingFinished also attempts to assign focus. lastly, focus
+    // should bounce back to second from first's editingFinished signal.
+    //
+    // this is a contrived example to be sure, but at the end of this, the
+    // important thing is that only one thing should have activeFocus.
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&window, Qt::LeftButton, noModifiers, QPoint(10, 10));
+
+    // make sure the press is processed.
+    QGuiApplication::processEvents();
+
+    QVERIFY(second->hasActiveFocus()); // make sure it's still there
+    QVERIFY(!third->hasActiveFocus()); // make sure it didn't end up anywhere else
+    QVERIFY(!first->hasActiveFocus()); // make sure it didn't end up anywhere else
+
+    // reset state
+    QTest::mouseRelease(&window, Qt::LeftButton, noModifiers, QPoint(10, 10));
 }
 
 void tst_qquicktextinput::openInputPanel()
