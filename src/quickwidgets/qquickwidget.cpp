@@ -778,9 +778,10 @@ void QQuickWidget::createFramebufferObject()
         return;
     }
 
-    if (context->shareContext() != QWidgetPrivate::get(window())->shareContext()) {
-        context->setShareContext(QWidgetPrivate::get(window())->shareContext());
-        context->setScreen(context->shareContext()->screen());
+    QOpenGLContext *shareWindowContext = QWidgetPrivate::get(window())->shareContext();
+    if (shareWindowContext && context->shareContext() != shareWindowContext) {
+        context->setShareContext(shareWindowContext);
+        context->setScreen(shareWindowContext->screen());
         if (!context->create())
             qWarning("QQuickWidget: Failed to recreate context");
         // The screen may be different so we must recreate the offscreen surface too.
