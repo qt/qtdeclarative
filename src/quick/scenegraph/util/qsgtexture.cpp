@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qsgtexture_p.h"
-#include <qopenglfunctions.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qthread.h>
 #include <qmath.h>
@@ -46,9 +45,12 @@
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglfunctions.h>
-
+#ifndef QT_NO_OPENGL
+# include <qopenglfunctions.h>
+# include <QtGui/qopenglcontext.h>
+# include <QtGui/qopenglfunctions.h>
+# include <private/qsgdefaultrendercontext_p.h>
+#endif
 #include <private/qsgmaterialshader_p.h>
 
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !defined(__UCLIBC__)
@@ -278,6 +280,7 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 
 bool qsg_safeguard_texture(QSGTexture *texture)
 {
+#ifndef QT_NO_OPENGL
     QMutexLocker locker(qsg_valid_texture_mutex());
     if (!qsg_valid_texture_set()->contains(texture)) {
         qWarning() << "Invalid texture accessed:" << (void *) texture;
@@ -285,6 +288,9 @@ bool qsg_safeguard_texture(QSGTexture *texture)
         QOpenGLContext::currentContext()->functions()->glBindTexture(GL_TEXTURE_2D, 0);
         return false;
     }
+#else
+    Q_UNUSED(texture)
+#endif
     return true;
 }
 #endif
@@ -517,6 +523,7 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
  */
 void QSGTexture::updateBindOptions(bool force)
 {
+#ifndef QT_NO_OPENGL
     Q_D(QSGTexture);
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     force |= isAtlasTexture();
@@ -551,6 +558,9 @@ void QSGTexture::updateBindOptions(bool force)
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, d->verticalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         d->wrapChanged = false;
     }
+#else
+    Q_UNUSED(force)
+#endif
 }
 
 QSGPlainTexture::QSGPlainTexture()
@@ -568,8 +578,10 @@ QSGPlainTexture::QSGPlainTexture()
 
 QSGPlainTexture::~QSGPlainTexture()
 {
+#ifndef QT_NO_OPENGL
     if (m_texture_id && m_owns_texture && QOpenGLContext::currentContext())
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
+#endif
 }
 
 void qsg_swizzleBGRAToRGBA(QImage *image)
@@ -601,8 +613,10 @@ int QSGPlainTexture::textureId() const
             // or ~QSGPlainTexture so just keep it minimal here.
             return 0;
         } else if (m_texture_id == 0){
+#ifndef QT_NO_OPENGL
             // Generate a texture id for use later and return it.
             QOpenGLContext::currentContext()->functions()->glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
+#endif
             return m_texture_id;
         }
     }
@@ -611,8 +625,10 @@ int QSGPlainTexture::textureId() const
 
 void QSGPlainTexture::setTextureId(int id)
 {
+#ifndef QT_NO_OPENGL
     if (m_texture_id && m_owns_texture)
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
+#endif
 
     m_texture_id = id;
     m_dirty_texture = false;
@@ -623,6 +639,7 @@ void QSGPlainTexture::setTextureId(int id)
 
 void QSGPlainTexture::bind()
 {
+#ifndef QT_NO_OPENGL
     QOpenGLContext *context = QOpenGLContext::currentContext();
     QOpenGLFunctions *funcs = context->functions();
     if (!m_dirty_texture) {
@@ -684,7 +701,7 @@ void QSGPlainTexture::bind()
     // based on QSGTexture::textureSize which is updated after this, so that
     // should be ok.
     int max;
-    if (QSGRenderContext *rc = QSGRenderContext::from(context))
+    if (auto rc = QSGDefaultRenderContext::from(context))
         max = rc->maxTextureSize();
     else
         funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
@@ -789,6 +806,7 @@ void QSGPlainTexture::bind()
     m_dirty_bind_options = false;
     if (!m_retain_image)
         m_image = QImage();
+#endif
 }
 
 

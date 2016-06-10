@@ -63,7 +63,8 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 
-#include <private/qquickshadereffectnode_p.h>
+#include <private/qquickopenglshadereffectnode_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
 
 /*
    Overall design:
@@ -268,7 +269,6 @@ public:
     QSGRenderThread(QSGThreadedRenderLoop *w, QSGRenderContext *renderContext)
         : wm(w)
         , gl(0)
-        , sgrc(renderContext)
         , animatorDriver(0)
         , pendingUpdate(0)
         , sleeping(false)
@@ -277,6 +277,7 @@ public:
         , window(0)
         , stopEventProcessing(false)
     {
+        sgrc = static_cast<QSGDefaultRenderContext *>(renderContext);
 #if defined(Q_OS_QNX) && !defined(Q_OS_BLACKBERRY) && defined(Q_PROCESSOR_X86)
         // The SDP 6.6.0 x86 MESA driver requires a larger stack than the default.
         setStackSize(1024 * 1024);
@@ -325,7 +326,7 @@ public:
 
     QSGThreadedRenderLoop *wm;
     QOpenGLContext *gl;
-    QSGRenderContext *sgrc;
+    QSGDefaultRenderContext *sgrc;
 
     QAnimationDriver *animatorDriver;
 
@@ -486,7 +487,7 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
 
     QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
 
-    QQuickShaderEffectMaterial::cleanupMaterialCache();
+    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {

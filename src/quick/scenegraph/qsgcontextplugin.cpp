@@ -43,7 +43,15 @@
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qlibraryinfo.h>
 
+// Built-in adaptations
+#include <QtQuick/private/qsgsoftwareadaptation_p.h>
+#ifndef QT_NO_OPENGL
+#include <QtQuick/private/qsgdefaultcontext_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_INFO)
 
 QSGContextPlugin::QSGContextPlugin(QObject *parent)
     : QObject(parent)
@@ -59,61 +67,113 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
     (QSGContextFactoryInterface_iid, QLatin1String("/scenegraph")))
 #endif
 
-struct QSGAdaptionPluginData
+struct QSGAdaptationBackendData
 {
-    QSGAdaptionPluginData()
-        : tried(false)
-        , factory(0)
-    {
-    }
-
-    ~QSGAdaptionPluginData()
-    {
-    }
+    QSGAdaptationBackendData();
 
     bool tried;
     QSGContextFactoryInterface *factory;
-    QString deviceName;
+    QString name;
+    QSGContextFactoryInterface::Flags flags;
+
+    QVector<QSGContextFactoryInterface *> builtIns;
+
+    QString quickWindowBackendRequest;
 };
 
-Q_GLOBAL_STATIC(QSGAdaptionPluginData, qsg_adaptation_data)
-
-QSGAdaptionPluginData *contextFactory()
+QSGAdaptationBackendData::QSGAdaptationBackendData()
+    : tried(false)
+    , factory(nullptr)
+    , flags(0)
 {
-    QSGAdaptionPluginData *plugin = qsg_adaptation_data();
-    if (!plugin->tried) {
+    // Fill in the table with the built-in adaptations.
+    builtIns.append(new QSGSoftwareAdaptation);
+}
 
-        plugin->tried = true;
+Q_GLOBAL_STATIC(QSGAdaptationBackendData, qsg_adaptation_data)
+
+// This only works when the backend is loaded (contextFactory() was called),
+// otherwise the return value is 0.
+//
+// Note that the default (OpenGL) implementation always results in 0, custom flags
+// can only be returned from the other (either compiled-in or plugin-based) backends.
+QSGContextFactoryInterface::Flags qsg_backend_flags()
+{
+    return qsg_adaptation_data()->flags;
+}
+
+QSGAdaptationBackendData *contextFactory()
+{
+    QSGAdaptationBackendData *backendData = qsg_adaptation_data();
+
+    if (!backendData->tried) {
+        backendData->tried = true;
+
         const QStringList args = QGuiApplication::arguments();
-        QString device;
+        QString requestedBackend = backendData->quickWindowBackendRequest; // empty or set via QQuickWindow::setBackend()
+
         for (int index = 0; index < args.count(); ++index) {
             if (args.at(index).startsWith(QLatin1String("--device="))) {
-                device = args.at(index).mid(9);
+                requestedBackend = args.at(index).mid(9);
                 break;
             }
         }
-        if (device.isEmpty())
-            device = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
 
-#ifndef QT_NO_LIBRARY
-        if (!device.isEmpty()) {
-            const int index = loader()->indexOf(device);
-            if (index != -1)
-                plugin->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(index));
-            plugin->deviceName = device;
-#ifndef QT_NO_DEBUG
-            if (!plugin->factory) {
-                qWarning("Could not create scene graph context for device '%s'"
-                         " - check that plugins are installed correctly in %s",
-                         qPrintable(device),
-                         qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
-            }
+        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QMLSCENE_DEVICE"))
+            requestedBackend = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
+
+        // A modern alternative. Scenegraph adaptations can represent backends
+        // for different graphics APIs as well, instead of being specific to
+        // some device or platform.
+        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QT_QUICK_BACKEND"))
+            requestedBackend = QString::fromLocal8Bit(qgetenv("QT_QUICK_BACKEND"));
+
+#ifdef QT_NO_OPENGL
+        // If this is a build without OpenGL, and no backend has been set
+        // default to the software renderer
+        if (requestedBackend.isEmpty())
+            requestedBackend = QString::fromLocal8Bit("software");
 #endif
-        }
 
+        if (!requestedBackend.isEmpty()) {
+#ifndef QT_NO_DEBUG
+            qCDebug(QSG_LOG_INFO) << "Loading backend" << requestedBackend;
+#endif
+
+            // First look for a built-in adaptation.
+            for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {
+                if (builtInBackend->keys().contains(requestedBackend)) {
+                    backendData->factory = builtInBackend;
+                    backendData->name = requestedBackend;
+                    backendData->flags = backendData->factory->flags(requestedBackend);
+                    break;
+                }
+            }
+
+            // Then try the plugins.
+            if (!backendData->factory) {
+#ifndef QT_NO_LIBRARY
+                const int index = loader()->indexOf(requestedBackend);
+                if (index != -1)
+                    backendData->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(index));
+                if (backendData->factory) {
+                    backendData->name = requestedBackend;
+                    backendData->flags = backendData->factory->flags(requestedBackend);
+                }
+#ifndef QT_NO_DEBUG
+                if (!backendData->factory) {
+                    qWarning("Could not create scene graph context for backend '%s'"
+                             " - check that plugins are installed correctly in %s",
+                             qPrintable(requestedBackend),
+                             qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
+                }
+#endif
+            }
 #endif // QT_NO_LIBRARY
+        }
     }
-    return plugin;
+
+    return backendData;
 }
 
 
@@ -126,10 +186,14 @@ QSGAdaptionPluginData *contextFactory()
 */
 QSGContext *QSGContext::createDefaultContext()
 {
-    QSGAdaptionPluginData *plugin = contextFactory();
-    if (plugin->factory)
-        return plugin->factory->create(plugin->deviceName);
-    return new QSGContext();
+    QSGAdaptationBackendData *backendData = contextFactory();
+    if (backendData->factory)
+        return backendData->factory->create(backendData->name);
+#ifndef QT_NO_OPENGL
+    return new QSGDefaultContext();
+#else
+    return nullptr;
+#endif
 }
 
 
@@ -143,9 +207,9 @@ QSGContext *QSGContext::createDefaultContext()
 
 QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &image)
 {
-    QSGAdaptionPluginData *plugin = contextFactory();
-    if (plugin->factory)
-        return plugin->factory->createTextureFactoryFromImage(image);
+    QSGAdaptationBackendData *backendData = contextFactory();
+    if (backendData->factory)
+        return backendData->factory->createTextureFactoryFromImage(image);
     return 0;
 }
 
@@ -157,14 +221,19 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
 
 QSGRenderLoop *QSGContext::createWindowManager()
 {
-    QSGAdaptionPluginData *plugin = contextFactory();
-    if (plugin->factory)
-        return plugin->factory->createWindowManager();
+    QSGAdaptationBackendData *backendData = contextFactory();
+    if (backendData->factory)
+        return backendData->factory->createWindowManager();
     return 0;
 }
 
+void QSGContext::setBackend(const QString &backend)
+{
+    QSGAdaptationBackendData *backendData = qsg_adaptation_data();
+    if (backendData->tried)
+        qWarning("Scenegraph already initialized, setBackend() request ignored");
 
-
-
+    backendData->quickWindowBackendRequest = backend;
+}
 
 QT_END_NAMESPACE

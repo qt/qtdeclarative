@@ -210,7 +210,7 @@ public:
     virtual QImage toImage() const = 0;
     virtual void setLive(bool live) = 0;
     virtual void setRecursive(bool recursive) = 0;
-    virtual void setFormat(GLenum format) = 0;
+    virtual void setFormat(uint format) = 0;
     virtual void setHasMipmaps(bool mipmap) = 0;
     virtual void setDevicePixelRatio(qreal ratio) = 0;
     virtual void setMirrorHorizontal(bool mirror) = 0;
@@ -222,6 +222,130 @@ Q_SIGNALS:
     void updateRequested();
     void scheduledUpdateCompleted();
 };
+
+class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
+{
+    Q_OBJECT
+
+public:
+    enum Status {
+        Compiled,
+        Uncompiled,
+        Error
+    };
+
+    virtual bool hasSeparateSamplerAndTextureObjects() const = 0;
+
+    virtual QString log() const = 0;
+    virtual Status status() const = 0;
+
+    struct ShaderInfo {
+        enum Type {
+            TypeVertex,
+            TypeFragment,
+            TypeOther
+        };
+        enum VariableType {
+            Constant, // cbuffer members or uniforms
+            Sampler,
+            Texture // for APIs with separate texture and sampler objects
+        };
+        struct InputParameter {
+            InputParameter() : semanticIndex(0) { }
+            // Semantics use the D3D keys (POSITION, TEXCOORD).
+            // Attribute name based APIs can map based on pre-defined names.
+            QByteArray semanticName;
+            int semanticIndex;
+        };
+        struct Variable {
+            Variable() : type(Constant), offset(0), size(0), bindPoint(0) { }
+            VariableType type;
+            QByteArray name;
+            uint offset; // for cbuffer members
+            uint size; // for cbuffer members
+            int bindPoint; // for textures and samplers; for register-based APIs
+        };
+
+        QByteArray blob; // source or bytecode
+        Type type;
+        QVector<InputParameter> inputParameters;
+        QVector<Variable> variables;
+        uint constantDataSize;
+    };
+
+    virtual bool reflect(const QByteArray &src, ShaderInfo *result) = 0;
+
+Q_SIGNALS:
+    void textureChanged();
+    void logAndStatusChanged();
+};
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p);
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v);
+#endif
+
+class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QSGVisitableNode
+{
+public:
+    enum DirtyShaderFlag {
+        DirtyShaders = 0x01,
+        DirtyShaderConstant = 0x02,
+        DirtyShaderTexture = 0x04,
+        DirtyShaderGeometry = 0x08,
+        DirtyShaderMesh = 0x10,
+
+        DirtyShaderAll = 0xFF
+    };
+    Q_DECLARE_FLAGS(DirtyShaderFlags, DirtyShaderFlag)
+
+    enum CullMode { // must match ShaderEffect
+        NoCulling,
+        BackFaceCulling,
+        FrontFaceCulling
+    };
+
+    struct VariableData {
+        enum SpecialType { None, Unused, Source, SubRect, Opacity, Matrix };
+
+        QVariant value;
+        SpecialType specialType;
+    };
+
+    struct ShaderData {
+        ShaderData() : hasShaderCode(false) { }
+        bool hasShaderCode;
+        QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
+        QVector<VariableData> varData;
+    };
+
+    struct SyncData {
+        DirtyShaderFlags dirty;
+        CullMode cullMode;
+        bool blending;
+        struct ShaderSyncData {
+            const ShaderData *shader;
+            const QSet<int> *dirtyConstants;
+            const QSet<int> *dirtyTextures;
+        };
+        ShaderSyncData vertex;
+        ShaderSyncData fragment;
+    };
+
+    // Each ShaderEffect item has one node (render thread) and one manager (gui thread).
+    QSGShaderEffectNode(QSGGuiThreadShaderEffectManager *) { }
+
+    virtual QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) = 0;
+    virtual void syncMaterial(SyncData *syncData) = 0;
+
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGShaderEffectNode::DirtyShaderFlags)
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd);
+#endif
 
 class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 {
@@ -295,7 +419,7 @@ public:
     };
 
     struct Texture {
-        GLuint textureId;
+        uint textureId;
         QSize size;
 
         Texture() : textureId(0), size(QSize()) { }
@@ -359,10 +483,10 @@ protected:
     void markGlyphsToRender(const QVector<glyph_t> &glyphs);
     inline void removeGlyph(glyph_t glyph);
 
-    void updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize);
+    void updateTexture(uint oldTex, uint newTex, const QSize &newTexSize);
 
     inline bool containsGlyph(glyph_t glyph);
-    GLuint textureIdForGlyph(glyph_t glyph) const;
+    uint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
 

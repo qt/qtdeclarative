@@ -32,8 +32,11 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qquickitem_p.h>
+#ifndef QT_NO_OPENGL
 #include <private/qsgdefaultpainternode_p.h>
-
+#else
+#include <private/qsgsoftwarepainternode_p.h>
+#endif
 class tst_QQuickPaintedItem: public QObject
 {
     Q_OBJECT
@@ -70,7 +73,7 @@ public:
         ++paintRequests;
         clipRect = painter->clipBoundingRect();
     }
-
+#ifndef QT_NO_OPENGL
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     {
         paintNode = static_cast<QSGDefaultPainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));
@@ -78,6 +81,15 @@ public:
     }
 
     QSGDefaultPainterNode *paintNode;
+#else
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+    {
+        paintNode = static_cast<QSGSoftwarePainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));
+        return paintNode;
+    }
+
+    QSGSoftwarePainterNode *paintNode;
+#endif
     int paintRequests;
     QRectF clipRect;
 };

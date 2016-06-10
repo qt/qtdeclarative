@@ -54,7 +54,13 @@
 #include <private/qsgcontext_p.h>
 #include <qsgsimplerectnode.h>
 
+QT_BEGIN_NAMESPACE
+
 #define QSG_DEBUG_FBO_OVERLAY
+
+class QOpenGLFramebufferObject;
+class QSGDepthStencilBuffer;
+class QSGDefaultRenderContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultLayer : public QSGLayer
 {
@@ -131,7 +137,7 @@ private:
     QSGSimpleRectNode *m_debugOverlay;
 #endif
 
-    QSGRenderContext *m_context;
+    QSGDefaultRenderContext *m_context;
 
     uint m_mipmap : 1;
     uint m_live : 1;
@@ -143,5 +149,7 @@ private:
     uint m_mirrorHorizontal : 1;
     uint m_mirrorVertical : 1;
 };
+
+QT_END_NAMESPACE
 
 #endif // QSGDEFAULTLAYER_P_H

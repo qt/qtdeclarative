@@ -93,12 +93,19 @@ public:
         Repeat
     };
     Q_ENUM(WrapMode)
-
+#ifndef QT_NO_OPENGL
     enum Format {
         Alpha = GL_ALPHA,
         RGB = GL_RGB,
         RGBA = GL_RGBA
     };
+#else
+    enum Format {
+        Alpha = 0x1906,
+        RGB,
+        RGBA
+    };
+#endif
     Q_ENUM(Format)
 
     enum TextureMirroring {

@@ -1,14 +1,12 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS += \
-    qml
+    qml \
+    quick \
+    qmltest
 
 qtHaveModule(gui):contains(QT_CONFIG, opengl(es1|es2)?) {
-    SUBDIRS += \
-        quick \
-        qmltest \
-        particles
-
+    SUBDIRS += particles
     qtHaveModule(widgets): SUBDIRS += quickwidgets
 }
 

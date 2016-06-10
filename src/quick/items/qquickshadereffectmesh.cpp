@@ -42,9 +42,22 @@
 #include "qquickshadereffect_p.h"
 #include "qquickscalegrid_p_p.h"
 #include "qquickborderimage_p_p.h"
-#include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgbasicimagenode_p.h>
 
 QT_BEGIN_NAMESPACE
+
+static const char qt_position_attribute_name[] = "qt_Vertex";
+static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
+
+const char *qtPositionAttributeName()
+{
+    return qt_position_attribute_name;
+}
+
+const char *qtTexCoordAttributeName()
+{
+    return qt_texcoord_attribute_name;
+}
 
 QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObject *parent)
     : QObject(parent)
@@ -70,54 +83,64 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
 {
 }
 
-QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &dstRect)
+bool QQuickGridMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
 {
-    int vmesh = m_resolution.height();
-    int hmesh = m_resolution.width();
-    int attrCount = attributes.count();
-
+    const int attrCount = attributes.count();
     int positionIndex = attributes.indexOf(qtPositionAttributeName());
     int texCoordIndex = attributes.indexOf(qtTexCoordAttributeName());
 
-    if (!geometry) {
-        switch (attrCount) {
-        case 0:
-            m_log = QLatin1String("Error: No attributes specified.");
-            return 0;
-        case 1:
-            if (positionIndex != 0) {
+    switch (attrCount) {
+    case 0:
+        m_log = QLatin1String("Error: No attributes specified.");
+        return false;
+    case 1:
+        if (positionIndex != 0) {
+            m_log = QLatin1String("Error: Missing \'");
+            m_log += QLatin1String(qtPositionAttributeName());
+            m_log += QLatin1String("\' attribute.\n");
+            return false;
+        }
+        break;
+    case 2:
+        if (positionIndex == -1 || texCoordIndex == -1) {
+            m_log.clear();
+            if (positionIndex == -1) {
                 m_log = QLatin1String("Error: Missing \'");
                 m_log += QLatin1String(qtPositionAttributeName());
                 m_log += QLatin1String("\' attribute.\n");
-                return 0;
             }
-            break;
-        case 2:
-            if (positionIndex == -1 || texCoordIndex == -1) {
-                m_log.clear();
-                if (positionIndex == -1) {
-                    m_log = QLatin1String("Error: Missing \'");
-                    m_log += QLatin1String(qtPositionAttributeName());
-                    m_log += QLatin1String("\' attribute.\n");
-                }
-                if (texCoordIndex == -1) {
-                    m_log += QLatin1String("Error: Missing \'");
-                    m_log += QLatin1String(qtTexCoordAttributeName());
-                    m_log += QLatin1String("\' attribute.\n");
-                }
-                return 0;
+            if (texCoordIndex == -1) {
+                m_log += QLatin1String("Error: Missing \'");
+                m_log += QLatin1String(qtTexCoordAttributeName());
+                m_log += QLatin1String("\' attribute.\n");
             }
-            break;
-        default:
-            m_log = QLatin1String("Error: Too many attributes specified.");
-            return 0;
+            return false;
         }
+        break;
+    default:
+        m_log = QLatin1String("Error: Too many attributes specified.");
+        return false;
+    }
 
+    if (posIndex)
+        *posIndex = positionIndex;
+
+    return true;
+}
+
+QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                            const QRectF &srcRect, const QRectF &dstRect)
+{
+    int vmesh = m_resolution.height();
+    int hmesh = m_resolution.width();
+
+    if (!geometry) {
+        Q_ASSERT(attrCount == 1 || attrCount == 2);
         geometry = new QSGGeometry(attrCount == 1
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                    (vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2),
-                                   GL_UNSIGNED_SHORT);
+                                   QSGGeometry::TypeUnsignedShort);
 
     } else {
         geometry->allocate((vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2));
@@ -132,7 +155,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
         for (int ix = 0; ix <= hmesh; ++ix) {
             float fx = ix / float(hmesh);
             for (int ia = 0; ia < attrCount; ++ia) {
-                if (ia == positionIndex) {
+                if (ia == posIndex) {
                     vdata->x = float(dstRect.left()) + fx * float(dstRect.width());
                     vdata->y = y;
                     ++vdata;
@@ -285,14 +308,26 @@ QQuickBorderImageMesh::QQuickBorderImageMesh(QObject *parent)
 {
 }
 
-QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &/*attributes*/, const QRectF &srcRect, const QRectF &rect)
+bool QQuickBorderImageMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
 {
+    Q_UNUSED(attributes);
+    Q_UNUSED(posIndex);
+    return true;
+}
+
+QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
+                                                   const QRectF &srcRect, const QRectF &rect)
+{
+    Q_UNUSED(attrCount);
+    Q_UNUSED(posIndex);
+
     QRectF innerSourceRect;
     QRectF targetRect;
     QRectF innerTargetRect;
     QRectF subSourceRect;
 
-    QQuickBorderImagePrivate::calculateRects(m_border, m_size, rect.size(), m_horizontalTileMode, m_verticalTileMode, 1, &targetRect, &innerTargetRect, &innerSourceRect, &subSourceRect);
+    QQuickBorderImagePrivate::calculateRects(m_border, m_size, rect.size(), m_horizontalTileMode, m_verticalTileMode,
+                                             1, &targetRect, &innerTargetRect, &innerSourceRect, &subSourceRect);
 
     QRectF sourceRect = srcRect;
     QRectF modifiedInnerSourceRect(sourceRect.x() + innerSourceRect.x() * sourceRect.width(),
@@ -300,7 +335,8 @@ QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, const 
                                    innerSourceRect.width() * sourceRect.width(),
                                    innerSourceRect.height() * sourceRect.height());
 
-    geometry = QSGDefaultImageNode::updateGeometry(targetRect, innerTargetRect, sourceRect, modifiedInnerSourceRect, subSourceRect, geometry);
+    geometry = QSGBasicImageNode::updateGeometry(targetRect, innerTargetRect, sourceRect,
+                                                 modifiedInnerSourceRect, subSourceRect, geometry);
 
     return geometry;
 }

@@ -51,8 +51,8 @@
 // We mean it.
 //
 #include "qquickparticlepainter_p.h"
-#include <private/qquickshadereffectnode_p.h>
-#include <private/qquickshadereffect_p.h>
+#include <private/qquickopenglshadereffectnode_p.h>
+#include <private/qquickopenglshadereffect_p.h>
 #include <QSignalMapper>
 
 QT_BEGIN_NAMESPACE
@@ -88,11 +88,11 @@ protected:
     virtual void commit(int gIdx, int pIdx);
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    QQuickShaderEffectNode *prepareNextFrame(QQuickShaderEffectNode *rootNode);
+    QQuickOpenGLShaderEffectNode *prepareNextFrame(QQuickOpenGLShaderEffectNode *rootNode);
     void reset();
     void resize(int oldCount, int newCount);
     virtual void componentComplete();
-    QQuickShaderEffectNode *buildCustomNodes();
+    QQuickOpenGLShaderEffectNode *buildCustomNodes();
 
     void sceneGraphInvalidated();
     void itemChange(ItemChange change, const ItemChangeData &value);
@@ -102,15 +102,15 @@ private Q_SLOTS:
     void propertyChanged(int mappedId);
 
 private:
-    typedef QQuickShaderEffectMaterialKey Key;
-    typedef QQuickShaderEffectMaterial::UniformData UniformData;
+    typedef QQuickOpenGLShaderEffectMaterialKey Key;
+    typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
-    void buildData(QQuickShaderEffectNode *rootNode);
+    void buildData(QQuickOpenGLShaderEffectNode *rootNode);
     void updateVertexShader();
 
-    QQuickShaderEffectCommon m_common;
+    QQuickOpenGLShaderEffectCommon m_common;
 
-    QHash<int, QQuickShaderEffectNode*> m_nodes;
+    QHash<int, QQuickOpenGLShaderEffectNode*> m_nodes;
     qreal m_lastTime;
 
     uint m_dirtyUniforms : 1;

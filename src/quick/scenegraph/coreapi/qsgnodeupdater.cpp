@@ -175,9 +175,10 @@ void QSGNodeUpdater::enterRenderNode(QSGRenderNode *r)
     qDebug() << "enter render:" << r;
 #endif
 
-    r->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
-    r->m_clip_list = m_current_clip;
-    r->setInheritedOpacity(m_opacity_stack.last());
+    QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(r);
+    rd->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
+    rd->m_clip_list = m_current_clip;
+    rd->m_opacity = m_opacity_stack.last();
 }
 
 void QSGNodeUpdater::leaveRenderNode(QSGRenderNode *r)

@@ -169,7 +169,7 @@ protected:
     QQuickAnimatorJob *createJob() const;
     QString propertyName() const { return QStringLiteral("rotation"); }
 };
-
+#ifndef QT_NO_OPENGL
 class QQuickUniformAnimatorPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
@@ -190,6 +190,7 @@ protected:
     QQuickAnimatorJob *createJob() const;
     QString propertyName() const;
 };
+#endif
 
 QT_END_NAMESPACE
 
@@ -199,6 +200,7 @@ QML_DECLARE_TYPE(QQuickYAnimator)
 QML_DECLARE_TYPE(QQuickScaleAnimator)
 QML_DECLARE_TYPE(QQuickRotationAnimator)
 QML_DECLARE_TYPE(QQuickOpacityAnimator)
+#ifndef QT_NO_OPENGL
 QML_DECLARE_TYPE(QQuickUniformAnimator)
-
+#endif
 #endif // QQUICKANIMATOR_P_H

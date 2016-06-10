@@ -40,7 +40,13 @@
 #include "qsgmaterial.h"
 #include "qsgrenderer_p.h"
 #include "qsgmaterialshader_p.h"
-#include <private/qsgshadersourcebuilder_p.h>
+#ifndef QT_NO_OPENGL
+# include <private/qsgshadersourcebuilder_p.h>
+# include <private/qsgdefaultcontext_p.h>
+# include <private/qsgdefaultrendercontext_p.h>
+# include <QtGui/QOpenGLFunctions>
+# include <QtGui/QOpenGLContext>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +64,7 @@ void qsg_set_material_failure()
     qsg_material_failure = true;
 }
 #endif
-
+#ifndef QT_NO_OPENGL
 const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType type) const
 {
     QStringList files = m_sourceFiles[type];
@@ -68,6 +74,7 @@ const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType
     m_sources[type] = builder.source();
     return m_sources[type].constData();
 }
+#endif
 
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
@@ -220,7 +227,7 @@ QSGMaterialShader::~QSGMaterialShader()
     defines the attribute register position in the vertex shader.
  */
 
-
+#ifndef QT_NO_OPENGL
 /*!
     \fn const char *QSGMaterialShader::vertexShader() const
 
@@ -256,7 +263,7 @@ const char *QSGMaterialShader::fragmentShader() const
 
     Returns the shader program used by this QSGMaterialShader.
  */
-
+#endif
 
 /*!
     \fn void QSGMaterialShader::initialize()
@@ -313,6 +320,7 @@ void QSGMaterialShader::updateState(const RenderState & /* state */, QSGMaterial
 {
 }
 
+#ifndef QT_NO_OPENGL
 /*!
     Sets the GLSL source file for the shader stage \a type to \a sourceFile. The
     default implementation of the vertexShader() and fragmentShader() functions
@@ -388,7 +396,7 @@ void QSGMaterialShader::compile()
     }
 }
 
-
+#endif
 
 /*!
     \class QSGMaterialShader::RenderState
@@ -542,7 +550,7 @@ QRect QSGMaterialShader::RenderState::deviceRect() const
     return static_cast<const QSGRenderer *>(m_data)->deviceRect();
 }
 
-
+#ifndef QT_NO_OPENGL
 
 /*!
     Returns the QOpenGLContext that is being used for rendering
@@ -550,9 +558,15 @@ QRect QSGMaterialShader::RenderState::deviceRect() const
 
 QOpenGLContext *QSGMaterialShader::RenderState::context() const
 {
-    return static_cast<const QSGRenderer *>(m_data)->context()->openglContext();
+    // Only the QSGDefaultRenderContext will have an OpenGL Context to query
+    auto openGLRenderContext = static_cast<const QSGDefaultRenderContext *>(static_cast<const QSGRenderer *>(m_data)->context());
+    if (openGLRenderContext != nullptr)
+        return openGLRenderContext->openglContext();
+    else
+        return nullptr;
 }
 
+#endif
 
 #ifndef QT_NO_DEBUG
 static int qt_material_count = 0;

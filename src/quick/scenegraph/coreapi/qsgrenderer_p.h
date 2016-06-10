@@ -86,14 +86,12 @@ public:
 
     bool isMirrored() const;
     void renderScene(const QSGBindable &bindable);
-    virtual void renderScene(GLuint fboId = 0) Q_DECL_OVERRIDE;
+    virtual void renderScene(uint fboId = 0) Q_DECL_OVERRIDE;
     virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
 
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
-
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
-
     virtual void setCustomRenderMode(const QByteArray &) { };
 
     void clearChangedFlag() { m_changed_emitted = false; }
@@ -135,7 +133,7 @@ public:
     virtual void clear(QSGAbstractRenderer::ClearMode mode) const;
     virtual void reactivate() const;
 };
-
+#ifndef QT_NO_OPENGL
 class QSGBindableFboId : public QSGBindable
 {
 public:
@@ -144,7 +142,7 @@ public:
 private:
     GLuint m_id;
 };
-
+#endif
 
 
 QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const

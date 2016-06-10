@@ -53,9 +53,9 @@
 
 #include <QtQuick/qtquickglobal.h>
 #include <private/qobject_p.h>
-
-#include <QtGui/qopengl.h>
-
+#ifndef QT_NO_OPENGL
+# include <QtGui/qopengl.h>
+#endif
 #include "qsgtexture.h"
 #include <QtQuick/private/qsgcontext_p.h>
 
@@ -110,7 +110,7 @@ public:
 protected:
     QImage m_image;
 
-    GLuint m_texture_id;
+    uint m_texture_id;
     QSize m_texture_size;
     QRectF m_texture_rect;
 

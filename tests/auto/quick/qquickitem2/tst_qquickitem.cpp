@@ -3017,7 +3017,7 @@ void tst_QQuickItem::grab()
     QVERIFY(root);
     QQuickItem *item = root->findChild<QQuickItem *>("myItem");
     QVERIFY(item);
-
+#ifndef QT_NO_OPENGL
     { // Default size (item is 100x100)
         QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
         QSignalSpy spy(result.data(), SIGNAL(ready()));
@@ -3038,7 +3038,7 @@ void tst_QQuickItem::grab()
         QCOMPARE(image.pixel(0, 0), qRgb(255, 0, 0));
         QCOMPARE(image.pixel(49, 49), qRgb(0, 0, 255));
     }
-
+#endif
 }
 
 void tst_QQuickItem::isAncestorOf()

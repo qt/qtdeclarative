@@ -31,7 +31,6 @@
 
 #include <QtGui/QOffscreenSurface>
 #include <QtGui/QOpenGLContext>
-
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>
@@ -76,7 +75,7 @@ private Q_SLOTS:
 private:
     QOffscreenSurface *surface;
     QOpenGLContext *context;
-    QSGRenderContext *renderContext;
+    QSGDefaultRenderContext *renderContext;
 };
 
 void NodesTest::initTestCase()
@@ -91,7 +90,8 @@ void NodesTest::initTestCase()
     QVERIFY(context->create());
     QVERIFY(context->makeCurrent(surface));
 
-    renderContext = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
+    auto rc = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
+    renderContext = static_cast<QSGDefaultRenderContext *>(rc);
     QVERIFY(renderContext);
     renderContext->initialize(context);
     QVERIFY(renderContext->isValid());
@@ -110,7 +110,7 @@ void NodesTest::cleanupTestCase()
 class DummyRenderer : public QSGBatchRenderer::Renderer
 {
 public:
-    DummyRenderer(QSGRootNode *root, QSGRenderContext *renderContext)
+    DummyRenderer(QSGRootNode *root, QSGDefaultRenderContext *renderContext)
         : QSGBatchRenderer::Renderer(renderContext)
         , changedNode(0)
         , changedState(0)

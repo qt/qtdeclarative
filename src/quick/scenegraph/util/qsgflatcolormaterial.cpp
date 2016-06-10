@@ -39,8 +39,9 @@
 
 #include "qsgflatcolormaterial.h"
 #include <private/qsgmaterialshader_p.h>
-
-#include <qopenglshaderprogram.h>
+#ifndef QT_NO_OPENGL
+# include <qopenglshaderprogram.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -66,14 +67,16 @@ QSGMaterialType FlatColorMaterialShader::type;
 FlatColorMaterialShader::FlatColorMaterialShader()
     : QSGMaterialShader(*new QSGMaterialShaderPrivate)
 {
+#ifndef QT_NO_OPENGL
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.frag"));
+#endif
 }
 
 void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
+#ifndef QT_NO_OPENGL
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
-
     QSGFlatColorMaterial *oldMaterial = static_cast<QSGFlatColorMaterial *>(oldEffect);
     QSGFlatColorMaterial *newMaterial = static_cast<QSGFlatColorMaterial *>(newEffect);
 
@@ -90,6 +93,11 @@ void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial 
 
     if (state.isMatrixDirty())
         program()->setUniformValue(m_matrix_id, state.combinedMatrix());
+#else
+    Q_UNUSED(state)
+    Q_UNUSED(newEffect)
+    Q_UNUSED(oldEffect)
+#endif
 }
 
 char const *const *FlatColorMaterialShader::attributeNames() const
@@ -100,8 +108,10 @@ char const *const *FlatColorMaterialShader::attributeNames() const
 
 void FlatColorMaterialShader::initialize()
 {
+#ifndef QT_NO_OPENGL
     m_matrix_id = program()->uniformLocation("matrix");
     m_color_id = program()->uniformLocation("color");
+#endif
 }
 
 

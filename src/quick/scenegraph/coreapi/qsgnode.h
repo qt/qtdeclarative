@@ -79,8 +79,8 @@ public:
         OpacityNodeType,
 #ifndef qdoc
         RootNodeType,
-        RenderNodeType
 #endif
+        RenderNodeType
     };
 
     enum Flag {
@@ -204,13 +204,15 @@ public:
     const QMatrix4x4 *matrix() const { return m_matrix; }
     const QSGClipNode *clipList() const { return m_clip_list; }
 
+    void setRendererMatrix(const QMatrix4x4 *m) { m_matrix = m; }
+    void setRendererClipList(const QSGClipNode *c) { m_clip_list = c; }
+
 protected:
     QSGBasicGeometryNode(NodeType type);
     QSGBasicGeometryNode(QSGBasicGeometryNodePrivate &dd, NodeType type);
 
 private:
     friend class QSGNodeUpdater;
-    friend class QSGBatchRenderer::Updater;
 
     QSGGeometry *m_geometry;
 

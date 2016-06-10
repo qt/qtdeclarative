@@ -44,6 +44,11 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgtexture_p.h>
 
+#ifndef QT_NO_OPENGL
+# include <QtGui/QOpenGLContext>
+# include <private/qsgdefaultrendercontext_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 
@@ -83,7 +88,7 @@ QT_BEGIN_NAMESPACE
 
 QSGEnginePrivate::QSGEnginePrivate()
     : sgContext(QSGContext::createDefaultContext())
-    , sgRenderContext(new QSGRenderContext(sgContext.data()))
+    , sgRenderContext(sgContext.data()->createRenderContext())
 {
 }
 
@@ -110,17 +115,23 @@ QSGEngine::~QSGEngine()
  */
 void QSGEngine::initialize(QOpenGLContext *context)
 {
+#ifndef QT_NO_OPENGL
     Q_D(QSGEngine);
     if (QOpenGLContext::currentContext() != context) {
         qWarning("WARNING: The context must be current before calling QSGEngine::initialize.");
         return;
     }
 
-    if (!d->sgRenderContext->isValid()) {
-        d->sgRenderContext->setAttachToGLContext(false);
-        d->sgRenderContext->initialize(context);
+    auto openGLRenderContext = static_cast<QSGDefaultRenderContext *>(d->sgRenderContext.data());
+
+    if (openGLRenderContext != nullptr && !openGLRenderContext->isValid()) {
+        openGLRenderContext->setAttachToGLContext(false);
+        openGLRenderContext->initialize(context);
         connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
     }
+#else
+    Q_UNUSED(context)
+#endif
 }
 
 /*!
@@ -196,6 +207,20 @@ QSGTexture *QSGEngine::createTextureFromId(uint id, const QSize &size, CreateTex
         return texture;
     }
     return 0;
+}
+
+/*!
+    Returns the current renderer interface if there is one. Otherwise null is returned.
+
+    \sa QSGRenderNode, QSGRendererInterface
+    \since 5.8
+ */
+QSGRendererInterface *QSGEngine::rendererInterface() const
+{
+    Q_D(const QSGEngine);
+    return d->sgRenderContext->isValid()
+            ? d->sgRenderContext->sceneGraphContext()->rendererInterface(d->sgRenderContext.data())
+            : nullptr;
 }
 
 QT_END_NAMESPACE

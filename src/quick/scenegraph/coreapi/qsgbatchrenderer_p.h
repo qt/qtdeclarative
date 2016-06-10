@@ -54,12 +54,14 @@
 //
 
 #include <private/qsgrenderer_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgnodeupdater_p.h>
+#include <private/qsgrendernode_p.h>
 #include <private/qdatabuffer_p.h>
 
-#include <private/qsgrendernode_p.h>
-
 #include <QtCore/QBitArray>
+
+#include <QtGui/QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE
 
@@ -527,7 +529,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager(QSGRenderContext *ctx) : visualizeProgram(0), blitProgram(0), context(ctx) { }
+    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(0), blitProgram(0), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);
@@ -547,13 +549,13 @@ private:
     QHash<QSGMaterialType *, Shader *> stockShaders;
 
     QOpenGLShaderProgram *blitProgram;
-    QSGRenderContext *context;
+    QSGDefaultRenderContext *context;
 };
 
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer, public QOpenGLFunctions
 {
 public:
-    Renderer(QSGRenderContext *);
+    Renderer(QSGDefaultRenderContext *);
     ~Renderer();
 
     enum VisualizeMode {
@@ -637,6 +639,7 @@ private:
     void visualizeDrawGeometry(const QSGGeometry *g);
     void setCustomRenderMode(const QByteArray &mode) Q_DECL_OVERRIDE;
 
+    QSGDefaultRenderContext *m_context;
     QSet<Node *> m_taggedRoots;
     QDataBuffer<Element *> m_opaqueRenderList;
     QDataBuffer<Element *> m_alphaRenderList;

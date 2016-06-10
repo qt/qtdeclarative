@@ -72,8 +72,11 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     // this allows us to call pathForGlyph once and reuse the result.
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
-
+#ifndef QT_NO_OPENGL
     m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
+#else
+    Q_UNUSED(c)
+#endif
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
@@ -291,7 +294,7 @@ void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QVector<glyph_t> &glyp
         m_pendingGlyphs.add(glyphs.at(i));
 }
 
-void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize)
+void QSGDistanceFieldGlyphCache::updateTexture(uint oldTex, uint newTex, const QSize &newTexSize)
 {
     int count = m_textures.count();
     for (int i = 0; i < count; ++i) {
@@ -515,5 +518,44 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
         }
     }
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p)
+{
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << p.semanticName << "semindex" << p.semanticIndex;
+    return debug;
+}
+
+QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v)
+{
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << v.name;
+    switch (v.type) {
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Constant:
+        debug << "cvar" << "offset" << v.offset << "size" << v.size;
+        break;
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler:
+        debug << "sampler" << "bindpoint" << v.bindPoint;
+        break;
+    case QSGGuiThreadShaderEffectManager::ShaderInfo::Texture:
+        debug << "texture" << "bindpoint" << v.bindPoint;
+        break;
+    default:
+        break;
+    }
+    return debug;
+}
+
+QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd)
+{
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << vd.specialType;
+    return debug;
+}
+#endif
 
 QT_END_NAMESPACE

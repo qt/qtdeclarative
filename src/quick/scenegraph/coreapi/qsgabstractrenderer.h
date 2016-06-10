@@ -42,6 +42,10 @@
 
 #include <QtQuick/qsgnode.h>
 
+#ifndef GLuint
+#define GLuint uint
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QSGAbstractRendererPrivate;
