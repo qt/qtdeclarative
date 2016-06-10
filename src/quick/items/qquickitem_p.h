@@ -429,7 +429,7 @@ public:
     bool hasCursor:1;
     bool hasCursorInChild:1;
     // Bit 32
-    bool hasHoverInChild:1;
+    bool subtreeHoverEnabled:1;
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;

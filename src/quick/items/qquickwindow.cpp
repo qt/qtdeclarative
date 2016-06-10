@@ -1789,8 +1789,8 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             return false;
     }
 
-    qCDebug(DBG_HOVER_TRACE) << q << item << scenePos << lastScenePos << "hasHoverInChild" << itemPrivate->hasHoverInChild;
-    if (itemPrivate->hasHoverInChild) {
+    qCDebug(DBG_HOVER_TRACE) << q << item << scenePos << lastScenePos << "subtreeHoverEnabled" << itemPrivate->subtreeHoverEnabled;
+    if (itemPrivate->subtreeHoverEnabled) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);

@@ -2918,7 +2918,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
     if (childPrivate->hasCursorInChild && !hasCursorInChild)
         setHasCursorInChild(true);
 #endif
-    if (childPrivate->hasHoverInChild && !hasHoverInChild)
+    if (childPrivate->subtreeHoverEnabled && !subtreeHoverEnabled)
         setHasHoverInChild(true);
 
     markSortedChildrenDirty(child);
@@ -2945,7 +2945,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     if (childPrivate->hasCursorInChild && hasCursorInChild)
         setHasCursorInChild(false);
 #endif
-    if (childPrivate->hasHoverInChild && hasHoverInChild)
+    if (childPrivate->subtreeHoverEnabled && subtreeHoverEnabled)
         setHasHoverInChild(false);
 
     markSortedChildrenDirty(child);
@@ -3169,7 +3169,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , culled(false)
     , hasCursor(false)
     , hasCursorInChild(false)
-    , hasHoverInChild(false)
+    , subtreeHoverEnabled(false)
     , activeFocusOnTab(false)
     , implicitAntialiasing(false)
     , antialiasingValid(false)
@@ -7070,18 +7070,19 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     Q_Q(QQuickItem);
 
     // if we're asked to turn it off (because of a setAcceptHoverEvents call, or a node
-    // removal) then we should check our children and make sure it's really ok
-    // to turn it off.
-    if (!hasHover && hasHoverInChild) {
+    // removal) then we should make sure it's really ok to turn it off.
+    if (!hasHover && subtreeHoverEnabled) {
+        if (hoverEnabled)
+            return; // nope! sorry, I need hover myself
         foreach (QQuickItem *otherChild, childItems) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
-            if (otherChildPrivate->hasHoverInChild)
+            if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)
                 return; // nope! sorry, something else wants it kept on.
         }
     }
 
-    qCDebug(DBG_HOVER_TRACE) << q << hasHoverInChild << "->" << hasHover;
-    hasHoverInChild = hasHover;
+    qCDebug(DBG_HOVER_TRACE) << q << subtreeHoverEnabled << "->" << hasHover;
+    subtreeHoverEnabled = hasHover;
     QQuickItem *parent = q->parentItem();
     if (parent) {
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
