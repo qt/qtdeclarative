@@ -79,9 +79,9 @@ static uint maxShiftValue()
     static uint result = 0;
     if (!result) {
         result = 6;
-        if (Q_UNLIKELY(qEnvironmentVariableIsSet("QV4_MM_MAXBLOCK_SHIFT"))) {
+        if (Q_UNLIKELY(qEnvironmentVariableIsSet(QV4_MM_MAXBLOCK_SHIFT))) {
             bool ok;
-            const uint overrideValue = qgetenv("QV4_MM_MAXBLOCK_SHIFT").toUInt(&ok);
+            const uint overrideValue = qgetenv(QV4_MM_MAXBLOCK_SHIFT).toUInt(&ok);
             if (ok && overrideValue <= 11 && overrideValue > 0)
                 result = overrideValue;
         }
@@ -94,9 +94,9 @@ static std::size_t maxChunkSizeValue()
     static std::size_t result = 0;
     if (!result) {
         result = 32 * 1024;
-        if (Q_UNLIKELY(qEnvironmentVariableIsSet("QV4_MM_MAX_CHUNK_SIZE"))) {
+        if (Q_UNLIKELY(qEnvironmentVariableIsSet(QV4_MM_MAX_CHUNK_SIZE))) {
             bool ok;
-            const std::size_t overrideValue = qgetenv("QV4_MM_MAX_CHUNK_SIZE").toUInt(&ok);
+            const std::size_t overrideValue = qgetenv(QV4_MM_MAX_CHUNK_SIZE).toUInt(&ok);
             if (ok)
                 result = overrideValue;
         }
@@ -170,7 +170,7 @@ struct MemoryManager::Data
         , maxShift(maxShiftValue())
         , gcBlocked(false)
         , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
-        , gcStats(!qEnvironmentVariableIsEmpty("QV4_MM_STATS"))
+        , gcStats(!qEnvironmentVariableIsEmpty(QV4_MM_STATS))
     {
         memset(nonFullChunks, 0, sizeof(nonFullChunks));
         memset(nChunks, 0, sizeof(nChunks));
