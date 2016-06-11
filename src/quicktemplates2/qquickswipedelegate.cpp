@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-swipedelegate-behind.gif
 
-    \sa {Customizing SwipeDelegate}
+    \sa {Customizing SwipeDelegate}, {Delegate Controls}
 */
 
 class QQuickSwipePrivate : public QObjectPrivate

@@ -56,25 +56,20 @@ T.ComboBox {
     spacing: 6
     padding: 16
 
-    //! [delegate]
     delegate: MenuItem {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         Material.foreground: control.currentIndex === index ? control.Material.accent : control.Material.foreground
         highlighted: control.highlightedIndex === index
     }
-    //! [delegate]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         opacity: !control.enabled ? 0.5 : 1.0
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
@@ -86,9 +81,7 @@ T.ComboBox {
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 48
@@ -115,9 +108,7 @@ T.ComboBox {
             color: control.Material.checkBoxUncheckedRippleColor
         }
     }
-    //! [background]
 
-    //! [popup]
     popup: T.Popup {
         width: control.width
         implicitHeight: listview.contentHeight
@@ -160,5 +151,4 @@ T.ComboBox {
             }
         }
     }
-    //! [popup]
 }

@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-menus.html
     \title Menu Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for menu controls
 
     \annotatedlist qtquickcontrols2-menus
 
@@ -39,5 +41,15 @@
 
     \image qtquickcontrols2-menu.png
 
-    \l Menu is a traditional menu.
+    \l Menu control can be used for context menus; for example, after
+    right-clicking. It can also be used for popup menus; for example, a
+    menu that is shown after clicking a button.
+
+   \l MenuItem is an item in the Menu control. Each item in a menu:
+   \list
+   \li displays text to the user
+   \li allows checking/unchecking
+   \li is highlighted (for example, on keyboard navigation)
+   \li performs some action on activation
+   \endlist
 */

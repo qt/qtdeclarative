@@ -54,15 +54,12 @@ T.CheckDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    //! [indicator]
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
@@ -77,9 +74,7 @@ T.CheckDelegate {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         visible: control.down || control.highlighted || control.visualFocus
         color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
@@ -92,5 +87,4 @@ T.CheckDelegate {
         }
 
     }
-    //! [background]
 }

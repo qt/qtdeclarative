@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tabbutton.qml 1
 
-    \sa TabBar, {Customizing TabButton}, {Navigation Controls}
+    \sa TabBar, {Customizing TabButton}, {Button Controls}, {Navigation Controls}
 */
 
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :

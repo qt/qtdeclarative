@@ -68,7 +68,6 @@ T.Menu {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
     }
 
-    //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
 
@@ -81,9 +80,7 @@ T.Menu {
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
@@ -96,5 +93,4 @@ T.Menu {
             elevation: control.Material.elevation
         }
     }
-    //! [background]
 }

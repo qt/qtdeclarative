@@ -53,7 +53,6 @@ T.RangeSlider {
 
     padding: 6
 
-    //! [firstHandle]
     first.handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
@@ -61,9 +60,7 @@ T.RangeSlider {
         handleHasFocus: activeFocus
         handlePressed: first.pressed
     }
-    //! [firstHandle]
 
-    //! [secondHandle]
     second.handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
@@ -71,9 +68,7 @@ T.RangeSlider {
         handleHasFocus: activeFocus
         handlePressed: second.pressed
     }
-    //! [secondHandle]
 
-    //! [background]
     background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
@@ -95,5 +90,4 @@ T.RangeSlider {
             color: control.Material.accentColor
         }
     }
-    //! [background]
 }

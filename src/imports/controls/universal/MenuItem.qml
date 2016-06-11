@@ -53,7 +53,6 @@ T.MenuItem {
     bottomPadding: padding + 1
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.mirrored ? control.indicator.width + control.spacing : 0
@@ -66,9 +65,7 @@ T.MenuItem {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: Image {
         x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -78,9 +75,7 @@ T.MenuItem {
         sourceSize.width: width
         sourceSize.height: height
     }
-    //! [indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
@@ -98,5 +93,4 @@ T.MenuItem {
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
     }
-    //! [background]
 }

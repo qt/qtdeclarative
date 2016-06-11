@@ -60,15 +60,12 @@ T.SpinBox {
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 
-    //! [validator]
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
         top: Math.max(control.from, control.to)
     }
-    //! [validator]
 
-    //! [contentItem]
     contentItem: TextInput {
         text: control.textFromValue(control.value, control.locale)
 
@@ -84,9 +81,7 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
-    //! [contentItem]
 
-    //! [up.indicator]
     up.indicator: Item {
         implicitWidth: 28
         height: parent.height + 4
@@ -112,9 +107,7 @@ T.SpinBox {
             sourceSize.height: height
         }
     }
-    //! [up.indicator]
 
-    //! [down.indicator]
     down.indicator: Item {
         implicitWidth: 28
         height: parent.height + 4
@@ -140,9 +133,7 @@ T.SpinBox {
             sourceSize.height: height
         }
     }
-    //! [down.indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 60 + 28 // TextControlThemeMinWidth - 4 (border)
         implicitHeight: 28 // TextControlThemeMinHeight - 4 (border)
@@ -152,5 +143,4 @@ T.SpinBox {
                        control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
         color: control.enabled ? control.Universal.background : control.Universal.baseLowColor
     }
-    //! [background]
 }

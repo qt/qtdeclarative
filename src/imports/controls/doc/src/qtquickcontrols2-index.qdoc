@@ -62,6 +62,7 @@
     \section1 Important Concepts in Qt Quick Controls 2
 
     \list
+      \li \l{Qt Quick Controls 2 Guidelines}
       \li \l{Styling Qt Quick Controls 2}
       \li \l{Customizing Qt Quick Controls 2}
       \li \l{High-DPI Support in Qt Quick Controls 2}

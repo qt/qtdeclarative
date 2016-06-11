@@ -49,7 +49,6 @@ T.TabButton {
 
     padding: 12 // PivotItemMargin
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -60,5 +59,4 @@ T.TabButton {
         opacity: control.checked || control.down ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 }

@@ -81,7 +81,6 @@ T.TextArea {
         }
     }
 
-    //! [placeholder]
     Text {
         id: placeholder
         x: control.leftPadding
@@ -96,14 +95,11 @@ T.TextArea {
         elide: Text.ElideRight
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
     }
-    //! [placeholder]
 
-    //! [background]
     background: Rectangle {
         y: parent.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
     }
-    //! [background]
 }

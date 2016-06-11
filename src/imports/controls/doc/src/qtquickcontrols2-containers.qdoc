@@ -41,7 +41,8 @@
 
     \image qtquickcontrols2-applicationwindow-wireframe.png
 
-    \l ApplicationWindow contains optional header and footer items.
+    \l ApplicationWindow creates the root window of an application, and makes
+    it easy to add an optional header and footer to that window.
 
     \section1 Frame Control
 
@@ -62,19 +63,26 @@
     \image qtquickcontrols2-page-wireframe.png
 
     \l Page provides page-specific header and footer items.
+    It is perfectly possible to use ApplicationWindow for setting the header
+    and the footer, but if you have a header and footer which varies per
+    screen, then it is better to use \l Page.
 
     \section1 Pane Control
 
     \image qtquickcontrols2-pane.png
 
     \l Pane provides a background color that matches with the application
-    style and theme.
+    style and theme. Pane does not provide a layout of its own, but requires
+    you to position its contents, for instance by using a \l RowLayout or
+    a \l ColumnLayout.
 
     \section1 StackView Control
 
     \image qtquickcontrols2-stackview-wireframe.png
 
-    \l StackView organizes content pages into a stack.
+    \l StackView organizes content pages into a stack using a last-in-first-out
+    principle: the last item to be "pushed" onto the stack is the first one to
+    be removed, and the top-most item is always the one that is visible.
 
     \section1 SwipeView Control
 

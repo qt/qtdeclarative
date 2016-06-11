@@ -49,14 +49,10 @@ T.Frame {
 
     padding: 12
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: "transparent"
         border.color: control.Universal.chromeDisabledLowColor
     }
-    //! [background]
 }

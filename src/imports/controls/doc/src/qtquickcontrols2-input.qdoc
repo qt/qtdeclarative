@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-input.html
     \title Input Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for input controls
 
     Qt Quick Controls 2 offers a variety of input controls for both numeric
     and textual input.
@@ -42,13 +44,30 @@
 
     \image qtquickcontrols2-combobox.png
 
-    \l ComboBox is used to select a value from a drop-down list.
+    \l ComboBox is used to select a value from a static multiple-line drop-down list.
+    It is not possible to add new values, and only one option can be selected.
+
+    Recommendations:
+    \list
+    \li If the number of values is very large, consider applying a filter.
+    \li If the list is very limited, consider using RadioButton. This has the
+    advantage that the user can see all options at the same time.
+    \li Select a default value, the value that will be chosen most often.
+    \endlist
+
+    \b {See also} \l {CheckBox Control}, \l {Tumbler Control}.
 
     \section1 Dial Control
 
     \image qtquickcontrols2-dial.png
 
-    \l Dial is a circular dial that is rotated to set a value.
+    \l Dial is similar to a traditional dial knob that is found on devices such
+    as stereos or industrial equipment.
+
+    The dial is rotated by clicking and dragging, with the handle indicating the
+    value of the dial.
+
+    \b {See also} \l {Tumbler Control}.
 
     \section1 TextArea Control
 
@@ -61,6 +80,8 @@
     \image qtquickcontrols2-textfield.png
 
     \l TextField is a single line text editor.
+
+    \b {See also} \l {Tumbler Control}.
 
     \section1 Slider Control
 
@@ -75,9 +96,19 @@
     \l RangeSlider is used to select a range specified by two values,
     by sliding each handle along a track.
 
+
+    \b {See also} \l {Slider Control}.
+
     \section1 Tumbler Control
 
     \image qtquickcontrols2-tumbler.png
 
     \l Tumbler is a spinnable wheel of items that can be selected.
+
+    \b {See also} \l {ComboBox Control}.
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls 2 Guidelines}
+    \endlist
 */

@@ -47,7 +47,6 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: ProgressStrip {
         id: strip
         implicitHeight: 4
@@ -62,9 +61,7 @@ T.ProgressBar {
             running: control.visible && control.indeterminate
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 4
@@ -75,5 +72,4 @@ T.ProgressBar {
 
         color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, 0.25)
     }
-    //! [background]
 }

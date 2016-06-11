@@ -54,16 +54,13 @@ T.MenuItem {
     bottomPadding: 12
     spacing: 16
 
-    //! [indicator]
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         visible: control.checkable
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
@@ -76,14 +73,11 @@ T.MenuItem {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
         visible: control.down || control.highlighted
         color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
     }
-    //! [background]
 }

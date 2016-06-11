@@ -48,7 +48,6 @@ T.TabBar {
 
     spacing: 1
 
-    //! [contentItem]
     contentItem: ListView {
         implicitWidth: contentWidth
         implicitHeight: 48
@@ -74,11 +73,8 @@ T.TabBar {
             }
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Material.backgroundColor
     }
-    //! [background]
 }

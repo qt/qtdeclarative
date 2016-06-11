@@ -46,7 +46,6 @@ T.ScrollIndicator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: Rectangle {
         id: indicator
 
@@ -78,5 +77,4 @@ T.ScrollIndicator {
             }
         ]
     }
-    //! [contentItem]
 }

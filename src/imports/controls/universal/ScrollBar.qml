@@ -48,7 +48,6 @@ T.ScrollBar {
 
     // TODO: arrows
 
-    //! [contentItem]
     contentItem: Rectangle {
         implicitWidth: 12
         implicitHeight: 12
@@ -57,9 +56,7 @@ T.ScrollBar {
         visible: control.size < 1.0
         opacity: 0.0
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 12
         implicitHeight: 12
@@ -68,7 +65,6 @@ T.ScrollBar {
         visible: control.size < 1.0
         opacity: 0.0
     }
-    //! [background]
 
     states: [
         State {

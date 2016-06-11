@@ -41,13 +41,9 @@ import QtQuick.Controls.Universal 2.0
 T.Page {
     id: control
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Universal.background
     }
-    //! [background]
 }

@@ -53,7 +53,7 @@ MetaInfo {
             version: "2.0"
             requiredImport: "QtQuick.Controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Check Delegate')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Check Delegate\")" }
         }
     }
 
@@ -147,6 +147,22 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.Page"
+        icon: "images/page-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Page"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/page-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.PageIndicator"
         icon: "images/pageindicator-icon16.png"
 
@@ -218,7 +234,23 @@ MetaInfo {
             version: "2.0"
             requiredImport: "QtQuick.Controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr('Radio Delegate')" }
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Radio Delegate\")" }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.RangeSlider"
+        icon: "images/rangeslider-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Range Slider"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/rangeslider-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "first.value"; type: "real"; value: 0.25 }
+            Property { name: "second.value"; type: "real"; value: 0.75 }
         }
     }
 
@@ -251,6 +283,21 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.SwipeDelegate"
+        icon: "images/itemdelegate-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Swipe Delegate"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/itemdelegate-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Swipe Delegate\")" }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.Switch"
         icon: "images/switch-icon16.png"
 
@@ -262,6 +309,21 @@ MetaInfo {
             requiredImport: "QtQuick.Controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Switch\")" }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.SwitchDelegate"
+        icon: "images/switch-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Switch Delegate"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/switch-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Switch Delegate\")" }
         }
     }
 

@@ -44,7 +44,6 @@ T.Dial {
     implicitWidth: 100
     implicitHeight: 100
 
-    //! [background]
     background: Rectangle {
         x: control.width / 2 - width / 2
         y: control.height / 2 - height / 2
@@ -55,9 +54,7 @@ T.Dial {
 
         border.color: control.enabled ? control.Material.accentColor : control.Material.hintTextColor
     }
-    //! [background]
 
-    //! [handle]
     handle: Rectangle {
         id: handleItem
 
@@ -78,5 +75,4 @@ T.Dial {
         radius: width / 2
         color: control.enabled ? control.Material.accentColor : control.Material.hintTextColor
     }
-    //! [handle]
 }

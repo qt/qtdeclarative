@@ -48,4 +48,9 @@
 
     For more information on the Qt Quick Controls 2 module, see the
     \l {Qt Quick Controls 2} module documentation.
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls 2 Guidelines}
+    \endlist
 */

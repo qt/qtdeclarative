@@ -52,7 +52,6 @@ T.RangeSlider {
 
     padding: 6
 
-    //! [firstHandle]
     first.handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -65,9 +64,7 @@ T.RangeSlider {
         radius: 4
         color: control.first.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [firstHandle]
 
-    //! [secondHandle]
     second.handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -80,9 +77,7 @@ T.RangeSlider {
         radius: 4
         color: control.second.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [secondHandle]
 
-    //! [background]
     background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
@@ -114,5 +109,4 @@ T.RangeSlider {
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [background]
 }

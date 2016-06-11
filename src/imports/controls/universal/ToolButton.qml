@@ -51,7 +51,6 @@ T.ToolButton {
 
     property bool useSystemFocusVisuals: true
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -62,9 +61,7 @@ T.ToolButton {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 68
         implicitHeight: 48 // AppBarThemeCompactHeight
@@ -72,5 +69,4 @@ T.ToolButton {
         color: control.down ? control.Universal.listMediumColor :
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent : "transparent"
     }
-    //! [background]
 }

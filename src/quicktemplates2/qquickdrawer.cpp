@@ -521,9 +521,11 @@ void QQuickDrawer::componentComplete()
 {
     Q_D(QQuickDrawer);
     QQuickPopup::componentComplete();
-    bool notify = false;
-    d->prepareEnterTransition(notify);
-    d->reposition();
+    if (d->window) {
+        bool notify = false;
+        d->prepareEnterTransition(notify);
+        d->reposition();
+    }
 }
 
 QT_END_NAMESPACE

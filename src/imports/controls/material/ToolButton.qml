@@ -49,7 +49,6 @@ T.ToolButton {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -58,9 +57,7 @@ T.ToolButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 48
         implicitHeight: 48
@@ -68,5 +65,4 @@ T.ToolButton {
         color: control.down ? control.Material.buttonPressColor : control.Material.buttonHoverColor
         visible: control.enabled && (control.down || control.visualFocus || control.checked || control.highlighted)
     }
-    //! [background]
 }

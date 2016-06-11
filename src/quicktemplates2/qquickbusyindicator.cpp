@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa {Customizing BusyIndicator}, {Indicator Controls}
+    \sa {Customizing BusyIndicator}, {Indicator Controls}, ProgressBar
 */
 
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
