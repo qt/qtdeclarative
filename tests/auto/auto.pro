@@ -5,16 +5,16 @@ SUBDIRS += \
     calendar \
     controls \
     drawer \
-    material \
     menu \
     popup \
     pressandhold \
+    qquickmaterialstyle \
     qquickstyle \
     qquickstyleselector \
+    qquickuniversalstyle \
     sanity \
     snippets \
-    styles \
-    universal
+    styles
 
 # QTBUG-50295
 !linux: SUBDIRS += \

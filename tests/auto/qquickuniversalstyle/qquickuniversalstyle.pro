@@ -1,12 +1,12 @@
 TEMPLATE = app
-TARGET = tst_material
+TARGET = tst_qquickuniversalstyle
 CONFIG += qmltestcase
 
 SOURCES += \
-    $$PWD/tst_material.cpp
+    $$PWD/tst_qquickuniversalstyle.cpp
 
 RESOURCES += \
-    $$PWD/material.qrc
+    $$PWD/qquickuniversalstyle.qrc
 
 OTHER_FILES += \
     $$PWD/data/*
