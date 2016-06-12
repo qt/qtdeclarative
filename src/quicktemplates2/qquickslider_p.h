@@ -105,6 +105,8 @@ public:
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
+    Q_REVISION(1) Q_INVOKABLE qreal valueAt(qreal position) const;
+
 public Q_SLOTS:
     void increase();
     void decrease();

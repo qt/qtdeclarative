@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 
 TestCase {
     id: testCase
@@ -515,6 +515,26 @@ TestCase {
         mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
         compare(control.value, 2.5)
         compare(control.position, 0.25)
+
+        control.destroy()
+    }
+
+    function test_valueAt_data() {
+        return [
+            { tag: "0.0..1.0", from: 0.0, to: 1.0, values: [0.0, 0.2, 0.5, 1.0] },
+            { tag: "0..100", from: 0, to: 100, values: [0, 20, 50, 100] },
+            { tag: "100..-100", from: 100, to: -100, values: [100, 60, 0, -100] }
+        ]
+    }
+
+    function test_valueAt(data) {
+        var control = slider.createObject(testCase, {from: data.from, to: data.to})
+        verify(control)
+
+        compare(control.valueAt(0.0), data.values[0])
+        compare(control.valueAt(0.2), data.values[1])
+        compare(control.valueAt(0.5), data.values[2])
+        compare(control.valueAt(1.0), data.values[3])
 
         control.destroy()
     }

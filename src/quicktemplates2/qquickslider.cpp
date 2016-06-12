@@ -83,7 +83,6 @@ public:
     {
     }
 
-    qreal valueAt(qreal position) const;
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPoint &point) const;
     void setPosition(qreal position);
@@ -100,11 +99,6 @@ public:
     QQuickSlider::SnapMode snapMode;
     QQuickItem *handle;
 };
-
-qreal QQuickSliderPrivate::valueAt(qreal position) const
-{
-    return from + (to - from) * position;
-}
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
 {
@@ -229,10 +223,11 @@ void QQuickSlider::setTo(qreal to)
     This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
     Unlike the \l position property, the \c value is not updated while the
-    handle is dragged. The value is updated after the value has been chosen
-    and the slider has been released.
+    handle is dragged, but only after the value has been chosen and the slider
+    has been released. The \l valueAt() method can be used to get continuous
+    updates.
 
-    \sa position
+    \sa position, valueAt()
 */
 qreal QQuickSlider::value() const
 {
@@ -265,7 +260,7 @@ void QQuickSlider::setValue(qreal value)
     continuously updated while the handle is dragged. For visualizing a
     slider, the right-to-left aware \l visualPosition should be used instead.
 
-    \sa value, visualPosition
+    \sa value, visualPosition, valueAt()
 */
 qreal QQuickSlider::position() const
 {
@@ -419,6 +414,25 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 }
 
 /*!
+    \since QtQuick.Controls 2.1
+    \qmlmethod real QtQuick.Controls::Slider::valueAt(real position)
+
+    Returns the value for the given \a position.
+
+    The \l value property is not updated while the handle is dragged, but this
+    method can be used to get continuous value updates:
+
+    \snippet qtquickcontrols2-tooltip-slider.qml 1
+
+    \sa value, position
+*/
+qreal QQuickSlider::valueAt(qreal position) const
+{
+    Q_D(const QQuickSlider);
+    return d->from + (d->to - d->from) * position;
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::Slider::increase()
 
     Increases the value by \l stepSize or \c 0.1 if stepSize is not defined.
@@ -520,7 +534,7 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
-        qreal val = d->valueAt(pos);
+        qreal val = valueAt(pos);
         if (!qFuzzyCompare(val, d->value))
             setValue(val);
         else if (d->snapMode != NoSnap)

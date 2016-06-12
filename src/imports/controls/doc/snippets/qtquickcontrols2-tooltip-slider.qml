@@ -46,7 +46,7 @@ Item {
         ToolTip {
             parent: slider.handle
             visible: slider.pressed
-            text: slider.position.toFixed(1)
+            text: slider.valueAt(slider.position).toFixed(1)
         }
     }
     //! [1]
