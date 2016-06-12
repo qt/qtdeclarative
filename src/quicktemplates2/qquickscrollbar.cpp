@@ -400,6 +400,7 @@ public:
     void activateVertical();
     void scrollHorizontal();
     void scrollVertical();
+    void mirrorVertical();
 
     void layoutHorizontal(bool move = true);
     void layoutVertical(bool move = true);
@@ -453,6 +454,11 @@ void QQuickScrollBarAttachedPrivate::scrollVertical()
         flickable->setContentY(cy);
 }
 
+void QQuickScrollBarAttachedPrivate::mirrorVertical()
+{
+    layoutVertical(true);
+}
+
 void QQuickScrollBarAttachedPrivate::layoutHorizontal(bool move)
 {
     Q_ASSERT(horizontal && flickable);
@@ -465,8 +471,8 @@ void QQuickScrollBarAttachedPrivate::layoutVertical(bool move)
 {
     Q_ASSERT(vertical && flickable);
     vertical->setHeight(flickable->height());
-    if (move && !QQuickItemPrivate::get(vertical)->isMirrored())
-        vertical->setX(flickable->width() - vertical->width());
+    if (move)
+        vertical->setX(vertical->isMirrored() ? 0 : flickable->width() - vertical->width());
 }
 
 void QQuickScrollBarAttachedPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -588,6 +594,7 @@ void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
 
     if (d->vertical && d->flickable) {
         QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::mirroredChanged, d, &QQuickScrollBarAttachedPrivate::mirrorVertical);
         QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
         QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
 
@@ -605,6 +612,7 @@ void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
         vertical->setOrientation(Qt::Vertical);
 
         QQuickItemPrivate::get(vertical)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+        QObjectPrivate::connect(vertical, &QQuickScrollBar::mirroredChanged, d, &QQuickScrollBarAttachedPrivate::mirrorVertical);
         QObjectPrivate::connect(vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
         QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollBarAttachedPrivate::activateVertical);
 

@@ -271,4 +271,17 @@ TestCase {
         ignoreWarning(Qt.resolvedUrl("tst_scrollbar.qml") + ":45:1: QML TestCase: ScrollBar must be attached to a Flickable")
         testCase.ScrollBar.vertical = null
     }
+
+    function test_mirrored() {
+        var container = flickable.createObject(testCase)
+        verify(container)
+        waitForRendering(container)
+
+        container.ScrollBar.vertical = scrollBar.createObject(container)
+        compare(container.ScrollBar.vertical.x, container.width - container.ScrollBar.vertical.width)
+        container.ScrollBar.vertical.locale = Qt.locale("ar_EG")
+        compare(container.ScrollBar.vertical.x, 0)
+
+        container.destroy()
+    }
 }
