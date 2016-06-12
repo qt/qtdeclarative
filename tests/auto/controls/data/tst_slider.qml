@@ -286,6 +286,12 @@ TestCase {
         verify(control.value <= 0.25 && control.value >= 0.0)
         verify(control.position <= 0.25 && control.position >= 0.0)
 
+        // QTBUG-53846
+        mouseClick(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
+        compare(pressedSpy.count, 6)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+
         control.destroy()
     }
 

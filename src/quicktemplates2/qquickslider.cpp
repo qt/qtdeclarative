@@ -516,17 +516,15 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickSlider);
     QQuickControl::mouseReleaseEvent(event);
     d->pressPoint = QPoint();
-    if (keepMouseGrab()) {
-        qreal pos = d->positionAt(event->pos());
-        if (d->snapMode != NoSnap)
-            pos = d->snapPosition(pos);
-        qreal val = d->valueAt(pos);
-        if (!qFuzzyCompare(val, d->value))
-            setValue(val);
-        else if (d->snapMode != NoSnap)
-            d->setPosition(pos);
-        setKeepMouseGrab(false);
-    }
+    qreal pos = d->positionAt(event->pos());
+    if (d->snapMode != NoSnap)
+        pos = d->snapPosition(pos);
+    qreal val = d->valueAt(pos);
+    if (!qFuzzyCompare(val, d->value))
+        setValue(val);
+    else if (d->snapMode != NoSnap)
+        d->setPosition(pos);
+    setKeepMouseGrab(false);
     setPressed(false);
 }
 
