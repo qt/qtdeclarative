@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.0 as T
 import QtQuick.Controls.Material 2.0
+import QtQuick.Controls.Material.impl 2.0
 
 T.TabBar {
     id: control
@@ -76,5 +77,11 @@ T.TabBar {
 
     background: Rectangle {
         color: control.Material.backgroundColor
+
+        layer.enabled: control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
+            fullWidth: true
+        }
     }
 }
