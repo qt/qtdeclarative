@@ -13,8 +13,7 @@ SUBDIRS += \
     qquickstyleselector \
     qquickuniversalstyle \
     sanity \
-    snippets \
-    styles
+    snippets
 
 # QTBUG-50295
 !linux: SUBDIRS += \

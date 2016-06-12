@@ -15,7 +15,9 @@
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
-/tests/auto/controls/tst_controls
+/tests/auto/controls/default/tst_default
+/tests/auto/controls/material/tst_material
+/tests/auto/controls/universal/tst_universal
 /tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/menu/tst_menu
