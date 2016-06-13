@@ -139,26 +139,6 @@ protected:
     QQmlTypeCompiler *compiler;
 };
 
-class QQmlPropertyCacheCreator : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
-public:
-    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
-    ~QQmlPropertyCacheCreator();
-
-    bool buildMetaObjects();
-protected:
-    bool buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
-    bool ensureVMEMetaObject(int objectIndex);
-    bool createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
-
-    QQmlEnginePrivate *enginePrivate;
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlImports *imports;
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
-    QQmlPropertyCacheVector propertyCaches;
-};
-
 // "Converts" signal expressions to full-fleged function declarations with
 // parameters taken from the signal declarations
 // It also updates the QV4::CompiledData::Binding objects to set the property name
