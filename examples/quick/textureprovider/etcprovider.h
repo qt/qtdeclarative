@@ -34,7 +34,7 @@
 #ifndef ETCPROVIDER_H
 #define ETCPROVIDER_H
 
-#include <qopengl.h>
+#include <QOpenGLFunctions>
 #include <QQuickImageProvider>
 #include <QtQuick/QSGTexture>
 #include <QUrl>
@@ -54,7 +54,7 @@ private:
     QUrl m_baseUrl;
 };
 
-class EtcTexture : public QSGTexture
+class EtcTexture : public QSGTexture, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:

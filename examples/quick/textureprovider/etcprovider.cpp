@@ -81,7 +81,7 @@ unsigned short getPaddedHeight(ETCHeader *pHeader)
 EtcTexture::EtcTexture()
     : m_texture_id(0), m_uploaded(false)
 {
-
+    initializeOpenGLFunctions();
 }
 
 EtcTexture::~EtcTexture()
@@ -92,8 +92,10 @@ EtcTexture::~EtcTexture()
 
 int EtcTexture::textureId() const
 {
-    if (m_texture_id == 0)
-        glGenTextures(1, &const_cast<EtcTexture *>(this)->m_texture_id);
+    if (m_texture_id == 0) {
+        EtcTexture *texture = const_cast<EtcTexture*>(this);
+        texture->glGenTextures(1, &texture->m_texture_id);
+    }
     return m_texture_id;
 }
 
