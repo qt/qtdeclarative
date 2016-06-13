@@ -62,7 +62,7 @@ class Q_AUTOTEST_EXPORT QQuickStyledTextImgTag
 {
 public:
     QQuickStyledTextImgTag()
-        : position(0), align(QQuickStyledTextImgTag::Bottom), pix(0)
+        : position(0), offset(0.0), align(QQuickStyledTextImgTag::Bottom), pix(0)
     { }
 
     ~QQuickStyledTextImgTag() { delete pix; }
@@ -77,6 +77,7 @@ public:
     QPointF pos;
     QSize size;
     int position;
+    qreal offset; // this offset allows us to compensate for flooring reserved space
     Align align;
     QQuickPixmap *pix;
 };

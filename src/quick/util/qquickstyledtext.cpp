@@ -652,10 +652,13 @@ bool QQuickStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QStr
 void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut)
 {
     qreal imgWidth = 0.0;
+    QFontMetricsF fm(layout.font());
+    const qreal spaceWidth = fm.width(QChar::Nbsp);
+    const bool trailingSpace = textOut.endsWith(space);
 
     if (!updateImagePositions) {
         QQuickStyledTextImgTag *image = new QQuickStyledTextImgTag;
-        image->position = textOut.length() + 1;
+        image->position = textOut.length() + (trailingSpace ? 0 : 1);
 
         QPair<QStringRef,QStringRef> attr;
         do {
@@ -692,14 +695,16 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         }
 
         imgWidth = image->size.width();
+        image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
         imgTags->append(image);
 
     } else {
         // if we already have a list of img tags for this text
         // we only want to update the positions of these tags.
         QQuickStyledTextImgTag *image = imgTags->value(nbImages);
-        image->position = textOut.length() + 1;
+        image->position = textOut.length() + (trailingSpace ? 0 : 1);
         imgWidth = image->size.width();
+        image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
         QPair<QStringRef,QStringRef> attr;
         do {
             attr = parseAttribute(ch, textIn);
@@ -707,9 +712,9 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         nbImages++;
     }
 
-    QFontMetricsF fm(layout.font());
-    QString padding(qFloor(imgWidth / fm.width(QChar::Nbsp)), QChar::Nbsp);
-    textOut += QLatin1Char(' ');
+    QString padding(qFloor(imgWidth / spaceWidth), QChar::Nbsp);
+    if (!trailingSpace)
+        textOut += QLatin1Char(' ');
     textOut += padding;
     textOut += QLatin1Char(' ');
 }
