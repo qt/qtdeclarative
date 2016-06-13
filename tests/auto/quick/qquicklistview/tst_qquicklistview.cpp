@@ -735,7 +735,7 @@ void tst_QQuickListView::inserted_more_data()
             << 15 << 1
             << 0.0;
 
-    QTest::newRow("add 1, at end of visible, content at start")
+    QTest::newRow("add multiple, at end of visible, content at start")
             << 0.0
             << 15 << 3
             << 0.0;
@@ -756,7 +756,7 @@ void tst_QQuickListView::inserted_more_data()
             << 16 << 1
             << 0.0;
 
-    QTest::newRow("add 1, after visible, content at start")
+    QTest::newRow("add multiple, after visible, content at start")
             << 0.0
             << 16 << 3
             << 0.0;

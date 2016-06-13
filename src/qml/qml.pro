@@ -22,6 +22,11 @@ exists("qqml_enable_gcov") {
     LIBS_PRIVATE += -lgcov
 }
 
+greaterThan(QT_GCC_MAJOR_VERSION, 5) {
+    # Our code is bad. Temporary workaround.
+    QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks
+}
+
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
 
 # 2415: variable "xx" of static storage duration was declared but never referenced

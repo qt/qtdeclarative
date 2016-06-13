@@ -82,6 +82,7 @@ private slots:
     void dragging_data() { acceptedButton_data(); }
     void dragging();
     void dragSmoothed();
+    void dragThreshold_data();
     void dragThreshold();
     void invalidDrag_data() { rejectedButton_data(); }
     void invalidDrag();
@@ -390,8 +391,17 @@ void tst_QQuickMouseArea::dragSmoothed()
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 122));
 }
 
+void tst_QQuickMouseArea::dragThreshold_data()
+{
+    QTest::addColumn<bool>("preventStealing");
+    QTest::newRow("without preventStealing") << false;
+    QTest::newRow("with preventStealing") << true;
+}
+
 void tst_QQuickMouseArea::dragThreshold()
 {
+    QFETCH(bool, preventStealing);
+
     QQuickView window;
     QByteArray errorMessage;
     QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
@@ -401,6 +411,7 @@ void tst_QQuickMouseArea::dragThreshold()
     QVERIFY(window.rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    mouseRegion->setPreventStealing(preventStealing);
     QQuickDrag *drag = mouseRegion->drag();
 
     drag->setThreshold(5);

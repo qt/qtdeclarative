@@ -105,6 +105,7 @@ private slots:
     void get_nested();
     void get_nested_data();
     void crash_model_with_multiple_roles();
+    void crash_model_with_unknown_roles();
     void set_model_cache();
     void property_changes();
     void property_changes_data();
@@ -961,6 +962,21 @@ void tst_qqmllistmodel::crash_model_with_multiple_roles()
     model->setProperty(0, "black", true);
 
     delete rootItem;
+}
+
+void tst_qqmllistmodel::crash_model_with_unknown_roles()
+{
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
+    QScopedPointer<QObject> rootItem(component.create());
+    QVERIFY(component.errorString().isEmpty());
+    QVERIFY(rootItem != 0);
+    QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+    QVERIFY(model != 0);
+
+    // used to cause a crash in debug builds
+    model->index(0, 0, QModelIndex()).data(Qt::DisplayRole);
+    model->index(0, 0, QModelIndex()).data(Qt::UserRole);
 }
 
 //QTBUG-15190

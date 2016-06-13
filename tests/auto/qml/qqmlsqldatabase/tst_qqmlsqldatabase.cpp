@@ -122,7 +122,7 @@ void tst_qqmlsqldatabase::checkDatabasePath()
     QVERIFY(engine->offlineStoragePath().contains("OfflineStorage"));
 }
 
-static const int total_databases_created_by_tests = 12;
+static const int total_databases_created_by_tests = 13;
 void tst_qqmlsqldatabase::testQml_data()
 {
     QTest::addColumn<QString>("jsfile"); // The input file
@@ -144,6 +144,7 @@ void tst_qqmlsqldatabase::testQml_data()
     QTest::newRow("error-outsidetransaction") << "error-outsidetransaction.js"; // reuse above
     QTest::newRow("reopen1") << "reopen1.js";
     QTest::newRow("reopen2") << "reopen2.js"; // re-uses above DB
+    QTest::newRow("null-values") << "nullvalues.js";
 
     // If you add a test, you should usually use a new database in the
     // test - in which case increment total_databases_created_by_tests above.

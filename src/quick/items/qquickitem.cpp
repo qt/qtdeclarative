@@ -423,21 +423,44 @@ void QQuickItemKeyFilter::componentComplete()
 
 /*!
     \qmlproperty Item QtQuick::KeyNavigation::left
+
+    This property holds the item to assign focus to
+    when the left cursor key is pressed.
+*/
+
+/*!
     \qmlproperty Item QtQuick::KeyNavigation::right
+
+    This property holds the item to assign focus to
+    when the right cursor key is pressed.
+*/
+
+/*!
     \qmlproperty Item QtQuick::KeyNavigation::up
+
+    This property holds the item to assign focus to
+    when the up cursor key is pressed.
+*/
+
+/*!
     \qmlproperty Item QtQuick::KeyNavigation::down
 
-    These properties hold the item to assign focus to
-    when the left, right, up or down cursor keys
-    are pressed.
+    This property holds the item to assign focus to
+    when the down cursor key is pressed.
 */
 
 /*!
     \qmlproperty Item QtQuick::KeyNavigation::tab
+
+    This property holds the item to assign focus to
+    when the Tab key is pressed.
+*/
+
+/*!
     \qmlproperty Item QtQuick::KeyNavigation::backtab
 
-    These properties hold the item to assign focus to
-    when the Tab key or Shift+Tab key combination (Backtab) are pressed.
+    This property holds the item to assign focus to
+    when the Shift+Tab key combination (Backtab) is pressed.
 */
 
 QQuickKeyNavigationAttached::QQuickKeyNavigationAttached(QObject *parent)
