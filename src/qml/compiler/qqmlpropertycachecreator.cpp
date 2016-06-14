@@ -41,15 +41,32 @@
 
 #include <private/qqmlengine_p.h>
 
-#define COMPILE_EXCEPTION(token, desc) \
-    { \
-        recordError((token)->location, desc); \
-        return false; \
-    }
-
 QT_BEGIN_NAMESPACE
 
 static QAtomicInt classIndexCounter(0);
+
+QQmlPropertyCacheCreator::InstantiationContext::InstantiationContext()
+    : referencingObjectIndex(-1)
+    , instantiatingBinding(nullptr)
+    , instantiatingProperty(nullptr)
+{
+
+}
+
+QQmlPropertyCacheCreator::InstantiationContext::InstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache)
+    : referencingObjectIndex(referencingObjectIndex)
+    , instantiatingBinding(instantiatingBinding)
+    , instantiatingProperty(nullptr)
+{
+    if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+        Q_ASSERT(referencingObjectIndex >= 0);
+        Q_ASSERT(referencingObjectPropertyCache);
+        Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
+
+        bool notInRevision = false;
+        instantiatingProperty = QmlIR::PropertyResolver(referencingObjectPropertyCache).property(instantiatingPropertyName, &notInRevision);
+    }
+}
 
 QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
@@ -72,8 +89,13 @@ bool QQmlPropertyCacheCreator::buildMetaObjects()
 {
     propertyCaches.resize(qmlObjects.count());
 
-    if (!buildMetaObjectRecursively(compiler->rootObjectIndex(), /*referencing object*/-1, /*instantiating binding*/0))
+    InstantiationContext context;
+
+    QQmlCompileError error = buildMetaObjectRecursively(compiler->rootObjectIndex(), context);
+    if (error.isSet()) {
+        recordError(error);
         return false;
+    }
 
     compiler->setPropertyCaches(propertyCaches);
     propertyCaches.clear();
@@ -81,80 +103,107 @@ bool QQmlPropertyCacheCreator::buildMetaObjects()
     return true;
 }
 
-bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding)
+QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, const InstantiationContext &context)
 {
     const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-
-    QQmlPropertyCache *baseTypeCache = 0;
-    QQmlPropertyData *instantiatingProperty = 0;
-    if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-        Q_ASSERT(referencingObjectIndex >= 0);
-        QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex).data();
-        Q_ASSERT(parentCache);
-        Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
-
-        bool notInRevision = false;
-        instantiatingProperty = QmlIR::PropertyResolver(parentCache).property(stringAt(instantiatingBinding->propertyNameIndex), &notInRevision);
-        if (instantiatingProperty) {
-            if (instantiatingProperty->isQObject()) {
-                baseTypeCache = enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType);
-                Q_ASSERT(baseTypeCache);
-            } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType)) {
-                baseTypeCache = enginePrivate->cache(vtmo);
-                Q_ASSERT(baseTypeCache);
-            }
-        }
-    }
 
     bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
         for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
-
-                // On assignments are implemented using value interceptors, which require a VME meta object.
-                needVMEMetaObject = true;
-
                 // If the on assignment is inside a group property, we need to distinguish between QObject based
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
-                if (instantiatingProperty && QQmlValueTypeFactory::isValueType(instantiatingProperty->propType)) {
-                    needVMEMetaObject = false;
-                    if (!ensureVMEMetaObject(referencingObjectIndex))
-                        return false;
+                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
+                    const bool willCreateVMEMetaObject = propertyCaches.at(context.referencingObjectIndex).flag();
+                    if (!willCreateVMEMetaObject) {
+                        const QmlIR::Object *obj = qmlObjects.at(context.referencingObjectIndex);
+                        auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+                        Q_ASSERT(typeRef);
+                        QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+                        QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
+                        if (error.isSet())
+                            return error;
+                    }
+                } else {
+                    // On assignments are implemented using value interceptors, which require a VME meta object.
+                    needVMEMetaObject = true;
                 }
                 break;
             }
         }
     }
 
-    if (obj->inheritedTypeNameIndex != 0) {
+    QQmlPropertyCache *baseTypeCache;
+    {
+        QQmlCompileError error;
+        baseTypeCache = propertyCacheForObject(obj, context, &error);
+        if (error.isSet())
+            return error;
+    }
+
+    if (baseTypeCache) {
+        if (needVMEMetaObject) {
+            QQmlCompileError error = createMetaObject(objectIndex, obj, baseTypeCache);
+            if (error.isSet())
+                return error;
+        } else {
+            if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
+                oldCache->release();
+            propertyCaches[objectIndex] = baseTypeCache;
+            baseTypeCache->addref();
+        }
+    }
+
+    if (QQmlPropertyCache *thisCache = propertyCaches.at(objectIndex).data()) {
+        for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
+            if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+                InstantiationContext context(objectIndex, binding, stringAt(binding->propertyNameIndex), thisCache);
+                QQmlCompileError error = buildMetaObjectRecursively(binding->value.objectIndex, context);
+                if (error.isSet())
+                    return error;
+            }
+    }
+
+    QQmlCompileError noError;
+    return noError;
+}
+
+QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const QmlIR::Object *obj, const QQmlPropertyCacheCreator::InstantiationContext &context, QQmlCompileError *error) const
+{
+    if (context.instantiatingProperty) {
+        if (context.instantiatingProperty->isQObject()) {
+            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType);
+        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType)) {
+            return enginePrivate->cache(vtmo);
+        }
+    } else if (obj->inheritedTypeNameIndex != 0) {
         auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
             if (obj->propertyCount() > 0 || obj->aliasCount() > 0) {
-                recordError(obj->location, tr("Fully dynamic types cannot declare new properties."));
-                return false;
+                *error = QQmlCompileError(obj->location, tr("Fully dynamic types cannot declare new properties."));
+                return nullptr;
             }
             if (obj->signalCount() > 0) {
-                recordError(obj->location, tr("Fully dynamic types cannot declare new signals."));
-                return false;
+                *error = QQmlCompileError(obj->location, tr("Fully dynamic types cannot declare new signals."));
+                return nullptr;
             }
             if (obj->functionCount() > 0) {
-                recordError(obj->location, tr("Fully Dynamic types cannot declare new functions."));
-                return false;
+                *error = QQmlCompileError(obj->location, tr("Fully Dynamic types cannot declare new functions."));
+                return nullptr;
             }
         }
 
-        baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-        Q_ASSERT(baseTypeCache);
-    } else if (instantiatingBinding && instantiatingBinding->isAttachedProperty()) {
-        auto *typeRef = resolvedTypes->value(instantiatingBinding->propertyNameIndex);
+        return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+    } else if (context.instantiatingBinding && context.instantiatingBinding->isAttachedProperty()) {
+        auto *typeRef = resolvedTypes->value(context.instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
         QQmlType *qmltype = typeRef->type;
         if (!qmltype) {
-            QString propertyName = stringAt(instantiatingBinding->propertyNameIndex);
+            QString propertyName = stringAt(context.instantiatingBinding->propertyNameIndex);
             if (imports->resolveType(propertyName, &qmltype, 0, 0, 0)) {
                 if (qmltype->isComposite()) {
                     QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
@@ -171,49 +220,15 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
 
         const QMetaObject *attachedMo = qmltype ? qmltype->attachedPropertiesType(enginePrivate) : 0;
         if (!attachedMo) {
-            recordError(instantiatingBinding->location, tr("Non-existent attached object"));
-            return false;
+            *error = QQmlCompileError(context.instantiatingBinding->location, tr("Non-existent attached object"));
+            return nullptr;
         }
-        baseTypeCache = enginePrivate->cache(attachedMo);
-        Q_ASSERT(baseTypeCache);
+        return enginePrivate->cache(attachedMo);
     }
-
-    if (baseTypeCache) {
-        if (needVMEMetaObject) {
-            if (!createMetaObject(objectIndex, obj, baseTypeCache))
-                return false;
-        } else {
-            if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
-                oldCache->release();
-            propertyCaches[objectIndex] = baseTypeCache;
-            baseTypeCache->addref();
-        }
-    }
-
-    if (propertyCaches.at(objectIndex).data()) {
-        for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
-            if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-                if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
-                    return false;
-            }
-    }
-
-    return true;
+    return nullptr;
 }
 
-bool QQmlPropertyCacheCreator::ensureVMEMetaObject(int objectIndex)
-{
-    const bool willCreateVMEMetaObject = propertyCaches.at(objectIndex).flag();
-    if (willCreateVMEMetaObject)
-        return true;
-    const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-    auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
-    Q_ASSERT(typeRef);
-    QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-    return createMetaObject(objectIndex, obj, baseTypeCache);
-}
-
-bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
+QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
 {
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
                                                              obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
@@ -283,14 +298,14 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
-            COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
+            return QQmlCompileError(p->location, tr("Cannot override FINAL property"));
     }
 
     for (const QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
         if (d && d->isFinal())
-            COMPILE_EXCEPTION(a, tr("Cannot override FINAL property"));
+            return QQmlCompileError(a->location, tr("Cannot override FINAL property"));
     }
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
@@ -363,7 +378,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                     const QString customTypeName = stringAt(param->customTypeNameIndex);
                     QQmlType *qmltype = 0;
                     if (!imports->resolveType(customTypeName, &qmltype, 0, 0, 0))
-                        COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(customTypeName));
+                        return QQmlCompileError(s->location, tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype->isComposite()) {
                         QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
@@ -389,7 +404,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
         QString signalName = stringAt(s->nameIndex);
         if (seenSignals.contains(signalName))
-            COMPILE_EXCEPTION(s, tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
+            return QQmlCompileError(s->location, tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
         seenSignals.insert(signalName);
 
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
@@ -408,7 +423,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
         QString slotName = astFunction->name.toString();
         if (seenSignals.contains(slotName))
-            COMPILE_EXCEPTION(s, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+            return QQmlCompileError(s->location, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
@@ -444,7 +459,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
             QQmlType *qmltype = 0;
             if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
-                COMPILE_EXCEPTION(p, tr("Invalid property type"));
+                return QQmlCompileError(p->location, tr("Invalid property type"));
             }
 
             Q_ASSERT(qmltype);
@@ -489,7 +504,8 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         effectiveSignalIndex++;
     }
 
-    return true;
+    QQmlCompileError noError;
+    return noError;
 }
 
 QT_END_NAMESPACE

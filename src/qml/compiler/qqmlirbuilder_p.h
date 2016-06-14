@@ -523,11 +523,11 @@ private:
 #ifndef V4_BOOTSTRAP
 struct Q_QML_EXPORT PropertyResolver
 {
-    PropertyResolver(QQmlPropertyCache *cache)
+    PropertyResolver(const QQmlPropertyCache *cache)
         : cache(cache)
     {}
 
-    QQmlPropertyData *property(int index)
+    QQmlPropertyData *property(int index) const
     {
         return cache->property(index);
     }
@@ -537,12 +537,12 @@ struct Q_QML_EXPORT PropertyResolver
         IgnoreRevision
     };
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, RevisionCheck check = CheckRevision);
+    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, RevisionCheck check = CheckRevision) const;
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision);
+    QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
 
-    QQmlPropertyCache *cache;
+    const QQmlPropertyCache *cache;
 };
 #endif
 

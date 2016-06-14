@@ -1965,7 +1965,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
 
 #ifndef V4_BOOTSTRAP
 
-QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, RevisionCheck check)
+QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision, RevisionCheck check) const
 {
     if (notInRevision) *notInRevision = false;
 
@@ -1984,7 +1984,7 @@ QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRev
 }
 
 
-QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision)
+QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision) const
 {
     if (notInRevision) *notInRevision = false;
 

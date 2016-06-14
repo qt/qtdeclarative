@@ -126,6 +126,17 @@ private:
     QQmlPropertyCacheVector m_propertyCaches;
 };
 
+struct QQmlCompileError
+{
+    QQmlCompileError() {}
+    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
+        : location(location), description(description) {}
+    QV4::CompiledData::Location location;
+    QString description;
+
+    bool isSet() const { return !description.isEmpty(); }
+};
+
 struct QQmlCompilePass
 {
     virtual ~QQmlCompilePass() {}
@@ -135,6 +146,8 @@ struct QQmlCompilePass
     QString stringAt(int idx) const { return compiler->stringAt(idx); }
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description) const;
+    void recordError(const QQmlCompileError &error)
+    { recordError(error.location, error.description); }
 
     QQmlTypeCompiler *compiler;
 };

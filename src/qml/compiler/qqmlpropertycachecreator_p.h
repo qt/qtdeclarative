@@ -63,9 +63,19 @@ public:
 
     bool buildMetaObjects();
 protected:
-    bool buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
-    bool ensureVMEMetaObject(int objectIndex);
-    bool createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
+
+    struct InstantiationContext {
+        InstantiationContext();
+        InstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache);
+        int referencingObjectIndex;
+        const QV4::CompiledData::Binding *instantiatingBinding;
+        QQmlPropertyData *instantiatingProperty;
+    };
+
+    QQmlCompileError buildMetaObjectRecursively(int objectIndex, const InstantiationContext &context);
+    QQmlPropertyCache *propertyCacheForObject(const QmlIR::Object *obj, const InstantiationContext &context, QQmlCompileError *error) const;
+    QQmlCompileError createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
+
 
     QQmlEnginePrivate *enginePrivate;
     const QList<QmlIR::Object*> &qmlObjects;
