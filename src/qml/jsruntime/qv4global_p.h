@@ -122,7 +122,7 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #define ENABLE_JIT 0
 #endif
 
-#if defined(Q_OS_QNX)
+#if defined(Q_OS_QNX) && defined(_CPPLIB_VER)
 #include <math.h>
 #undef isnan
 #undef isfinite
