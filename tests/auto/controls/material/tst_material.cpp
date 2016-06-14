@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -34,39 +34,13 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qprocess.h>
 #include <QtQuickTest/quicktest.h>
-
-static const char* styles[] = { "Material", "Universal" };
+#include <QtQuickControls2/qquickstyle.h>
 
 int main(int argc, char *argv[])
 {
-    QByteArray style = qgetenv("QT_QUICK_CONTROLS_STYLE");
-    if (!style.isEmpty())
-        return quick_test_main(argc, argv, "tst_styles(" + style + ")", TST_CONTROLS_DATA);
-
-    QCoreApplication app(argc, argv);
-
-    int failures = 0;
-    int count = sizeof(styles) / sizeof(styles[0]);
-
-    for (int i = 0; i < count; ++i) {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("QT_QUICK_CONTROLS_STYLE", styles[i]);
-
-        QProcess process;
-        process.setProcessEnvironment(env);
-        process.setWorkingDirectory(QDir::currentPath());
-        process.setProcessChannelMode(QProcess::ForwardedChannels);
-
-        process.start(argv[0], app.arguments().mid(1));
-        process.waitForFinished();
-        if (process.exitStatus() != QProcess::NormalExit)
-            return -1;
-
-        failures += process.exitCode();
-    }
-
-    return failures;
+    QTEST_ADD_GPU_BLACKLIST_SUPPORT
+    QTEST_SET_MAIN_SOURCE_PATH
+    QQuickStyle::setStyle("Material");
+    return quick_test_main(argc, argv, "tst_controls::Material", TST_CONTROLS_DATA);
 }

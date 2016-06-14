@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,54 +34,5 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
-
-T.TabBar {
-    id: control
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-
-    spacing: 1
-
-    contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 48
-
-        model: control.contentModel
-        currentIndex: control.currentIndex
-
-        spacing: control.spacing
-        orientation: ListView.Horizontal
-        boundsBehavior: Flickable.StopAtBounds
-        snapMode: ListView.SnapToItem
-
-        highlightMoveDuration: 250
-        highlightResizeDuration: 0
-        highlightFollowsCurrentItem: true
-        highlight: Item {
-            z: 2
-            Rectangle {
-                height: 2
-                width: parent.width
-                y: control.position === T.TabBar.Footer ? 0 : parent.height - height
-                color: control.Material.accentColor
-            }
-        }
-    }
-
-    background: Rectangle {
-        color: control.Material.backgroundColor
-
-        layer.enabled: control.Material.elevation > 0
-        layer.effect: ElevationEffect {
-            elevation: control.Material.elevation
-            fullWidth: true
-        }
-    }
-}
+#include <QtQuickTest/quicktest.h>
+QUICK_TEST_MAIN(tst_qquickmaterialstyle)

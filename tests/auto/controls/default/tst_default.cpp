@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -35,4 +35,10 @@
 ****************************************************************************/
 
 #include <QtQuickTest/quicktest.h>
-QUICK_TEST_MAIN(tst_material)
+
+int main(int argc, char *argv[])
+{
+    QTEST_ADD_GPU_BLACKLIST_SUPPORT
+    QTEST_SET_MAIN_SOURCE_PATH
+    return quick_test_main(argc, argv, "tst_controls::Default", TST_CONTROLS_DATA);
+}

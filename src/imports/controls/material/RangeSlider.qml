@@ -43,13 +43,11 @@ T.RangeSlider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-        Math.max(background ? background.implicitWidth : 0,
-            first.handle ? first.handle.implicitWidth : 0,
-                second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
+        Math.max(first.handle ? first.handle.implicitWidth : 0,
+                 second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-        Math.max(background ? background.implicitHeight : 0,
-            first.handle ? first.handle.implicitHeight : 0,
-                second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
+        Math.max(first.handle ? first.handle.implicitHeight : 0,
+                 second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
 
@@ -72,10 +70,10 @@ T.RangeSlider {
     background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
-        implicitWidth: horizontal ? 200 : 1
-        implicitHeight: horizontal ? 1 : 200
-        width: horizontal ? control.availableWidth : implicitWidth
-        height: horizontal ? implicitHeight : control.availableHeight
+        implicitWidth: horizontal ? 200 : 48
+        implicitHeight: horizontal ? 48 : 200
+        width: horizontal ? control.availableWidth : 1
+        height: horizontal ? 1 : control.availableHeight
         color: control.Material.primaryTextColor
         scale: horizontal && control.mirrored ? -1 : 1
 
