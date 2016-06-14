@@ -90,6 +90,7 @@ public:
     QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
     bool populateDeferredProperties(QObject *instance);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
+    void cancel(QObject *object);
     void clear();
 
     QQmlComponentAttached **componentAttachment() const { return &sharedState->componentAttached; }
