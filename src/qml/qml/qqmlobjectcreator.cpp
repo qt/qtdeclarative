@@ -73,7 +73,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , resolvedTypes(compilationUnit->resolvedTypes)
-    , propertyCaches(compilationUnit->propertyCaches)
+    , propertyCaches(&compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(activeVMEDataForRootContext)
 {
     init(parentContext);
@@ -97,7 +97,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , resolvedTypes(compilationUnit->resolvedTypes)
-    , propertyCaches(compilationUnit->propertyCaches)
+    , propertyCaches(&compilationUnit->propertyCaches)
     , activeVMEDataForRootContext(0)
 {
     init(parentContext);
@@ -1147,7 +1147,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         return instance;
     }
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(index).data();
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(index);
     Q_ASSERT(!cache.isNull());
     if (installPropertyCache) {
         if (ddata->propertyCache)
@@ -1278,11 +1278,10 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObjectProtector(valueScope);
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(_compiledObjectIndex).data();
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(_compiledObjectIndex);
 
     QQmlVMEMetaObject *vmeMetaObject = 0;
-    const bool needVMEMetaObject = propertyCaches.at(_compiledObjectIndex).flag();
-    if (needVMEMetaObject) {
+    if (propertyCaches->needsVMEMetaObject(_compiledObjectIndex)) {
         Q_ASSERT(!cache.isNull());
         // install on _object
         vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, compilationUnit, _compiledObjectIndex);

@@ -76,10 +76,6 @@ class QQmlScriptData;
 class QQmlType;
 class QQmlEngine;
 
-// The vector is indexed by QV4::CompiledData::Object index and the flag
-// indicates whether instantiation of the object requires a VME meta-object.
-typedef QVector<QFlagPointer<QQmlPropertyCache>> QQmlPropertyCacheVector;
-
 namespace QmlIR {
 struct Document;
 }
@@ -706,8 +702,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
-    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject).data(); }
-    bool isCompositeType() const { return propertyCaches.at(data->indexOfRootObject).flag(); }
+    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject); }
 
     QQmlRefPointer<QQmlTypeNameCache> importCache;
 

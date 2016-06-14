@@ -655,6 +655,49 @@ const QMetaObject *QQmlMetaObject::metaObject() const
     else return _m.asT2();
 }
 
+class QQmlPropertyCacheVector
+{
+public:
+    QQmlPropertyCacheVector() {}
+    QQmlPropertyCacheVector(QQmlPropertyCacheVector &&other)
+        : data(std::move(other.data)) {}
+    QQmlPropertyCacheVector &operator=(QQmlPropertyCacheVector &&other) {
+        QVector<QFlagPointer<QQmlPropertyCache>> moved(std::move(other.data));
+        data.swap(moved);
+        return *this;
+    }
+
+    ~QQmlPropertyCacheVector() { clear(); }
+    void resize(int size) { return data.resize(size); }
+    int count() const { return data.count(); }
+    void clear()
+    {
+        for (int i = 0; i < data.count(); ++i) {
+            if (QQmlPropertyCache *cache = data.at(i).data())
+                cache->release();
+        }
+        data.clear();
+    }
+
+    void append(QQmlPropertyCache *cache) { cache->addref(); data.append(cache); }
+    QQmlPropertyCache *at(int index) const { return data.at(index).data(); }
+    void set(int index, QQmlPropertyCache *replacement) {
+        if (QQmlPropertyCache *oldCache = data.at(index).data()) {
+            if (replacement == oldCache)
+                return;
+            oldCache->release();
+        }
+        data[index] = replacement;
+        replacement->addref();
+    }
+
+    void setNeedsVMEMetaObject(int index) { data[index].setFlag(); }
+    bool needsVMEMetaObject(int index) const { return data.at(index).flag(); }
+private:
+    Q_DISABLE_COPY(QQmlPropertyCacheVector)
+    QVector<QFlagPointer<QQmlPropertyCache>> data;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLPROPERTYCACHE_P_H

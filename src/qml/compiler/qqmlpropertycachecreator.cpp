@@ -79,10 +79,6 @@ QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompile
 
 QQmlPropertyCacheCreator::~QQmlPropertyCacheCreator()
 {
-    for (int i = 0; i < propertyCaches.count(); ++i)
-        if (QQmlPropertyCache *cache = propertyCaches.at(i).data())
-            cache->release();
-    propertyCaches.clear();
 }
 
 bool QQmlPropertyCacheCreator::buildMetaObjects()
@@ -97,8 +93,7 @@ bool QQmlPropertyCacheCreator::buildMetaObjects()
         return false;
     }
 
-    compiler->setPropertyCaches(propertyCaches);
-    propertyCaches.clear();
+    compiler->setPropertyCaches(std::move(propertyCaches));
 
     return true;
 }
@@ -116,8 +111,7 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
                 if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
-                    const bool willCreateVMEMetaObject = propertyCaches.at(context.referencingObjectIndex).flag();
-                    if (!willCreateVMEMetaObject) {
+                    if (!propertyCaches.needsVMEMetaObject(context.referencingObjectIndex)) {
                         const QmlIR::Object *obj = qmlObjects.at(context.referencingObjectIndex);
                         auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
@@ -149,14 +143,11 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
             if (error.isSet())
                 return error;
         } else {
-            if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
-                oldCache->release();
-            propertyCaches[objectIndex] = baseTypeCache;
-            baseTypeCache->addref();
+            propertyCaches.set(objectIndex, baseTypeCache);
         }
     }
 
-    if (QQmlPropertyCache *thisCache = propertyCaches.at(objectIndex).data()) {
+    if (QQmlPropertyCache *thisCache = propertyCaches.at(objectIndex)) {
         for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 InstantiationContext context(objectIndex, binding, stringAt(binding->propertyNameIndex), thisCache);
@@ -230,15 +221,13 @@ QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const QmlIR:
 
 QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
 {
-    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
-                                                             obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
-                                                             obj->signalCount() + obj->propertyCount() + obj->aliasCount());
+    QQmlRefPointer<QQmlPropertyCache> cache;
+    cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
+                                              obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
+                                              obj->signalCount() + obj->propertyCount() + obj->aliasCount()));
 
-    if (QQmlPropertyCache *oldCache = propertyCaches.at(objectIndex).data())
-        oldCache->release();
-    propertyCaches[objectIndex] = cache;
-    // Indicate that this object also needs a VME meta-object at run-time
-    propertyCaches[objectIndex].setFlag();
+    propertyCaches.set(objectIndex, cache);
+    propertyCaches.setNeedsVMEMetaObject(objectIndex);
 
     struct TypeData {
         QV4::CompiledData::Property::Type dtype;

@@ -98,8 +98,9 @@ public:
     QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes();
     QList<QmlIR::Object*> *qmlObjects();
     int rootObjectIndex() const;
-    void setPropertyCaches(const QQmlPropertyCacheVector &caches);
-    const QQmlPropertyCacheVector &propertyCaches() const;
+    void setPropertyCaches(QQmlPropertyCacheVector &&caches);
+    const QQmlPropertyCacheVector *propertyCaches() const;
+    QQmlPropertyCacheVector &&takePropertyCaches();
     void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
     const QVector<quint32> &componentRoots() const { return m_componentRoots; }
     QQmlJS::MemoryPool *memoryPool();
@@ -173,7 +174,7 @@ private:
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QSet<QString> &illegalNames;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 // ### This will go away when the codegen resolves all enums to constant expressions
@@ -200,7 +201,7 @@ private:
 
 
     const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
     const QQmlImports *imports;
     QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes;
 };
@@ -228,7 +229,7 @@ public:
     void annotateBindingsToAliases();
 private:
     const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 class QQmlScriptStringScanner : public QQmlCompilePass
@@ -240,7 +241,7 @@ public:
 
 private:
     const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
@@ -284,7 +285,7 @@ private:
     bool scanObject(int objectIndex);
 
     QList<QmlIR::Object*> *qmlObjects;
-    QQmlPropertyCacheVector propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
     const QHash<int, QQmlCustomParser*> &customParsers;
 
     bool _seenObjectWithId;
@@ -294,7 +295,7 @@ class QQmlPropertyValidator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QQmlPropertyCacheVector *propertyCaches);
 
     bool validate();
 
@@ -312,7 +313,7 @@ private:
     const QV4::CompiledData::Unit *qmlUnit;
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 
     // collected state variables, essentially write-only
     mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
@@ -333,7 +334,7 @@ private:
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
     QmlIR::JSCodeGen * const v4CodeGen;
 };
 
@@ -348,7 +349,7 @@ private:
     void mergeDefaultProperties(int objectIndex);
 
     const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass

@@ -140,7 +140,7 @@ private:
     QQmlGuardedContextData parentContext;
     QQmlContextData *context;
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector *propertyCaches;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
     void *activeVMEDataForRootContext;
