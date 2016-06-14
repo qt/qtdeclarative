@@ -188,6 +188,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
+#ifdef V4_USE_VALGRIND
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
+#endif
+
     jsStackTop = jsStackBase;
 
     exceptionValue = jsAlloca(1);
@@ -196,10 +200,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));
     typedArrayCtors = static_cast<FunctionObject *>(jsAlloca(NTypedArrayTypes));
     jsStrings = jsAlloca(NJSStrings);
-
-#ifdef V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
-#endif
 
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);

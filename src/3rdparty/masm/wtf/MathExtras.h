@@ -106,7 +106,7 @@ inline bool isinf(double x) { return !finite(x) && !isnand(x); }
 
 #endif
 
-#if OS(OPENBSD)
+#if OS(OPENBSD) && __cplusplus < 201103L
 
 namespace std {
 

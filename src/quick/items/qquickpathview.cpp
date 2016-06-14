@@ -1026,7 +1026,7 @@ void QQuickPathView::setHighlightMoveDuration(int duration)
 
 /*!
     \qmlproperty real QtQuick::PathView::dragMargin
-    This property holds the maximum distance from the path that initiate mouse dragging.
+    This property holds the maximum distance from the path that initiates mouse dragging.
 
     By default the path can only be dragged by clicking on an item.  If
     dragMargin is greater than zero, a drag can be initiated by clicking

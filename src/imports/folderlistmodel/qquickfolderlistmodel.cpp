@@ -491,10 +491,11 @@ QUrl QQuickFolderListModel::parentFolder() const
             return QUrl();
         localFile = dir.path();
     } else {
-        const int pos = d->currentDir.path().lastIndexOf(QLatin1Char('/'));
+        const QString path = d->currentDir.path();
+        const int pos = path.lastIndexOf(QLatin1Char('/'));
         if (pos <= 0)
             return QUrl();
-        localFile = d->currentDir.path().left(pos);
+        localFile = path.left(pos);
     }
     return QUrl::fromLocalFile(localFile);
 }

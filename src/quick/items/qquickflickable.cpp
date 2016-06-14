@@ -65,7 +65,9 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
+#ifdef Q_OS_OSX
 static const int MovementEndingTimerInterval = 100;
+#endif
 
 static qreal EaseOvershoot(qreal t) {
     return qAtan(t);

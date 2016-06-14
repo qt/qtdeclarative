@@ -222,7 +222,7 @@ private:
 
 };
 
-struct QmlSignalHandler : public QV4::Object
+struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
     V4_PROTOTYPE(signalHandlerPrototype)
