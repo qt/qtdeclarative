@@ -54,9 +54,23 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlPropertyCacheCreator
+struct QQmlBindingInstantiationContext {
+    QQmlBindingInstantiationContext();
+    QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache);
+    int referencingObjectIndex;
+    const QV4::CompiledData::Binding *instantiatingBinding;
+    QQmlPropertyData *instantiatingProperty;
+};
+
+struct QQmlPropertyCacheCreatorBase
 {
-    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
+    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreatorBase)
+public:
+    static QAtomicInt classIndexCounter;
+};
+
+class QQmlPropertyCacheCreator : public QQmlPropertyCacheCreatorBase
+{
 public:
     QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const QQmlTypeCompiler *compiler, const QQmlImports *imports);
     ~QQmlPropertyCacheCreator();
@@ -64,16 +78,8 @@ public:
     QQmlCompileError buildMetaObjects();
 
 protected:
-    struct InstantiationContext {
-        InstantiationContext();
-        InstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache);
-        int referencingObjectIndex;
-        const QV4::CompiledData::Binding *instantiatingBinding;
-        QQmlPropertyData *instantiatingProperty;
-    };
-
-    QQmlCompileError buildMetaObjectRecursively(int objectIndex, const InstantiationContext &context);
-    QQmlPropertyCache *propertyCacheForObject(const QmlIR::Object *obj, const InstantiationContext &context, QQmlCompileError *error) const;
+    QQmlCompileError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
+    QQmlPropertyCache *propertyCacheForObject(const QmlIR::Object *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
     QQmlCompileError createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
 
     QString stringAt(int index) const { return compiler->stringAt(index); }
