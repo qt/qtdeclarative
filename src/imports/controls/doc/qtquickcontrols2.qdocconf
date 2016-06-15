@@ -83,7 +83,7 @@ macro.endstylemethod = "\\br"
 macro.stylecolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\">\1 \2</div>"
 
 macro.nbsp.HTML = "&nbsp;"
-macro.labs = "\\note \\e{Types in the Qt.labs module are not guaranteed to remain compatible in future versions.}"
+macro.labs = "\\note \\e{Types in Qt.labs modules are not guaranteed to remain compatible in future versions.}"
 
 #Add output suffix to the html filenames
 outputsuffixes = QML
