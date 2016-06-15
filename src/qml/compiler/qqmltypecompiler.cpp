@@ -77,8 +77,8 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 
     typeData->imports().populateCache(importCache.data());
 
-    const QHash<int, QQmlTypeData::TypeReference> &resolvedTypes = typeData->resolvedTypeRefs();
-    for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
+    const QHash<int, QQmlTypeData::TypeReference> &resolvedTypeRefs = typeData->resolvedTypeRefs();
+    for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypeRefs.constBegin(), end = resolvedTypeRefs.constEnd();
          resolvedType != end; ++resolvedType) {
         QScopedPointer<QV4::CompiledData::CompilationUnit::ResolvedTypeReference> ref(new QV4::CompiledData::CompilationUnit::ResolvedTypeReference);
         QQmlType *qmlType = resolvedType->type;
@@ -109,12 +109,12 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         ref->majorVersion = resolvedType->majorVersion;
         ref->minorVersion = resolvedType->minorVersion;
         ref->doDynamicTypeCheck();
-        m_resolvedTypes.insert(resolvedType.key(), ref.take());
+        resolvedTypes.insert(resolvedType.key(), ref.take());
     }
 
     // Build property caches and VME meta object data
 
-    for (auto it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+    for (auto it = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
          it != end; ++it) {
         QQmlCustomParser *customParser = (*it)->type ? (*it)->type->customParser() : 0;
         if (customParser)
@@ -122,7 +122,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     }
 
     {
-        QQmlPropertyCacheCreator propertyCacheBuilder(this, &m_propertyCaches);
+        QQmlPropertyCacheCreator propertyCacheBuilder(&m_propertyCaches, engine, this, imports());
         QQmlCompileError error = propertyCacheBuilder.buildMetaObjects();
         if (error.isSet()) {
             recordError(error);
@@ -231,7 +231,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit->importCache = importCache;
     compilationUnit->dependentScripts = dependentScripts;
-    compilationUnit->resolvedTypes = m_resolvedTypes;
+    compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));
 
@@ -240,7 +240,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         engine->registerInternalCompositeType(compilationUnit);
     else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
-        auto *typeRef = m_resolvedTypes.value(obj->inheritedTypeNameIndex);
+        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (typeRef->compilationUnit) {
             compilationUnit->metaTypeId = typeRef->compilationUnit->metaTypeId;
@@ -263,7 +263,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
         bindingCount += obj->nBindings;
-        if (auto *typeRef = m_resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
             if (QQmlType *qmlType = typeRef->type) {
                 if (qmlType->parserStatusCast() != -1)
                     ++parserStatusCount;
@@ -333,12 +333,7 @@ const QQmlImports *QQmlTypeCompiler::imports() const
     return &typeData->imports();
 }
 
-QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *QQmlTypeCompiler::resolvedTypes()
-{
-    return &m_resolvedTypes;
-}
-
-QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects()
+QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
 {
     return &document->objects;
 }
@@ -402,7 +397,7 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
     , imports(typeCompiler->imports())
     , customParsers(typeCompiler->customParserCache())
-    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , resolvedTypes(typeCompiler->resolvedTypes)
     , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(typeCompiler->enginePrivate()))->illegalNames())
     , propertyCaches(typeCompiler->propertyCaches())
 {
@@ -613,7 +608,7 @@ QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
     , propertyCaches(typeCompiler->propertyCaches())
     , imports(typeCompiler->imports())
-    , resolvedTypes(typeCompiler->resolvedTypes())
+    , resolvedTypes(&typeCompiler->resolvedTypes)
 {
 }
 
@@ -872,7 +867,7 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
     , _componentIndex(-1)
-    , resolvedTypes(typeCompiler->resolvedTypes())
+    , resolvedTypes(&typeCompiler->resolvedTypes)
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
 }
@@ -1342,7 +1337,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, con
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
     , qmlUnit(typeCompiler->qmlUnit())
-    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , resolvedTypes(typeCompiler->resolvedTypes)
     , customParsers(typeCompiler->customParserCache())
     , propertyCaches(propertyCaches)
 {
@@ -2004,7 +1999,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen)
     : QQmlCompilePass(typeCompiler)
-    , resolvedTypes(*typeCompiler->resolvedTypes())
+    , resolvedTypes(typeCompiler->resolvedTypes)
     , customParsers(typeCompiler->customParserCache())
     , qmlObjects(*typeCompiler->qmlObjects())
     , propertyCaches(typeCompiler->propertyCaches())

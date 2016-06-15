@@ -54,11 +54,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlPropertyCacheCreator : public QQmlCompilePass
+class QQmlPropertyCacheCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
-    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler, QQmlPropertyCacheVector *propertyCaches);
+    QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const QQmlTypeCompiler *compiler, const QQmlImports *imports);
     ~QQmlPropertyCacheCreator();
 
     QQmlCompileError buildMetaObjects();
@@ -76,11 +76,12 @@ protected:
     QQmlPropertyCache *propertyCacheForObject(const QmlIR::Object *obj, const InstantiationContext &context, QQmlCompileError *error) const;
     QQmlCompileError createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
 
+    QString stringAt(int index) const { return compiler->stringAt(index); }
 
-    QQmlEnginePrivate *enginePrivate;
+    QQmlEnginePrivate * const enginePrivate;
+    const QQmlTypeCompiler *compiler;
     const QVector<QmlIR::Object*> &qmlObjects;
-    const QQmlImports *imports;
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
+    const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
 };
 

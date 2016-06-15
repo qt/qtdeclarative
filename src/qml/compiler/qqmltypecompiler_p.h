@@ -95,6 +95,7 @@ public:
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
+    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> resolvedTypes;
     // ---
 
     QV4::CompiledData::CompilationUnit *compile();
@@ -113,8 +114,7 @@ public:
     QUrl url() const { return typeData->finalUrl(); }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes();
-    QVector<QmlIR::Object *> *qmlObjects();
+    QVector<QmlIR::Object *> *qmlObjects() const;
     int rootObjectIndex() const;
     void setPropertyCaches(QQmlPropertyCacheVector &&caches);
     const QQmlPropertyCacheVector *propertyCaches() const;
@@ -138,7 +138,6 @@ private:
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> m_resolvedTypes;
 
     // index in first hash is component index, vector inside contains object indices of objects with id property
     QVector<quint32> m_componentRoots;
@@ -147,8 +146,6 @@ private:
 
 struct QQmlCompilePass
 {
-    virtual ~QQmlCompilePass() {}
-
     QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
 
     QString stringAt(int idx) const { return compiler->stringAt(idx); }

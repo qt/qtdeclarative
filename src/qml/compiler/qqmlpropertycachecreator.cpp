@@ -68,12 +68,11 @@ QQmlPropertyCacheCreator::InstantiationContext::InstantiationContext(int referen
     }
 }
 
-QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler, QQmlPropertyCacheVector *propertyCaches)
-    : QQmlCompilePass(typeCompiler)
-    , enginePrivate(typeCompiler->enginePrivate())
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , imports(typeCompiler->imports())
-    , resolvedTypes(typeCompiler->resolvedTypes())
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const QQmlTypeCompiler *compiler, const QQmlImports *imports)
+    : enginePrivate(enginePrivate)
+    , compiler(compiler)
+    , qmlObjects(*compiler->qmlObjects())
+    , imports(imports)
     , propertyCaches(propertyCaches)
 {
     propertyCaches->resize(qmlObjects.count());
@@ -104,7 +103,7 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
                 if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const QmlIR::Object *obj = qmlObjects.at(context.referencingObjectIndex);
-                        auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+                        auto *typeRef = compiler->resolvedTypes.value(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
                         QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
@@ -161,7 +160,7 @@ QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const QmlIR:
             return enginePrivate->cache(vtmo);
         }
     } else if (obj->inheritedTypeNameIndex != 0) {
-        auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+        auto *typeRef = compiler->resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
@@ -181,7 +180,7 @@ QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const QmlIR:
 
         return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
     } else if (context.instantiatingBinding && context.instantiatingBinding->isAttachedProperty()) {
-        auto *typeRef = resolvedTypes->value(context.instantiatingBinding->propertyNameIndex);
+        auto *typeRef = compiler->resolvedTypes.value(context.instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
         QQmlType *qmltype = typeRef->type;
         if (!qmltype) {
@@ -250,7 +249,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
     QByteArray newClassName;
 
     if (objectIndex == compiler->rootObjectIndex()) {
-        QString path = compiler->url().path();
+        const QString path = compiler->url().path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             const QStringRef nameBase = path.midRef(lastSlash + 1, path.length() - lastSlash - 5);
