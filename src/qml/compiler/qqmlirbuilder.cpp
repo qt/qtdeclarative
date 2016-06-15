@@ -911,6 +911,16 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->location.column = loc.startColumn;
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
+
+        int formalsCount = 0;
+        for (QQmlJS::AST::FormalParameterList *it = funDecl->formals; it; it = it->next)
+            ++formalsCount;
+        f->formals.allocate(pool, formalsCount);
+
+        int i = 0;
+        for (QQmlJS::AST::FormalParameterList *it = funDecl->formals; it; it = it->next, ++i)
+            f->formals[i] = registerString(it->name.toString());
+
         _object->appendFunction(f);
     } else {
         recordError(node->firstSourceLocation(), QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));

@@ -104,7 +104,7 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
 
     bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
-        for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
+        for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
             if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
                 // If the on assignment is inside a group property, we need to distinguish between QObject based
                 // group properties and value type group properties. For the former the base type is derived from
@@ -148,9 +148,9 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
     }
 
     if (QQmlPropertyCache *thisCache = propertyCaches.at(objectIndex)) {
-        for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next)
+        for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-                InstantiationContext context(objectIndex, binding, stringAt(binding->propertyNameIndex), thisCache);
+                InstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
                 QQmlCompileError error = buildMetaObjectRecursively(binding->value.objectIndex, context);
                 if (error.isSet())
                     return error;
@@ -280,7 +280,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
 
     QmlIR::PropertyResolver resolver(baseTypeCache);
 
-    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
+    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p) {
         if (p->type == QV4::CompiledData::Property::Var)
             varPropCount++;
 
@@ -290,7 +290,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
             return QQmlCompileError(p->location, tr("Cannot override FINAL property"));
     }
 
-    for (const QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+    for (auto a = obj->aliasesBegin(), end = obj->aliasesEnd(); a != end; ++a) {
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
         if (d && d->isFinal())
@@ -324,7 +324,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
     }
 
     // Set up notify signals for properties - first normal, then alias
-    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
+    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p) {
         quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
                 QQmlPropertyData::IsVMESignal;
 
@@ -334,7 +334,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
 
-    for (const QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+    for (auto a = obj->aliasesBegin(), end = obj->aliasesEnd(); a != end; ++a) {
         quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
                         QQmlPropertyData::IsVMESignal;
 
@@ -345,8 +345,8 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
     }
 
     // Dynamic signals
-    for (const QmlIR::Signal *s = obj->firstSignal(); s; s = s->next) {
-        const int paramCount = s->parameters->count;
+    for (auto s = obj->signalsBegin(), end = obj->signalsEnd(); s != end; ++s) {
+        const int paramCount = s->parameterCount();
 
         QList<QByteArray> names;
         names.reserve(paramCount);
@@ -355,8 +355,8 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
         if (paramCount) {
             paramTypes[0] = paramCount;
 
-            QmlIR::SignalParameter *param = s->parameters->first;
-            for (int i = 0; i < paramCount; ++i, param = param->next) {
+            int i = 0;
+            for (auto param = s->parametersBegin(), end = s->parametersEnd(); param != end; ++param, ++i) {
                 names.append(stringAt(param->nameIndex).toUtf8());
                 if (param->type < builtinTypeCount) {
                     // built-in type
@@ -402,25 +402,19 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
 
 
     // Dynamic slots
-    for (const QmlIR::Function *s = obj->firstFunction(); s; s = s->next) {
-        QQmlJS::AST::FunctionDeclaration *astFunction = s->functionDeclaration;
-
+    for (auto function = compiler->objectFunctionsBegin(obj), end = compiler->objectFunctionsEnd(obj); function != end; ++function) {
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
 
-        if (astFunction->formals)
-            flags |= QQmlPropertyData::HasArguments;
-
-        QString slotName = astFunction->name.toString();
+        const QString slotName = stringAt(function->nameIndex);
         if (seenSignals.contains(slotName))
-            return QQmlCompileError(s->location, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+            return QQmlCompileError(function->location, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
-        QQmlJS::AST::FormalParameterList *param = astFunction->formals;
-        while (param) {
-            parameterNames << param->name.toUtf8();
-            param = param->next;
+        for (auto formal = function->formalsBegin(), end = function->formalsEnd(); formal != end; ++formal) {
+            flags |= QQmlPropertyData::HasArguments;
+            parameterNames << stringAt(*formal).toUtf8();
         }
 
         cache->appendMethod(slotName, flags, effectiveMethodIndex++, parameterNames);
@@ -430,7 +424,7 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
     // Dynamic properties
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
     int propertyIdx = 0;
-    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
+    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p, ++propertyIdx) {
         int propertyType = 0;
         quint32 propertyFlags = 0;
 

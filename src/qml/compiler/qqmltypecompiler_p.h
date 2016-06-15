@@ -80,12 +80,17 @@ struct QQmlTypeCompiler
 public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document);
 
+    // --- interface used by QQmlPropertyCacheCreator
+    QString stringAt(int idx) const;
+    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
+    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
+    // ---
+
     QV4::CompiledData::CompilationUnit *compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(const QQmlError &error);
 
-    QString stringAt(int idx) const;
     int registerString(const QString &str);
 
     QV4::IR::Module *jsIRModule() const;

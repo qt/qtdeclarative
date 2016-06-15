@@ -175,6 +175,14 @@ struct PoolList
             return ptr;
         }
 
+        T &operator*() {
+            return *ptr;
+        }
+
+        const T &operator*() const {
+            return *ptr;
+        }
+
         void operator++() {
             ptr = ptr->next;
         }
@@ -203,6 +211,12 @@ public:
         : data(0)
         , count(0)
     {}
+
+    void allocate(QQmlJS::MemoryPool *pool, int size)
+    {
+        count = size;
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+    }
 
     void allocate(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
@@ -244,6 +258,9 @@ public:
                 return i;
         return -1;
     }
+
+    const T *begin() const { return data; }
+    const T *end() const { return data + count; }
 };
 
 struct Object;
@@ -260,6 +277,10 @@ struct Signal
     PoolList<SignalParameter> *parameters;
 
     QStringList parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const;
+
+    int parameterCount() const { return parameters->count; }
+    PoolList<SignalParameter>::Iterator parametersBegin() const { return parameters->begin(); }
+    PoolList<SignalParameter>::Iterator parametersEnd() const { return parameters->end(); }
 
     Signal *next;
 };
@@ -290,6 +311,13 @@ struct Function
     QV4::CompiledData::Location location;
     int nameIndex;
     quint32 index; // index in parsedQML::functions
+    FixedPoolArray<int> formals;
+
+    // --- QQmlPropertyCacheCreator interface
+    const int *formalsBegin() const { return formals.begin(); }
+    const int *formalsEnd() const { return formals.end(); }
+    // ---
+
     Function *next;
 };
 
@@ -342,6 +370,12 @@ public:
     PoolList<Binding>::Iterator bindingsEnd() const { return bindings->end(); }
     PoolList<Property>::Iterator propertiesBegin() const { return properties->begin(); }
     PoolList<Property>::Iterator propertiesEnd() const { return properties->end(); }
+    PoolList<Alias>::Iterator aliasesBegin() const { return aliases->begin(); }
+    PoolList<Alias>::Iterator aliasesEnd() const { return aliases->end(); }
+    PoolList<Signal>::Iterator signalsBegin() const { return qmlSignals->begin(); }
+    PoolList<Signal>::Iterator signalsEnd() const { return qmlSignals->end(); }
+    PoolList<Function>::Iterator functionsBegin() const { return functions->begin(); }
+    PoolList<Function>::Iterator functionsEnd() const { return functions->end(); }
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
