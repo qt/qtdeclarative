@@ -397,7 +397,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
     int indexOfRootObject;
-    QList<Object*> objects;
+    QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
     quint32 unitFlags;
 
@@ -499,7 +499,7 @@ public:
 
     QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
-    QList<Object*> _objects;
+    QVector<Object*> _objects;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 

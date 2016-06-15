@@ -336,7 +336,7 @@ QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *QQmlType
     return &m_resolvedTypes;
 }
 
-QList<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects()
+QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects()
 {
     return &document->objects;
 }

@@ -78,7 +78,7 @@ protected:
 
 
     QQmlEnginePrivate *enginePrivate;
-    const QList<QmlIR::Object*> &qmlObjects;
+    const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
