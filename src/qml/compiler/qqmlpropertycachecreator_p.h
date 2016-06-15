@@ -71,46 +71,50 @@ public:
     static QAtomicInt classIndexCounter;
 };
 
+template <typename ObjectContainer>
 class QQmlPropertyCacheCreator : public QQmlPropertyCacheCreatorBase
 {
 public:
-    QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const QQmlTypeCompiler *compiler, const QQmlImports *imports);
+    typedef typename ObjectContainer::CompiledObject CompiledObject;
+
+    QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const ObjectContainer *objectContainer, const QQmlImports *imports);
 
     QQmlCompileError buildMetaObjects();
 
 protected:
     QQmlCompileError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
-    QQmlPropertyCache *propertyCacheForObject(const QmlIR::Object *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
-    QQmlCompileError createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
+    QQmlPropertyCache *propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
+    QQmlCompileError createMetaObject(int objectIndex, const CompiledObject *obj, QQmlPropertyCache *baseTypeCache);
 
-    QString stringAt(int index) const { return compiler->stringAt(index); }
+    QString stringAt(int index) const { return objectContainer->stringAt(index); }
 
     QQmlEnginePrivate * const enginePrivate;
-    const QQmlTypeCompiler *compiler;
-    const QVector<QmlIR::Object*> &qmlObjects;
+    const ObjectContainer * const objectContainer;
     const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
 };
 
-inline QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const QQmlTypeCompiler *compiler, const QQmlImports *imports)
+template <typename ObjectContainer>
+inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const ObjectContainer *objectContainer, const QQmlImports *imports)
     : enginePrivate(enginePrivate)
-    , compiler(compiler)
-    , qmlObjects(*compiler->qmlObjects())
+    , objectContainer(objectContainer)
     , imports(imports)
     , propertyCaches(propertyCaches)
 {
-    propertyCaches->resize(qmlObjects.count());
+    propertyCaches->resize(objectContainer->objectCount());
 }
 
-inline QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjects()
+template <typename ObjectContainer>
+inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 {
     QQmlBindingInstantiationContext context;
-    return buildMetaObjectRecursively(compiler->rootObjectIndex(), context);
+    return buildMetaObjectRecursively(objectContainer->rootObjectIndex(), context);
 }
 
-inline QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
+template <typename ObjectContainer>
+inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
 {
-    const QmlIR::Object *obj = qmlObjects.at(objectIndex);
+    const CompiledObject *obj = objectContainer->objectAt(objectIndex);
 
     bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
@@ -122,8 +126,8 @@ inline QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int
                 // because interceptors can't go to the shared value type instances.
                 if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
-                        const QmlIR::Object *obj = qmlObjects.at(context.referencingObjectIndex);
-                        auto *typeRef = compiler->resolvedTypes.value(obj->inheritedTypeNameIndex);
+                        const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
+                        auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
                         QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
@@ -171,7 +175,8 @@ inline QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int
     return noError;
 }
 
-inline QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const QmlIR::Object *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
+template <typename ObjectContainer>
+inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
 {
     if (context.instantiatingProperty) {
         if (context.instantiatingProperty->isQObject()) {
@@ -180,7 +185,7 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const
             return enginePrivate->cache(vtmo);
         }
     } else if (obj->inheritedTypeNameIndex != 0) {
-        auto *typeRef = compiler->resolvedTypes.value(obj->inheritedTypeNameIndex);
+        auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
@@ -200,7 +205,7 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const
 
         return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
     } else if (context.instantiatingBinding && context.instantiatingBinding->isAttachedProperty()) {
-        auto *typeRef = compiler->resolvedTypes.value(context.instantiatingBinding->propertyNameIndex);
+        auto *typeRef = objectContainer->resolvedTypes.value(context.instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
         QQmlType *qmltype = typeRef->type;
         if (!qmltype) {
@@ -229,7 +234,8 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator::propertyCacheForObject(const
     return nullptr;
 }
 
-inline QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
+template <typename ObjectContainer>
+inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, QQmlPropertyCache *baseTypeCache)
 {
     QQmlRefPointer<QQmlPropertyCache> cache;
     cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
@@ -268,8 +274,8 @@ inline QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectInd
 
     QByteArray newClassName;
 
-    if (objectIndex == compiler->rootObjectIndex()) {
-        const QString path = compiler->url().path();
+    if (objectIndex == objectContainer->rootObjectIndex()) {
+        const QString path = objectContainer->url().path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             const QStringRef nameBase = path.midRef(lastSlash + 1, path.length() - lastSlash - 5);
@@ -412,7 +418,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectInd
 
 
     // Dynamic slots
-    for (auto function = compiler->objectFunctionsBegin(obj), end = compiler->objectFunctionsEnd(obj); function != end; ++function) {
+    for (auto function = objectContainer->objectFunctionsBegin(obj), end = objectContainer->objectFunctionsEnd(obj); function != end; ++function) {
         quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
 
         const QString slotName = stringAt(function->nameIndex);

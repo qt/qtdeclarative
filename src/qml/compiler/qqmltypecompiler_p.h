@@ -92,6 +92,9 @@ public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document);
 
     // --- interface used by QQmlPropertyCacheCreator
+    typedef QmlIR::Object CompiledObject;
+    const QmlIR::Object *objectAt(int index) const { return document->objects.at(index); }
+    int objectCount() const { return document->objects.count(); }
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }

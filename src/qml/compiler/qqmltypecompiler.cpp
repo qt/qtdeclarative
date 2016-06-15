@@ -122,7 +122,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     }
 
     {
-        QQmlPropertyCacheCreator propertyCacheBuilder(&m_propertyCaches, engine, this, imports());
+        QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, engine, this, imports());
         QQmlCompileError error = propertyCacheBuilder.buildMetaObjects();
         if (error.isSet()) {
             recordError(error);
