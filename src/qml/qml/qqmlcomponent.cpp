@@ -1174,7 +1174,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 */
 
 
-static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v)
+void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
@@ -1263,7 +1263,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined()) {
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
-        setInitialProperties(v4, qmlContext, object, valuemap);
+        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, object, valuemap);
     }
 
     d->completeCreate();
@@ -1496,7 +1496,7 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
         QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
-        setInitialProperties(v4, qmlCtxt, obj, d()->valuemap);
+        QQmlComponentPrivate::setInitialProperties(v4, qmlCtxt, obj, d()->valuemap);
     }
 }
 

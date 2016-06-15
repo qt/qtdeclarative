@@ -86,6 +86,7 @@ public:
     QObject *beginCreate(QQmlContextData *);
     void completeCreate();
     void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate);
+    static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v);
 
     QQmlTypeData *typeData;
     virtual void typeDataReady(QQmlTypeData *);
