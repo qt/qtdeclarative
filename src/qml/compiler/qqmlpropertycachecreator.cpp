@@ -68,34 +68,25 @@ QQmlPropertyCacheCreator::InstantiationContext::InstantiationContext(int referen
     }
 }
 
-QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler)
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler, QQmlPropertyCacheVector *propertyCaches)
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
     , qmlObjects(*typeCompiler->qmlObjects())
     , imports(typeCompiler->imports())
     , resolvedTypes(typeCompiler->resolvedTypes())
+    , propertyCaches(propertyCaches)
 {
+    propertyCaches->resize(qmlObjects.count());
 }
 
 QQmlPropertyCacheCreator::~QQmlPropertyCacheCreator()
 {
 }
 
-bool QQmlPropertyCacheCreator::buildMetaObjects()
+QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjects()
 {
-    propertyCaches.resize(qmlObjects.count());
-
     InstantiationContext context;
-
-    QQmlCompileError error = buildMetaObjectRecursively(compiler->rootObjectIndex(), context);
-    if (error.isSet()) {
-        recordError(error);
-        return false;
-    }
-
-    compiler->setPropertyCaches(std::move(propertyCaches));
-
-    return true;
+    return buildMetaObjectRecursively(compiler->rootObjectIndex(), context);
 }
 
 QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, const InstantiationContext &context)
@@ -111,7 +102,7 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
                 if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
-                    if (!propertyCaches.needsVMEMetaObject(context.referencingObjectIndex)) {
+                    if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const QmlIR::Object *obj = qmlObjects.at(context.referencingObjectIndex);
                         auto *typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
@@ -143,11 +134,11 @@ QQmlCompileError QQmlPropertyCacheCreator::buildMetaObjectRecursively(int object
             if (error.isSet())
                 return error;
         } else {
-            propertyCaches.set(objectIndex, baseTypeCache);
+            propertyCaches->set(objectIndex, baseTypeCache);
         }
     }
 
-    if (QQmlPropertyCache *thisCache = propertyCaches.at(objectIndex)) {
+    if (QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex)) {
         for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 InstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
@@ -226,8 +217,8 @@ QQmlCompileError QQmlPropertyCacheCreator::createMetaObject(int objectIndex, con
                                               obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
                                               obj->signalCount() + obj->propertyCount() + obj->aliasCount()));
 
-    propertyCaches.set(objectIndex, cache);
-    propertyCaches.setNeedsVMEMetaObject(objectIndex);
+    propertyCaches->set(objectIndex, cache);
+    propertyCaches->setNeedsVMEMetaObject(objectIndex);
 
     struct TypeData {
         QV4::CompiledData::Property::Type dtype;

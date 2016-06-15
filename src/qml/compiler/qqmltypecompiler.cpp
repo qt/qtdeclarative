@@ -84,12 +84,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         QQmlType *qmlType = resolvedType->type;
         if (resolvedType->typeData) {
             if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
-                QQmlError error;
-                QString reason = tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName());
-                error.setDescription(reason);
-                error.setColumn(resolvedType->location.column);
-                error.setLine(resolvedType->location.line);
-                recordError(error);
+                recordError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName()));
                 return nullptr;
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
@@ -102,23 +97,13 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
                 QString reason = ref->type->noCreationReason();
                 if (reason.isEmpty())
                     reason = tr("Element is not creatable.");
-                error.setDescription(reason);
-                error.setColumn(resolvedType->location.column);
-                error.setLine(resolvedType->location.line);
-                recordError(error);
+                recordError(resolvedType->location, reason);
                 return nullptr;
             }
 
             if (ref->type->containsRevisionedAttributes()) {
                 ref->typePropertyCache = engine->cache(ref->type,
                                                        resolvedType->minorVersion);
-                if (!ref->typePropertyCache) {
-                    QQmlError cacheError;
-                    cacheError.setColumn(resolvedType->location.column);
-                    cacheError.setLine(resolvedType->location.line);
-                    recordError(cacheError);
-                    return nullptr;
-                }
             }
         }
         ref->majorVersion = resolvedType->majorVersion;
@@ -137,9 +122,12 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     }
 
     {
-        QQmlPropertyCacheCreator propertyCacheBuilder(this);
-        if (!propertyCacheBuilder.buildMetaObjects())
+        QQmlPropertyCacheCreator propertyCacheBuilder(this, &m_propertyCaches);
+        QQmlCompileError error = propertyCacheBuilder.buildMetaObjects();
+        if (error.isSet()) {
+            recordError(error);
             return nullptr;
+        }
     }
 
     {
@@ -299,11 +287,25 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         return nullptr;
 }
 
-void QQmlTypeCompiler::recordError(const QQmlError &error)
+void QQmlTypeCompiler::recordError(QQmlError error)
 {
-    QQmlError e = error;
-    e.setUrl(url());
-    errors << e;
+    error.setUrl(url());
+    errors << error;
+}
+
+void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
+{
+    QQmlError error;
+    error.setLine(location.line);
+    error.setColumn(location.column);
+    error.setDescription(description);
+    error.setUrl(url());
+    errors << error;
+}
+
+void QQmlTypeCompiler::recordError(const QQmlCompileError &error)
+{
+    recordError(error.location, error.description);
 }
 
 QString QQmlTypeCompiler::stringAt(int idx) const
@@ -392,14 +394,7 @@ QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
 {
 }
 
-void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, const QString &description) const
-{
-    QQmlError error;
-    error.setLine(location.line);
-    error.setColumn(location.column);
-    error.setDescription(description);
-    compiler->recordError(error);
-}
+
 
 SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)

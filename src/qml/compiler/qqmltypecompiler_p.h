@@ -74,6 +74,17 @@ struct Location;
 }
 }
 
+struct QQmlCompileError
+{
+    QQmlCompileError() {}
+    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
+        : location(location), description(description) {}
+    QV4::CompiledData::Location location;
+    QString description;
+
+    bool isSet() const { return !description.isEmpty(); }
+};
+
 struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
@@ -89,7 +100,9 @@ public:
     QV4::CompiledData::CompilationUnit *compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
-    void recordError(const QQmlError &error);
+    void recordError(QQmlError error);
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+    void recordError(const QQmlCompileError &error);
 
     int registerString(const QString &str);
 
@@ -132,17 +145,6 @@ private:
     QQmlPropertyCacheVector m_propertyCaches;
 };
 
-struct QQmlCompileError
-{
-    QQmlCompileError() {}
-    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
-        : location(location), description(description) {}
-    QV4::CompiledData::Location location;
-    QString description;
-
-    bool isSet() const { return !description.isEmpty(); }
-};
-
 struct QQmlCompilePass
 {
     virtual ~QQmlCompilePass() {}
@@ -151,9 +153,10 @@ struct QQmlCompilePass
 
     QString stringAt(int idx) const { return compiler->stringAt(idx); }
 protected:
-    void recordError(const QV4::CompiledData::Location &location, const QString &description) const;
+    void recordError(const QV4::CompiledData::Location &location, const QString &description) const
+    { compiler->recordError(location, description); }
     void recordError(const QQmlCompileError &error)
-    { recordError(error.location, error.description); }
+    { compiler->recordError(error); }
 
     QQmlTypeCompiler *compiler;
 };

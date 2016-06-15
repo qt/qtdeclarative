@@ -58,12 +58,12 @@ class QQmlPropertyCacheCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
-    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
+    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler, QQmlPropertyCacheVector *propertyCaches);
     ~QQmlPropertyCacheCreator();
 
-    bool buildMetaObjects();
-protected:
+    QQmlCompileError buildMetaObjects();
 
+protected:
     struct InstantiationContext {
         InstantiationContext();
         InstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache);
@@ -81,7 +81,7 @@ protected:
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
-    QQmlPropertyCacheVector propertyCaches;
+    QQmlPropertyCacheVector *propertyCaches;
 };
 
 QT_END_NAMESPACE
