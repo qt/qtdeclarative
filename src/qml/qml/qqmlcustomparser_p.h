@@ -54,6 +54,7 @@
 #include "qqmlmetatype_p.h"
 #include "qqmlerror.h"
 #include "qqmlbinding_p.h"
+#include <private/qqmltypecompiler_p.h>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qxmlstream.h>
@@ -83,7 +84,7 @@ public:
     virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
     virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
-    QList<QQmlError> errors() const { return exceptions; }
+    QVector<QQmlCompileError> errors() const { return exceptions; }
 
 protected:
     void error(const QV4::CompiledData::Binding *binding, const QString& description)
@@ -97,7 +98,7 @@ protected:
     const QMetaObject *resolveType(const QString&) const;
 
 private:
-    QList<QQmlError> exceptions;
+    QVector<QQmlCompileError> exceptions;
     QQmlEnginePrivate *engine;
     const QQmlPropertyValidator *validator;
     Flags m_flags;
