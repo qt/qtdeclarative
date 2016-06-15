@@ -54,7 +54,7 @@ ApplicationWindow {
 
     Settings {
         id: settings
-        property string style: "Universal"
+        property string style: "Default"
     }
 
     header: ToolBar {
