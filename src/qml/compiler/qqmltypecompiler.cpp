@@ -252,7 +252,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     }
 
     // Sanity check property bindings
-    QQmlPropertyValidator validator(this, &compilationUnit->propertyCaches);
+    QQmlPropertyValidator validator(this, engine, *imports(), compilationUnit);
     if (!validator.validate())
         return nullptr;
 
@@ -1333,23 +1333,21 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
 }
 
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QQmlPropertyCacheVector *propertyCaches)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, QV4::CompiledData::CompilationUnit *compilationUnit)
     : QQmlCompilePass(typeCompiler)
-    , enginePrivate(typeCompiler->enginePrivate())
-    , imports(*typeCompiler->imports())
-    , qmlUnit(typeCompiler->qmlUnit())
-    , resolvedTypes(typeCompiler->resolvedTypes)
-    , propertyCaches(propertyCaches)
+    , enginePrivate(enginePrivate)
+    , imports(imports)
+    , qmlUnit(compilationUnit->data)
+    , resolvedTypes(compilationUnit->resolvedTypes)
+    , propertyCaches(compilationUnit->propertyCaches)
+    , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)
 {
+    bindingPropertyDataPerObject->resize(qmlUnit->nObjects);
 }
 
 bool QQmlPropertyValidator::validate()
 {
-    _bindingPropertyDataPerObject.resize(qmlUnit->nObjects);
-    if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
-        return false;
-    compiler->setBindingPropertyDataPerObject(_bindingPropertyDataPerObject);
-    return true;
+    return validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0);
 }
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
@@ -1381,7 +1379,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         return validateObject(componentBinding->value.objectIndex, componentBinding);
     }
 
-    QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
+    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return true;
 
@@ -1619,7 +1617,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
     }
 
-    _bindingPropertyDataPerObject[objectIndex] = collectedBindingPropertyData;
+    (*bindingPropertyDataPerObject)[objectIndex] = collectedBindingPropertyData;
 
     return true;
 }
@@ -1955,7 +1953,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
     } else if (property->isQList()) {
         const int listType = enginePrivate->listType(property->propType);
         if (!QQmlMetaType::isInterface(listType)) {
-            QQmlPropertyCache *source = propertyCaches->at(binding->value.objectIndex);
+            QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
                 recordError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
                 return false;
@@ -1982,7 +1980,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
         bool isAssignable = false;
         // Determine isAssignable value
         if (propertyMetaObject) {
-            QQmlPropertyCache *c = propertyCaches->at(binding->value.objectIndex);
+            QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent();

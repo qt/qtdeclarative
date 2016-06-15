@@ -303,7 +303,7 @@ class QQmlPropertyValidator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QQmlPropertyCacheVector *propertyCaches);
+    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, QV4::CompiledData::CompilationUnit *compilationUnit);
 
     bool validate();
 
@@ -318,10 +318,9 @@ private:
     const QQmlImports &imports;
     const QV4::CompiledData::Unit *qmlUnit;
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
-    const QQmlPropertyCacheVector * const propertyCaches;
+    const QQmlPropertyCacheVector &propertyCaches;
 
-    // collected state variables, essentially write-only
-    mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
+    QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
 };
 
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
