@@ -207,7 +207,7 @@ ApplicationWindow {
         }
     }
 
-    Popup {
+    Dialog {
         id: settingsDialog
         x: Math.round((window.width - width) / 2)
         y: Math.round(window.height / 6)
@@ -215,6 +215,16 @@ ApplicationWindow {
         height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onAccepted: {
+            settings.style = styleBox.displayText
+            settingsDialog.close()
+        }
+        onRejected: {
+            styleBox.currentIndex = styleBox.styleIndex
+            settingsDialog.close()
+        }
 
         contentItem: ColumnLayout {
             id: settingsColumn
@@ -254,22 +264,10 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
-
-            DialogButtonBox {
-                standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
-                onAccepted: {
-                    settings.style = styleBox.displayText
-                    settingsDialog.close()
-                }
-                onRejected: {
-                    styleBox.currentIndex = styleBox.styleIndex
-                    settingsDialog.close()
-                }
-            }
         }
     }
 
-    Popup {
+    Dialog {
         id: aboutDialog
         modal: true
         focus: true

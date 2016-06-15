@@ -99,6 +99,8 @@ QT_BEGIN_NAMESPACE
     emitted for the actual button that is pressed. For convenience, if the
     button has an \c AcceptRole, \c RejectRole, or \c HelpRole, the \l accepted(),
     \l rejected(), or \l helpRequested() signals are emitted respectively.
+
+    \sa Dialog
 */
 
 /*!

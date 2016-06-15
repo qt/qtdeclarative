@@ -47,6 +47,7 @@ T.DialogButtonBox {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     spacing: 4
+    padding: 24
     alignment: count === 1 ? Qt.AlignRight : undefined
 
     delegate: Button {
@@ -67,5 +68,8 @@ T.DialogButtonBox {
     background: Rectangle {
         implicitHeight: 32
         color: control.Universal.chromeMediumLowColor
+        x: 1; y: 1
+        width: parent.width - 2
+        height: parent.height - 2
     }
 }

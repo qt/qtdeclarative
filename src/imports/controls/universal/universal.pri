@@ -7,6 +7,7 @@ QML_FILES += \
     $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
+    $$PWD/Dialog.qml \
     $$PWD/DialogButtonBox.qml \
     $$PWD/Drawer.qml \
     $$PWD/Frame.qml \

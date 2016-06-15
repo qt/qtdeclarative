@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,46 +34,48 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.1 as T
-import QtQuick.Controls.Material 2.1
-import QtQuick.Controls.Material.impl 2.1
+#ifndef QQUICKDIALOG_P_P_H
+#define QQUICKDIALOG_P_P_H
 
-T.DialogButtonBox {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
+#include <QtQuickTemplates2/private/qquickpagelayout_p_p.h>
 
-    spacing: 8
-    padding: 8
-    topPadding: padding - 4
-    bottomPadding: padding - 4
-    alignment: Qt.AlignRight
+QT_BEGIN_NAMESPACE
 
-    Material.foreground: Material.accent
+class QQmlComponent;
+class QQuickDialogButtonBox;
 
-    delegate: Button { flat: true }
+class QQuickDialogPrivate : public QQuickPopupPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickDialog)
 
-    contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 48
+public:
+    QQuickDialogPrivate() : buttonBox(nullptr), buttonBoxComponent(nullptr) { }
 
-        model: control.contentModel
-        spacing: control.spacing
-        orientation: ListView.Horizontal
-        boundsBehavior: Flickable.StopAtBounds
-        snapMode: ListView.SnapToItem
+    static QQuickDialogPrivate *get(QQuickDialog *dialog)
+    {
+        return dialog->d_func();
     }
 
-    background: PaddedRectangle {
-        implicitHeight: 52
-        radius: 2
-        color: control.Material.dialogColor
-        topPadding: control.position === T.DialogButtonBox.Footer ? -2 : 0
-        bottomPadding: control.position === T.DialogButtonBox.Header ? -2 : 0
-        clip: true
-    }
-}
+    void createButtonBox();
+
+    QQuickDialogButtonBox *buttonBox;
+    QQmlComponent *buttonBoxComponent;
+    QScopedPointer<QQuickPageLayout> layout;
+    QPlatformDialogHelper::StandardButtons standardButtons;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKDIALOG_P_P_H

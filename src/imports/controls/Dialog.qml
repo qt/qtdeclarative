@@ -36,44 +36,31 @@
 
 import QtQuick 2.6
 import QtQuick.Templates 2.1 as T
-import QtQuick.Controls.Material 2.1
-import QtQuick.Controls.Material.impl 2.1
+import QtQuick.Controls 2.1
 
-T.DialogButtonBox {
+T.Dialog {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            header ? header.implicitWidth : 0,
+                            footer ? footer.implicitWidth : 0,
+                            contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             (header ? header.implicitHeight : 0) + (footer ? footer.implicitHeight : 0))
+                             + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
 
-    spacing: 8
-    padding: 8
-    topPadding: padding - 4
-    bottomPadding: padding - 4
-    alignment: Qt.AlignRight
+    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
+    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    Material.foreground: Material.accent
+    padding: 12
 
-    delegate: Button { flat: true }
+    contentItem: Item { }
 
-    contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 48
-
-        model: control.contentModel
-        spacing: control.spacing
-        orientation: ListView.Horizontal
-        boundsBehavior: Flickable.StopAtBounds
-        snapMode: ListView.SnapToItem
+    background: Rectangle {
+        border.color: "#353637"
     }
 
-    background: PaddedRectangle {
-        implicitHeight: 52
-        radius: 2
-        color: control.Material.dialogColor
-        topPadding: control.position === T.DialogButtonBox.Footer ? -2 : 0
-        bottomPadding: control.position === T.DialogButtonBox.Header ? -2 : 0
-        clip: true
+    buttonBox: DialogButtonBox {
+        position: DialogButtonBox.Footer
     }
 }
