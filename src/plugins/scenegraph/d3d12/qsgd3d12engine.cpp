@@ -552,12 +552,12 @@ QSGRendererInterface::ShaderType QSGD3D12Engine::shaderType() const
 
 QSGRendererInterface::ShaderCompilationTypes QSGD3D12Engine::shaderCompilationType() const
 {
-    return OfflineCompilation;
+    return RuntimeCompilation | OfflineCompilation;
 }
 
 QSGRendererInterface::ShaderSourceTypes QSGD3D12Engine::shaderSourceType() const
 {
-    return ShaderByteCode;
+    return ShaderSourceString | ShaderByteCode;
 }
 
 static inline quint32 alignedSize(quint32 size, quint32 byteAlign)

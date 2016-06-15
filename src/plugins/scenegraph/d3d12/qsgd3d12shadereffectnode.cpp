@@ -41,6 +41,7 @@
 #include "qsgd3d12rendercontext_p.h"
 #include "qsgd3d12texture_p.h"
 #include "qsgd3d12engine_p.h"
+#include <QtCore/qthreadpool.h>
 #include <QtCore/qfile.h>
 #include <QtQml/qqmlfile.h>
 #include <qsgtextureprovider.h>
@@ -777,12 +778,12 @@ bool QSGD3D12GuiThreadShaderEffectManager::hasSeparateSamplerAndTextureObjects()
 
 QString QSGD3D12GuiThreadShaderEffectManager::log() const
 {
-    return QString();
+    return m_log;
 }
 
 QSGGuiThreadShaderEffectManager::Status QSGD3D12GuiThreadShaderEffectManager::status() const
 {
-    return Compiled;
+    return m_status;
 }
 
 struct RefGuard {
@@ -791,17 +792,85 @@ struct RefGuard {
     IUnknown *p;
 };
 
-bool QSGD3D12GuiThreadShaderEffectManager::reflect(const QByteArray &src, ShaderInfo *result)
+class QSGD3D12ShaderCompileTask : public QRunnable
 {
-    const QString fn = QQmlFile::urlToLocalFileOrQrc(src);
-    QFile f(fn);
-    if (!f.open(QIODevice::ReadOnly)) {
-        qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));
-        return false;
-    }
-    result->blob = f.readAll();
-    f.close();
+public:
+    QSGD3D12ShaderCompileTask(QSGD3D12GuiThreadShaderEffectManager *mgr,
+                              QSGD3D12GuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
+                              const QByteArray &src,
+                              QSGD3D12GuiThreadShaderEffectManager::ShaderInfo *result)
+        : mgr(mgr), typeHint(typeHint), src(src), result(result) { }
 
+    void run() override;
+
+private:
+    QSGD3D12GuiThreadShaderEffectManager *mgr;
+    QSGD3D12GuiThreadShaderEffectManager::ShaderInfo::Type typeHint;
+    QByteArray src;
+    QSGD3D12GuiThreadShaderEffectManager::ShaderInfo *result;
+};
+
+void QSGD3D12ShaderCompileTask::run()
+{
+    const char *target = typeHint == QSGD3D12GuiThreadShaderEffectManager::ShaderInfo::TypeVertex ? "vs_5_0" : "ps_5_0";
+    ID3DBlob *bytecode = nullptr;
+    ID3DBlob *errors = nullptr;
+    HRESULT hr = D3DCompile(src.constData(), src.size(), nullptr, nullptr, nullptr,
+                            "main", target, 0, 0, &bytecode, &errors);
+    if (FAILED(hr) || !bytecode) {
+        qWarning("HLSL shader compilation failed: 0x%x", hr);
+        if (errors) {
+            mgr->m_log += QString::fromUtf8(static_cast<const char *>(errors->GetBufferPointer()), errors->GetBufferSize());
+            errors->Release();
+        }
+        mgr->m_status = QSGGuiThreadShaderEffectManager::Error;
+        emit mgr->shaderCodePrepared(false, typeHint, src, result);
+        emit mgr->logAndStatusChanged();
+        return;
+    }
+
+    result->blob.resize(bytecode->GetBufferSize());
+    memcpy(result->blob.data(), bytecode->GetBufferPointer(), result->blob.size());
+    bytecode->Release();
+
+    const bool ok = mgr->reflect(result);
+    mgr->m_status = ok ? QSGGuiThreadShaderEffectManager::Compiled : QSGGuiThreadShaderEffectManager::Error;
+    emit mgr->shaderCodePrepared(ok, typeHint, src, result);
+    emit mgr->logAndStatusChanged();
+}
+
+void QSGD3D12GuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result)
+{
+    // The D3D12 backend's ShaderEffect implementation supports both HLSL
+    // source strings and bytecode in files as input. The latter is strongly
+    // recommended, but in order to make ShaderEffect users' (and
+    // qtgraphicaleffects') life easier, and since we link to d3dcompiler
+    // anyways, compiling from source is also supported.
+
+    // For simplicity, assume that file = bytecode, string = HLSL.
+    QUrl srcUrl(src);
+    if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
+        const QString fn = QQmlFile::urlToLocalFileOrQrc(src);
+        QFile f(fn);
+        if (!f.open(QIODevice::ReadOnly)) {
+            qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));
+            emit shaderCodePrepared(false, typeHint, src, result);
+            return;
+        }
+        result->blob = f.readAll();
+        f.close();
+        const bool ok = reflect(result);
+        m_status = ok ? Compiled : Error;
+        emit shaderCodePrepared(ok, typeHint, src, result);
+        emit logAndStatusChanged();
+        return;
+    }
+
+    QThreadPool::globalInstance()->start(new QSGD3D12ShaderCompileTask(this, typeHint, src, result));
+}
+
+bool QSGD3D12GuiThreadShaderEffectManager::reflect(ShaderInfo *result)
+{
     ID3D12ShaderReflection *reflector;
     HRESULT hr = D3DReflect(result->blob.constData(), result->blob.size(), IID_PPV_ARGS(&reflector));
     if (FAILED(hr)) {

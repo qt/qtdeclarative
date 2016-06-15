@@ -273,9 +273,10 @@ public:
         uint constantDataSize;
     };
 
-    virtual bool reflect(const QByteArray &src, ShaderInfo *result) = 0;
+    virtual void prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result) = 0;
 
 Q_SIGNALS:
+    void shaderCodePrepared(bool ok, ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result);
     void textureChanged();
     void logAndStatusChanged();
 };
@@ -536,7 +537,8 @@ inline bool QSGDistanceFieldGlyphCache::containsGlyph(glyph_t glyph)
     return glyphData(glyph).texCoord.isValid();
 }
 
-
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QSGGuiThreadShaderEffectManager::ShaderInfo::Type)
 
 #endif

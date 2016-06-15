@@ -103,6 +103,8 @@ private slots:
     void markGeometryDirtyAndUpdateIfSupportsAtlas();
     void itemWindowChanged(QQuickWindow *w);
     void backendChanged();
+    void shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
+                            const QByteArray &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
 
 private:
     QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
@@ -113,8 +115,9 @@ private:
 
         NShader
     };
-    void updateShader(Shader which, const QByteArray &src);
-    void disconnectSignals(Shader which);
+    void updateShader(Shader shaderType, const QByteArray &src);
+    void updateShaderVars(Shader shaderType);
+    void disconnectSignals(Shader shaderType);
     bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
 
     QQuickShaderEffect *m_item;
@@ -132,6 +135,7 @@ private:
     QSGShaderEffectNode::DirtyShaderFlags m_dirty;
     QSet<int> m_dirtyConstants[NShader];
     QSet<int> m_dirtyTextures[NShader];
+    QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
 
     struct SignalMapper {
         SignalMapper() : mapper(nullptr), active(false) { }

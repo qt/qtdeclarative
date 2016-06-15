@@ -209,11 +209,33 @@ QT_BEGIN_NAMESPACE
     it is the textures that map to properties referencing \l Image or
     \l ShaderEffectSource items.
 
-    Unlike with OpenGL, runtime compilation of shader source code may not be
-    supported. Backends for modern APIs are likely to prefer offline
+    Unlike OpenGL, backends for modern APIs will typically prefer offline
     compilation and shipping pre-compiled bytecode with applications instead of
-    inlined shader source strings. To check what is expected at runtime, use the
-    GraphicsInfo.shaderSourceType and GraphicsInfo.shaderCompilationType properties.
+    inlined shader source strings. In this case the string properties for
+    vertex and fragment shaders are treated as URLs referring to local files or
+    files shipped via the Qt resource system.
+
+    To check at runtime what is supported, use the
+    GraphicsInfo.shaderSourceType and GraphicsInfo.shaderCompilationType
+    properties. Note that these are bitmasks, because some backends may support
+    multiple approaches.
+
+    In case of Direct3D 12, both bytecode in files and HLSL source strings are
+    supported. If the vertexShader and fragmentShader properties form a valid
+    URL with the \c file or \c qrc schema, the bytecode is read from the
+    specified file. Otherwise, the string is treated as HLSL source code and is
+    compiled at runtime, assuming Shader Model 5.0 and an entry point of
+    \c{"main"}. This allows dynamically constructing shader strings. However,
+    whenever the shader source code is static, it is strongly recommended to
+    pre-compile to bytecode using the \c fxc tool and refer to these files from
+    QML. This will be a lot more efficient at runtime and allows catching
+    syntax errors in the shaders at compile time.
+
+    Unlike OpenGL, the Direct3D backend is able to perform runtime shader
+    compilation on dedicated threads. This is managed transparently to the
+    applications, and means that ShaderEffect items that contain HLSL source
+    strings do not block the rendering or other parts of the application until
+    the bytecode is ready.
 
     \table 70%
     \row
