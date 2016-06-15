@@ -119,12 +119,9 @@ QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickSta
 
 QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackView *view)
 {
+    Q_UNUSED(view);
     QQuickStackElement *element = new QQuickStackElement;
     element->component = qobject_cast<QQmlComponent *>(object);
-    if (!element->component) {
-        element->component = new QQmlComponent(qmlEngine(view), view);
-        element->ownComponent = true;
-    }
     element->item = qobject_cast<QQuickItem *>(object);
     if (element->item)
         element->originalParent = element->item->parentItem();
@@ -176,14 +173,15 @@ void QQuickStackElement::initialize()
     p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
 
     if (!properties.isUndefined()) {
-        QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
-        Q_ASSERT(d && d->engine);
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(d->engine);
+        QQmlEngine *engine = qmlEngine(view);
+        Q_ASSERT(engine);
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
         QV4::ScopedValue ipv(scope, properties.value());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
-        d->initializeObjectWithInitialProperties(qmlContext, ipv, item);
+        QV4::ScopedValue qmlObject(scope, QV4::QObjectWrapper::wrap(v4, item));
+        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv);
         properties.clear();
     }
 
