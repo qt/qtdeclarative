@@ -95,6 +95,19 @@ struct Lookup;
 struct RegExp;
 struct Unit;
 
+template <typename ItemType, typename Container, const ItemType *(Container::*IndexedGetter)(int index) const>
+struct TableIterator
+{
+    TableIterator(const Container *container, int index) : container(container), index(index) {}
+    const Container *container;
+    int index;
+
+    const ItemType *operator->() { return (container->*IndexedGetter)(index); }
+    void operator++() { ++index; }
+    bool operator==(const TableIterator &rhs) const { return index == rhs.index; }
+    bool operator!=(const TableIterator &rhs) const { return index != rhs.index; }
+};
+
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 1)
 #endif
@@ -204,6 +217,11 @@ struct Function
     const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
     const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
     const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
+
+    // --- QQmlPropertyCacheCreator interface
+    const quint32 *formalsBegin() const { return formalsTable(); }
+    const quint32 *formalsEnd() const { return formalsTable() + nFormals; }
+    // ---
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
@@ -355,6 +373,12 @@ struct Signal
                 + nParameters * sizeof(Parameter)
                 + 7) & ~0x7;
     }
+
+    // --- QQmlPropertyCacheCceatorInterface
+    const Parameter *parametersBegin() const { return parameterAt(0); }
+    const Parameter *parametersEnd() const { return parameterAt(nParameters); }
+    int parameterCount() const { return nParameters; }
+    // ---
 };
 
 struct Property
@@ -481,6 +505,26 @@ struct Object
     {
         return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
     }
+
+    // --- QQmlPropertyCacheCreator interface
+    int propertyCount() const { return nProperties; }
+    int aliasCount() const { return nAliases; }
+    int signalCount() const { return nSignals; }
+    int functionCount() const { return nFunctions; }
+
+    const Binding *bindingsBegin() const { return bindingTable(); }
+    const Binding *bindingsEnd() const { return bindingTable() + nBindings; }
+
+    const Property *propertiesBegin() const { return propertyTable(); }
+    const Property *propertiesEnd() const { return propertyTable() + nProperties; }
+
+    const Alias *aliasesBegin() const { return aliasTable(); }
+    const Alias *aliasesEnd() const { return aliasTable() + nAliases; }
+
+    typedef TableIterator<Signal, Object, &Object::signalAt> SignalIterator;
+    SignalIterator signalsBegin() const { return SignalIterator(this, 0); }
+    SignalIterator signalsEnd() const { return SignalIterator(this, nSignals); }
+    // ---
 };
 
 struct Import
@@ -753,6 +797,29 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
+
+    // --- interface for QQmlPropertyCacheCreator
+    typedef Object CompiledObject;
+    int objectCount() const { return data->nObjects; }
+    int rootObjectIndex() const { return data->indexOfRootObject; }
+    const Object *objectAt(int index) const { return data->objectAt(index); }
+    QString stringAt(int index) const { return data->stringAt(index); }
+
+    struct FunctionIterator
+    {
+        FunctionIterator(const Unit *unit, const Object *object, int index) : unit(unit), object(object), index(index) {}
+        const Unit *unit;
+        const Object *object;
+        int index;
+
+        const Function *operator->() const { return unit->functionAt(object->functionOffsetTable()[index]); }
+        void operator++() { ++index; }
+        bool operator==(const FunctionIterator &rhs) const { return index == rhs.index; }
+        bool operator!=(const FunctionIterator &rhs) const { return index != rhs.index; }
+    };
+    FunctionIterator objectFunctionsBegin(const Object *object) const { return FunctionIterator(data, object, 0); }
+    FunctionIterator objectFunctionsEnd(const Object *object) const { return FunctionIterator(data, object, object->nFunctions); }
+    // ---
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
