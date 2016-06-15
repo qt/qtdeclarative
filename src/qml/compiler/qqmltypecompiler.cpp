@@ -1336,9 +1336,9 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
 QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler, const QQmlPropertyCacheVector *propertyCaches)
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
+    , imports(*typeCompiler->imports())
     , qmlUnit(typeCompiler->qmlUnit())
     , resolvedTypes(typeCompiler->resolvedTypes)
-    , customParsers(typeCompiler->customParserCache())
     , propertyCaches(propertyCaches)
 {
 }
@@ -1350,11 +1350,6 @@ bool QQmlPropertyValidator::validate()
         return false;
     compiler->setBindingPropertyDataPerObject(_bindingPropertyDataPerObject);
     return true;
-}
-
-const QQmlImports &QQmlPropertyValidator::imports() const
-{
-    return *compiler->imports();
 }
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
@@ -1400,7 +1395,12 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
     }
 
-    QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex);
+    QQmlCustomParser *customParser = 0;
+    if (auto typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+        if (typeRef->type)
+            customParser = typeRef->type->customParser();
+    }
+
     QList<const QV4::CompiledData::Binding*> customBindings;
 
     // Collect group properties first for sanity checking
@@ -1491,7 +1491,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType *type = 0;
             QQmlImportNamespace *typeNamespace = 0;
-            compiler->imports()->resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
+            imports.resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
             if (typeNamespace)
                 recordError(binding->location, tr("Invalid use of namespace"));
             else
@@ -1606,7 +1606,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         customParser->clearErrors();
         customParser->validator = this;
         customParser->engine = enginePrivate;
-        customParser->imports = compiler->imports();
+        customParser->imports = &imports;
         customParser->verifyBindings(qmlUnit, customBindings);
         customParser->validator = 0;
         customParser->engine = 0;

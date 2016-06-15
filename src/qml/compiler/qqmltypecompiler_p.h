@@ -307,9 +307,6 @@ public:
 
     bool validate();
 
-    const QQmlImports &imports() const;
-    QQmlEnginePrivate *engine() const { return enginePrivate; }
-
 private:
     bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;
     bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
@@ -318,9 +315,9 @@ private:
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
     QQmlEnginePrivate *enginePrivate;
+    const QQmlImports &imports;
     const QV4::CompiledData::Unit *qmlUnit;
     const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
-    const QHash<int, QQmlCustomParser*> &customParsers;
     const QQmlPropertyCacheVector * const propertyCaches;
 
     // collected state variables, essentially write-only

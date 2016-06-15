@@ -165,11 +165,13 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
 */
 const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 {
+    if (!imports.isT1())
+        return nullptr;
     QQmlType *qmltype = 0;
-    if (!validator->imports().resolveType(name, &qmltype, 0, 0, 0))
-        return 0;
+    if (!imports.asT1()->resolveType(name, &qmltype, 0, 0, 0))
+        return nullptr;
     if (!qmltype)
-        return 0;
+        return nullptr;
     return qmltype->metaObject();
 }
 
