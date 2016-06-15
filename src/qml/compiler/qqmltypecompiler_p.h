@@ -299,34 +299,6 @@ private:
     bool _seenObjectWithId;
 };
 
-class QQmlPropertyValidator
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
-public:
-    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, QV4::CompiledData::CompilationUnit *compilationUnit);
-
-    QVector<QQmlCompileError> validate();
-
-private:
-    QVector<QQmlCompileError> validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;
-    QQmlCompileError validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
-    QQmlCompileError validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
-
-    bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
-
-    QVector<QQmlCompileError> recordError(const QV4::CompiledData::Location &location, const QString &description) const Q_REQUIRED_RESULT;
-    QVector<QQmlCompileError> recordError(const QQmlCompileError &error) const Q_REQUIRED_RESULT;
-    QString stringAt(int index) const { return qmlUnit->stringAt(index); }
-
-    QQmlEnginePrivate *enginePrivate;
-    const QQmlImports &imports;
-    const QV4::CompiledData::Unit *qmlUnit;
-    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
-    const QQmlPropertyCacheVector &propertyCaches;
-
-    QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
-};
-
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
 class QQmlJSCodeGenerator : public QQmlCompilePass
 {
