@@ -68,11 +68,6 @@ void ObjectIterator::init(const Object *o)
     object->setM(o ? o->m() : 0);
     current->setM(o ? o->m() : 0);
 
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-    object->setTag(QV4::Value::Managed_Type);
-    current->setTag(QV4::Value::Managed_Type);
-#endif
-
     if (object->as<ArgumentsObject>()) {
         Scope scope(engine);
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();

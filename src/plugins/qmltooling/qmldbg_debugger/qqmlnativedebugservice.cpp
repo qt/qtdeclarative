@@ -549,7 +549,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
             dict[QStringLiteral("name")] = name;
             dict[QStringLiteral("valueencoded")] = QStringLiteral("undefined");
             output.append(dict);
-        } else if (result.ptr && result.ptr->_val) {
+        } else if (result.ptr && result.ptr->rawValue()) {
             collector.collect(&output, QString(), name, *result);
         } else {
             QJsonObject dict;

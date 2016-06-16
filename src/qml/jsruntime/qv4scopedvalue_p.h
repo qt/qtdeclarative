@@ -120,9 +120,6 @@ struct ScopedValue
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setM(o);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        ptr->setTag(QV4::Value::Managed_Type);
-#endif
     }
 
     ScopedValue(const Scope &scope, Managed *m)
@@ -144,9 +141,6 @@ struct ScopedValue
 
     ScopedValue &operator=(Heap::Base *o) {
         ptr->setM(o);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        ptr->setTag(QV4::Value::Managed_Type);
-#endif
         return *this;
     }
 
@@ -186,18 +180,12 @@ struct Scoped
 
     inline void setPointer(const Managed *p) {
         ptr->setM(p ? p->m() : 0);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        ptr->setTag(QV4::Value::Managed_Type);
-#endif
     }
 
     Scoped(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setM(0);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        ptr->setTag(QV4::Value::Managed_Type);
-#endif
     }
 
     Scoped(const Scope &scope, const Value &v)
@@ -339,14 +327,14 @@ struct ScopedCallData {
 
 inline Value &Value::operator =(const ScopedValue &v)
 {
-    _val = v.ptr->val();
+    _val = v.ptr->rawValue();
     return *this;
 }
 
 template<typename T>
 inline Value &Value::operator=(const Scoped<T> &t)
 {
-    _val = t.ptr->val();
+    _val = t.ptr->rawValue();
     return *this;
 }
 

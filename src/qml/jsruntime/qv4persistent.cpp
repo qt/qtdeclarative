@@ -79,11 +79,9 @@ Page *allocatePage(PersistentValueStorage *storage)
     if (p->header.next)
         p->header.next->header.prev = &p->header.next;
     for (int i = 0; i < kEntriesPerPage - 1; ++i) {
-        p->values[i].setTag(QV4::Value::Empty_Type);
-        p->values[i].setInt_32(i + 1);
+        p->values[i].setEmpty(i + 1);
     }
-    p->values[kEntriesPerPage - 1].setTag(QV4::Value::Empty_Type);
-    p->values[kEntriesPerPage - 1].setInt_32(-1);
+    p->values[kEntriesPerPage - 1].setEmpty(-1);
 
     storage->firstPage = p;
 
@@ -205,8 +203,7 @@ void PersistentValueStorage::free(Value *v)
 
     Page *p = getPage(v);
 
-    v->setTag(QV4::Value::Empty_Type);
-    v->setInt_32(p->header.freeList);
+    v->setEmpty(p->header.freeList);
     p->header.freeList = v - p->values;
     if (!--p->header.refCount)
         freePage(p);
