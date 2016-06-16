@@ -440,8 +440,7 @@ void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
     }
     QQuickItemPrivate::get(item)->setCulled(percent >= 1);
     QPointF pf = path->pointAtPercent(qMin(percent, qreal(1)));
-    item->setX(pf.x() - item->width()/2);
-    item->setY(pf.y() - item->height()/2);
+    item->setPosition(pf - QPointF(item->width()/2, item->height()/2));
 }
 
 void QQuickPathViewPrivate::regenerate()
