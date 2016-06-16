@@ -916,9 +916,14 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
     if (!item)
         return;
 
-    if (loaderGeometryChanged && q->widthValid())
+    const bool needToUpdateWidth = loaderGeometryChanged && q->widthValid();
+    const bool needToUpdateHeight = loaderGeometryChanged && q->heightValid();
+
+    if (needToUpdateWidth && needToUpdateHeight)
+        item->setSize(QSizeF(q->width(), q->height()));
+    else if (needToUpdateWidth)
         item->setWidth(q->width());
-    if (loaderGeometryChanged && q->heightValid())
+    else if (needToUpdateHeight)
         item->setHeight(q->height());
 
     if (updatingSize)
