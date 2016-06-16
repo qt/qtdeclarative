@@ -402,7 +402,7 @@ The following functions are also on the Qt object.
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "wince" - Windows CE
-        \li \c "winrt" - Windows RT
+        \li \c "winrt" - Windows Runtime
         \li \c "winphone" - Windows Phone
     \endlist
     \endtable
