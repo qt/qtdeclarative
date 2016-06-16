@@ -448,14 +448,20 @@ TestCase {
 
     function test_snapMode_data() {
         return [
-            { tag: "NoSnap", snapMode: Slider.NoSnap, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
-            { tag: "SnapAlways", snapMode: Slider.SnapAlways, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] },
-            { tag: "SnapOnRelease", snapMode: Slider.SnapOnRelease, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] }
+            { tag: "NoSnap", snapMode: Slider.NoSnap, from: 0, to: 2, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
+            { tag: "SnapAlways (0..2)", snapMode: Slider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapAlways (1..3)", snapMode: Slider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapAlways (-1..1)", snapMode: Slider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (1..-1)", snapMode: Slider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (0..2)", snapMode: Slider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..3)", snapMode: Slider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] }
         ]
     }
 
     function test_snapMode(data) {
-        var control = slider.createObject(testCase, {snapMode: data.snapMode, from: 0, to: 2, stepSize: 0.2})
+        var control = slider.createObject(testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
         function sliderCompare(left, right) {
