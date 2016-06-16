@@ -218,30 +218,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         }
     }
 
-    // Collect some data for instantiation later.
-    int bindingCount = 0;
-    int parserStatusCount = 0;
-    int objectCount = 0;
-    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
-        bindingCount += obj->nBindings;
-        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-            if (QQmlType *qmlType = typeRef->type) {
-                if (qmlType->parserStatusCast() != -1)
-                    ++parserStatusCount;
-            }
-            ++objectCount;
-            if (typeRef->compilationUnit) {
-                bindingCount += typeRef->compilationUnit->totalBindingsCount;
-                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount;
-                objectCount += typeRef->compilationUnit->totalObjectCount;
-            }
-        }
-    }
-
-    compilationUnit->totalBindingsCount = bindingCount;
-    compilationUnit->totalParserStatusCount = parserStatusCount;
-    compilationUnit->totalObjectCount = objectCount;
+    compilationUnit->updateBindingAndObjectCounters();
 
     if (errors.isEmpty())
         return compilationUnit;

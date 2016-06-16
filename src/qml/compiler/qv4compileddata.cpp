@@ -238,6 +238,34 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     return *it;
 }
 
+void CompilationUnit::updateBindingAndObjectCounters()
+{
+
+    // Collect some data for instantiation later.
+    int bindingCount = 0;
+    int parserStatusCount = 0;
+    int objectCount = 0;
+    for (quint32 i = 0; i < data->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = data->objectAt(i);
+        bindingCount += obj->nBindings;
+        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+            if (QQmlType *qmlType = typeRef->type) {
+                if (qmlType->parserStatusCast() != -1)
+                    ++parserStatusCount;
+            }
+            ++objectCount;
+            if (typeRef->compilationUnit) {
+                bindingCount += typeRef->compilationUnit->totalBindingsCount;
+                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount;
+                objectCount += typeRef->compilationUnit->totalObjectCount;
+            }
+        }
+    }
+
+    totalBindingsCount = bindingCount;
+    totalParserStatusCount = parserStatusCount;
+    totalObjectCount = objectCount;
+}
 #endif // V4_BOOTSTRAP
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
