@@ -89,7 +89,7 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap &resolvedTypeCache);
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
@@ -98,7 +98,7 @@ public:
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> resolvedTypes;
+    QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap resolvedTypes;
     // ---
 
     QV4::CompiledData::CompilationUnit *compile();

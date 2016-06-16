@@ -81,6 +81,7 @@ class QQmlComponentPrivate;
 class QQmlTypeData;
 class QQmlTypeLoader;
 class QQmlExtensionInterface;
+struct QQmlCompileError;
 
 namespace QmlIR {
 struct Document;
@@ -151,6 +152,7 @@ protected:
     // Can be called from within callbacks
     void setError(const QQmlError &);
     void setError(const QList<QQmlError> &errors);
+    void setError(const QQmlCompileError &error);
     void addDependency(QQmlDataBlob *);
 
     // Callbacks made in load thread
@@ -390,6 +392,7 @@ private:
 
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 {
+    Q_DECLARE_TR_FUNCTIONS(QQmlTypeData)
 public:
     struct TypeReference
     {
@@ -421,11 +424,7 @@ private:
 public:
     ~QQmlTypeData();
 
-    const QHash<int, TypeReference> &resolvedTypeRefs() const { return m_resolvedTypes; }
-
     const QList<ScriptReference> &resolvedScripts() const;
-    const QSet<QString> &namespaces() const;
-    const QList<TypeReference> &compositeSingletons() const;
 
     QV4::CompiledData::CompilationUnit *compilationUnit() const;
 
@@ -451,6 +450,7 @@ protected:
 private:
     void continueLoadFromIR();
     void resolveTypes();
+    QQmlCompileError buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const;
     void compile();
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 

@@ -434,6 +434,16 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
         tryDone();
 }
 
+void QQmlDataBlob::setError(const QQmlCompileError &error)
+{
+    QQmlError e;
+    e.setColumn(error.location.column);
+    e.setLine(error.location.line);
+    e.setDescription(error.description);
+    e.setUrl(url());
+    setError(e);
+}
+
 /*!
 Wait for \a blob to become complete or to error.  If \a blob is already
 complete or in error, or this blob is already complete, this has no effect.
@@ -2033,16 +2043,6 @@ const QList<QQmlTypeData::ScriptReference> &QQmlTypeData::resolvedScripts() cons
     return m_scripts;
 }
 
-const QSet<QString> &QQmlTypeData::namespaces() const
-{
-    return m_namespaces;
-}
-
-const QList<QQmlTypeData::TypeReference> &QQmlTypeData::compositeSingletons() const
-{
-    return m_compositeSingletons;
-}
-
 QV4::CompiledData::CompilationUnit *QQmlTypeData::compilationUnit() const
 {
     return m_compiledData.data();
@@ -2301,7 +2301,15 @@ void QQmlTypeData::compile()
 {
     Q_ASSERT(m_compiledData.isNull());
 
-    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data());
+    QQmlRefPointer<QQmlTypeNameCache> importCache;
+    QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap resolvedTypeCache;
+    QQmlCompileError error = buildTypeResolutionCaches(&importCache, &resolvedTypeCache);
+    if (error.isSet()) {
+        setError(error);
+        return;
+    }
+
+    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data(), importCache, resolvedTypeCache);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
@@ -2426,6 +2434,54 @@ void QQmlTypeData::resolveTypes()
 
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
+}
+
+QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const
+{
+    importCache->adopt(new QQmlTypeNameCache);
+
+    for (const QString &ns: m_namespaces)
+        (*importCache)->add(ns);
+
+    // Add any Composite Singletons that were used to the import cache
+    for (const QQmlTypeData::TypeReference &singleton: m_compositeSingletons)
+        (*importCache)->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
+
+    m_importCache.populateCache(*importCache);
+
+    QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
+
+    for (auto resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); resolvedType != end; ++resolvedType) {
+        QScopedPointer<QV4::CompiledData::CompilationUnit::ResolvedTypeReference> ref(new QV4::CompiledData::CompilationUnit::ResolvedTypeReference);
+        QQmlType *qmlType = resolvedType->type;
+        if (resolvedType->typeData) {
+            if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
+                return QQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName()));
+            }
+            ref->compilationUnit = resolvedType->typeData->compilationUnit();
+        } else if (qmlType) {
+            ref->type = qmlType;
+            Q_ASSERT(ref->type);
+
+            if (resolvedType->needsCreation && !ref->type->isCreatable()) {
+                QString reason = ref->type->noCreationReason();
+                if (reason.isEmpty())
+                    reason = tr("Element is not creatable.");
+                return QQmlCompileError(resolvedType->location, reason);
+            }
+
+            if (ref->type->containsRevisionedAttributes()) {
+                ref->typePropertyCache = engine->cache(ref->type,
+                                                       resolvedType->minorVersion);
+            }
+        }
+        ref->majorVersion = resolvedType->majorVersion;
+        ref->minorVersion = resolvedType->minorVersion;
+        ref->doDynamicTypeCheck();
+        resolvedTypeCache->insert(resolvedType.key(), ref.take());
+    }
+    QQmlCompileError noError;
+    return noError;
 }
 
 bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref)

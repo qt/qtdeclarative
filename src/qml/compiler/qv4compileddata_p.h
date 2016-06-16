@@ -791,7 +791,8 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
         void doDynamicTypeCheck();
     };
     // map from name index
-    QHash<int, ResolvedTypeReference*> resolvedTypes;
+    typedef QHash<int, ResolvedTypeReference*> ResolvedTypeReferenceMap;
+    ResolvedTypeReferenceMap resolvedTypes;
 
     int metaTypeId;
     int listMetaTypeId;

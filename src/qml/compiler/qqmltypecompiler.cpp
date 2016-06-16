@@ -57,61 +57,17 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML)
-    : engine(engine)
+QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap &resolvedTypeCache)
+    : resolvedTypes(resolvedTypeCache)
+    , engine(engine)
     , typeData(typeData)
+    , importCache(importCache)
     , document(parsedQML)
 {
 }
 
 QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 {
-    importCache.adopt(new QQmlTypeNameCache);
-
-    foreach (const QString &ns, typeData->namespaces())
-        importCache->add(ns);
-
-    // Add any Composite Singletons that were used to the import cache
-    foreach (const QQmlTypeData::TypeReference &singleton, typeData->compositeSingletons())
-        importCache->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
-
-    typeData->imports().populateCache(importCache.data());
-
-    const QHash<int, QQmlTypeData::TypeReference> &resolvedTypeRefs = typeData->resolvedTypeRefs();
-    for (QHash<int, QQmlTypeData::TypeReference>::ConstIterator resolvedType = resolvedTypeRefs.constBegin(), end = resolvedTypeRefs.constEnd();
-         resolvedType != end; ++resolvedType) {
-        QScopedPointer<QV4::CompiledData::CompilationUnit::ResolvedTypeReference> ref(new QV4::CompiledData::CompilationUnit::ResolvedTypeReference);
-        QQmlType *qmlType = resolvedType->type;
-        if (resolvedType->typeData) {
-            if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
-                recordError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName()));
-                return nullptr;
-            }
-            ref->compilationUnit = resolvedType->typeData->compilationUnit();
-        } else if (qmlType) {
-            ref->type = qmlType;
-            Q_ASSERT(ref->type);
-
-            if (resolvedType->needsCreation && !ref->type->isCreatable()) {
-                QQmlError error;
-                QString reason = ref->type->noCreationReason();
-                if (reason.isEmpty())
-                    reason = tr("Element is not creatable.");
-                recordError(resolvedType->location, reason);
-                return nullptr;
-            }
-
-            if (ref->type->containsRevisionedAttributes()) {
-                ref->typePropertyCache = engine->cache(ref->type,
-                                                       resolvedType->minorVersion);
-            }
-        }
-        ref->majorVersion = resolvedType->majorVersion;
-        ref->minorVersion = resolvedType->minorVersion;
-        ref->doDynamicTypeCheck();
-        resolvedTypes.insert(resolvedType.key(), ref.take());
-    }
-
     // Build property caches and VME meta object data
 
     for (auto it = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
