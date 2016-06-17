@@ -2898,7 +2898,7 @@ void tst_qqmllanguage::importIncorrectCase()
     QCOMPARE(errors.count(), 1);
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
-        QStringLiteral("File not found") :
+        QStringLiteral("No such file or directory") :
         QStringLiteral("File name case mismatch");
     QCOMPARE(errors.at(0).description(), expectedError);
 

@@ -131,21 +131,14 @@ public:
 
     class Data {
     public:
-        inline const char *data() const;
-        inline int size() const;
-
-        inline QByteArray asByteArray() const;
-
-        inline bool isFile() const;
-        inline QQmlFile *asFile() const;
-
+        QByteArray readAll(QString *error) const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;
         inline Data();
         Data(const Data &);
         Data &operator=(const Data &);
-        QBiPointer<const QByteArray, QQmlFile> d;
+        QBiPointer<const QByteArray, const QString> d;
     };
 
 protected:
@@ -153,6 +146,7 @@ protected:
     void setError(const QQmlError &);
     void setError(const QList<QQmlError> &errors);
     void setError(const QQmlCompileError &error);
+    void setError(const QString &description);
     void addDependency(QQmlDataBlob *);
 
     // Callbacks made in load thread
@@ -342,7 +336,7 @@ private:
 #endif
 
     void setData(QQmlDataBlob *, const QByteArray &);
-    void setData(QQmlDataBlob *, QQmlFile *);
+    void setData(QQmlDataBlob *, const QString &fileName);
     void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
     void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
@@ -582,40 +576,7 @@ QQmlDataBlob::Data::Data()
 {
 }
 
-const char *QQmlDataBlob::Data::data() const
-{
-    Q_ASSERT(!d.isNull());
 
-    if (d.isT1()) return d.asT1()->constData();
-    else return d.asT2()->data();
-}
-
-int QQmlDataBlob::Data::size() const
-{
-    Q_ASSERT(!d.isNull());
-
-    if (d.isT1()) return d.asT1()->size();
-    else return d.asT2()->size();
-}
-
-bool QQmlDataBlob::Data::isFile() const
-{
-    return d.isT2();
-}
-
-QByteArray QQmlDataBlob::Data::asByteArray() const
-{
-    Q_ASSERT(!d.isNull());
-
-    if (d.isT1()) return *d.asT1();
-    else return d.asT2()->dataByteArray();
-}
-
-QQmlFile *QQmlDataBlob::Data::asFile() const
-{
-    if (d.isT2()) return d.asT2();
-    else return 0;
-}
 
 QT_END_NAMESPACE
 

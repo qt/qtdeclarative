@@ -213,7 +213,7 @@ void tst_QQuickLoader::sourceOrComponent_data()
     QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << testFileUrl("subdir/Test.qml") << "";
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
     QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << testFileUrl("IDontExist.qml")
-            << QString(testFileUrl("IDontExist.qml").toString() + ": File not found");
+            << QString(testFileUrl("IDontExist.qml").toString() + ": No such file or directory");
 }
 
 void tst_QQuickLoader::clear()
@@ -748,7 +748,7 @@ void tst_QQuickLoader::initialPropertyValuesError_data()
             << (QStringList() << QString(testFileUrl("initialPropertyValues.error.1.qml").toString() + ":6:5: QML Loader: setSource: value is not an object"));
 
     QTest::newRow("nonexistent source url") << testFileUrl("initialPropertyValues.error.2.qml")
-            << (QStringList() << QString(testFileUrl("NonexistentSourceComponent.qml").toString() + ": File not found"));
+            << (QStringList() << QString(testFileUrl("NonexistentSourceComponent.qml").toString() + ": No such file or directory"));
 
     QTest::newRow("invalid source url") << testFileUrl("initialPropertyValues.error.3.qml")
             << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
@@ -901,7 +901,7 @@ void tst_QQuickLoader::asynchronous_data()
             << QStringList();
 
     QTest::newRow("Non-existent component") << testFileUrl("IDoNotExist.qml")
-            << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": File not found"));
+            << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": No such file or directory"));
 
     QTest::newRow("Invalid component") << testFileUrl("InvalidSourceComponent.qml")
             << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));

@@ -445,6 +445,14 @@ void QQmlDataBlob::setError(const QQmlCompileError &error)
     setError(e);
 }
 
+void QQmlDataBlob::setError(const QString &description)
+{
+    QQmlError e;
+    e.setDescription(description);
+    e.setUrl(finalUrl());
+    setError(e);
+}
+
 /*!
 Wait for \a blob to become complete or to error.  If \a blob is already
 complete or in error, or this blob is already complete, this has no effect.
@@ -1091,13 +1099,9 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
     QML_MEMORY_SCOPE_URL(blob->m_url);
 
     if (QQmlFile::isSynchronous(blob->m_url)) {
-        QQmlFile file(m_engine, blob->m_url);
-
-        if (file.isError()) {
-            QQmlError error;
-            error.setUrl(blob->m_url);
-            error.setDescription(file.error());
-            blob->setError(error);
+        const QString fileName = QQmlFile::urlToLocalFileOrQrc(blob->m_url);
+        if (!QQml_isFileCaseCorrect(fileName)) {
+            blob->setError(QLatin1String("File name case mismatch"));
             return;
         }
 
@@ -1105,7 +1109,7 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
         if (blob->m_data.isAsync())
             m_thread->callDownloadProgressChanged(blob, 1.);
 
-        setData(blob, &file);
+        setData(blob, fileName);
 
     } else {
 #ifndef QT_NO_NETWORK
@@ -1225,11 +1229,11 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, QQmlFile *file)
+void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::Data d;
-    d.d = file;
+    d.d = &fileName;
     setData(blob, d);
 }
 
@@ -2122,11 +2126,7 @@ void QQmlTypeData::done()
     QQmlType *type = QQmlMetaType::qmlType(url(), true);
     if (!isError() && type && type->isCompositeSingleton() && !m_isSingleton) {
         QString typeName = type->qmlTypeName();
-
-        QQmlError error;
-        error.setDescription(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
-        error.setUrl(finalUrl());
-        setError(error);
+        setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
     }
 
     // Compile component
@@ -2170,7 +2170,12 @@ bool QQmlTypeData::loadImplicitImport()
 
 void QQmlTypeData::dataReceived(const Data &data)
 {
-    QString code = QString::fromUtf8(data.data(), data.size());
+    QString error;
+    QString code = QString::fromUtf8(data.readAll(&error));
+    if (!error.isEmpty()) {
+        setError(error);
+        return;
+    }
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
@@ -2699,7 +2704,12 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
-    QString source = QString::fromUtf8(data.data(), data.size());
+    QString error;
+    QString source = QString::fromUtf8(data.readAll(&error));
+    if (!error.isEmpty()) {
+        setError(error);
+        return;
+    }
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
     QmlIR::Document irUnit(v4->debugger != 0);
@@ -2854,12 +2864,37 @@ void QQmlQmldirData::setPriority(int priority)
 
 void QQmlQmldirData::dataReceived(const Data &data)
 {
-    m_content = QString::fromUtf8(data.data(), data.size());
+    QString error;
+    m_content = QString::fromUtf8(data.readAll(&error));
+    if (!error.isEmpty()) {
+        setError(error);
+        return;
+    }
 }
 
 void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *)
 {
     Q_UNIMPLEMENTED();
+}
+
+QByteArray QQmlDataBlob::Data::readAll(QString *error) const
+{
+    Q_ASSERT(!d.isNull());
+    error->clear();
+    if (d.isT1()) {
+        return *d.asT1();
+    }
+    QFile f(*d.asT2());
+    if (!f.open(QIODevice::ReadOnly)) {
+        *error = f.errorString();
+        return QByteArray();
+    }
+    QByteArray data(f.size(), Qt::Uninitialized);
+    if (f.read(data.data(), data.length()) != data.length()) {
+        *error = f.errorString();
+        return QByteArray();
+    }
+    return data;
 }
 
 QT_END_NAMESPACE
