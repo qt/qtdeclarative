@@ -255,6 +255,9 @@
         \li \l [QML QtQuickControls] {Menu}
         \li \l [QML QtQuickControls2] {Menu}
     \row
+        \li \l [QML QtQuickControls] {MenuBar}
+        \li \mdash
+    \row
         \li \l [QML QtQuickControls] {MenuItem}
         \li \l [QML QtQuickControls2] {MenuItem}
     \row
