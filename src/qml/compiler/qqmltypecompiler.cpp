@@ -113,28 +113,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         annotator.annotateBindingsToAliases();
     }
 
-    // Collect imported scripts
-    const QList<QQmlTypeData::ScriptReference> &scripts = typeData->resolvedScripts();
-    QVector<QQmlScriptData *> dependentScripts;
-    dependentScripts.reserve(scripts.count());
-    for (int scriptIndex = 0; scriptIndex < scripts.count(); ++scriptIndex) {
-        const QQmlTypeData::ScriptReference &script = scripts.at(scriptIndex);
-
-        QStringRef qualifier(&script.qualifier);
-        QString enclosingNamespace;
-
-        const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
-        if (lastDotIndex != -1) {
-            enclosingNamespace = qualifier.left(lastDotIndex).toString();
-            qualifier = qualifier.mid(lastDotIndex+1);
-        }
-
-        importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
-        QQmlScriptData *scriptData = script.script->scriptData();
-        scriptData->addref();
-        dependentScripts << scriptData;
-    }
-
     // Resolve component boundaries and aliases
 
     {
@@ -186,7 +164,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     QV4::CompiledData::CompilationUnit *compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit->importCache = importCache;
-    compilationUnit->dependentScripts = dependentScripts;
     compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));

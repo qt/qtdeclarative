@@ -2102,7 +2102,27 @@ void QQmlTypeData::done()
         }
     }
 
-    if (isError()) {
+    if (!isError()) {
+        // Collect imported scripts
+        m_compiledData->dependentScripts.reserve(m_scripts.count());
+        for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
+            const QQmlTypeData::ScriptReference &script = m_scripts.at(scriptIndex);
+
+            QStringRef qualifier(&script.qualifier);
+            QString enclosingNamespace;
+
+            const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
+            if (lastDotIndex != -1) {
+                enclosingNamespace = qualifier.left(lastDotIndex).toString();
+                qualifier = qualifier.mid(lastDotIndex+1);
+            }
+
+            m_compiledData->importCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
+            QQmlScriptData *scriptData = script.script->scriptData();
+            scriptData->addref();
+            m_compiledData->dependentScripts << scriptData;
+        }
+    } else {
         m_compiledData = nullptr;
     }
 
