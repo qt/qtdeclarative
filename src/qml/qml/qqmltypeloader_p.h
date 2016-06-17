@@ -232,7 +232,6 @@ public:
 
     protected:
         bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
-        bool addPragma(const QmlIR::Pragma &pragma, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, const QV4::CompiledData::Import *import, int priority, QList<QQmlError> *errors);
         bool updateQmldir(QQmlQmldirData *data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
@@ -249,7 +248,6 @@ public:
         virtual QString stringAt(int) const { return QString(); }
 
         QQmlImports m_importCache;
-        bool m_isSingleton;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
     };

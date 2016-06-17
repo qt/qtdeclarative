@@ -1284,7 +1284,7 @@ void QQmlTypeLoader::shutdownThread()
 }
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
-  : QQmlDataBlob(url, type, loader), m_importCache(loader), m_isSingleton(false)
+  : QQmlDataBlob(url, type, loader), m_importCache(loader)
 {
 }
 
@@ -1447,51 +1447,6 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
     return true;
 }
-
-bool QQmlTypeLoader::Blob::addPragma(const QmlIR::Pragma &pragma, QList<QQmlError> *errors)
-{
-    Q_ASSERT(errors);
-
-    if (pragma.type == QmlIR::Pragma::PragmaSingleton) {
-        QUrl myUrl = finalUrl();
-
-        QQmlType *ret = QQmlMetaType::qmlType(myUrl, true);
-        if (!ret) {
-            QQmlError error;
-            error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
-            error.setUrl(myUrl);
-            error.setLine(pragma.location.line);
-            error.setColumn(pragma.location.column);
-            errors->prepend(error);
-            return false;
-        }
-
-        if (!ret->isCompositeSingleton()) {
-            QQmlError error;
-            error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(ret->qmlTypeName()));
-            error.setUrl(myUrl);
-            error.setLine(pragma.location.line);
-            error.setColumn(pragma.location.column);
-            errors->prepend(error);
-            return false;
-        }
-        // This flag is used for error checking when a qmldir file marks a type as
-        // composite singleton, but there is no pragma Singleton defined in QML.
-        m_isSingleton = true;
-    } else {
-        QQmlError error;
-        error.setDescription(QLatin1String("Invalid pragma"));
-        error.setUrl(finalUrl());
-        error.setLine(pragma.location.line);
-        error.setColumn(pragma.location.column);
-        errors->prepend(error);
-        return false;
-    }
-
-    return true;
-}
-
-
 
 void QQmlTypeLoader::Blob::dependencyError(QQmlDataBlob *blob)
 {
@@ -2121,17 +2076,35 @@ void QQmlTypeData::done()
         }
     }
 
-    // If the type is CompositeSingleton but there was no pragma Singleton in the
-    // QML file, lets report an error.
-    QQmlType *type = QQmlMetaType::qmlType(url(), true);
-    if (!isError() && type && type->isCompositeSingleton() && !m_isSingleton) {
-        QString typeName = type->qmlTypeName();
-        setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
-    }
-
     // Compile component
     if (!isError())
         compile();
+
+    if (!isError()) {
+        QQmlType *type = QQmlMetaType::qmlType(finalUrl(), true);
+        if (m_compiledData && m_compiledData->data->flags & QV4::CompiledData::Unit::IsSingleton) {
+            if (!type) {
+                QQmlError error;
+                error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
+                setError(error);
+            } else if (!type->isCompositeSingleton()) {
+                QQmlError error;
+                error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(type->qmlTypeName()));
+                setError(error);
+            }
+        } else {
+            // If the type is CompositeSingleton but there was no pragma Singleton in the
+            // QML file, lets report an error.
+            if (type && type->isCompositeSingleton()) {
+                QString typeName = type->qmlTypeName();
+                setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
+            }
+        }
+    }
+
+    if (isError()) {
+        m_compiledData = nullptr;
+    }
 
     m_document.reset();
     m_typeReferences.clear();
@@ -2244,14 +2217,6 @@ void QQmlTypeData::continueLoadFromIR()
             error.setLine(import->location.line);
             error.setColumn(import->location.column);
             errors.prepend(error); // put it back on the list after filling out information.
-            setError(errors);
-            return;
-        }
-    }
-
-    foreach (QmlIR::Pragma *pragma, m_document->pragmas) {
-        if (!addPragma(*pragma, &errors)) {
-            Q_ASSERT(errors.size());
             setError(errors);
             return;
         }
