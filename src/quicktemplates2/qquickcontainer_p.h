@@ -86,6 +86,8 @@ public:
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
+    Q_REVISION(1) void incrementCurrentIndex();
+    Q_REVISION(1) void decrementCurrentIndex();
 
 Q_SIGNALS:
     void countChanged();

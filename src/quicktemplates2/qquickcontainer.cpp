@@ -437,6 +437,8 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
     \qmlproperty int QtQuick.Controls::Container::currentIndex
 
     This property holds the index of the current item in the container.
+
+    \sa incrementCurrentIndex(), decrementCurrentIndex()
 */
 int QQuickContainer::currentIndex() const
 {
@@ -453,6 +455,36 @@ void QQuickContainer::setCurrentIndex(int index)
     d->currentIndex = index;
     emit currentIndexChanged();
     emit currentItemChanged();
+}
+
+/*!
+    \qmlmethod void QtQuick.Controls::Container::incrementCurrentIndex()
+    \since QtQuick.Controls 2.1
+
+    Increments the current index of the container.
+
+    \sa currentIndex
+*/
+void QQuickContainer::incrementCurrentIndex()
+{
+    Q_D(QQuickContainer);
+    if (d->currentIndex < count() - 1)
+        setCurrentIndex(d->currentIndex + 1);
+}
+
+/*!
+    \qmlmethod void QtQuick.Controls::Container::decrementCurrentIndex()
+    \since QtQuick.Controls 2.1
+
+    Decrements the current index of the container.
+
+    \sa currentIndex
+*/
+void QQuickContainer::decrementCurrentIndex()
+{
+    Q_D(QQuickContainer);
+    if (d->currentIndex > 0)
+        setCurrentIndex(d->currentIndex - 1);
 }
 
 /*!

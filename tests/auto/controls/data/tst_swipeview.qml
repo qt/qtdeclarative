@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 
 TestCase {
     id: testCase
@@ -106,6 +106,16 @@ TestCase {
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
         compare(currentItemChangedSpy.count, 3);
+
+        control.decrementCurrentIndex()
+        compare(control.currentIndex, 1)
+        compare(control.currentItem.text, "1")
+        compare(currentItemChangedSpy.count, 4);
+
+        control.incrementCurrentIndex()
+        compare(control.currentIndex, 2)
+        compare(control.currentItem.text, "2")
+        compare(currentItemChangedSpy.count, 5);
 
         control.destroy()
     }

@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 
 TestCase {
     id: testCase
@@ -140,6 +140,16 @@ TestCase {
         compare(control.currentItem.checked, true)
 
         control.currentIndex = 2
+        compare(control.currentIndex, 2)
+        compare(control.currentItem.text, "2")
+        compare(control.currentItem.checked, true)
+
+        control.decrementCurrentIndex()
+        compare(control.currentIndex, 1)
+        compare(control.currentItem.text, "1")
+        compare(control.currentItem.checked, true)
+
+        control.incrementCurrentIndex()
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
         compare(control.currentItem.checked, true)
