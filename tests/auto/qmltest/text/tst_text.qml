@@ -118,9 +118,10 @@ Item {
             compare(txtlinecount.lineCount, 2)
             txtlinecount.text = txtlinecount.third;
             compare(txtlinecount.lineCount, 3)
+            console.log(txtlinecount.width)
             txtlinecount.text = txtlinecount.first;
             compare(txtlinecount.lineCount, 1)
-            txtlinecount.width = 50;
+            txtlinecount.width = 44;
             compare(txtlinecount.lineCount, 3)
         }
         function test_linecounts() {
