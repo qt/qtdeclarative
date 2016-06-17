@@ -1978,7 +1978,7 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
-   m_typesResolved(false), m_implicitImport(0), m_implicitImportLoaded(false)
+   m_typesResolved(false), m_implicitImportLoaded(false)
 {
 
 }
@@ -2108,7 +2108,6 @@ void QQmlTypeData::done()
 
     m_document.reset();
     m_typeReferences.clear();
-    m_implicitImport = 0;
 }
 
 void QQmlTypeData::completed()
@@ -2193,14 +2192,14 @@ void QQmlTypeData::continueLoadFromIR()
                 return;
             // This qmldir is for the implicit import
             QQmlJS::MemoryPool *pool = m_document->jsParserEngine.pool();
-            m_implicitImport = pool->New<QV4::CompiledData::Import>();
-            m_implicitImport->uriIndex = m_document->registerString(QLatin1String("."));
-            m_implicitImport->qualifierIndex = 0; // empty string
-            m_implicitImport->majorVersion = -1;
-            m_implicitImport->minorVersion = -1;
+            auto implicitImport = pool->New<QV4::CompiledData::Import>();
+            implicitImport->uriIndex = m_document->registerString(QLatin1String("."));
+            implicitImport->qualifierIndex = 0; // empty string
+            implicitImport->majorVersion = -1;
+            implicitImport->minorVersion = -1;
             QList<QQmlError> errors;
 
-            if (!fetchQmldir(qmldirUrl, m_implicitImport, 1, &errors)) {
+            if (!fetchQmldir(qmldirUrl, implicitImport, 1, &errors)) {
                 setError(errors);
                 return;
             }

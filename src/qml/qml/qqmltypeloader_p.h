@@ -464,7 +464,6 @@ private:
 
     QList<TypeDataCallback *> m_callbacks;
 
-    QV4::CompiledData::Import *m_implicitImport;
     bool m_implicitImportLoaded;
     bool loadImplicitImport();
 };
