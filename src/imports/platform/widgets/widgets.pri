@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qwidgetplatformfontdialog_p.h \
     $$PWD/qwidgetplatformmenu_p.h \
     $$PWD/qwidgetplatformmenuitem_p.h \
+    $$PWD/qwidgetplatformmessagedialog_p.h \
     $$PWD/qwidgetplatformsystemtrayicon_p.h
 
 SOURCES += \
@@ -16,4 +17,5 @@ SOURCES += \
     $$PWD/qwidgetplatformfontdialog.cpp \
     $$PWD/qwidgetplatformmenu.cpp \
     $$PWD/qwidgetplatformmenuitem.cpp \
+    $$PWD/qwidgetplatformmessagedialog.cpp \
     $$PWD/qwidgetplatformsystemtrayicon.cpp

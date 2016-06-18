@@ -40,6 +40,7 @@
 #include "qquickplatformdialog_p.h"
 #include "qquickplatformcolordialog_p.h"
 #include "qquickplatformfontdialog_p.h"
+#include "qquickplatformmessagedialog_p.h"
 
 #include "qquickplatformmenu_p.h"
 #include "qquickplatformmenubar_p.h"
@@ -77,6 +78,7 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickPlatformDialog>(uri, 1, 0, "Dialog", QQuickPlatformDialog::tr("Dialog is an abstract base class"));
     qmlRegisterType<QQuickPlatformColorDialog>(uri, 1, 0, "ColorDialog");
     qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 0, "FontDialog");
+    qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
 
     qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
