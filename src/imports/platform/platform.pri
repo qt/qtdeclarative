@@ -1,6 +1,8 @@
 HEADERS += \
     $$PWD/qquickplatformcolordialog_p.h \
     $$PWD/qquickplatformdialog_p.h \
+    $$PWD/qquickplatformfiledialog_p.h \
+    $$PWD/qquickplatformfolderdialog_p.h \
     $$PWD/qquickplatformfontdialog_p.h \
     $$PWD/qquickplatformiconloader_p.h \
     $$PWD/qquickplatformmenu_p.h \
@@ -13,6 +15,8 @@ HEADERS += \
 SOURCES += \
     $$PWD/qquickplatformcolordialog.cpp \
     $$PWD/qquickplatformdialog.cpp \
+    $$PWD/qquickplatformfiledialog.cpp \
+    $$PWD/qquickplatformfolderdialog.cpp \
     $$PWD/qquickplatformfontdialog.cpp \
     $$PWD/qquickplatformiconloader.cpp \
     $$PWD/qquickplatformmenu.cpp \
