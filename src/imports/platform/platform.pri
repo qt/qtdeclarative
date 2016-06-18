@@ -1,4 +1,5 @@
 HEADERS += \
+    $$PWD/qquickplatformdialog_p.h \
     $$PWD/qquickplatformiconloader_p.h \
     $$PWD/qquickplatformmenu_p.h \
     $$PWD/qquickplatformmenubar_p.h \
@@ -7,6 +8,7 @@ HEADERS += \
     $$PWD/qquickplatformsystemtrayicon_p.h
 
 SOURCES += \
+    $$PWD/qquickplatformdialog.cpp \
     $$PWD/qquickplatformiconloader.cpp \
     $$PWD/qquickplatformmenu.cpp \
     $$PWD/qquickplatformmenubar.cpp \

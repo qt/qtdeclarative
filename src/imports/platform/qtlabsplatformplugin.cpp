@@ -37,6 +37,8 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
+#include "qquickplatformdialog_p.h"
+
 #include "qquickplatformmenu_p.h"
 #include "qquickplatformmenubar_p.h"
 #include "qquickplatformmenuitem_p.h"
@@ -70,6 +72,8 @@ QtLabsPlatformPlugin::QtLabsPlatformPlugin(QObject *parent) : QQmlExtensionPlugi
 
 void QtLabsPlatformPlugin::registerTypes(const char *uri)
 {
+    qmlRegisterUncreatableType<QQuickPlatformDialog>(uri, 1, 0, "Dialog", QQuickPlatformDialog::tr("Dialog is an abstract base class"));
+
     qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
     qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
