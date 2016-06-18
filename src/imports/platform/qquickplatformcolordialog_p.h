@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+** This file is part of the Qt Labs Platform module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,56 +34,56 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
+#ifndef QQUICKPLATFORMCOLORDIALOG_P_H
+#define QQUICKPLATFORMCOLORDIALOG_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include "qquickplatformdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-
-#include "qquickplatformmenu_p.h"
-#include "qquickplatformmenubar_p.h"
-#include "qquickplatformmenuitem_p.h"
-#include "qquickplatformmenuitemgroup_p.h"
-
-#include "qquickplatformsystemtrayicon_p.h"
-
-static inline void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_platform);
-#endif
-}
+#include <QtGui/qcolor.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsPlatformPlugin: public QQmlExtensionPlugin
+class QQuickPlatformColorDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged FINAL)
+    Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
+    Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
 
 public:
-    QtLabsPlatformPlugin(QObject *parent = nullptr);
-    void registerTypes(const char *uri) override;
+    explicit QQuickPlatformColorDialog(QObject *parent = nullptr);
+
+    QColor currentColor() const;
+    void setCurrentColor(const QColor &color);
+
+    QColorDialogOptions::ColorDialogOptions options() const;
+    void setOptions(QColorDialogOptions::ColorDialogOptions options);
+
+Q_SIGNALS:
+    void optionsChanged();
+    void currentColorChanged();
+    void colorSelected(const QColor &color);
+
+protected:
+    void applyOptions() override;
+
+private:
+    QSharedPointer<QColorDialogOptions> m_options;
 };
-
-QtLabsPlatformPlugin::QtLabsPlatformPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
-{
-    initResources();
-}
-
-void QtLabsPlatformPlugin::registerTypes(const char *uri)
-{
-    qmlRegisterUncreatableType<QQuickPlatformDialog>(uri, 1, 0, "Dialog", QQuickPlatformDialog::tr("Dialog is an abstract base class"));
-    qmlRegisterType<QQuickPlatformColorDialog>(uri, 1, 0, "ColorDialog");
-
-    qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
-    qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
-    qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
-    qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
-
-    qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
-}
 
 QT_END_NAMESPACE
 
-#include "qtlabsplatformplugin.moc"
+QML_DECLARE_TYPE(QQuickPlatformColorDialog)
+
+#endif // QQUICKPLATFORMCOLORDIALOG_P_H
