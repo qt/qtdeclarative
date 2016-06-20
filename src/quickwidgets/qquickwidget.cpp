@@ -1103,7 +1103,14 @@ void QQuickWidget::showEvent(QShowEvent *)
     d->createContext();
     if (d->offscreenWindow->openglContext()) {
         d->render(true);
-        if (d->updatePending) {
+        // render() may have led to a QQuickWindow::update() call (for
+        // example, having a scene with a QQuickFramebufferObject::Renderer
+        // calling update() in its render()) which in turn results in
+        // renderRequested in the rendercontrol, ending up in
+        // triggerUpdate. In this case just calling update() is not
+        // acceptable, we need the full renderSceneGraph issued from
+        // timerEvent().
+        if (!d->eventPending && d->updatePending) {
             d->updatePending = false;
             update();
         }
