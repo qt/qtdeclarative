@@ -831,11 +831,11 @@ TestCase {
         verify(control)
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 File not found")
+        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory")
         control.push(Qt.resolvedUrl("non-existent.qml"))
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 File not found")
+        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory")
         control.replace(Qt.resolvedUrl("non-existent.qml"))
 
         control.pop()
