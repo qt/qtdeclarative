@@ -7,6 +7,8 @@
 linux
 [tst_grabImage::test_equals]
 linux
+[ListView::test_listInteractiveCurrentIndexEnforce]
+linux
 [Text::test_linecount]
 osx
 windows
