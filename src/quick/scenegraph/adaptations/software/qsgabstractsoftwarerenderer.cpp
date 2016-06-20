@@ -149,7 +149,7 @@ void QSGAbstractSoftwareRenderer::buildRenderList()
     QSGSoftwareRenderListBuilder(this).visitChildren(rootNode());
 }
 
-void QSGAbstractSoftwareRenderer::optimizeRenderList()
+QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
 {
     // Iterate through the renderlist from front to back
     // Objective is to update the dirty status and rects.
@@ -212,9 +212,13 @@ void QSGAbstractSoftwareRenderer::optimizeRenderList()
         m_dirtyRegion += node->dirtyRegion();
     }
 
+    QRegion updateRegion = m_dirtyRegion;
+
     // Empty dirtyRegion
     m_dirtyRegion = QRegion();
     m_obscuredRegion = QRegion();
+
+    return updateRegion;
 }
 
 void QSGAbstractSoftwareRenderer::setBackgroundColor(const QColor &color)

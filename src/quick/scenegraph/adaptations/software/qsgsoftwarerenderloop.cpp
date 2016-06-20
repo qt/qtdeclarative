@@ -156,11 +156,9 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     //Tell the renderer about the windows backing store
     auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
     if (softwareRenderer)
-        softwareRenderer->setCurrentPaintDevice(m_backingStores[window]->paintDevice());
+        softwareRenderer->setBackingStore(m_backingStores[window]);
 
-    m_backingStores[window]->beginPaint(QRect(0, 0, window->width(), window->height()));
     cd->renderSceneGraph(window->size());
-    m_backingStores[window]->endPaint();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
