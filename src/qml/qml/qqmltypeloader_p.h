@@ -146,6 +146,7 @@ protected:
     void setError(const QQmlError &);
     void setError(const QList<QQmlError> &errors);
     void setError(const QQmlCompileError &error);
+    void setError(const QVector<QQmlCompileError> &errors);
     void setError(const QString &description);
     void addDependency(QQmlDataBlob *);
 

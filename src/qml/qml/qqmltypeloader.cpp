@@ -49,6 +49,7 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmltypecompiler_p.h>
+#include <private/qqmlpropertyvalidator_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -443,6 +444,21 @@ void QQmlDataBlob::setError(const QQmlCompileError &error)
     e.setDescription(error.description);
     e.setUrl(url());
     setError(e);
+}
+
+void QQmlDataBlob::setError(const QVector<QQmlCompileError> &errors)
+{
+    QList<QQmlError> finalErrors;
+    finalErrors.reserve(errors.count());
+    for (const QQmlCompileError &error: errors) {
+        QQmlError e;
+        e.setColumn(error.location.column);
+        e.setLine(error.location.line);
+        e.setDescription(error.description);
+        e.setUrl(url());
+        finalErrors << e;
+    }
+    setError(finalErrors);
 }
 
 void QQmlDataBlob::setError(const QString &description)
@@ -2079,6 +2095,20 @@ void QQmlTypeData::done()
     // Compile component
     if (!isError())
         compile();
+
+    if (!isError()) {
+        QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
+        {
+        // Sanity check property bindings
+            QQmlPropertyValidator validator(engine, m_importCache, m_compiledData);
+            QVector<QQmlCompileError> errors = validator.validate();
+            if (!errors.isEmpty()) {
+                setError(errors);
+            }
+        }
+
+        m_compiledData->finalize(engine);
+    }
 
     if (!isError()) {
         QQmlType *type = QQmlMetaType::qmlType(finalUrl(), true);

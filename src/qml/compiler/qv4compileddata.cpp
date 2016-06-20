@@ -239,8 +239,23 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     return *it;
 }
 
-void CompilationUnit::updateBindingAndObjectCounters()
+void CompilationUnit::finalize(QQmlEnginePrivate *engine)
 {
+    // Add to type registry of composites
+    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject))
+        engine->registerInternalCompositeType(this);
+    else {
+        const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
+        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        if (typeRef->compilationUnit) {
+            metaTypeId = typeRef->compilationUnit->metaTypeId;
+            listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
+        } else {
+            metaTypeId = typeRef->type->typeId();
+            listMetaTypeId = typeRef->type->qListTypeId();
+        }
+    }
 
     // Collect some data for instantiation later.
     int bindingCount = 0;

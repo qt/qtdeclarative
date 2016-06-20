@@ -47,7 +47,6 @@
 #include <private/qv4ssa_p.h>
 
 #include "qqmlpropertycachecreator_p.h"
-#include "qqmlpropertyvalidator_p.h"
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -168,34 +167,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));
 
-    // Add to type registry of composites
-    if (compilationUnit->propertyCaches.needsVMEMetaObject(qmlUnit->indexOfRootObject))
-        engine->registerInternalCompositeType(compilationUnit);
-    else {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
-        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
-        Q_ASSERT(typeRef);
-        if (typeRef->compilationUnit) {
-            compilationUnit->metaTypeId = typeRef->compilationUnit->metaTypeId;
-            compilationUnit->listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
-        } else {
-            compilationUnit->metaTypeId = typeRef->type->typeId();
-            compilationUnit->listMetaTypeId = typeRef->type->qListTypeId();
-        }
-    }
-
-    {
-    // Sanity check property bindings
-        QQmlPropertyValidator validator(engine, *imports(), compilationUnit);
-        QVector<QQmlCompileError> errors = validator.validate();
-        if (!errors.isEmpty()) {
-            for (const QQmlCompileError &error: qAsConst(errors))
-                recordError(error);
-            return nullptr;
-        }
-    }
-
-    compilationUnit->updateBindingAndObjectCounters();
 
     if (errors.isEmpty())
         return compilationUnit;

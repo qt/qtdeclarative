@@ -766,7 +766,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
     IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
 
-    void updateBindingAndObjectCounters();
+    void finalize(QQmlEnginePrivate *engine);
 
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
