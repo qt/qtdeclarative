@@ -73,6 +73,7 @@ class QMetaObjectBuilder;
 class QQmlPropertyCacheMethodArguments;
 class QQmlVMEMetaObject;
 template <typename T> class QQmlPropertyCacheCreator;
+template <typename T> class QQmlPropertyCacheAliasCreator;
 
 // We have this somewhat awful split between RawData and Data so that RawData can be
 // used in unions.  In normal code, you should always use Data which initializes RawData
@@ -338,6 +339,7 @@ private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
     template <typename T> friend class QQmlPropertyCacheCreator;
+    template <typename T> friend class QQmlPropertyCacheAliasCreator;
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
 

@@ -565,6 +565,8 @@ struct Object
     typedef TableIterator<Signal, Object, &Object::signalAt> SignalIterator;
     SignalIterator signalsBegin() const { return SignalIterator(this, 0); }
     SignalIterator signalsEnd() const { return SignalIterator(this, nSignals); }
+
+    int namedObjectsInComponentCount() const { return nNamedObjectsInComponent; }
     // ---
 };
 

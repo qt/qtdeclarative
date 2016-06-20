@@ -775,7 +775,6 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , pool(typeCompiler->memoryPool())
     , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
-    , _componentIndex(-1)
     , resolvedTypes(&typeCompiler->resolvedTypes)
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
@@ -924,7 +923,6 @@ bool QQmlComponentAndAliasResolver::resolve()
         QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
         const QmlIR::Binding *rootBinding = component->firstBinding();
 
-        _componentIndex = i;
         _idToObjectIndex.clear();
 
         _objectsWithAliases.clear();
@@ -932,23 +930,23 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (!collectIdsAndAliases(rootBinding->value.objectIndex))
             return false;
 
-        if (!resolveAliases())
-            return false;
-
         component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
+
+        if (!resolveAliases(componentRoots.at(i)))
+            return false;
     }
 
     // Collect ids and aliases for root
-    _componentIndex = -1;
     _idToObjectIndex.clear();
     _objectsWithAliases.clear();
 
     collectIdsAndAliases(indexOfRootObject);
 
-    resolveAliases();
-
     QmlIR::Object *rootComponent = qmlObjects->at(indexOfRootObject);
     rootComponent->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
+
+    if (!resolveAliases(indexOfRootObject))
+        return false;
 
     // Implicit component insertion may have added objects and thus we also need
     // to extend the symmetric propertyCaches.
@@ -991,10 +989,13 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
     return true;
 }
 
-bool QQmlComponentAndAliasResolver::resolveAliases()
+bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 {
     if (_objectsWithAliases.isEmpty())
         return true;
+
+    QQmlPropertyCacheAliasCreator<QQmlTypeCompiler> aliasCacheCreator(&propertyCaches, compiler);
+
     bool atLeastOneAliasResolved;
     do {
         atLeastOneAliasResolved = false;
@@ -1011,7 +1012,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
             }
 
             if (result == AllAliasesResolved) {
-                addAliasesToPropertyCache(objectIndex);
+                aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
                 atLeastOneAliasResolved = true;
             } else if (result == SomeAliasesResolved) {
                 atLeastOneAliasResolved = true;
@@ -1151,113 +1152,6 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
         return seenUnresolvedAlias ? NoAliasResolved : AllAliasesResolved;
 
     return SomeAliasesResolved;
-}
-
-void QQmlComponentAndAliasResolver::propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags)
-{
-    const auto objectForId = [this](int objectId) {
-        for (auto idIt = _idToObjectIndex.constBegin(), end = _idToObjectIndex.constEnd(); idIt != end; ++idIt) {
-            const QmlIR::Object *obj = qmlObjects->at(*idIt);
-            if (obj->id == objectId)
-                return *idIt;
-        }
-        return -1;
-    };
-
-    const int targetObjectIndex = objectForId(alias->targetObjectId);
-    Q_ASSERT(targetObjectIndex >= 0);
-
-    const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
-
-    *type = 0;
-    bool writable = false;
-    bool resettable = false;
-
-    *propertyFlags = QQmlPropertyData::IsAlias;
-
-    if (alias->aliasToLocalAlias) {
-        auto targetAlias = targetObject->firstAlias();
-        for (uint i = 0; i < alias->localAliasIndex; ++i)
-            targetAlias = targetAlias->next;
-        propertyDataForAlias(targetAlias, type, propertyFlags);
-        return;
-    } else if (alias->encodedMetaPropertyIndex == -1) {
-        Q_ASSERT(alias->flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
-        auto *typeRef = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
-        Q_ASSERT(typeRef);
-
-        if (typeRef->type)
-            *type = typeRef->type->typeId();
-        else
-            *type = typeRef->compilationUnit->metaTypeId;
-
-        *propertyFlags |= QQmlPropertyData::IsQObjectDerived;
-    } else {
-        int coreIndex;
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(alias->encodedMetaPropertyIndex, &coreIndex);
-
-        QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
-        Q_ASSERT(targetCache);
-        QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
-        Q_ASSERT(targetProperty);
-
-        *type = targetProperty->propType;
-
-        writable = targetProperty->isWritable();
-        resettable = targetProperty->isResettable();
-
-        if (valueTypeIndex != -1) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
-            if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                *type = QVariant::Int;
-            else
-                *type = valueTypeMetaObject->property(valueTypeIndex).userType();
-        } else {
-            if (targetProperty->isEnum()) {
-                *type = QVariant::Int;
-            } else {
-                // Copy type flags
-                *propertyFlags |= targetProperty->getFlags() & QQmlPropertyData::PropTypeFlagMask;
-
-                if (targetProperty->isVarProperty())
-                    *propertyFlags |= QQmlPropertyData::IsQVariant;
-            }
-        }
-    }
-
-    if (!(alias->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
-        *propertyFlags |= QQmlPropertyData::IsWritable;
-    else
-        *propertyFlags &= ~QQmlPropertyData::IsWritable;
-
-    if (resettable)
-        *propertyFlags |= QQmlPropertyData::IsResettable;
-    else
-        *propertyFlags &= ~QQmlPropertyData::IsResettable;
-}
-
-void QQmlComponentAndAliasResolver::addAliasesToPropertyCache(int objectIndex)
-{
-    const QmlIR::Object * const obj = qmlObjects->at(objectIndex);
-    QQmlPropertyCache * const propertyCache = propertyCaches.at(objectIndex);
-    Q_ASSERT(propertyCache);
-    int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();
-    int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
-
-    int aliasIndex = 0;
-    for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
-        int type = 0;
-        quint32 propertyFlags = 0;
-        propertyDataForAlias(alias, &type, &propertyFlags);
-
-        QString propertyName = stringAt(alias->nameIndex);
-
-        if (obj->defaultPropertyIsAlias && aliasIndex == obj->indexOfDefaultPropertyOrAlias)
-            propertyCache->_defaultPropertyName = propertyName;
-
-        propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                      type, effectiveSignalIndex++);
-    }
 }
 
 QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler)

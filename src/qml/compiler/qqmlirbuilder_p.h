@@ -400,6 +400,8 @@ public:
     FixedPoolArray<int> runtimeFunctionIndices;
 
     FixedPoolArray<quint32> namedObjectsInComponent;
+    int namedObjectsInComponentCount() const { return namedObjectsInComponent.count; }
+    const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
     friend struct IRLoader;

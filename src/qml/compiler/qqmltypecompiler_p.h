@@ -265,7 +265,7 @@ public:
 protected:
     void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
-    bool resolveAliases();
+    bool resolveAliases(int componentIndex);
     void propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags);
 
     enum AliasResolutionResult {
@@ -275,7 +275,6 @@ protected:
     };
 
     AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlCompileError *error);
-    void addAliasesToPropertyCache(int objectIndex);
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;
@@ -286,7 +285,6 @@ protected:
     // indices of the objects that are actually Component {}
     QVector<quint32> componentRoots;
 
-    int _componentIndex;
     QHash<int, int> _idToObjectIndex;
     QVector<int> _objectsWithAliases;
 
