@@ -28,6 +28,8 @@
 /*!
     \page qtquickcontrols2-containers.html
     \title Container Controls
+    \ingroup qtquickcontrols2-guidelines
+    \brief Guidelines for container controls
 
     Qt Quick Controls 2 offers a selection of container-like controls.
 

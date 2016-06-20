@@ -411,6 +411,11 @@ TestCase {
         compare(control.depth, 6)
         compare(control.currentItem, items[5])
 
+        // pop down to the current item
+        compare(control.pop(control.currentItem, StackView.Immediate), null)
+        compare(control.depth, 6)
+        compare(control.currentItem, items[5])
+
         // pop down to (but not including) the Nth item
         compare(control.pop(items[3], StackView.Immediate), items[5])
         compare(control.depth, 4)

@@ -50,7 +50,86 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-containers
     \brief A container control base type.
 
-    Container is the base type of container-like user interface controls.
+    Container is the base type of container-like user interface controls that
+    allow dynamic insertion and removal of items.
+
+    \section2 Using Containers
+
+    Container provides API to \l {addItem}{add}, \l {insertItem}{insert},
+    \l {moveItem}{move} and \l {removeItem}{remove} items dynamically. The
+    items in a container can be accessed using \l itemAt() or \l contentChildren.
+
+    Most containers have a concept of a "current" item. The current item is
+    specified via the \l currentIndex property, and can be accessed using the
+    read-only \l currentItem property.
+
+    The following example illustrates dynamic insertion of items to a \l TabBar,
+    which is one of the concrete implementations of Container.
+
+    \code
+    Row {
+        TabBar {
+            id: tabBar
+
+            currentIndex: 0
+            width: parent.width - addButton.width
+
+            TabButton { text: "TabButton" }
+        }
+
+        Component {
+            id: tabButton
+            TabButton { text: "TabButton" }
+        }
+
+        Button {
+            id: addButton
+            text: "+"
+            flat: true
+            onClicked: {
+                tabBar.addItem(tabButton.createObject(tabBar))
+                console.log("added:", tabBar.itemAt(tabBar.count - 1))
+            }
+        }
+    }
+    \endcode
+
+    \section2 Implementing Containers
+
+    Container does not provide any default visualization. It is used to implement
+    such containers as \l SwipeView and \l TabBar. When implementing a custom
+    container, the most important part of the API is \l contentModel, which provides
+    the contained items in a way that it can be used as a delegate model for item
+    views and repeaters.
+
+    \code
+    Container {
+        id: container
+
+        contentItem: ListView {
+            model: container.contentModel
+            snapMode: ListView.SnapOneItem
+            orientation: ListView.Horizontal
+        }
+
+        Text {
+            text: "Page 1"
+            width: container.width
+            height: container.height
+        }
+
+        Text {
+            text: "Page 2"
+            width: container.width
+            height: container.height
+        }
+    }
+    \endcode
+
+    Notice how the sizes of the page items are set by hand. This is because the
+    example uses a plain Container, which does not make any assumptions on the
+    visual layout. It is typically not necessary to specify sizes for items in
+    concrete Container implementations, such as \l SwipeView and \l TabBar.
 
     \sa {Container Controls}
 */
@@ -391,6 +470,20 @@ void QQuickContainer::removeItem(int index)
     \readonly
 
     This property holds the content model of items.
+
+    The content model is provided for visualization purposes. It can be assigned
+    as a model to a content item that presents the contents of the container.
+
+    \code
+    Container {
+        id: container
+        contentItem: ListView {
+            model: container.contentModel
+        }
+    }
+    \endcode
+
+    \sa contentData, contentChildren
 */
 QVariant QQuickContainer::contentModel() const
 {
@@ -404,7 +497,14 @@ QVariant QQuickContainer::contentModel() const
 
     This property holds the list of content data.
 
-    \sa Item::data
+    The list contains all objects that have been declared in QML as children
+    of the container, and also items that have been dynamically added or
+    inserted using the \l addItem() and \l insertItem() methods, respectively.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects. It is not re-ordered when items are inserted or moved.
+
+    \sa Item::data, contentChildren
 */
 QQmlListProperty<QObject> QQuickContainer::contentData()
 {
@@ -421,7 +521,14 @@ QQmlListProperty<QObject> QQuickContainer::contentData()
 
     This property holds the list of content children.
 
-    \sa Item::children
+    The list contains all items that have been declared in QML as children
+    of the container, and also items that have been dynamically added or
+    inserted using the \l addItem() and \l insertItem() methods, respectively.
+
+    \note Unlike \c contentData, \c contentChildren does not include non-visual
+    QML objects. It is re-ordered when items are inserted or moved.
+
+    \sa Item::children, contentData
 */
 QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 {
@@ -436,9 +543,9 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 /*!
     \qmlproperty int QtQuick.Controls::Container::currentIndex
 
-    This property holds the index of the current item in the container.
+    This property holds the index of the current item.
 
-    \sa incrementCurrentIndex(), decrementCurrentIndex()
+    \sa currentItem, incrementCurrentIndex(), decrementCurrentIndex()
 */
 int QQuickContainer::currentIndex() const
 {
@@ -489,8 +596,11 @@ void QQuickContainer::decrementCurrentIndex()
 
 /*!
     \qmlproperty Item QtQuick.Controls::Container::currentItem
+    \readonly
 
     This property holds the current item.
+
+    \sa currentIndex
 */
 QQuickItem *QQuickContainer::currentItem() const
 {

@@ -102,7 +102,7 @@ public:
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
 {
-    const qreal range = from + (to - from);
+    const qreal range = to - from;
     if (qFuzzyIsNull(range))
         return position;
 
