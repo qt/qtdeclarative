@@ -364,11 +364,9 @@ void QSGSoftwareImageNode::setSubSourceRect(const QRectF &rect)
 
 void QSGSoftwareImageNode::setTexture(QSGTexture *texture)
 {
-    if (m_texture != texture) {
-        m_texture = texture;
-        m_cachedMirroredPixmapIsDirty = true;
-        markDirty(DirtyMaterial);
-    }
+    m_texture = texture;
+    m_cachedMirroredPixmapIsDirty = true;
+    markDirty(DirtyMaterial);
 }
 
 void QSGSoftwareImageNode::setMirror(bool mirror)
