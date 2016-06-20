@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtQuick/private/qquickdrag_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qquickflickable_p.h>
@@ -107,6 +108,7 @@ private slots:
     void hoverPropagation();
     void hoverVisible();
     void hoverAfterPress();
+    void subtreeHoverEnabled();
     void disableAfterPress();
     void onWheel();
     void transformedMouseArea_data();
@@ -1313,6 +1315,26 @@ void tst_QQuickMouseArea::hoverAfterPress()
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(200,200));
     QCOMPARE(mouseArea->hovered(), true);
     QTest::mouseMove(&window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
+}
+
+void tst_QQuickMouseArea::subtreeHoverEnabled()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("qtbug54019.qml"), true, &errorMessage), errorMessage.constData());
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea*>();
+    QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
+    QVERIFY(mouseArea != 0);
+    QTest::mouseMove(&window, QPoint(10, 160));
+    QCOMPARE(mouseArea->hovered(), false);
+    QVERIFY(rootPrivate->subtreeHoverEnabled);
+    QTest::mouseMove(&window, QPoint(10, 10));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mouseMove(&window, QPoint(160, 10));
     QCOMPARE(mouseArea->hovered(), false);
 }
 
