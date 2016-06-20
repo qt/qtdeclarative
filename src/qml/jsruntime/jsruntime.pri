@@ -112,3 +112,7 @@ SOURCES += \
 valgrind {
     DEFINES += V4_USE_VALGRIND
 }
+
+heaptrack {
+    DEFINES += V4_USE_HEAPTRACK
+}

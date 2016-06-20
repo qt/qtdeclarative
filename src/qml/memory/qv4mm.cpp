@@ -60,6 +60,10 @@
 #include <valgrind/memcheck.h>
 #endif
 
+#ifdef V4_USE_HEAPTRACK
+#include <heaptrack_api.h>
+#endif
+
 #if OS(QNX)
 #include <sys/storage.h>   // __tls()
 #endif
@@ -232,6 +236,9 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
                 VALGRIND_DISABLE_ERROR_REPORTING;
                 VALGRIND_MEMPOOL_FREE(engine->memoryManager, m);
 #endif
+#ifdef V4_USE_HEAPTRACK
+                heaptrack_report_free(m);
+#endif
                 Q_V4_PROFILE_DEALLOC(engine, m, header->itemSize, Profiling::SmallItem);
                 ++(*itemsInUse);
             }
@@ -362,11 +369,17 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
         VALGRIND_MAKE_MEM_NOACCESS(allocation.base(), allocSize);
         VALGRIND_MEMPOOL_ALLOC(this, header, sizeof(Data::ChunkHeader));
 #endif
+#ifdef V4_USE_HEAPTRACK
+        heaptrack_report_alloc(header, sizeof(Data::ChunkHeader));
+#endif
     }
 
   found:
 #ifdef V4_USE_VALGRIND
     VALGRIND_MEMPOOL_ALLOC(this, m, size);
+#endif
+#ifdef V4_USE_HEAPTRACK
+    heaptrack_report_alloc(m, size);
 #endif
     Q_V4_PROFILE_ALLOC(engine, size, Profiling::SmallItem);
 
@@ -497,6 +510,9 @@ void MemoryManager::sweep(bool lastSweep)
             Q_V4_PROFILE_DEALLOC(engine, 0, chunkIter->size(), Profiling::HeapPage);
 #ifdef V4_USE_VALGRIND
             VALGRIND_MEMPOOL_FREE(this, header);
+#endif
+#ifdef V4_USE_HEAPTRACK
+            heaptrack_report_free(header);
 #endif
             --m_d->nChunks[pos];
             m_d->availableItems[pos] -= uint(decrease);
