@@ -1313,10 +1313,12 @@ void QQuickPathView::resetPathItemCount()
     allowing creation to occur across multiple frames and reducing the
     likelihood of skipping frames.
 
-    Setting this value can improve the smoothness of scrolling behavior at the expense
-    of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer objects and bindings in a delegate, the faster a view can be
-    moved.
+    \note Setting this property is not a replacement for creating efficient delegates.
+    It can improve the smoothness of scrolling behavior at the expense of additional
+    memory usage. The fewer objects and bindings in a delegate, the faster a
+    view can be scrolled. It is important to realize that setting cacheItemCount
+    will only postpone issues caused by slow-loading delegates, it is not a
+    solution for this scenario.
 
     \sa pathItemCount
 */

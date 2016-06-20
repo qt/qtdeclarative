@@ -103,8 +103,10 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
         glyph_t glyphIndex = *it;
 
         int padding = QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING;
-        int glyphWidth = qCeil(glyphData(glyphIndex).boundingRect.width()) + distanceFieldRadius() * 2;
-        QSize glyphSize(glyphWidth + padding * 2, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()) + padding * 2);
+        QRectF boundingRect = glyphData(glyphIndex).boundingRect;
+        int glyphWidth = qCeil(boundingRect.width()) + distanceFieldRadius() * 2;
+        int glyphHeight = qCeil(boundingRect.height()) + distanceFieldRadius() * 2;
+        QSize glyphSize(glyphWidth + padding * 2, glyphHeight + padding * 2);
         QRect alloc = m_areaAllocator->allocate(glyphSize);
 
         if (alloc.isNull()) {
@@ -113,11 +115,13 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
                 glyph_t unusedGlyph = *m_unusedGlyphs.constBegin();
 
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
-                int unusedGlyphWidth = qCeil(glyphData(unusedGlyph).boundingRect.width()) + distanceFieldRadius() * 2;
+                QRectF unusedGlyphBoundingRect = glyphData(unusedGlyph).boundingRect;
+                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width()) + distanceFieldRadius() * 2;
+                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height())  + distanceFieldRadius() * 2;
                 m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
                                                   unusedCoord.y - padding,
                                                   padding * 2 + unusedGlyphWidth,
-                                                  padding * 2 + QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())));
+                                                  padding * 2 + unusedGlyphHeight));
 
                 m_unusedGlyphs.remove(unusedGlyph);
                 m_glyphsTexture.remove(unusedGlyph);

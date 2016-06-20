@@ -63,7 +63,6 @@
 #include <QtQuick/qsgnode.h>
 #include "qquickclipnode_p.h"
 
-#include <private/qpodvector_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlnotifier_p.h>
@@ -332,7 +331,7 @@ public:
     Q_DECLARE_FLAGS(GeometryChangeTypes, GeometryChangeType)
 
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t), gTypes(GeometryChange) {}
+        ChangeListener(QQuickItemChangeListener *l = Q_NULLPTR, QQuickItemPrivate::ChangeTypes t = 0) : listener(l), types(t), gTypes(GeometryChange) {}
         ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::GeometryChangeTypes gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
@@ -386,7 +385,7 @@ public:
 
     inline Qt::MouseButtons acceptedMouseButtons() const;
 
-    QPODVector<QQuickItemPrivate::ChangeListener,4> changeListeners;
+    QVector<QQuickItemPrivate::ChangeListener> changeListeners;
 
     void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
@@ -935,6 +934,7 @@ QSGNode *QQuickItemPrivate::childContainerNode()
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes)
+Q_DECLARE_TYPEINFO(QQuickItemPrivate::ChangeListener, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

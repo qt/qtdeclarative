@@ -1154,7 +1154,10 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 
     foreach (QQuickStyledTextImgTag *image, imagesInLine) {
         totalLineHeight = qMax(totalLineHeight, textTop + image->pos.y() + image->size.height());
-        image->pos.setX(line.cursorToX(image->position));
+        const int leadX = line.cursorToX(image->position);
+        const int trailX = line.cursorToX(image->position, QTextLine::Trailing);
+        const bool rtl = trailX < leadX;
+        image->pos.setX(leadX + (rtl ? (-image->offset - image->size.width()) : image->offset));
         image->pos.setY(image->pos.y() + height + textTop);
         extra->visibleImgTags << image;
     }

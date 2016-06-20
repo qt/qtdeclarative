@@ -72,6 +72,7 @@ typedef uint Bool;
 
 struct Q_QML_PRIVATE_EXPORT Value
 {
+private:
     /*
         We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
 
@@ -96,10 +97,10 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     quint64 _val;
 
-    Q_ALWAYS_INLINE quint64 val() const { return _val; }
-    Q_ALWAYS_INLINE void setVal(quint64 v) { _val = v; }
-    Q_ALWAYS_INLINE void setValue(quint32 v) { memcpy(&_val, &v, 4); }
-    Q_ALWAYS_INLINE void setTag(quint32 t) { memcpy(4 + (quint8 *)&_val, &t, 4); }
+public:
+    Q_ALWAYS_INLINE quint64 &rawValueRef() { return _val; }
+    Q_ALWAYS_INLINE quint64 rawValue() const { return _val; }
+    Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
@@ -119,16 +120,52 @@ struct Q_QML_PRIVATE_EXPORT Value
     Q_ALWAYS_INLINE Heap::Base *m() const { Q_UNREACHABLE(); return Q_NULLPTR; }
     Q_ALWAYS_INLINE void setM(Heap::Base *b) { Q_UNUSED(b); Q_UNREACHABLE(); }
 #elif defined(QV4_USE_64_BIT_VALUE_ENCODING)
-    Q_ALWAYS_INLINE Heap::Base *m() const { Heap::Base *b; memcpy(&b, &_val, 8); return b; }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b) { memcpy(&_val, &b, 8); }
+    Q_ALWAYS_INLINE Heap::Base *m() const
+    {
+        Heap::Base *b;
+        memcpy(&b, &_val, 8);
+        return b;
+    }
+    Q_ALWAYS_INLINE void setM(Heap::Base *b)
+    {
+        memcpy(&_val, &b, 8);
+    }
 #else // !QV4_USE_64_BIT_VALUE_ENCODING
-    Q_ALWAYS_INLINE Heap::Base *m() const { Q_STATIC_ASSERT(sizeof(Heap::Base*) == sizeof(quint32)); Heap::Base *b; quint32 v = value(); memcpy(&b, &v, 4); return b; }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b) { quint32 v; memcpy(&v, &b, 4); setValue(v); }
+    Q_ALWAYS_INLINE Heap::Base *m() const
+    {
+        Q_STATIC_ASSERT(sizeof(Heap::Base*) == sizeof(quint32));
+        Heap::Base *b;
+        quint32 v = value();
+        memcpy(&b, &v, 4);
+        return b;
+    }
+    Q_ALWAYS_INLINE void setM(Heap::Base *b)
+    {
+        quint32 v;
+        memcpy(&v, &b, 4);
+        setTagValue(Managed_Type, v);
+    }
 #endif
 
-    Q_ALWAYS_INLINE int int_32() const { int i; quint32 v = value(); memcpy(&i, &v, 4); return i; }
-    Q_ALWAYS_INLINE void setInt_32(int i) { quint32 u; memcpy(&u, &i, 4); setValue(u); }
+    Q_ALWAYS_INLINE int int_32() const
+    {
+        return int(value());
+    }
+    Q_ALWAYS_INLINE void setInt_32(int i)
+    {
+        setTagValue(Integer_Type_Internal, quint32(i));
+    }
     Q_ALWAYS_INLINE uint uint_32() const { return value(); }
+
+    Q_ALWAYS_INLINE void setEmpty()
+    {
+        setTagValue(Empty_Type, value());
+    }
+
+    Q_ALWAYS_INLINE void setEmpty(int i)
+    {
+        setTagValue(Empty_Type, quint32(i));
+    }
 
 #ifndef QV4_USE_64_BIT_VALUE_ENCODING
     enum Masks {
@@ -266,7 +303,6 @@ struct Q_QML_PRIVATE_EXPORT Value
             int i = (int)d;
             if (i == d) {
                 setInt_32(i);
-                setTag(Integer_Type_Internal);
                 return true;
             }
         }
@@ -304,22 +340,10 @@ struct Q_QML_PRIVATE_EXPORT Value
         return isManaged() ? m() : nullptr;
     }
 
-    Q_ALWAYS_INLINE quint64 &rawValueRef() {
-        return _val;
-    }
-    Q_ALWAYS_INLINE quint64 rawValue() const {
-        return _val;
-    }
-    Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
-
     static inline Value fromHeapObject(Heap::Base *m)
     {
         Value v;
-        v.setRawValue(0);
         v.setM(m);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        v.setTag(Managed_Type);
-#endif
         return v;
     }
 
@@ -340,7 +364,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool tryIntegerConversion() {
         bool b = integerCompatible();
         if (b)
-            setTag(Integer_Type_Internal);
+            setTagValue(Integer_Type_Internal, value());
         return b;
     }
 
@@ -393,7 +417,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     Value &operator=(ReturnedValue v) { _val = v; return *this; }
     Value &operator=(Managed *m) {
         if (!m) {
-            setTagValue(Undefined_Type, 0);
+            setM(0);
         } else {
             _val = reinterpret_cast<Value *>(m)->_val;
         }
@@ -401,9 +425,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     Value &operator=(Heap::Base *o) {
         setM(o);
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-        setTag(Managed_Type);
-#endif
         return *this;
     }
 
@@ -494,13 +515,7 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    v.setRawValue(quint64(Undefined_Type) << Tag_Shift);
-#else
-    v.setRawValue(0);
-    v.setTag(Undefined_Type);
-    v.setValue(0);
-#endif
+    v.setTagValue(Undefined_Type, 0);
     return v;
 }
 
@@ -514,11 +529,7 @@ inline Primitive Primitive::emptyValue()
 inline Primitive Primitive::nullValue()
 {
     Primitive v;
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-    v.setRawValue(quint64(Null_Type_Internal) << Tag_Shift);
-#else
     v.setTagValue(Null_Type_Internal, 0);
-#endif
     return v;
 }
 
@@ -539,7 +550,7 @@ inline Primitive Primitive::fromDouble(double d)
 inline Primitive Primitive::fromInt32(int i)
 {
     Primitive v;
-    v.setTagValue(Integer_Type_Internal, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
+    v.setTagValue(Integer_Type_Internal, 0);
     v.setInt_32(i);
     return v;
 }
@@ -548,8 +559,7 @@ inline Primitive Primitive::fromUInt32(uint i)
 {
     Primitive v;
     if (i < INT_MAX) {
-        v.setTagValue(Integer_Type_Internal, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
-        v.setInt_32((int)i);
+        v.setTagValue(Integer_Type_Internal, i);
     } else {
         v.setDouble(i);
     }

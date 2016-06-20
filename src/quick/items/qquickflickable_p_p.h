@@ -62,6 +62,7 @@
 #include <private/qquicktimeline_p_p.h>
 #include <private/qquickanimation_p_p.h>
 #include <private/qquicktransitionmanager_p_p.h>
+#include <private/qpodvector_p.h>
 
 QT_BEGIN_NAMESPACE
 
