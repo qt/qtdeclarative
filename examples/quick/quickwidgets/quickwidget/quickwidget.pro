@@ -3,7 +3,8 @@ QT       += core gui quick widgets quickwidgets
 TARGET = quickwidget
 TEMPLATE = app
 
-SOURCES += main.cpp
+SOURCES += main.cpp fbitem.cpp
+HEADERS += fbitem.h
 
 RESOURCES += quickwidget.qrc
 
