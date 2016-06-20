@@ -68,7 +68,7 @@ T.SpinBox {
         text: control.textFromValue(control.value, control.locale)
 
         font: control.font
-        color: control.Material.primaryTextColor
+        color: enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
         selectionColor: control.Material.textSelectionColor
         selectedTextColor: control.Material.primaryTextColor
         horizontalAlignment: Qt.AlignHCenter
