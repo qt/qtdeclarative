@@ -1217,6 +1217,17 @@ bool QQuickWidget::event(QEvent *e)
         break;
 
     case QEvent::ScreenChangeInternal:
+        if (QWindow *window = this->window()->windowHandle()) {
+            QScreen *newScreen = window->screen();
+
+            if (d->offscreenWindow)
+                d->offscreenWindow->setScreen(newScreen);
+            if (d->offscreenSurface)
+                d->offscreenSurface->setScreen(newScreen);
+            if (d->context)
+                d->context->setScreen(newScreen);
+        }
+
         if (d->fbo) {
             // This will check the size taking the devicePixelRatio into account
             // and recreate if needed.
