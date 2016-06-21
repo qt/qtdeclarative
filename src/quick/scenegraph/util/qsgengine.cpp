@@ -115,23 +115,21 @@ QSGEngine::~QSGEngine()
  */
 void QSGEngine::initialize(QOpenGLContext *context)
 {
-#ifndef QT_NO_OPENGL
     Q_D(QSGEngine);
-    if (QOpenGLContext::currentContext() != context) {
+#ifdef QT_NO_OPENGL
+    if (context && QOpenGLContext::currentContext() != context) {
         qWarning("WARNING: The context must be current before calling QSGEngine::initialize.");
         return;
     }
-
-    auto openGLRenderContext = static_cast<QSGDefaultRenderContext *>(d->sgRenderContext.data());
-
-    if (openGLRenderContext != nullptr && !openGLRenderContext->isValid()) {
-        openGLRenderContext->setAttachToGLContext(false);
-        openGLRenderContext->initialize(context);
-        connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
-    }
-#else
-    Q_UNUSED(context)
 #endif
+    if (d->sgRenderContext && !d->sgRenderContext->isValid()) {
+        d->sgRenderContext->setAttachToGraphicsContext(false);
+        d->sgRenderContext->initialize(context);
+#ifndef QT_NO_OPENGL
+        if (context)
+            connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
+#endif
+    }
 }
 
 /*!

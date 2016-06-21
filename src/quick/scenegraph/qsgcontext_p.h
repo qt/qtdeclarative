@@ -122,6 +122,8 @@ public:
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;
     virtual QSGRenderer *createRenderer() = 0;
 
+    virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }
+
     void registerFontengineForCleanup(QFontEngine *engine);
 
 Q_SIGNALS:

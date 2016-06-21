@@ -273,7 +273,7 @@ void QSGDefaultRenderContext::initializeShader(QSGMaterialShader *shader)
     shader->initialize();
 }
 
-void QSGDefaultRenderContext::setAttachToGLContext(bool attach)
+void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)
 {
     Q_ASSERT(!isValid());
     m_attachToGLContext = attach;

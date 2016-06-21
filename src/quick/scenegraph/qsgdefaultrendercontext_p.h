@@ -88,7 +88,7 @@ public:
     virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
     virtual void initializeShader(QSGMaterialShader *shader);
 
-    void setAttachToGLContext(bool attach);
+    void setAttachToGraphicsContext(bool attach) override;
 
     static QSGDefaultRenderContext *from(QOpenGLContext *context);
 
