@@ -2364,8 +2364,9 @@ QQuickItem::~QQuickItem()
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(0);
 
-    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
-        QQuickAnchorsPrivate *anchor = d->changeListeners.at(ii).listener->anchorPrivate();
+    const auto listeners = d->changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
         if (anchor)
             anchor->clearItem(this);
     }
@@ -2374,14 +2375,13 @@ QQuickItem::~QQuickItem()
         update item anchors that depended on us unless they are our child (and will also be destroyed),
         or our sibling, and our parent is also being destroyed.
     */
-    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
-        QQuickAnchorsPrivate *anchor = d->changeListeners.at(ii).listener->anchorPrivate();
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
         if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
             anchor->update();
     }
 
-    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::Destroyed)
             change.listener->itemDestroyed(this);
     }
@@ -3628,8 +3628,8 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
-    for (int ii = 0; ii < changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+    const auto listeners = changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::SiblingOrder) {
             change.listener->itemSiblingOrderChanged(q);
         }
@@ -3737,8 +3737,8 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     bool widthChange = (newGeometry.width() != oldGeometry.width());
     bool heightChange = (newGeometry.height() != oldGeometry.height());
 
-    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
+    const auto listeners = d->changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::Geometry) {
             if (change.gTypes == QQuickItemPrivate::GeometryChange) {
                 change.listener->itemGeometryChanged(this, newGeometry, oldGeometry);
@@ -3874,7 +3874,7 @@ void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *liste
 void QQuickItemPrivate::updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types)
 {
     ChangeListener change(listener, types);
-    int index = changeListeners.find(change);
+    int index = changeListeners.indexOf(change);
     if (index > -1)
         changeListeners[index].gTypes = change.gTypes;  //we may have different GeometryChangeTypes
     else
@@ -3888,7 +3888,7 @@ void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeLis
     if (types == NoChange) {
         changeListeners.removeOne(change);
     } else {
-        int index = changeListeners.find(change);
+        int index = changeListeners.indexOf(change);
         if (index > -1)
             changeListeners[index].gTypes = change.gTypes;  //we may have different GeometryChangeTypes
     }
@@ -4297,8 +4297,8 @@ void QQuickItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
+    const auto listeners = d->changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::Geometry) {
             QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
             if (anchor)
@@ -5969,66 +5969,72 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 {
     Q_Q(QQuickItem);
     switch (change) {
-    case QQuickItem::ItemChildAddedChange:
+    case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Children) {
                 change.listener->itemChildAdded(q, data.item);
             }
         }
         break;
-    case QQuickItem::ItemChildRemovedChange:
+    }
+    case QQuickItem::ItemChildRemovedChange: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Children) {
                 change.listener->itemChildRemoved(q, data.item);
             }
         }
         break;
+    }
     case QQuickItem::ItemSceneChange:
         q->itemChange(change, data);
         break;
-    case QQuickItem::ItemVisibleHasChanged:
+    case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Visibility) {
                 change.listener->itemVisibilityChanged(q);
             }
         }
         break;
-    case QQuickItem::ItemParentHasChanged:
+    }
+    case QQuickItem::ItemParentHasChanged: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Parent) {
                 change.listener->itemParentChanged(q, data.item);
             }
         }
         break;
-    case QQuickItem::ItemOpacityHasChanged:
+    }
+    case QQuickItem::ItemOpacityHasChanged: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Opacity) {
                 change.listener->itemOpacityChanged(q);
             }
         }
         break;
+    }
     case QQuickItem::ItemActiveFocusHasChanged:
         q->itemChange(change, data);
         break;
-    case QQuickItem::ItemRotationHasChanged:
+    case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
-        for (int ii = 0; ii < changeListeners.count(); ++ii) {
-            const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        const auto listeners = changeListeners;
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Rotation) {
                 change.listener->itemRotationChanged(q);
             }
         }
         break;
+    }
     case QQuickItem::ItemAntialiasingHasChanged:
         // fall through
     case QQuickItem::ItemDevicePixelRatioHasChanged:
@@ -6383,8 +6389,8 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
-    for (int ii = 0; ii < changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+    const auto listeners = changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::ImplicitWidth) {
             change.listener->itemImplicitWidthChanged(q);
         }
@@ -6547,8 +6553,8 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
-    for (int ii = 0; ii < changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+    const auto listeners = changeListeners;
+    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::ImplicitHeight) {
             change.listener->itemImplicitHeightChanged(q);
         }

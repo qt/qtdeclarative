@@ -317,7 +317,6 @@ void QSGDefaultPainterNode::updateRenderTarget()
     if (m_texture)
         delete m_texture;
 
-    texture->setTextureSize(m_size);
     m_texture = texture;
 }
 

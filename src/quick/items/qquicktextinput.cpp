@@ -1042,6 +1042,7 @@ void QQuickTextInput::q_validatorChanged()
 
 QRectF QQuickTextInputPrivate::anchorRectangle() const
 {
+    Q_Q(const QQuickTextInput);
     QRectF rect;
     int a;
     // Unfortunately we cannot use selectionStart() and selectionEnd()
@@ -1062,8 +1063,8 @@ QRectF QQuickTextInputPrivate::anchorRectangle() const
             a = 0;
         QTextLine l = m_textLayout.lineForTextPosition(a);
         if (l.isValid()) {
-            qreal x = l.cursorToX(a) - hscroll;
-            qreal y = l.y() - vscroll;
+            qreal x = l.cursorToX(a) - hscroll + q->leftPadding();
+            qreal y = l.y() - vscroll + q->topPadding();
             rect.setRect(x, y, 1, l.height());
         }
     }
