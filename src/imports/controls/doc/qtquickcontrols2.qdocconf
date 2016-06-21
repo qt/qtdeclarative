@@ -44,12 +44,14 @@ exampledirs += ../../../../examples/quickcontrols2 \
 examplesinstallpath = quickcontrols2
 
 headerdirs += ../../../quicktemplates2 \
-              ../../calendar \
-              ../../../quickcontrols2
+              ../../../quickcontrols2 \
+              ../../calendar
 
 sourcedirs += ../../../quicktemplates2 \
-              ../../calendar \
               ../../../quickcontrols2 \
+              ../../templates/doc/src \
+              ../../calendar/doc/src \
+              ../../calendar \
               src
 
 imagedirs += images
