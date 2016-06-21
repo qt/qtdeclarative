@@ -31,7 +31,22 @@
 
     A basic example of a QML file that makes use of controls is shown here:
 
-    \snippet basic-example.qml 0
+    \qml
+    import QtQuick 2.6
+    import QtQuick.Controls 2.0
+
+    ApplicationWindow {
+        title: "My Application"
+        width: 640
+        height: 480
+        visible: true
+
+        Button {
+            text: "Push Me"
+            anchors.centerIn: parent
+        }
+    }
+    \endqml
 
     \section1 Setting Up Controls from C++
 
