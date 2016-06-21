@@ -48,6 +48,7 @@
 #include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
+#include <private/qjsvalue_p.h>
 #include <private/qv4value_p.h>
 
 #include <QtCore/qstringbuilder.h>
@@ -217,7 +218,9 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         //### ideally we would use metaTypeToJS, however it currently gives different results
         //    for several cases (such as QVariant type and QObject-derived types)
         //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
-        if (type == QMetaType::QVariant) {
+        if (type == qMetaTypeId<QJSValue>()) {
+            callData->args[ii] = *QJSValuePrivate::getValue(reinterpret_cast<QJSValue *>(a[ii + 1]));
+        } else if (type == QMetaType::QVariant) {
             callData->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {
             //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
