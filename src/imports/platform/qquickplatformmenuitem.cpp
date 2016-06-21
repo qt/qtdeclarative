@@ -44,6 +44,10 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformmenuitem_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -137,6 +141,11 @@ QPlatformMenuItem *QQuickPlatformMenuItem::create()
         // TODO: implement QCocoaMenu::createMenuItem()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenuItem();
+
+#ifdef QT_WIDGETS_LIB
+        if (!m_handle)
+            m_handle = new QWidgetPlatformMenuItem;
+#endif
 
         if (m_handle) {
             connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::triggered);

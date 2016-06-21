@@ -51,6 +51,10 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickitem.h>
 
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformmenu_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -93,7 +97,9 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    Menu is currently available on the following platforms:
+    \section2 Availability
+
+    A native platform menu is currently available on the following platforms:
 
     \list
     \li OS X
@@ -101,6 +107,8 @@ QT_BEGIN_NAMESPACE
     \li Android
     \li Linux (only available as a stand-alone context menu when running with the GTK platform theme)
     \endlist
+
+    \input includes/widgets.qdocinc 1
 
     \labs
 
@@ -173,6 +181,11 @@ QPlatformMenu * QQuickPlatformMenu::create()
         // - QCocoaSystemTrayIcon::createMenu()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenu();
+
+#ifdef QT_WIDGETS_LIB
+        if (!m_handle)
+            m_handle = new QWidgetPlatformMenu;
+#endif
 
         if (m_handle) {
             connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickPlatformMenu::aboutToShow);

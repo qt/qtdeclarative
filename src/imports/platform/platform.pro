@@ -16,6 +16,9 @@ SOURCES += \
     $$PWD/qtlabsplatformplugin.cpp
 
 include(platform.pri)
+qtHaveModule(widgets) {
+    win32|linux:include(widgets/widgets.pri)
+}
 
 CONFIG += no_cxx_module
 load(qml_plugin)
