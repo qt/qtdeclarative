@@ -107,7 +107,7 @@ Item {
         property int callCount: 0;
         property bool ready: false;
         function handleGrab(result) {
-            if (!result.saveToFile("image.png"))
+            if (!result.saveToFile("itemgrabber/image.png"))
                 print("Error: Failed to save image to disk...");
             source = "image.png";
             ready = true;
@@ -121,7 +121,7 @@ Item {
         y: 0
         property bool ready: false;
         function handleGrab(result) {
-            if (!result.saveToFile("image_small.png"))
+            if (!result.saveToFile("itemgrabber/image_small.png"))
                 print("Error: Failed to save image to disk...");
             source = "image_small.png";
             ready = true;
