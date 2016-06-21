@@ -711,7 +711,7 @@ void QQuickCanvasItem::updatePolish()
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
             QV4::ScopedFunctionObject f(scope, it.value().value());
-            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
+            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
             f->call(callData);
         }
     }
