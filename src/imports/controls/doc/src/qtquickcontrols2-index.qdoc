@@ -40,7 +40,7 @@
     application using the following import statement in your \c {.qml} file:
 
     \code
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
     \endcode
 
     The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into
