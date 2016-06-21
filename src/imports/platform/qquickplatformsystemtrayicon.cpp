@@ -41,6 +41,10 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformsystemtrayicon_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -117,7 +121,7 @@ QT_BEGIN_NAMESPACE
 
     \section2 Availability
 
-    SystemTrayIcon is currently \l available on the following platforms:
+    A native system tray icon is currently \l available on the following platforms:
 
     \list
     \li All window managers and independent tray implementations for X11 that implement the
@@ -129,6 +133,8 @@ QT_BEGIN_NAMESPACE
     \li All supported versions of OS X. Note that the Growl notification system must be installed
         for showMessage() to display messages on OS X prior to 10.8 (Mountain Lion).
     \endlist
+
+    \input includes/widgets.qdocinc 1
 
     \labs
 
@@ -167,6 +173,10 @@ QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
       m_handle(nullptr)
 {
     m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformSystemTrayIcon();
+#ifdef QT_WIDGETS_LIB
+    if (!m_handle)
+        m_handle = new QWidgetPlatformSystemTrayIcon(this);
+#endif
     if (m_handle) {
         connect(m_handle, &QPlatformSystemTrayIcon::activated, this, &QQuickPlatformSystemTrayIcon::activated);
         connect(m_handle, &QPlatformSystemTrayIcon::messageClicked, this, &QQuickPlatformSystemTrayIcon::messageClicked);
