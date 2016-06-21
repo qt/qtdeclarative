@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.
-Q_LOGGING_CATEGORY(QSG_LOG_INFO,                "qt.scenegraph.info")
+Q_LOGGING_CATEGORY(QSG_LOG_INFO,                "qt.scenegraph.general")
 
 // Used to debug the renderloop logic. Primarily useful for platform integrators
 // and when investigating the render loop logic.
