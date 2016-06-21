@@ -31,13 +31,45 @@
 
 \section1 Scene Graph Adaptations in Qt Quick
 
-Originally Qt Quick only had one available renderer for parsing the
-scene graph and rendering the results to a render target.  This renderer
-is now the default OpenGL Renderer which supports rendering either using
-the OpenGL ES 2.0 or OpenGL 2.0 APIs.  The Qt Quick APIs are designed
-with the assumption that these two APIs are always available.  It is
-however possible now to use other graphics API's to render Qt Quick
+Originally Qt Quick only had one available renderer for parsing the scene graph
+and rendering the results to a render target. This renderer is now the default
+OpenGL Renderer which supports rendering either using the OpenGL ES 2.0 or
+OpenGL 2.0 (with framebuffer object extensions) APIs. The Qt Quick APIs have
+originally been designed with the assumption that OpenGL is always available.
+However, it is now possible to use other graphics API's to render Qt Quick
 scenes using the scene graph APIs.
+
+\section1 Switching between the adaptation used by the application
+
+The default of the OpenGL, or - in Qt builds with disabled OpenGL support - the
+software adaptation, can be overridden either by using an environment variable
+or a C++ API. The former consists of setting the \c{QT_QUICK_BACKEND} or the
+legacy \c{QMLSCENE_DEVICE} environment variable before launching applications.
+The latter is done by calling QQuickWindow::setSceneGraphBackend() early in the
+application's main() function.
+
+The supported backends are the following
+
+\list
+
+\li OpenGL - Requested by the string \c{""} or the enum value QSGRendererInterface::OpenGL.
+
+\li Software - Requested by the string \c{"software"} or the enum value QSGRendererInterface::Software.
+
+\li Direct3D 12 - Requested by the string \c{"d3d12"} or the enum value QSGRendererInterface::Direct3D12.
+
+\endlist
+
+When in doubt which backend is in use, enable basic scenegraph information
+logging via the \c{QSG_INFO} environment variable or the
+\c{qt.scenegraph.general} logging category. This will result in printing some
+information during application startup onto the debug output.
+
+\note Adaptations other than OpenGL will typically come with a set of
+limitations since they are unlikely to provide a feature set 100% compatible
+with OpenGL. However, they may provide their own specific advantages in certain
+areas. Refer to the sections below for more information on the various
+adaptations.
 
 \section1 OpenGL ES 2.0 and OpenGL 2.0 Adaptation
 
