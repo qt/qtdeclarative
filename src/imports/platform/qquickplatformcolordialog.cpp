@@ -39,6 +39,10 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformcolordialog_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -70,12 +74,16 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    ColorDialog is currently available on the following platforms:
+    \section2 Availability
+
+    A native platform color dialog is currently available on the following platforms:
 
     \list
     \li OS X
     \li Linux (when running with the GTK+ platform theme)
     \endlist
+
+    \input includes/widgets.qdocinc 1
 
     \labs
 */
@@ -92,6 +100,10 @@ QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QColorDialogOptions::create())
 {
     QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformColorDialog(this);
+#endif
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
         connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
         connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);

@@ -39,6 +39,10 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformfontdialog_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -70,12 +74,16 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    FontDialog is currently available on the following platforms:
+    \section2 Availability
+
+    A native platform font dialog is currently available on the following platforms:
 
     \list
     \li OS X
     \li Linux (when running with the GTK+ platform theme)
     \endlist
+
+    \input includes/widgets.qdocinc 1
 
     \labs
 */
@@ -92,6 +100,10 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QFontDialogOptions::create())
 {
     QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformFontDialog(this);
+#endif
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
         connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
