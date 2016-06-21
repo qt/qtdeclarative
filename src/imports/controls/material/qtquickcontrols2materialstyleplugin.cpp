@@ -77,6 +77,7 @@ QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
+    qmlRegisterUncreatableType<QQuickMaterialStyle, 1>(uri, 2, 1, "Material", tr("Material is an attached property"));
 }
 
 void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)

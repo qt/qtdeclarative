@@ -77,6 +77,7 @@ QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObje
 void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
+    qmlRegisterUncreatableType<QQuickUniversalStyle, 1>(uri, 2, 1, "Universal", tr("Universal is an attached property"));
 }
 
 void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
