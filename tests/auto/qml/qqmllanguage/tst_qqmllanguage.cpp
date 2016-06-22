@@ -1803,6 +1803,36 @@ void tst_qqmllanguage::aliasProperties()
 
         delete object;
     }
+
+    // Nested aliases with a qml file
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.12.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
+
+    // Nested aliases with a qml file with reverse ordering
+    {
+        // This is known to fail at the moment.
+        QQmlComponent component(&engine, testFileUrl("alias.13.qml"));
+        QVERIFY(!component.errors().isEmpty());
+#if 0
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+#endif
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
