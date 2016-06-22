@@ -34,6 +34,7 @@
 #include <QtQuick/qquickitem.h>
 #include "../../shared/util.h"
 #include <QtGui/QWindow>
+#include <QtGui/QImage>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
@@ -55,6 +56,7 @@ private slots:
     void readback();
     void renderingSignals();
     void grabBeforeShow();
+    void reparentToNewWindow();
 };
 
 
@@ -299,6 +301,27 @@ void tst_qquickwidget::grabBeforeShow()
 {
     QQuickWidget widget;
     QVERIFY(!widget.grab().isNull());
+}
+
+void tst_qquickwidget::reparentToNewWindow()
+{
+    QWidget window1;
+    QWidget window2;
+
+    QQuickWidget *qqw = new QQuickWidget(&window1);
+    qqw->setSource(testFileUrl("rectangle.qml"));
+    window1.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window1, 5000));
+    window2.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window2, 5000));
+
+    QSignalSpy afterRenderingSpy(qqw->quickWindow(), &QQuickWindow::afterRendering);
+    qqw->setParent(&window2);
+    qqw->show();
+    QTRY_VERIFY(afterRenderingSpy.size() > 0);
+
+    QImage img = qqw->grabFramebuffer();
+    QCOMPARE(img.pixel(5, 5), qRgb(255, 0, 0));
 }
 
 QTEST_MAIN(tst_qquickwidget)

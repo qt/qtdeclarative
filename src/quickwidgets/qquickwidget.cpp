@@ -154,7 +154,18 @@ void QQuickWidgetPrivate::invalidateRenderControl()
 
 void QQuickWidgetPrivate::handleWindowChange()
 {
+    if (offscreenWindow->isPersistentSceneGraph() && qGuiApp->testAttribute(Qt::AA_ShareOpenGLContexts))
+        return;
+
+    // In case of !isPersistentSceneGraph or when we need a new context due to
+    // the need to share resources with the new window's context, we must both
+    // invalidate the scenegraph and destroy the context. With
+    // QQuickRenderControl destroying the context must be preceded by an
+    // invalidate to prevent being left with dangling context references in the
+    // rendercontrol.
+
     invalidateRenderControl();
+
     if (!useSoftwareRenderer)
         destroyContext();
 }
@@ -417,6 +428,20 @@ QObject *QQuickWidgetPrivate::focusObject()
     persistent. The OpenGL context is thus not destroyed when hiding the
     widget. The context is destroyed only when the widget is destroyed or when
     the widget gets reparented into another top-level widget's child hierarchy.
+    However, some applications, in particular those that have their own
+    graphics resources due to performing custom OpenGL rendering in the Qt
+    Quick scene, may wish to disable the latter since they may not be prepared
+    to handle the loss of the context when moving a QQuickWidget into another
+    window. Such applications can set the
+    QCoreApplication::AA_ShareOpenGLContexts attribute. For a discussion on the
+    details of resource initialization and cleanup, refer to the QOpenGLWidget
+    documentation.
+
+    \note QQuickWidget offers less fine-grained control over its internal
+    OpenGL context than QOpenGLWidget, and there are subtle differences, most
+    notably that disabling the persistent scene graph will lead to destroying
+    the context on a window change regardless of the presence of
+    QCoreApplication::AA_ShareOpenGLContexts.
 
     \section1 Limitations
 
