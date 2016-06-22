@@ -685,53 +685,53 @@ static QString quote(const QString &str)
 QString Stringify::Str(const QString &key, const Value &v)
 {
     Scope scope(v4);
+    scope.result = v;
 
-    ScopedValue value(scope, v);
-    ScopedObject o(scope, value);
+    ScopedObject o(scope, scope.result);
     if (o) {
         ScopedString s(scope, v4->newString(QStringLiteral("toJSON")));
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
-            callData->thisObject = value;
+            callData->thisObject = scope.result;
             callData->args[0] = v4->newString(key);
-            value = toJSON->call(callData);
+            toJSON->call(scope, callData);
         }
     }
 
     if (replacerFunction) {
         ScopedObject holder(scope, v4->newObject());
-        holder->put(scope.engine, QString(), value);
+        holder->put(scope.engine, QString(), scope.result);
         ScopedCallData callData(scope, 2);
         callData->args[0] = v4->newString(key);
-        callData->args[1] = value;
+        callData->args[1] = scope.result;
         callData->thisObject = holder;
-        value = replacerFunction->call(callData);
+        replacerFunction->call(scope, callData);
     }
 
-    o = value->asReturnedValue();
+    o = scope.result.asReturnedValue();
     if (o) {
         if (NumberObject *n = o->as<NumberObject>())
-            value = Encode(n->value());
+            scope.result = Encode(n->value());
         else if (StringObject *so = o->as<StringObject>())
-            value = so->d()->string;
+            scope.result = so->d()->string;
         else if (BooleanObject *b = o->as<BooleanObject>())
-            value = Encode(b->value());
+            scope.result = Encode(b->value());
     }
 
-    if (value->isNull())
+    if (scope.result.isNull())
         return QStringLiteral("null");
-    if (value->isBoolean())
-        return value->booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
-    if (value->isString())
-        return quote(value->stringValue()->toQString());
+    if (scope.result.isBoolean())
+        return scope.result.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
+    if (scope.result.isString())
+        return quote(scope.result.stringValue()->toQString());
 
-    if (value->isNumber()) {
-        double d = value->toNumber();
-        return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
+    if (scope.result.isNumber()) {
+        double d = scope.result.toNumber();
+        return std::isfinite(d) ? scope.result.toQString() : QStringLiteral("null");
     }
 
-    o = value->asReturnedValue();
+    o = scope.result.asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
             if (o->as<ArrayObject>()) {

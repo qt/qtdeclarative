@@ -76,7 +76,7 @@ public:
 
     QVariant value(bool *isUndefined = 0);
 
-    QV4::ReturnedValue v4value(bool *isUndefined = 0);
+    void v4value(bool *isUndefined, QV4::Scope &scope);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

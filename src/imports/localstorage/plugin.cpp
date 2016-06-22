@@ -426,7 +426,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
         callData->args[0] = w;
 
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(callData);
+        callback->call(scope, callData);
         rollbackOnException.clear();
         if (!db.commit()) {
             db.rollback();
@@ -474,7 +474,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool re
         callData->thisObject = scope.engine->globalObject;
         callData->args[0] = w;
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(callData);
+        callback->call(scope, callData);
         rollbackOnException.clear();
 
         if (!db.commit())
@@ -745,7 +745,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
         ScopedCallData callData(scope, 1);
         callData->thisObject = scope.engine->globalObject;
         callData->args[0] = db;
-        dbcreationCallback->call(callData);
+        dbcreationCallback->call(scope, callData);
     }
 
     args->setReturnValue(db.asReturnedValue());

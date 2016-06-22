@@ -945,15 +945,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 for (uint ii = 0; ii < parameterCount; ++ii)
                     callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
-                QV4::ScopedValue result(scope);
-                result = function->call(callData);
+                function->call(scope, callData);
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
+                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(scope.result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

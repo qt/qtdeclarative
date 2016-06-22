@@ -112,8 +112,8 @@ struct Object : Base {
 struct ObjectVTable
 {
     VTable vTable;
-    ReturnedValue (*call)(const Managed *, CallData *data);
-    ReturnedValue (*construct)(const Managed *, CallData *data);
+    void (*call)(const Managed *, Scope &scope, CallData *data);
+    void (*construct)(const Managed *, Scope &scope, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
@@ -324,14 +324,14 @@ public:
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
 
-    inline ReturnedValue construct(CallData *d) const
-    { return vtable()->construct(this, d); }
-    inline ReturnedValue call(CallData *d) const
-    { return vtable()->call(this, d); }
+    inline void construct(Scope &scope, CallData *d) const
+    { return vtable()->construct(this, scope, d); }
+    inline void call(Scope &scope, CallData *d) const
+    { vtable()->call(this, scope, d); }
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static ReturnedValue construct(const Managed *m, CallData *);
-    static ReturnedValue call(const Managed *m, CallData *);
+    static void construct(const Managed *m, Scope &scope, CallData *);
+    static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);

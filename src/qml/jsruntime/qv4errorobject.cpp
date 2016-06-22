@@ -239,16 +239,15 @@ Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope, const QString &name)
 {
 }
 
-ReturnedValue ErrorCtor::construct(const Managed *m, CallData *callData)
+void ErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const ErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<ErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<ErrorObject>(scope.engine, v);
 }
 
-ReturnedValue ErrorCtor::call(const Managed *that, CallData *callData)
+void ErrorCtor::call(const Managed *that, Scope &scope, CallData *callData)
 {
-    return static_cast<const Object *>(that)->construct(callData);
+    static_cast<const Object *>(that)->construct(scope, callData);
 }
 
 Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
@@ -256,11 +255,10 @@ Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue EvalErrorCtor::construct(const Managed *m, CallData *callData)
+void EvalErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const EvalErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<EvalErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<EvalErrorObject>(scope.engine, v);
 }
 
 Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
@@ -268,11 +266,10 @@ Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue RangeErrorCtor::construct(const Managed *m, CallData *callData)
+void RangeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const RangeErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<RangeErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<RangeErrorObject>(scope.engine, v);
 }
 
 Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
@@ -280,11 +277,10 @@ Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ReferenceErrorCtor::construct(const Managed *m, CallData *callData)
+void ReferenceErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const ReferenceErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<ReferenceErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<ReferenceErrorObject>(scope.engine, v);
 }
 
 Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
@@ -292,11 +288,10 @@ Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue SyntaxErrorCtor::construct(const Managed *m, CallData *callData)
+void SyntaxErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const SyntaxErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<SyntaxErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<SyntaxErrorObject>(scope.engine, v);
 }
 
 Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
@@ -304,11 +299,10 @@ Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue TypeErrorCtor::construct(const Managed *m, CallData *callData)
+void TypeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const TypeErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<TypeErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<TypeErrorObject>(scope.engine, v);
 }
 
 Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
@@ -316,11 +310,10 @@ Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue URIErrorCtor::construct(const Managed *m, CallData *callData)
+void URIErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const URIErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return ErrorObject::create<URIErrorObject>(scope.engine, v)->asReturnedValue();
+    scope.result = ErrorObject::create<URIErrorObject>(scope.engine, v);
 }
 
 void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, Heap::ErrorObject::ErrorType t)

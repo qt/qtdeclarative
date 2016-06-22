@@ -74,7 +74,7 @@ struct ContextStateSaver {
     CompiledData::CompilationUnit *compilationUnit;
     int lineNumber;
 
-    ContextStateSaver(Scope &scope, ExecutionContext *context)
+    ContextStateSaver(const Scope &scope, ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->d()->strictMode)
         , lookups(context->d()->lookups)
@@ -83,7 +83,7 @@ struct ContextStateSaver {
     {
         savedContext->setM(context->d());
     }
-    ContextStateSaver(Scope &scope, Heap::ExecutionContext *context)
+    ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->strictMode)
         , lookups(context->lookups)

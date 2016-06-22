@@ -68,7 +68,7 @@ struct Print: FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(const Managed *, CallData *callData)
+    static void call(const Managed *, Scope &scope, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
             QString s = callData->args[i].toQStringNoThrow();
@@ -77,7 +77,7 @@ struct Print: FunctionObject
             std::cout << qPrintable(s);
         }
         std::cout << std::endl;
-        return Encode::undefined();
+        scope.result = Encode::undefined();
     }
 };
 
@@ -94,10 +94,10 @@ struct GC: public FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(const Managed *m, CallData *)
+    static void call(const Managed *m, Scope &scope, CallData *)
     {
         static_cast<const GC *>(m)->engine()->memoryManager->runGC();
-        return Encode::undefined();
+        scope.result = Encode::undefined();
     }
 };
 

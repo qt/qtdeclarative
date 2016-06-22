@@ -188,7 +188,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 
     void initBindingLocation(); // from caller stack trace
 
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

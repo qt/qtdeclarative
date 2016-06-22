@@ -208,7 +208,7 @@ private:
 
     void handleDebuggerDeleted(QObject *debugger);
 
-    QV4::ReturnedValue evaluateExpression(QV4::Scope &scope, const QString &expression);
+    void evaluateExpression(QV4::Scope &scope, const QString &expression);
     bool checkCondition(const QString &expression);
 
     QStringList breakOnSignals;
@@ -241,12 +241,11 @@ private:
 bool NativeDebugger::checkCondition(const QString &expression)
 {
     QV4::Scope scope(m_engine);
-    QV4::ReturnedValue result = evaluateExpression(scope, expression);
-    QV4::ScopedValue val(scope, result);
-    return val->booleanValue();
+    evaluateExpression(scope, expression);
+    return scope.result.booleanValue();
 }
 
-QV4::ReturnedValue NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
+void NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
 {
     m_runningJob = true;
 
@@ -261,12 +260,10 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(QV4::Scope &scope, const Q
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
     script.parse();
-    QV4::ScopedValue result(scope);
     if (!m_engine->hasException)
-        result = script.run();
+        scope.result = script.run();
 
     m_runningJob = false;
-    return result->asReturnedValue();
 }
 
 NativeDebugger::NativeDebugger(QQmlNativeDebugServiceImpl *service, QV4::ExecutionEngine *engine)
@@ -545,8 +542,8 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
         TRACE_PROTOCOL("Evaluate expression: " << expression);
         m_runningJob = true;
 
-        QV4::ReturnedValue eval = evaluateExpression(scope, expression);
-        QV4::ScopedValue result(scope, eval);
+        evaluateExpression(scope, expression);
+        QV4::ScopedValue result(scope, scope.result);
 
         m_runningJob = false;
         if (result->isUndefined()) {

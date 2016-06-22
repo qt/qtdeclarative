@@ -91,17 +91,17 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
         return scope->engine()->memoryManager->allocObject<DelegateModelGroupFunction>(scope, flag, code);
     }
 
-    static QV4::ReturnedValue call(const QV4::Managed *that, QV4::CallData *callData)
+    static void call(const QV4::Managed *that, QV4::Scope &scope, QV4::CallData *callData)
     {
-        QV4::ExecutionEngine *v4 = static_cast<const DelegateModelGroupFunction *>(that)->engine();
-        QV4::Scope scope(v4);
         QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<const DelegateModelGroupFunction *>(that));
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
-        if (!o)
-            return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        if (!o) {
+            scope.result = scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return;
+        }
 
         QV4::ScopedValue v(scope, callData->argument(0));
-        return f->d()->code(o->d()->item, f->d()->flag, v);
+        scope.result = f->d()->code(o->d()->item, f->d()->flag, v);
     }
 };
 

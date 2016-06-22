@@ -51,29 +51,34 @@ Heap::ArrayBufferCtor::ArrayBufferCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ArrayBufferCtor::construct(const Managed *m, CallData *callData)
+void ArrayBufferCtor::construct(const Managed *m, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
 
-    Scope scope(v4);
     ScopedValue l(scope, callData->argument(0));
     double dl = l->toInteger();
-    if (v4->hasException)
-        return Encode::undefined();
+    if (v4->hasException) {
+        scope.result = Encode::undefined();
+        return;
+    }
     uint len = (uint)qBound(0., dl, (double)UINT_MAX);
-    if (len != dl)
-        return v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
+    if (len != dl) {
+        scope.result = v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
+        return;
+    }
 
     Scoped<ArrayBuffer> a(scope, v4->newArrayBuffer(len));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    return a.asReturnedValue();
+    if (scope.engine->hasException) {
+        scope.result = Encode::undefined();
+    } else {
+        scope.result = a->asReturnedValue();
+    }
 }
 
 
-ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
+void ArrayBufferCtor::call(const Managed *that, Scope &scope, CallData *callData)
 {
-    return construct(that, callData);
+    construct(that, scope, callData);
 }
 
 ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
@@ -184,7 +189,8 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
     ScopedCallData callData(scope, 1);
     double newLen = qMax(final - first, 0.);
     callData->args[0] = QV4::Encode(newLen);
-    QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->construct(callData));
+    constructor->construct(scope, callData);
+    QV4::Scoped<ArrayBuffer> newBuffer(scope, scope.result.asReturnedValue());
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
         return scope.engine->throwTypeError();
 

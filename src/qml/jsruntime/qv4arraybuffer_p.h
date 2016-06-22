@@ -78,8 +78,8 @@ struct ArrayBufferCtor: FunctionObject
 {
     V4_OBJECT2(ArrayBufferCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
 
     static ReturnedValue method_isView(CallContext *ctx);
 

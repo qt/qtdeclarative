@@ -193,9 +193,9 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
     QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
 
-    static ReturnedValue call(const Managed *, CallData *callData);
+    static void call(const Managed *, Scope &scope, CallData *callData);
 
-    ReturnedValue callInternal(CallData *callData) const;
+    void callInternal(CallData *callData, Scope &scope) const;
 
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
@@ -209,7 +209,7 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static ReturnedValue construct(const Managed *, CallData *callData);
+    static void construct(const Managed *, Scope &scope, CallData *callData);
     static bool isEqualTo(Managed *a, Managed *b);
 
     const QMetaObject *metaObject() const { return d()->metaObject; }

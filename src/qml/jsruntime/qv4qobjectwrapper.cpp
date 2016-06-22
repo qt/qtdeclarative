@@ -816,7 +816,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 }
             }
 
-            f->call(callData);
+            f->call(scope, callData);
             if (scope.hasException()) {
                 QQmlError error = v4->catchExceptionAsQmlError();
                 if (error.description().isEmpty()) {
@@ -1750,7 +1750,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->propertyCache = valueType->d()->propertyCache;
     method->d()->index = index;
     method->d()->valueTypeWrapper = valueType->d();
@@ -1810,25 +1810,32 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
     return Encode::undefined();
 }
 
-ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
+void QObjectMethod::call(const Managed *m, Scope &scope, CallData *callData)
 {
     const QObjectMethod *This = static_cast<const QObjectMethod*>(m);
-    return This->callInternal(callData);
+    This->callInternal(callData, scope);
 }
 
-ReturnedValue QObjectMethod::callInternal(CallData *callData) const
+void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
 {
     ExecutionEngine *v4 = engine();
     ExecutionContext *context = v4->currentContext;
-    if (d()->index == DestroyMethod)
-        return method_destroy(context, callData->args, callData->argc);
-    else if (d()->index == ToStringMethod)
-        return method_toString(context);
+    if (d()->index == DestroyMethod) {
+        scope.result = method_destroy(context, callData->args, callData->argc);
+        return;
+    }
+
+    else if (d()->index == ToStringMethod) {
+        scope.result = method_toString(context);
+        return;
+    }
 
     QQmlObjectOrGadget object(d()->object.data());
     if (!d()->object) {
-        if (!d()->valueTypeWrapper)
-            return Encode::undefined();
+        if (!d()->valueTypeWrapper) {
+            scope.result = Encode::undefined();
+            return;
+        }
 
         object = QQmlObjectOrGadget(d()->propertyCache.data(), d()->valueTypeWrapper->gadgetPtr);
     }
@@ -1837,16 +1844,20 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 
     if (d()->propertyCache) {
         QQmlPropertyData *data = d()->propertyCache->method(d()->index);
-        if (!data)
-            return QV4::Encode::undefined();
+        if (!data) {
+            scope.result = QV4::Encode::undefined();
+            return;
+        }
         method = *data;
     } else {
         const QMetaObject *mo = d()->object->metaObject();
         const QMetaMethod moMethod = mo->method(d()->index);
         method.load(moMethod);
 
-        if (method.coreIndex == -1)
-            return QV4::Encode::undefined();
+        if (method.coreIndex == -1) {
+            scope.result = QV4::Encode::undefined();
+            return;
+        }
 
         // Look for overloaded methods
         QByteArray methodName = moMethod.name();
@@ -1862,21 +1873,20 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
     }
 
     if (method.isV4Function()) {
-        Scope scope(v4);
-        QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
-        QQmlV4Function func(callData, rv, v4);
+        scope.result = QV4::Encode::undefined();
+        QQmlV4Function func(callData, &scope.result, v4);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
         object.metacall(QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
-        return rv->asReturnedValue();
+        return;
     }
 
     if (!method.isOverload()) {
-        return CallPrecise(object, method, v4, callData);
+        scope.result = CallPrecise(object, method, v4, callData);
     } else {
-        return CallOverloaded(object, method, v4, callData, d()->propertyCache);
+        scope.result = CallOverloaded(object, method, v4, callData, d()->propertyCache);
     }
 }
 
@@ -1936,10 +1946,10 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
     }
 }
 
-ReturnedValue QMetaObjectWrapper::construct(const Managed *m, CallData *callData)
+void QMetaObjectWrapper::construct(const Managed *m, Scope &scope, CallData *callData)
 {
     const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(m);
-    return This->constructInternal(callData);
+    scope.result = This->constructInternal(callData);
 }
 
 ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {

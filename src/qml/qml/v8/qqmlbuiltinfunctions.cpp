@@ -1285,11 +1285,10 @@ void QQmlBindingFunction::initBindingLocation()
     d()->bindingLocation.line = frame.line;
 }
 
-ReturnedValue QQmlBindingFunction::call(const Managed *that, CallData *callData)
+void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const QQmlBindingFunction*>(that)->engine());
     ScopedFunctionObject function(scope, static_cast<const QQmlBindingFunction*>(that)->d()->originalFunction);
-    return function->call(callData);
+    function->call(scope, callData);
 }
 
 void QQmlBindingFunction::markObjects(Heap::Base *that, ExecutionEngine *e)

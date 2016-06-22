@@ -478,7 +478,10 @@ public:
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 
-    bool checkStackLimits(ReturnedValue &exception);
+    bool checkStackLimits(Scope &scope);
+
+private:
+    void failStackLimitCheck(Scope &scope);
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't
@@ -571,7 +574,7 @@ inline void Value::mark(ExecutionEngine *e)
         o->mark(e);
 }
 
-#define CHECK_STACK_LIMITS(v4) { ReturnedValue e; if ((v4)->checkStackLimits(e)) return e; } \
+#define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
 struct ExecutionEngineCallDepthRecorder
@@ -582,10 +585,10 @@ struct ExecutionEngineCallDepthRecorder
     ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
 };
 
-inline bool ExecutionEngine::checkStackLimits(ReturnedValue &exception)
+inline bool ExecutionEngine::checkStackLimits(Scope &scope)
 {
     if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= maxCallDepth))) {
-        exception = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
+        failStackLimitCheck(scope);
         return true;
     }
 

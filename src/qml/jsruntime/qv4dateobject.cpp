@@ -651,9 +651,8 @@ Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue DateCtor::construct(const Managed *m, CallData *callData)
+void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const DateCtor *>(m)->engine());
     double t = 0;
 
     if (callData->argc == 0)
@@ -687,13 +686,13 @@ ReturnedValue DateCtor::construct(const Managed *m, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    return Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
+    scope.result = Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
 }
 
-ReturnedValue DateCtor::call(const Managed *m, CallData *)
+void DateCtor::call(const Managed *m, Scope &scope, CallData *)
 {
     double t = currentTime();
-    return static_cast<const DateCtor *>(m)->engine()->newString(ToString(t))->asReturnedValue();
+    scope.result = static_cast<const DateCtor *>(m)->engine()->newString(ToString(t));
 }
 
 void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -1311,7 +1310,8 @@ ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 
     ScopedCallData callData(scope);
     callData->thisObject = ctx->thisObject();
-    return toIso->call(callData);
+    toIso->call(scope, callData);
+    return scope.result.asReturnedValue();
 }
 
 void DatePrototype::timezoneUpdated()

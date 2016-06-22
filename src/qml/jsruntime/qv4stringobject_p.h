@@ -103,8 +103,8 @@ struct StringCtor: FunctionObject
 {
     V4_OBJECT2(StringCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static void call(const Managed *, Scope &scope, CallData *callData);
 };
 
 struct StringPrototype: StringObject

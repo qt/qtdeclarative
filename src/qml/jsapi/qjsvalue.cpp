@@ -663,11 +663,11 @@ QJSValue QJSValue::call(const QJSValueList &args)
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->call(callData));
+    f->call(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 /*!
@@ -719,11 +719,11 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->call(callData));
+    f->call(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 /*!
@@ -767,11 +767,11 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->construct(callData));
+    f->construct(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED

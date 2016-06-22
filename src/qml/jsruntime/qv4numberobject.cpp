@@ -76,17 +76,16 @@ Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue NumberCtor::construct(const Managed *m, CallData *callData)
+void NumberCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(m->cast<NumberCtor>()->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Encode(scope.engine->newNumberObject(dbl));
+    scope.result = Encode(scope.engine->newNumberObject(dbl));
 }
 
-ReturnedValue NumberCtor::call(const Managed *, CallData *callData)
+void NumberCtor::call(const Managed *, Scope &scope, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Encode(dbl);
+    scope.result = Encode(dbl);
 }
 
 void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)

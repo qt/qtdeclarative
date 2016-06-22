@@ -134,7 +134,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         ScopedCallData callData(scope, 1);
         callData->thisObject = this->asReturnedValue();
         callData->args[0] = desc->value;
-        setter->call(callData);
+        setter->call(scope, callData);
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);
@@ -203,33 +203,35 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
-ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *callData)
+void ArgumentsGetterFunction::call(const Managed *getter, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const ArgumentsGetterFunction *>(getter)->engine();
-    Scope scope(v4);
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<const ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o)
-        return v4->throwTypeError();
+    if (!o) {
+        scope.result = v4->throwTypeError();
+        return;
+    }
 
     Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->callData->argc));
-    return o->context()->callData->args[g->index()].asReturnedValue();
+    scope.result = o->context()->callData->args[g->index()];
 }
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
-ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *callData)
+void ArgumentsSetterFunction::call(const Managed *setter, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const ArgumentsSetterFunction *>(setter)->engine();
-    Scope scope(v4);
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<const ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o)
-        return v4->throwTypeError();
+    if (!o) {
+        scope.result = v4->throwTypeError();
+        return;
+    }
 
     Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->callData->argc));
     o->context()->callData->args[s->index()] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
-    return Encode::undefined();
+    scope.result = Encode::undefined();
 }
 
 void ArgumentsObject::markObjects(Heap::Base *that, ExecutionEngine *e)

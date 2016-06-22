@@ -103,8 +103,7 @@ public:
     virtual QString expressionIdentifier() = 0;
     virtual void expressionChanged() = 0;
 
-    QV4::ReturnedValue evaluate(bool *isUndefined);
-    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
+    void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);
 
     inline bool notifyOnValueChanged() const;
 
@@ -181,7 +180,7 @@ public:
     void captureProperty(QQmlNotifier *);
     void captureProperty(QObject *, int, int);
 
-    static void registerQmlDependencies(QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
+    static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;

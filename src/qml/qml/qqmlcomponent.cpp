@@ -1527,7 +1527,7 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
         QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = this;
         callData->args[0] = QV4::Primitive::fromUInt32(s);
-        f->call(callData);
+        f->call(scope, callData);
         if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);

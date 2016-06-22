@@ -91,7 +91,7 @@ Heap::CompilationUnitHolder::CompilationUnitHolder(CompiledData::CompilationUnit
 struct QmlBindingWrapper : FunctionObject {
     V4_OBJECT2(QmlBindingWrapper, FunctionObject)
 
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
 };
 
 }
@@ -113,27 +113,28 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::QmlContext *scope, Function *f)
         function->compilationUnit->addref();
 }
 
-ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
+void QmlBindingWrapper::call(const Managed *that, Scope &scope, CallData *callData)
 {
     const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
     ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
-    if (v4->hasException)
-        return Encode::undefined();
-    CHECK_STACK_LIMITS(v4);
+    if (v4->hasException) {
+        scope.result = Encode::undefined();
+        return;
+    }
+    CHECK_STACK_LIMITS(v4, scope);
 
-    Scope scope(v4);
     ExecutionContextSaver ctxSaver(scope);
 
     QV4::Function *f = This->function();
-    if (!f)
-        return QV4::Encode::undefined();
+    if (!f) {
+        scope.result = QV4::Encode::undefined();
+        return;
+    }
 
     Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(This, callData));
     v4->pushContext(ctx);
 
-    ScopedValue result(scope, Q_V4_PROFILE(v4, f));
-
-    return result->asReturnedValue();
+    scope.result = Q_V4_PROFILE(v4, f);
 }
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
@@ -255,7 +256,8 @@ ReturnedValue Script::run()
         ScopedFunctionObject f(valueScope, engine->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
-        return f->call(callData);
+        f->call(valueScope, callData);
+        return valueScope.result.asReturnedValue();
     }
 }
 

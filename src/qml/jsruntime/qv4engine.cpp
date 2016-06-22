@@ -1506,6 +1506,11 @@ void ExecutionEngine::assertObjectBelongsToEngine(const Heap::Base &baseObject)
     Q_UNUSED(baseObject);
 }
 
+void ExecutionEngine::failStackLimitCheck(Scope &scope)
+{
+    scope.result = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
+}
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
