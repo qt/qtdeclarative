@@ -41,6 +41,7 @@
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
 
