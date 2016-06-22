@@ -402,6 +402,22 @@ QObject *QQuickWidgetPrivate::focusObject()
     entire purpose of QQuickWidget is to render Quick scenes without a separate native
     window, hence making it a native widget should always be avoided.
 
+    \section1 Scene graph and context persistency
+
+    QQuickWidget honors QQuickWindow::isPersistentSceneGraph(), meaning that
+    applications can decide - by calling
+    QQuickWindow::setPersistentSceneGraph() on the window returned from the
+    quickWindow() function - to let scenegraph nodes and other Qt Quick scene
+    related resources be released whenever the widget becomes hidden. By default
+    persistency is enabled, just like with QQuickWindow.
+
+    When running with the OpenGL backend of the scene graph, QQuickWindow
+    offers the possibility to disable persistent OpenGL contexts as well. This
+    setting is currently ignored by QQuickWidget and the context is always
+    persistent. The OpenGL context is thus not destroyed when hiding the
+    widget. The context is destroyed only when the widget is destroyed or when
+    the widget gets reparented into another top-level widget's child hierarchy.
+
     \section1 Limitations
 
     Putting other widgets underneath and making the QQuickWidget transparent will not lead
@@ -777,8 +793,9 @@ void QQuickWidgetPrivate::createContext()
 {
 #ifndef QT_NO_OPENGL
     Q_Q(QQuickWidget);
-    // On hide-show we invalidate() but our context is kept.
-    // We nonetheless need to initialize() again.
+
+    // On hide-show we may invalidate() (when !isPersistentSceneGraph) but our
+    // context is kept. We may need to initialize() again, though.
     const bool reinit = context && !offscreenWindow->openglContext();
 
     if (!reinit) {
@@ -812,9 +829,10 @@ void QQuickWidgetPrivate::createContext()
         offscreenSurface->create();
     }
 
-    if (context->makeCurrent(offscreenSurface))
-        renderControl->initialize(context);
-    else
+    if (context->makeCurrent(offscreenSurface)) {
+        if (!offscreenWindow->openglContext())
+            renderControl->initialize(context);
+    } else
 #endif
         qWarning("QQuickWidget: Failed to make context current");
 }
@@ -1230,7 +1248,8 @@ void QQuickWidget::showEvent(QShowEvent *)
 void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
-    d->invalidateRenderControl();
+    if (!d->offscreenWindow->isPersistentSceneGraph())
+        d->invalidateRenderControl();
     QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
     if (offscreenPrivate->visible) {
         offscreenPrivate->visible = false;
