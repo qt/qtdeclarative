@@ -58,11 +58,18 @@ class QQuickSwipeViewPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 1)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
 
+    bool isInteractive() const;
+    void setInteractive(bool interactive);
+
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
+
+Q_SIGNALS:
+    Q_REVISION(1) void interactiveChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

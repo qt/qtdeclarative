@@ -106,10 +106,14 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
+    QQuickSwipeViewPrivate() : interactive(true) { }
+
     void resizeItem(QQuickItem *item);
     void resizeItems();
 
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
+
+    bool interactive;
 };
 
 void QQuickSwipeViewPrivate::resizeItems()
@@ -141,6 +145,31 @@ QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
 {
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::SwipeView::interactive
+
+    This property describes whether the user can interact with the SwipeView.
+    The user cannot swipe a view that is not interactive.
+
+    The default value is \c true.
+*/
+bool QQuickSwipeView::isInteractive() const
+{
+    Q_D(const QQuickSwipeView);
+    return d->interactive;
+}
+
+void QQuickSwipeView::setInteractive(bool interactive)
+{
+    Q_D(QQuickSwipeView);
+    if (d->interactive == interactive)
+        return;
+
+    d->interactive = interactive;
+    emit interactiveChanged();
 }
 
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)

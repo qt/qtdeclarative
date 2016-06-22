@@ -51,6 +51,7 @@ T.SwipeView {
     //! [contentItem]
     contentItem: ListView {
         model: control.contentModel
+        interactive: control.interactive
         currentIndex: control.currentIndex
 
         spacing: control.spacing
