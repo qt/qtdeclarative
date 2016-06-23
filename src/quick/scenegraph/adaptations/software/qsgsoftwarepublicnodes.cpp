@@ -73,10 +73,10 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
 {
     if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
         const QPixmap &pm = pt->pixmap();
-        painter->drawPixmap(m_rect, pm, QRectF(0, 0, pm.width(), pm.height()));
+        painter->drawPixmap(m_rect, pm, m_sourceRect);
     } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(m_texture)) {
         const QImage &im = pt->image();
-        painter->drawImage(m_rect, im, QRectF(0, 0, im.width(), im.height()));
+        painter->drawImage(m_rect, im, m_sourceRect);
     }
 }
 
