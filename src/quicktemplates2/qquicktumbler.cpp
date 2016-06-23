@@ -57,6 +57,22 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    Tumbler allows the user to select an option from a spinnable \e "wheel" of
+    items. It is useful for when there are too many options to use, for
+    example, a RadioButton, and too few options to require the use of an
+    editable SpinBox. It is convenient in that it requires no keyboard usage
+    and can be made to wrap around at each end when there are a large number of
+    items.
+
+    The API is similar to that of views like \l ListView and \l PathView; a
+    \l model and \l delegate can be set, and the \l count and \l currentItem
+    properties provide read-only access to information about the view.
+
+    Unlike views like \l PathView and \l ListView, however, there is always a
+    current item (when the model isn't empty). This means that when \l count is
+    equal to \c 0, \l currentIndex will be \c -1. In all other cases, it will
+    be greater than or equal to \c 0.
+
     By default, Tumbler wraps when it reaches the top and bottom. To achieve a
     non-wrapping Tumbler, set the \l wrap property to \c false:
 
@@ -116,9 +132,11 @@ public:
     void _q_updateItemHeights();
     void _q_updateItemWidths();
     void _q_onViewCurrentIndexChanged();
+    void _q_onViewCountChanged();
 
     void disconnectFromView();
     void setupViewData(QQuickItem *newControlContentItem);
+    void syncCurrentIndex();
 
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
@@ -209,6 +227,19 @@ void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
     }
 }
 
+void QQuickTumblerPrivate::_q_onViewCountChanged()
+{
+    Q_Q(QQuickTumbler);
+    // If new items were added and our currentIndex was -1, we must
+    // enforce our rule of a non-negative currentIndex when count > 0.
+    if (q->count() > 0 && currentIndex == -1)
+        q->setCurrentIndex(0);
+    else
+        syncCurrentIndex();
+
+    emit q->countChanged();
+}
+
 void QQuickTumblerPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
 {
     _q_updateItemWidths();
@@ -258,6 +289,11 @@ void QQuickTumbler::setModel(const QVariant &model)
 
     d->model = model;
     emit modelChanged();
+
+    // Don't try to correct the currentIndex if count() isn't known yet.
+    // We can check in setupViewData() instead.
+    if (isComponentComplete() && d->view && count() == 0)
+        setCurrentIndex(-1);
 }
 
 /*!
@@ -276,6 +312,9 @@ int QQuickTumbler::count() const
     \qmlproperty int QtQuick.Controls::Tumbler::currentIndex
 
     This property holds the index of the current item.
+
+    The value of this property is \c -1 when \l count is equal to \c 0. In all
+    other cases, it will be greater than or equal to \c 0.
 */
 int QQuickTumbler::currentIndex() const
 {
@@ -286,7 +325,11 @@ int QQuickTumbler::currentIndex() const
 void QQuickTumbler::setCurrentIndex(int currentIndex)
 {
     Q_D(QQuickTumbler);
-    if (currentIndex == d->currentIndex)
+    // -1 doesn't make sense for a non-empty Tumbler, because unlike
+    // e.g. ListView, there's always one item selected.
+    // Wait until the component has finished before enforcing this rule, though,
+    // because the count might not be known yet.
+    if (currentIndex == d->currentIndex || (isComponentComplete() && currentIndex == -1 && count() > 0))
         return;
 
     d->currentIndex = currentIndex;
@@ -484,7 +527,7 @@ void QQuickTumblerPrivate::disconnectFromView()
     Q_ASSERT(view);
     QObject::disconnect(view, SIGNAL(currentIndexChanged()), q, SLOT(_q_onViewCurrentIndexChanged()));
     QObject::disconnect(view, SIGNAL(currentItemChanged()), q, SIGNAL(currentItemChanged()));
-    QObject::disconnect(view, SIGNAL(countChanged()), q, SIGNAL(countChanged()));
+    QObject::disconnect(view, SIGNAL(countChanged()), q, SLOT(_q_onViewCountChanged()));
 
     QQuickItemPrivate *oldViewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
     oldViewContentItemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Children);
@@ -508,22 +551,31 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     Q_Q(QQuickTumbler);
     QObject::connect(view, SIGNAL(currentIndexChanged()), q, SLOT(_q_onViewCurrentIndexChanged()));
     QObject::connect(view, SIGNAL(currentItemChanged()), q, SIGNAL(currentItemChanged()));
-    QObject::connect(view, SIGNAL(countChanged()), q, SIGNAL(countChanged()));
+    QObject::connect(view, SIGNAL(countChanged()), q, SLOT(_q_onViewCountChanged()));
 
     QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
     viewContentItemPrivate->addItemChangeListener(this, QQuickItemPrivate::Children);
 
-    const int actualViewIndex = view->property("currentIndex").toInt();
-    if (actualViewIndex != currentIndex) {
-        ignoreCurrentIndexChanges = true;
-        view->setProperty("currentIndex", currentIndex);
-        ignoreCurrentIndexChanges = false;
+    // Sync the view's currentIndex with ours.
+    syncCurrentIndex();
+}
 
-        // If we still couldn't set the currentIndex, it's probably out of bounds,
-        // in which case we must respect the actual currentIndex.
-        if (view->property("currentIndex").toInt() != currentIndex)
-            q->setCurrentIndex(actualViewIndex);
-    }
+void QQuickTumblerPrivate::syncCurrentIndex()
+{
+    const int actualViewIndex = view->property("currentIndex").toInt();
+    Q_Q(QQuickTumbler);
+
+    // Nothing to do.
+    if (actualViewIndex == currentIndex)
+        return;
+
+    // PathView likes to use 0 as currentIndex for empty models, but we use -1 for that.
+    if (q->count() == 0 && actualViewIndex == 0)
+        return;
+
+    ignoreCurrentIndexChanges = true;
+    view->setProperty("currentIndex", currentIndex);
+    ignoreCurrentIndexChanges = false;
 }
 
 void QQuickTumbler::keyPressEvent(QKeyEvent *event)

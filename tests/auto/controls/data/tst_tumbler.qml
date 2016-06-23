@@ -154,12 +154,21 @@ TestCase {
         tryCompare(tumbler, "currentIndex", 2);
         compare(tumblerView.currentIndex, 2);
 
-        // PathView has 0 as its currentIndex in this case for some reason.
         tumbler.model = null;
-        tryCompare(tumbler, "currentIndex", 0);
+        tryCompare(tumbler, "currentIndex", -1);
 
         tumbler.model = ["A", "B", "C"];
         tryCompare(tumbler, "currentIndex", 0);
+
+        // Setting a negative current index should have no effect, because the model isn't empty.
+        tumbler.currentIndex = -1;
+        compare(tumbler.currentIndex, 0);
+
+        tumbler.model = 1;
+        compare(tumbler.currentIndex, 0);
+
+        tumbler.model = 0;
+        compare(tumbler.currentIndex, -1);
     }
 
     Component {
@@ -194,12 +203,25 @@ TestCase {
         }
     }
 
+    Component {
+        id: negativeCurrentIndexTumblerNoWrap
+
+        Tumbler {
+            model: 5
+            wrap: false
+            currentIndex: -1
+            visibleItemCount: 3
+        }
+    }
+
     function test_currentIndexAtCreation_data() {
         return [
-            { tag: "wrap: true", currentIndex: 2, wrap: true, component: currentIndexTumbler },
-            { tag: "wrap: false", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrap },
+            { tag: "wrap: true, currentIndex: 2", currentIndex: 2, wrap: true, component: currentIndexTumbler },
+            { tag: "wrap: false, currentIndex: 2", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrap },
             // Order of property assignments shouldn't matter
-            { tag: "wrap: false, reversed property assignment order", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrapReversedOrder }
+            { tag: "wrap: false, currentIndex: 2, reversed property assignment order",
+                currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrapReversedOrder },
+            { tag: "wrap: false, currentIndex: -1", currentIndex: 0, wrap: false, component: negativeCurrentIndexTumblerNoWrap }
         ]
     }
 
@@ -423,6 +445,7 @@ TestCase {
         tumblerView = findView(tumbler);
         compare(tumbler.count, 5);
         compare(tumbler.currentIndex, 2);
+        compare(tumblerView.count, 5);
         compare(tumblerView.currentIndex, 2);
     }
 
