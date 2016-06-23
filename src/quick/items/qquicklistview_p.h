@@ -103,7 +103,7 @@ private:
 
 class QQmlInstanceModel;
 class QQuickListViewAttached;
-class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
+class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickListView)

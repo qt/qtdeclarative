@@ -53,6 +53,7 @@
 
 #include "qquickitem.h"
 
+#include <private/qtquickglobal_p.h>
 #include <private/qquickpath_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +62,7 @@ class QQmlChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
-class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
 {
     Q_OBJECT
 
