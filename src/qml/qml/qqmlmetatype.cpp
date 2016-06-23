@@ -484,8 +484,8 @@ QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     Q_ASSERT(isComposite());
     if (!engine)
         return 0;
-    QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
-    if (!td || !td->isComplete())
+    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()), QQmlRefPointer<QQmlTypeData>::Adopt);
+    if (td.isNull() || !td->isComplete())
         return 0;
     QQmlCompiledData *cd = td->compiledData();
     const QMetaObject *mo = cd->rootPropertyCache->firstCppMetaObject();
