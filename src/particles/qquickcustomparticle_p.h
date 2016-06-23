@@ -99,9 +99,10 @@ protected:
 
 private Q_SLOTS:
     void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
 
 private:
+    void propertyChanged(int mappedId);
+
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
@@ -109,6 +110,7 @@ private:
     void updateVertexShader();
 
     QQuickOpenGLShaderEffectCommon m_common;
+    const QMetaObject *m_myMetaObject;
 
     QHash<int, QQuickOpenGLShaderEffectNode*> m_nodes;
     qreal m_lastTime;

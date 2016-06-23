@@ -33,12 +33,13 @@
 #include <private/qquickopenglshadereffect_p.h>
 #include <QMatrix4x4>
 #include <QtQuick/QQuickView>
+#include <QtQml/QQmlEngine>
 #include "../../shared/util.h"
 
 class TestShaderEffect : public QQuickShaderEffect
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant source READ dummyRead NOTIFY dummyChanged)
+    Q_PROPERTY(QVariant source READ dummyRead NOTIFY sourceChanged)
     Q_PROPERTY(QVariant _0aA9zZ READ dummyRead NOTIFY dummyChanged)
     Q_PROPERTY(QVariant x86 READ dummyRead NOTIFY dummyChanged)
     Q_PROPERTY(QVariant X READ dummyRead NOTIFY dummyChanged)
@@ -47,17 +48,18 @@ class TestShaderEffect : public QQuickShaderEffect
 public:
     QMatrix4x4 mat4x4Read() const { return QMatrix4x4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1); }
     QVariant dummyRead() const { return QVariant(); }
-    bool isConnected(const QMetaMethod &signal) const { return m_signals.contains(signal); }
+
+    int signalsConnected = 0;
 
 protected:
-    void connectNotify(const QMetaMethod &signal) { m_signals.append(signal); }
-    void disconnectNotify(const QMetaMethod &signal) { m_signals.removeOne(signal); }
+    void connectNotify(const QMetaMethod &) { ++signalsConnected; }
+    void disconnectNotify(const QMetaMethod &) { --signalsConnected; }
 
 signals:
     void dummyChanged();
+    void sourceChanged();
 
 private:
-    QList<QMetaMethod> m_signals;
 };
 
 class tst_qquickshadereffect : public QQmlDataTest
@@ -82,12 +84,13 @@ private:
         TexCoordPresent = 0x02,
         MatrixPresent = 0x04,
         OpacityPresent = 0x08,
-        PropertyPresent = 0x10
+        SourcePresent = 0x10
     };
 };
 
 tst_qquickshadereffect::tst_qquickshadereffect()
 {
+    qmlRegisterType<TestShaderEffect>("ShaderEffectTest", 1, 0, "TestShaderEffect");
 }
 
 void tst_qquickshadereffect::initTestCase()
@@ -120,7 +123,7 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "void main() {                                                      \n"
                           "    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;   \n"
                           "}")
-            << (VertexPresent | TexCoordPresent | MatrixPresent | OpacityPresent | PropertyPresent);
+            << (VertexPresent | TexCoordPresent | MatrixPresent | OpacityPresent | SourcePresent);
 
     QTest::newRow("empty")
             << QByteArray(" ") // one space -- if completely empty, default will be used instead.
@@ -133,14 +136,14 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "attribute highp vec4 qt_Vertex;\n"
                           "// attribute highp vec2 qt_MultiTexCoord0;")
             << QByteArray("uniform int source; // uniform lowp float qt_Opacity;")
-            << (VertexPresent | PropertyPresent);
+            << (VertexPresent | SourcePresent);
 
     QTest::newRow("inside block comments")
             << QByteArray("/*uniform highp mat4 qt_Matrix;\n"
                           "*/attribute highp vec4 qt_Vertex;\n"
                           "/*/attribute highp vec2 qt_MultiTexCoord0;//**/")
             << QByteArray("/**/uniform int source; /* uniform lowp float qt_Opacity; */")
-            << (VertexPresent | PropertyPresent);
+            << (VertexPresent | SourcePresent);
 
     QTest::newRow("inside preprocessor directive")
             << QByteArray("#define uniform\nhighp mat4 qt_Matrix;\n"
@@ -148,7 +151,7 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "#if\\\nattribute highp vec2 qt_MultiTexCoord0;")
             << QByteArray("uniform int source;\n"
                           "    #    undef uniform lowp float qt_Opacity;")
-            << (VertexPresent | PropertyPresent);
+            << (VertexPresent | SourcePresent);
 
 
     QTest::newRow("line comments between")
@@ -156,21 +159,21 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "attribute//\nhighp//\nvec4//\nqt_Vertex;\n"
                           " //*/ uniform \n attribute //\\ \n highp //// \n vec2 //* \n qt_MultiTexCoord0;")
             << QByteArray("uniform// lowp float qt_Opacity;\nsampler2D source;")
-            << (VertexPresent | TexCoordPresent | MatrixPresent | PropertyPresent);
+            << (VertexPresent | TexCoordPresent | MatrixPresent | SourcePresent);
 
     QTest::newRow("block comments between")
             << QByteArray("uniform/*foo*/highp/*/bar/*/mat4/**//**/qt_Matrix;\n"
                           "attribute/**/highp/**/vec4/**/qt_Vertex;\n"
                           " /* * */ attribute /*///*/ highp /****/ vec2 /**/ qt_MultiTexCoord0;")
             << QByteArray("uniform/*/ uniform//lowp/*float qt_Opacity;*/sampler2D source;")
-            << (VertexPresent | TexCoordPresent | MatrixPresent | PropertyPresent);
+            << (VertexPresent | TexCoordPresent | MatrixPresent | SourcePresent);
 
     QTest::newRow("preprocessor directive between")
             << QByteArray("uniform\n#foo\nhighp\n#bar\nmat4\n#baz\\\nblimey\nqt_Matrix;\n"
                           "attribute\n#\nhighp\n#\nvec4\n#\nqt_Vertex;\n"
                           " #uniform \n attribute \n # foo \n highp \n #  bar \n vec2 \n#baz \n qt_MultiTexCoord0;")
             << QByteArray("uniform\n#if lowp float qt_Opacity;\nsampler2D source;")
-            << (VertexPresent | TexCoordPresent | MatrixPresent | PropertyPresent);
+            << (VertexPresent | TexCoordPresent | MatrixPresent | SourcePresent);
 
     QTest::newRow("newline between")
             << QByteArray("uniform\nhighp\nmat4\nqt_Matrix\n;\n"
@@ -178,7 +181,7 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "   \n   attribute   \n   highp   \n   vec2   \n   qt_Multi\nTexCoord0  \n  ;")
             << QByteArray("uniform\nsampler2D\nsource;"
                           "uniform lowp float qt_Opacity;")
-            << (VertexPresent | MatrixPresent | OpacityPresent | PropertyPresent);
+            << (VertexPresent | MatrixPresent | OpacityPresent | SourcePresent);
 
 
     QTest::newRow("extra characters #1")
@@ -219,28 +222,28 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
                           "attribute highp qt_MultiTexCoord0;\n")
             << QByteArray("uniform lowp float qt_Opacity;\n"
                           "uniform mediump float source;\n")
-            << (MatrixPresent | OpacityPresent | PropertyPresent);
+            << (MatrixPresent | OpacityPresent | SourcePresent);
 
 
     QTest::newRow("property name #1")
             << QByteArray("uniform highp vec3 _0aA9zZ;")
             << QByteArray(" ")
-            << int(PropertyPresent);
+            << int(SourcePresent);
 
     QTest::newRow("property name #2")
             << QByteArray("uniform mediump vec2 x86;")
             << QByteArray(" ")
-            << int(PropertyPresent);
+            << int(SourcePresent);
 
     QTest::newRow("property name #3")
             << QByteArray("uniform lowp float X;")
             << QByteArray(" ")
-            << int(PropertyPresent);
+            << int(SourcePresent);
 
     QTest::newRow("property name #4")
             << QByteArray("uniform highp mat4 mat4x4;")
             << QByteArray(" ")
-            << int(PropertyPresent);
+            << int(SourcePresent);
 }
 
 void tst_qquickshadereffect::lookThroughShaderCode()
@@ -249,9 +252,11 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     QFETCH(QByteArray, fragmentShader);
     QFETCH(int, presenceFlags);
 
-    TestShaderEffect item;
-    QMetaMethod dummyChangedSignal = QMetaMethod::fromSignal(&TestShaderEffect::dummyChanged);
-    QVERIFY(!item.isConnected(dummyChangedSignal)); // Nothing connected yet.
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nimport ShaderEffectTest 1.0\nTestShaderEffect {}", QUrl());
+    QScopedPointer<TestShaderEffect> item(qobject_cast<TestShaderEffect*>(component.create()));
+    QCOMPARE(item->signalsConnected, 1);
 
     QString expected;
     if ((presenceFlags & VertexPresent) == 0)
@@ -263,12 +268,12 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     if ((presenceFlags & OpacityPresent) == 0)
         expected += "Warning: Shaders are missing reference to \'qt_Opacity\'.\n";
 
-    item.setVertexShader(vertexShader);
-    item.setFragmentShader(fragmentShader);
-    QCOMPARE(item.parseLog(), expected);
+    item->setVertexShader(vertexShader);
+    item->setFragmentShader(fragmentShader);
+    QCOMPARE(item->parseLog(), expected);
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.
-    QCOMPARE(item.isConnected(dummyChangedSignal), (presenceFlags & PropertyPresent) != 0);
+    QCOMPARE(item->signalsConnected, (presenceFlags & SourcePresent) ? 2 : 1);
 }
 
 void tst_qquickshadereffect::deleteSourceItem()
