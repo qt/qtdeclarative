@@ -116,7 +116,7 @@ QSGEngine::~QSGEngine()
 void QSGEngine::initialize(QOpenGLContext *context)
 {
     Q_D(QSGEngine);
-#ifdef QT_NO_OPENGL
+#ifndef QT_NO_OPENGL
     if (context && QOpenGLContext::currentContext() != context) {
         qWarning("WARNING: The context must be current before calling QSGEngine::initialize.");
         return;
