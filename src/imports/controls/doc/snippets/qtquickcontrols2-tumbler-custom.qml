@@ -32,7 +32,6 @@ import QtQuick.Controls 2.0
 Tumbler {
     id: control
     model: 15
-    visibleItemCount: 5
 
     background: Item {
         Rectangle {

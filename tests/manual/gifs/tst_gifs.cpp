@@ -128,7 +128,7 @@ void tst_Gifs::tumblerWrap()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setRecordingDuration(5);
     gifRecorder.setQmlFileName("qtquickcontrols2-tumbler-wrap.qml");
 
     gifRecorder.start();

@@ -61,7 +61,9 @@ TestCase {
     Component {
         id: tumblerComponent
 
-        Tumbler {}
+        Tumbler {
+            visibleItemCount: 3
+        }
     }
 
     function init() {
@@ -166,6 +168,7 @@ TestCase {
         Tumbler {
             model: 5
             currentIndex: 2
+            visibleItemCount: 3
         }
     }
 
@@ -176,6 +179,7 @@ TestCase {
             model: 5
             currentIndex: 2
             wrap: false
+            visibleItemCount: 3
         }
     }
 
@@ -186,6 +190,7 @@ TestCase {
             model: 5
             wrap: false
             currentIndex: 2
+            visibleItemCount: 3
         }
     }
 

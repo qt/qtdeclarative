@@ -74,7 +74,7 @@ class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChang
 public:
     QQuickTumblerPrivate() :
         delegate(nullptr),
-        visibleItemCount(3),
+        visibleItemCount(5),
         wrap(true),
         view(nullptr),
         viewContentItem(nullptr),

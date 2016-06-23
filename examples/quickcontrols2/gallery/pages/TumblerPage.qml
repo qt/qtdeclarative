@@ -57,7 +57,6 @@ Pane {
 
         Tumbler {
             model: 10
-            visibleItemCount: 5
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

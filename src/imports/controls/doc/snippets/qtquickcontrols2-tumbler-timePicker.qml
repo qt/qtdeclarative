@@ -78,21 +78,18 @@ Rectangle {
 
             Tumbler {
                 id: hoursTumbler
-                visibleItemCount: 5
                 model: 12
                 delegate: delegateComponent
             }
 
             Tumbler {
                 id: minutesTumbler
-                visibleItemCount: 5
                 model: 60
                 delegate: delegateComponent
             }
 
             Tumbler {
                 id: amPmTumbler
-                visibleItemCount: 5
                 wrap: false
                 model: ["AM", "PM"]
                 delegate: delegateComponent
