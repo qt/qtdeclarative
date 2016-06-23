@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QSGImageNode::setRect(const QRectF &rect)
 
-    Sets the target rect of this image node to \a r.
+    Sets the target rect of this image node to \a rect.
  */
 
 /*!
@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QSGImageNode::setSourceRect(const QRectF &rect)
 
-    Sets the source rect of this image node to \a r.
+    Sets the source rect of this image node to \a rect.
  */
 
 /*!
