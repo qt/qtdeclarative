@@ -105,6 +105,7 @@ public:
     QImage grabFramebuffer() Q_DECL_OVERRIDE;
 
     void init(QQmlEngine* e = 0);
+    void ensureEngine();
     void handleWindowChange();
     void invalidateRenderControl();
 

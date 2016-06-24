@@ -55,6 +55,7 @@ private slots:
     void readback();
     void renderingSignals();
     void grabBeforeShow();
+    void nullEngine();
 };
 
 
@@ -299,6 +300,14 @@ void tst_qquickwidget::grabBeforeShow()
 {
     QQuickWidget widget;
     QVERIFY(!widget.grab().isNull());
+}
+
+void tst_qquickwidget::nullEngine()
+{
+    QQuickWidget widget;
+    QVERIFY(widget.engine() == Q_NULLPTR);
+    QVERIFY(widget.errors().isEmpty());
+    QCOMPARE(widget.status(), QQuickWidget::Null);
 }
 
 QTEST_MAIN(tst_qquickwidget)

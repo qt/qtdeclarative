@@ -96,10 +96,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
 
     engine = e;
 
-    if (engine.isNull())
-        engine = new QQmlEngine(q);
-
-    if (!engine.data()->incubationController())
+    if (!engine.isNull() && !engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
 #ifndef QT_NO_DRAGANDDROP
@@ -110,6 +107,16 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
+}
+
+void QQuickWidgetPrivate::ensureEngine()
+{
+    Q_Q(QQuickWidget);
+    if (!engine.isNull())
+        return;
+
+    engine = new QQmlEngine(q);
+    engine.data()->setIncubationController(offscreenWindow->incubationController());
 }
 
 void QQuickWidgetPrivate::invalidateRenderControl()
@@ -167,10 +174,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
 void QQuickWidgetPrivate::execute()
 {
     Q_Q(QQuickWidget);
-    if (!engine) {
-        qWarning() << "QQuickWidget: invalid qml engine.";
-        return;
-    }
+    ensureEngine();
 
     if (root) {
         delete root;
@@ -404,7 +408,6 @@ QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
-    Q_ASSERT(engine);
     d_func()->init(engine);
 }
 
@@ -548,7 +551,7 @@ QQmlContext* QQuickWidget::rootContext() const
 QQuickWidget::Status QQuickWidget::status() const
 {
     Q_D(const QQuickWidget);
-    if (!d->engine)
+    if (!d->engine && !d->source.isEmpty())
         return QQuickWidget::Error;
 
     if (!d->component)
@@ -574,11 +577,12 @@ QList<QQmlError> QQuickWidget::errors() const
     if (d->component)
         errs = d->component->errors();
 
-    if (!d->engine) {
+    if (!d->engine && !d->source.isEmpty()) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid qml engine."));
         errs << error;
-    } else if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
+    }
+    if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid root object."));
         errs << error;
