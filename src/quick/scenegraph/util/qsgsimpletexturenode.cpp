@@ -102,6 +102,8 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
   or software backends of the Qt Quick scenegraph. For a proper cross-platform
   alternative prefer using QSGSimpleImageNode via
   QQuickWindow::createSimpleImageNode() or QSGEngine::createSimpleImageNode().
+
+  \deprecated
 */
 
 /*!

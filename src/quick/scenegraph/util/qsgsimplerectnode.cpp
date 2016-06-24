@@ -53,6 +53,8 @@ QT_BEGIN_NAMESPACE
   or software backends of the Qt Quick scenegraph. For a proper cross-platform
   alternative prefer using QSGSimpleRectangleNode via
   QQuickWindow::createSimpleRectangleNode() or QSGEngine::createSimpleRectangleNode().
+
+  \deprecated
  */
 
 
