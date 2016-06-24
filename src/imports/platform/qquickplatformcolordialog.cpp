@@ -162,6 +162,7 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
 
 void QQuickPlatformColorDialog::applyOptions()
 {
+    m_options->setWindowTitle(title());
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
         colorDialog->setOptions(m_options);
 }

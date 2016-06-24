@@ -165,6 +165,7 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
 
 void QQuickPlatformFontDialog::applyOptions()
 {
+    m_options->setWindowTitle(title());
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
         fontDialog->setOptions(m_options);
 }
