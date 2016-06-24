@@ -73,7 +73,7 @@ T.GroupBox {
         width: parent.width
         height: parent.height - control.topPadding + control.padding
 
-        radius: 3
+        radius: 2
         color: control.Material.elevation > 0 ? control.Material.backgroundColor : "transparent"
         border.color: control.Material.frameColor
 

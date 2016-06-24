@@ -53,7 +53,7 @@ T.Frame {
     contentItem: Item { }
 
     background: Rectangle {
-        radius: 3
+        radius: 2
         color: control.Material.elevation > 0 ? control.Material.backgroundColor : "transparent"
         border.color: control.Material.frameColor
 
