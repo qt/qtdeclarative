@@ -92,7 +92,7 @@ QT_BEGIN_NAMESPACE
     MenuBar is currently available on the following platforms:
 
     \list
-    \li OS X
+    \li macOS
     \li Android
     \li Linux (only available on desktop environments that provide a global D-Bus menu bar)
     \endlist

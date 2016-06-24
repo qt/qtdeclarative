@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     \li All desktop environments that implement the
         \l{http://www.freedesktop.org/wiki/Specifications/StatusNotifierItem/StatusNotifierItem}
         {freedesktop.org D-Bus StatusNotifierItem specification}, including recent versions of KDE and Unity.
-    \li All supported versions of OS X. Note that the Growl notification system must be installed
+    \li All supported versions of macOS. Note that the Growl notification system must be installed
         for showMessage() to display messages on OS X prior to 10.8 (Mountain Lion).
     \endlist
 

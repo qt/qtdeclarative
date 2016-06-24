@@ -102,10 +102,10 @@ QT_BEGIN_NAMESPACE
     A native platform menu is currently available on the following platforms:
 
     \list
-    \li OS X
+    \li macOS
     \li iOS
     \li Android
-    \li Linux (only available as a stand-alone context menu when running with the GTK platform theme)
+    \li Linux (only available as a stand-alone context menu when running with the GTK+ platform theme)
     \endlist
 
     \input includes/widgets.qdocinc 1

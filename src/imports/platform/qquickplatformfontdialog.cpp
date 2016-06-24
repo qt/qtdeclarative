@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     A native platform font dialog is currently available on the following platforms:
 
     \list
-    \li OS X
+    \li macOS
     \li Linux (when running with the GTK+ platform theme)
     \endlist
 

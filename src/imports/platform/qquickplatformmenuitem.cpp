@@ -396,7 +396,7 @@ void QQuickPlatformMenuItem::setChecked(bool checked)
     \qmlproperty enumeration Qt.labs.platform::MenuItem::role
 
     This property holds the role of the item. The role determines whether
-    the item should be placed into the application menu on OS X.
+    the item should be placed into the application menu on macOS.
 
     Available values:
     \value MenuItem.NoRole The item should not be put into the application menu
