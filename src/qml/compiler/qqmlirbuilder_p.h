@@ -526,6 +526,7 @@ public:
     QString stringAt(int index) const { return jsGenerator->stringForIndex(index); }
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
+    static bool isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement);
 
     QList<QQmlJS::DiagnosticMessage> errors;
 

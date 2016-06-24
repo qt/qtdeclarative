@@ -886,7 +886,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 // process QML-like initializers (e.g. property Object o: Object {})
                 QQmlJS::AST::Node::accept(node->binding, this);
             } else if (node->statement) {
-                appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
+                if (!isRedundantNullInitializerForPropertyDeclaration(_propertyDeclaration, node->statement))
+                    appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
             }
             qSwap(_propertyDeclaration, property);
         }
@@ -1342,6 +1343,17 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
     }
 
     return true;
+}
+
+bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement)
+{
+    if (property->type != QV4::CompiledData::Property::Custom)
+        return false;
+    QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
+    if (!exprStmt)
+        return false;
+    QQmlJS::AST::ExpressionNode * const expr = exprStmt->expression;
+    return QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr);
 }
 
 QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)

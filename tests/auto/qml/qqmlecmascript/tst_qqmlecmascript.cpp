@@ -208,6 +208,7 @@ private slots:
     void dynamicCreationOwnership();
     void regExpBug();
     void nullObjectBinding();
+    void nullObjectInitializer();
     void deletedEngine();
     void libraryScriptAssert();
     void variantsAssignedUndefined();
@@ -5705,6 +5706,49 @@ void tst_qqmlecmascript::nullObjectBinding()
     QVERIFY(object->property("test") == QVariant::fromValue((QObject *)0));
 
     delete object;
+}
+
+void tst_qqmlecmascript::nullObjectInitializer()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("nullObjectInitializer.qml"));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+
+        QQmlData *ddata = QQmlData::get(obj.data(), /*create*/false);
+        QVERIFY(ddata);
+
+        {
+            const int propertyIndex = obj->metaObject()->indexOfProperty("testProperty");
+            QVERIFY(propertyIndex > 0);
+            QVERIFY(!ddata->hasBindingBit(propertyIndex));
+        }
+
+        QVariant value = obj->property("testProperty");
+        QVERIFY(value.userType() == qMetaTypeId<QObject*>());
+        QVERIFY(!value.value<QObject*>());
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("nullObjectInitializer.2.qml"));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+
+        QQmlData *ddata = QQmlData::get(obj.data(), /*create*/false);
+        QVERIFY(ddata);
+
+        {
+            const int propertyIndex = obj->metaObject()->indexOfProperty("testProperty");
+            QVERIFY(propertyIndex > 0);
+            QVERIFY(ddata->hasBindingBit(propertyIndex));
+        }
+
+        QVERIFY(obj->property("success").toBool());
+
+        QVariant value = obj->property("testProperty");
+        QVERIFY(value.userType() == qMetaTypeId<QObject*>());
+        QVERIFY(!value.value<QObject*>());
+    }
 }
 
 // Test that bindings don't evaluate once the engine has been destroyed
