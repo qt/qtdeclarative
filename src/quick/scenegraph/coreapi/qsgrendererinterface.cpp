@@ -68,8 +68,6 @@ QT_BEGIN_NAMESPACE
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenGL OpenGL ES 2.0 or higher
     \value Direct3D12 Direct3D 12
-    \value Vulkan Vulkan
-    \value Metal Metal
   */
 
 /*!
@@ -77,6 +75,32 @@ QT_BEGIN_NAMESPACE
     \value Device The graphics device
     \value CommandQueue The graphics command queue used by the scenergaph
     \value CommandList The command list or buffer used by the scenegraph
+ */
+
+/*!
+    \enum QSGRendererInterface::ShaderType
+    \value UnknownShadingLanguage - Not yet known due to no window and scenegraph associated
+    \value GLSL - GLSL or GLSL ES
+    \value HLSL - HLSL
+ */
+
+/*!
+    \enum QSGRendererInterface::ShaderCompilationType
+    \value RuntimeCompilation - Runtime compilation of shader source code is supported
+    \value OfflineCompilation - Pre-compiled bytecode supported
+ */
+
+/*!
+    \enum QSGRendererInterface::ShaderSourceType
+
+    \value ShaderSourceString - Shader source can be provided as a string in
+    the corresponding properties of ShaderEffect
+
+    \value ShaderSourceFile - Local or resource files containing shader source
+    code are supported
+
+    \value ShaderByteCode - Local or resource files containing shader bytecode are
+    supported
  */
 
 QSGRendererInterface::~QSGRendererInterface()
@@ -156,7 +180,7 @@ void *QSGRendererInterface::getResource(const char *resource) const
 /*!
     \fn QSGRendererInterface::ShaderSourceTypes QSGRendererInterface::shaderSourceType() const
 
-    \return a bitmask of the supported ways of providing shader sources.
+    \return a bitmask of the supported ways of providing shader sources in ShaderEffect items.
 
     \note This function can be called on any thread. However, the renderer
     interface's lifetime may be tied to the render thread and therefore calling
