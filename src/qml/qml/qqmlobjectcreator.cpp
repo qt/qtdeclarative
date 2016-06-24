@@ -342,8 +342,12 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::String: {
         Q_ASSERT(binding->evaluatesToString());
         QString value = binding->valueAsString(qmlUnit);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (property->hasAccessors()) {
+            property->accessors->write(_qobject, &value);
+        } else {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        }
     }
     break;
     case QVariant::StringList: {
@@ -386,23 +390,35 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         double d = binding->valueAsNumber();
         int value = int(d);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (property->hasAccessors()) {
+            property->accessors->write(_qobject, &value);
+        } else {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        }
         break;
     }
     break;
     case QMetaType::Float: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         float value = float(binding->valueAsNumber());
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (property->hasAccessors()) {
+            property->accessors->write(_qobject, &value);
+        } else {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        }
     }
     break;
     case QVariant::Double: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         double value = binding->valueAsNumber();
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (property->hasAccessors()) {
+            property->accessors->write(_qobject, &value);
+        } else {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        }
     }
     break;
     case QVariant::Color: {
@@ -499,8 +515,12 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::Bool: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Boolean);
         bool value = binding->valueAsBoolean();
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (property->hasAccessors()) {
+            property->accessors->write(_qobject, &value);
+        } else {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        }
     }
     break;
     case QVariant::Vector3D: {
