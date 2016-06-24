@@ -53,11 +53,13 @@
 
 #include "qquickitemview_p.h"
 
+#include <private/qtquickglobal_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickListView;
 class QQuickListViewPrivate;
-class Q_AUTOTEST_EXPORT QQuickViewSection : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
