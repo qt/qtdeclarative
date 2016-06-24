@@ -59,9 +59,11 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
+#ifndef QT_NO_OPENGL
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFunctions>
 #include <QtGui/private/qopenglextensions_p.h>
+#endif
 #include <QtGui/QPainter>
 
 #include <QtQuick/QSGRendererInterface>
@@ -74,7 +76,9 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_OPENGL
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+#endif
 
 class QQuickWidgetRenderControl : public QQuickRenderControl
 {
@@ -104,9 +108,11 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
         useSoftwareRenderer = true;
 
     if (!useSoftwareRenderer) {
+#ifndef QT_NO_OPENGL
         if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface))
             setRenderToTexture();
         else
+#endif
             qWarning("QQuickWidget is not supported on this platform.");
     }
 
@@ -130,6 +136,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
 
 void QQuickWidgetPrivate::invalidateRenderControl()
 {
+#ifndef QT_NO_OPENGL
     if (!useSoftwareRenderer) {
         if (!context) // this is not an error, could be called before creating the context, or multiple times
             return;
@@ -140,6 +147,7 @@ void QQuickWidgetPrivate::invalidateRenderControl()
             return;
         }
     }
+#endif
 
     renderControl->invalidate();
 }
@@ -157,9 +165,11 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , offscreenWindow(0)
     , offscreenSurface(0)
     , renderControl(0)
+#ifndef QT_NO_OPENGL
     , fbo(0)
     , resolvedFbo(0)
     , context(0)
+#endif
     , resizeMode(QQuickWidget::SizeViewToRootObject)
     , initialSize(0,0)
     , eventPending(false)
@@ -178,6 +188,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
         delete renderControl;
         delete offscreenWindow;
     } else {
+#ifndef QT_NO_OPENGL
         // context and offscreenSurface are current at this stage, if the context was created.
         Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
         delete renderControl; // always delete the rendercontrol first
@@ -186,6 +197,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
         delete fbo;
 
         destroyContext();
+#endif
     }
 }
 
@@ -230,6 +242,7 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
 void QQuickWidgetPrivate::render(bool needsSync)
 {
     if (!useSoftwareRenderer) {
+#ifndef QT_NO_OPENGL
         // createFramebufferObject() bails out when the size is empty. In this case
         // we cannot render either.
         if (!fbo)
@@ -259,6 +272,7 @@ void QQuickWidgetPrivate::render(bool needsSync)
         static_cast<QOpenGLExtensions *>(context->functions())->flushShared();
 
         QOpenGLContextPrivate::get(context)->defaultFboRedirect = 0;
+#endif
     } else {
         //Software Renderer
         if (needsSync) {
@@ -313,10 +327,12 @@ void QQuickWidgetPrivate::renderSceneGraph()
 QImage QQuickWidgetPrivate::grabFramebuffer()
 {
     if (!useSoftwareRenderer) {
+#ifndef QT_NO_OPENGL
         if (!context)
             return QImage();
 
         context->makeCurrent(offscreenSurface);
+#endif
     }
     return renderControl->grab();
 }
@@ -759,6 +775,7 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &for
 // Never called by Software Rendering backend
 void QQuickWidgetPrivate::createContext()
 {
+#ifndef QT_NO_OPENGL
     Q_Q(QQuickWidget);
     // On hide-show we invalidate() but our context is kept.
     // We nonetheless need to initialize() again.
@@ -798,6 +815,7 @@ void QQuickWidgetPrivate::createContext()
     if (context->makeCurrent(offscreenSurface))
         renderControl->initialize(context);
     else
+#endif
         qWarning("QQuickWidget: Failed to make context current");
 }
 
@@ -806,8 +824,10 @@ void QQuickWidgetPrivate::destroyContext()
 {
     delete offscreenSurface;
     offscreenSurface = 0;
+#ifndef QT_NO_OPENGL
     delete context;
     context = 0;
+#endif
 }
 
 void QQuickWidget::createFramebufferObject()
@@ -826,6 +846,7 @@ void QQuickWidget::createFramebufferObject()
         return;
     }
 
+#ifndef QT_NO_OPENGL
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
@@ -898,6 +919,7 @@ void QQuickWidget::createFramebufferObject()
     // Having one would mean create() was called and platforms that only support
     // a single native window were in trouble.
     Q_ASSERT(!d->offscreenWindow->handle());
+#endif
 }
 
 void QQuickWidget::destroyFramebufferObject()
@@ -909,10 +931,12 @@ void QQuickWidget::destroyFramebufferObject()
         return;
     }
 
+#ifndef QT_NO_OPENGL
     delete d->fbo;
     d->fbo = 0;
     delete d->resolvedFbo;
     d->resolvedFbo = 0;
+#endif
 }
 
 QQuickWidget::ResizeMode QQuickWidget::resizeMode() const
@@ -990,6 +1014,7 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
     }
 }
 
+#ifndef QT_NO_OPENGL
 GLuint QQuickWidgetPrivate::textureId() const
 {
     Q_Q(const QQuickWidget);
@@ -1001,6 +1026,7 @@ GLuint QQuickWidgetPrivate::textureId() const
     return resolvedFbo ? resolvedFbo->texture()
         : (fbo ? fbo->texture() : 0);
 }
+#endif
 
 /*!
   \internal
@@ -1090,7 +1116,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
             createFramebufferObject();
         }
     } else {
-
+#ifndef QT_NO_OPENGL
         if (d->context) {
             // Bail out when receiving a resize after scenegraph invalidation. This can happen
             // during hide - resize - show sequences and also during application exit.
@@ -1112,7 +1138,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
             qWarning("QQuickWidget::resizeEvent() no OpenGL context");
             return;
         }
-
+#endif
     }
 
     d->render(needsSync);
@@ -1305,7 +1331,11 @@ bool QQuickWidget::event(QEvent *e)
         break;
 
     case QEvent::ScreenChangeInternal:
-        if (d->fbo || d->useSoftwareRenderer) {
+        if (d->useSoftwareRenderer
+#ifndef QT_NO_OPENGL
+            || d->fbo
+#endif
+           ) {
             // This will check the size taking the devicePixelRatio into account
             // and recreate if needed.
             createFramebufferObject();

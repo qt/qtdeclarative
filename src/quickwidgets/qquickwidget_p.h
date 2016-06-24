@@ -101,8 +101,12 @@ public:
 
     QObject *focusObject() Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_OPENGL
     GLuint textureId() const Q_DECL_OVERRIDE;
     QImage grabFramebuffer() Q_DECL_OVERRIDE;
+#else
+    QImage grabFramebuffer();
+#endif
 
     void init(QQmlEngine* e = 0);
     void handleWindowChange();
@@ -120,9 +124,12 @@ public:
     QQuickWindow *offscreenWindow;
     QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
+
+#ifndef QT_NO_OPENGL
     QOpenGLFramebufferObject *fbo;
     QOpenGLFramebufferObject *resolvedFbo;
     QOpenGLContext *context;
+#endif
 
     QQuickWidget::ResizeMode resizeMode;
     QSize initialSize;
