@@ -46,6 +46,7 @@ ApplicationWindow {
     height: 400
 
     property alias popup: popup
+    property alias popup2: popup2
     property alias button: button
 
     Button {
@@ -67,6 +68,16 @@ ApplicationWindow {
                     onClicked: popup.close()
                 }
             }
+        }
+    }
+
+    Popup {
+        id: popup2
+        y: popup.y
+        z: 1
+        contentItem: Text {
+            text: "Popup2"
+            font.pixelSize: 36
         }
     }
 }

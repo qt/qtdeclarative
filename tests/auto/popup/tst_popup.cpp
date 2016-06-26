@@ -53,6 +53,7 @@ class tst_popup : public QQmlDataTest
 private slots:
     void visible();
     void overlay();
+    void zOrder();
     void windowChange();
     void closePolicy_data();
     void closePolicy();
@@ -152,6 +153,39 @@ void tst_popup::overlay()
 
     QVERIFY(!popup->isVisible());
     QVERIFY(!overlay->isVisible());
+}
+
+void tst_popup::zOrder()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->setModal(true);
+
+    QQuickPopup *popup2 = helper.window->property("popup2").value<QQuickPopup*>();
+    QVERIFY(popup2);
+    popup2->setModal(true);
+
+    // show popups in reverse order. popup2 has higher z-order so it appears
+    // on top and must be closed first, even if the other popup was opened last
+    popup2->open();
+    popup->open();
+    QVERIFY(popup2->isVisible());
+    QVERIFY(popup->isVisible());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(!popup2->isVisible());
+    QVERIFY(popup->isVisible());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(!popup2->isVisible());
+    QVERIFY(!popup->isVisible());
 }
 
 void tst_popup::windowChange()
