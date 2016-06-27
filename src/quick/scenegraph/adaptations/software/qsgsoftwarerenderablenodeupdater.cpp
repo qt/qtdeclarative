@@ -58,6 +58,7 @@ QSGSoftwareRenderableNodeUpdater::QSGSoftwareRenderableNodeUpdater(QSGAbstractSo
     m_opacityState.push(1.0f);
     // Invalid RectF by default for no clip
     m_clipState.push(QRegion());
+    m_hasClip = false;
     m_transformState.push(QTransform());
 }
 
@@ -81,10 +82,13 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGTransformNode *)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 {
     // Make sure to translate the clip rect into world coordinates
-    if (m_clipState.top().isEmpty()) {
+    if (m_clipState.count() == 1) {
         m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect())));
-    } else
-        m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect()).intersected(m_clipState.top())));
+        m_hasClip = true;
+    } else {
+        const QRegion transformedClipRect = m_transformState.top().map(QRegion(node->clipRect().toRect()));
+        m_clipState.push(transformedClipRect.intersected(m_clipState.top()));
+    }
     m_stateMap[node] = currentState(node);
     return true;
 }
@@ -92,6 +96,8 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGClipNode *)
 {
     m_clipState.pop();
+    if (m_clipState.count() == 1)
+        m_hasClip = false;
 }
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGGeometryNode *node)
@@ -264,6 +270,7 @@ QSGSoftwareRenderableNodeUpdater::NodeState QSGSoftwareRenderableNodeUpdater::cu
     NodeState state;
     state.opacity = m_opacityState.top();
     state.clip = m_clipState.top();
+    state.hasClip = m_hasClip;
     state.transform = m_transformState.top();
     state.parent = node->parent();
     return state;

@@ -58,6 +58,7 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
     : m_nodeType(type)
     , m_isOpaque(true)
     , m_isDirty(true)
+    , m_hasClipRegion(false)
     , m_opacity(1.0f)
 {
     switch (m_nodeType) {
@@ -179,8 +180,12 @@ void QSGSoftwareRenderableNode::update()
 
     m_boundingRect = m_transform.mapRect(boundingRect);
 
-    if (m_clipRegion.rectCount() == 1) {
-        m_boundingRect = m_boundingRect.intersected(m_clipRegion.rects().first());
+    if (m_hasClipRegion && m_clipRegion.rectCount() <= 1) {
+        // If there is a clipRegion, and it is empty, the item wont be rendered
+        if (m_clipRegion.isEmpty())
+            m_boundingRect = QRect();
+        else
+            m_boundingRect = m_boundingRect.intersected(m_clipRegion.rects().first());
     }
 
     // Overrides
@@ -284,12 +289,13 @@ void QSGSoftwareRenderableNode::setTransform(const QTransform &transform)
     update();
 }
 
-void QSGSoftwareRenderableNode::setClipRegion(const QRegion &clipRect)
+void QSGSoftwareRenderableNode::setClipRegion(const QRegion &clipRect, bool hasClipRegion)
 {
-    if (m_clipRegion == clipRect)
+    if (m_clipRegion == clipRect && m_hasClipRegion == hasClipRegion)
         return;
 
     m_clipRegion = clipRect;
+    m_hasClipRegion = hasClipRegion;
     update();
 }
 
