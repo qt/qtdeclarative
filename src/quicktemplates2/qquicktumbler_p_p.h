@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTUMBLERVIEW_P_H
-#define QQUICKTUMBLERVIEW_P_H
+#ifndef QQUICKTUMBLER_P_P_H
+#define QQUICKTUMBLER_P_P_H
 
 //
 //  W A R N I N G
@@ -48,62 +48,66 @@
 // We mean it.
 //
 
-#include <QQuickItem>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickListView;
-class QQuickPath;
-class QQuickPathView;
-
 class QQuickTumbler;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickTumblerView : public QQuickItem
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
-    Q_OBJECT
-    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
-    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_DECLARE_PUBLIC(QQuickTumbler)
 
 public:
-    QQuickTumblerView(QQuickItem *parent = nullptr);
+    QQuickTumblerPrivate();
+    ~QQuickTumblerPrivate();
 
-    QVariant model() const;
-    void setModel(const QVariant &model);
+    enum ContentItemType {
+        UnsupportedContentItemType,
+        PathViewContentItem,
+        ListViewContentItem
+    };
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    QQuickItem *determineViewType(QQuickItem *contentItem);
+    void resetViewData();
+    QList<QQuickItem *> viewContentItemChildItems() const;
 
-    QQuickPath *path() const;
-    void setPath(QQuickPath *path);
+    static QQuickTumblerPrivate *get(QQuickTumbler *tumbler);
 
-Q_SIGNALS:
-    void modelChanged();
-    void delegateChanged();
-    void pathChanged();
+    QVariant model;
+    QQmlComponent *delegate;
+    int visibleItemCount;
+    bool wrap;
+    bool explicitWrap;
+    bool ignoreWrapChanges;
+    QQuickItem *view;
+    QQuickItem *viewContentItem;
+    ContentItemType viewContentItemType;
+    int currentIndex;
+    int pendingCurrentIndex;
+    bool ignoreCurrentIndexChanges;
+    int count;
 
-protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void componentComplete() override;
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void updatePolish();
+    void _q_updateItemHeights();
+    void _q_updateItemWidths();
+    void _q_onViewCurrentIndexChanged();
+    void _q_onViewCountChanged();
 
-private:
-    QQuickItem *view();
-    void createView();
-    void updateView();
+    void disconnectFromView();
+    void setupViewData(QQuickItem *newControlContentItem);
+    void syncCurrentIndex();
 
-    void wrapChange();
+    void setCount(int newCount);
+    void setWrapBasedOnCount();
+    void setWrap(bool shouldWrap, bool isExplicit);
+    void lockWrap();
+    void unlockWrap();
 
-    QQuickTumbler *m_tumbler;
-    QVariant m_model;
-    QQmlComponent *m_delegate;
-    QQuickPathView *m_pathView;
-    QQuickListView *m_listView;
-    QQuickPath *m_path;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 };
 
 QT_END_NAMESPACE
 
-#endif // TUMBLERVIEW_H
+#endif // QQUICKTUMBLER_P_P_H

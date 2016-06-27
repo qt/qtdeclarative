@@ -156,6 +156,8 @@ TestCase {
 
         tumbler.model = null;
         tryCompare(tumbler, "currentIndex", -1);
+        // PathView will only use 0 as the currentIndex when there are no items.
+        compare(tumblerView.currentIndex, 0);
 
         tumbler.model = ["A", "B", "C"];
         tryCompare(tumbler, "currentIndex", 0);
@@ -166,6 +168,21 @@ TestCase {
 
         tumbler.model = 1;
         compare(tumbler.currentIndex, 0);
+
+        tumbler.model = 5;
+        compare(tumbler.count, 5);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "count", 5);
+        tumbler.currentIndex = 4;
+        compare(tumbler.currentIndex, 4);
+        compare(tumblerView.currentIndex, 4);
+
+        --tumbler.model;
+        compare(tumbler.count, 4);
+        compare(tumblerView.count, 4);
+        // Removing an item from an integer-based model will cause views to reset their currentIndex to 0.
+        compare(tumbler.currentIndex, 0);
+        compare(tumblerView.currentIndex, 0);
 
         tumbler.model = 0;
         compare(tumbler.currentIndex, -1);
@@ -214,14 +231,26 @@ TestCase {
         }
     }
 
+    Component {
+        id: currentIndexTooLargeTumbler
+
+        Tumbler {
+            objectName: "currentIndexTooLargeTumbler"
+            model: 10
+            currentIndex: 10
+        }
+    }
+
+
     function test_currentIndexAtCreation_data() {
         return [
-            { tag: "wrap: true, currentIndex: 2", currentIndex: 2, wrap: true, component: currentIndexTumbler },
-            { tag: "wrap: false, currentIndex: 2", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrap },
+            { tag: "wrap: implicit, expected currentIndex: 2", currentIndex: 2, wrap: true, component: currentIndexTumbler },
+            { tag: "wrap: false, expected currentIndex: 2", currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrap },
             // Order of property assignments shouldn't matter
-            { tag: "wrap: false, currentIndex: 2, reversed property assignment order",
+            { tag: "wrap: false, expected currentIndex: 2, reversed property assignment order",
                 currentIndex: 2, wrap: false, component: currentIndexTumblerNoWrapReversedOrder },
-            { tag: "wrap: false, currentIndex: -1", currentIndex: 0, wrap: false, component: negativeCurrentIndexTumblerNoWrap }
+            { tag: "wrap: false, expected currentIndex: 0", currentIndex: 0, wrap: false, component: negativeCurrentIndexTumblerNoWrap },
+            { tag: "wrap: implicit, expected currentIndex: 0", currentIndex: 0, wrap: true, component: currentIndexTooLargeTumbler }
         ]
     }
 
@@ -229,7 +258,9 @@ TestCase {
         // Test setting currentIndex at creation time
         var tumbler = data.component.createObject(testCase);
         verify(tumbler);
-        compare(tumbler.currentIndex, data.currentIndex);
+        // A "statically declared" currentIndex will be pending until the count has changed,
+        // which happens when the model is set, which happens on the TumblerView's next polish.
+        tryCompare(tumbler, "currentIndex", data.currentIndex);
 
         tumblerView = findView(tumbler);
         // TODO: replace once QTBUG-19708 is fixed.
@@ -242,10 +273,11 @@ TestCase {
         compare(tumblerView.currentIndex, data.currentIndex);
         compare(tumblerView.currentItem.text, data.currentIndex.toString());
 
+        var fuzz = 1;
         if (data.wrap) {
-            compare(tumblerView.offset, tumblerView.count - data.currentIndex);
+            fuzzyCompare(tumblerView.offset, data.currentIndex > 0 ? tumblerView.count - data.currentIndex : 0, fuzz);
         } else {
-            compare(tumblerView.contentY, tumblerDelegateHeight * data.currentIndex - tumblerView.preferredHighlightBegin);
+            fuzzyCompare(tumblerView.contentY, tumblerDelegateHeight * data.currentIndex - tumblerView.preferredHighlightBegin, fuzz);
         }
 
         tumbler.destroy();
@@ -337,7 +369,7 @@ TestCase {
         tumbler = component.createObject(testCase);
         // Should not be any warnings.
 
-        compare(tumbler.dayTumbler.currentIndex, 0);
+        tryCompare(tumbler.dayTumbler, "currentIndex", 0);
         compare(tumbler.dayTumbler.count, 31);
         compare(tumbler.monthTumbler.currentIndex, 0);
         compare(tumbler.monthTumbler.count, 12);
@@ -421,6 +453,7 @@ TestCase {
     function test_displacement(data) {
         // TODO: test setting these in the opposite order (delegate after model
         // doesn't seem to cause a change in delegates in PathView)
+        tumbler.wrap = true;
         tumbler.delegate = displacementDelegate;
         tumbler.model = data.count;
         compare(tumbler.count, data.count);
@@ -445,8 +478,71 @@ TestCase {
         tumblerView = findView(tumbler);
         compare(tumbler.count, 5);
         compare(tumbler.currentIndex, 2);
-        compare(tumblerView.count, 5);
+        // Tumbler's count hasn't changed (the model hasn't changed),
+        // but the new view needs time to instantiate its items.
+        tryCompare(tumblerView, "count", 5);
         compare(tumblerView.currentIndex, 2);
+    }
+
+    Component {
+        id: twoItemTumbler
+
+        Tumbler {
+            model: 2
+        }
+    }
+
+    Component {
+        id: tenItemTumbler
+
+        Tumbler {
+            model: 10
+        }
+    }
+
+    function test_countWrap() {
+        // Check that a count that is less than visibleItemCount results in wrap being set to false.
+        verify(2 < tumbler.visibleItemCount);
+        tumbler.model = 2;
+        compare(tumbler.count, 2);
+        compare(tumbler.wrap, false);
+    }
+
+    function test_explicitlyNonwrapping() {
+        // Check that explicitly setting wrap to false works even when it was implicitly false.
+        var explicitlyNonWrapping = twoItemTumbler.createObject(testCase);
+        verify(explicitlyNonWrapping);
+        tryCompare(explicitlyNonWrapping, "wrap", false);
+
+        explicitlyNonWrapping.wrap = false;
+        // wrap shouldn't be set to true now that there are more items than there are visible ones.
+        verify(10 > explicitlyNonWrapping.visibleItemCount);
+        explicitlyNonWrapping.model = 10;
+        compare(explicitlyNonWrapping.wrap, false);
+
+        // Test resetting wrap back to the default behavior.
+        explicitlyNonWrapping.wrap = undefined;
+        compare(explicitlyNonWrapping.wrap, true);
+
+        explicitlyNonWrapping.destroy();
+    }
+
+    function test_explicitlyWrapping() {
+        // Check that explicitly setting wrap to true works even when it was implicitly true.
+        var explicitlyWrapping = tenItemTumbler.createObject(testCase);
+        verify(explicitlyWrapping);
+        compare(explicitlyWrapping.wrap, true);
+
+        explicitlyWrapping.wrap = true;
+        // wrap shouldn't be set to false now that there are more items than there are visible ones.
+        explicitlyWrapping.model = 2;
+        compare(explicitlyWrapping.wrap, true);
+
+        // Test resetting wrap back to the default behavior.
+        explicitlyWrapping.wrap = undefined;
+        compare(explicitlyWrapping.wrap, false);
+
+        explicitlyWrapping.destroy();
     }
 
     Component {

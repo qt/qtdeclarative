@@ -61,6 +61,7 @@ HEADERS += \
     $$PWD/qquicktoolbutton_p.h \
     $$PWD/qquicktooltip_p.h \
     $$PWD/qquicktumbler_p.h \
+    $$PWD/qquicktumbler_p_p.h \
     $$PWD/qquickvelocitycalculator_p_p.h
 
 SOURCES += \

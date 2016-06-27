@@ -90,7 +90,6 @@ Rectangle {
 
             Tumbler {
                 id: amPmTumbler
-                wrap: false
                 model: ["AM", "PM"]
                 delegate: delegateComponent
             }

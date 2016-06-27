@@ -66,7 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
-    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 1)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION 1)
 
 public:
     explicit QQuickTumbler(QQuickItem *parent = nullptr);
@@ -89,6 +89,7 @@ public:
 
     bool wrap() const;
     void setWrap(bool wrap);
+    void resetWrap();
 
     static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
 
@@ -106,6 +107,7 @@ protected:
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void updatePolish() override;
 
 private:
     Q_DISABLE_COPY(QQuickTumbler)

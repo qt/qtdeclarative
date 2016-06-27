@@ -42,6 +42,7 @@
 #include <QtQuick/private/qquickpathview_p.h>
 
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
+#include <QtQuickTemplates2/private/qquicktumbler_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -121,6 +122,8 @@ void QQuickTumblerView::createView()
 {
     Q_ASSERT(m_tumbler);
 
+    // We create a view regardless of whether or not we know
+    // the count yet, because we rely on the view to tell us the count.
     if (m_tumbler->wrap()) {
         if (m_listView) {
             delete m_listView;
@@ -131,12 +134,7 @@ void QQuickTumblerView::createView()
             m_pathView = new QQuickPathView;
             QQmlEngine::setContextForObject(m_pathView, qmlContext(this));
             QQml_setParent_noEvent(m_pathView, this);
-            // QQuickPathView::setPathItemCount() resets the offset animation,
-            // so we just skip the animation while constructing the view.
-            const int oldHighlightMoveDuration = m_pathView->highlightMoveDuration();
-            m_pathView->setHighlightMoveDuration(0);
             m_pathView->setParentItem(this);
-            m_pathView->setModel(m_model);
             m_pathView->setPath(m_path);
             m_pathView->setDelegate(m_delegate);
             m_pathView->setPreferredHighlightBegin(0.5);
@@ -145,8 +143,8 @@ void QQuickTumblerView::createView()
 
             // Give the view a size.
             updateView();
-
-            m_pathView->setHighlightMoveDuration(oldHighlightMoveDuration);
+            // Ensure that the model is set eventually.
+            polish();
         }
     } else {
         if (m_pathView) {
@@ -162,11 +160,12 @@ void QQuickTumblerView::createView()
             m_listView->setSnapMode(QQuickListView::SnapToItem);
             m_listView->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
             m_listView->setClip(true);
-            m_listView->setModel(m_model);
             m_listView->setDelegate(m_delegate);
 
             // Give the view a size.
             updateView();
+            // Ensure that the model is set eventually.
+            polish();
         }
     }
 }
@@ -221,6 +220,42 @@ void QQuickTumblerView::itemChange(QQuickItem::ItemChange change, const QQuickIt
             connect(m_tumbler, &QQuickTumbler::wrapChanged, this, &QQuickTumblerView::createView);
             connect(m_tumbler, &QQuickTumbler::visibleItemCountChanged, this, &QQuickTumblerView::updateView);
         }
+    }
+}
+
+void QQuickTumblerView::updatePolish()
+{
+    // There are certain cases where model count changes can potentially cause problems.
+    // An example of this is a ListModel that appends items in a for loop in Component.onCompleted.
+    // If we didn't delay assignment of the model, the PathView/ListView would be deleted in
+    // response to it emitting countChanged(), causing a crash. To avoid this issue,
+    // and to avoid the overhead of count affecting the wrap property, which in turn may
+    // unnecessarily create delegates that are never seen, we delay setting the model. This ensures that
+    // Component.onCompleted would have been finished, for example.
+    if (m_pathView && !m_pathView->model().isValid() && m_model.isValid()) {
+        // QQuickPathView::setPathItemCount() resets the offset animation,
+        // so we just skip the animation while constructing the view.
+        const int oldHighlightMoveDuration = m_pathView->highlightMoveDuration();
+        m_pathView->setHighlightMoveDuration(0);
+
+        // Setting model can change the count, which can affect the wrap, which can cause
+        // the current view to be deleted before setModel() is finished, which causes a crash.
+        // Since QQuickTumbler can't know about QQuickTumblerView, we use its private API to
+        // inform it that it should delay setting wrap.
+        QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(m_tumbler);
+        tumblerPrivate->lockWrap();
+        m_pathView->setModel(m_model);
+        tumblerPrivate->unlockWrap();
+
+        // The count-depends-on-wrap behavior could cause wrap to change after
+        // the call above, so we must check that we're still using a PathView.
+        if (m_pathView)
+            m_pathView->setHighlightMoveDuration(oldHighlightMoveDuration);
+    } else if (m_listView && !m_listView->model().isValid() && m_model.isValid()) {
+        // Usually we'd do this in QQuickTumbler::setWrap(), but that will be too early for polishes.
+        const int currentIndex = m_tumbler->currentIndex();
+        m_listView->setModel(m_model);
+        m_listView->setCurrentIndex(currentIndex);
     }
 }
 
