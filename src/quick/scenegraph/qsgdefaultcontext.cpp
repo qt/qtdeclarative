@@ -272,7 +272,7 @@ QSGRendererInterface::ShaderCompilationTypes QSGDefaultContext::shaderCompilatio
 
 QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() const
 {
-    return ShaderSourceString;
+    return ShaderSourceString | ShaderSourceFile;
 }
 
 QT_END_NAMESPACE

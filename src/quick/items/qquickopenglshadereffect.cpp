@@ -51,6 +51,7 @@
 #include "qquickshadereffectsource_p.h"
 #include "qquickshadereffectmesh_p.h"
 
+#include <QtQml/qqmlfile.h>
 #include <QtCore/qsignalmapper.h>
 
 QT_BEGIN_NAMESPACE
@@ -320,6 +321,20 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item, Key::ShaderT
     signalMappers[shaderType].clear();
     if (shaderType == Key::VertexShader)
         attributes.clear();
+
+    // A qrc or file URL means the shader source is to be read from the specified file.
+    QUrl srcUrl(QString::fromUtf8(source.sourceCode[shaderType]));
+    if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
+        const QString fn = QQmlFile::urlToLocalFileOrQrc(srcUrl);
+        QFile f(fn);
+        if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            source.sourceCode[shaderType] = f.readAll();
+            f.close();
+        } else {
+            qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));
+            source.sourceCode[shaderType] = QByteArray();
+        }
+    }
 
     const QByteArray &code = source.sourceCode[shaderType];
     if (code.isEmpty()) {
