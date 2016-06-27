@@ -109,13 +109,13 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
 
-void QQuickWidgetPrivate::ensureEngine()
+void QQuickWidgetPrivate::ensureEngine() const
 {
-    Q_Q(QQuickWidget);
+    Q_Q(const QQuickWidget);
     if (!engine.isNull())
         return;
 
-    engine = new QQmlEngine(q);
+    engine = new QQmlEngine(const_cast<QQuickWidget*>(q));
     engine.data()->setIncubationController(offscreenWindow->incubationController());
 }
 
@@ -493,7 +493,8 @@ QUrl QQuickWidget::source() const
 QQmlEngine* QQuickWidget::engine() const
 {
     Q_D(const QQuickWidget);
-    return d->engine ? const_cast<QQmlEngine *>(d->engine.data()) : 0;
+    d->ensureEngine();
+    return const_cast<QQmlEngine *>(d->engine.data());
 }
 
 /*!
@@ -506,7 +507,8 @@ QQmlEngine* QQuickWidget::engine() const
 QQmlContext* QQuickWidget::rootContext() const
 {
     Q_D(const QQuickWidget);
-    return d->engine ? d->engine.data()->rootContext() : 0;
+    d->ensureEngine();
+    return d->engine.data()->rootContext();
 }
 
 /*!

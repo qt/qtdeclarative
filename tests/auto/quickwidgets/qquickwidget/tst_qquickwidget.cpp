@@ -305,9 +305,13 @@ void tst_qquickwidget::grabBeforeShow()
 void tst_qquickwidget::nullEngine()
 {
     QQuickWidget widget;
-    QVERIFY(widget.engine() == Q_NULLPTR);
+    // Default should have no errors, even with a null qml engine
     QVERIFY(widget.errors().isEmpty());
     QCOMPARE(widget.status(), QQuickWidget::Null);
+
+    // A QML engine should be created lazily.
+    QVERIFY(widget.rootContext());
+    QVERIFY(widget.engine());
 }
 
 QTEST_MAIN(tst_qquickwidget)

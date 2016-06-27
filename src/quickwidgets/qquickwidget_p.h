@@ -105,7 +105,7 @@ public:
     QImage grabFramebuffer() Q_DECL_OVERRIDE;
 
     void init(QQmlEngine* e = 0);
-    void ensureEngine();
+    void ensureEngine() const;
     void handleWindowChange();
     void invalidateRenderControl();
 
@@ -115,7 +115,7 @@ public:
 
     QUrl source;
 
-    QPointer<QQmlEngine> engine;
+    mutable QPointer<QQmlEngine> engine;
     QQmlComponent *component;
     QBasicTimer resizetimer;
     QQuickWindow *offscreenWindow;
