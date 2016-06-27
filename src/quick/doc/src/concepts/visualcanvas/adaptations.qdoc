@@ -104,11 +104,15 @@ uses the Raster paint engine to render the contents of the scene graph instead
 of OpenGL. As a result of not using OpenGL to render the scene graph, some
 features and optimizations are no longer available. Most Qt Quick 2
 applications will run without modification though any attempts to use
-unsupported features will be ignored. By using the Software adpatation it is
+unsupported features will be ignored. By using the Software adaptation it is
 possible to run Qt Quick 2 applications on hardware and platforms that do not
 have OpenGL support.
 
 The Software adaptation was previously known as the Qt Quick 2D Renderer.
+However, unlike the 2D Renderer, the new, integrated version supports partial
+updates. This means that the full update of the window or screen contents is
+now avoided, and only the changed areas get flushed. This can significantly
+improve performance for many applications.
 
 \section2 Shader Effects
 ShaderEffect components in QtQuick 2 can not be rendered by the Software adptation.
@@ -194,8 +198,8 @@ category \c{qt.scenegraph.general} is enabled.
 When encountering issues, always set the \c{QSG_INFO} and \c{QT_D3D_DEBUG}
 environment variables to 1 in order to get debug and warning messages printed
 on the debug output. The latter enables the Direct3D debug layer. Note that the
-debug layer should not be enabled in production use since the performance it
-can significantly impact performance (CPU load) due to increased API overhead.
+debug layer should not be enabled in production use since it can significantly
+impact performance (CPU load) due to increased API overhead.
 
 \section2 Render Loops
 
@@ -241,8 +245,9 @@ See the ShaderEffect documentation for a detailed description.
 Particles, sprites, and other OpenGL-dependent tools like
 QQuickFramebufferObject are not currently supported.
 
-Like with the Software adaptation, text is always rendered using the native
-method. Distance field-based text rendering is not currently implemented.
+Like with the \l{qtquick-visualcanvas-adaptations-software.html}{Software
+adaptation}, text is always rendered using the native method. Distance
+field-based text rendering is not currently implemented.
 
 Texture atlases are not currently in use.
 
