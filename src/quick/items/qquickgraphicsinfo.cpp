@@ -112,11 +112,11 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \endlist
 
     \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from
-    GraphicsInfo.UnknownShadingLanguage to the actual value after component
-    initialization is complete. This is particularly relevant for ShaderEffect
-    items inside ShaderEffectSource items set as property values.
+    window. Bindings relying on the value have to keep this in mind since the
+    value may change from GraphicsInfo.UnknownShadingLanguage to the actual
+    value after component initialization is complete. This is particularly
+    relevant for ShaderEffect items inside ShaderEffectSource items set as
+    property values.
 
     \since 5.8
     \since QtQuick 2.8
@@ -140,11 +140,10 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     expected to focus more on GraphicsInfo.OfflineCompilation, however.
 
     \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from \c 0 to the
-    actual bitmask after component initialization is complete. This is
-    particularly relevant for ShaderEffect items inside ShaderEffectSource
-    items set as property values.
+    window. Bindings relying on the value have to keep this in mind since the
+    value may change from \c 0 to the actual bitmask after component
+    initialization is complete. This is particularly relevant for ShaderEffect
+    items inside ShaderEffectSource items set as property values.
 
     \since 5.8
     \since QtQuick 2.8
@@ -172,11 +171,10 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     bytecode.
 
     \note The value is only up-to-date once the item is associated with a
-    window and the window's scenegraph has initialized. Bindings relying on the
-    value have to keep this in mind since the value may change from \c 0 to the
-    actual bitmask after component initialization is complete. This is
-    particularly relevant for ShaderEffect items inside ShaderEffectSource
-    items set as property values.
+    window. Bindings relying on the value have to keep this in mind since the
+    value may change from \c 0 to the actual bitmask after component
+    initialization is complete. This is particularly relevant for ShaderEffect
+    items inside ShaderEffectSource items set as property values.
 
     \since 5.8
     \since QtQuick 2.8
@@ -240,9 +238,8 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
 
 void QQuickGraphicsInfo::updateInfo()
 {
-    const bool sgReady = m_window && m_window->isSceneGraphInitialized();
-
-    if (sgReady) {
+    // The queries via the RIF do not depend on isSceneGraphInitialized(), they only need a window.
+    if (m_window) {
         QSGRendererInterface *rif = m_window->rendererInterface();
         if (rif) {
             GraphicsApi newAPI = GraphicsApi(rif->graphicsApi());
@@ -261,7 +258,7 @@ void QQuickGraphicsInfo::updateInfo()
 
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
 #ifndef QT_NO_OPENGL
-    if (sgReady) {
+    if (m_window && m_window->isSceneGraphInitialized()) {
         QOpenGLContext *context = m_window->openglContext();
         if (context)
             format = context->format();

@@ -59,10 +59,11 @@ QQuickGenericShaderEffect::QQuickGenericShaderEffect(QQuickShaderEffect *item, Q
     , m_blending(true)
     , m_supportsAtlasTextures(false)
     , m_mgr(nullptr)
+    , m_fragNeedsUpdate(true)
+    , m_vertNeedsUpdate(true)
     , m_dirty(0)
 {
     qRegisterMetaType<QSGGuiThreadShaderEffectManager::ShaderInfo::Type>("ShaderInfo::Type");
-    connect(m_item, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(itemWindowChanged(QQuickWindow*)));
     for (int i = 0; i < NShader; ++i)
         m_inProgress[i] = nullptr;
 }
@@ -88,12 +89,11 @@ void QQuickGenericShaderEffect::setFragmentShader(const QByteArray &src)
         return;
 
     m_fragShader = src;
-    m_dirty |= QSGShaderEffectNode::DirtyShaders;
 
+    m_fragNeedsUpdate = true;
     if (m_item->isComponentComplete())
-        updateShader(Fragment, src);
+        maybeUpdateShaders();
 
-    m_item->update();
     emit m_item->fragmentShaderChanged();
 }
 
@@ -103,12 +103,11 @@ void QQuickGenericShaderEffect::setVertexShader(const QByteArray &src)
         return;
 
     m_vertShader = src;
-    m_dirty |= QSGShaderEffectNode::DirtyShaders;
 
+    m_vertNeedsUpdate = true;
     if (m_item->isComponentComplete())
-        updateShader(Vertex, src);
+        maybeUpdateShaders();
 
-    m_item->update();
     emit m_item->vertexShaderChanged();
 }
 
@@ -185,6 +184,12 @@ void QQuickGenericShaderEffect::setSupportsAtlasTextures(bool supports)
     m_supportsAtlasTextures = supports;
     markGeometryDirtyAndUpdate();
     emit m_item->supportsAtlasTexturesChanged();
+}
+
+QString QQuickGenericShaderEffect::parseLog()
+{
+    maybeUpdateShaders();
+    return log();
 }
 
 QString QQuickGenericShaderEffect::log() const
@@ -294,10 +299,14 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
     return node;
 }
 
-void QQuickGenericShaderEffect::handleComponentComplete()
+void QQuickGenericShaderEffect::maybeUpdateShaders()
 {
-    updateShader(Vertex, m_vertShader);
-    updateShader(Fragment, m_fragShader);
+    if (m_vertNeedsUpdate)
+        m_vertNeedsUpdate = !updateShader(Vertex, m_vertShader);
+    if (m_fragNeedsUpdate)
+        m_fragNeedsUpdate = !updateShader(Fragment, m_fragShader);
+    if (m_vertNeedsUpdate || m_fragNeedsUpdate)
+        m_item->polish();
 }
 
 void QQuickGenericShaderEffect::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -326,9 +335,8 @@ QSGGuiThreadShaderEffectManager *QQuickGenericShaderEffect::shaderEffectManager(
         // return null if this is not the gui thread and not already created
         if (QThread::currentThread() != m_item->thread())
             return m_mgr;
-        // need a window and a rendercontext (i.e. the scenegraph backend is ready)
         QQuickWindow *w = m_item->window();
-        if (w && w->isSceneGraphInitialized()) {
+        if (w) { // note: just the window, don't care about isSceneGraphInitialized() here
             m_mgr = QQuickWindowPrivate::get(w)->context->sceneGraphContext()->createGuiThreadShaderEffectManager();
             if (m_mgr) {
                 connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(logChanged()));
@@ -336,32 +344,10 @@ QSGGuiThreadShaderEffectManager *QQuickGenericShaderEffect::shaderEffectManager(
                 connect(m_mgr, SIGNAL(textureChanged()), this, SLOT(markGeometryDirtyAndUpdateIfSupportsAtlas()));
                 connect(m_mgr, &QSGGuiThreadShaderEffectManager::shaderCodePrepared, this, &QQuickGenericShaderEffect::shaderCodePrepared);
             }
-        } else if (!w) {
-            // Wait until itemWindowChanged() gets called. Return null for now.
-        } else {
-            // Have window, but no scenegraph -> ensure the signal is connected. Return null for now.
-            const_cast<QQuickGenericShaderEffect *>(this)->itemWindowChanged(w);
         }
     }
 
     return m_mgr;
-}
-
-void QQuickGenericShaderEffect::itemWindowChanged(QQuickWindow *w)
-{
-    if (w) {
-        if (w->isSceneGraphInitialized())
-            backendChanged();
-        else
-            connect(w, SIGNAL(sceneGraphInitialized()), this, SLOT(backendChanged()), Qt::UniqueConnection);
-    }
-}
-
-void QQuickGenericShaderEffect::backendChanged()
-{
-    disconnect(m_item->window(), SIGNAL(sceneGraphInitialized()), this, SLOT(backendChanged()));
-    emit m_item->logChanged();
-    emit m_item->statusChanged();
 }
 
 void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)
@@ -407,11 +393,11 @@ struct ShaderInfoCache
 
 Q_GLOBAL_STATIC(ShaderInfoCache, shaderInfoCache)
 
-void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray &src)
+bool QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray &src)
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
-        return;
+        return false;
 
     const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
 
@@ -439,7 +425,7 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
             // source->bytecode compilation as well in this step.
             mgr->prepareShaderCode(typeHint, src, m_inProgress[shaderType]);
             // the rest is handled in shaderCodePrepared()
-            return;
+            return true;
         }
     } else {
         m_shaders[shaderType].hasShaderCode = false;
@@ -459,6 +445,9 @@ void QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
     }
 
     updateShaderVars(shaderType);
+    m_dirty |= QSGShaderEffectNode::DirtyShaders;
+    m_item->update();
+    return true;
 }
 
 void QQuickGenericShaderEffect::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
@@ -486,6 +475,8 @@ void QQuickGenericShaderEffect::shaderCodePrepared(bool ok, QSGGuiThreadShaderEf
     m_shaders[shaderType].hasShaderCode = true;
     shaderInfoCache()->insert(src, m_shaders[shaderType].shaderInfo);
     updateShaderVars(shaderType);
+    m_dirty |= QSGShaderEffectNode::DirtyShaders;
+    m_item->update();
 }
 
 void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)

@@ -126,4 +126,34 @@ void QSGD3D12RenderContext::ensureInitializedEmitted()
     emit initialized();
 }
 
+QSGRendererInterface::GraphicsApi QSGD3D12RenderContext::graphicsApi() const
+{
+    return Direct3D12;
+}
+
+void *QSGD3D12RenderContext::getResource(Resource resource) const
+{
+    if (!m_engine) {
+        qWarning("getResource: No D3D12 engine available yet (window not exposed?)");
+        return nullptr;
+    }
+
+    return m_engine->getResource(resource);
+}
+
+QSGRendererInterface::ShaderType QSGD3D12RenderContext::shaderType() const
+{
+    return HLSL;
+}
+
+QSGRendererInterface::ShaderCompilationTypes QSGD3D12RenderContext::shaderCompilationType() const
+{
+    return RuntimeCompilation | OfflineCompilation;
+}
+
+QSGRendererInterface::ShaderSourceTypes QSGD3D12RenderContext::shaderSourceType() const
+{
+    return ShaderSourceString | ShaderByteCode;
+}
+
 QT_END_NAMESPACE

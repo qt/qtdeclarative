@@ -535,29 +535,9 @@ void QSGD3D12Engine::simulateDeviceLoss()
     d->simulateDeviceLoss();
 }
 
-QSGRendererInterface::GraphicsApi QSGD3D12Engine::graphicsApi() const
-{
-    return Direct3D12;
-}
-
-void *QSGD3D12Engine::getResource(Resource resource) const
+void *QSGD3D12Engine::getResource(QSGRendererInterface::Resource resource) const
 {
     return d->getResource(resource);
-}
-
-QSGRendererInterface::ShaderType QSGD3D12Engine::shaderType() const
-{
-    return HLSL;
-}
-
-QSGRendererInterface::ShaderCompilationTypes QSGD3D12Engine::shaderCompilationType() const
-{
-    return RuntimeCompilation | OfflineCompilation;
-}
-
-QSGRendererInterface::ShaderSourceTypes QSGD3D12Engine::shaderSourceType() const
-{
-    return ShaderSourceString | ShaderByteCode;
 }
 
 static inline quint32 alignedSize(quint32 size, quint32 byteAlign)

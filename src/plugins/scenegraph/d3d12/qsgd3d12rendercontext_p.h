@@ -52,12 +52,13 @@
 //
 
 #include <private/qsgcontext_p.h>
+#include <qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSGD3D12Engine;
 
-class QSGD3D12RenderContext : public QSGRenderContext
+class QSGD3D12RenderContext : public QSGRenderContext, public QSGRendererInterface
 {
 public:
     QSGD3D12RenderContext(QSGContext *ctx);
@@ -72,6 +73,13 @@ public:
 
     void ensureInitializedEmitted();
     void setInitializedPending() { m_pendingInitialized = true; }
+
+    // QSGRendererInterface
+    GraphicsApi graphicsApi() const override;
+    void *getResource(Resource resource) const override;
+    ShaderType shaderType() const override;
+    ShaderCompilationTypes shaderCompilationType() const override;
+    ShaderSourceTypes shaderSourceType() const override;
 
 private:
     QSGD3D12Engine *m_engine = nullptr;

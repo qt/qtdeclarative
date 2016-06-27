@@ -610,6 +610,8 @@ public:
 
     // recursive helper to let a visual parent mark its visual children
     void markObjects(QV4::ExecutionEngine *e);
+
+    virtual void updatePolish() { }
 };
 
 /*

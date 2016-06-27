@@ -281,7 +281,7 @@ inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
             + key.topologyType;
 }
 
-class QSGD3D12Engine : public QSGRendererInterface
+class QSGD3D12Engine
 {
 public:
     QSGD3D12Engine();
@@ -372,12 +372,7 @@ public:
 
     void simulateDeviceLoss();
 
-    // QSGRendererInterface
-    GraphicsApi graphicsApi() const override;
-    void *getResource(Resource resource) const override;
-    ShaderType shaderType() const override;
-    ShaderCompilationTypes shaderCompilationType() const override;
-    ShaderSourceTypes shaderSourceType() const override;
+    void *getResource(QSGRendererInterface::Resource resource) const;
 
 private:
     QSGD3D12EnginePrivate *d;

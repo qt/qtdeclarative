@@ -39,6 +39,7 @@
 
 #include <private/qquickshadereffect_p.h>
 #include <private/qsgcontextplugin_p.h>
+#include <private/qquickitem_p.h>
 #ifndef QT_NO_OPENGL
 #include <private/qquickopenglshadereffect_p.h>
 #endif
@@ -382,10 +383,18 @@ QT_BEGIN_NAMESPACE
     \sa {Item Layers}
 */
 
+class QQuickShaderEffectPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickShaderEffect)
+
+public:
+    void updatePolish() override;
+};
+
 QSGContextFactoryInterface::Flags qsg_backend_flags();
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
-    : QQuickItem(parent),
+    : QQuickItem(*new QQuickShaderEffectPrivate, parent),
 #ifndef QT_NO_OPENGL
       m_glImpl(nullptr),
 #endif
@@ -712,12 +721,12 @@ void QQuickShaderEffect::componentComplete()
 {
 #ifndef QT_NO_OPENGL
     if (m_glImpl) {
-        m_glImpl->handleComponentComplete();
+        m_glImpl->maybeUpdateShaders();
         QQuickItem::componentComplete();
         return;
     }
 #endif
-    m_impl->handleComponentComplete();
+    m_impl->maybeUpdateShaders();
     QQuickItem::componentComplete();
 }
 
@@ -745,7 +754,19 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
     if (m_glImpl)
         return m_glImpl->parseLog();
 #endif
-    return QString();
+    return m_impl->parseLog();
+}
+
+void QQuickShaderEffectPrivate::updatePolish()
+{
+    Q_Q(QQuickShaderEffect);
+#ifndef QT_NO_OPENGL
+    if (q->m_glImpl) {
+        q->m_glImpl->maybeUpdateShaders();
+        return;
+    }
+#endif
+    q->m_impl->maybeUpdateShaders();
 }
 
 QT_END_NAMESPACE

@@ -132,8 +132,8 @@ public:
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
-    void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
+    void maybeUpdateShaders(bool force = false);
 
 private Q_SLOTS:
     void updateGeometry();
@@ -169,6 +169,8 @@ private:
     uint m_dirtyGeometry : 1;
     uint m_customVertexShader : 1;
     uint m_supportsAtlasTextures : 1;
+    uint m_vertNeedsUpdate : 1;
+    uint m_fragNeedsUpdate : 1;
 };
 
 QT_END_NAMESPACE

@@ -109,12 +109,7 @@ QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
 
 QSGRendererInterface *QSGD3D12Context::rendererInterface(QSGRenderContext *renderContext)
 {
-    QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
-    if (!rc->engine()) {
-        qWarning("No D3D12 engine available yet (no render thread due to window not exposed?)");
-        return nullptr;
-    }
-    return rc->engine();
+    return static_cast<QSGD3D12RenderContext *>(renderContext);
 }
 
 QSGRectangleNode *QSGD3D12Context::createRectangleNode()

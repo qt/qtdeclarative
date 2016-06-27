@@ -54,12 +54,21 @@ QT_BEGIN_NAMESPACE
     necessary to query certain values, for instance the graphics device (e.g.
     the Direct3D or Vulkan device) that is used by the scenegraph.
 
-    \note QSGRendererInterface is only available after the scenegraph is
-    initialized. Additionally, there may be backend-specific limitations on
-    when the functions can be called. The only way that is guaranteed to
-    succeed is calling them when the rendering of a node (i.e. the preparation
-    of the command list for the next frame) is active. In practice this
-    typically means QSGRenderNode::render().
+    QSGRendererInterface's functions have varying availability. API and
+    language queries, like graphicsApi() or shaderType() are always available,
+    meaning it is sufficient to construct a QQuickWindow or QQuickView, and the
+    graphics API or shading language in use can be queried right after via
+    QQuickWindow::rendererInterface(). This guarantees that utilities like the
+    GraphicsInfo QML type are able to report the correct values as early as
+    possible, without having conditional property values - depending on for
+    instance shaderType() - evaluate to unexpected values.
+
+    Engine-specific accessors, like getResource(), are however available only
+    after the scenegraph is initialized. Additionally, there may be
+    backend-specific limitations on when such functions can be called. The only
+    way that is guaranteed to succeed is calling them when the rendering of a
+    node (i.e. the preparation of the command list for the next frame) is
+    active. In practice this typically means QSGRenderNode::render().
  */
 
 /*!
@@ -112,10 +121,7 @@ QSGRendererInterface::~QSGRendererInterface()
 
     Returns the graphics API that is in use by the Qt Quick scenegraph.
 
-    \note This function can be called on any thread. However, the renderer
-    interface's lifetime may be tied to the render thread and therefore calling
-    this function from other threads during the process of application shutdown
-    or QQuickWindow closing is likely to become invalid.
+    \note This function can be called on any thread.
  */
 
 /*!
@@ -155,10 +161,7 @@ void *QSGRendererInterface::getResource(const char *resource) const
     \return the shading language supported by the Qt Quick backend the
     application is using.
 
-    \note This function can be called on any thread. However, the renderer
-    interface's lifetime may be tied to the render thread and therefore calling
-    this function from other threads during the process of application shutdown
-    or QQuickWindow closing is likely to become invalid.
+    \note This function can be called on any thread.
 
     \sa QtQuick::GraphicsInfo
  */
@@ -169,10 +172,7 @@ void *QSGRendererInterface::getResource(const char *resource) const
     \return a bitmask of the shader compilation approaches supported by the Qt
     Quick backend the application is using.
 
-    \note This function can be called on any thread. However, the renderer
-    interface's lifetime may be tied to the render thread and therefore calling
-    this function from other threads during the process of application shutdown
-    or QQuickWindow closing is likely to become invalid.
+    \note This function can be called on any thread.
 
     \sa QtQuick::GraphicsInfo
  */
@@ -182,10 +182,7 @@ void *QSGRendererInterface::getResource(const char *resource) const
 
     \return a bitmask of the supported ways of providing shader sources in ShaderEffect items.
 
-    \note This function can be called on any thread. However, the renderer
-    interface's lifetime may be tied to the render thread and therefore calling
-    this function from other threads during the process of application shutdown
-    or QQuickWindow closing is likely to become invalid.
+    \note This function can be called on any thread.
 
     \sa QtQuick::GraphicsInfo
  */

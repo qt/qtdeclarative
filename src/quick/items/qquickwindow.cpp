@@ -293,7 +293,9 @@ void QQuickWindowPrivate::polishItems()
     int recursionSafeguard = INT_MAX;
     while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
         QQuickItem *item = itemsToPolish.takeLast();
-        QQuickItemPrivate::get(item)->polishScheduled = false;
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        itemPrivate->polishScheduled = false;
+        itemPrivate->updatePolish();
         item->updatePolish();
     }
 
@@ -4450,16 +4452,31 @@ qreal QQuickWindow::effectiveDevicePixelRatio() const
 }
 
 /*!
-    Returns the current renderer interface if there is one. Otherwise null is returned.
+    \return the current renderer interface. The value is always valid and is never null.
 
-    \sa QSGRenderNode, QSGRendererInterface, isSceneGraphInitialized()
+    \note This function can be called at any time after constructing the
+    QQuickWindow, even while isSceneGraphInitialized() is still false. However,
+    some renderer interface functions, in particular
+    QSGRendererInterface::getResource() will not be functional until the
+    scenegraph is up and running. Backend queries, like
+    QSGRendererInterface::graphicsApi() or QSGRendererInterface::shaderType(),
+    will always be functional on the other hand.
+
+    \sa QSGRenderNode, QSGRendererInterface
 
     \since 5.8
  */
 QSGRendererInterface *QQuickWindow::rendererInterface() const
 {
     Q_D(const QQuickWindow);
-    return isSceneGraphInitialized() ? d->context->sceneGraphContext()->rendererInterface(d->context) : nullptr;
+
+    // no context validity check - it is essential to be able to return a
+    // renderer interface instance before scenegraphInitialized() is emitted
+    // (depending on the backend, that can happen way too late for some of the
+    // rif use cases, like examining the graphics api or shading language in
+    // use)
+
+    return d->context->sceneGraphContext()->rendererInterface(d->context);
 }
 
 /*!

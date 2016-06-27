@@ -318,7 +318,15 @@ QSize QSGContext::minimumFBOSize() const
     Returns a pointer to the (presumably) global renderer interface.
 
     \note This function may be called on the gui thread in order to get access
-    to QSGRendererInterface::graphicsApi().
+    to QSGRendererInterface::graphicsApi() and other getters.
+
+    \note it is expected that the simple queries (graphicsApi, shaderType,
+    etc.) are available regardless of the render context validity (i.e.
+    scenegraph status). This does not apply to engine-specific getters like
+    getResource(). In the end this means that this function must always return
+    a valid object in subclasses, even when renderContext->isValid() is false.
+    The typical pattern is to implement the QSGRendererInterface in the
+    QSGContext or QSGRenderContext subclass itself, whichever is more suitable.
  */
 QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderContext)
 {

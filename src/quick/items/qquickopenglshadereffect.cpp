@@ -556,6 +556,8 @@ QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QOb
     , m_dirtyGeometry(true)
     , m_customVertexShader(false)
     , m_supportsAtlasTextures(false)
+    , m_vertNeedsUpdate(true)
+    , m_fragNeedsUpdate(true)
 {
 }
 
@@ -573,8 +575,9 @@ void QQuickOpenGLShaderEffect::setFragmentShader(const QByteArray &code)
     m_dirtyProgram = true;
     m_dirtyParseLog = true;
 
+    m_fragNeedsUpdate = true;
     if (m_item->isComponentComplete())
-        m_common.updateShader(m_item, Key::FragmentShader);
+        maybeUpdateShaders();
 
     m_item->update();
     if (m_status != QQuickShaderEffect::Uncompiled) {
@@ -593,8 +596,9 @@ void QQuickOpenGLShaderEffect::setVertexShader(const QByteArray &code)
     m_dirtyParseLog = true;
     m_customVertexShader = true;
 
+    m_vertNeedsUpdate = true;
     if (m_item->isComponentComplete())
-        m_common.updateShader(m_item, Key::VertexShader);
+        maybeUpdateShaders();
 
     m_item->update();
     if (m_status != QQuickShaderEffect::Uncompiled) {
@@ -677,6 +681,8 @@ void QQuickOpenGLShaderEffect::setSupportsAtlasTextures(bool supports)
 
 QString QQuickOpenGLShaderEffect::parseLog()
 {
+    maybeUpdateShaders(true);
+
     if (m_dirtyParseLog) {
         m_common.updateParseLog(m_mesh != 0);
         m_dirtyParseLog = false;
@@ -862,10 +868,25 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     return node;
 }
 
-void QQuickOpenGLShaderEffect::handleComponentComplete()
+void QQuickOpenGLShaderEffect::maybeUpdateShaders(bool force)
 {
-    m_common.updateShader(m_item, Key::VertexShader);
-    m_common.updateShader(m_item, Key::FragmentShader);
+    // Defer processing if a window is not yet associated with the item. This
+    // is because the actual scenegraph backend is not known so conditions
+    // based on GraphicsInfo.shaderType and similar evaluate to wrong results.
+    if (!m_item->window() && !force) {
+        m_item->polish();
+        return;
+    }
+
+    if (m_vertNeedsUpdate) {
+        m_vertNeedsUpdate = false;
+        m_common.updateShader(m_item, Key::VertexShader);
+    }
+
+    if (m_fragNeedsUpdate) {
+        m_fragNeedsUpdate = false;
+        m_common.updateShader(m_item, Key::FragmentShader);
+    }
 }
 
 void QQuickOpenGLShaderEffect::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
