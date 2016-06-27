@@ -131,6 +131,7 @@ QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
         connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformDialog::close);
         connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::clicked);
+        messageDialog->setOptions(m_options);
     }
     setHandle(dialog);
 }
@@ -246,8 +247,6 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
 void QQuickPlatformMessageDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
-    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(handle()))
-        messageDialog->setOptions(m_options);
 }
 
 QT_END_NAMESPACE

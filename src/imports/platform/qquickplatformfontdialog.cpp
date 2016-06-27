@@ -107,6 +107,7 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
         connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
+        fontDialog->setOptions(m_options);
     }
     setHandle(dialog);
 }
@@ -166,8 +167,6 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
 void QQuickPlatformFontDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
-        fontDialog->setOptions(m_options);
 }
 
 QT_END_NAMESPACE

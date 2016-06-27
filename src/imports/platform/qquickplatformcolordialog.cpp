@@ -107,6 +107,7 @@ QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
         connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
         connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);
+        colorDialog->setOptions(m_options);
     }
     setHandle(dialog);
 }
@@ -163,8 +164,6 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
 void QQuickPlatformColorDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
-    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
-        colorDialog->setOptions(m_options);
 }
 
 QT_END_NAMESPACE
