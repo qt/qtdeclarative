@@ -135,7 +135,7 @@ Creator.
     \div {class="doc-column"}
         \b{Layouts and Views}
         \list
-        \li \l{Qt Quick Controls - Basic Layouts Example}{Basic Layouts}
+        \li \l{Qt Quick Layouts - Basic Example}
         \li \l{Qt Quick Examples - Positioners}{Positioners}
         \li \l{Qt Quick Examples - Views}{Views}
         \li \l{Qt Quick Examples - Window and Screen}{Windows and Screen}
