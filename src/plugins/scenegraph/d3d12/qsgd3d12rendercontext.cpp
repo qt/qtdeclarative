@@ -153,7 +153,7 @@ QSGRendererInterface::ShaderCompilationTypes QSGD3D12RenderContext::shaderCompil
 
 QSGRendererInterface::ShaderSourceTypes QSGD3D12RenderContext::shaderSourceType() const
 {
-    return ShaderSourceString | ShaderByteCode;
+    return ShaderSourceString | ShaderSourceFile | ShaderByteCode;
 }
 
 QT_END_NAMESPACE

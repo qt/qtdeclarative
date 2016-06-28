@@ -840,16 +840,19 @@ void QSGD3D12ShaderCompileTask::run()
     emit mgr->logAndStatusChanged();
 }
 
+static const int BYTECODE_MAGIC = 0x43425844; // 'DXBC'
+
 void QSGD3D12GuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result)
 {
     // The D3D12 backend's ShaderEffect implementation supports both HLSL
-    // source strings and bytecode in files as input. The latter is strongly
-    // recommended, but in order to make ShaderEffect users' (and
-    // qtgraphicaleffects') life easier, and since we link to d3dcompiler
+    // source strings and bytecode or source in files as input. Bytecode is
+    // strongly recommended, but in order to make ShaderEffect users' (and
+    // anything that stiches shader strings together dynamically, e.g.
+    // qtgraphicaleffects) life easier, and since we link to d3dcompiler
     // anyways, compiling from source is also supported.
 
-    // For simplicity, assume that file = bytecode, string = HLSL.
-    QUrl srcUrl(src);
+    QByteArray shaderSourceCode = src;
+    QUrl srcUrl(QString::fromUtf8(src));
     if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
         if (!m_fileSelector) {
             m_fileSelector = new QFileSelector(this);
@@ -862,16 +865,25 @@ void QSGD3D12GuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type ty
             emit shaderCodePrepared(false, typeHint, src, result);
             return;
         }
-        result->blob = f.readAll();
+        QByteArray blob = f.readAll();
         f.close();
-        const bool ok = reflect(result);
-        m_status = ok ? Compiled : Error;
-        emit shaderCodePrepared(ok, typeHint, src, result);
-        emit logAndStatusChanged();
-        return;
+        if (blob.size() > 4) {
+            const quint32 *p = reinterpret_cast<const quint32 *>(blob.constData());
+            if (*p == BYTECODE_MAGIC) {
+                // already compiled D3D bytecode, skip straight to reflection
+                result->blob = blob;
+                const bool ok = reflect(result);
+                m_status = ok ? Compiled : Error;
+                emit shaderCodePrepared(ok, typeHint, src, result);
+                emit logAndStatusChanged();
+                return;
+            }
+            // assume the file contained HLSL source code
+            shaderSourceCode = blob;
+        }
     }
 
-    QThreadPool::globalInstance()->start(new QSGD3D12ShaderCompileTask(this, typeHint, src, result));
+    QThreadPool::globalInstance()->start(new QSGD3D12ShaderCompileTask(this, typeHint, shaderSourceCode, result));
 }
 
 bool QSGD3D12GuiThreadShaderEffectManager::reflect(ShaderInfo *result)
