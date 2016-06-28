@@ -60,7 +60,9 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.first.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.first.pressed ? control.Universal.chromeHighColor :
+               control.first.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
 
     second.handle: Rectangle {
@@ -73,7 +75,9 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.second.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.second.pressed ? control.Universal.chromeHighColor :
+               control.second.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
 
     background: Item {
@@ -95,7 +99,8 @@ T.RangeSlider {
             width: parent.horizontal ? parent.width : 2 // SliderBackgroundThemeHeight
             height: !parent.horizontal ? parent.height : 2 // SliderBackgroundThemeHeight
 
-            color: control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
+            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+                   control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 
         Rectangle {

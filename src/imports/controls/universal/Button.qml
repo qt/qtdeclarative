@@ -72,5 +72,14 @@ T.Button {
         color: control.down ? control.Universal.baseMediumLowColor :
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            color: "transparent"
+            visible: control.hovered
+            border.width: 2 // ButtonBorderThemeThickness
+            border.color: control.Universal.baseMediumLowColor
+        }
     }
 }

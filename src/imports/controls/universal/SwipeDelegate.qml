@@ -84,7 +84,8 @@ T.SwipeDelegate {
         Rectangle {
             width: parent.width
             height: parent.height
-            color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+            color: control.down ? control.Universal.listMediumColor :
+                   control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
             Rectangle {
                 width: parent.width
                 height: parent.height

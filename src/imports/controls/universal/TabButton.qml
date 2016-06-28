@@ -56,7 +56,7 @@ T.TabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
-        opacity: control.checked || control.down ? 1.0 : 0.2
-        color: control.Universal.foreground
+        opacity: control.checked || control.down || control.hovered ? 1.0 : 0.2
+        color: control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground
     }
 }

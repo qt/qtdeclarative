@@ -91,7 +91,8 @@ T.ComboBox {
 
         border.width: 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
+                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor :
+                       control.hovered ? control.Universal.baseMediumColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
                 control.pressed || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
 

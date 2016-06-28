@@ -60,7 +60,9 @@ T.Slider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.pressed ? control.Universal.chromeHighColor :
+               control.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
 
     background: Item {
@@ -82,7 +84,8 @@ T.Slider {
             width: parent.horizontal ? parent.width : 2 // SliderTrackThemeHeight
             height: !parent.horizontal ? parent.height : 2 // SliderTrackThemeHeight
 
-            color: control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
+            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+                   control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 
         Rectangle {

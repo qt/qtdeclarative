@@ -43,7 +43,7 @@ Rectangle {
     implicitHeight: 20
 
     color: !control.enabled ? "transparent" :
-            control.down && control.checkState !== Qt.PartiallyChecked ? control.Universal.baseMediumColor :
+            control.down && !partiallyChecked ? control.Universal.baseMediumColor :
             control.checkState === Qt.Checked ? control.Universal.accent : "transparent"
     border.color: !control.enabled ? control.Universal.baseLowColor :
                    control.down ? control.Universal.baseMediumColor :
@@ -51,6 +51,7 @@ Rectangle {
     border.width: 2 // CheckBoxBorderThemeThickness
 
     property Item control
+    readonly property bool partiallyChecked: control.checkState === Qt.PartiallyChecked
 
     Image {
         x: (parent.width - width) / 2
@@ -65,11 +66,15 @@ Rectangle {
     Rectangle {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        width: parent.width / 2
-        height: parent.height / 2
+        width: partiallyChecked ? parent.width / 2 : parent.width
+        height: partiallyChecked  ? parent.height / 2 : parent.height
 
-        visible: control.checkState === Qt.PartiallyChecked
-        color: !control.enabled ? control.Universal.baseLowColor :
-                control.down ? control.Universal.baseMediumColor : control.Universal.baseMediumHighColor
+        visible: !control.pressed && control.hovered || partiallyChecked
+        color: !partiallyChecked ? "transparent" :
+               !control.enabled ? control.Universal.baseLowColor :
+                control.down ? control.Universal.baseMediumColor :
+                control.hovered ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor
+        border.width: partiallyChecked ? 0 : 2 // CheckBoxBorderThemeThickness
+        border.color: control.Universal.baseMediumLowColor
     }
 }
