@@ -128,6 +128,21 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+    \fn void QSGImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+
+    Sets the mipmap filtering to be used for this image node to \a filtering.
+
+    For smooth scaling between mip maps, use QSGTexture::Linear.
+    For normal scaling, use QSGTexture::Nearest.
+ */
+
+/*!
+    \fn QSGTexture::Filtering QSGImageNode::mipmapFiltering() const
+
+    Returns the mipmap filtering for this image node.
+ */
+
+/*!
     \enum QSGImageNode::TextureCoordinatesTransformFlag
 
     The TextureCoordinatesTransformFlag enum is used to specify the mode used

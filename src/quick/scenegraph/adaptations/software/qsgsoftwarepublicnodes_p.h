@@ -94,6 +94,9 @@ public:
     void setFiltering(QSGTexture::Filtering) override { }
     QSGTexture::Filtering filtering() const override { return QSGTexture::None; }
 
+    void setMipmapFiltering(QSGTexture::Filtering) override { }
+    QSGTexture::Filtering mipmapFiltering() const override { return QSGTexture::None; }
+
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode) override { }
     TextureCoordinatesTransformMode textureCoordinatesTransform() const override { return NoTransform; }
 

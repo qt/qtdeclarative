@@ -79,6 +79,21 @@ QSGTexture::Filtering QSGDefaultImageNode::filtering() const
     return m_material.filtering();
 }
 
+void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+{
+    if (m_material.mipmapFiltering() == filtering)
+        return;
+
+    m_material.setMipmapFiltering(filtering);
+    m_opaque_material.setMipmapFiltering(filtering);
+    markDirty(DirtyMaterial);
+}
+
+QSGTexture::Filtering QSGDefaultImageNode::mipmapFiltering() const
+{
+    return m_material.mipmapFiltering();
+}
+
 void QSGDefaultImageNode::setRect(const QRectF &r)
 {
     if (m_rect == r)

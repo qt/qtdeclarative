@@ -118,6 +118,20 @@ QSGTexture::Filtering QSGD3D12ImageNode::filtering() const
     return m_material.filtering();
 }
 
+void QSGD3D12ImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
+{
+    if (m_material.mipmapFiltering() == filtering)
+        return;
+
+    m_material.setMipmapFiltering(filtering);
+    markDirty(DirtyMaterial);
+}
+
+QSGTexture::Filtering QSGD3D12ImageNode::mipmapFiltering() const
+{
+    return m_material.mipmapFiltering();
+}
+
 void QSGD3D12ImageNode::setRect(const QRectF &r)
 {
     if (m_rect == r)

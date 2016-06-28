@@ -64,6 +64,9 @@ public:
     virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
     virtual QSGTexture::Filtering filtering() const = 0;
 
+    virtual void setMipmapFiltering(QSGTexture::Filtering filtering) = 0;
+    virtual QSGTexture::Filtering mipmapFiltering() const = 0;
+
     enum TextureCoordinatesTransformFlag {
         NoTransform        = 0x00,
         MirrorHorizontally = 0x01,

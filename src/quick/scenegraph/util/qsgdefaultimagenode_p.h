@@ -76,6 +76,9 @@ public:
     void setFiltering(QSGTexture::Filtering filtering) override;
     QSGTexture::Filtering filtering() const override;
 
+    void setMipmapFiltering(QSGTexture::Filtering filtering) override;
+    QSGTexture::Filtering mipmapFiltering() const override;
+
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode) override;
     TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
 
