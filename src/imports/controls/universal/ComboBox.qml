@@ -60,6 +60,7 @@ T.ComboBox {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
+        hoverEnabled: control.hoverEnabled
     }
 
     indicator: Image {

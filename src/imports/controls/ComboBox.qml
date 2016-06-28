@@ -62,6 +62,7 @@ T.ComboBox {
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex == index
+        hoverEnabled: control.hoverEnabled
     }
     //! [delegate]
 
