@@ -105,6 +105,9 @@ Q_SIGNALS:
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -135,6 +138,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSliderNode : public QObject
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
 
 public:
     explicit QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider);
@@ -152,6 +156,9 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
+    bool isHovered() const;
+    void setHovered(bool hovered);
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -162,6 +169,7 @@ Q_SIGNALS:
     void visualPositionChanged();
     void handleChanged();
     void pressedChanged();
+    Q_REVISION(1) void hoveredChanged();
 
 private:
     Q_DISABLE_COPY(QQuickRangeSliderNode)

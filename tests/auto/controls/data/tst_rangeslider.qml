@@ -689,4 +689,31 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_hover_data() {
+        return [
+            { tag: "first:true", node: "first", hoverEnabled: true },
+            { tag: "first:false", node: "first", hoverEnabled: false },
+            { tag: "second:true", node: "second", hoverEnabled: true },
+            { tag: "second:false", node: "second", hoverEnabled: false }
+        ]
+    }
+
+    function test_hover(data) {
+        var control = sliderComponent.createObject(testCase, {hoverEnabled: data.hoverEnabled})
+        verify(control)
+
+        var node = control[data.node]
+        compare(control.hovered, false)
+        compare(node.hovered, false)
+
+        mouseMove(control, node.handle.x + node.handle.width / 2, node.handle.y + node.handle.height / 2)
+        compare(control.hovered, data.hoverEnabled)
+        compare(node.hovered, data.hoverEnabled && node.handle.enabled)
+
+        mouseMove(control, node.handle.x - 1, node.handle.y - 1)
+        compare(node.hovered, false)
+
+        control.destroy()
+    }
 }

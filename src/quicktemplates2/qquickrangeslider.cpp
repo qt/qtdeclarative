@@ -88,7 +88,8 @@ public:
         position(0),
         handle(nullptr),
         slider(slider),
-        pressed(false)
+        pressed(false),
+        hovered(false)
     {
     }
 
@@ -109,6 +110,7 @@ private:
     QQuickItem *handle;
     QQuickRangeSlider *slider;
     bool pressed;
+    bool hovered;
 };
 
 bool QQuickRangeSliderNodePrivate::isFirst() const
@@ -272,6 +274,22 @@ void QQuickRangeSliderNode::setPressed(bool pressed)
     emit pressedChanged();
 }
 
+bool QQuickRangeSliderNode::isHovered() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    return d->hovered;
+}
+
+void QQuickRangeSliderNode::setHovered(bool hovered)
+{
+    Q_D(QQuickRangeSliderNode);
+    if (d->hovered == hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
+}
+
 void QQuickRangeSliderNode::increase()
 {
     Q_D(QQuickRangeSliderNode);
@@ -305,6 +323,8 @@ public:
     {
     }
 
+    void updateHover(const QPointF &pos);
+
     qreal from;
     qreal to;
     qreal stepSize;
@@ -314,6 +334,15 @@ public:
     Qt::Orientation orientation;
     QQuickRangeSlider::SnapMode snapMode;
 };
+
+void QQuickRangeSliderPrivate::updateHover(const QPointF &pos)
+{
+    Q_Q(QQuickRangeSlider);
+    QQuickItem *firstHandle = first->handle();
+    QQuickItem *secondHandle = second->handle();
+    first->setHovered(firstHandle && firstHandle->isEnabled() && firstHandle->contains(q->mapToItem(firstHandle, pos)));
+    second->setHovered(secondHandle && secondHandle->isEnabled() && secondHandle->contains(q->mapToItem(secondHandle, pos)));
+}
 
 static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
 {
@@ -428,6 +457,7 @@ void QQuickRangeSlider::setTo(qreal to)
     \qmlproperty real QtQuick.Controls::RangeSlider::first.visualPosition
     \qmlproperty Item QtQuick.Controls::RangeSlider::first.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.pressed
+    \qmlproperty bool QtQuick.Controls::RangeSlider::first.hovered
 
     \table
     \header
@@ -468,6 +498,10 @@ void QQuickRangeSlider::setTo(qreal to)
     \row
         \li pressed
         \li This property holds whether the first handle is pressed.
+    \row
+        \li hovered
+        \li This property holds whether the first handle is hovered.
+            This property was introduced in QtQuick.Controls 2.1.
     \endtable
 
     \sa first.increase(), first.decrease()
@@ -485,6 +519,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \qmlproperty real QtQuick.Controls::RangeSlider::second.visualPosition
     \qmlproperty Item QtQuick.Controls::RangeSlider::second.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.pressed
+    \qmlproperty bool QtQuick.Controls::RangeSlider::second.hovered
 
     \table
     \header
@@ -525,6 +560,10 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \row
         \li pressed
         \li This property holds whether the second handle is pressed.
+    \row
+        \li hovered
+        \li This property holds whether the second handle is hovered.
+            This property was introduced in QtQuick.Controls 2.1.
     \endtable
 
     \sa second.increase(), second.decrease()
@@ -723,6 +762,28 @@ void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
             event->accept();
         }
     }
+}
+
+void QQuickRangeSlider::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::hoverEnterEvent(event);
+    d->updateHover(event->posF());
+}
+
+void QQuickRangeSlider::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::hoverMoveEvent(event);
+    d->updateHover(event->posF());
+}
+
+void QQuickRangeSlider::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::hoverLeaveEvent(event);
+    d->first->setHovered(false);
+    d->second->setHovered(false);
 }
 
 void QQuickRangeSlider::keyReleaseEvent(QKeyEvent *event)
