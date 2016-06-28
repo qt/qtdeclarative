@@ -84,7 +84,7 @@
     stretches horizontally. The azure rectangle can be resized from 50x150 to 300x150, and the plum
     rectangle can be resized from 100x100 to ∞x100.
 
-    \snippet windowconstraints.qml rowlayout
+    \snippet qml/windowconstraints.qml rowlayout
 
     \image rowlayout-minimum.png "RowLayout at its minimum"
 
