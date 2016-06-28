@@ -43,6 +43,7 @@
 #include "qsgd3d12engine_p.h"
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qfileselector.h>
 #include <QtQml/qqmlfile.h>
 #include <qsgtextureprovider.h>
 
@@ -850,7 +851,11 @@ void QSGD3D12GuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type ty
     // For simplicity, assume that file = bytecode, string = HLSL.
     QUrl srcUrl(src);
     if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
-        const QString fn = QQmlFile::urlToLocalFileOrQrc(src);
+        if (!m_fileSelector) {
+            m_fileSelector = new QFileSelector(this);
+            m_fileSelector->setExtraSelectors(QStringList() << QStringLiteral("hlsl"));
+        }
+        const QString fn = m_fileSelector->select(QQmlFile::urlToLocalFileOrQrc(srcUrl));
         QFile f(fn);
         if (!f.open(QIODevice::ReadOnly)) {
             qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));

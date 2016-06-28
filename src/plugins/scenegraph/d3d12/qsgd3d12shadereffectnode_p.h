@@ -60,6 +60,7 @@ class QSGD3D12RenderContext;
 class QSGD3D12GuiThreadShaderEffectManager;
 class QSGD3D12ShaderEffectNode;
 class QSGD3D12Texture;
+class QFileSelector;
 
 class QSGD3D12ShaderLinker
 {
@@ -166,6 +167,7 @@ private:
     bool reflect(ShaderInfo *result);
     QString m_log;
     Status m_status = Uncompiled;
+    QFileSelector *m_fileSelector = nullptr;
 
     friend class QSGD3D12ShaderCompileTask;
 };
