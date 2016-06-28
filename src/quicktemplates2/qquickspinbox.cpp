@@ -109,6 +109,7 @@ public:
     void updateUpEnabled();
     bool downEnabled() const;
     void updateDownEnabled();
+    void updateHover(const QPointF &pos);
 
     void startRepeatDelay();
     void startPressRepeat();
@@ -188,6 +189,15 @@ void QQuickSpinBoxPrivate::updateDownEnabled()
         return;
 
     downIndicator->setEnabled(from < to ? value > from : value < from);
+}
+
+void QQuickSpinBoxPrivate::updateHover(const QPointF &pos)
+{
+    Q_Q(QQuickSpinBox);
+    QQuickItem *ui = up->indicator();
+    QQuickItem *di = down->indicator();
+    up->setHovered(ui && ui->isEnabled() && ui->contains(q->mapToItem(ui, pos)));
+    down->setHovered(di && di->isEnabled() && di->contains(q->mapToItem(di, pos)));
 }
 
 void QQuickSpinBoxPrivate::startRepeatDelay()
@@ -526,8 +536,10 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
     \qmlpropertygroup QtQuick.Controls::SpinBox::up
     \qmlproperty bool QtQuick.Controls::SpinBox::up.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::up.indicator
+    \qmlproperty bool QtQuick.Controls::SpinBox::up.hovered
 
-    These properties hold the up indicator item and whether it is pressed.
+    These properties hold the up indicator item and whether it is pressed or
+    hovered. The \c up.hovered property was introduced in QtQuick.Controls 2.1.
 
     \sa increase()
 */
@@ -541,8 +553,10 @@ QQuickSpinButton *QQuickSpinBox::up() const
     \qmlpropertygroup QtQuick.Controls::SpinBox::down
     \qmlproperty bool QtQuick.Controls::SpinBox::down.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::down.indicator
+    \qmlproperty bool QtQuick.Controls::SpinBox::down.hovered
 
-    These properties hold the down indicator item and whether it is pressed.
+    These properties hold the down indicator item and whether it is pressed or
+    hovered. The \c down.hovered property was introduced in QtQuick.Controls 2.1.
 
     \sa decrease()
 */
@@ -576,6 +590,28 @@ void QQuickSpinBox::decrease()
 {
     Q_D(QQuickSpinBox);
     setValue(d->value - d->effectiveStepSize());
+}
+
+void QQuickSpinBox::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::hoverEnterEvent(event);
+    d->updateHover(event->posF());
+}
+
+void QQuickSpinBox::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::hoverMoveEvent(event);
+    d->updateHover(event->posF());
+}
+
+void QQuickSpinBox::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::hoverLeaveEvent(event);
+    d->down->setHovered(false);
+    d->up->setHovered(false);
 }
 
 void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
@@ -730,8 +766,9 @@ QAccessible::Role QQuickSpinBox::accessibleRole() const
 class QQuickSpinButtonPrivate : public QObjectPrivate
 {
 public:
-    QQuickSpinButtonPrivate() : pressed(false), indicator(nullptr) { }
+    QQuickSpinButtonPrivate() : pressed(false), hovered(false), indicator(nullptr) { }
     bool pressed;
+    bool hovered;
     QQuickItem *indicator;
 };
 
@@ -754,6 +791,22 @@ void QQuickSpinButton::setPressed(bool pressed)
 
     d->pressed = pressed;
     emit pressedChanged();
+}
+
+bool QQuickSpinButton::isHovered() const
+{
+    Q_D(const QQuickSpinButton);
+    return d->hovered;
+}
+
+void QQuickSpinButton::setHovered(bool hovered)
+{
+    Q_D(QQuickSpinButton);
+    if (d->hovered == hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
 }
 
 QQuickItem *QQuickSpinButton::indicator() const

@@ -118,6 +118,9 @@ Q_SIGNALS:
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -146,6 +149,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
@@ -154,11 +158,15 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
+    bool isHovered() const;
+    void setHovered(bool hovered);
+
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
 Q_SIGNALS:
     void pressedChanged();
+    Q_REVISION(1) void hoveredChanged();
     void indicatorChanged();
 
 private:

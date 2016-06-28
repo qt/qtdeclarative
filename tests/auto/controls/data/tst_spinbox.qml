@@ -478,4 +478,33 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_hover_data() {
+        return [
+            { tag: "up:true", button: "up", hoverEnabled: true, value: 50 },
+            { tag: "up:false", button: "up", hoverEnabled: false, value: 50 },
+            { tag: "up:max", button: "up", hoverEnabled: true, value: 99 },
+            { tag: "down:true", button: "down", hoverEnabled: true, value: 50 },
+            { tag: "down:false", button: "down", hoverEnabled: false, value: 50 },
+            { tag: "down:min", button: "down", hoverEnabled: true, value: 0 }
+        ]
+    }
+
+    function test_hover(data) {
+        var control = spinBox.createObject(testCase, {hoverEnabled: data.hoverEnabled, value: data.value})
+        verify(control)
+
+        var button = control[data.button]
+        compare(control.hovered, false)
+        compare(button.hovered, false)
+
+        mouseMove(control, button.indicator.x + button.indicator.width / 2, button.indicator.y + button.indicator.height / 2)
+        compare(control.hovered, data.hoverEnabled)
+        compare(button.hovered, data.hoverEnabled && button.indicator.enabled)
+
+        mouseMove(control, button.indicator.x - 1, button.indicator.y - 1)
+        compare(button.hovered, false)
+
+        control.destroy()
+    }
 }
