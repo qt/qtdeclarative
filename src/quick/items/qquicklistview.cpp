@@ -3147,7 +3147,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
     }
 
-    int prevVisibleCount = visibleItems.count();
+    bool visibleAffected = false;
     if (insertResult->visiblePos.isValid() && pos < insertResult->visiblePos) {
         // Insert items before the visible item.
         int insertionIdx = index;
@@ -3170,6 +3170,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 if (!item)
                     return false;
 
+                visibleAffected = true;
                 visibleItems.insert(insertionIdx, item);
                 if (insertionIdx == 0)
                     insertResult->changedFirstItem = true;
@@ -3201,6 +3202,9 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 
     } else {
         qreal to = buffer + displayMarginEnd + tempPos + size();
+
+        visibleAffected = count > 0 && pos < to;
+
         for (int i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
@@ -3251,7 +3255,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 
     updateVisibleIndex();
 
-    return visibleItems.count() > prevVisibleCount;
+    return visibleAffected;
 }
 
 void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)

@@ -69,6 +69,7 @@ private slots:
     void transformedTouchArea();
     void mouseInteraction();
     void mouseInteraction_data();
+    void cancel();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -1193,6 +1194,60 @@ void tst_QQuickMultiPointTouchArea::mouseInteraction()
     QTest::mouseRelease(view.data(), (Qt::MouseButton) buttons);
     QCOMPARE(point1->pressed(), false);
     QCOMPARE(area->property("touchCount").toInt(), 0);
+}
+
+void tst_QQuickMultiPointTouchArea::cancel()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("cancel.qml"));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *area = qobject_cast<QQuickMultiPointTouchArea *>(window->rootObject());
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(window.data(), device);
+    QQuickTouchPoint *point1 = area->findChild<QQuickTouchPoint*>("point1");
+
+    QPoint p1(20,100);
+    sequence.press(0, p1).commit();
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 1);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 0);
+    QCOMPARE(area->property("touchCount").toInt(), 1);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
+    area->setVisible(false);
+    // we should get a onCancel signal
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 1);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+    QMetaObject::invokeMethod(area, "clearCounts");
+    area->setVisible(true);
+
+
+    sequence.press(0, p1).commit();
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 1);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 0);
+    QCOMPARE(area->property("touchCount").toInt(), 1);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
+    area->setEnabled(false);
+    // we should get a onCancel signal
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 1);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
 }
 
 

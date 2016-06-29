@@ -782,9 +782,10 @@ void QQuickWidget::createFramebufferObject()
         return;
     }
 
-    if (context->shareContext() != QWidgetPrivate::get(window())->shareContext()) {
-        context->setShareContext(QWidgetPrivate::get(window())->shareContext());
-        context->setScreen(context->shareContext()->screen());
+    QOpenGLContext *shareWindowContext = QWidgetPrivate::get(window())->shareContext();
+    if (shareWindowContext && context->shareContext() != shareWindowContext) {
+        context->setShareContext(shareWindowContext);
+        context->setScreen(shareWindowContext->screen());
         if (!context->create())
             qWarning("QQuickWidget: Failed to recreate context");
         // The screen may be different so we must recreate the offscreen surface too.
@@ -1112,7 +1113,14 @@ void QQuickWidget::showEvent(QShowEvent *)
     d->createContext();
     if (d->offscreenWindow->openglContext()) {
         d->render(true);
-        if (d->updatePending) {
+        // render() may have led to a QQuickWindow::update() call (for
+        // example, having a scene with a QQuickFramebufferObject::Renderer
+        // calling update() in its render()) which in turn results in
+        // renderRequested in the rendercontrol, ending up in
+        // triggerUpdate. In this case just calling update() is not
+        // acceptable, we need the full renderSceneGraph issued from
+        // timerEvent().
+        if (!d->eventPending && d->updatePending) {
             d->updatePending = false;
             update();
         }
@@ -1234,6 +1242,17 @@ bool QQuickWidget::event(QEvent *e)
         break;
 
     case QEvent::ScreenChangeInternal:
+        if (QWindow *window = this->window()->windowHandle()) {
+            QScreen *newScreen = window->screen();
+
+            if (d->offscreenWindow)
+                d->offscreenWindow->setScreen(newScreen);
+            if (d->offscreenSurface)
+                d->offscreenSurface->setScreen(newScreen);
+            if (d->context)
+                d->context->setScreen(newScreen);
+        }
+
         if (d->fbo) {
             // This will check the size taking the devicePixelRatio into account
             // and recreate if needed.
