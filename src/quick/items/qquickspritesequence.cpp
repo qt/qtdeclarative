@@ -95,6 +95,7 @@ QQuickSpriteSequenceMaterial::~QQuickSpriteSequenceMaterial()
     delete texture;
 }
 
+#ifndef QT_NO_OPENGL
 class SpriteSequenceMaterialData : public QSGMaterialShader
 {
 public:
@@ -139,10 +140,15 @@ public:
     int m_animData_id;
     int m_animPos_id;
 };
+#endif
 
 QSGMaterialShader *QQuickSpriteSequenceMaterial::createShader() const
 {
+#ifndef QT_NO_OPENGL
     return new SpriteSequenceMaterialData;
+#else
+    return nullptr;
+#endif
 }
 
 struct SpriteVertex {
@@ -275,8 +281,8 @@ void QQuickSpriteSequence::createEngine()
 }
 
 static QSGGeometry::Attribute SpriteSequence_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),   // pos
-    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),         // tex
+    QSGGeometry::Attribute::create(0, 2, QSGGeometry::TypeFloat, true),   // pos
+    QSGGeometry::Attribute::create(1, 2, QSGGeometry::TypeFloat),         // tex
 };
 
 static QSGGeometry::AttributeSet SpriteSequence_AttributeSet =
@@ -341,7 +347,7 @@ QSGGeometryNode* QQuickSpriteSequence::buildNode()
     int vCount = 4;
     int iCount = 6;
     QSGGeometry *g = new QSGGeometry(SpriteSequence_AttributeSet, vCount, iCount);
-    g->setDrawingMode(GL_TRIANGLES);
+    g->setDrawingMode(QSGGeometry::DrawTriangles);
 
     SpriteVertices *p = (SpriteVertices *) g->vertexData();
     QRectF texRect = m_material->texture->normalizedTextureSubRect();

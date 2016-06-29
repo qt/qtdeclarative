@@ -96,6 +96,7 @@ QQuickAnimatedSpriteMaterial::~QQuickAnimatedSpriteMaterial()
     delete texture;
 }
 
+#ifndef QT_NO_OPENGL
 class AnimatedSpriteMaterialData : public QSGMaterialShader
 {
 public:
@@ -140,10 +141,15 @@ public:
     int m_animData_id;
     int m_animPos_id;
 };
+#endif
 
 QSGMaterialShader *QQuickAnimatedSpriteMaterial::createShader() const
 {
+#ifndef QT_NO_OPENGL
     return new AnimatedSpriteMaterialData;
+#else
+    return nullptr;
+#endif
 }
 
 struct AnimatedSpriteVertex {
@@ -448,8 +454,8 @@ void QQuickAnimatedSprite::createEngine()
 }
 
 static QSGGeometry::Attribute AnimatedSprite_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),   // pos
-    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),         // tex
+    QSGGeometry::Attribute::create(0, 2, QSGGeometry::TypeFloat, true),   // pos
+    QSGGeometry::Attribute::create(1, 2, QSGGeometry::TypeFloat),         // tex
 };
 
 static QSGGeometry::AttributeSet AnimatedSprite_AttributeSet =
@@ -508,7 +514,7 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
     int vCount = 4;
     int iCount = 6;
     QSGGeometry *g = new QSGGeometry(AnimatedSprite_AttributeSet, vCount, iCount);
-    g->setDrawingMode(GL_TRIANGLES);
+    g->setDrawingMode(QSGGeometry::DrawTriangles);
 
     AnimatedSpriteVertices *p = (AnimatedSpriteVertices *) g->vertexData();
 
