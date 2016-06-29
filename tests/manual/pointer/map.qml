@@ -39,21 +39,36 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
-            addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
-            addExample("map", "scale and pan", Qt.resolvedUrl("map.qml"))
+Item {
+    width: 640
+    height: 480
+
+    Rectangle {
+        id: map
+        color: "aqua"
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: image.implicitWidth
+        height: image.implicitHeight
+
+        Image {
+            id: image
+            anchors.centerIn: parent
+            fillMode: Image.PreserveAspectFit
+            source: "resources/map.svgz"
         }
+    }
+
+    PinchHandler {
+        id: pinch
+        target: map
+        minimumScale: 0.1
+        maximumScale: 10
+    }
+
+    DragHandler {
+        target: map
     }
 }

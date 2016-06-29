@@ -2,9 +2,11 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>joystick.qml</file>
+        <file>map.qml</file>
         <file>mixer.qml</file>
         <file>pinchHandler.qml</file>
         <file>content/Slider.qml</file>
+        <file>resources/map.svgz</file>
         <file>resources/mixer-knob.png</file>
         <file>resources/redball.png</file>
     </qresource>
