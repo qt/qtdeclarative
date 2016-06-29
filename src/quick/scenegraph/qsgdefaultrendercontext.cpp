@@ -163,7 +163,8 @@ void QSGDefaultRenderContext::invalidate()
         m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
     m_gl = 0;
 
-    QSGRenderContext::invalidate();
+    m_sg->renderContextInvalidated(this);
+    emit invalidated();
 }
 
 static QBasicMutex qsg_framerender_mutex;

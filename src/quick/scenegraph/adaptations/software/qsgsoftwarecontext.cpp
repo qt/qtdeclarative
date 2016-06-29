@@ -134,7 +134,8 @@ void QSGSoftwareRenderContext::initializeIfNeeded()
 
 void QSGSoftwareRenderContext::invalidate()
 {
-    QSGRenderContext::invalidate();
+    m_sg->renderContextInvalidated(this);
+    emit invalidated();
 }
 
 QSGTexture *QSGSoftwareRenderContext::createTexture(const QImage &image, uint flags) const

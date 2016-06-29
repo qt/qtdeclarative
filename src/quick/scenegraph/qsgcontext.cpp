@@ -343,7 +343,6 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
 
 QSGRenderContext::~QSGRenderContext()
 {
-    invalidate();
 }
 
 void QSGRenderContext::initialize(void *context)
@@ -353,8 +352,6 @@ void QSGRenderContext::initialize(void *context)
 
 void QSGRenderContext::invalidate()
 {
-    m_sg->renderContextInvalidated(this);
-    emit invalidated();
 }
 
 void QSGRenderContext::endSync()
