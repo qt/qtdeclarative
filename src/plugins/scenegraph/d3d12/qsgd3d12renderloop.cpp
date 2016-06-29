@@ -128,39 +128,49 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
     delete engine;
 }
 
+void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)
+{
+    WindowData data;
+    data.engine = new QSGD3D12Engine;
+    data.rc = static_cast<QSGD3D12RenderContext *>(QQuickWindowPrivate::get(window)->context);
+    data.rc->setEngine(data.engine);
+    m_windows[window] = data;
+
+    const int samples = window->format().samples();
+    const qreal dpr = window->effectiveDevicePixelRatio();
+
+    if (Q_UNLIKELY(debug_loop()))
+        qDebug() << "initializing D3D12 engine" << window << window->size() << dpr << samples;
+
+    data.engine->attachToWindow(window->winId(), window->size(), dpr, samples);
+}
+
+void QSGD3D12RenderLoop::obscureWindow(QQuickWindow *window)
+{
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    wd->fireAboutToStop();
+}
+
 void QSGD3D12RenderLoop::exposureChanged(QQuickWindow *window)
 {
     if (Q_UNLIKELY(debug_loop()))
         qDebug() << "exposure changed" << window;
 
     if (window->isExposed()) {
-        if (!m_windows.contains(window)) {
-            WindowData data;
-            data.engine = new QSGD3D12Engine;
-            data.rc = static_cast<QSGD3D12RenderContext *>(QQuickWindowPrivate::get(window)->context);
-            data.rc->setEngine(data.engine);
-            m_windows[window] = data;
-
-            const int samples = window->format().samples();
-            const qreal dpr = window->effectiveDevicePixelRatio();
-
-            if (debug_loop())
-                qDebug() << "initializing D3D12 engine" << window << window->size() << dpr << samples;
-
-            data.engine->attachToWindow(window->winId(), window->size(), dpr, samples);
-        }
+        if (!m_windows.contains(window))
+            exposeWindow(window);
         m_windows[window].updatePending = true;
         renderWindow(window);
     } else if (m_windows.contains(window)) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        wd->fireAboutToStop();
+        obscureWindow(window);
     }
 }
 
 QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return QImage();
+    const bool tempExpose = !m_windows.contains(window);
+    if (tempExpose)
+        exposeWindow(window);
 
     m_windows[window].grabOnly = true;
 
@@ -168,6 +178,10 @@ QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
 
     QImage grabbed = m_grabContent;
     m_grabContent = QImage();
+
+    if (tempExpose)
+        obscureWindow(window);
+
     return grabbed;
 }
 
@@ -234,7 +248,7 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         qDebug() << "renderWindow" << window;
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-    if (!wd->isRenderable() || !m_windows.contains(window))
+    if (!m_windows.contains(window) || !window->geometry().isValid())
         return;
 
     WindowData &data(m_windows[window]);

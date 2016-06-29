@@ -91,6 +91,8 @@ public:
     int flags() const override;
 
 private:
+    void exposeWindow(QQuickWindow *window);
+    void obscureWindow(QQuickWindow *window);
     void renderWindow(QQuickWindow *window);
 
     QSGD3D12Context *sg;
