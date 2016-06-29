@@ -54,7 +54,7 @@ T.Pane {
 
     background: Rectangle {
         color: control.Material.backgroundColor
-        radius: control.Material.elevation > 0 ? 3 : 0
+        radius: control.Material.elevation > 0 ? 2 : 0
 
         layer.enabled: control.enabled && control.Material.elevation > 0
         layer.effect: ElevationEffect {

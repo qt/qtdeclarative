@@ -111,7 +111,7 @@ T.SpinBox {
         height: parent.height
         width: height
         padding: control.spacing
-        radius: 3
+        radius: 2
         color: Qt.tint(Qt.tint(control.Material.buttonColor,
                                control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
                                control.up.pressed ? control.Material.buttonPressColor: "transparent")
@@ -139,7 +139,7 @@ T.SpinBox {
         height: parent.height
         width: height
         padding: control.spacing
-        radius: 3
+        radius: 2
         color: Qt.tint(Qt.tint(control.Material.buttonColor,
                                control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
                                control.down.pressed ? control.Material.buttonPressColor : "transparent")

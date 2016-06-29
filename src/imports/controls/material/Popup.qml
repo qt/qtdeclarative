@@ -69,7 +69,7 @@ T.Popup {
     contentItem: Item { }
 
     background: Rectangle {
-        radius: 3
+        radius: 2
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0
