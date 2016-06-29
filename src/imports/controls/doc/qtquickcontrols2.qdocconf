@@ -29,7 +29,7 @@ qhp.QtQuickControls2.subprojects.examples.title = Examples
 qhp.QtQuickControls2.subprojects.examples.indexTitle = Qt Quick Controls 2 Examples
 qhp.QtQuickControls2.subprojects.examples.selectors = fake:example
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquickextras qmake qtsql qtwidgets
+depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquickextras qmake qtsql qtwidgets qtlabscalendar qtlabsplatform
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
@@ -37,20 +37,16 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquic
 exampledirs += ../../../../examples/quickcontrols2 \
                ../ \
                ../../../quicktemplates2 \
-               ../../calendar \
                snippets
 
 examplesinstallpath = quickcontrols2
 
 headerdirs += ../../../quicktemplates2 \
-              ../../../quickcontrols2 \
-              ../../calendar
+              ../../../quickcontrols2
 
 sourcedirs += ../../../quicktemplates2 \
               ../../../quickcontrols2 \
               ../../templates/doc/src \
-              ../../calendar/doc/src \
-              ../../calendar \
               src
 
 imagedirs += images
@@ -84,7 +80,6 @@ macro.endstylemethod = "\\br"
 macro.stylecolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\">\1 \2</div>"
 
 macro.nbsp.HTML = "&nbsp;"
-macro.labs = "\\note \\e{Types in Qt.labs modules are not guaranteed to remain compatible in future versions.}"
 
 #Add output suffix to the html filenames
 outputsuffixes = QML
