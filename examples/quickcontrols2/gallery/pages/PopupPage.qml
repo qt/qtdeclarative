@@ -62,7 +62,7 @@ Pane {
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
 
-            onClicked: settingsPopup.open()
+            onClicked: settingsDialog.open()
         }
     }
 }
