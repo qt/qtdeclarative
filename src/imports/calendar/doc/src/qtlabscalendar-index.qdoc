@@ -29,11 +29,11 @@
     \page qtlabscalendar-index.html
     \title Qt Labs Calendar
 
-    \brief The Qt Labs Calendar module provides a set of UI controls for Qt
-    Quick.
+    \brief The experimental Qt Labs Calendar module provides a set of UI controls
+    for Qt Quick.
 
-    The Qt Labs Calendar module provides a set of types that can be used
-    to build calendars in Qt Quick.
+    The experimental Qt Labs Calendar module provides a set of types that can be
+    used to build calendars in Qt Quick. The module was introduced in Qt 5.7.
 
     \section1 QML Types
 

@@ -32,7 +32,8 @@
     \brief Provides a set of UI controls for Qt Quick.
 
     Qt Quick Controls 2 provides a set of controls that can be used
-    to build complete interfaces in Qt Quick.
+    to build complete interfaces in Qt Quick. The module was introduced
+    in Qt 5.7.
 
     \section1 Prerequisites
 
