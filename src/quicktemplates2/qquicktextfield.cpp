@@ -90,7 +90,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
-    : background(nullptr)
+    : hovered(false)
+    , background(nullptr)
     , focusReason(Qt::OtherFocusReason)
     , accessibleAttached(nullptr)
 {
@@ -347,6 +348,55 @@ void QQuickTextField::setFocusReason(Qt::FocusReason reason)
     emit focusReasonChanged();
 }
 
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::TextField::hovered
+    \readonly
+
+    This property holds whether the text field is hovered.
+
+    \sa hoverEnabled
+*/
+bool QQuickTextField::isHovered() const
+{
+    Q_D(const QQuickTextField);
+    return d->hovered;
+}
+
+void QQuickTextField::setHovered(bool hovered)
+{
+    Q_D(QQuickTextField);
+    if (hovered == d->hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::TextField::hoverEnabled
+
+    This property determines whether the text field accepts hover events. The default value is \c false.
+
+    \sa hovered
+*/
+bool QQuickTextField::isHoverEnabled() const
+{
+    Q_D(const QQuickTextField);
+    return d->hoverEnabled;
+}
+
+void QQuickTextField::setHoverEnabled(bool enabled)
+{
+    Q_D(QQuickTextField);
+    if (enabled == d->hoverEnabled)
+        return;
+
+    setAcceptHoverEvents(enabled);
+    emit hoverEnabledChanged();
+}
+
 void QQuickTextField::classBegin()
 {
     Q_D(QQuickTextField);
@@ -405,6 +455,22 @@ void QQuickTextField::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextInput::focusOutEvent(event);
     setFocusReason(event->reason());
+}
+
+void QQuickTextField::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextField);
+    QQuickTextInput::hoverEnterEvent(event);
+    setHovered(d->hoverEnabled);
+    event->setAccepted(d->hoverEnabled);
+}
+
+void QQuickTextField::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextField);
+    QQuickTextInput::hoverLeaveEvent(event);
+    setHovered(false);
+    event->setAccepted(d->hoverEnabled);
 }
 
 void QQuickTextField::mousePressEvent(QMouseEvent *event)

@@ -145,6 +145,8 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("SpinBox.qml")), uri, 2, 1, "SpinBox");
     qmlRegisterType(selector.select(QStringLiteral("StackView.qml")), uri, 2, 1, "StackView");
     qmlRegisterType(selector.select(QStringLiteral("SwipeView.qml")), uri, 2, 1, "SwipeView");
+    qmlRegisterType(selector.select(QStringLiteral("TextArea.qml")), uri, 2, 1, "TextArea");
+    qmlRegisterType(selector.select(QStringLiteral("TextField.qml")), uri, 2, 1, "TextField");
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 2, 1, "Tumbler");
 }
 

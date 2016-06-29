@@ -67,6 +67,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = nullptr);
@@ -86,6 +88,12 @@ public:
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
+    bool isHovered() const;
+    void setHovered(bool hovered);
+
+    bool isHoverEnabled() const;
+    void setHoverEnabled(bool enabled);
+
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged3();
@@ -93,6 +101,8 @@ Q_SIGNALS:
     void backgroundChanged();
     void placeholderTextChanged();
     void focusReasonChanged();
+    Q_REVISION(1) void hoveredChanged();
+    Q_REVISION(1) void hoverEnabledChanged();
     void pressAndHold(QQuickMouseEvent *event);
 
 protected:
@@ -105,6 +115,8 @@ protected:
 
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

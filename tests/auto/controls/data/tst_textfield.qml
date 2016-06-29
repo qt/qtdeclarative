@@ -144,4 +144,26 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_hover_data() {
+        return [
+            { tag: "enabled", hoverEnabled: true },
+            { tag: "disabled", hoverEnabled: false },
+        ]
+    }
+
+    function test_hover(data) {
+        var control = textField.createObject(testCase, {hoverEnabled: data.hoverEnabled})
+        verify(control)
+
+        compare(control.hovered, false)
+
+        mouseMove(control)
+        compare(control.hovered, data.hoverEnabled)
+
+        mouseMove(control, -1, -1)
+        compare(control.hovered, false)
+
+        control.destroy()
+    }
 }

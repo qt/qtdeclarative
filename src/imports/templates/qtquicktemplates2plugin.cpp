@@ -183,6 +183,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSpinBox, 1>(uri, 2, 1, "SpinBox");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");
     qmlRegisterType<QQuickSwipeView, 1>(uri, 2, 1, "SwipeView");
+    qmlRegisterType<QQuickTextArea, 1>(uri, 2, 1, "TextArea");
+    qmlRegisterType<QQuickTextField, 1>(uri, 2, 1, "TextField");
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
 }
 

@@ -93,6 +93,7 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    bool hovered;
     QFont font;
     QQuickItem *background;
     QString placeholder;

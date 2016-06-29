@@ -176,4 +176,26 @@ TestCase {
         ignoreWarning(Qt.resolvedUrl("tst_textarea.qml") + ":45:1: QML TestCase: TextArea must be attached to a Flickable")
         testCase.TextArea.flickable = null
     }
+
+    function test_hover_data() {
+        return [
+            { tag: "enabled", hoverEnabled: true },
+            { tag: "disabled", hoverEnabled: false },
+        ]
+    }
+
+    function test_hover(data) {
+        var control = textArea.createObject(testCase, {text: "TextArea", hoverEnabled: data.hoverEnabled})
+        verify(control)
+
+        compare(control.hovered, false)
+
+        mouseMove(control)
+        compare(control.hovered, data.hoverEnabled)
+
+        mouseMove(control, -1, -1)
+        compare(control.hovered, false)
+
+        control.destroy()
+    }
 }

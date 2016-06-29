@@ -107,7 +107,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
+    : hovered(false), background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -471,6 +471,55 @@ void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
     emit focusReasonChanged();
 }
 
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::TextArea::hovered
+    \readonly
+
+    This property holds whether the text area is hovered.
+
+    \sa hoverEnabled
+*/
+bool QQuickTextArea::isHovered() const
+{
+    Q_D(const QQuickTextArea);
+    return d->hovered;
+}
+
+void QQuickTextArea::setHovered(bool hovered)
+{
+    Q_D(QQuickTextArea);
+    if (hovered == d->hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::TextArea::hoverEnabled
+
+    This property determines whether the text area accepts hover events. The default value is \c true.
+
+    \sa hovered
+*/
+bool QQuickTextArea::isHoverEnabled() const
+{
+    Q_D(const QQuickTextArea);
+    return d->hoverEnabled;
+}
+
+void QQuickTextArea::setHoverEnabled(bool enabled)
+{
+    Q_D(QQuickTextArea);
+    if (enabled == d->hoverEnabled)
+        return;
+
+    setAcceptHoverEvents(enabled);
+    emit hoverEnabledChanged();
+}
+
 void QQuickTextArea::classBegin()
 {
     Q_D(QQuickTextArea);
@@ -541,6 +590,22 @@ void QQuickTextArea::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextEdit::focusOutEvent(event);
     setFocusReason(event->reason());
+}
+
+void QQuickTextArea::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextArea);
+    QQuickTextEdit::hoverEnterEvent(event);
+    setHovered(d->hoverEnabled);
+    event->setAccepted(d->hoverEnabled);
+}
+
+void QQuickTextArea::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextArea);
+    QQuickTextEdit::hoverLeaveEvent(event);
+    setHovered(false);
+    event->setAccepted(d->hoverEnabled);
 }
 
 void QQuickTextArea::mousePressEvent(QMouseEvent *event)
