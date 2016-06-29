@@ -62,7 +62,6 @@ class QQuickDialogButtonBoxAttachedPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment RESET resetAlignment NOTIFY alignmentChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
@@ -72,9 +71,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickCont
 public:
     explicit QQuickDialogButtonBox(QQuickItem *parent = nullptr);
     ~QQuickDialogButtonBox();
-
-    bool isFlat() const;
-    void setFlat(bool flat);
 
     enum Position {
         Header,
@@ -104,7 +100,6 @@ Q_SIGNALS:
     void helpRequested();
     void clicked(QQuickAbstractButton *button);
 
-    void flatChanged();
     void positionChanged();
     void alignmentChanged();
     void standardButtonsChanged();

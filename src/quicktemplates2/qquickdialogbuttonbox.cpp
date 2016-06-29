@@ -142,7 +142,6 @@ static QPlatformDialogHelper::ButtonRole buttonRole(QQuickAbstractButton *button
 }
 
 QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate() :
-    flat(false),
     alignment(0),
     position(QQuickDialogButtonBox::Footer),
     standardButtons(QPlatformDialogHelper::NoButton),
@@ -358,36 +357,6 @@ QQuickDialogButtonBox::~QQuickDialogButtonBox()
 {
 }
 
-/*!
-    \qmlproperty bool QtQuick.Controls::DialogButtonBox::flat
-
-    This property holds whether the buttons in the button box are flat.
-
-    The default value is \c false.
-
-    \sa Button::flat
-*/
-bool QQuickDialogButtonBox::isFlat() const
-{
-    Q_D(const QQuickDialogButtonBox);
-    return d->flat;
-}
-
-void QQuickDialogButtonBox::setFlat(bool flat)
-{
-    Q_D(QQuickDialogButtonBox);
-    if (flat == d->flat)
-        return;
-
-    for (int i = 0; i < count(); ++i) {
-        QQuickButton *button = qobject_cast<QQuickButton *>(itemAt(i));
-        if (button)
-            button->setFlat(flat);
-    }
-
-    d->flat = flat;
-    emit flatChanged();
-}
 
 /*!
     \qmlproperty enumeration QtQuick.Controls::DialogButtonBox::position
@@ -604,8 +573,6 @@ void QQuickDialogButtonBox::itemAdded(int index, QQuickItem *item)
     Q_UNUSED(index);
     if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(item))
         QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, d, &QQuickDialogButtonBoxPrivate::handleClick);
-    if (QQuickButton *button = qobject_cast<QQuickButton *>(item))
-        button->setFlat(d->flat);
     if (QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(item, false)))
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->setButtonBox(this);
     if (isComponentComplete())

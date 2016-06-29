@@ -141,28 +141,6 @@ TestCase {
         control.destroy()
     }
 
-    function test_flat() {
-        var control = buttonBox.createObject(testCase)
-
-        control.flat = true
-        compare(control.flat, true)
-
-        control.standardButtons = DialogButtonBox.Ok | DialogButtonBox.Cancel | DialogButtonBox.Apply
-        button.createObject(control, {text: "Custom"})
-        compare(control.count, 4)
-
-        for (var i = 0; i < control.count; ++i)
-            compare(control.itemAt(i).flat, true)
-
-        control.flat = false
-        compare(control.flat, false)
-
-        for (var j = 0; j < control.count; ++j)
-            compare(control.itemAt(j).flat, false)
-
-        control.destroy()
-    }
-
     function test_signals_data() {
         return [
             { tag: "Ok", standardButton: DialogButtonBox.Ok, buttonRole: DialogButtonBox.AcceptRole, signalName: "accepted" },

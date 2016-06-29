@@ -46,7 +46,6 @@ T.DialogButtonBox {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    flat: true
     spacing: 8
     padding: 8
     topPadding: padding - 4
