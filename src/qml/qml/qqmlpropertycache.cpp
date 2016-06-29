@@ -230,9 +230,10 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
         flags |= NotFullyResolved;
     }
 
-    if (m.parameterCount()) {
+    const int paramCount = m.parameterCount();
+    if (paramCount) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
             flags |= IsV4Function;
         }
     }
@@ -509,11 +510,12 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         bool hasFastProperty = false;
         for (int ii = 0; ii < classInfoCount; ++ii) {
             int idx = ii + classInfoOffset;
-
-            if (0 == qstrcmp(metaObject->classInfo(idx).name(), "qt_HasQmlAccessors")) {
+            QMetaClassInfo mci = metaObject->classInfo(idx);
+            const char *name = mci.name();
+            if (0 == qstrcmp(name, "qt_HasQmlAccessors")) {
                 hasFastProperty = true;
-            } else if (0 == qstrcmp(metaObject->classInfo(idx).name(), "DefaultProperty")) {
-                _defaultPropertyName = QString::fromUtf8(metaObject->classInfo(idx).value());
+            } else if (0 == qstrcmp(name, "DefaultProperty")) {
+                _defaultPropertyName = QString::fromUtf8(mci.value());
             }
         }
 
@@ -804,11 +806,11 @@ inline bool contextHasNoExtensions(QQmlContextData *context)
     return (!context->parent || !context->parent->imports);
 }
 
-inline int maximumIndexForProperty(QQmlPropertyData *prop, const QQmlVMEMetaObject *vmemo)
+inline int maximumIndexForProperty(QQmlPropertyData *prop, const int methodCount, const int signalCount, const int propertyCount)
 {
-    return (prop->isFunction() ? vmemo->methodCount()
-                               : prop->isSignalHandler() ? vmemo->signalCount()
-                                                         : vmemo->propertyCount());
+    return prop->isFunction() ? methodCount
+                              : prop->isSignalHandler() ? signalCount
+                                                        : propertyCount;
 }
 
 }
@@ -835,11 +837,15 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
         }
 
         if (vmemo) {
+            const int methodCount = vmemo->methodCount();
+            const int signalCount = vmemo->signalCount();
+            const int propertyCount = vmemo->propertyCount();
+
             // Ensure that the property we resolve to is accessible from this meta-object
             do {
                 const StringCache::mapped_type &property(it.value());
 
-                if (property.first < maximumIndexForProperty(property.second, vmemo)) {
+                if (property.first < maximumIndexForProperty(property.second, methodCount, signalCount, propertyCount)) {
                     // This property is available in the specified context
                     if (property.second->isFunction() || property.second->isSignalHandler()) {
                         // Prefer the earlier resolution
