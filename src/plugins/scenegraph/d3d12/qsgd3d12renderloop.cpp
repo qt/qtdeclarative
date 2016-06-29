@@ -84,13 +84,17 @@ void QSGD3D12RenderLoop::hide(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::resize(QQuickWindow *window)
 {
-    if (!window->isExposed() || window->size().isEmpty())
+    if (!m_windows.contains(window) || window->size().isEmpty())
         return;
 
     if (Q_UNLIKELY(debug_loop()))
         qDebug() << "resize" << window;
 
-    WindowData &data(m_windows[window]);
+    const WindowData &data(m_windows[window]);
+
+    if (!data.exposed)
+        return;
+
     if (data.engine)
         data.engine->setWindowSize(window->size(), window->effectiveDevicePixelRatio());
 }
@@ -131,6 +135,7 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
 void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)
 {
     WindowData data;
+    data.exposed = true;
     data.engine = new QSGD3D12Engine;
     data.rc = static_cast<QSGD3D12RenderContext *>(QQuickWindowPrivate::get(window)->context);
     data.rc->setEngine(data.engine);
@@ -147,6 +152,7 @@ void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::obscureWindow(QQuickWindow *window)
 {
+    m_windows[window].exposed = false;
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->fireAboutToStop();
 }
@@ -154,12 +160,14 @@ void QSGD3D12RenderLoop::obscureWindow(QQuickWindow *window)
 void QSGD3D12RenderLoop::exposureChanged(QQuickWindow *window)
 {
     if (Q_UNLIKELY(debug_loop()))
-        qDebug() << "exposure changed" << window;
+        qDebug() << "exposure changed" << window << window->isExposed();
 
     if (window->isExposed()) {
         if (!m_windows.contains(window))
             exposeWindow(window);
-        m_windows[window].updatePending = true;
+        WindowData &data(m_windows[window]);
+        data.exposed = true;
+        data.updatePending = true;
         renderWindow(window);
     } else if (m_windows.contains(window)) {
         obscureWindow(window);
@@ -252,6 +260,11 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         return;
 
     WindowData &data(m_windows[window]);
+    if (!data.exposed) { // not the same as window->isExposed(), when grabbing invisible windows for instance
+        if (Q_UNLIKELY(debug_loop()))
+            qDebug("renderWindow - not exposed, abort");
+        return;
+    }
 
     const bool needsSwap = data.updatePending;
     data.updatePending = false;

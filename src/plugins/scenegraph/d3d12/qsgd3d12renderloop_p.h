@@ -102,6 +102,7 @@ private:
         QSGD3D12Engine *engine = nullptr;
         bool updatePending = false;
         bool grabOnly = false;
+        bool exposed = false;
     };
 
     QHash<QQuickWindow *, WindowData> m_windows;
