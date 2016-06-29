@@ -183,7 +183,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     if (QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
         qCDebug(QSG_RASTER_LOG_TIME_RENDERLOOP,
-                "Frame rendered with 'basic' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
+                "Frame rendered with 'software' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
                 int(swapTime / 1000000),
                 int(polishTime / 1000000),
                 int((syncTime - polishTime) / 1000000),
