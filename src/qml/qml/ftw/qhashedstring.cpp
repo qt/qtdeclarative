@@ -39,30 +39,7 @@
 
 #include "qhashedstring_p.h"
 
-inline quint32 stringHash(const QChar* data, int length)
-{
-    return QV4::String::createHashValue(data, length, Q_NULLPTR);
-}
 
-inline quint32 stringHash(const char *data, int length)
-{
-    return QV4::String::createHashValue(data, length, Q_NULLPTR);
-}
-
-void QHashedString::computeHash() const
-{
-    m_hash = stringHash(constData(), length());
-}
-
-void QHashedStringRef::computeHash() const
-{
-    m_hash = stringHash(m_data, m_length);
-}
-
-void QHashedCStringRef::computeHash() const
-{
-    m_hash = stringHash(m_data, m_length);
-}
 
 /*
     A QHash has initially around pow(2, MinNumBits) buckets. For
