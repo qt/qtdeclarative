@@ -63,6 +63,7 @@ class QSGD3D12RenderContext : public QSGRenderContext, public QSGRendererInterfa
 public:
     QSGD3D12RenderContext(QSGContext *ctx);
     bool isValid() const override;
+    void initialize(void *context) override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
@@ -70,9 +71,6 @@ public:
 
     void setEngine(QSGD3D12Engine *engine);
     QSGD3D12Engine *engine() { return m_engine; }
-
-    void ensureInitializedEmitted();
-    void setInitializedPending() { m_pendingInitialized = true; }
 
     // QSGRendererInterface
     GraphicsApi graphicsApi() const override;
@@ -83,7 +81,7 @@ public:
 
 private:
     QSGD3D12Engine *m_engine = nullptr;
-    bool m_pendingInitialized = false;
+    bool m_initialized = false;
 };
 
 QT_END_NAMESPACE

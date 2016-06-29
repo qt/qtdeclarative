@@ -327,10 +327,6 @@ bool QSGD3D12RenderThread::event(QEvent *e)
             rc->invalidate();
             engine->releaseResources();
             needsWindow = true;
-            // Be nice and emit the rendercontext's initialized() later on at
-            // some point so that QQuickWindow::sceneGraphInitialized() behaves
-            // in a manner similar to GL.
-            rc->setInitializedPending();
         }
         if (needsWindow) {
             // Must only ever get here when there is no window or releaseResources() has been called.
@@ -412,7 +408,7 @@ bool QSGD3D12RenderThread::event(QEvent *e)
             // However, our hands are tied by the existing, synchronous APIs of
             // QQuickWindow and such.
             QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
-            rc->ensureInitializedEmitted();
+            rc->initialize(nullptr);
             wd->syncSceneGraph();
             wd->renderSceneGraph(wme->window->size());
             *wme->image = engine->executeAndWaitReadbackRenderTarget();
@@ -547,7 +543,7 @@ void QSGD3D12RenderThread::sync(bool inExpose)
         if (wd->renderer)
             wd->renderer->clearChangedFlag();
 
-        rc->ensureInitializedEmitted();
+        rc->initialize(nullptr);
         wd->syncSceneGraph();
 
         if (!hadRenderer && wd->renderer) {

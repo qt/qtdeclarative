@@ -276,9 +276,6 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         data.rc->invalidate();
         data.engine->releaseResources();
         needsWindow = true;
-        // Be nice and emit the rendercontext's initialized() later on so that
-        // QQuickWindow::sceneGraphInitialized() behaves in a manner similar to GL.
-        data.rc->setInitializedPending();
     }
     if (needsWindow) {
         // Must only ever get here when there is no window or releaseResources() has been called.
@@ -296,10 +293,9 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         wd->cleanupNodesOnShutdown();
         QSGD3D12ShaderEffectNode::cleanupMaterialTypeCache();
         data.rc->invalidate();
-        data.rc->setInitializedPending();
     }
 
-    data.rc->ensureInitializedEmitted();
+    data.rc->initialize(nullptr);
 
     wd->syncSceneGraph();
 

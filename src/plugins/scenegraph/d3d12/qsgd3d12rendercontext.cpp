@@ -64,8 +64,22 @@ bool QSGD3D12RenderContext::isValid() const
     return m_engine != nullptr;
 }
 
+void QSGD3D12RenderContext::initialize(void *)
+{
+    if (m_initialized)
+        return;
+
+    m_initialized = true;
+    emit initialized();
+}
+
 void QSGD3D12RenderContext::invalidate()
 {
+    if (!m_initialized)
+        return;
+
+    m_initialized = false;
+
     if (Q_UNLIKELY(debug_render()))
         qDebug("rendercontext invalidate engine %p, %d/%d/%d", m_engine,
                m_texturesToDelete.count(), m_textures.count(), m_fontEnginesToClean.count());
@@ -114,16 +128,7 @@ void QSGD3D12RenderContext::setEngine(QSGD3D12Engine *engine)
     m_engine = engine;
 
     if (m_engine)
-        emit initialized();
-}
-
-void QSGD3D12RenderContext::ensureInitializedEmitted()
-{
-    if (!m_pendingInitialized)
-        return;
-
-    m_pendingInitialized = false;
-    emit initialized();
+        initialize(nullptr);
 }
 
 QSGRendererInterface::GraphicsApi QSGD3D12RenderContext::graphicsApi() const
