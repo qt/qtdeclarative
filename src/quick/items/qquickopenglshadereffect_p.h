@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGContext;
 class QSignalMapper;
+class QFileSelector;
 class QQuickOpenGLCustomMaterialShader;
 
 // Common class for QQuickOpenGLShaderEffect and QQuickCustomParticle.
@@ -74,7 +75,7 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
-    QQuickOpenGLShaderEffectCommon(QObject *host) : host(host) { }
+    QQuickOpenGLShaderEffectCommon(QObject *host) : host(host), fileSelector(nullptr) { }
     ~QQuickOpenGLShaderEffectCommon();
     void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
     void connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
@@ -95,6 +96,7 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
     QVector<UniformData> uniformData[Key::ShaderTypeCount];
     QVector<QSignalMapper *> signalMappers[Key::ShaderTypeCount];
     QString parseLog;
+    QFileSelector *fileSelector;
 };
 
 

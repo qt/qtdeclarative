@@ -53,6 +53,7 @@
 
 #include <QtQml/qqmlfile.h>
 #include <QtCore/qsignalmapper.h>
+#include <QtCore/qfileselector.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -325,7 +326,16 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item, Key::ShaderT
     // A qrc or file URL means the shader source is to be read from the specified file.
     QUrl srcUrl(QString::fromUtf8(source.sourceCode[shaderType]));
     if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
-        const QString fn = QQmlFile::urlToLocalFileOrQrc(srcUrl);
+        if (!fileSelector) {
+            fileSelector = new QFileSelector(item);
+            // There may not be an OpenGL context accessible here. So rely on
+            // the window's requestedFormat().
+            if (item->window()
+                    && item->window()->requestedFormat().profile() == QSurfaceFormat::CoreProfile) {
+                fileSelector->setExtraSelectors(QStringList() << QStringLiteral("glslcore"));
+            }
+        }
+        const QString fn = fileSelector->select(QQmlFile::urlToLocalFileOrQrc(srcUrl));
         QFile f(fn);
         if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
             source.sourceCode[shaderType] = f.readAll();
