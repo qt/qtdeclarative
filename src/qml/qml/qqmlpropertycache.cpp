@@ -423,12 +423,6 @@ void QQmlPropertyCache::appendMethod(const QString &name, quint32 flags, int cor
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
 }
 
-// Returns this property cache's metaObject.  May be null if it hasn't been created yet.
-const QMetaObject *QQmlPropertyCache::metaObject() const
-{
-    return _metaObject;
-}
-
 // Returns this property cache's metaObject, creating it if necessary.
 const QMetaObject *QQmlPropertyCache::createMetaObject()
 {
@@ -444,20 +438,9 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
     return _metaObject;
 }
 
-// Returns the name of the default property for this cache
-QString QQmlPropertyCache::defaultPropertyName() const
-{
-    return _defaultPropertyName;
-}
-
 QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
 {
     return property(defaultPropertyName(), 0, 0);
-}
-
-QQmlPropertyCache *QQmlPropertyCache::parent() const
-{
-    return _parent;
 }
 
 void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
@@ -468,15 +451,6 @@ void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
         _parent->release();
     _parent = newParent;
     _parent->addref();
-}
-
-// Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
-// QML
-const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
-{
-    while (_parent && (_metaObject == 0 || _ownMetaObject))
-        return _parent->firstCppMetaObject();
-    return _metaObject;
 }
 
 QQmlPropertyCache *
@@ -812,48 +786,6 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
         signalHandlerIndexCacheStart = 0;
         update(metaObject);
     }
-}
-
-/*! \internal
-    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
-    This is different from QMetaMethod::methodIndex().
-*/
-QQmlPropertyData *
-QQmlPropertyCache::signal(int index) const
-{
-    if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
-        return 0;
-
-    if (index < signalHandlerIndexCacheStart)
-        return _parent->signal(index);
-
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
-    Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
-    return ensureResolved(rv);
-}
-
-int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
-{
-    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
-        return index;
-
-    if (index < methodIndexCacheStart)
-        return _parent->methodIndexToSignalIndex(index);
-
-    return index - methodIndexCacheStart + signalHandlerIndexCacheStart;
-}
-
-QQmlPropertyData *
-QQmlPropertyCache::method(int index) const
-{
-    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
-        return 0;
-
-    if (index < methodIndexCacheStart)
-        return _parent->method(index);
-
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
-    return ensureResolved(rv);
 }
 
 QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, QObject *object, QQmlContextData *context) const
