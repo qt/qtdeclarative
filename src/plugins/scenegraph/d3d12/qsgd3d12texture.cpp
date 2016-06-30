@@ -52,7 +52,13 @@ void QSGD3D12Texture::create(const QImage &image, uint flags)
     const bool alphaRequest = flags & QSGRenderContext::CreateTexture_Alpha;
     m_alphaWanted = alphaRequest && image.hasAlphaChannel();
 
-    m_image = image;
+    // The engine maps 8-bit formats to R8. This is fine for glyphs and such
+    // but may not be what apps expect for ordinary image data. The OpenGL
+    // implementation maps these to ARGB32_Pre so let's follow suit.
+    if (image.depth() != 8)
+        m_image = image;
+    else
+        m_image = image.convertToFormat(m_alphaWanted ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32);
 
     m_id = m_engine->genTexture();
     Q_ASSERT(m_id);
