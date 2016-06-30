@@ -61,6 +61,8 @@ class QSGD3D12RenderContext;
 
 class QSGD3D12RenderLoop : public QSGRenderLoop
 {
+    Q_OBJECT
+
 public:
     QSGD3D12RenderLoop();
     ~QSGD3D12RenderLoop();
@@ -77,7 +79,6 @@ public:
 
     void update(QQuickWindow *window) override;
     void maybeUpdate(QQuickWindow *window) override;
-    void handleUpdateRequest(QQuickWindow *window) override;
 
     QAnimationDriver *animationDriver() const override;
 
@@ -88,14 +89,28 @@ public:
     void postJob(QQuickWindow *window, QRunnable *job) override;
 
     QSurface::SurfaceType windowSurfaceType() const override;
+    bool interleaveIncubation() const override;
     int flags() const override;
+
+    bool event(QEvent *event) override;
+
+public Q_SLOTS:
+    void onAnimationStarted();
+    void onAnimationStopped();
 
 private:
     void exposeWindow(QQuickWindow *window);
     void obscureWindow(QQuickWindow *window);
     void renderWindow(QQuickWindow *window);
+    void render();
+    void maybePostUpdateTimer();
+    bool somethingVisible() const;
 
     QSGD3D12Context *sg;
+    QAnimationDriver *m_anims;
+    int m_vsyncDelta;
+    int m_updateTimer = 0;
+    int m_animationTimer = 0;
 
     struct WindowData {
         QSGD3D12RenderContext *rc = nullptr;

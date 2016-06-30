@@ -44,7 +44,10 @@
 #include "qsgd3d12shadereffectnode_p.h"
 #include <private/qquickwindow_p.h>
 #include <private/qquickprofiler_p.h>
+#include <private/qquickanimatorcontroller_p.h>
 #include <QElapsedTimer>
+#include <QGuiApplication>
+#include <QScreen>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,12 +60,29 @@ QT_BEGIN_NAMESPACE
 DECLARE_DEBUG_VAR(loop)
 DECLARE_DEBUG_VAR(time)
 
+
+// This render loop operates on the gui (main) thread.
+// Conceptually it matches the OpenGL 'windows' render loop.
+
+static inline int qsgrl_animation_interval()
+{
+    const qreal refreshRate = QGuiApplication::primaryScreen() ? QGuiApplication::primaryScreen()->refreshRate() : 0;
+    return refreshRate < 1 ? 16 : int(1000 / refreshRate);
+}
+
 QSGD3D12RenderLoop::QSGD3D12RenderLoop()
 {
     if (Q_UNLIKELY(debug_loop()))
         qDebug("new d3d12 render loop");
 
     sg = new QSGD3D12Context;
+
+    m_anims = sg->createAnimationDriver(this);
+    connect(m_anims, &QAnimationDriver::started, this, &QSGD3D12RenderLoop::onAnimationStarted);
+    connect(m_anims, &QAnimationDriver::stopped, this, &QSGD3D12RenderLoop::onAnimationStopped);
+    m_anims->install();
+
+    m_vsyncDelta = qsgrl_animation_interval();
 }
 
 QSGD3D12RenderLoop::~QSGD3D12RenderLoop()
@@ -130,6 +150,8 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
 
     delete rc;
     delete engine;
+
+    delete wd->animationController;
 }
 
 void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)
@@ -165,12 +187,31 @@ void QSGD3D12RenderLoop::exposureChanged(QQuickWindow *window)
     if (window->isExposed()) {
         if (!m_windows.contains(window))
             exposeWindow(window);
+
+        // Stop non-visual animation timer as we now have a window rendering.
+        if (m_animationTimer && somethingVisible()) {
+            killTimer(m_animationTimer);
+            m_animationTimer = 0;
+        }
+        // If we have a pending timer and we get an expose, we need to stop it.
+        // Otherwise we get two frames and two animation ticks in the same time interval.
+        if (m_updateTimer) {
+            killTimer(m_updateTimer);
+            m_updateTimer = 0;
+        }
+
         WindowData &data(m_windows[window]);
         data.exposed = true;
         data.updatePending = true;
-        renderWindow(window);
+
+        render();
+
     } else if (m_windows.contains(window)) {
         obscureWindow(window);
+
+        // Potentially start the non-visual animation timer if nobody is rendering.
+        if (m_anims->isRunning() && !somethingVisible() && !m_animationTimer)
+            m_animationTimer = startTimer(m_vsyncDelta);
     }
 }
 
@@ -193,32 +234,41 @@ QImage QSGD3D12RenderLoop::grab(QQuickWindow *window)
     return grabbed;
 }
 
+bool QSGD3D12RenderLoop::somethingVisible() const
+{
+    for (auto it = m_windows.constBegin(), itEnd = m_windows.constEnd(); it != itEnd; ++it) {
+        if (it.key()->isVisible() && it.key()->isExposed())
+            return true;
+    }
+    return false;
+}
+
+void QSGD3D12RenderLoop::maybePostUpdateTimer()
+{
+    if (!m_updateTimer) {
+        if (Q_UNLIKELY(debug_loop()))
+            qDebug("starting update timer");
+        m_updateTimer = startTimer(m_vsyncDelta / 3);
+    }
+}
+
 void QSGD3D12RenderLoop::update(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return;
-
-    m_windows[window].updatePending = true;
-    window->requestUpdate();
+    maybeUpdate(window);
 }
 
 void QSGD3D12RenderLoop::maybeUpdate(QQuickWindow *window)
 {
-    update(window);
-}
+    if (!m_windows.contains(window) || !somethingVisible())
+        return;
 
-// called in response to window->requestUpdate()
-void QSGD3D12RenderLoop::handleUpdateRequest(QQuickWindow *window)
-{
-    if (Q_UNLIKELY(debug_loop()))
-        qDebug() << "handleUpdateRequest" << window;
-
-    renderWindow(window);
+    m_windows[window].updatePending = true;
+    maybePostUpdateTimer();
 }
 
 QAnimationDriver *QSGD3D12RenderLoop::animationDriver() const
 {
-    return nullptr;
+    return m_anims;
 }
 
 QSGContext *QSGD3D12RenderLoop::sceneGraphContext() const
@@ -250,6 +300,92 @@ QSurface::SurfaceType QSGD3D12RenderLoop::windowSurfaceType() const
     return QSurface::OpenGLSurface;
 }
 
+bool QSGD3D12RenderLoop::interleaveIncubation() const
+{
+    return m_anims->isRunning() && somethingVisible();
+}
+
+void QSGD3D12RenderLoop::onAnimationStarted()
+{
+    if (!somethingVisible()) {
+        if (!m_animationTimer) {
+            if (Q_UNLIKELY(debug_loop()))
+                qDebug("starting non-visual animation timer");
+            m_animationTimer = startTimer(m_vsyncDelta);
+        }
+    } else {
+        maybePostUpdateTimer();
+    }
+}
+
+void QSGD3D12RenderLoop::onAnimationStopped()
+{
+    if (m_animationTimer) {
+        if (Q_UNLIKELY(debug_loop()))
+            qDebug("stopping non-visual animation timer");
+        killTimer(m_animationTimer);
+        m_animationTimer = 0;
+    }
+}
+
+bool QSGD3D12RenderLoop::event(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::Timer:
+    {
+        QTimerEvent *te = static_cast<QTimerEvent *>(event);
+        if (te->timerId() == m_animationTimer) {
+            if (Q_UNLIKELY(debug_loop()))
+                qDebug("animation tick while no windows exposed");
+            m_anims->advance();
+        } else if (te->timerId() == m_updateTimer) {
+            if (Q_UNLIKELY(debug_loop()))
+                qDebug("update timeout - rendering");
+            killTimer(m_updateTimer);
+            m_updateTimer = 0;
+            render();
+        }
+        return true;
+    }
+    default:
+        break;
+    }
+
+    return QObject::event(event);
+}
+
+void QSGD3D12RenderLoop::render()
+{
+    bool rendered = false;
+    for (auto it = m_windows.begin(), itEnd = m_windows.end(); it != itEnd; ++it) {
+        if (it->updatePending) {
+            it->updatePending = false;
+            renderWindow(it.key());
+            rendered = true;
+        }
+    }
+
+    if (!rendered) {
+        if (Q_UNLIKELY(debug_loop()))
+            qDebug("render - no changes, sleep");
+        QThread::msleep(m_vsyncDelta);
+    }
+
+    if (m_anims->isRunning()) {
+        if (Q_UNLIKELY(debug_loop()))
+            qDebug("render - advancing animations");
+
+        m_anims->advance();
+
+        // It is not given that animations triggered another maybeUpdate()
+        // and thus another render pass, so to keep things running,
+        // make sure there is another frame pending.
+        maybePostUpdateTimer();
+
+        emit timeToIncubate();
+    }
+}
+
 void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
 {
     if (Q_UNLIKELY(debug_loop()))
@@ -266,14 +402,8 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         return;
     }
 
-    const bool needsSwap = data.updatePending;
-    data.updatePending = false;
-
-    if (!data.grabOnly) {
+    if (!data.grabOnly)
         wd->flushFrameSynchronousEvents();
-        if (!m_windows.contains(window))
-            return;
-    }
 
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
@@ -336,26 +466,26 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         renderTime = renderTimer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
-    if (data.grabOnly) {
+    if (!data.grabOnly) {
+        // The engine is able to have multiple frames in flight. This in effect is
+        // similar to BufferQueueingOpenGL. Provide an env var to force the
+        // traditional blocking swap behavior, just in case.
+        static bool blockOnEachFrame = qEnvironmentVariableIntValue("QT_D3D_BLOCKING_PRESENT") != 0;
+
+        if (window->isVisible()) {
+            data.engine->present();
+            if (blockOnEachFrame)
+                data.engine->waitGPU();
+            // The concept of "frame swaps" is quite misleading by default, when
+            // blockOnEachFrame is not used, but emit it for compatibility.
+            wd->fireFrameSwapped();
+        } else {
+            if (blockOnEachFrame)
+                data.engine->waitGPU();
+        }
+    } else {
         m_grabContent = data.engine->executeAndWaitReadbackRenderTarget();
         data.grabOnly = false;
-    }
-
-    // The engine is able to have multiple frames in flight. This in effect is
-    // similar to BufferQueueingOpenGL. Provide an env var to force the
-    // traditional blocking swap behavior, just in case.
-    static bool blockOnEachFrame = qEnvironmentVariableIntValue("QT_D3D_BLOCKING_PRESENT") != 0;
-
-    if (needsSwap && window->isVisible()) {
-        data.engine->present();
-        if (blockOnEachFrame)
-            data.engine->waitGPU();
-        // The concept of "frame swaps" is quite misleading by default, when
-        // blockOnEachFrame is not used, but emit it for compatibility.
-        wd->fireFrameSwapped();
-    } else {
-        if (blockOnEachFrame)
-            data.engine->waitGPU();
     }
 
     qint64 swapTime = 0;
@@ -374,10 +504,6 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
                int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
-
-    // Might have been set during syncSceneGraph()
-    if (data.updatePending)
-        maybeUpdate(window);
 
     // Simulate device loss if requested.
     static int devLossTest = qEnvironmentVariableIntValue("QT_D3D_TEST_DEVICE_LOSS");
