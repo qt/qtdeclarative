@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTRENDERCONTEXT_H
-#define QSGDEFAULTRENDERCONTEXT_H
+#ifndef QQUICKANIMATEDSPRITE_P_P_H
+#define QQUICKANIMATEDSPRITE_P_P_H
 
 //
 //  W A R N I N G
@@ -51,62 +51,46 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qsgcontext_p.h>
-#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
+#include "qquickitem_p.h"
+#include "qquicksprite_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGMaterialShader;
-class QOpenGLFramebufferObject;
+class QQuickAnimatedSprite;
 
-namespace QSGAtlasTexture {
-    class Manager;
-}
-
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
+class QQuickAnimatedSpritePrivate : public QQuickItemPrivate
 {
-    Q_OBJECT
+    Q_DECLARE_PUBLIC(QQuickAnimatedSprite)
+
 public:
-    QSGDefaultRenderContext(QSGContext *context);
+    QQuickAnimatedSpritePrivate()
+        : m_sprite(nullptr)
+        , m_spriteEngine(nullptr)
+        , m_curFrame(0)
+        , m_pleaseReset(false)
+        , m_running(true)
+        , m_paused(false)
+        , m_interpolate(true)
+        , m_loops(-1)
+        , m_curLoop(0)
+        , m_pauseOffset(0)
+    {
+    }
 
-    QOpenGLContext *openglContext() const { return m_gl; }
-    bool isValid() const override { return m_gl; }
-
-    void initialize(void *context) override;
-    void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
-
-    QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
-
-    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
-    QSGDepthStencilBufferManager *depthStencilBufferManager();
-
-    QSGTexture *createTexture(const QImage &image, uint flags) const override;
-    QSGRenderer *createRenderer() override;
-
-    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
-    virtual void initializeShader(QSGMaterialShader *shader);
-
-    void setAttachToGraphicsContext(bool attach) override;
-
-    static QSGDefaultRenderContext *from(QOpenGLContext *context);
-
-    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
-    int maxTextureSize() const override { return m_maxTextureSize; }
-
-protected:
-    QOpenGLContext *m_gl;
-    QSGDepthStencilBufferManager *m_depthStencilManager;
-    int m_maxTextureSize;
-    bool m_brokenIBOs;
-    bool m_serializedRender;
-    bool m_attachToGLContext;
-    QSGAtlasTexture::Manager *m_atlasManager;
-
-
+    QQuickSprite* m_sprite;
+    QQuickSpriteEngine* m_spriteEngine;
+    QElapsedTimer m_timestamp;
+    int m_curFrame;
+    bool m_pleaseReset;
+    bool m_running;
+    bool m_paused;
+    bool m_interpolate;
+    QSize m_sheetSize;
+    int m_loops;
+    int m_curLoop;
+    int m_pauseOffset;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGDEFAULTRENDERCONTEXT_H
+#endif // QQUICKANIMATEDSPRITE_P_P_H

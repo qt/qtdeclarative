@@ -52,6 +52,7 @@
 #include <QtQuick/private/qsgdefaultrectanglenode_p.h>
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
 #include <QtQuick/private/qsgdefaultninepatchnode_p.h>
+#include <QtQuick/private/qsgdefaultspritenode_p.h>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFramebufferObject>
@@ -255,6 +256,11 @@ QSGImageNode *QSGDefaultContext::createImageNode()
 QSGNinePatchNode *QSGDefaultContext::createNinePatchNode()
 {
     return new QSGDefaultNinePatchNode;
+}
+
+QSGSpriteNode *QSGDefaultContext::createSpriteNode()
+{
+    return new QSGDefaultSpriteNode;
 }
 
 QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const

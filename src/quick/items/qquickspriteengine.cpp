@@ -372,7 +372,7 @@ void QQuickSpriteEngine::startAssemblingImage()
     m_startedImageAssembly = true;
 }
 
-QImage QQuickSpriteEngine::assembledImage()
+QImage QQuickSpriteEngine::assembledImage(int maxSize)
 {
     QQuickPixmap::Status stat = status();
     if (!m_errorsPrinted && stat == QQuickPixmap::Error) {
@@ -389,19 +389,7 @@ QImage QQuickSpriteEngine::assembledImage()
     int w = 0;
     m_maxFrames = 0;
     m_imageStateCount = 0;
-    int maxSize = 0;
-#ifndef QT_NO_OPENGL
-    //If there is no current OpenGL Context
-    if (!QOpenGLContext::currentContext())
-        return QImage();
 
-    QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-#else
-    maxSize = 2048;
-#endif
-#ifdef SPRITE_IMAGE_DEBUG
-    qDebug() << "MAX TEXTURE SIZE" << maxSize;
-#endif
     foreach (QQuickSprite* state, m_sprites){
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();

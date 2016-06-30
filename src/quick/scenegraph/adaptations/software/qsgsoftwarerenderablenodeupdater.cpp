@@ -180,6 +180,16 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRootNode *)
 {
 }
 
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGSpriteNode *node)
+{
+    return updateRenderableNode(QSGSoftwareRenderableNode::SpriteNode, node);
+}
+
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGSpriteNode *)
+{
+
+}
+
 void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRemoved)
 {
     m_opacityState.clear();

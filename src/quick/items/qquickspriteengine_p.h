@@ -295,7 +295,7 @@ public:
     bool isError() { return status() == QQuickPixmap::Error; }
     QQuickPixmap::Status status();//Composed status of all Sprites
     void startAssemblingImage();
-    QImage assembledImage();
+    QImage assembledImage(int maxSize = 2048);
 
 private:
     int pseudospriteProgress(int,int,int*rd=0);

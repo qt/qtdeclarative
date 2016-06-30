@@ -127,4 +127,9 @@ QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
     return new QSGD3D12NinePatchNode;
 }
 
+QSGSpriteNode *QSGD3D12Context::createSpriteNode()
+{
+    return nullptr;
+}
+
 QT_END_NAMESPACE

@@ -83,7 +83,9 @@ HEADERS += \
     $$PWD/qquickspriteengine_p.h \
     $$PWD/qquicksprite_p.h \
     $$PWD/qquickspritesequence_p.h \
-    $$PWD/qquickanimatedsprite_p.h
+    $$PWD/qquickanimatedsprite_p.h \
+    $$PWD/qquickanimatedsprite_p_p.h \
+    $$PWD/qquickspritesequence_p_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -159,14 +161,10 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qquickframebufferobject.h
 
     OTHER_FILES += \
-        $$PWD/shaders/sprite.vert \
-        $$PWD/shaders/sprite.frag \
         $$PWD/shaders/shadereffect.vert \
         $$PWD/shaders/shadereffect.frag \
         $$PWD/shaders/shadereffectfallback.vert \
         $$PWD/shaders/shadereffectfallback.frag \
-        $$PWD/shaders/sprite_core.vert \
-        $$PWD/shaders/sprite_core.frag \
         $$PWD/shaders/shadereffect_core.vert \
         $$PWD/shaders/shadereffect_core.frag \
         $$PWD/shaders/shadereffectfallback_core.vert \

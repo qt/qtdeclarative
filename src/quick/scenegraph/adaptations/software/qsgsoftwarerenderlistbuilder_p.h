@@ -80,6 +80,8 @@ public:
     void endVisit(QSGGlyphNode *) override;
     bool visit(QSGRootNode *) override;
     void endVisit(QSGRootNode *) override;
+    bool visit(QSGSpriteNode *) override;
+    void endVisit(QSGSpriteNode *) override;
 
 private:
     bool addRenderableNode(QSGNode *node);
