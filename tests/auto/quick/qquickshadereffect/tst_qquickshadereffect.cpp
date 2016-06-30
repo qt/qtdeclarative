@@ -81,6 +81,7 @@ private slots:
 
     void deleteSourceItem();
     void deleteShaderEffectSource();
+    void twoImagesOneShaderEffect();
 
 private:
     enum PresenceFlags {
@@ -304,6 +305,19 @@ void tst_qquickshadereffect::deleteShaderEffectSource()
     QVERIFY(obj);
     QMetaObject::invokeMethod(obj, "setDeletedShaderEffectSource");
     QTest::qWait(50);
+    delete view;
+}
+
+void tst_qquickshadereffect::twoImagesOneShaderEffect()
+{
+    // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
+    QQuickView *view = new QQuickView(0);
+    view->setSource(QUrl::fromLocalFile(testFile("twoImagesOneShaderEffect.qml")));
+    view->show();
+    QVERIFY(QTest::qWaitForWindowExposed(view));
+    QVERIFY(view);
+    QObject *obj = view->rootObject();
+    QVERIFY(obj);
     delete view;
 }
 

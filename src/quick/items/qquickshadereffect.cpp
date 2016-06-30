@@ -1054,7 +1054,7 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
     bool geometryUsesTextureSubRect = false;
     if (m_supportsAtlasTextures && material->textureProviders.size() == 1) {
         QSGTextureProvider *provider = material->textureProviders.at(0);
-        if (provider->texture()) {
+        if (provider && provider->texture()) {
             srcRect = provider->texture()->normalizedTextureSubRect();
             geometryUsesTextureSubRect = true;
         }
