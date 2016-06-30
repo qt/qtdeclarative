@@ -186,7 +186,7 @@ dedicated thread. Qt attempts to choose a suitable loop based on the
 platform and possibly the graphics drivers in use. When this is not
 satisfactory, or for testing purposes, the environment variable
 \c QSG_RENDER_LOOP can be used to force the usage of a given loop. To
-verify which render loop is in use, enable the \c qt.scenegraph.info
+verify which render loop is in use, enable the \c qt.scenegraph.general
 \l {QLoggingCategory}{logging category}.
 
 \note The \c threaded and \c windows render loops rely on the OpenGL
@@ -374,7 +374,7 @@ addition to being helpful to Qt contributors.
 
 \li \c {qt.scenegraph.time.glyph} - logs the time spent preparing distance field glyphs
 
-\li \c {qt.scenegraph.info} - logs general information about various parts of the scene graph and the graphics stack
+\li \c {qt.scenegraph.general} - logs general information about various parts of the scene graph and the graphics stack
 
 \li \c {qt.scenegraph.renderloop} - creates a detailed log of the various stages involved in rendering. This log mode is primarily useful for developers working on Qt.
 

@@ -9,8 +9,3 @@ linux
 linux
 [ListView::test_listInteractiveCurrentIndexEnforce]
 linux
-[Text::test_linecount]
-osx
-windows
-[TextInput::test_doublevalidators]
-osx

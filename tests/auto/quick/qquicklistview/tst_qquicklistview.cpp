@@ -629,6 +629,8 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     }
     listview->setContentY(contentY);
 
+    QQuickItemViewPrivate::get(listview)->layout();
+
     QList<QPair<QString, QString> > newData;
     for (int i=0; i<insertCount; i++)
         newData << qMakePair(QString("value %1").arg(i), QString::number(i));
@@ -649,6 +651,16 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     else
         QCOMPARE(item0->y(), itemsOffsetAfterMove);
 #endif
+
+    QList<FxViewItem *> visibleItems = QQuickItemViewPrivate::get(listview)->visibleItems;
+    for (QList<FxViewItem *>::const_iterator itemIt = visibleItems.begin(); itemIt != visibleItems.end(); ++itemIt)
+    {
+        FxViewItem *item = *itemIt;
+        if (item->item->position().y() >= 0 && item->item->position().y() < listview->height())
+        {
+            QVERIFY(!QQuickItemPrivate::get(item->item)->culled);
+        }
+    }
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -769,6 +781,11 @@ void tst_QQuickListView::inserted_more_data()
     QTest::newRow("add multiple, after visible, content not at start")
             << 80.0     // show 4-19
             << 20 << 3
+            << 0.0;
+
+    QTest::newRow("add multiple, within visible, content at start")
+            << 0.0
+            << 2 << 50
             << 0.0;
 }
 

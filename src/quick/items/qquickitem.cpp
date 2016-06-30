@@ -5772,6 +5772,8 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
         if (windowPriv->mouseGrabberItem == q)
             q->ungrabMouse();
+        if (!effectiveVisible)
+            q->ungrabTouchPoints();
     }
 
     bool childVisibilityChanged = false;
@@ -5820,6 +5822,8 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
         if (windowPriv->mouseGrabberItem == q)
             q->ungrabMouse();
+        if (!effectiveEnable)
+            q->ungrabTouchPoints();
         if (scope && !effectiveEnable && activeFocus) {
             windowPriv->clearFocusInScope(
                     scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);

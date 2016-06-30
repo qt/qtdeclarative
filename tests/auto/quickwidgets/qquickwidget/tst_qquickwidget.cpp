@@ -57,6 +57,7 @@ private slots:
     void renderingSignals();
     void grabBeforeShow();
     void reparentToNewWindow();
+    void nullEngine();
 };
 
 
@@ -322,6 +323,18 @@ void tst_qquickwidget::reparentToNewWindow()
 
     QImage img = qqw->grabFramebuffer();
     QCOMPARE(img.pixel(5, 5), qRgb(255, 0, 0));
+}
+
+void tst_qquickwidget::nullEngine()
+{
+    QQuickWidget widget;
+    // Default should have no errors, even with a null qml engine
+    QVERIFY(widget.errors().isEmpty());
+    QCOMPARE(widget.status(), QQuickWidget::Null);
+
+    // A QML engine should be created lazily.
+    QVERIFY(widget.rootContext());
+    QVERIFY(widget.engine());
 }
 
 QTEST_MAIN(tst_qquickwidget)

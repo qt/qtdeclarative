@@ -118,10 +118,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
 
     engine = e;
 
-    if (engine.isNull())
-        engine = new QQmlEngine(q);
-
-    if (!engine.data()->incubationController())
+    if (!engine.isNull() && !engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
 #ifndef QT_NO_DRAGANDDROP
@@ -132,6 +129,16 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
+}
+
+void QQuickWidgetPrivate::ensureEngine() const
+{
+    Q_Q(const QQuickWidget);
+    if (!engine.isNull())
+        return;
+
+    engine = new QQmlEngine(const_cast<QQuickWidget*>(q));
+    engine.data()->setIncubationController(offscreenWindow->incubationController());
 }
 
 void QQuickWidgetPrivate::invalidateRenderControl()
@@ -215,10 +222,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
 void QQuickWidgetPrivate::execute()
 {
     Q_Q(QQuickWidget);
-    if (!engine) {
-        qWarning() << "QQuickWidget: invalid qml engine.";
-        return;
-    }
+    ensureEngine();
 
     if (root) {
         delete root;
@@ -509,7 +513,6 @@ QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
-    Q_ASSERT(engine);
     d_func()->init(engine);
 }
 
@@ -595,7 +598,8 @@ QUrl QQuickWidget::source() const
 QQmlEngine* QQuickWidget::engine() const
 {
     Q_D(const QQuickWidget);
-    return d->engine ? const_cast<QQmlEngine *>(d->engine.data()) : 0;
+    d->ensureEngine();
+    return const_cast<QQmlEngine *>(d->engine.data());
 }
 
 /*!
@@ -608,7 +612,8 @@ QQmlEngine* QQuickWidget::engine() const
 QQmlContext* QQuickWidget::rootContext() const
 {
     Q_D(const QQuickWidget);
-    return d->engine ? d->engine.data()->rootContext() : 0;
+    d->ensureEngine();
+    return d->engine.data()->rootContext();
 }
 
 /*!
@@ -653,7 +658,7 @@ QQmlContext* QQuickWidget::rootContext() const
 QQuickWidget::Status QQuickWidget::status() const
 {
     Q_D(const QQuickWidget);
-    if (!d->engine)
+    if (!d->engine && !d->source.isEmpty())
         return QQuickWidget::Error;
 
     if (!d->component)
@@ -679,11 +684,12 @@ QList<QQmlError> QQuickWidget::errors() const
     if (d->component)
         errs = d->component->errors();
 
-    if (!d->engine) {
+    if (!d->engine && !d->source.isEmpty()) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid qml engine."));
         errs << error;
-    } else if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
+    }
+    if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid root object."));
         errs << error;
@@ -897,9 +903,10 @@ void QQuickWidget::createFramebufferObject()
         return;
     }
 
-    if (context->shareContext() != QWidgetPrivate::get(window())->shareContext()) {
-        context->setShareContext(QWidgetPrivate::get(window())->shareContext());
-        context->setScreen(context->shareContext()->screen());
+    QOpenGLContext *shareWindowContext = QWidgetPrivate::get(window())->shareContext();
+    if (shareWindowContext && context->shareContext() != shareWindowContext) {
+        context->setShareContext(shareWindowContext);
+        context->setScreen(shareWindowContext->screen());
         if (!context->create())
             qWarning("QQuickWidget: Failed to recreate context");
         // The screen may be different so we must recreate the offscreen surface too.
@@ -1249,15 +1256,20 @@ void QQuickWidget::showEvent(QShowEvent *)
         d->createContext();
         if (d->offscreenWindow->openglContext()) {
             d->render(true);
-            if (d->updatePending) {
+            // render() may have led to a QQuickWindow::update() call (for
+            // example, having a scene with a QQuickFramebufferObject::Renderer
+            // calling update() in its render()) which in turn results in
+            // renderRequested in the rendercontrol, ending up in
+            // triggerUpdate. In this case just calling update() is not
+            // acceptable, we need the full renderSceneGraph issued from
+            // timerEvent().
+            if (!d->eventPending && d->updatePending) {
                 d->updatePending = false;
                 update();
             }
         } else {
             triggerUpdate();
         }
-    } else {
-        triggerUpdate();
     }
     QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
     if (!offscreenPrivate->visible) {
@@ -1375,6 +1387,17 @@ bool QQuickWidget::event(QEvent *e)
         break;
 
     case QEvent::ScreenChangeInternal:
+        if (QWindow *window = this->window()->windowHandle()) {
+            QScreen *newScreen = window->screen();
+
+            if (d->offscreenWindow)
+                d->offscreenWindow->setScreen(newScreen);
+            if (d->offscreenSurface)
+                d->offscreenSurface->setScreen(newScreen);
+            if (d->context)
+                d->context->setScreen(newScreen);
+        }
+
         if (d->useSoftwareRenderer
 #ifndef QT_NO_OPENGL
             || d->fbo
