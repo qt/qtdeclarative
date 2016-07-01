@@ -369,7 +369,6 @@ Q_SIGNALS:
     void clipChanged(bool);
     Q_REVISION(1) void windowChanged(QQuickWindow* window);
 
-    // XXX todo
     void childrenChanged();
     void opacityChanged();
     void enabledChanged();
@@ -454,7 +453,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickItem)
 };
 
-// XXX todo
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItem::Flags)
 
 #ifndef QT_NO_DEBUG_STREAM
