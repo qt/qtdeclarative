@@ -713,7 +713,8 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     if (waitableSwapChainMaxLatency)
         qCDebug(QSG_LOG_INFO, "Swap chain frame latency waitable object enabled. Frame latency is %d", waitableSwapChainMaxLatency);
 
-    if (qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0) {
+    const bool debugLayer = qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0;
+    if (debugLayer) {
         qCDebug(QSG_LOG_INFO, "Enabling debug layer");
         ComPtr<ID3D12Debug> debugController;
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
@@ -723,6 +724,29 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     QSGD3D12DeviceManager *dev = deviceManager();
     device = dev->ref();
     dev->registerDeviceLossObserver(this);
+
+    if (debugLayer) {
+        ComPtr<ID3D12InfoQueue> infoQueue;
+        if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+            infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+            infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+            const bool breakOnWarning = qEnvironmentVariableIntValue("QT_D3D_DEBUG_BREAK_ON_WARNING") != 0;
+            infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, breakOnWarning);
+            D3D12_INFO_QUEUE_FILTER filter = {};
+            D3D12_MESSAGE_ID suppressedMessages[] = {
+                // When using a render target other than the default one we
+                // have no way to know the custom clear color, if there is one.
+                D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE
+            };
+            filter.DenyList.NumIDs = _countof(suppressedMessages);
+            filter.DenyList.pIDList = suppressedMessages;
+            // setting the filter would enable Info messages which we don't need
+            D3D12_MESSAGE_SEVERITY infoSev = D3D12_MESSAGE_SEVERITY_INFO;
+            filter.DenyList.NumSeverities = 1;
+            filter.DenyList.pSeverityList = &infoSev;
+            infoQueue->PushStorageFilter(&filter);
+        }
+    }
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -1001,7 +1025,9 @@ void QSGD3D12EnginePrivate::setupDefaultRenderTargets()
             device->CreateRenderTargetView(defaultRT[i].Get(), nullptr, defaultRTV[i]);
         } else {
             const QSize size(windowSize.width() * windowDpr, windowSize.height() * windowDpr);
-            const QColor cc(Qt::white); // ### what if setClearColor? non-fatal but debug layer warns...
+            // Not optimal if the user called setClearColor, but there's so
+            // much we can do. The debug layer warning is suppressed so we're good to go.
+            const QColor cc(Qt::white);
             const QVector4D clearColor(cc.redF(), cc.greenF(), cc.blueF(), cc.alphaF());
             ID3D12Resource *msaaRT = createColorBuffer(defaultRTV[i], size, clearColor, windowSamples);
             if (msaaRT)
