@@ -7208,16 +7208,7 @@ void QQuickItem::ungrabMouse()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    if (windowPriv->mouseGrabberItem != this) {
-        qWarning("QQuickItem::ungrabMouse(): Item is not the mouse grabber.");
-        return;
-    }
-
-    qCDebug(DBG_MOUSE_TARGET) << "ungrabMouse" << windowPriv->mouseGrabberItem << "-> null";
-    windowPriv->mouseGrabberItem = 0;
-
-    QEvent ev(QEvent::UngrabMouse);
-    d->window->sendEvent(this, &ev);
+    windowPriv->removeGrabber(this, true, false);
 }
 
 
@@ -7304,7 +7295,7 @@ void QQuickItem::ungrabTouchPoints()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    windowPriv->removeGrabber(this);
+    windowPriv->removeGrabber(this, false, true);
 }
 
 /*!
