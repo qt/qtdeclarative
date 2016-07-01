@@ -204,7 +204,7 @@ impact performance (CPU load) due to increased API overhead.
 \section2 Render Loops
 
 By default the D3D12 adaptation uses a single-threaded render loop similar to
-OpenGL's \c basic render loop. There is also a threaded variant available, that
+OpenGL's \c windows render loop. There is also a threaded variant available, that
 can be requested by setting the \c{QSG_RENDER_LOOP} environment variable to \c
 threaded. However, due to conceptual limitations in DXGI, the windowing system
 interface, the threaded loop is prone to deadlocks when multiple QQuickWindow
@@ -248,6 +248,32 @@ pre-compiled bytecode into "shaders/+hlsl/effect.frag", while simply writing
 \c{fragmentShader: "qrc:shaders/effect.frag"} in QML.
 
 See the ShaderEffect documentation for more details.
+
+\section2 Multisample Render Targets
+
+The Direct3D 12 adaptation ignores the QSurfaceFormat set on the QQuickWindow
+or QQuickView (or set via QSurfaceFormat::setDefaultFormat()), with one
+exception: QSurfaceFormat::samples() is still taken into account. When the
+value is greater than 1, multisample offscreen render targets will be created
+with the specified sample count and a quality of the maximum supported quality
+level. The backend automatically performs resolving into the non-multisample
+swapchain buffers after each frame.
+
+\section2 Mipmaps
+
+Mipmap generation is supported and handled transparently to the applications
+via a built-in compute shader, but is experimental and only supports
+power-of-two images at the moment. Textures of other size will work too, but
+this involves a QImage-based scaling on the CPU first. Therefore avoid enabling
+mipmapping for NPOT images whenever possible.
+
+\section2 Image formats
+
+When creating textures via the C++ scenegraph APIs like
+QQuickWindow::createTextureFromImage(), 32-bit formats will not involve any
+conversion, they will map directly to the corresponding \c{R8G8B8A8_UNORM} or
+\c{B8G8R8A8_UNORM} format. Everything else will trigger a QImage-based format
+conversion on the CPU first.
 
 \section2 Unsupported Features
 
