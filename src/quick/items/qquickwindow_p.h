@@ -143,6 +143,7 @@ public:
     bool translateTouchToMouse(QQuickItem *item, QTouchEvent *event);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void setMouseGrabber(QQuickItem *grabber);
+    void removeGrabber(QQuickItem *grabber);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);

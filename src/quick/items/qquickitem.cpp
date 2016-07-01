@@ -3013,13 +3013,7 @@ void QQuickItemPrivate::derefWindow()
     QQuickWindowPrivate *c = QQuickWindowPrivate::get(window);
     if (polishScheduled)
         c->itemsToPolish.removeOne(q);
-    QMutableHashIterator<int, QQuickItem *> itemTouchMapIt(c->itemForTouchPointId);
-    while (itemTouchMapIt.hasNext()) {
-        if (itemTouchMapIt.next().value() == q)
-            itemTouchMapIt.remove();
-    }
-    if (c->mouseGrabberItem == q)
-        c->mouseGrabberItem = 0;
+    c->removeGrabber(q);
 #ifndef QT_NO_CURSOR
     if (c->cursorItem == q) {
         c->cursorItem = 0;
@@ -5770,10 +5764,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
 
     if (window) {
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        if (windowPriv->mouseGrabberItem == q)
-            q->ungrabMouse();
-        if (!effectiveVisible)
-            q->ungrabTouchPoints();
+        windowPriv->removeGrabber(q);
     }
 
     bool childVisibilityChanged = false;
@@ -5820,10 +5811,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     if (window) {
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        if (windowPriv->mouseGrabberItem == q)
-            q->ungrabMouse();
-        if (!effectiveEnable)
-            q->ungrabTouchPoints();
+        windowPriv->removeGrabber(q);
         if (scope && !effectiveEnable && activeFocus) {
             windowPriv->clearFocusInScope(
                     scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
@@ -7316,14 +7304,7 @@ void QQuickItem::ungrabTouchPoints()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-
-    QMutableHashIterator<int, QQuickItem*> i(windowPriv->itemForTouchPointId);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value() == this)
-            i.remove();
-    }
-    touchUngrabEvent();
+    windowPriv->removeGrabber(this);
 }
 
 /*!
