@@ -1478,8 +1478,7 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd: {
         QTouchEvent *touch = static_cast<QTouchEvent*>(e);
-        d->translateTouchEvent(touch);
-        d->deliverTouchEvent(touch);
+        d->handleTouchEvent(touch);
         if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
             // we consume all touch events ourselves to avoid duplicate
             // mouse delivery by QtGui mouse synthesis
@@ -1972,20 +1971,24 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
     // Set delayedTouch to 0 before delivery to avoid redelivery in case of
     // event loop recursions (e.g if it the touch starts a dnd session).
     QScopedPointer<QTouchEvent> e(delayedTouch.take());
-    reallyDeliverTouchEvent(e.data());
+    deliverTouchEvent(e.data());
 }
 
 static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
 
-// check what kind of touch we have (begin/update) and
-// call deliverTouchPoints to actually dispatch the points
-void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
+// entry point for touch event delivery:
+// - translate the event to window coordinates
+// - compress the event instead of delivering it if applicable
+// - call deliverTouchPoints to actually dispatch the points
+void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
 {
+    translateTouchEvent(event);
+
     qCDebug(DBG_TOUCH) << event;
     Q_Q(QQuickWindow);
 
     if (qquickwindow_no_touch_compression || touchRecursionGuard) {
-        reallyDeliverTouchEvent(event);
+        deliverTouchEvent(event);
         return;
     }
 
@@ -2048,7 +2051,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
     } else {
         if (delayedTouch)
             deliverDelayedTouchEvent();
-        reallyDeliverTouchEvent(event);
+        deliverTouchEvent(event);
     }
 }
 
@@ -2076,7 +2079,7 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
     }
 }
 
-void QQuickWindowPrivate::reallyDeliverTouchEvent(QTouchEvent *event)
+void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << " - delivering" << event;
 

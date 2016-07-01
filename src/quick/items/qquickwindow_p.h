@@ -156,8 +156,8 @@ public:
 #endif
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
                             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
+    void handleTouchEvent(QTouchEvent *);
     void deliverTouchEvent(QTouchEvent *);
-    void reallyDeliverTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
     void deliverDelayedTouchEvent();
     void flushFrameSynchronousEvents();
