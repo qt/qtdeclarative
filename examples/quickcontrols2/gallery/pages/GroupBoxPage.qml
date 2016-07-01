@@ -63,7 +63,7 @@ Pane {
 
             Column {
                 spacing: 20
-                width: itemWidth
+                width: pane.itemWidth
 
                 RadioButton {
                     text: "First"
