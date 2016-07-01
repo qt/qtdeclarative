@@ -2309,6 +2309,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     return touchEventAccepted;
 }
 
+// create touch event containing only points inside the target item
 QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds)
 {
     const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
@@ -2336,6 +2337,7 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QT
     return touchEvent;
 }
 
+// copy a touch event's basic properties but give it new touch points
 QTouchEvent *QQuickWindowPrivate::touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints)
 {
     Qt::TouchPointStates eventStates;
