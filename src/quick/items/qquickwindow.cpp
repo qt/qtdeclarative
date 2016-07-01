@@ -773,7 +773,7 @@ void QQuickWindowPrivate::grabTouchPoints(QQuickItem *grabber, const QVector<int
     for (int i = 0; i < ids.count(); ++i) {
         QQuickItem *oldGrabber = itemForTouchPointId.value(ids.at(i));
         if (oldGrabber == grabber)
-            return;
+            continue;
 
         itemForTouchPointId[ids.at(i)] = grabber;
         if (oldGrabber)
