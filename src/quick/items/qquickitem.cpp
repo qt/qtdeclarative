@@ -7219,27 +7219,7 @@ void QQuickItem::grabTouchPoints(const QVector<int> &ids)
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-
-    QSet<QQuickItem*> ungrab;
-    for (int i = 0; i < ids.count(); ++i) {
-        QQuickItem *oldGrabber = windowPriv->itemForTouchPointId.value(ids.at(i));
-        if (oldGrabber == this)
-            return;
-
-        windowPriv->itemForTouchPointId[ids.at(i)] = this;
-        if (oldGrabber)
-            ungrab.insert(oldGrabber);
-
-        QQuickItem *mouseGrabber = windowPriv->mouseGrabberItem;
-        if (windowPriv->touchMouseId == ids.at(i) && mouseGrabber && mouseGrabber != this) {
-            qCDebug(DBG_MOUSE_TARGET) << "grabTouchPoints: grabber" << windowPriv->mouseGrabberItem << "-> null";
-            windowPriv->mouseGrabberItem = 0;
-            QEvent ev(QEvent::UngrabMouse);
-            d->window->sendEvent(mouseGrabber, &ev);
-        }
-    }
-    foreach (QQuickItem *oldGrabber, ungrab)
-        oldGrabber->touchUngrabEvent();
+    windowPriv->grabTouchPoints(this, ids);
 }
 
 /*!
