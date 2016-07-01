@@ -153,7 +153,20 @@ void D3D12RenderNode::init()
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // not in use due to !DepthEnable, but this would be the correct format otherwise
-    psoDesc.SampleDesc.Count = 1;
+    // We are rendering on the default render target so if the QuickWindow/View
+    // has requested samples > 0 then we have to follow suit.
+    const uint samples = qMax(1, m_item->window()->format().samples());
+    psoDesc.SampleDesc.Count = samples;
+    if (samples > 1) {
+        D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaInfo = {};
+        msaaInfo.Format = psoDesc.RTVFormats[0];
+        msaaInfo.SampleCount = samples;
+        if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaInfo, sizeof(msaaInfo)))) {
+            if (msaaInfo.NumQualityLevels > 0)
+                psoDesc.SampleDesc.Quality = msaaInfo.NumQualityLevels - 1;
+        }
+    }
+
     if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
         qWarning("Failed to create graphics pipeline state");
         return;
