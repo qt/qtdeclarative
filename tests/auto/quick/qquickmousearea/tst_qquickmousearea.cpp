@@ -1340,9 +1340,8 @@ void tst_QQuickMouseArea::disableAfterPress()
     QCOMPARE(blackRect, drag->target());
 
     QVERIFY(!drag->active());
-
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
-
+    QPoint p = QPoint(100,100);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
     QTRY_COMPARE(mousePressSpy.count(), 1);
 
     QVERIFY(!drag->active());
@@ -1352,22 +1351,24 @@ void tst_QQuickMouseArea::disableAfterPress()
     // First move event triggers drag, second is acted upon.
     // This is due to possibility of higher stacked area taking precedence.
 
-    QTest::mouseMove(&window, QPoint(111,111));
-    QTest::qWait(50);
-    QTest::mouseMove(&window, QPoint(122,122));
+    p += QPoint(startDragDistance() + 1, 0);
+    QTest::mouseMove(&window, p);
+    p += QPoint(11, 11);
+    QTest::mouseMove(&window, p);
 
     QTRY_COMPARE(mousePositionSpy.count(), 2);
 
-    QVERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 61.0);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(blackRect->x(), 61.0);
     QCOMPARE(blackRect->y(), 61.0);
 
     mouseArea->setEnabled(false);
 
     // move should still be acted upon
-    QTest::mouseMove(&window, QPoint(133,133));
-    QTest::qWait(50);
-    QTest::mouseMove(&window, QPoint(144,144));
+    p += QPoint(11, 11);
+    QTest::mouseMove(&window, p);
+    p += QPoint(11, 11);
+    QTest::mouseMove(&window, p);
 
     QTRY_COMPARE(mousePositionSpy.count(), 4);
 
@@ -1378,7 +1379,7 @@ void tst_QQuickMouseArea::disableAfterPress()
     QVERIFY(mouseArea->pressed());
     QVERIFY(mouseArea->hovered());
 
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(144,144));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
 
     QTRY_COMPARE(mouseReleaseSpy.count(), 1);
 
@@ -1635,36 +1636,39 @@ void tst_QQuickMouseArea::changeAxis()
     QVERIFY(!drag->active());
 
     // Start a diagonal drag
-    QTest::mousePress(&view, Qt::LeftButton, 0, QPoint(100, 100));
+    QPoint p = QPoint(100, 100);
+    QTest::mousePress(&view, Qt::LeftButton, 0, p);
 
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 50.0);
     QCOMPARE(blackRect->y(), 50.0);
 
-    QTest::mouseMove(&view, QPoint(111, 111));
-    QTest::qWait(50);
-    QTest::mouseMove(&view, QPoint(122, 122));
-
+    p += QPoint(startDragDistance() + 1, startDragDistance() + 1);
+    QTest::mouseMove(&view, p);
+    p += QPoint(11, 11);
+    QTest::mouseMove(&view, p);
     QTRY_VERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 61.0);
+    QTRY_COMPARE(blackRect->x(), 61.0);
     QCOMPARE(blackRect->y(), 61.0);
     QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
 
     /* When blackRect.x becomes bigger than 75, the drag axis is changed to
      * Drag.YAxis by the QML code. Verify that this happens, and that the drag
      * movement is effectively constrained to the Y axis. */
-    QTest::mouseMove(&view, QPoint(144, 144));
+    p += QPoint(22, 22);
+    QTest::mouseMove(&view, p);
 
     QTRY_COMPARE(blackRect->x(), 83.0);
     QTRY_COMPARE(blackRect->y(), 83.0);
     QTRY_COMPARE(drag->axis(), QQuickDrag::YAxis);
 
-    QTest::mouseMove(&view, QPoint(155, 155));
+    p += QPoint(11, 11);
+    QTest::mouseMove(&view, p);
 
     QTRY_COMPARE(blackRect->y(), 94.0);
     QCOMPARE(blackRect->x(), 83.0);
 
-    QTest::mouseRelease(&view, Qt::LeftButton, 0, QPoint(155, 155));
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, p);
 
     QTRY_VERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 83.0);
@@ -1870,33 +1874,41 @@ void tst_QQuickMouseArea::ignoreBySource()
     QVERIFY(flickable);
 
     // MouseArea should grab the press because it's interested in non-synthesized mouse events
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    QPoint p = QPoint(80, 80);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
     QVERIFY(window.mouseGrabberItem() == mouseArea);
     // That was a real mouse event
     QVERIFY(root->property("lastEventSource").toInt() == Qt::MouseEventNotSynthesized);
 
     // Flickable content should not move
-    QTest::mouseMove(&window,QPoint(69,69));
-    QTest::mouseMove(&window,QPoint(58,58));
-    QTest::mouseMove(&window,QPoint(47,47));
+    p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
+    QTest::mouseMove(&window, p);
+    p -= QPoint(11, 11);
+    QTest::mouseMove(&window, p);
+    p -= QPoint(11, 11);
+    QTest::mouseMove(&window, p);
     QCOMPARE(flickable->contentX(), 0.);
     QCOMPARE(flickable->contentY(), 0.);
 
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(47, 47));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
 
     // Now try touch events and confirm that MouseArea ignores them, while Flickable does its thing
-
-    QTest::touchEvent(&window, device).press(0, QPoint(80, 80), &window);
+    p = QPoint(80, 80);
+    QTest::touchEvent(&window, device).press(0, p, &window);
     QQuickTouchUtils::flush(&window);
     QVERIFY(window.mouseGrabberItem() != mouseArea);
     // That was a fake mouse event
     QCOMPARE(root->property("lastEventSource").toInt(), int(Qt::MouseEventSynthesizedByQt));
-    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
-    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
-    QTest::touchEvent(&window, device).move(0, QPoint(47,47), &window);
+    p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
+    QTest::touchEvent(&window, device).move(0, p, &window);
+    p -= QPoint(11, 11);
+    QTest::touchEvent(&window, device).move(0, p, &window);
+    p -= QPoint(11, 11);
+    QTest::touchEvent(&window, device).move(0, p, &window);
+
     QQuickTouchUtils::flush(&window);
     QCOMPARE(window.mouseGrabberItem(), flickable);
-    QTest::touchEvent(&window, device).release(0, QPoint(47,47), &window);
+    QTest::touchEvent(&window, device).release(0, p, &window);
     QQuickTouchUtils::flush(&window);
 
     // Flickable content should have moved
@@ -1911,15 +1923,19 @@ void tst_QQuickMouseArea::ignoreBySource()
 
 
     // MouseArea should ignore the press because it's interested in synthesized mouse events
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    p = QPoint(80, 80);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
     QVERIFY(window.mouseGrabberItem() != mouseArea);
     // That was a real mouse event
     QVERIFY(root->property("lastEventSource").toInt() == Qt::MouseEventNotSynthesized);
 
     // Flickable content should move
-    QTest::mouseMove(&window,QPoint(69,69));
-    QTest::mouseMove(&window,QPoint(58,58));
-    QTest::mouseMove(&window,QPoint(47,47));
+    p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
+    QTest::mouseMove(&window, p);
+    p -= QPoint(11, 11);
+    QTest::mouseMove(&window, p);
+    p -= QPoint(11, 11);
+    QTest::mouseMove(&window, p);
     QTRY_VERIFY(flickable->contentX() > 1);
     QVERIFY(flickable->contentY() > 1);
 
@@ -1928,13 +1944,16 @@ void tst_QQuickMouseArea::ignoreBySource()
     flickable->setContentY(0);
 
     // Now try touch events and confirm that MouseArea gets them, while Flickable doesn't
-
-    QTest::touchEvent(&window, device).press(0, QPoint(80, 80), &window);
+    p = QPoint(80, 80);
+    QTest::touchEvent(&window, device).press(0, p, &window);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(window.mouseGrabberItem(), mouseArea);
-    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
-    QTest::touchEvent(&window, device).move(0, QPoint(69,69), &window);
-    QTest::touchEvent(&window, device).move(0, QPoint(47,47), &window);
+    p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
+    QTest::touchEvent(&window, device).move(0, p, &window);
+    p -= QPoint(11, 11);
+    QTest::touchEvent(&window, device).move(0, p, &window);
+    p -= QPoint(11, 11);
+    QTest::touchEvent(&window, device).move(0, p, &window);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(window.mouseGrabberItem(), mouseArea);
     QTest::touchEvent(&window, device).release(0, QPoint(47,47), &window);
