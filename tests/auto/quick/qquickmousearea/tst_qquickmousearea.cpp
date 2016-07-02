@@ -125,6 +125,9 @@ private slots:
     void ignoreBySource();
 
 private:
+    int startDragDistance() const {
+        return QGuiApplication::styleHints()->startDragDistance();
+    }
     void acceptedButton_data();
     void rejectedButton_data();
     QTouchDevice *device;
@@ -546,15 +549,18 @@ void tst_QQuickMouseArea::cancelDragging()
 
     QVERIFY(!drag->active());
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QPoint p = QPoint(100,100);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
 
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 50.0);
     QCOMPARE(blackRect->y(), 50.0);
 
-    QTest::mouseMove(&window, QPoint(111,111), 50);
-    QTest::mouseMove(&window, QPoint(116,116), 50);
-    QTest::mouseMove(&window, QPoint(122,122), 50);
+    p += QPoint(startDragDistance() + 1, 0);
+    QTest::mouseMove(&window, p);
+
+    p += QPoint(11, 11);
+    QTest::mouseMove(&window, p);
 
     QTRY_VERIFY(drag->active());
     QTRY_COMPARE(blackRect->x(), 61.0);
