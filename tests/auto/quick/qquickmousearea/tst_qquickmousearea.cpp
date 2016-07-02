@@ -1011,48 +1011,60 @@ void tst_QQuickMouseArea::preventStealing()
 
     QSignalSpy mousePositionSpy(mouseArea, SIGNAL(positionChanged(QQuickMouseEvent*)));
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    QPoint p = QPoint(80, 80);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
 
     // Without preventStealing, mouse movement over MouseArea would
     // cause the Flickable to steal mouse and trigger content movement.
 
-    QTest::mouseMove(&window,QPoint(69,69));
-    QTest::mouseMove(&window,QPoint(58,58));
-    QTest::mouseMove(&window,QPoint(47,47));
+    p += QPoint(-startDragDistance() * 2, -startDragDistance() * 2);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
 
-    // We should have received all three move events
-    QCOMPARE(mousePositionSpy.count(), 3);
+    // We should have received all four move events
+    QTRY_COMPARE(mousePositionSpy.count(), 4);
+    mousePositionSpy.clear();
     QVERIFY(mouseArea->pressed());
 
     // Flickable content should not have moved.
     QCOMPARE(flickable->contentX(), 0.);
     QCOMPARE(flickable->contentY(), 0.);
 
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(47, 47));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
 
     // Now allow stealing and confirm Flickable does its thing.
     window.rootObject()->setProperty("stealing", false);
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(80, 80));
+    p = QPoint(80, 80);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
 
     // Without preventStealing, mouse movement over MouseArea would
     // cause the Flickable to steal mouse and trigger content movement.
 
-    QTest::mouseMove(&window,QPoint(69,69));
-    QTest::mouseMove(&window,QPoint(58,58));
-    QTest::mouseMove(&window,QPoint(47,47));
+    p += QPoint(-startDragDistance() * 2, -startDragDistance() * 2);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
+    p += QPoint(-10, -10);
+    QTest::mouseMove(&window, p);
 
     // We should only have received the first move event
-    QCOMPARE(mousePositionSpy.count(), 4);
+    QTRY_COMPARE(mousePositionSpy.count(), 1);
     // Our press should be taken away
     QVERIFY(!mouseArea->pressed());
 
-    // Flickable content should have moved.
+    // Flickable swallows the first move, then moves 2*10 px
+    QTRY_COMPARE(flickable->contentX(), 20.);
+    QCOMPARE(flickable->contentY(), 20.);
 
-    QCOMPARE(flickable->contentX(), 11.);
-    QCOMPARE(flickable->contentY(), 11.);
-
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
 }
 
 void tst_QQuickMouseArea::clickThrough()
