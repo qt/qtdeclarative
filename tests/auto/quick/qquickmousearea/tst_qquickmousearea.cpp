@@ -595,7 +595,8 @@ void tst_QQuickMouseArea::setDragOnPressed()
     QQuickItem *target = mouseArea->findChild<QQuickItem*>("target");
     QVERIFY(target);
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QPoint p = QPoint(100, 100);
+    QTest::mousePress(&window, Qt::LeftButton, 0, p);
 
     QQuickDrag *drag = mouseArea->drag();
     QVERIFY(drag);
@@ -607,19 +608,17 @@ void tst_QQuickMouseArea::setDragOnPressed()
     // First move event triggers drag, second is acted upon.
     // This is due to possibility of higher stacked area taking precedence.
 
-    QTest::mouseMove(&window, QPoint(111,102));
-    QTest::qWait(50);
-    QTest::mouseMove(&window, QPoint(122,122));
-    QTest::qWait(50);
+    p += QPoint(startDragDistance() + 1, 0);
+    QTest::mouseMove(&window, p);
 
-    QVERIFY(drag->active());
-    QCOMPARE(target->x(), 61.0);
+    p += QPoint(11, 0);
+    QTest::mouseMove(&window, p);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(target->x(), 61.0);
     QCOMPARE(target->y(), 50.0);
 
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(122,122));
-    QTest::qWait(50);
-
-    QVERIFY(!drag->active());
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
+    QTRY_VERIFY(!drag->active());
     QCOMPARE(target->x(), 61.0);
     QCOMPARE(target->y(), 50.0);
 }
