@@ -320,7 +320,8 @@ void tst_QQuickMouseArea::dragging()
 
     QVERIFY(!drag->active());
 
-    QTest::mousePress(&window, button, 0, QPoint(100,100));
+    QPoint p = QPoint(100,100);
+    QTest::mousePress(&window, button, 0, p);
 
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 50.0);
@@ -331,18 +332,32 @@ void tst_QQuickMouseArea::dragging()
     // The item is moved relative to the position of the mouse when the drag
     // was triggered, this prevents a sudden change in position when the drag
     // threshold is exceeded.
-    QTest::mouseMove(&window, QPoint(111,111), 50);
-    QTest::mouseMove(&window, QPoint(116,116), 50);
-    QTest::mouseMove(&window, QPoint(122,122), 50);
 
+    int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+    // move the minimum distance to activate drag
+    p += QPoint(dragThreshold + 1, dragThreshold + 1);
+    QTest::mouseMove(&window, p);
+    QVERIFY(!drag->active());
+
+    // from here on move the item
+    p += QPoint(1, 1);
+    QTest::mouseMove(&window, p);
+    QTRY_VERIFY(drag->active());
+    // on macOS the cursor movement is going through a native event which
+    // means that it can actually take some time to show
+    QTRY_COMPARE(blackRect->x(), 50.0 + 1);
+    QCOMPARE(blackRect->y(), 50.0 + 1);
+
+    p += QPoint(10, 10);
+    QTest::mouseMove(&window, p);
     QTRY_VERIFY(drag->active());
     QTRY_COMPARE(blackRect->x(), 61.0);
     QCOMPARE(blackRect->y(), 61.0);
 
-    QTest::mouseRelease(&window, button, 0, QPoint(122,122));
-
+    QTest::mouseRelease(&window, button, 0, p);
     QTRY_VERIFY(!drag->active());
-    QCOMPARE(blackRect->x(), 61.0);
+    QTRY_COMPARE(blackRect->x(), 61.0);
     QCOMPARE(blackRect->y(), 61.0);
 }
 
