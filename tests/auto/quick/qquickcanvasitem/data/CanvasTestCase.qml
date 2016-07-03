@@ -31,7 +31,9 @@ TestCase {
   }
 
   function createCanvasObject(data) {
-    return component.createObject(testCase, data.properties);
+      var canvas = component.createObject(testCase, data.properties);
+      waitForRendering(canvas);
+      return canvas;
   }
 
   function comparePixel(ctx,x,y,r,g,b,a, d)
