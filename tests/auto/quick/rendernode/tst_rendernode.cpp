@@ -215,16 +215,18 @@ void tst_rendernode::renderOrder()
         QSKIP("This test does not work at display depths < 24");
     QImage fb = runTest("RenderOrder.qml");
 
-    QCOMPARE(fb.width(), 200);
-    QCOMPARE(fb.height(), 200);
+    QQuickView v;
+    int devicePixelRatio = static_cast<int>(v.devicePixelRatio());
+    QCOMPARE(fb.width(), 200 * devicePixelRatio);
+    QCOMPARE(fb.height(), 200 * devicePixelRatio);
 
-    QCOMPARE(fb.pixel(50, 50), qRgb(0xff, 0xff, 0xff));
-    QCOMPARE(fb.pixel(50, 150), qRgb(0xff, 0xff, 0xff));
-    QCOMPARE(fb.pixel(150, 50), qRgb(0x00, 0x00, 0xff));
+    QCOMPARE(fb.pixel(50 * devicePixelRatio, 50 * devicePixelRatio), qRgb(0xff, 0xff, 0xff));
+    QCOMPARE(fb.pixel(50 * devicePixelRatio, 150 * devicePixelRatio), qRgb(0xff, 0xff, 0xff));
+    QCOMPARE(fb.pixel(150 * devicePixelRatio, 50 * devicePixelRatio), qRgb(0x00, 0x00, 0xff));
 
     QByteArray errorMessage;
-    QVERIFY2(fuzzyCompareColor(fb.pixel(150, 150), qRgb(0x7f, 0x7f, 0xff), &errorMessage),
-             msgColorMismatchAt(errorMessage, 150, 150).constData());
+    QVERIFY2(fuzzyCompareColor(fb.pixel(150 * devicePixelRatio, 150 * devicePixelRatio), qRgb(0x7f, 0x7f, 0xff), &errorMessage),
+             msgColorMismatchAt(errorMessage, 150 * devicePixelRatio, 150 * devicePixelRatio).constData());
 }
 
 /* The test uses a number of nested rectangles with clipping
