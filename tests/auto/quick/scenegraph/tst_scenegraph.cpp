@@ -549,6 +549,7 @@ void tst_SceneGraph::createTextureFromImage()
     QQuickView view;
     view.show();
     QTest::qWaitForWindowExposed(&view);
+    QTRY_VERIFY(view.isSceneGraphInitialized());
 
     QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
