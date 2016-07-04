@@ -791,14 +791,14 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     QGuiApplication::sendEvent(&window, &pressEvent);
 
-    QVERIFY(window.rootObject()->property("pressed").toBool());
+    QTRY_VERIFY(window.rootObject()->property("pressed").toBool());
     QVERIFY(!window.rootObject()->property("canceled").toBool());
     QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), expectedClicks);
 
     if (doubleClick) {
         QGuiApplication::sendEvent(&window, &releaseEvent);
-        QVERIFY(!window.rootObject()->property("pressed").toBool());
+        QTRY_VERIFY(!window.rootObject()->property("pressed").toBool());
         QVERIFY(!window.rootObject()->property("canceled").toBool());
         QCOMPARE(window.rootObject()->property("released").toInt(), ++expectedRelease);
         QCOMPARE(window.rootObject()->property("clicked").toInt(), ++expectedClicks);
@@ -807,7 +807,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
         QMouseEvent pressEvent2(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
         QGuiApplication::sendEvent(&window, &pressEvent2);
 
-        QVERIFY(window.rootObject()->property("pressed").toBool());
+        QTRY_VERIFY(window.rootObject()->property("pressed").toBool());
         QVERIFY(!window.rootObject()->property("canceled").toBool());
         QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);
         QCOMPARE(window.rootObject()->property("clicked").toInt(), expectedClicks);
@@ -819,23 +819,21 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     secondWindow->setProperty("visible", true);
     QTest::qWaitForWindowExposed(secondWindow);
 
-    QVERIFY(!window.rootObject()->property("pressed").toBool());
+    QTRY_VERIFY(!window.rootObject()->property("pressed").toBool());
     QVERIFY(window.rootObject()->property("canceled").toBool());
     QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), expectedClicks);
 
     //press again
     QGuiApplication::sendEvent(&window, &pressEvent);
-    QVERIFY(window.rootObject()->property("pressed").toBool());
+    QTRY_VERIFY(window.rootObject()->property("pressed").toBool());
     QVERIFY(!window.rootObject()->property("canceled").toBool());
     QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), expectedClicks);
 
-    QTest::qWait(200);
-
     //release
     QGuiApplication::sendEvent(&window, &releaseEvent);
-    QVERIFY(!window.rootObject()->property("pressed").toBool());
+    QTRY_VERIFY(!window.rootObject()->property("pressed").toBool());
     QVERIFY(!window.rootObject()->property("canceled").toBool());
     QCOMPARE(window.rootObject()->property("released").toInt(), ++expectedRelease);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), ++expectedClicks);
