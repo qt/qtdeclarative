@@ -1671,7 +1671,8 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
         if (FAILED(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
-            qWarning("Failed to serialize root signature");
+            QByteArray msg(static_cast<const char *>(error->GetBufferPointer()), error->GetBufferSize());
+            qWarning("Failed to serialize root signature: %s", qPrintable(msg));
             return;
         }
         if (FAILED(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
