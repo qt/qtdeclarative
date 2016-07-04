@@ -64,7 +64,7 @@ namespace QSGAtlasTexture {
     class Manager;
 }
 
-class QSGDefaultRenderContext : public QSGRenderContext
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 {
     Q_OBJECT
 public:

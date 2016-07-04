@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultContext : public QSGContext, public QSGRendererInterface
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultContext : public QSGContext, public QSGRendererInterface
 {
 public:
     QSGDefaultContext(QObject *parent = 0);
