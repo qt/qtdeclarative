@@ -3816,6 +3816,11 @@ QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upda
     return 0;
 }
 
+QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
+: transformNode(0)
+{
+}
+
 /*!
     This function is called when an item should release graphics
     resources which are not already managed by the nodes returend from

@@ -203,11 +203,6 @@ thus the first item that has focus will get it (assuming the scope doesn't alrea
 have a scope focused item), and the other items will have their focus cleared.
 */
 
-QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
-: transformNode(0)
-{
-}
-
 QQuickRootItem::QQuickRootItem()
 {
 }
