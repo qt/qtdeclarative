@@ -1626,17 +1626,17 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         rootParams[0].Descriptor.RegisterSpace = 0;
         ++rootParamCount;
 
+        D3D12_DESCRIPTOR_RANGE tvDescRange;
         if (pipelineState.shaders.rootSig.textureViewCount > 0) {
             rootParams[rootParamCount].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
             rootParams[rootParamCount].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
             rootParams[rootParamCount].DescriptorTable.NumDescriptorRanges = 1;
-            D3D12_DESCRIPTOR_RANGE descRange;
-            descRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            descRange.NumDescriptors = pipelineState.shaders.rootSig.textureViewCount;
-            descRange.BaseShaderRegister = 0; // t0, t1, ...
-            descRange.RegisterSpace = 0;
-            descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-            rootParams[rootParamCount].DescriptorTable.pDescriptorRanges = &descRange;
+            tvDescRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+            tvDescRange.NumDescriptors = pipelineState.shaders.rootSig.textureViewCount;
+            tvDescRange.BaseShaderRegister = 0; // t0, t1, ...
+            tvDescRange.RegisterSpace = 0;
+            tvDescRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+            rootParams[rootParamCount].DescriptorTable.pDescriptorRanges = &tvDescRange;
             ++rootParamCount;
         }
 
