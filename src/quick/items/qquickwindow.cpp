@@ -1669,71 +1669,6 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     return false;
 }
 
-/*! \reimp */
-void QQuickWindow::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickWindow);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMousePress, event->button(),
-                          event->buttons());
-
-    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
-        event->accept();
-        return;
-    }
-
-    qCDebug(DBG_MOUSE) << "QQuickWindow::mousePressEvent()" << event->localPos() << event->button() << event->buttons();
-    d->deliverMouseEvent(event);
-}
-
-/*! \reimp */
-void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickWindow);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
-                          event->buttons());
-
-    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
-        event->accept();
-        return;
-    }
-
-    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons() << "grabber:" << d->mouseGrabberItem;
-
-    if (!d->mouseGrabberItem) {
-        QWindow::mouseReleaseEvent(event);
-        return;
-    }
-
-    d->deliverMouseEvent(event);
-    if (d->mouseGrabberItem && !event->buttons())
-        d->mouseGrabberItem->ungrabMouse();
-}
-
-/*! \reimp */
-void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    Q_D(QQuickWindow);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
-                          event->button(), event->buttons());
-
-    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
-        event->accept();
-        return;
-    }
-
-    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseDoubleClickEvent()" << event->localPos() << event->button() << event->buttons();
-
-    if (!d->mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
-        if (d->deliverInitialMousePressEvent(d->contentItem, event))
-            event->accept();
-        else
-            event->ignore();
-        return;
-    }
-
-    d->deliverMouseEvent(event);
-}
-
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
                                       const QPointF &scenePos, const QPointF &lastScenePos,
                                       Qt::KeyboardModifiers modifiers, bool accepted)
@@ -1753,44 +1688,6 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
     q->sendEvent(item, &hoverEvent);
 
     return hoverEvent.isAccepted();
-}
-
-/*! \reimp */
-void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickWindow);
-    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
-                          event->localPos().x(), event->localPos().y());
-
-    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
-        event->accept();
-        return;
-    }
-
-    qCDebug(DBG_MOUSE) << "QQuickWindow::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
-    qCDebug(DBG_HOVER_TRACE) << this;
-
-#ifndef QT_NO_CURSOR
-    d->updateCursor(event->windowPos());
-#endif
-
-    if (!d->mouseGrabberItem) {
-        if (d->lastMousePosition.isNull())
-            d->lastMousePosition = event->windowPos();
-        QPointF last = d->lastMousePosition;
-        d->lastMousePosition = event->windowPos();
-
-        bool accepted = event->isAccepted();
-        bool delivered = d->deliverHoverEvent(d->contentItem, event->windowPos(), last, event->modifiers(), accepted);
-        if (!delivered) {
-            //take care of any exits
-            accepted = d->clearHover();
-        }
-        event->setAccepted(accepted);
-        return;
-    }
-
-    d->deliverMouseEvent(event);
 }
 
 bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -2067,6 +1964,104 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
         if (delayedTouch)
             deliverDelayedTouchEvent();
         deliverTouchEvent(event);
+    }
+}
+
+/*! \reimp */
+void QQuickWindow::mousePressEvent(QMouseEvent *event)
+{
+    Q_D(QQuickWindow);
+    d->handleMouseEvent(event);
+}
+/*! \reimp */
+void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickWindow);
+    d->handleMouseEvent(event);
+}
+/*! \reimp */
+void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    Q_D(QQuickWindow);
+    d->handleMouseEvent(event);
+}
+/*! \reimp */
+void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickWindow);
+    d->handleMouseEvent(event);
+}
+
+void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
+{
+    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
+        event->accept();
+        return;
+    }
+    qCDebug(DBG_MOUSE) << "QQuickWindow::handleMouseEvent()" << event->type() << event->localPos() << event->button() << event->buttons();
+
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+        Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMousePress, event->button(),
+                              event->buttons());
+        deliverMouseEvent(event);
+        break;
+    case QEvent::MouseButtonRelease:
+        Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
+                              event->buttons());
+        if (!mouseGrabberItem) {
+            event->ignore();
+            return;
+        }
+
+        deliverMouseEvent(event);
+        if (mouseGrabberItem && !event->buttons())
+            mouseGrabberItem->ungrabMouse();
+        break;
+    case QEvent::MouseButtonDblClick:
+        Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
+                              event->button(), event->buttons());
+
+        if (!mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
+            if (deliverInitialMousePressEvent(contentItem, event))
+                event->accept();
+            else
+                event->ignore();
+            return;
+        }
+
+        deliverMouseEvent(event);
+        break;
+    case QEvent::MouseMove:
+        Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
+                              event->localPos().x(), event->localPos().y());
+
+        qCDebug(DBG_HOVER_TRACE) << this;
+
+    #ifndef QT_NO_CURSOR
+        updateCursor(event->windowPos());
+    #endif
+
+        if (!mouseGrabberItem) {
+            if (lastMousePosition.isNull())
+                lastMousePosition = event->windowPos();
+            QPointF last = lastMousePosition;
+            lastMousePosition = event->windowPos();
+
+            bool accepted = event->isAccepted();
+            bool delivered = deliverHoverEvent(contentItem, event->windowPos(), last, event->modifiers(), accepted);
+            if (!delivered) {
+                //take care of any exits
+                accepted = clearHover();
+            }
+            event->setAccepted(accepted);
+            return;
+        }
+        deliverMouseEvent(event);
+        break;
+    default:
+        Q_ASSERT(false);
+        break;
     }
 }
 
