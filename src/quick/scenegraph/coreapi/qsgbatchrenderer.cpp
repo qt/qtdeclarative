@@ -2771,8 +2771,8 @@ struct RenderNodeState : public QSGRenderNode::RenderState
 
     const QMatrix4x4 *m_projectionMatrix;
     QRect m_scissorRect;
-    bool m_scissorEnabled;
     int m_stencilValue;
+    bool m_scissorEnabled;
     bool m_stencilEnabled;
 };
 
