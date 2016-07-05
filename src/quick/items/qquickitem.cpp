@@ -7359,7 +7359,9 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 bool QQuickItem::contains(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    return QRectF(0, 0, d->width, d->height).contains(point);
+    qreal x = point.x();
+    qreal y = point.y();
+    return x >= 0 && y >= 0 && x <= d->width && y <= d->height;
 }
 
 /*!
