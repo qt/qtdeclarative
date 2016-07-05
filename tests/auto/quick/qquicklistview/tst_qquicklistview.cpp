@@ -657,11 +657,9 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
 #endif
 
     QList<FxViewItem *> visibleItems = QQuickItemViewPrivate::get(listview)->visibleItems;
-    for (QList<FxViewItem *>::const_iterator itemIt = visibleItems.begin(); itemIt != visibleItems.end(); ++itemIt)
-    {
+    for (QList<FxViewItem *>::const_iterator itemIt = visibleItems.begin(); itemIt != visibleItems.end(); ++itemIt) {
         FxViewItem *item = *itemIt;
-        if (item->item->position().y() >= 0 && item->item->position().y() < listview->height())
-        {
+        if (item->item->position().y() >= 0 && item->item->position().y() < listview->height()) {
             QVERIFY(!QQuickItemPrivate::get(item->item)->culled);
         }
     }
