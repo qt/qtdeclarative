@@ -121,7 +121,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickMouseEvent() {}
+    QQuickMouseEvent()
+      : _x(0), _y(0), _button(Qt::NoButton), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
+      , _source(Qt::MouseEventNotSynthesized), _wasHeld(false), _isClick(false), _accepted(false)
+    {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
                Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false)
@@ -180,7 +183,10 @@ class QQuickWheelEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickWheelEvent() {}
+    QQuickWheelEvent()
+      : _x(0), _y(0), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
+      , _inverted(false), _accepted(false)
+    {}
 
     void reset(qreal x, qreal y, const QPoint &angleDelta, const QPoint &pixelDelta,
                      Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, bool inverted)
