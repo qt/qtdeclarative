@@ -158,8 +158,8 @@ public:
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
     static QQuickPointerDevice *touchDevice(QTouchDevice *d);
-    bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
-                            QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
+    bool deliverPoints(QQuickItem *, const QQuickPointerEvent *, const QList<const QQuickEventPoint *> &,
+                       QSet<quint64> *, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *, QSet<QQuickItem *> *);
     void handleTouchEvent(QTouchEvent *);
     void handleMouseEvent(QMouseEvent *);
     void deliverPointerEvent(QQuickPointerEvent *);
@@ -169,7 +169,7 @@ public:
     void deliverDelayedTouchEvent();
     void flushFrameSynchronousEvents();
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
-    bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints, QSet<QQuickItem*> *filtered);
+    bool deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerEvent *event, QSet<quint64> *acceptedNewPoints, const QSet<quint64> &matchingNewPoints, const QList<const QQuickEventPoint *> &matchingPoints, QSet<QQuickItem*> *filtered);
     static QTouchEvent *touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds = false);
     static QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
     bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem*> *filtered);

@@ -2127,32 +2127,31 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     --pointerEventRecursionGuard;
 }
 
-void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *pointerEvent)
+void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *event)
 {
-    QTouchEvent *event = pointerEvent->asTouchEvent();
-    qCDebug(DBG_TOUCH) << " - delivering" << event;
+    qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
 
     // List of all items that received an event before
     // When we have TouchBegin this is and will stay empty
-    QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > updatedPoints;
+    QHash<QQuickItem *, QList<const QQuickEventPoint*> > updatedPoints;
 
     // Figure out who accepted a touch point last and put it in updatedPoints
     // Add additional item to newPoints
-    const QList<QTouchEvent::TouchPoint> &touchPoints = event->touchPoints();
-    QList<QTouchEvent::TouchPoint> newPoints;
-    for (int i=0; i<touchPoints.count(); i++) {
-        const QTouchEvent::TouchPoint &touchPoint = touchPoints.at(i);
-        if (touchPoint.state() == Qt::TouchPointPressed) {
-            newPoints << touchPoint;
+    int pointCount = event->pointCount();
+    QList<const QQuickEventPoint*> newPoints;
+    for (int i = 0; i < pointCount; ++i) {
+        const QQuickEventPoint *point = event->point(i);
+        if (point->state() == Qt::TouchPointPressed) {
+            newPoints << point;
         } else {
             // TouchPointStationary is relevant only to items which
             // are also receiving touch points with some other state.
             // But we have not yet decided which points go to which item,
             // so for now we must include all non-new points in updatedPoints.
-            if (itemForTouchPointId.contains(touchPoint.id())) {
-                QQuickItem *item = itemForTouchPointId.value(touchPoint.id());
+            if (itemForTouchPointId.contains(point->pointId())) {
+                QQuickItem *item = itemForTouchPointId.value(point->pointId());
                 if (item)
-                    updatedPoints[item].append(touchPoint);
+                    updatedPoints[item].append(point);
             }
         }
     }
@@ -2160,44 +2159,45 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *pointerEvent)
     // Deliver the event, but only if there is at least one new point
     // or some item accepted a point and should receive an update
     if (newPoints.count() > 0 || updatedPoints.count() > 0) {
-        QSet<int> acceptedNewPoints;
+        QSet<quint64> acceptedNewPoints;
         QSet<QQuickItem *> hasFiltered;
-        deliverTouchPoints(contentItem, event, newPoints, &acceptedNewPoints, &updatedPoints, &hasFiltered);
+        deliverPoints(contentItem, event, newPoints, &acceptedNewPoints, &updatedPoints, &hasFiltered);
     }
 
     // Remove released points from itemForTouchPointId
-    if (event->touchPointStates() & Qt::TouchPointReleased) {
-        for (int i=0; i<touchPoints.count(); i++) {
-            if (touchPoints[i].state() == Qt::TouchPointReleased) {
-                qCDebug(DBG_TOUCH_TARGET) << "TP" << touchPoints[i].id() << "released";
-                itemForTouchPointId.remove(touchPoints[i].id());
-                if (touchPoints[i].id() == touchMouseId)
-                    touchMouseId = -1;
-                touchMouseIdCandidates.remove(touchPoints[i].id());
-            }
+    bool allReleased = true;
+    for (int i = 0; i < pointCount; ++i) {
+        const QQuickEventPoint *point = event->point(i);
+        int id = point->pointId();
+        if (point->state() == Qt::TouchPointReleased) {
+            qCDebug(DBG_TOUCH_TARGET) << "TP" << id << "released";
+            itemForTouchPointId.remove(id);
+            if (id == touchMouseId)
+                touchMouseId = -1;
+            touchMouseIdCandidates.remove(id);
+        } else {
+            allReleased = false;
         }
     }
 
-    if (event->type() == QEvent::TouchEnd) {
-        if (!itemForTouchPointId.isEmpty()) {
-            qWarning() << "No release received for" << itemForTouchPointId.size()
-                << "touch points over" << itemForTouchPointId.begin().value()
-                << "on touch end.";
-            itemForTouchPointId.clear();
-        }
+    if (allReleased && !itemForTouchPointId.isEmpty()) {
+        qWarning() << "No release received for" << itemForTouchPointId.size()
+            << "touch points over" << itemForTouchPointId.begin().value()
+            << "on touch end.";
+        itemForTouchPointId.clear();
     }
 }
 
 // This function recurses and sends the events to the individual items
-bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *event, const QList<QTouchEvent::TouchPoint> &newPoints,
-                                             QSet<int> *acceptedNewPoints, QHash<QQuickItem *,
-                                             QList<QTouchEvent::TouchPoint> > *updatedPoints, QSet<QQuickItem *> *hasFiltered)
+bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, const QQuickPointerEvent *event, const QList<const QQuickEventPoint *> &newPoints,
+                                        QSet<quint64> *acceptedNewPoints, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *updatedPoints,
+                                        QSet<QQuickItem *> *hasFiltered)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        for (int i=0; i<newPoints.count(); i++) {
-            QPointF p = item->mapFromScene(newPoints[i].scenePos());
+        for (const QQuickEventPoint * point : qAsConst(newPoints)) {
+            QPointF p = item->mapFromScene(point->scenePos());
             if (!item->contains(p))
                 return false;
         }
@@ -2210,7 +2210,7 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
         QQuickItem *child = children.at(ii);
         if (!child->isEnabled() || !child->isVisible() || QQuickItemPrivate::get(child)->culled)
             continue;
-        if (deliverTouchPoints(child, event, newPoints, acceptedNewPoints, updatedPoints, hasFiltered))
+        if (deliverPoints(child, event, newPoints, acceptedNewPoints, updatedPoints, hasFiltered))
             return true;
     }
 
@@ -2222,18 +2222,19 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     // (A point which was already accepted is effectively "grabbed" by the item.)
 
     // set of IDs of "interesting" new points
-    QSet<int> matchingNewPoints;
+    QSet<quint64> matchingNewPoints;
     // set of points which this item has previously accepted, for starters
-    QList<QTouchEvent::TouchPoint> matchingPoints = (*updatedPoints)[item];
+    QList<const QQuickEventPoint *> matchingPoints = (*updatedPoints)[item];
     // now add the new points which are inside this item's bounds
     if (newPoints.count() > 0 && acceptedNewPoints->count() < newPoints.count()) {
         for (int i = 0; i < newPoints.count(); i++) {
-            if (acceptedNewPoints->contains(newPoints[i].id()))
+            const QQuickEventPoint * point = newPoints[i];
+            if (acceptedNewPoints->contains(point->pointId()))
                 continue;
-            QPointF p = item->mapFromScene(newPoints[i].scenePos());
+            QPointF p = item->mapFromScene(point->scenePos());
             if (item->contains(p)) {
-                matchingNewPoints.insert(newPoints[i].id());
-                matchingPoints << newPoints[i];
+                matchingNewPoints.insert(point->pointId());
+                matchingPoints << point;
             }
         }
     }
@@ -2244,8 +2245,8 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     if (matchingNewPoints.isEmpty()) {
         bool stationaryOnly = true;
 
-        foreach (const QTouchEvent::TouchPoint &tp, matchingPoints) {
-            if (tp.state() != Qt::TouchPointStationary) {
+        for (const QQuickEventPoint *tp : matchingPoints) {
+            if (tp->state() != Qt::TouchPointStationary) {
                 stationaryOnly = false;
                 break;
             }
@@ -2258,8 +2259,6 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     if (!matchingPoints.isEmpty()) {
         // Now we know this item might be interested in the event. Copy and send it, but
         // with only the subset of TouchPoints which are relevant to that item: that's matchingPoints.
-        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-        transformTouchPoints(matchingPoints, itemPrivate->windowToItemTransform());
         deliverMatchingPointsToItem(item, event, acceptedNewPoints, matchingNewPoints, matchingPoints, hasFiltered);
     }
 
@@ -2274,17 +2273,20 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
 // only the points that are relevant for this item.  Thus the need for
 // matchingPoints to already be that set of interesting points.
 // They are all pre-transformed, too.
-bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints, QSet<QQuickItem *> *hasFiltered)
+bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerEvent *event, QSet<quint64> *acceptedNewPoints,
+                                                      const QSet<quint64> &matchingNewPoints, const QList<const QQuickEventPoint *> &matchingPoints,
+                                                      QSet<QQuickItem *> *hasFiltered)
 {
-    QScopedPointer<QTouchEvent> touchEvent(touchEventWithPoints(*event, matchingPoints));
-    touchEvent.data()->setTarget(item);
+    QScopedPointer<QTouchEvent> touchEvent(event->touchEventForItem(matchingPoints, item));
+    if (touchEvent.data()->touchPoints().isEmpty())
+        return false;
     bool touchEventAccepted = false;
 
     qCDebug(DBG_TOUCH) << " - considering delivering " << touchEvent.data() << " to " << item;
 
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
-    if (sendFilteredTouchEvent(item->parentItem(), item, event, hasFiltered)) {
+    if (sendFilteredTouchEvent(item->parentItem(), item, event->asTouchEvent(), hasFiltered)) {
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints
         qCDebug(DBG_TOUCH) << " - can't. intercepted " << touchEvent.data() << " to " << item->parentItem() << " instead of " << item;
@@ -2359,6 +2361,7 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QT
 }
 
 // copy a touch event's basic properties but give it new touch points
+// TODO remove this variant and use QQuickPointerEvent/QQuickEventPoint
 QTouchEvent *QQuickWindowPrivate::touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints)
 {
     Qt::TouchPointStates eventStates;
@@ -2562,6 +2565,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 }
 #endif
 
+// Child event filtering is legacy stuff, so here we use QTouchEvent
 bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
     if (!target)
