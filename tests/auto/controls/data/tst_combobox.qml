@@ -811,4 +811,33 @@ TestCase {
 
         control.destroy()
     }
+
+    ListModel {
+        id: resetmodel
+        ListElement { text: "First" }
+        ListElement { text: "Second" }
+        ListElement { text: "Third" }
+    }
+
+    // QTBUG-54573
+    function test_modelReset() {
+        var control = comboBox.createObject(testCase, {model: resetmodel})
+        verify(control)
+        control.popup.open()
+
+        var listview = control.popup.contentItem
+        verify(listview)
+
+        waitForRendering(listview)
+        compare(listview.contentItem.children.length, resetmodel.count + 1) // + highlight item
+
+        resetmodel.clear()
+        resetmodel.append({text: "Fourth"})
+        resetmodel.append({text: "Fifth"})
+
+        waitForRendering(listview)
+        compare(listview.contentItem.children.length, resetmodel.count + 1) // + highlight item
+
+        control.destroy()
+    }
 }
