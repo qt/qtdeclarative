@@ -59,6 +59,8 @@
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
 
+#include <limits>
+
 QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
@@ -74,7 +76,8 @@ public:
     typedef QQuickTextEdit Public;
 
     struct Node {
-        explicit Node(int startPos, QQuickTextNode* node)
+        explicit Node(int startPos = std::numeric_limits<int>::max(),
+                      QQuickTextNode *node = nullptr)
             : m_startPos(startPos), m_node(node), m_dirty(false) { }
         QQuickTextNode* textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
@@ -87,7 +90,7 @@ public:
         QQuickTextNode* m_node;
         bool m_dirty;
     };
-    typedef QList<Node*>::iterator TextNodeIterator;
+    typedef QList<Node>::iterator TextNodeIterator;
 
     struct ExtraData {
         ExtraData();
@@ -126,11 +129,6 @@ public:
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
         , hadSelection(false)
     {
-    }
-
-    ~QQuickTextEditPrivate()
-    {
-        qDeleteAll(textNodeMap);
     }
 
     static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
@@ -186,7 +184,7 @@ public:
     QQuickTextDocumentWithImageResources *document;
     QQuickTextControl *control;
     QQuickTextDocument *quickDocument;
-    QList<Node*> textNodeMap;
+    QList<Node> textNodeMap;
 
     int lastSelectionStart;
     int lastSelectionEnd;
