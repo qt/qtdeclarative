@@ -160,6 +160,7 @@ public:
     void handleTouchEvent(QTouchEvent *);
     void handleMouseEvent(QMouseEvent *);
     void deliverTouchEvent(QTouchEvent *);
+    bool compressTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
     void deliverDelayedTouchEvent();
     void flushFrameSynchronousEvents();

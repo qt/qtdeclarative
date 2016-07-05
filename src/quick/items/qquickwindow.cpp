@@ -1884,6 +1884,70 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
 
 static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
 
+bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
+{
+    Q_Q(QQuickWindow);
+    Qt::TouchPointStates states = event->touchPointStates();
+    if (((states & (Qt::TouchPointMoved | Qt::TouchPointStationary)) == 0)
+        || ((states & (Qt::TouchPointPressed | Qt::TouchPointReleased)) != 0)) {
+        // we can only compress something that isn't a press or release
+        return false;
+    }
+
+    if (!delayedTouch) {
+        delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
+        delayedTouch->setTimestamp(event->timestamp());
+        if (renderControl)
+            QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
+        else if (windowManager)
+            windowManager->maybeUpdate(q);
+        return true;
+    }
+
+    // check if this looks like the last touch event
+    if (delayedTouch->type() == event->type() &&
+            delayedTouch->device() == event->device() &&
+            delayedTouch->modifiers() == event->modifiers() &&
+            delayedTouch->touchPoints().count() == event->touchPoints().count())
+    {
+        // possible match.. is it really the same?
+        bool mismatch = false;
+
+        QList<QTouchEvent::TouchPoint> tpts = event->touchPoints();
+        Qt::TouchPointStates states;
+        for (int i = 0; i < event->touchPoints().count(); ++i) {
+            const QTouchEvent::TouchPoint &tp = tpts.at(i);
+            const QTouchEvent::TouchPoint &tpDelayed = delayedTouch->touchPoints().at(i);
+            if (tp.id() != tpDelayed.id()) {
+                mismatch = true;
+                break;
+            }
+
+            if (tpDelayed.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
+                tpts[i].setState(Qt::TouchPointMoved);
+            tpts[i].setLastPos(tpDelayed.lastPos());
+            tpts[i].setLastScenePos(tpDelayed.lastScenePos());
+            tpts[i].setLastScreenPos(tpDelayed.lastScreenPos());
+            tpts[i].setLastNormalizedPos(tpDelayed.lastNormalizedPos());
+
+            states |= tpts.at(i).state();
+        }
+
+        // matching touch event? then merge the new event into the old one
+        if (!mismatch) {
+            delayedTouch->setTouchPoints(tpts);
+            delayedTouch->setTimestamp(event->timestamp());
+            return true;
+        }
+    }
+
+    // merging wasn't possible, so deliver the delayed event first, and then delay this one
+    deliverDelayedTouchEvent();
+    delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
+    delayedTouch->setTimestamp(event->timestamp());
+    return true;
+}
+
 // entry point for touch event delivery:
 // - translate the event to window coordinates
 // - compress the event instead of delivering it if applicable
@@ -1891,72 +1955,14 @@ static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_N
 void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
 {
     translateTouchEvent(event);
-
     qCDebug(DBG_TOUCH) << event;
-    Q_Q(QQuickWindow);
 
     if (qquickwindow_no_touch_compression || touchRecursionGuard) {
         deliverTouchEvent(event);
         return;
     }
 
-    Qt::TouchPointStates states = event->touchPointStates();
-    if (((states & (Qt::TouchPointMoved | Qt::TouchPointStationary)) != 0)
-        && ((states & (Qt::TouchPointPressed | Qt::TouchPointReleased)) == 0)) {
-        // we can only compress something that isn't a press or release
-        if (!delayedTouch) {
-            delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
-            delayedTouch->setTimestamp(event->timestamp());
-            if (renderControl)
-                QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
-            else if (windowManager)
-                windowManager->maybeUpdate(q);
-            return;
-        } else {
-            // check if this looks like the last touch event
-            if (delayedTouch->type() == event->type() &&
-                delayedTouch->device() == event->device() &&
-                delayedTouch->modifiers() == event->modifiers() &&
-                delayedTouch->touchPoints().count() == event->touchPoints().count())
-            {
-                // possible match.. is it really the same?
-                bool mismatch = false;
-
-                QList<QTouchEvent::TouchPoint> tpts = event->touchPoints();
-                Qt::TouchPointStates states;
-                for (int i = 0; i < event->touchPoints().count(); ++i) {
-                    const QTouchEvent::TouchPoint &tp = tpts.at(i);
-                    const QTouchEvent::TouchPoint &tpDelayed = delayedTouch->touchPoints().at(i);
-                    if (tp.id() != tpDelayed.id()) {
-                        mismatch = true;
-                        break;
-                    }
-
-                    if (tpDelayed.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
-                        tpts[i].setState(Qt::TouchPointMoved);
-                    tpts[i].setLastPos(tpDelayed.lastPos());
-                    tpts[i].setLastScenePos(tpDelayed.lastScenePos());
-                    tpts[i].setLastScreenPos(tpDelayed.lastScreenPos());
-                    tpts[i].setLastNormalizedPos(tpDelayed.lastNormalizedPos());
-
-                    states |= tpts.at(i).state();
-                }
-
-                // matching touch event? then merge the new event into the old one
-                if (!mismatch) {
-                    delayedTouch->setTouchPoints(tpts);
-                    delayedTouch->setTimestamp(event->timestamp());
-                    return;
-                }
-            }
-
-            // merging wasn't possible, so deliver the delayed event first, and then delay this one
-            deliverDelayedTouchEvent();
-            delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
-            delayedTouch->setTimestamp(event->timestamp());
-            return;
-        }
-    } else {
+    if (!compressTouchEvent(event)) {
         if (delayedTouch)
             deliverDelayedTouchEvent();
         deliverTouchEvent(event);
