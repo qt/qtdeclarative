@@ -93,6 +93,10 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
+QQuickPointerDevice *QQuickWindowPrivate::genericMouseDevice(nullptr);
+QHash<QTouchDevice *, QQuickPointerDevice *> QQuickWindowPrivate::touchDevices;
+QHash<qint64, QQuickPointerDevice *> QQuickWindowPrivate::tabletDevices;
+
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
 #ifndef QT_NO_IM
@@ -503,6 +507,11 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #ifndef QT_NO_DRAGANDDROP
     dragGrabber = new QQuickDragGrabber;
 #endif
+    if (!genericMouseDevice) {
+        genericMouseDevice = new QQuickPointerDevice(QQuickPointerDevice::Mouse, QQuickPointerDevice::GenericPointer,
+            QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
+            1, 3, QStringLiteral("core pointer"), 0);
+    }
 }
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
@@ -1851,6 +1860,24 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
     return false;
 }
 #endif // QT_NO_GESTURES
+
+QQuickPointerDevice *QQuickWindowPrivate::touchDevice(QTouchDevice *d)
+{
+    if (touchDevices.contains(d))
+        return touchDevices.value(d);
+
+    QQuickPointerDevice::DeviceType type = QQuickPointerDevice::TouchScreen;
+    QQuickPointerDevice::Capabilities caps =
+        static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
+    if (d->type() == QTouchDevice::TouchPad) {
+        type = QQuickPointerDevice::TouchPad;
+        caps |= QQuickPointerDevice::Scroll;
+    }
+    QQuickPointerDevice *dev = new QQuickPointerDevice(type, QQuickPointerDevice::Finger,
+        caps, d->maximumTouchPoints(), 0, d->name(), 0);
+    touchDevices.insert(d, dev);
+    return dev;
+}
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {

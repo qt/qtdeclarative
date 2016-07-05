@@ -89,6 +89,7 @@ class QQuickItemPrivate;
 class QQuickWindowPrivate;
 
 class QTouchEvent;
+class QQuickPointerDevice;
 class QQuickWindowRenderLoop;
 class QQuickWindowIncubationController;
 
@@ -155,6 +156,7 @@ public:
 #ifndef QT_NO_GESTURES
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
+    QQuickPointerDevice *touchDevice(QTouchDevice *d);
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
                             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
     void handleTouchEvent(QTouchEvent *);
@@ -262,6 +264,10 @@ public:
     QSet<int> touchMouseIdCandidates;
 
     mutable QQuickWindowIncubationController *incubationController;
+
+    static QQuickPointerDevice *genericMouseDevice;
+    static QHash<QTouchDevice *, QQuickPointerDevice *> touchDevices;
+    static QHash<qint64, QQuickPointerDevice *> tabletDevices;
 
     static bool defaultAlphaBuffer;
 
