@@ -1463,7 +1463,8 @@ int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *u
     return type;
 }
 
-int *QQmlMetaObject::methodParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const
+int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
+                                          QByteArray *unknownTypeError) const
 {
     Q_ASSERT(!_m.isNull() && index >= 0);
 
@@ -1518,15 +1519,19 @@ int *QQmlMetaObject::methodParameterTypes(int index, QVarLengthArray<int, 9> &du
 
     } else {
         QMetaMethod m = _m.asT2()->method(index);
-        return methodParameterTypes(m, dummy, unknownTypeError);
+        return methodParameterTypes(m, argStorage, unknownTypeError);
 
     }
 }
 
-int* QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const {
+int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
+                                          QByteArray *unknownTypeError) const
+{
+    Q_ASSERT(argStorage);
+
     int argc = m.parameterCount();
-    dummy.resize(argc + 1);
-    dummy[0] = argc;
+    argStorage->resize(argc + 1);
+    argStorage->operator[](0) = argc;
     QList<QByteArray> argTypeNames; // Only loaded if needed
 
     for (int ii = 0; ii < argc; ++ii) {
@@ -1546,10 +1551,10 @@ int* QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, QVarLengthArray<
             if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
             return 0;
         }
-        dummy[ii + 1] = type;
+        argStorage->operator[](ii + 1) = type;
     }
 
-    return dummy.data();
+    return argStorage->data();
 }
 
 void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv) const
@@ -1568,7 +1573,9 @@ void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv
     }
 }
 
-int* QQmlStaticMetaObject::constructorParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const {
+int *QQmlStaticMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
+                                                     QByteArray *unknownTypeError) const
+{
     QMetaMethod m = _m.asT2()->constructor(index);
     return methodParameterTypes(m, dummy, unknownTypeError);
 }

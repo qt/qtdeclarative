@@ -797,8 +797,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             if (!v4)
                 break;
 
-            QVarLengthArray<int, 9> dummy;
-            int *argsTypes = QQmlMetaObject(r).methodParameterTypes(This->signalIndex, dummy, 0);
+            QQmlMetaObject::ArgTypeStorage storage;
+            int *argsTypes = QQmlMetaObject(r).methodParameterTypes(This->signalIndex, &storage, 0);
 
             int argCount = argsTypes ? argsTypes[0]:0;
 
@@ -1372,12 +1372,13 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
     if (data.hasArguments()) {
 
         int *args = 0;
-        QVarLengthArray<int, 9> dummy;
+        QQmlMetaObject::ArgTypeStorage storage;
 
         if (data.isConstructor())
-            args = static_cast<const QQmlStaticMetaObject&>(object).constructorParameterTypes(data.coreIndex, dummy, &unknownTypeError);
+            args = static_cast<const QQmlStaticMetaObject&>(object).constructorParameterTypes(
+                        data.coreIndex, &storage, &unknownTypeError);
         else
-            args = object.methodParameterTypes(data.coreIndex, dummy, &unknownTypeError);
+            args = object.methodParameterTypes(data.coreIndex, &storage, &unknownTypeError);
 
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
@@ -1429,11 +1430,11 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
     QV4::ScopedValue v(scope);
 
     do {
-        QVarLengthArray<int, 9> dummy;
+        QQmlMetaObject::ArgTypeStorage storage;
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt->hasArguments()) {
-            int *args = object.methodParameterTypes(attempt->coreIndex, dummy, 0);
+            int *args = object.methodParameterTypes(attempt->coreIndex, &storage, 0);
             if (!args) // Must be an unknown argument
                 continue;
 
@@ -2001,11 +2002,11 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
 
     for (int i = 0; i < numberOfConstructors; i++) {
         const QQmlPropertyData & attempt = d()->constructors.at(i);
-        QVarLengthArray<int, 9> dummy;
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt.hasArguments()) {
-            int *args = object.constructorParameterTypes(attempt.coreIndex, dummy, 0);
+            QQmlMetaObject::ArgTypeStorage storage;
+            int *args = object.constructorParameterTypes(attempt.coreIndex, &storage, 0);
             if (!args) // Must be an unknown argument
                 continue;
 

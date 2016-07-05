@@ -410,6 +410,8 @@ class QQmlEnginePrivate;
 class Q_QML_EXPORT QQmlMetaObject
 {
 public:
+    typedef QVarLengthArray<int, 9> ArgTypeStorage;
+
     inline QQmlMetaObject();
     inline QQmlMetaObject(QObject *);
     inline QQmlMetaObject(const QMetaObject *);
@@ -429,7 +431,8 @@ public:
     QQmlPropertyCache *propertyCache(QQmlEnginePrivate *) const;
 
     int methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
-    int *methodParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
+    int *methodParameterTypes(int index, ArgTypeStorage *argStorage,
+                              QByteArray *unknownTypeError) const;
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
 
@@ -439,7 +442,8 @@ public:
 
 protected:
     QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
-    int *methodParameterTypes(const QMetaMethod &method, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
+    int *methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
+                              QByteArray *unknownTypeError) const;
 
 };
 
@@ -472,7 +476,7 @@ public:
     QQmlStaticMetaObject(const QMetaObject* metaObject)
         : QQmlObjectOrGadget(metaObject)
     {}
-    int *constructorParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
+    int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
 };
 
 QQmlPropertyData::QQmlPropertyData()
