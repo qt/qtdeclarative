@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 
 TestCase {
     id: testCase
@@ -165,5 +165,173 @@ TestCase {
         compare(control.hovered, false)
 
         control.destroy()
+    }
+
+    function test_pressedReleased_data() {
+        return [
+            {
+                tag: "pressed outside", x: -1, y: -1, button: Qt.LeftButton,
+                controlPressEvent: null,
+                controlReleaseEvent: null,
+                parentPressEvent: {
+                    x: 0, y: 0, button: Qt.LeftButton, buttons: Qt.LeftButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+                parentReleaseEvent: {
+                    x: 0, y: 0, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+            },
+            {
+                tag: "left click", x: 0, y: 0, button: Qt.LeftButton,
+                controlPressEvent: {
+                    x: 0, y: 0, button: Qt.LeftButton, buttons: Qt.LeftButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+                controlReleaseEvent: {
+                    x: 0, y: 0, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+                parentPressEvent: null,
+                parentReleaseEvent: null,
+            },
+            {
+                tag: "right click", x: 0, y: 0, button: Qt.RightButton,
+                controlPressEvent: {
+                    x: 0, y: 0, button: Qt.RightButton, buttons: Qt.RightButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+                controlReleaseEvent: {
+                    x: 0, y: 0, button: Qt.RightButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false
+                },
+                parentPressEvent: null,
+                parentReleaseEvent: null,
+            },
+        ];
+    }
+
+    Component {
+        id: mouseAreaComponent
+        MouseArea {
+            anchors.fill: parent
+        }
+    }
+
+    function checkMouseEvent(event, expectedEvent) {
+        compare(event.x, expectedEvent.x)
+        compare(event.y, expectedEvent.y)
+        compare(event.button, expectedEvent.button)
+        compare(event.buttons, expectedEvent.buttons)
+    }
+
+    function test_pressedReleased(data) {
+        var mouseArea = mouseAreaComponent.createObject(testCase)
+        verify(mouseArea)
+        var control = textField.createObject(mouseArea)
+        verify(control)
+
+        // Give enough room to check presses outside of the control and on the parent.
+        control.x = 1;
+        control.y = 1;
+
+        function checkControlPressEvent(event) {
+            checkMouseEvent(event, data.controlPressEvent)
+        }
+        function checkControlReleaseEvent(event) {
+            checkMouseEvent(event, data.controlReleaseEvent)
+        }
+        function checkParentPressEvent(event) {
+            checkMouseEvent(event, data.parentPressEvent)
+        }
+        function checkParentReleaseEvent(event) {
+            checkMouseEvent(event, data.parentReleaseEvent)
+        }
+
+        // Can't use signalArguments, because the event won't live that long.
+        if (data.controlPressEvent)
+            control.onPressed.connect(checkControlPressEvent)
+        if (data.controlReleaseEvent)
+            control.onReleased.connect(checkControlReleaseEvent)
+        if (data.parentPressEvent)
+            control.onPressed.connect(checkParentPressEvent)
+        if (data.parentReleaseEvent)
+            control.onReleased.connect(checkParentReleaseEvent)
+
+        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        verify(controlPressedSpy.valid)
+        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        verify(controlReleasedSpy.valid)
+        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        verify(parentPressedSpy.valid)
+        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        verify(parentReleasedSpy.valid)
+
+        mousePress(control, data.x, data.y, data.button)
+        compare(controlPressedSpy.count, data.controlPressEvent ? 1 : 0)
+        compare(parentPressedSpy.count, data.parentPressEvent ? 1 : 0)
+        mouseRelease(control, data.x, data.y, data.button)
+        compare(controlReleasedSpy.count, data.controlReleaseEvent ? 1 : 0)
+        compare(parentReleasedSpy.count, data.parentReleaseEvent ? 1 : 0)
+
+        mouseArea.destroy()
+    }
+
+    Component {
+        id: ignoreTextField
+
+        TextField {
+            property bool ignorePress: false
+            property bool ignoreRelease: false
+
+            onPressed: if (ignorePress) event.accepted = false
+            onReleased: if (ignoreRelease) event.accepted = false
+        }
+    }
+
+    function checkEventAccepted(event) {
+        compare(event.accepted, true)
+    }
+
+    function checkEventIgnored(event) {
+        compare(event.accepted, false)
+    }
+
+    function test_ignorePressRelease() {
+        var mouseArea = mouseAreaComponent.createObject(testCase)
+        verify(mouseArea)
+        var control = ignoreTextField.createObject(mouseArea)
+        verify(control)
+
+        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        verify(controlPressedSpy.valid)
+        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        verify(controlReleasedSpy.valid)
+        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        verify(parentPressedSpy.valid)
+        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        verify(parentReleasedSpy.valid)
+
+        // Ignore only press events.
+        control.onPressed.connect(checkEventIgnored)
+        control.ignorePress = true
+        mousePress(control, 0, 0, data.button)
+        // The control will still get the signal, it just won't accept the event.
+        compare(controlPressedSpy.count, 1)
+        compare(parentPressedSpy.count, 1)
+        mouseRelease(control, 0, 0, data.button)
+        compare(controlReleasedSpy.count, 0)
+        compare(parentReleasedSpy.count, 1)
+        control.onPressed.disconnect(checkEventIgnored)
+
+        // Ignore only release events.
+        control.onPressed.connect(checkEventAccepted)
+        control.onReleased.connect(checkEventIgnored)
+        control.ignorePress = false
+        control.ignoreRelease = true
+        mousePress(control, 0, 0, data.button)
+        compare(controlPressedSpy.count, 2)
+        compare(parentPressedSpy.count, 1)
+        mouseRelease(control, 0, 0, data.button)
+        compare(controlReleasedSpy.count, 1)
+        compare(parentReleasedSpy.count, 1)
+        control.onPressed.disconnect(checkEventAccepted)
+        control.onReleased.disconnect(checkEventIgnored)
+
+        mouseArea.destroy()
     }
 }

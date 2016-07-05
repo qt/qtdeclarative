@@ -87,6 +87,30 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
     position of the press, and which button is pressed.
+
+    \sa pressed, released
+*/
+
+/*!
+    \qmlsignal QtQuick.Controls::TextField::pressed(MouseEvent event)
+    \since QtQuick.Controls 2.1
+
+    This signal is emitted when the text field is pressed by the user.
+    The \l {MouseEvent}{event} parameter provides information about the press,
+    including the x and y position of the press, and which button is pressed.
+
+    \sa released, pressAndHold
+*/
+
+/*!
+    \qmlsignal QtQuick.Controls::TextField::released(MouseEvent event)
+    \since QtQuick.Controls 2.1
+
+    This signal is emitted when the text field is released by the user.
+    The \l {MouseEvent}{event} parameter provides information about the release,
+    including the x and y position of the press, and which button is pressed.
+
+    \sa pressed, pressAndHold
 */
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
@@ -153,6 +177,7 @@ QQuickTextField::QQuickTextField(QQuickItem *parent) :
     Q_D(QQuickTextField);
     d->pressHandler.control = this;
     d->setImplicitResizeEnabled(false);
+    setAcceptedMouseButtons(Qt::AllButtons);
     setActiveFocusOnTab(true);
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
                             d, &QQuickTextFieldPrivate::_q_readOnlyChanged);

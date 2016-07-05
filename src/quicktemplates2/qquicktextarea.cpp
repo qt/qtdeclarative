@@ -104,6 +104,30 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
     position of the press, and which button is pressed.
+
+    \sa pressed, released
+*/
+
+/*!
+    \qmlsignal QtQuick.Controls::TextArea::pressed(MouseEvent event)
+    \since QtQuick.Controls 2.1
+
+    This signal is emitted when the text area is pressed by the user.
+    The \l {MouseEvent}{event} parameter provides information about the press,
+    including the x and y position of the press, and which button is pressed.
+
+    \sa released, pressAndHold
+*/
+
+/*!
+    \qmlsignal QtQuick.Controls::TextArea::released(MouseEvent event)
+    \since QtQuick.Controls 2.1
+
+    This signal is emitted when the text area is released by the user.
+    The \l {MouseEvent}{event} parameter provides information about the release,
+    including the x and y position of the press, and which button is pressed.
+
+    \sa pressed, pressAndHold
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
@@ -283,6 +307,7 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
 {
     Q_D(QQuickTextArea);
     setActiveFocusOnTab(true);
+    setAcceptedMouseButtons(Qt::AllButtons);
     d->setImplicitResizeEnabled(false);
     d->pressHandler.control = this;
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
@@ -617,7 +642,12 @@ void QQuickTextArea::mousePressEvent(QMouseEvent *event)
             QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
+        // Calling the base class implementation will result in QQuickTextControl's
+        // press handler being called, which ignores events that aren't Qt::LeftButton.
+        const bool wasAccepted = event->isAccepted();
         QQuickTextEdit::mousePressEvent(event);
+        if (wasAccepted)
+            event->accept();
     }
 }
 

@@ -104,6 +104,8 @@ Q_SIGNALS:
     Q_REVISION(1) void hoveredChanged();
     Q_REVISION(1) void hoverEnabledChanged();
     void pressAndHold(QQuickMouseEvent *event);
+    Q_REVISION(1) void pressed(QQuickMouseEvent *event);
+    Q_REVISION(1) void released(QQuickMouseEvent *event);
 
 protected:
     void classBegin() override;

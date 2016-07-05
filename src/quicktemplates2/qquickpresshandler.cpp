@@ -48,6 +48,8 @@ QQuickPressHandler::QQuickPressHandler()
     : control(nullptr)
     , longPress(false)
     , pressAndHoldSignalIndex(-1)
+    , pressedSignalIndex(-1)
+    , releasedSignalIndex(-1)
     , delayedMousePressEvent(nullptr)
 { }
 
@@ -61,6 +63,21 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
     } else {
         timer.stop();
     }
+
+    if (pressedSignalIndex == -1)
+        pressedSignalIndex = control->metaObject()->indexOfSignal("pressed(QQuickMouseEvent*)");
+    Q_ASSERT(pressedSignalIndex != -1);
+
+    if (QObjectPrivate::get(control)->isSignalConnected(pressedSignalIndex)) {
+        QQuickMouseEvent mev;
+        mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
+                  QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
+        mev.setAccepted(true);
+        QQuickMouseEvent *mevPtr = &mev;
+        void *args[] = { nullptr, &mevPtr };
+        QMetaObject::metacall(control, QMetaObject::InvokeMetaMethod, pressedSignalIndex, args);
+        event->setAccepted(mev.isAccepted());
+    }
 }
 
 void QQuickPressHandler::mouseMoveEvent(QMouseEvent *event)
@@ -69,10 +86,26 @@ void QQuickPressHandler::mouseMoveEvent(QMouseEvent *event)
         timer.stop();
 }
 
-void QQuickPressHandler::mouseReleaseEvent(QMouseEvent *)
+void QQuickPressHandler::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (!longPress)
+    if (!longPress) {
         timer.stop();
+
+        if (releasedSignalIndex == -1)
+            releasedSignalIndex = control->metaObject()->indexOfSignal("released(QQuickMouseEvent*)");
+        Q_ASSERT(releasedSignalIndex != -1);
+
+        if (QObjectPrivate::get(control)->isSignalConnected(releasedSignalIndex)) {
+            QQuickMouseEvent mev;
+            mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
+                      QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
+            mev.setAccepted(true);
+            QQuickMouseEvent *mevPtr = &mev;
+            void *args[] = { nullptr, &mevPtr };
+            QMetaObject::metacall(control, QMetaObject::InvokeMetaMethod, releasedSignalIndex, args);
+            event->setAccepted(mev.isAccepted());
+        }
+    }
 }
 
 void QQuickPressHandler::timerEvent(QTimerEvent *)

@@ -74,6 +74,8 @@ struct QQuickPressHandler
     QPointF pressPos;
     bool longPress;
     int pressAndHoldSignalIndex;
+    int pressedSignalIndex;
+    int releasedSignalIndex;
     QMouseEvent *delayedMousePressEvent;
 };
 
