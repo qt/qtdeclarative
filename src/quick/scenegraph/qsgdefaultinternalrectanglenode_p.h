@@ -65,7 +65,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGSmoothColorMaterial : public QSGMaterial
 public:
     QSGSmoothColorMaterial();
 
-    int compare(const QSGMaterial *other) const;
+    int compare(const QSGMaterial *other) const override;
 
 protected:
     QSGMaterialType *type() const override;

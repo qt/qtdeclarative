@@ -2764,10 +2764,10 @@ void Renderer::render()
 struct RenderNodeState : public QSGRenderNode::RenderState
 {
     const QMatrix4x4 *projectionMatrix() const override { return m_projectionMatrix; }
-    QRect scissorRect() const { return m_scissorRect; }
-    bool scissorEnabled() const { return m_scissorEnabled; }
-    int stencilValue() const { return m_stencilValue; }
-    bool stencilEnabled() const { return m_stencilEnabled; }
+    QRect scissorRect() const override { return m_scissorRect; }
+    bool scissorEnabled() const override { return m_scissorEnabled; }
+    int stencilValue() const override { return m_stencilValue; }
+    bool stencilEnabled() const override { return m_stencilEnabled; }
 
     const QMatrix4x4 *m_projectionMatrix;
     QRect m_scissorRect;
