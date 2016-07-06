@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     gallery \
-    chattutorial
+    chattutorial \
+    texteditor
