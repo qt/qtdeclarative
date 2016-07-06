@@ -2102,6 +2102,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \value ItemDevicePixelRatioHasChanged The device pixel ratio of the screen
     the item is on has changed. ItemChangedData::realValue contains the new
     device pixel ratio.
+
+    \value ItemAntialiasingHasChanged The antialiasing has changed. The current
+    (boolean) value can be found in QQuickItem::antialiasing.
 */
 
 /*!
