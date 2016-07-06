@@ -155,14 +155,14 @@ public:
     bool deliverTouchCancelEvent(QTouchEvent *);
     void deliverDelayedTouchEvent();
     void flushDelayedTouchEvent();
-    bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
+    bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted);
     bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints, QSet<QQuickItem*> *filtered);
     QTouchEvent *touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent);
     QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
     bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem*> *filtered);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
-                        Qt::KeyboardModifiers modifiers, bool accepted);
-    bool clearHover();
+                        Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
+    bool clearHover(ulong timestamp = 0);
 #ifndef QT_NO_DRAGANDDROP
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);

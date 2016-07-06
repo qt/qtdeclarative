@@ -371,6 +371,7 @@ private slots:
     void testRenderJob();
 
     void testHoverChildMouseEventFilter();
+    void testHoverTimestamp();
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2280,6 +2281,90 @@ void tst_qquickwindow::testHoverChildMouseEventFilter()
     QTRY_VERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverEnter) > 0);
     QCOMPARE(topItem->eventCount(QEvent::HoverEnter), 0);
     QCOMPARE(middleItem->eventCount(QEvent::HoverEnter), 0);
+}
+
+class HoverTimestampConsumer : public QQuickItem
+{
+    Q_OBJECT
+public:
+    HoverTimestampConsumer(QQuickItem *parent = 0)
+        : QQuickItem(parent)
+    {
+        setAcceptHoverEvents(true);
+    }
+
+    void hoverEnterEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
+    void hoverLeaveEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
+    void hoverMoveEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
+
+    QList<ulong> hoverTimestamps;
+};
+
+// Checks that a QHoverEvent carries the timestamp of the QMouseEvent that caused it.
+// QTBUG-54600
+void tst_qquickwindow::testHoverTimestamp()
+{
+    QQuickWindow window;
+
+    window.resize(200, 200);
+    window.setPosition(100, 100);
+    window.setTitle(QTest::currentTestFunction());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    HoverTimestampConsumer *hoverConsumer = new HoverTimestampConsumer(window.contentItem());
+    hoverConsumer->setWidth(100);
+    hoverConsumer->setHeight(100);
+    hoverConsumer->setX(50);
+    hoverConsumer->setY(50);
+
+    // First position, outside
+    {
+        QMouseEvent mouseEvent(QEvent::MouseMove, QPointF(40, 40), QPointF(40, 40), QPointF(140, 140),
+                Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventNotSynthesized);
+        mouseEvent.setTimestamp(10);
+        QVERIFY(QCoreApplication::sendEvent(&window, &mouseEvent));
+    }
+
+    // Enter
+    {
+        QMouseEvent mouseEvent(QEvent::MouseMove, QPointF(50, 50), QPointF(50, 50), QPointF(150, 150),
+                Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventNotSynthesized);
+        mouseEvent.setTimestamp(20);
+        QVERIFY(QCoreApplication::sendEvent(&window, &mouseEvent));
+    }
+    QCOMPARE(hoverConsumer->hoverTimestamps.size(), 1);
+    QCOMPARE(hoverConsumer->hoverTimestamps.last(), 20UL);
+
+    // Move
+    {
+        QMouseEvent mouseEvent(QEvent::MouseMove, QPointF(60, 60), QPointF(60, 60), QPointF(160, 160),
+                Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventNotSynthesized);
+        mouseEvent.setTimestamp(30);
+        QVERIFY(QCoreApplication::sendEvent(&window, &mouseEvent));
+    }
+    QCOMPARE(hoverConsumer->hoverTimestamps.size(), 2);
+    QCOMPARE(hoverConsumer->hoverTimestamps.last(), 30UL);
+
+    // Move
+    {
+        QMouseEvent mouseEvent(QEvent::MouseMove, QPointF(100, 100), QPointF(100, 100), QPointF(200, 200),
+                Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventNotSynthesized);
+        mouseEvent.setTimestamp(40);
+        QVERIFY(QCoreApplication::sendEvent(&window, &mouseEvent));
+    }
+    QCOMPARE(hoverConsumer->hoverTimestamps.size(), 3);
+    QCOMPARE(hoverConsumer->hoverTimestamps.last(), 40UL);
+
+    // Leave
+    {
+        QMouseEvent mouseEvent(QEvent::MouseMove, QPointF(160, 160), QPointF(160, 160), QPointF(260, 260),
+                Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventNotSynthesized);
+        mouseEvent.setTimestamp(5);
+        QVERIFY(QCoreApplication::sendEvent(&window, &mouseEvent));
+    }
+    QCOMPARE(hoverConsumer->hoverTimestamps.size(), 4);
+    QCOMPARE(hoverConsumer->hoverTimestamps.last(), 5UL);
 }
 
 QTEST_MAIN(tst_qquickwindow)
