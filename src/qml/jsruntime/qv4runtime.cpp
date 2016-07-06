@@ -252,11 +252,11 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
                 result->append(QLatin1Char('+'));
             result->append(QString::number(decpt - 1));
         } else if (decpt <= 0) {
-            result->prepend(QString::fromLatin1("0.%1").arg(QString().fill(zero, -decpt)));
+            result->prepend(QLatin1String("0.") + QString(-decpt, zero));
         } else if (decpt < result->length()) {
             result->insert(decpt, dot);
         } else {
-            result->append(QString().fill(zero, decpt - result->length()));
+            result->append(QString(decpt - result->length(), zero));
         }
 
         if (sign)
