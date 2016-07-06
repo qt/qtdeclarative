@@ -99,10 +99,10 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuick.Controls::TextArea::pressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick.Controls::TextArea::pressAndHold(MouseEvent event)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
-    The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
+    The \l {MouseEvent}{event} parameter provides information about the press, including the x and y
     position of the press, and which button is pressed.
 
     \sa pressed, released
