@@ -231,8 +231,8 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 void QQuickPopupPrivate::finalizeExitTransition(bool hide)
 {
     Q_Q(QQuickPopup);
-    positioner.setParentItem(nullptr);
     if (hide) {
+        positioner.setParentItem(nullptr);
         popupItem->setParentItem(nullptr);
         popupItem->setVisible(false);
     }
