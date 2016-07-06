@@ -387,7 +387,7 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
 
 double RuntimeHelpers::stringToNumber(const QString &string)
 {
-    QString s = string.trimmed();
+    const QStringRef s = QStringRef(&string).trimmed();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
         return s.toLong(0, 16);
     bool ok;

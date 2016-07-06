@@ -715,7 +715,7 @@ ReturnedValue Text::method_isElementContentWhitespace(CallContext *ctx)
     Scoped<Node> r(scope, ctx->thisObject().as<Node>());
     if (!r) return Encode::undefined();
 
-    return Encode(r->d()->d->data.trimmed().isEmpty());
+    return Encode(QStringRef(&r->d()->d->data).trimmed().isEmpty());
 }
 
 ReturnedValue Text::method_wholeText(CallContext *ctx)
