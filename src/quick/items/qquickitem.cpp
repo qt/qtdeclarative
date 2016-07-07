@@ -2915,7 +2915,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     // if the added child has a cursor and we do not currently have any children
     // with cursors, bubble the notification up
-    if (childPrivate->hasCursorInChild && !hasCursorInChild)
+    if (childPrivate->subtreeCursorEnabled && !subtreeCursorEnabled)
         setHasCursorInChild(true);
 #endif
     if (childPrivate->subtreeHoverEnabled && !subtreeHoverEnabled)
@@ -2942,7 +2942,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
     // turn it off, if nothing else is using it
-    if (childPrivate->hasCursorInChild && hasCursorInChild)
+    if (childPrivate->subtreeCursorEnabled && subtreeCursorEnabled)
         setHasCursorInChild(false);
 #endif
     if (childPrivate->subtreeHoverEnabled && subtreeHoverEnabled)
@@ -3162,7 +3162,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , isAccessible(false)
     , culled(false)
     , hasCursor(false)
-    , hasCursorInChild(false)
+    , subtreeCursorEnabled(false)
     , subtreeHoverEnabled(false)
     , activeFocusOnTab(false)
     , implicitAntialiasing(false)
@@ -7049,17 +7049,18 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
     Q_Q(QQuickItem);
 
     // if we're asked to turn it off (because of an unsetcursor call, or a node
-    // removal) then we should check our children and make sure it's really ok
-    // to turn it off.
-    if (!hasCursor && hasCursorInChild) {
+    // removal) then we should make sure it's really ok to turn it off.
+    if (!hasCursor && subtreeCursorEnabled) {
+        if (hasCursor)
+            return; // nope! sorry, I have a cursor myself
         foreach (QQuickItem *otherChild, childItems) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
-            if (otherChildPrivate->hasCursorInChild)
+            if (otherChildPrivate->subtreeCursorEnabled || otherChildPrivate->hasCursor)
                 return; // nope! sorry, something else wants it kept on.
         }
     }
 
-    hasCursorInChild = hasCursor;
+    subtreeCursorEnabled = hasCursor;
     QQuickItem *parent = q->parentItem();
     if (parent) {
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);

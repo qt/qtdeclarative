@@ -2515,7 +2515,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
             return 0;
     }
 
-    if (itemPrivate->hasCursorInChild) {
+    if (itemPrivate->subtreeCursorEnabled) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);

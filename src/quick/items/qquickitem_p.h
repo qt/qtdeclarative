@@ -426,7 +426,7 @@ public:
     bool isAccessible:1;
     bool culled:1;
     bool hasCursor:1;
-    bool hasCursorInChild:1;
+    bool subtreeCursorEnabled:1;
     // Bit 32
     bool subtreeHoverEnabled:1;
     bool activeFocusOnTab:1;
