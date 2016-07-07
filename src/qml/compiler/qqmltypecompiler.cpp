@@ -271,6 +271,28 @@ QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scrip
     return object->bindingAsString(document, scriptIndex);
 }
 
+void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion)
+{
+    const quint32 moduleIdx = registerString(module);
+    const quint32 qualifierIdx = registerString(qualifier);
+
+    for (int i = 0, count = document->imports.count(); i < count; ++i) {
+        const QV4::CompiledData::Import *existingImport = document->imports.at(i);
+        if (existingImport->type == QV4::CompiledData::Import::ImportLibrary
+            && existingImport->uriIndex == moduleIdx
+            && existingImport->qualifierIndex == qualifierIdx)
+            return;
+    }
+    auto pool = memoryPool();
+    QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
+    import->type = QV4::CompiledData::Import::ImportLibrary;
+    import->majorVersion = majorVersion;
+    import->minorVersion = minorVersion;
+    import->uriIndex = moduleIdx;
+    import->qualifierIndex = qualifierIdx;
+    document->imports.append(import);
+}
+
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
     : compiler(typeCompiler)
 {
@@ -803,11 +825,15 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!mo)
             continue;
 
+        // emulate "import Qml 2.0 as QmlInternals" and then wrap the component in "QmlInternals.Component {}"
         QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
         Q_ASSERT(componentType);
+        const QString qualifier = QStringLiteral("QmlInternals");
+
+        compiler->addImport(componentType->module(), qualifier, componentType->majorVersion(), componentType->minorVersion());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
-        syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
+        syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType->elementName()), compiler->registerString(QString()));
         syntheticComponent->location = binding->valueLocation;
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
