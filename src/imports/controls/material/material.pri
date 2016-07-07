@@ -1,10 +1,12 @@
 HEADERS += \
+    $$PWD/qquickmaterialripple_p.h \
     $$PWD/qquickmaterialstyle_p.h \
     $$PWD/qquickmaterialtheme_p.h \
     $$PWD/qquickmaterialprogressring_p.h \
     $$PWD/qquickmaterialprogressstrip_p.h
 
 SOURCES += \
+    $$PWD/qquickmaterialripple.cpp \
     $$PWD/qquickmaterialstyle.cpp \
     $$PWD/qquickmaterialtheme.cpp \
     $$PWD/qquickmaterialprogressring.cpp \
@@ -38,7 +40,6 @@ QML_FILES += \
     $$PWD/RadioDelegate.qml \
     $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
-    $$PWD/Ripple.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ScrollIndicator.qml \
     $$PWD/Slider.qml \

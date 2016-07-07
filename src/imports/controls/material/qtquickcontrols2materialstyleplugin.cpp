@@ -40,6 +40,7 @@
 #include "qquickmaterialtheme_p.h"
 #include "qquickmaterialprogressring_p.h"
 #include "qquickmaterialprogressstrip_p.h"
+#include "qquickmaterialripple_p.h"
 
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
@@ -89,6 +90,7 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     qmlRegisterType<QQuickMaterialProgressRing>(import, 2, 1, "ProgressRing");
     qmlRegisterType<QQuickMaterialProgressStrip>(import, 2, 1, "ProgressStrip");
     qmlRegisterType<QQuickMaterialRingAnimator>(import, 2, 1, "RingAnimator");
+    qmlRegisterType<QQuickMaterialRipple>(import, 2, 1, "Ripple");
     qmlRegisterType<QQuickMaterialStripAnimator>(import, 2, 1, "StripAnimator");
     qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 1, "BoxShadow");
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 1, "CheckIndicator");

@@ -46,15 +46,15 @@ Rectangle {
     border.color: control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
     color: "transparent"
 
-    property alias control: ripple.control
+    property Item control
 
     Ripple {
-        id: ripple
-        width: parent.width
-        height: width
-        control: control
-        colored: control.checked
-        opacity: control.down || control.visualFocus ? 1 : 0
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: 28; height: 28
+        pressed: control.pressed
+        active: control.down || control.visualFocus || control.hovered
+        color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
     }
 
     Rectangle {
