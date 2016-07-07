@@ -437,4 +437,46 @@ Item {
     \l inverted always returns false.
 */
 
+QQuickPointerEvent *QQuickPointerEvent::reset(const QQuickPointerDevice *dev, const QMouseEvent *ev) {
+    m_device = dev;
+    m_event = ev;
+    m_button = ev->button();
+    m_pressedButtons = ev->buttons();
+    Qt::TouchPointState state = Qt::TouchPointStationary;
+    switch (ev->type()) {
+    case QEvent::MouseButtonPress:
+        state = Qt::TouchPointPressed;
+        break;
+    case QEvent::MouseButtonRelease:
+        state = Qt::TouchPointReleased;
+        break;
+    case QEvent::MouseMove:
+        state = Qt::TouchPointMoved;
+        break;
+    default:
+        break;
+    }
+
+    if (!m_mousePoint)
+        m_mousePoint = new QQuickEventPoint;
+    m_mousePoint->reset(state, ev->windowPos(), 0);  // mouse is 0
+    return this;
+}
+
+QQuickPointerEvent *QQuickPointerEvent::reset(const QQuickPointerDevice *dev, const QTouchEvent *ev) {
+    m_device = dev;
+    m_event = ev;
+    m_button = Qt::NoButton;
+    m_pressedButtons = Qt::NoButton;
+
+    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
+    const int pointCount = tps.count();
+    while (pointCount > m_touchPoints.count())
+        m_touchPoints.append(new QQuickEventTouchPoint);
+
+    for (int i = 0; i < pointCount; ++i)
+        m_touchPoints.at(i)->reset(tps.at(i));
+    return this;
+}
+
 QT_END_NAMESPACE
