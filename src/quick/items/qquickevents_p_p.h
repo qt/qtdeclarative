@@ -471,6 +471,11 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::DeviceTypes)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::PointerTypes)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::Capabilities)
 
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickPointerDevice *);
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickPointerEvent *);
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickEventPoint *);
+//Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickEventTouchPoint *); TODO maybe
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickKeyEvent)

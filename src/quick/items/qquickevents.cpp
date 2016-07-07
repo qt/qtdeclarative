@@ -41,6 +41,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <private/qdebug_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -737,5 +738,55 @@ QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEvent
     touchEvent->accept();
     return touchEvent;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "QQuickPointerDevice("<< dev->name() << ' ';
+    QtDebugUtils::formatQEnum(dbg, dev->type());
+    dbg << ' ';
+    QtDebugUtils::formatQEnum(dbg, dev->pointerType());
+    dbg << " caps:";
+    QtDebugUtils::formatQFlags(dbg, dev->capabilities());
+    if (dev->type() == QQuickPointerDevice::TouchScreen ||
+            dev->type() == QQuickPointerDevice::TouchPad)
+        dbg << " maxTouchPoints:" << dev->maximumTouchPoints();
+    else
+        dbg << " buttonCount:" << dev->buttonCount();
+    dbg << ')';
+    return dbg;
+}
+
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *event) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "QQuickPointerEvent(dev:";
+    QtDebugUtils::formatQEnum(dbg, event->device()->type());
+    if (event->buttons() != Qt::NoButton) {
+        dbg << " buttons:";
+        QtDebugUtils::formatQEnum(dbg, event->buttons());
+    }
+    dbg << " [";
+    int c = event->pointCount();
+    for (int i = 0; i < c; ++i)
+        dbg << event->point(i) << ' ';
+    dbg << "])";
+    return dbg;
+}
+
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *event) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "QQuickEventPoint(valid:" << event->isValid() << " accepted:" << event->isAccepted()
+        << " state:";
+    QtDebugUtils::formatQEnum(dbg, event->state());
+    dbg << " scenePos:" << event->scenePos() << " id:" << event->pointId()
+        << " timeHeld:" << event->timeHeld() << ')';
+    return dbg;
+}
+
+#endif
 
 QT_END_NAMESPACE
