@@ -46,8 +46,17 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \qmltype MultiPointHandler
+    \since 5.10
+    \preliminary
+    \instantiates QQuickMultiPointHandler
+    \inherits PointerDeviceHandler
+    \inqmlmodule Qt.labs.handlers
+    \ingroup qtquick-handlers
+    \brief Abstract handler for multi-point Pointer Events.
+
     An intermediate class (not registered as a QML type)
-    for the type of handler which requires and acts upon a specific number
+    for any type of handler which requires and acts upon a specific number
     of multiple touchpoints.
 */
 QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int requiredPointCount)
@@ -99,6 +108,20 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
     return ret;
 }
 
+/*!
+     \qmlproperty int MultiPointHandler::requiredPointCount
+
+     The number of touchpoints that are required to activate this handler. If
+     a smaller number of touchpoints are in contact with the
+     \l {PointerHandler::parent}{parent}, they will be ignored. If a larger number
+     of touchpoints are in contact, the required number of points will be
+     chosen in the order that they are pressed, and the remaining points will
+     be ignored. Any ignored points are eligible to activate other Pointer
+     Handlers, which have different constraints, on the same Item or on other
+     Items.
+
+     The default value is 2.
+*/
 void QQuickMultiPointHandler::setRequiredPointCount(int c)
 {
     if (m_requiredPointCount == c)
@@ -108,6 +131,21 @@ void QQuickMultiPointHandler::setRequiredPointCount(int c)
     emit requiredPointCountChanged();
 }
 
+
+/*!
+     \qmlproperty real MultiPointHandler::pointDistanceThreshold
+
+     The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+     item within which a touch point can activate this handler. For example, on
+     a PinchHandler where the \l {PointerHandler::target}{target} is also the
+     \c parent, it's useful to set this to a distance at least half the width
+     of a typical user's finger, so that if the \c parent has been scaled down
+     to a very small size, the pinch gesture is still possible.
+
+     The default value is 0.
+
+     \image pointDistanceThreshold.png
+*/
 void QQuickMultiPointHandler::setPointDistanceThreshold(qreal pointDistanceThreshold)
 {
     if (m_pointDistanceThreshold == pointDistanceThreshold)

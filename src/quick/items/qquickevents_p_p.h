@@ -270,7 +270,6 @@ public:
         Updated     = Qt::TouchPointMoved,
         Stationary  = Qt::TouchPointStationary,
         Released    = Qt::TouchPointReleased
-        // Canceled    = Qt::TouchPointReleased << 1 // 0x10 // TODO maybe
     };
     Q_DECLARE_FLAGS(States, State)
     Q_FLAG(States)
