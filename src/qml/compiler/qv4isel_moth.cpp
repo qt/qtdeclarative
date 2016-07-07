@@ -1665,8 +1665,7 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 bool CompilationUnit::memoryMapCode(QString *errorString)
 {
     Q_UNUSED(errorString);
-    Q_ASSERT(codeRefs.isEmpty());
-    codeRefs.reserve(data->functionTableSize);
+    codeRefs.resize(data->functionTableSize);
 
     const char *basePtr = reinterpret_cast<const char *>(data);
 
@@ -1680,7 +1679,7 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 #else
         QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
 #endif
-        codeRefs.append(code);
+        codeRefs[i] = code;
     }
 
     return true;

@@ -666,8 +666,10 @@ struct Unit
             return QString();
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
-        if (flags & StaticData)
-            return QString::fromRawData(characters, str->size);
+        // Too risky to do this while we unmap disk backed compilation but keep pointers to string
+        // data in the identifier tables.
+        //        if (flags & StaticData)
+        //            return QString::fromRawData(characters, str->size);
         return QString(characters, str->size);
 #else
         const LEUInt16 *characters = reinterpret_cast<const LEUInt16 *>(str + 1);

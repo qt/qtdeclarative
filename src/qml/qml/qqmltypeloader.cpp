@@ -2502,7 +2502,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
 {
     Q_ASSERT(m_compiledData.isNull());
 
-    QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data(), importCache, resolvedTypeCache);
+    QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
+    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), importCache, resolvedTypeCache);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
@@ -2510,7 +2511,12 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
     }
     if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
-        if (!m_compiledData->saveToDisk(url(), &errorString)) {
+        if (m_compiledData->saveToDisk(url(), &errorString)) {
+            QString error;
+            if (!m_compiledData->loadFromDisk(url(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
+                // ignore error, keep using the in-memory compilation unit.
+            }
+        } else {
             qCDebug(DBG_DISK_CACHE) << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
         }
     }

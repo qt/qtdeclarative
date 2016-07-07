@@ -424,6 +424,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
         return false;
     }
 
+    const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
 
     {
@@ -448,6 +449,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
         return false;
 
     dataPtrChange.commit();
+    free(const_cast<Unit*>(oldDataPtr));
     backingFile.reset(cacheFile.take());
     return true;
 }

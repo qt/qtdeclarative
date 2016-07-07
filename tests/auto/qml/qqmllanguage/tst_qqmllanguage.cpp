@@ -2118,8 +2118,13 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlTypeData *td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        const QV4::CompiledData::Unit *qmlUnit = td->compilationUnit()->data;
-        Q_ASSERT(qmlUnit);
+        const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->data;
+        Q_ASSERT(readOnlyQmlUnit);
+        QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
+        memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
+        qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
+        td->compilationUnit()->data = qmlUnit;
+
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
         QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
