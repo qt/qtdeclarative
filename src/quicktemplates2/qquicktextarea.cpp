@@ -582,6 +582,16 @@ void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+void QQuickTextArea::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextArea);
+    if (d->pressHandler.delayedMousePressEvent) {
+        QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+        d->pressHandler.clearDelayedMouseEvent();
+    }
+    QQuickTextEdit::mouseDoubleClickEvent(event);
+}
+
 void QQuickTextArea::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextArea);

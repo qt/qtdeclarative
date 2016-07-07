@@ -446,6 +446,16 @@ void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+void QQuickTextField::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextField);
+    if (d->pressHandler.delayedMousePressEvent) {
+        QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+        d->pressHandler.clearDelayedMouseEvent();
+    }
+    QQuickTextInput::mouseDoubleClickEvent(event);
+}
+
 void QQuickTextField::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextField);

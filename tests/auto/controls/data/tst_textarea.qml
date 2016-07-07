@@ -176,4 +176,23 @@ TestCase {
         ignoreWarning(Qt.resolvedUrl("tst_textarea.qml") + ":45:1: QML TestCase: TextArea must be attached to a Flickable")
         testCase.TextArea.flickable = null
     }
+
+    function test_multiClick() {
+        var control = textArea.createObject(testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
+        verify(control)
+
+        waitForRendering(control)
+        control.width = control.contentWidth
+        var rect = control.positionToRectangle(12)
+
+        // double click -> select word
+        mouseDoubleClickSequence(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
+        compare(control.selectedText, "Controls")
+
+        // tripple click -> select whole line
+        mouseClick(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
+        compare(control.selectedText, "Qt Quick Controls 2 TextArea")
+
+        control.destroy()
+    }
 }
