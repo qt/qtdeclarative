@@ -254,7 +254,7 @@ TestCase {
     function test_pressedReleased(data) {
         var mouseArea = mouseAreaComponent.createObject(testCase)
         verify(mouseArea)
-        var control = textArea.createObject(mouseArea)
+        var control = textArea.createObject(mouseArea, {text: "TextArea"})
         verify(control)
 
         // Give enough room to check presses outside of the control and on the parent.
