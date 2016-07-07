@@ -492,4 +492,34 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
         m_touchPoints.at(i)->reset(tps.at(i));
 }
 
+QTouchEvent *QQuickPointerEvent::asTouchEvent() const {
+    if (!m_event)
+        return nullptr;
+    switch (m_event->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchCancel:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        return static_cast<QTouchEvent *>(m_event);
+    default:
+        break;
+    }
+    return nullptr;
+}
+
+QMouseEvent *QQuickPointerEvent::asMouseEvent() const {
+    if (!m_event)
+        return nullptr;
+    switch (m_event->type()) {
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+        return static_cast<QMouseEvent *>(m_event);
+    default:
+        return nullptr;
+    }
+}
+
+
 QT_END_NAMESPACE

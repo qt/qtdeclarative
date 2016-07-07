@@ -406,20 +406,13 @@ public:
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
 
-    QTouchEvent *asTouchEvent() const {
-        if (!m_event)
-            return nullptr;
-        switch (m_event->type()) {
-        case QEvent::TouchBegin:
-        case QEvent::TouchCancel:
-        case QEvent::TouchUpdate:
-        case QEvent::TouchEnd:
-            return static_cast<QTouchEvent *>(m_event);
-        default:
-            break;
-        }
-        return nullptr;
-    }
+    /** Returns the original touch event. */
+    QTouchEvent *asTouchEvent() const;
+
+    /** Returns the original mouse event.
+     *
+     * Returns nullptr in case the original event was not a mouse event. */
+    QMouseEvent *asMouseEvent() const;
 
     // helpers for C++ event delivery, not for QML properties
     int pointCount() const { return asTouchEvent() ? m_touchPoints.count() : 1; }
