@@ -460,6 +460,7 @@ void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
     Qt::TouchPointState state = Qt::TouchPointStationary;
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonDblClick:
         state = Qt::TouchPointPressed;
         break;
     case QEvent::MouseButtonRelease:
