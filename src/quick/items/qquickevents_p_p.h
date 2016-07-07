@@ -395,7 +395,7 @@ public:
       , m_pressedButtons(Qt::NoButton)
       , m_mousePoint(nullptr) { }
 
-    void reset(const QQuickPointerDevice* dev, const QMouseEvent *ev) {
+    QQuickPointerEvent *reset(const QQuickPointerDevice* dev, const QMouseEvent *ev) {
         m_device = dev;
         m_event = ev;
         m_button = ev->button();
@@ -418,9 +418,10 @@ public:
         if (!m_mousePoint)
             m_mousePoint = new QQuickEventPoint;
         m_mousePoint->reset(state, ev->windowPos(), 0);  // mouse is 0
+        return this;
     }
 
-    void reset(const QQuickPointerDevice* dev, const QTouchEvent *ev) {
+    QQuickPointerEvent *reset(const QQuickPointerDevice* dev, const QTouchEvent *ev) {
         m_device = dev;
         m_event = ev;
         m_button = Qt::NoButton;
@@ -433,6 +434,7 @@ public:
 
         for (int i = 0; i < pointCount; ++i)
             m_touchPoints.at(i)->reset(tps.at(i));
+        return this;
     }
 
     const QQuickPointerDevice *device() const { return m_device; }
