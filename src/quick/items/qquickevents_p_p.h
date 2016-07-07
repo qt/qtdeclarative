@@ -399,14 +399,14 @@ public:
      *
      * ev must be a touch, mouse or tablet event.
      */
-    QQuickPointerEvent *reset(const QEvent *ev);
+    QQuickPointerEvent *reset(QEvent *ev);
 
     const QQuickPointerDevice *device() const { return m_device; }
     Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
 
-    const QTouchEvent *asTouchEvent() const {
+    QTouchEvent *asTouchEvent() const {
         if (!m_event)
             return nullptr;
         switch (m_event->type()) {
@@ -414,7 +414,7 @@ public:
         case QEvent::TouchCancel:
         case QEvent::TouchUpdate:
         case QEvent::TouchEnd:
-            return static_cast<const QTouchEvent *>(m_event);
+            return static_cast<QTouchEvent *>(m_event);
         default:
             break;
         }
@@ -434,15 +434,15 @@ protected:
 
 protected:
     const QQuickPointerDevice *m_device;
-    const QInputEvent *m_event; // original event as received by QQuickWindow
+    QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
     Qt::MouseButtons m_pressedButtons;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     QQuickEventPoint *m_mousePoint;
 
 private:
-    void initFromMouse(const QMouseEvent *ev);
-    void initFromTouch(const QTouchEvent *ev);
+    void initFromMouse(QMouseEvent *ev);
+    void initFromTouch(QTouchEvent *ev);
 
     Q_DISABLE_COPY(QQuickPointerEvent)
 };

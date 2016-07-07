@@ -439,20 +439,20 @@ Item {
 */
 
 
-QQuickPointerEvent *QQuickPointerEvent::reset(const QEvent *ev) {
+QQuickPointerEvent *QQuickPointerEvent::reset(QEvent *ev) {
     if (ev->type() >= QEvent::MouseButtonPress && ev->type() <= QEvent::MouseMove)
     {
-        initFromMouse(static_cast<const QMouseEvent*>(ev));
+        initFromMouse(static_cast<QMouseEvent*>(ev));
     } else if ((ev->type() >= QEvent::TouchBegin && ev->type() <= QEvent::TouchEnd)
                || ev->type() == QEvent::TouchCancel) {
-        initFromTouch(static_cast<const QTouchEvent*>(ev));
+        initFromTouch(static_cast<QTouchEvent*>(ev));
     } else {
         Q_ASSERT_X(false, "", "invalid event type");
     }
     return this;
 }
 
-void QQuickPointerEvent::initFromMouse(const QMouseEvent *ev) {
+void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
     m_device = QQuickWindowPrivate::genericMouseDevice;
     m_event = ev;
     m_button = ev->button();
@@ -477,7 +477,7 @@ void QQuickPointerEvent::initFromMouse(const QMouseEvent *ev) {
     m_mousePoint->reset(state, ev->windowPos(), 0);  // mouse is 0
 }
 
-void QQuickPointerEvent::initFromTouch(const QTouchEvent *ev) {
+void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
     m_device = QQuickWindowPrivate::touchDevice(ev->device());
     m_event = ev;
     m_button = Qt::NoButton;
