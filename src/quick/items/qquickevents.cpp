@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickevents_p_p.h"
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
@@ -570,6 +571,52 @@ const QQuickEventPoint *QQuickPointerEvent::point(int i) const {
     if (isMouseEvent())
         return m_mousePoint;
     return nullptr;
+}
+
+/*!
+    \internal
+    Populate the reusable synth-mouse event from one touchpoint.
+    It's required that isTouchEvent() be true when this is called.
+    If the touchpoint cannot be found, this returns nullptr.
+    Ownership of the event is NOT transferred to the caller.
+*/
+QMouseEvent *QQuickPointerEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const {
+    const QTouchEvent::TouchPoint *p = touchPointById(pointID);
+    if (!p)
+        return nullptr;
+    QEvent::Type type;
+    Qt::MouseButton buttons = Qt::LeftButton;
+    switch (p->state()) {
+    case Qt::TouchPointPressed:
+        type = QEvent::MouseButtonPress;
+        break;
+    case Qt::TouchPointMoved:
+    case Qt::TouchPointStationary:
+        type = QEvent::MouseMove;
+        break;
+    case Qt::TouchPointReleased:
+        type = QEvent::MouseButtonRelease;
+        buttons = Qt::NoButton;
+        break;
+    default:
+        Q_ASSERT(false);
+        return nullptr;
+    }
+    m_synthMouseEvent = QMouseEvent(type, relativeTo->mapFromScene(p->scenePos()),
+        p->scenePos(), p->screenPos(), Qt::LeftButton, buttons, m_event->modifiers());
+    m_synthMouseEvent.setAccepted(true);
+    m_synthMouseEvent.setTimestamp(m_event->timestamp());
+    // In the future we will try to always have valid velocity in every QQuickEventPoint.
+    // QQuickFlickablePrivate::handleMouseMoveEvent() checks for QTouchDevice::Velocity
+    // and if it is set, then it does not need to do its own velocity calculations.
+    // That's probably the only usecase for this, so far.  Some day Flickable should handle
+    // pointer events, and then passing touchpoint velocity via QMouseEvent will be obsolete.
+    // Conveniently (by design), QTouchDevice::Velocity == QQuickPointerDevice.Velocity
+    // so that we don't need to convert m_device->capabilities().
+    if (m_device)
+        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&m_synthMouseEvent, m_device->capabilities(), p->velocity());
+    QGuiApplicationPrivate::setMouseEventSource(&m_synthMouseEvent, Qt::MouseEventSynthesizedByQt);
+    return &m_synthMouseEvent;
 }
 
 /*!

@@ -396,7 +396,8 @@ public:
       , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
       , m_pointCount(0)
-      , m_mousePoint(nullptr) { }
+      , m_mousePoint(nullptr)
+      , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier) { }
 
 public: // property accessors
     const QQuickPointerDevice *device() const { return m_device; }
@@ -422,6 +423,8 @@ public: // helpers for C++ only (during event delivery)
 
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
 
+    QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
+
 private:
     void initFromMouse(QMouseEvent *ev);
     void initFromTouch(QTouchEvent *ev);
@@ -434,6 +437,7 @@ private:
     int m_pointCount;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     QQuickEventPoint *m_mousePoint;
+    mutable QMouseEvent m_synthMouseEvent;
 
     Q_DISABLE_COPY(QQuickPointerEvent)
 };
