@@ -754,11 +754,6 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
         d->m_ignoredItems << child;
     return ignoreItem;
 }
-struct QQuickItemPublic : public QQuickItem {
-    static bool isCompleted(QQuickItem *item) {
-        return static_cast<QQuickItemPublic*>(item)->isComponentComplete();
-    }
-};
 
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
