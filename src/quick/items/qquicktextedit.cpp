@@ -1435,8 +1435,8 @@ void QQuickTextEdit::setSelectByKeyboard(bool on)
 
     If true, the user can use the mouse to select text in some
     platform-specific way. Note that for some platforms this may
-    not be an appropriate interaction (eg. may conflict with how
-    the text needs to behave inside a Flickable.
+    not be an appropriate interaction; it may conflict with how
+    the text needs to behave inside a Flickable, for example.
 */
 bool QQuickTextEdit::selectByMouse() const
 {
