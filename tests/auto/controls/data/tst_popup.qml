@@ -40,8 +40,8 @@
 
 import QtQuick 2.4
 import QtTest 1.0
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
 
 TestCase {
     id: testCase

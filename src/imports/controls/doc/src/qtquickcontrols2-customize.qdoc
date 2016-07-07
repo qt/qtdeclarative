@@ -49,7 +49,7 @@
 
     \qml
     import QtQuick 2.6
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
 
     ApplicationWindow {
         width: 400
@@ -92,7 +92,7 @@
     your application, refer to it by its filename:
 
     \qml
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
 
     ApplicationWindow {
         MyButton {
@@ -108,7 +108,7 @@
     control, first import the folder into a namespace:
 
     \qml
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
     import "controls" as MyControls
 
     ApplicationWindow {
@@ -299,7 +299,7 @@
 
     \qml
     import QtQuick 2.6
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
 
     import MyStyle 1.0
 
@@ -456,7 +456,7 @@
 
         \quotefromfile qtquickcontrols2-menu-custom.qml
         \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.0
+        \printuntil import QtQuick.Controls 2.1
         \skipto Menu
         \printto contentItem.parent: window
         \skipline contentItem.parent: window
@@ -680,7 +680,7 @@
 
         \quotefromfile qtquickcontrols2-tooltip-custom.qml
         \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.0
+        \printuntil import QtQuick.Controls 2.1
         \skipto ToolTip
         \printuntil }
         \printuntil }

@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 
     \code
     import QtQuick 2.7
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
 
     ApplicationWindow {
         id: window

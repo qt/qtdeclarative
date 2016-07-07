@@ -41,8 +41,8 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
-import QtQuick.Controls.Universal 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Controls.Universal 2.1
 
 TestCase {
     id: testCase
@@ -406,7 +406,7 @@ TestCase {
         verify(window)
         verify(window.pane)
 
-        var control = Qt.createQmlObject("import QtQuick.Controls 2.0; " + data.type + " { }", window.pane)
+        var control = Qt.createQmlObject("import QtQuick.Controls 2.1; " + data.type + " { }", window.pane)
         verify(control)
 
         compare(control.font[data.attribute], data.value)

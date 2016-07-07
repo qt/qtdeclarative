@@ -35,10 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Menu {
     id: control

@@ -36,7 +36,7 @@
 
 import QtQuick 2.7
 import QtQuick.Templates 2.1 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick.Controls.Universal 2.1
 
 T.TabBar {
     id: control

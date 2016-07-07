@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-applicationwindow-wireframe.png
 
     \qml
-    import QtQuick.Controls 2.0
+    import QtQuick.Controls 2.1
 
     ApplicationWindow {
         visible: true

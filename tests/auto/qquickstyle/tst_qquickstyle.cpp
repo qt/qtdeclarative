@@ -58,7 +58,7 @@ void tst_QQuickStyle::lookup()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.0; Control { }", QUrl());
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());

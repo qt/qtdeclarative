@@ -522,7 +522,7 @@ void tst_applicationwindow::defaultFont()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.0; ApplicationWindow { }", QUrl());
+    component.setData("import QtQuick.Controls 2.1; ApplicationWindow { }", QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));
