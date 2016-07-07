@@ -102,7 +102,7 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
                 << item->hasActiveFocus()
                 << item->isFocusScope()
                 << item;
-        foreach (QQuickItem *child, item->childItems()) {
+        for (QQuickItem *child : item->childItems()) {
             debugFocusTree(
                     child,
                     item->isFocusScope() || !scope ? item : scope,
@@ -3356,7 +3356,7 @@ void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
     QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
     if (quickItemPrivate->extra.isAllocated()) {//If extra is not allocated resources is empty.
-        foreach (QObject *object, quickItemPrivate->extra->resourcesList) {
+        for (QObject *object : qAsConst(quickItemPrivate->extra->resourcesList)) {
             qmlobject_disconnect(object, QObject, SIGNAL(destroyed(QObject*)),
                                  quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
         }
@@ -7053,7 +7053,7 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
     if (!hasCursor && subtreeCursorEnabled) {
         if (hasCursor)
             return; // nope! sorry, I have a cursor myself
-        foreach (QQuickItem *otherChild, childItems) {
+        for (QQuickItem *otherChild : qAsConst(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeCursorEnabled || otherChildPrivate->hasCursor)
                 return; // nope! sorry, something else wants it kept on.
@@ -7078,7 +7078,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     if (!hasHover && subtreeHoverEnabled) {
         if (hoverEnabled)
             return; // nope! sorry, I need hover myself
-        foreach (QQuickItem *otherChild, childItems) {
+        for (QQuickItem *otherChild : qAsConst(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)
                 return; // nope! sorry, something else wants it kept on.
@@ -7099,7 +7099,7 @@ void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
     Q_Q(QQuickItem);
     QV4::QObjectWrapper::markWrapper(q, e);
 
-    foreach (QQuickItem *child, childItems)
+    for (QQuickItem *child : qAsConst(childItems))
         QQuickItemPrivate::get(child)->markObjects(e);
 }
 
