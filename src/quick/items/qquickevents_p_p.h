@@ -395,8 +395,8 @@ public:
       , m_pressedButtons(Qt::NoButton)
       , m_mousePoint(nullptr) { }
 
-    QQuickPointerEvent *reset(const QQuickPointerDevice* dev, const QMouseEvent *ev);
-    QQuickPointerEvent *reset(const QQuickPointerDevice* dev, const QTouchEvent *ev);
+    QQuickPointerEvent *reset(const QMouseEvent *ev);
+    QQuickPointerEvent *reset(const QTouchEvent *ev);
 
     const QQuickPointerDevice *device() const { return m_device; }
     Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }

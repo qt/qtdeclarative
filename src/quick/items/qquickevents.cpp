@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickevents_p_p.h"
+#include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -437,8 +438,9 @@ Item {
     \l inverted always returns false.
 */
 
-QQuickPointerEvent *QQuickPointerEvent::reset(const QQuickPointerDevice *dev, const QMouseEvent *ev) {
-    m_device = dev;
+
+QQuickPointerEvent *QQuickPointerEvent::reset(const QMouseEvent *ev) {
+    m_device = QQuickWindowPrivate::genericMouseDevice;
     m_event = ev;
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
@@ -463,8 +465,8 @@ QQuickPointerEvent *QQuickPointerEvent::reset(const QQuickPointerDevice *dev, co
     return this;
 }
 
-QQuickPointerEvent *QQuickPointerEvent::reset(const QQuickPointerDevice *dev, const QTouchEvent *ev) {
-    m_device = dev;
+QQuickPointerEvent *QQuickPointerEvent::reset(const QTouchEvent *ev) {
+    m_device = QQuickWindowPrivate::touchDevice(ev->device());
     m_event = ev;
     m_button = Qt::NoButton;
     m_pressedButtons = Qt::NoButton;

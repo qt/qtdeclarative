@@ -156,7 +156,7 @@ public:
 #ifndef QT_NO_GESTURES
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
-    QQuickPointerDevice *touchDevice(QTouchDevice *d);
+    static QQuickPointerDevice *touchDevice(QTouchDevice *d);
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
                             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
     void handleTouchEvent(QTouchEvent *);
