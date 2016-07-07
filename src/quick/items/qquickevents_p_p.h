@@ -338,7 +338,7 @@ public:
     quint64 pointId() const { return m_pointId; }
     bool isValid() const { return m_valid; }
     bool isAccepted() const { return m_accept; }
-    void setAccepted(bool accepted) { m_accept = accepted; }
+    void setAccepted(bool accepted = true) { m_accept = accepted; }
 
 private:
     QPointF m_scenePos;
