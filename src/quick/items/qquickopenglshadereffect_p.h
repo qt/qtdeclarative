@@ -84,6 +84,8 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
         : host(host), mappedPropertyChanged(mappedPropertyChanged), fileSelector(nullptr)
     { }
 
+    ~QQuickOpenGLShaderEffectCommon();
+
     void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
     void connectPropertySignals(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType);
     void updateParseLog(bool ignoreAttributes);
@@ -96,6 +98,8 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
     // Called by slots in QQuickOpenGLShaderEffect:
     void sourceDestroyed(QObject *object);
     void propertyChanged(QQuickItem *item, const QMetaObject *itemMetaObject, int mappedId, bool *textureProviderChanged);
+
+    void clearSignalMappers(int shader);
 
     QObject *host;
     std::function<void(int)> mappedPropertyChanged;

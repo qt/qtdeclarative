@@ -207,7 +207,7 @@ void QQuickCustomParticle::updateVertexShader()
 {
     m_common.disconnectPropertySignals(this, Key::VertexShader);
     m_common.uniformData[Key::VertexShader].clear();
-    m_common.signalMappers[Key::VertexShader].clear();
+    m_common.clearSignalMappers(Key::VertexShader);
     m_common.attributes.clear();
     m_common.attributes.append("qt_ParticlePos");
     m_common.attributes.append("qt_ParticleTex");
