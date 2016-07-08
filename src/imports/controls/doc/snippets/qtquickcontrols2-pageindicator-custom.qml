@@ -30,6 +30,7 @@ import QtQuick 2.6
 import QtQuick.Controls 2.0
 
 PageIndicator {
+    id: control
     count: 5
     currentIndex: 2
 
@@ -40,7 +41,7 @@ PageIndicator {
         radius: width / 2
         color: "#21be2b"
 
-        opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
+        opacity: index === control.currentIndex ? 0.95 : pressed ? 0.7 : 0.45
 
         Behavior on opacity {
             OpacityAnimator {
