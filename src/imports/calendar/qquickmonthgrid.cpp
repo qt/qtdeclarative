@@ -73,6 +73,30 @@ QT_BEGIN_NAMESPACE
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */
 
+/*!
+    \qmlsignal Qt.labs.calendar::MonthGrid::pressed(date date)
+
+    This signal is emitted when \a date is pressed.
+*/
+
+/*!
+    \qmlsignal Qt.labs.calendar::MonthGrid::released(date date)
+
+    This signal is emitted when \a date is released.
+*/
+
+/*!
+    \qmlsignal Qt.labs.calendar::MonthGrid::clicked(date date)
+
+    This signal is emitted when \a date is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.calendar::MonthGrid::pressAndHold(date date)
+
+    This signal is emitted when \a date is pressed and held down.
+*/
+
 class QQuickMonthGridPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMonthGrid)
