@@ -88,10 +88,6 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
 Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 
-#ifndef QT_NO_DEBUG
-static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
-#endif
-
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
 {
     if (DBG_FOCUS().isEnabled(QtDebugMsg)) {
@@ -2315,29 +2311,11 @@ QQuickItem::QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent)
     d->init(parent);
 }
 
-#ifndef QT_NO_DEBUG
-static int qt_item_count = 0;
-
-static void qt_print_item_count()
-{
-    qDebug("Number of leaked items: %i", qt_item_count);
-    qt_item_count = -1;
-}
-#endif
-
 /*!
     Destroys the QQuickItem.
 */
 QQuickItem::~QQuickItem()
 {
-#ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
-        --qt_item_count;
-        if (qt_item_count < 0)
-            qDebug("Item destroyed after qt_print_item_count() was called.");
-    }
-#endif
-
     Q_D(QQuickItem);
 
     if (d->windowRefCount > 1)
@@ -3181,17 +3159,6 @@ QQuickItemPrivate::~QQuickItemPrivate()
 
 void QQuickItemPrivate::init(QQuickItem *parent)
 {
-#ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
-        ++qt_item_count;
-        static bool atexit_registered = false;
-        if (!atexit_registered) {
-            atexit(qt_print_item_count);
-            atexit_registered = true;
-        }
-    }
-#endif
-
     Q_Q(QQuickItem);
 
     registerAccessorProperties();
