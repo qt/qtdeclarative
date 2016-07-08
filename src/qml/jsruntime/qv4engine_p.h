@@ -419,6 +419,7 @@ public:
 
     Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);
+    Heap::DateObject *newDateObjectFromTime(const QTime &t);
 
     Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
     Heap::RegExpObject *newRegExpObject(RegExp *re, bool global);

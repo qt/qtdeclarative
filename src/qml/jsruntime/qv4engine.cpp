@@ -621,6 +621,13 @@ Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
     return object->d();
 }
 
+Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
+{
+    Scope scope(this);
+    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(t));
+    return object->d();
+}
+
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & IR::RegExp::RegExp_Global);
@@ -1291,7 +1298,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::QDate:
                 return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Encode(newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
+                return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
             case QMetaType::QRegExp:
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:

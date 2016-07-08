@@ -46,6 +46,15 @@
 #include <QFont>
 #include "../../shared/util.h"
 
+// Copied from tst_qdatetime.cpp
+#ifdef Q_OS_WIN
+# include <qt_windows.h>
+# include <time.h>
+#  if defined(Q_OS_WINRT)
+#    define tzset()
+#  endif
+#endif
+
 class tst_qqmlqt : public QQmlDataTest
 {
     Q_OBJECT
@@ -92,6 +101,9 @@ private slots:
     void later_data();
     void later();
     void qtObjectContents();
+
+    void timeRoundtrip_data();
+    void timeRoundtrip();
 
 private:
     QQmlEngine engine;
@@ -873,8 +885,6 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
 
     QTime time(11, 16, 39, 755);
     temporary = QDateTime(QDate(1970,1,1), time);
-    QTest::newRow("formatDate, qtime") << "formatDate" << QVariant::fromValue(time) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qtime") << "formatDateTime" << QVariant::fromValue(time) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
     QTest::newRow("formatTime, qtime") << "formatTime" << QVariant::fromValue(time) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
 
     QDate date(2011,5,31);
@@ -1152,6 +1162,104 @@ void tst_qqmlqt::qtObjectContents()
     QCOMPARE(values.count(), uniqueKeys);
 
     delete object;
+}
+
+class TimeProvider: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QTime time READ time WRITE setTime NOTIFY timeChanged)
+
+public:
+    TimeProvider(const QTime &t)
+        : m_getTime(t)
+    {}
+
+    QTime time() const { return m_getTime; }
+    void setTime(const QTime &t) { m_putTime = t; emit timeChanged(); }
+
+signals:
+    void timeChanged();
+
+public:
+    QTime m_getTime, m_putTime;
+};
+
+class TimeZoneSwitch
+{
+public:
+    TimeZoneSwitch(const char *newZone)
+        : doChangeZone(qstrcmp(newZone, "localtime") == 0)
+    {
+        if (!doChangeZone)
+            return;
+
+        hadOldZone = qEnvironmentVariableIsSet("TZ");
+        if (hadOldZone) {
+            oldZone = qgetenv("TZ");
+        }
+        qputenv("TZ", newZone);
+        tzset();
+    }
+
+    ~TimeZoneSwitch()
+    {
+        if (!doChangeZone)
+            return;
+
+        if (hadOldZone)
+            qputenv("TZ", oldZone);
+        else
+            qunsetenv("TZ");
+        tzset();
+    }
+
+private:
+    bool doChangeZone;
+    bool hadOldZone;
+    QByteArray oldZone;
+};
+
+void tst_qqmlqt::timeRoundtrip_data()
+{
+    QTest::addColumn<QTime>("time");
+
+    // Local timezone:
+    QTest::newRow("localtime") << QTime(0, 0, 0);
+
+    // No DST:
+    QTest::newRow("UTC") << QTime(0, 0, 0);
+    QTest::newRow("Europe/Amsterdam") << QTime(1, 0, 0);
+    QTest::newRow("Asia/Jakarta") << QTime(7, 0, 0);
+
+    // DST:
+    QTest::newRow("Namibia/Windhoek") << QTime(1, 0, 0);
+    QTest::newRow("Australia/Adelaide") << QTime(10, 0, 0);
+    QTest::newRow("Australia/Hobart") << QTime(10, 0, 0);
+    QTest::newRow("Pacific/Auckland") << QTime(12, 0, 0);
+    QTest::newRow("Pacific/Samoa") << QTime(13, 0, 0);
+}
+
+void tst_qqmlqt::timeRoundtrip()
+{
+#ifdef Q_OS_WIN
+    QSKIP("On Windows, the DateObject doesn't handle DST transitions correctly when the timezone is not localtime."); // I.e.: for this test.
+#endif
+
+    TimeZoneSwitch tzs(QTest::currentDataTag());
+    QFETCH(QTime, time);
+
+    TimeProvider tp(time);
+
+    QQmlEngine eng;
+    eng.rootContext()->setContextProperty(QLatin1String("tp"), &tp);
+    QQmlComponent component(&eng, testFileUrl("timeRoundtrip.qml"));
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+
+    // QML reads m_getTime and saves the result as m_putTime; this should come out the same, without
+    // any perturbation (e.g. by DST effects) from converting from QTime to V4's Date and back
+    // again.
+    QCOMPARE(tp.m_getTime, tp.m_putTime);
 }
 
 QTEST_MAIN(tst_qqmlqt)

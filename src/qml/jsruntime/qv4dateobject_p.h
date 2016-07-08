@@ -74,6 +74,8 @@ struct DateObject : Object {
     }
     DateObject(const QDateTime &date);
     double date;
+
+    DateObject(const QTime &time);
 };
 
 
