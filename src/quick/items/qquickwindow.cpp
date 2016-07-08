@@ -1906,7 +1906,7 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
     // Set delayedTouch to 0 before delivery to avoid redelivery in case of
     // event loop recursions (e.g if it the touch starts a dnd session).
     QScopedPointer<QTouchEvent> e(delayedTouch.take());
-    deliverTouchEvent(e.data());
+    deliverPointerEvent(currentPointerEvent.reset(e.data()));
 }
 
 static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
@@ -1985,14 +1985,14 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
     qCDebug(DBG_TOUCH) << event;
 
     if (qquickwindow_no_touch_compression || touchRecursionGuard) {
-        deliverTouchEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
         return;
     }
 
     if (!compressTouchEvent(event)) {
         if (delayedTouch)
             deliverDelayedTouchEvent();
-        deliverTouchEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
     }
 }
 
@@ -2033,7 +2033,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonPress:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMousePress, event->button(),
                               event->buttons());
-        deliverMouseEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
         break;
     case QEvent::MouseButtonRelease:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
@@ -2043,7 +2043,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
             return;
         }
 
-        deliverMouseEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
         if (mouseGrabberItem && !event->buttons())
             mouseGrabberItem->ungrabMouse();
         break;
@@ -2059,7 +2059,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
             return;
         }
 
-        deliverMouseEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
         break;
     case QEvent::MouseMove:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
@@ -2086,7 +2086,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
             event->setAccepted(accepted);
             return;
         }
-        deliverMouseEvent(event);
+        deliverPointerEvent(currentPointerEvent.reset(event));
         break;
     default:
         Q_ASSERT(false);
@@ -2115,6 +2115,17 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
         bool delivered = deliverHoverEvent(contentItem, lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), accepted);
         if (!delivered)
             clearHover(); // take care of any exits
+    }
+}
+
+void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
+{
+    if (QMouseEvent *mouse = event->asMouseEvent()) {
+        deliverMouseEvent(mouse);
+    } else if (QTouchEvent *touch = event->asTouchEvent()) {
+        deliverTouchEvent(touch);
+    } else {
+        Q_ASSERT(false);
     }
 }
 

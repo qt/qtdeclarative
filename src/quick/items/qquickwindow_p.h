@@ -53,6 +53,7 @@
 
 #include "qquickitem.h"
 #include "qquickwindow.h"
+#include "qquickevents_p_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
 
@@ -161,6 +162,7 @@ public:
                             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
     void handleTouchEvent(QTouchEvent *);
     void handleMouseEvent(QMouseEvent *);
+    void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QTouchEvent *);
     bool compressTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
@@ -238,6 +240,10 @@ public:
     QQuickRenderControl *renderControl;
     QQuickAnimatorController *animationController;
     QScopedPointer<QTouchEvent> delayedTouch;
+
+    // The current touch or mouse event that is delivered.
+    // This event gets re-used (reset) for every incoming mouse/touch event.
+    QQuickPointerEvent currentPointerEvent;
     int touchRecursionGuard;
     QQuickCustomRenderStage *customRenderStage;
 
