@@ -436,7 +436,6 @@ struct Q_QML_PRIVATE_EXPORT Document
     quint32 unitFlags;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
-    QHash<int, QStringList> extraSignalParameters;
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
