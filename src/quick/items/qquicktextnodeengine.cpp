@@ -68,7 +68,7 @@ QQuickTextNodeEngine::BinaryTreeNodeKey::BinaryTreeNodeKey(BinaryTreeNode *node)
 QQuickTextNodeEngine::BinaryTreeNode::BinaryTreeNode(const QGlyphRun &g,
                                                      SelectionState selState,
                                                      const QRectF &brect,
-                                                     const QQuickTextNode::Decorations &decs,
+                                                     const Decorations &decs,
                                                      const QColor &c,
                                                      const QColor &bc,
                                                      const QPointF &pos, qreal a)
@@ -90,7 +90,7 @@ QQuickTextNodeEngine::BinaryTreeNode::BinaryTreeNode(const QGlyphRun &g,
 
 
 void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
-                                             QQuickTextNode::Decorations decorations, const QColor &textColor,
+                                             Decorations decorations, const QColor &textColor,
                                              const QColor &backgroundColor, const QPointF &position)
 {
     QRectF searchRect = glyphRun.boundingRect();
@@ -99,10 +99,10 @@ void QQuickTextNodeEngine::BinaryTreeNode::insert(QVarLengthArray<BinaryTreeNode
     if (qFuzzyIsNull(searchRect.width()) || qFuzzyIsNull(searchRect.height()))
         return;
 
-    decorations |= (glyphRun.underline() ? QQuickTextNode::Underline : QQuickTextNode::NoDecoration);
-    decorations |= (glyphRun.overline()  ? QQuickTextNode::Overline  : QQuickTextNode::NoDecoration);
-    decorations |= (glyphRun.strikeOut() ? QQuickTextNode::StrikeOut : QQuickTextNode::NoDecoration);
-    decorations |= (backgroundColor.isValid() ? QQuickTextNode::Background : QQuickTextNode::NoDecoration);
+    decorations |= (glyphRun.underline() ? Decoration::Underline : Decoration::NoDecoration);
+    decorations |= (glyphRun.overline()  ? Decoration::Overline  : Decoration::NoDecoration);
+    decorations |= (glyphRun.strikeOut() ? Decoration::StrikeOut : Decoration::NoDecoration);
+    decorations |= (backgroundColor.isValid() ? Decoration::Background : Decoration::NoDecoration);
 
     qreal ascent = glyphRun.rawFont().ascent();
     insert(binaryTree, BinaryTreeNode(glyphRun,
@@ -237,7 +237,7 @@ void QQuickTextNodeEngine::processCurrentLine()
     SelectionState currentSelectionState = Unselected;
     QRectF currentRect;
 
-    QQuickTextNode::Decorations currentDecorations = QQuickTextNode::NoDecoration;
+    Decorations currentDecorations = Decoration::NoDecoration;
     qreal underlineOffset = 0.0;
     qreal underlineThickness = 0.0;
 
@@ -271,7 +271,7 @@ void QQuickTextNodeEngine::processCurrentLine()
                 currentSelectionState = node->selectionState;
 
             // Update decorations
-            if (currentDecorations != QQuickTextNode::NoDecoration) {
+            if (currentDecorations != Decoration::NoDecoration) {
                 decorationRect.setY(m_position.y() + m_currentLine.y());
                 decorationRect.setHeight(m_currentLine.height());
 
@@ -279,16 +279,16 @@ void QQuickTextNodeEngine::processCurrentLine()
                     decorationRect.setRight(node->boundingRect.left());
 
                 TextDecoration textDecoration(currentSelectionState, decorationRect, lastColor);
-                if (currentDecorations & QQuickTextNode::Underline)
+                if (currentDecorations & Decoration::Underline)
                     pendingUnderlines.append(textDecoration);
 
-                if (currentDecorations & QQuickTextNode::Overline)
+                if (currentDecorations & Decoration::Overline)
                     pendingOverlines.append(textDecoration);
 
-                if (currentDecorations & QQuickTextNode::StrikeOut)
+                if (currentDecorations & Decoration::StrikeOut)
                     pendingStrikeOuts.append(textDecoration);
 
-                if (currentDecorations & QQuickTextNode::Background)
+                if (currentDecorations & Decoration::Background)
                     m_backgrounds.append(qMakePair(decorationRect, lastBackgroundColor));
             }
 
@@ -344,7 +344,7 @@ void QQuickTextNodeEngine::processCurrentLine()
                 // If previous item(s) had underline and current does not, then we add the
                 // pending lines to the lists and likewise for overlines and strikeouts
                 if (!pendingUnderlines.isEmpty()
-                        && !(node->decorations & QQuickTextNode::Underline)) {
+                        && !(node->decorations & Decoration::Underline)) {
                     addTextDecorations(pendingUnderlines, underlineOffset, underlineThickness);
 
                     pendingUnderlines.clear();
@@ -377,19 +377,19 @@ void QQuickTextNodeEngine::processCurrentLine()
 
                 // Merge current values with previous. Prefer greatest thickness
                 QRawFont rawFont = node->glyphRun.rawFont();
-                if (node->decorations & QQuickTextNode::Underline) {
+                if (node->decorations & Decoration::Underline) {
                     if (rawFont.lineThickness() > underlineThickness) {
                         underlineThickness = rawFont.lineThickness();
                         underlineOffset = rawFont.underlinePosition();
                     }
                 }
 
-                if (node->decorations & QQuickTextNode::Overline) {
+                if (node->decorations & Decoration::Overline) {
                     overlineOffset = -rawFont.ascent();
                     overlineThickness = rawFont.lineThickness();
                 }
 
-                if (node->decorations & QQuickTextNode::StrikeOut) {
+                if (node->decorations & Decoration::StrikeOut) {
                     strikeOutThickness = rawFont.lineThickness();
                     strikeOutOffset = rawFont.ascent() / -3.0;
                 }
@@ -495,7 +495,7 @@ void QQuickTextNodeEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun)
     BinaryTreeNode::insert(&m_currentLineTree,
                            glyphRun,
                            Unselected,
-                           QQuickTextNode::NoDecoration,
+                           Decoration::NoDecoration,
                            m_textColor,
                            m_backgroundColor,
                            m_position);
@@ -507,7 +507,7 @@ void QQuickTextNodeEngine::addSelectedGlyphs(const QGlyphRun &glyphRun)
     BinaryTreeNode::insert(&m_currentLineTree,
                            glyphRun,
                            Selected,
-                           QQuickTextNode::NoDecoration,
+                           Decoration::NoDecoration,
                            m_textColor,
                            m_backgroundColor,
                            m_position);

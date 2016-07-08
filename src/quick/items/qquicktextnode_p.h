@@ -77,15 +77,6 @@ class QQuickTextNodeEngine;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextNode : public QSGTransformNode
 {
 public:
-    enum Decoration {
-        NoDecoration = 0x0,
-        Underline    = 0x1,
-        Overline     = 0x2,
-        StrikeOut    = 0x4,
-        Background   = 0x8
-    };
-    Q_DECLARE_FLAGS(Decorations, Decoration)
-
     QQuickTextNode(QQuickItem *ownerElement);
     ~QQuickTextNode();
 
