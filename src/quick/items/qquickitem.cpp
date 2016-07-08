@@ -4868,14 +4868,16 @@ void QQuickItem::componentComplete()
         QQuickAnchorsPrivate::get(d->_anchors)->updateOnComplete();
     }
 
-    if (d->extra.isAllocated() && d->extra->layer)
-        d->extra->layer->componentComplete();
+    if (d->extra.isAllocated()) {
+        if (d->extra->layer)
+            d->extra->layer->componentComplete();
 
-    if (d->extra.isAllocated() && d->extra->keyHandler)
-        d->extra->keyHandler->componentComplete();
+        if (d->extra->keyHandler)
+            d->extra->keyHandler->componentComplete();
 
-    if (d->extra.isAllocated() && d->extra->contents)
-        d->extra->contents->complete();
+        if (d->extra->contents)
+            d->extra->contents->complete();
+    }
 
     if (d->window && d->dirtyAttributes) {
         d->addToDirtyList();
