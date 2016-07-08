@@ -545,7 +545,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
 {
     Q_Q(QQuickSwipeDelegate);
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
-    // If the position is 0, we want to handle events ourself - we don't want child items to steal them.
+    // If the position is 0, we want to handle events ourselves - we don't want child items to steal them.
     // This code will only get called when a child item has been created;
     // events will go through the regular channels (mousePressEvent()) until then.
     if (qFuzzyIsNull(swipePrivate->position)) {
@@ -618,7 +618,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
 
             // If the control was exposed before the drag begun, the distance should be inverted.
             // For example, if the control had been swiped to the right, the position would be 1.0.
-            // If the control was then swiped the left by a distance of -20 pixels, the normalized
+            // If the control was then swiped to the left by a distance of -20 pixels, the normalized
             // distance might be -0.2, for example, which cannot be used as the position; the swipe
             // started from the right, so we account for that by adding the position.
             if (qFuzzyIsNull(normalizedDistance)) {
@@ -658,6 +658,9 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEve
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     swipePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
 
+    const bool hadGrabbedMouse = q->keepMouseGrab();
+    q->setKeepMouseGrab(false);
+
     // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
     const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
     if (swipePrivate->position > 0.5 ||
@@ -676,9 +679,8 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEve
         swipePrivate->wasComplete = false;
     }
 
-    q->setKeepMouseGrab(false);
-
-    return true;
+    // Only consume child events if we had grabbed the mouse.
+    return hadGrabbedMouse;
 }
 
 void QQuickSwipeDelegatePrivate::resizeContent()
