@@ -155,7 +155,9 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
         qCDebug(QSG_LOG_INFO) << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
         qCDebug(QSG_LOG_INFO) << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
         QSet<QByteArray> exts = openglRenderContext->openglContext()->extensions();
-        QByteArray all; foreach (const QByteArray &e, exts) all += ' ' + e;
+        QByteArray all;
+        for (const QByteArray &e : qAsConst(exts))
+            all += ' ' + e;
         qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
         qCDebug(QSG_LOG_INFO) << "Max Texture Size: " << openglRenderContext->maxTextureSize();
         qCDebug(QSG_LOG_INFO) << "Debug context:    " << format.testOption(QSurfaceFormat::DebugContext);

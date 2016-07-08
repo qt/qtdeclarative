@@ -117,7 +117,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
 {
     //normalize stops
     bool needsNormalization = false;
-    foreach (const QGradientStop &stop, stops) {
+    for (const QGradientStop &stop : qAsConst(stops)) {
         if (stop.first < 0.0 || stop.first > 1.0) {
             needsNormalization = true;
             continue;
@@ -274,7 +274,7 @@ bool QSGSoftwareInternalRectangleNode::isOpaque() const
     if (m_penWidth > 0.0f && m_penColor.alpha() < 255)
         return false;
     if (m_stops.count() > 0) {
-        foreach (QGradientStop stop, m_stops) {
+        for (const QGradientStop &stop : qAsConst(m_stops)) {
             if (stop.second.alpha() < 255)
                 return false;
         }

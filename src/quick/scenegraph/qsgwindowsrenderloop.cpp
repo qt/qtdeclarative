@@ -263,7 +263,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
 
 bool QSGWindowsRenderLoop::anyoneShowing() const
 {
-    foreach (const WindowData &wd, m_windows)
+    for (const WindowData &wd : qAsConst(m_windows))
         if (wd.window->isVisible() && wd.window->isExposed() && wd.window->size().isValid())
             return true;
     return false;
@@ -382,7 +382,7 @@ void QSGWindowsRenderLoop::render()
 {
     RLDEBUG("render");
     bool rendered = false;
-    foreach (const WindowData &wd, m_windows) {
+    for (const WindowData &wd : qAsConst(m_windows)) {
         if (wd.pendingUpdate) {
             const_cast<WindowData &>(wd).pendingUpdate = false;
             renderWindow(wd.window);
