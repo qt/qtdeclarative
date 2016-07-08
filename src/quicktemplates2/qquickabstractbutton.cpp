@@ -95,7 +95,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::pressAndHold()
 
-    This signal is emitted when the button is interactively perssed and held down by the user.
+    This signal is emitted when the button is interactively pressed and held down by the user.
 */
 
 /*!
