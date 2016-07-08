@@ -2682,8 +2682,8 @@ void QQuickTextInputPrivate::init()
 #endif
     q->setFlag(QQuickItem::ItemHasContents);
 #ifndef QT_NO_CLIPBOARD
-    q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
-            q, SLOT(q_canPasteChanged()));
+    qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()),
+            q, QQuickTextInput, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD
 
     lastSelectionStart = 0;
