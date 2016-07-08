@@ -181,8 +181,8 @@ QQuickTransform::QQuickTransform(QQuickTransformPrivate &dd, QObject *parent)
 QQuickTransform::~QQuickTransform()
 {
     Q_D(QQuickTransform);
-    for (int ii = 0; ii < d->items.count(); ++ii) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->items.at(ii));
+    for (QQuickItem *item : qAsConst(d->items)) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
         p->transforms.removeOne(this);
         p->dirty(QQuickItemPrivate::Transform);
     }
@@ -191,8 +191,8 @@ QQuickTransform::~QQuickTransform()
 void QQuickTransform::update()
 {
     Q_D(QQuickTransform);
-    for (int ii = 0; ii < d->items.count(); ++ii) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->items.at(ii));
+    for (QQuickItem *item : qAsConst(d->items)) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
         p->dirty(QQuickItemPrivate::Transform);
     }
 }
@@ -204,9 +204,7 @@ QQuickContents::QQuickContents(QQuickItem *item)
 
 QQuickContents::~QQuickContents()
 {
-    QList<QQuickItem *> children = m_item->childItems();
-    for (int i = 0; i < children.count(); ++i) {
-        QQuickItem *child = children.at(i);
+    for (QQuickItem *child : m_item->childItems()) {
         QQuickItemPrivate::get(child)->removeItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
     }
 }
@@ -229,9 +227,8 @@ bool QQuickContents::calcHeight(QQuickItem *changed)
     } else {
         qreal top = std::numeric_limits<qreal>::max();
         qreal bottom = -std::numeric_limits<qreal>::max();
-        QList<QQuickItem *> children = m_item->childItems();
-        for (int i = 0; i < children.count(); ++i) {
-            QQuickItem *child = children.at(i);
+        const QList<QQuickItem*> children = m_item->childItems();
+        for (QQuickItem *child : qAsConst(children)) {
             qreal y = child->y();
             if (y + child->height() > bottom)
                 bottom = y + child->height();
@@ -264,9 +261,8 @@ bool QQuickContents::calcWidth(QQuickItem *changed)
     } else {
         qreal left = std::numeric_limits<qreal>::max();
         qreal right = -std::numeric_limits<qreal>::max();
-        QList<QQuickItem *> children = m_item->childItems();
-        for (int i = 0; i < children.count(); ++i) {
-            QQuickItem *child = children.at(i);
+        const QList<QQuickItem*> children = m_item->childItems();
+        for (QQuickItem *child : qAsConst(children)) {
             qreal x = child->x();
             if (x + child->width() > right)
                 right = x + child->width();
@@ -285,9 +281,7 @@ void QQuickContents::complete()
 {
     QQuickItemPrivate::get(m_item)->addItemChangeListener(this, QQuickItemPrivate::Children);
 
-    QList<QQuickItem *> children = m_item->childItems();
-    for (int i = 0; i < children.count(); ++i) {
-        QQuickItem *child = children.at(i);
+    for (QQuickItem *child : m_item->childItems()) {
         QQuickItemPrivate::get(child)->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
         //###what about changes to visibility?
     }
@@ -1342,8 +1336,7 @@ void QQuickKeysAttached::componentComplete()
 #ifndef QT_NO_IM
     Q_D(QQuickKeysAttached);
     if (d->item) {
-        for (int ii = 0; ii < d->targets.count(); ++ii) {
-            QQuickItem *targetItem = d->targets.at(ii);
+        for (QQuickItem *targetItem : qAsConst(d->targets)) {
             if (targetItem && (targetItem->flags() & QQuickItem::ItemAcceptsInputMethod)) {
                 d->item->setFlag(QQuickItem::ItemAcceptsInputMethod);
                 break;
@@ -1365,11 +1358,10 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
     // first process forwards
     if (d->item && d->item->window()) {
         d->inPress = true;
-        for (int ii = 0; ii < d->targets.count(); ++ii) {
-            QQuickItem *i = d->targets.at(ii);
-            if (i && i->isVisible()) {
+        for (QQuickItem *targetItem : qAsConst(d->targets)) {
+            if (targetItem && targetItem->isVisible()) {
                 event->accept();
-                QCoreApplication::sendEvent(i, event);
+                QCoreApplication::sendEvent(targetItem, event);
                 if (event->isAccepted()) {
                     d->inPress = false;
                     return;
@@ -1409,11 +1401,10 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
 
     if (d->item && d->item->window()) {
         d->inRelease = true;
-        for (int ii = 0; ii < d->targets.count(); ++ii) {
-            QQuickItem *i = d->targets.at(ii);
-            if (i && i->isVisible()) {
+        for (QQuickItem *targetItem : qAsConst(d->targets)) {
+            if (targetItem && targetItem->isVisible()) {
                 event->accept();
-                QCoreApplication::sendEvent(i, event);
+                QCoreApplication::sendEvent(targetItem, event);
                 if (event->isAccepted()) {
                     d->inRelease = false;
                     return;
@@ -1437,12 +1428,11 @@ void QQuickKeysAttached::inputMethodEvent(QInputMethodEvent *event, bool post)
     Q_D(QQuickKeysAttached);
     if (post == m_processPost && d->item && !d->inIM && d->item->window()) {
         d->inIM = true;
-        for (int ii = 0; ii < d->targets.count(); ++ii) {
-            QQuickItem *i = d->targets.at(ii);
-            if (i && i->isVisible() && (i->flags() & QQuickItem::ItemAcceptsInputMethod)) {
-                d->item->window()->sendEvent(i, event);
+        for (QQuickItem *targetItem : qAsConst(d->targets)) {
+            if (targetItem && targetItem->isVisible() && (targetItem->flags() & QQuickItem::ItemAcceptsInputMethod)) {
+                d->item->window()->sendEvent(targetItem, event);
                 if (event->isAccepted()) {
-                    d->imeItem = i;
+                    d->imeItem = targetItem;
                     d->inIM = false;
                     return;
                 }
@@ -1457,13 +1447,12 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickKeysAttached);
     if (d->item) {
-        for (int ii = 0; ii < d->targets.count(); ++ii) {
-            QQuickItem *i = d->targets.at(ii);
-            if (i && i->isVisible() && (i->flags() & QQuickItem::ItemAcceptsInputMethod) && i == d->imeItem) {
-                //### how robust is i == d->imeItem check?
-                QVariant v = i->inputMethodQuery(query);
+        for (QQuickItem *targetItem : qAsConst(d->targets)) {
+            if (targetItem && targetItem->isVisible() && (targetItem->flags() & QQuickItem::ItemAcceptsInputMethod) && targetItem == d->imeItem) {
+                //### how robust is targetItem == d->imeItem check?
+                QVariant v = targetItem->inputMethodQuery(query);
                 if (v.userType() == QVariant::RectF)
-                    v = d->item->mapRectFromItem(i, v.toRectF());  //### cost?
+                    v = d->item->mapRectFromItem(targetItem, v.toRectF());  //### cost?
                 return v;
             }
         }
@@ -1620,11 +1609,9 @@ void QQuickItemPrivate::setImplicitLayoutMirror(bool mirror, bool inherit)
 
     if (isMirrorImplicit)
         setLayoutMirror(inherit ? inheritedLayoutMirror : false);
-    for (int i = 0; i < childItems.count(); ++i) {
-        if (QQuickItem *child = qmlobject_cast<QQuickItem *>(childItems.at(i))) {
-            QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
-            childPrivate->setImplicitLayoutMirror(inheritedLayoutMirror, inheritMirrorFromParent);
-        }
+    for (QQuickItem *child : qAsConst(childItems)) {
+        QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
+        childPrivate->setImplicitLayoutMirror(inheritedLayoutMirror, inheritMirrorFromParent);
     }
 }
 
@@ -2393,8 +2380,7 @@ QQuickItem::~QQuickItem()
        remove themselves from our list of transforms when that list has already
        been destroyed after ~QQuickItem() has run.
     */
-    for (int ii = 0; ii < d->transforms.count(); ++ii) {
-        QQuickTransform *t = d->transforms.at(ii);
+    for (QQuickTransform *t : qAsConst(d->transforms)) {
         QQuickTransformPrivate *tp = QQuickTransformPrivate::get(t);
         tp->items.removeOne(this);
     }
@@ -2885,8 +2871,8 @@ QList<QQuickItem *> QQuickItemPrivate::paintOrderChildItems() const
     // If none of the items have set Z then the paint order list is the same as
     // the childItems list.  This is by far the most common case.
     bool haveZ = false;
-    for (int i = 0; i < childItems.count(); ++i) {
-        if (QQuickItemPrivate::get(childItems.at(i))->z() != 0.) {
+    for (QQuickItem *childItem : qAsConst(childItems)) {
+        if (QQuickItemPrivate::get(childItem)->z() != 0.) {
             haveZ = true;
             break;
         }
@@ -2985,8 +2971,7 @@ void QQuickItemPrivate::refWindow(QQuickWindow *c)
     if (!parentItem)
         QQuickWindowPrivate::get(window)->parentlessItems.insert(q);
 
-    for (int ii = 0; ii < childItems.count(); ++ii) {
-        QQuickItem *child = childItems.at(ii);
+    for (QQuickItem *child : qAsConst(childItems)) {
         QQuickItemPrivate::get(child)->refWindow(c);
     }
 
@@ -3038,8 +3023,7 @@ void QQuickItemPrivate::derefWindow()
 
     paintNode = 0;
 
-    for (int ii = 0; ii < childItems.count(); ++ii) {
-        QQuickItem *child = childItems.at(ii);
+    for (QQuickItem *child : qAsConst(childItems)) {
         QQuickItemPrivate::get(child)->derefWindow();
     }
 
@@ -3497,8 +3481,7 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
 
-    for (int ii = 0; ii < p->transforms.count(); ++ii) {
-        QQuickTransform *t = p->transforms.at(ii);
+    for (QQuickTransform *t : qAsConst(p->transforms)) {
         QQuickTransformPrivate *tp = QQuickTransformPrivate::get(t);
         tp->items.removeOne(that);
     }
@@ -5775,8 +5758,9 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     }
 
     bool childVisibilityChanged = false;
-    for (int ii = 0; ii < childItems.count(); ++ii)
-        childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
+    for (QQuickItem *childItem : qAsConst(childItems)) {
+        childVisibilityChanged |= QQuickItemPrivate::get(childItem)->setEffectiveVisibleRecur(newEffectiveVisible);
+    }
 
     itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
 #ifndef QT_NO_ACCESSIBILITY
@@ -5825,8 +5809,8 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
         }
     }
 
-    for (int ii = 0; ii < childItems.count(); ++ii) {
-        QQuickItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(
+    for (QQuickItem *childItem : qAsConst(childItems)) {
+        QQuickItemPrivate::get(childItem)->setEffectiveEnableRecur(
                 (flags & QQuickItem::ItemIsFocusScope) && scope ? q : scope, newEffectiveEnable);
     }
 
