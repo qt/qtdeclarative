@@ -1740,11 +1740,17 @@ void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
 
     QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
 
+    // the press was not accepted, make sure there is no move or release event
     QTest::mouseMove(&window, QPoint(110,110), 50);
-    QTRY_COMPARE(root->property("hadMove").toBool(), false);
+
+    // use qwait here because we want to make sure an event does NOT happen
+    // the test fails if the default state changes, while it shouldn't
+    QTest::qWait(100);
+    QCOMPARE(root->property("hadMove").toBool(), false);
 
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(110,110));
-    QTRY_COMPARE(root->property("hadRelease").toBool(), false);
+    QTest::qWait(100);
+    QCOMPARE(root->property("hadRelease").toBool(), false);
 }
 
 void tst_QQuickMouseArea::nestedStopAtBounds_data()
