@@ -58,6 +58,18 @@ T.RadioButton {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
+
+        Ripple {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 28; height: 28
+
+            z: -1
+            anchor: control
+            pressed: control.pressed
+            active: control.down || control.visualFocus || control.hovered
+            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+        }
     }
 
     contentItem: Text {
