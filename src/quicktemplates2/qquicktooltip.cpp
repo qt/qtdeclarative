@@ -195,6 +195,8 @@ void QQuickToolTip::setText(const QString &text)
     This property holds the delay (milliseconds) after which the tool tip is
     shown. A tooltip with a negative delay is shown immediately. The default
     value is \c 0.
+
+    \sa {Delay and Timeout}
 */
 int QQuickToolTip::delay() const
 {
@@ -218,6 +220,8 @@ void QQuickToolTip::setDelay(int delay)
     This property holds the timeout (milliseconds) after which the tool tip is
     hidden. A tooltip with a negative timeout does not hide automatically. The
     default value is \c -1.
+
+    \sa {Delay and Timeout}
 */
 int QQuickToolTip::timeout() const
 {
@@ -346,7 +350,7 @@ QQuickToolTipAttached::QQuickToolTipAttached(QQuickItem *item) :
 /*!
     \qmlattachedproperty string QtQuick.Controls::ToolTip::text
 
-    This attached property holds the text of the shared tool tip instance.
+    This attached property holds the text of the shared tool tip.
     The property can be attached to any item.
 */
 QString QQuickToolTipAttached::text() const
@@ -373,6 +377,8 @@ void QQuickToolTipAttached::setText(const QString &text)
 
     This attached property holds the delay (milliseconds) of the shared tool tip.
     The property can be attached to any item.
+
+    \sa {Delay and Timeout}
 */
 int QQuickToolTipAttached::delay() const
 {
@@ -395,6 +401,8 @@ void QQuickToolTipAttached::setDelay(int delay)
 
     This attached property holds the timeout (milliseconds) of the shared tool tip.
     The property can be attached to any item.
+
+    \sa {Delay and Timeout}
 */
 int QQuickToolTipAttached::timeout() const
 {

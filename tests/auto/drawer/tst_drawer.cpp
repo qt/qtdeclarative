@@ -56,6 +56,8 @@ private slots:
 
     void dragMargin_data();
     void dragMargin();
+
+    void reposition();
 };
 
 void tst_Drawer::position_data()
@@ -148,6 +150,29 @@ void tst_Drawer::dragMargin()
     QTest::mouseMove(window, QPoint(window->width() - drawer->width() * 0.75, drawer->height() / 2));
     QCOMPARE(drawer->position(), dragFromRight);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - drawer->width() * 0.75, drawer->height() / 2));
+}
+
+void tst_Drawer::reposition()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    drawer->setEdge(Qt::RightEdge);
+
+    drawer->open();
+    QTRY_COMPARE(drawer->popupItem()->x(), window->width() - drawer->width());
+
+    drawer->close();
+    QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
+
+    window->setWidth(window->width() + 100);
+    QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
 }
 
 QTEST_MAIN(tst_Drawer)

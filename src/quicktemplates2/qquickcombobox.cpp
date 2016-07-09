@@ -669,9 +669,16 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 QString QQuickComboBox::textAt(int index) const
 {
     Q_D(const QQuickComboBox);
-    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count() || !d->delegateModel->object(index))
+    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count())
         return QString();
-    return d->delegateModel->stringValue(index, d->textRole.isEmpty() ? QStringLiteral("modelData") : d->textRole);
+
+    QString text;
+    QObject *object = d->delegateModel->object(index);
+    if (object) {
+        text = d->delegateModel->stringValue(index, d->textRole.isEmpty() ? QStringLiteral("modelData") : d->textRole);
+        d->delegateModel->release(object);
+    }
+    return text;
 }
 
 /*!
