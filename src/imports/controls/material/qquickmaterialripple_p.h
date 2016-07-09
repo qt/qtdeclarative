@@ -62,7 +62,7 @@ class QQuickMaterialRipple : public QQuickItem
     Q_PROPERTY(qreal clipRadius READ clipRadius WRITE setClipRadius FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive FINAL)
-    Q_PROPERTY(QPointF anchor READ anchor WRITE setAnchor FINAL)
+    Q_PROPERTY(QQuickItem *anchor READ anchor WRITE setAnchor FINAL)
 
 public:
     QQuickMaterialRipple(QQuickItem *parent = nullptr);
@@ -79,8 +79,10 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
-    QPointF anchor() const;
-    void setAnchor(const QPointF &anchor);
+    QPointF anchorPoint() const;
+
+    QQuickItem *anchor() const;
+    void setAnchor(QQuickItem *anchor);
 
 protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
@@ -92,10 +94,9 @@ protected:
 private:
     bool m_active;
     bool m_pressed;
-    bool m_anchored;
     qreal m_clipRadius;
-    QPointF m_anchor;
     QColor m_color;
+    QQuickItem *m_anchor;
     QQuickOpacityAnimator *m_opacityAnimator;
     QVector<QQuickMaterialRippleAnimator *> m_rippleAnimators;
 };

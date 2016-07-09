@@ -42,6 +42,8 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -200,7 +202,7 @@ QQuickAnimatorJob *QQuickMaterialRippleAnimator::createJob() const
 }
 
 QQuickMaterialRipple::QQuickMaterialRipple(QQuickItem *parent)
-    : QQuickItem(parent), m_active(false), m_pressed(false), m_anchored(false), m_clipRadius(0.0), m_opacityAnimator(nullptr)
+    : QQuickItem(parent), m_active(false), m_pressed(false), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
 {
     setOpacity(0.0);
     setFlag(ItemHasContents);
@@ -279,30 +281,45 @@ void QQuickMaterialRipple::setPressed(bool pressed)
         exitWave();
 }
 
-QPointF QQuickMaterialRipple::anchor() const
+QPointF QQuickMaterialRipple::anchorPoint() const
 {
     const QRectF bounds = boundingRect();
     const QPointF center = bounds.center();
-    if (!m_anchored)
+    if (!m_anchor)
         return center;
+
+    QPointF anchorPoint = bounds.center();
+    if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(m_anchor)) {
+        if (QQuickWindow *window = button->window()) {
+            if (button == window->mouseGrabberItem()) {
+                QQuickAbstractButtonPrivate *p = QQuickAbstractButtonPrivate::get(button);
+                anchorPoint = p->pressPoint;
+            }
+        }
+    }
+    anchorPoint = mapFromItem(m_anchor, anchorPoint);
 
     // calculate whether the anchor point is within the ripple circle bounds,
     // that is, whether waves should start expanding from the anchor point
     const qreal r = qSqrt(bounds.width() * bounds.width() + bounds.height() * bounds.height()) / 2;
-    if (QLineF(center, m_anchor).length() < r)
-        return m_anchor;
+    if (QLineF(center, anchorPoint).length() < r)
+        return anchorPoint;
 
     // if the anchor point is outside the ripple circle bounds, start expanding
     // from the intersection point of the ripple circle and a line from its center
     // to the the anchor point
-    const qreal p = qAtan2(m_anchor.y() - center.y(), m_anchor.x() - center.x());
+    const qreal p = qAtan2(anchorPoint.y() - center.y(), anchorPoint.x() - center.x());
     return QPointF(center.x() + r * qCos(p), center.y() + r * qSin(p));
 }
 
-void QQuickMaterialRipple::setAnchor(const QPointF &anchor)
+QQuickItem *QQuickMaterialRipple::anchor() const
 {
-    m_anchor = anchor;
-    m_anchored = true;
+    return m_anchor;
+}
+
+void QQuickMaterialRipple::setAnchor(QQuickItem *item)
+{
+    m_anchor = item;
 }
 
 void QQuickMaterialRipple::itemChange(ItemChange change, const ItemChangeData &data)
@@ -371,7 +388,7 @@ void QQuickMaterialRipple::enterWave()
     wave->setColor(color());
     wave->setOpacity(0.0);
 
-    QQuickMaterialRippleAnimator *animator = new QQuickMaterialRippleAnimator(anchor(), boundingRect(), wave);
+    QQuickMaterialRippleAnimator *animator = new QQuickMaterialRippleAnimator(anchorPoint(), boundingRect(), wave);
     animator->setDuration(qRound(RIPPLE_ENTER_DELAY + 1000.0 * qSqrt(sz / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
     animator->setTargetItem(wave);
     animator->setTo(sz);

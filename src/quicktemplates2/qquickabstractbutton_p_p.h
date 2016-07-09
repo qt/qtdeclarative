@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickButtonGroup;
 
-class QQuickAbstractButtonPrivate : public QQuickControlPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickAbstractButton)
 

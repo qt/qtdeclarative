@@ -474,8 +474,8 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
-        setPressed(true);
         d->pressPoint = QPoint(qRound(width() / 2), qRound(height() / 2));
+        setPressed(true);
 
         if (d->autoRepeat) {
             d->startRepeatDelay();
@@ -506,8 +506,8 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mousePressEvent(event);
-    setPressed(true);
     d->pressPoint = event->pos();
+    setPressed(true);
 
     emit pressed();
 
