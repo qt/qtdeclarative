@@ -77,7 +77,17 @@ T.MenuItem {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
-        visible: control.down || control.highlighted
-        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
+        color: control.down ? control.Material.buttonPressColor : control.highlighted ? control.Material.listHighlightColor : "transparent"
+
+        Ripple {
+            width: parent.width
+            height: parent.height
+
+            clip: visible
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.Material.checkBoxUncheckedRippleColor
+        }
     }
 }

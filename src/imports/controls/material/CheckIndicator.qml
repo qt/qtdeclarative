@@ -63,15 +63,6 @@ Rectangle {
         }
     }
 
-    Ripple {
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        width: 28; height: 28
-        pressed: control.pressed
-        active: control.down || control.visualFocus || control.hovered
-        color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
-    }
-
     // TODO: This needs to be transparent
     Image {
         id: checkImage
