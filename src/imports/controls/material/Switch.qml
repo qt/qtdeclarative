@@ -56,6 +56,15 @@ T.Switch {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
+
+        Ripple {
+            x: parent.handle.x + parent.handle.width / 2 - width / 2
+            y: parent.handle.y + parent.handle.height / 2 - height / 2
+            width: 28; height: 28
+            pressed: control.pressed
+            active: control.down || control.visualFocus || control.hovered
+            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+        }
     }
 
     contentItem: Text {

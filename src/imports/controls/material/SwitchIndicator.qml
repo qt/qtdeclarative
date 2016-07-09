@@ -44,18 +44,9 @@ Item {
     implicitHeight: 32
 
     property Item control
+    property alias handle: handle
 
     Material.elevation: 1
-
-    Ripple {
-        id: ripple
-        x: handle.x + handle.width / 2 - width / 2
-        y: handle.y + handle.height / 2 - height / 2
-        width: 28; height: 28
-        pressed: control.pressed
-        active: control.down || control.visualFocus || control.hovered
-        color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
-    }
 
     Rectangle {
         width: parent.width
