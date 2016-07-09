@@ -426,25 +426,49 @@ TestCase {
         }
     }
 
+    Component {
+        id: signalSpyComponent
+
+        SignalSpy {}
+    }
+
     function test_eventsToLeftAndRight() {
         var control = swipeDelegateWithButtonComponent.createObject(testCase);
         verify(control);
 
         // The button should be pressed instead of the SwipeDelegate.
         mouseDrag(control, control.width / 2, control.height / 2,  -control.width, 0);
+        // Mouse has been released by this stage.
         verify(!control.pressed);
         compare(control.swipe.position, -1.0);
         verify(control.swipe.rightItem);
         verify(control.swipe.rightItem.visible);
         compare(control.swipe.rightItem.parent, control);
 
+        var buttonPressedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "pressed" });
+        verify(buttonPressedSpy);
+        verify(buttonPressedSpy.valid);
+        var buttonReleasedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "released" });
+        verify(buttonReleasedSpy);
+        verify(buttonReleasedSpy.valid);
+        var buttonClickedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "clicked" });
+        verify(buttonClickedSpy);
+        verify(buttonClickedSpy.valid);
+
+        // Now press the button.
         mousePress(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
         var button = control.swipe.rightItem;
         verify(button.pressed);
+        compare(buttonPressedSpy.count, 1);
+        compare(buttonReleasedSpy.count, 0);
+        compare(buttonClickedSpy.count, 0);
 
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!button.pressed);
+        compare(buttonPressedSpy.count, 1);
+        compare(buttonReleasedSpy.count, 1);
+        compare(buttonClickedSpy.count, 1);
 
         // Returning back to a position of 0 and pressing on the control should
         // result in the control being pressed.
