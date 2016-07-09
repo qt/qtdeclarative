@@ -244,7 +244,7 @@ public:
     // The current touch or mouse event that is delivered.
     // This event gets re-used (reset) for every incoming mouse/touch event.
     QQuickPointerEvent currentPointerEvent;
-    int touchRecursionGuard;
+    int pointerEventRecursionGuard;
     QQuickCustomRenderStage *customRenderStage;
 
     QColor clearColor;

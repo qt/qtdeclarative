@@ -490,7 +490,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderer(0)
     , windowManager(0)
     , renderControl(0)
-    , touchRecursionGuard(0)
+    , pointerEventRecursionGuard(0)
     , customRenderStage(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
@@ -1984,7 +1984,7 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
     translateTouchEvent(event);
     qCDebug(DBG_TOUCH) << event;
 
-    if (qquickwindow_no_touch_compression || touchRecursionGuard) {
+    if (qquickwindow_no_touch_compression || pointerEventRecursionGuard) {
         deliverPointerEvent(currentPointerEvent.reset(event));
         return;
     }
@@ -2120,6 +2120,11 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
 
 void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
 {
+    // If users spin the eventloop as a result of event delivery, we disable
+    // event compression and send events directly. This is because we consider
+    // the usecase a bit evil, but we at least don't want to lose events.
+    ++pointerEventRecursionGuard;
+
     if (QMouseEvent *mouse = event->asMouseEvent()) {
         deliverMouseEvent(mouse);
     } else if (QTouchEvent *touch = event->asTouchEvent()) {
@@ -2127,16 +2132,13 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     } else {
         Q_ASSERT(false);
     }
+
+    --pointerEventRecursionGuard;
 }
 
 void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << " - delivering" << event;
-
-    // If users spin the eventloop as a result of touch delivery, we disable
-    // touch compression and send events directly. This is because we consider
-    // the usecase a bit evil, but we at least don't want to lose events.
-    ++touchRecursionGuard;
 
     // List of all items that received an event before
     // When we have TouchBegin this is and will stay empty
@@ -2193,8 +2195,6 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
             itemForTouchPointId.clear();
         }
     }
-
-    --touchRecursionGuard;
 }
 
 // This function recurses and sends the events to the individual items
