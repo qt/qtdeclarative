@@ -440,11 +440,10 @@ Item {
 
 
 QQuickPointerEvent *QQuickPointerEvent::reset(QEvent *ev) {
-    if (ev->type() >= QEvent::MouseButtonPress && ev->type() <= QEvent::MouseMove)
-    {
+    m_event = static_cast<QInputEvent*>(ev);
+    if (isMouseEvent()) {
         initFromMouse(static_cast<QMouseEvent*>(ev));
-    } else if ((ev->type() >= QEvent::TouchBegin && ev->type() <= QEvent::TouchEnd)
-               || ev->type() == QEvent::TouchCancel) {
+    } else if (isTouchEvent()) {
         initFromTouch(static_cast<QTouchEvent*>(ev));
     } else {
         Q_ASSERT_X(false, "", "invalid event type");
@@ -494,33 +493,46 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
 }
 
 QTouchEvent *QQuickPointerEvent::asTouchEvent() const {
-    if (!m_event)
+    if (!isTouchEvent())
         return nullptr;
-    switch (m_event->type()) {
-    case QEvent::TouchBegin:
-    case QEvent::TouchCancel:
-    case QEvent::TouchUpdate:
-    case QEvent::TouchEnd:
-        return static_cast<QTouchEvent *>(m_event);
-    default:
-        break;
-    }
-    return nullptr;
+    return static_cast<QTouchEvent *>(m_event);
 }
 
 QMouseEvent *QQuickPointerEvent::asMouseEvent() const {
-    if (!m_event)
-        return nullptr;
-    switch (m_event->type()) {
-    case QEvent::MouseMove:
-    case QEvent::MouseButtonPress:
-    case QEvent::MouseButtonRelease:
-    case QEvent::MouseButtonDblClick:
+    if (isMouseEvent())
         return static_cast<QMouseEvent *>(m_event);
-    default:
-        return nullptr;
-    }
+    return nullptr;
 }
 
+
+bool QQuickPointerEvent::isMouseEvent() const
+{
+    return m_event
+        && m_event->type() >= QEvent::MouseButtonPress
+        && m_event->type() <= QEvent::MouseMove;
+}
+
+bool QQuickPointerEvent::isTouchEvent() const
+{
+    return m_event
+        && ((m_event->type() >= QEvent::TouchBegin && m_event->type() <= QEvent::TouchEnd)
+            || m_event->type() == QEvent::TouchCancel);
+}
+
+bool QQuickPointerEvent::isTabletEvent() const
+{
+    if (!m_event)
+        return false;
+    switch (m_event->type()) {
+    case QEvent::TabletPress:
+    case QEvent::TabletRelease:
+    case QEvent::TabletMove:
+    case QEvent::TabletEnterProximity:
+    case QEvent::TabletLeaveProximity:
+        return true;
+    default:
+        return false;
+    }
+}
 
 QT_END_NAMESPACE

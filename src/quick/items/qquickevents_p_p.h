@@ -426,6 +426,10 @@ protected:
     bool isValid() const { return m_event != nullptr; }
 
 protected:
+    bool isMouseEvent() const;
+    bool isTouchEvent() const;
+    bool isTabletEvent() const;
+
     const QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
