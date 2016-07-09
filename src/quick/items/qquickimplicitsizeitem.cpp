@@ -42,6 +42,19 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \internal
+
+    The purpose of QQuickImplicitSizeItem is not immediately clear, as both
+    the implicit size properties and signals exist on QQuickItem. However,
+    for some items - where the implicit size has an underlying meaning (such as
+    Image, where the implicit size represents the real size of the image)
+    having implicit size writable is an undesirable thing.
+
+    QQuickImplicitSizeItem redefines the properties as being readonly.
+    Unfortunately, this also means they need to redefine the change signals.
+    See QTBUG-30258 for more information.
+*/
 void QQuickImplicitSizeItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickImplicitSizeItem);
