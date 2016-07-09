@@ -46,6 +46,7 @@ Item {
     property real value: 0
     property bool handleHasFocus: false
     property bool handlePressed: false
+    property bool handleHovered: false
     readonly property int initialSize: 13
     readonly property bool horizontal: control.orientation === Qt.Horizontal
     readonly property var control: parent
@@ -70,7 +71,7 @@ Item {
         y: (parent.height - height) / 2
         width: 22; height: 22
         pressed: root.handlePressed
-        active: root.handlePressed || root.handleHasFocus || control.hovered
+        active: root.handlePressed || root.handleHasFocus || root.handleHovered
         color: control.Material.checkBoxUncheckedRippleColor
     }
 }

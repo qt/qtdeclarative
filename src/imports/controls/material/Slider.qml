@@ -55,6 +55,7 @@ T.Slider {
         value: control.value
         handleHasFocus: control.visualFocus
         handlePressed: control.pressed
+        handleHovered: control.hovered
     }
 
     background: Rectangle {

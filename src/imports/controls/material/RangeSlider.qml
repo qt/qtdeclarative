@@ -57,6 +57,7 @@ T.RangeSlider {
         value: first.value
         handleHasFocus: activeFocus
         handlePressed: first.pressed
+        handleHovered: first.hovered
     }
 
     second.handle: SliderHandle {
@@ -65,6 +66,7 @@ T.RangeSlider {
         value: second.value
         handleHasFocus: activeFocus
         handlePressed: second.pressed
+        handleHovered: second.hovered
     }
 
     background: Rectangle {
