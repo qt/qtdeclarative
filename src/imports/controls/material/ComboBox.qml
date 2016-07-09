@@ -101,12 +101,14 @@ T.ComboBox {
             elevation: control.Material.elevation
         }
 
-        Rectangle {
+        Ripple {
+            clipRadius: 2
             width: parent.width
             height: parent.height
-            radius: parent.radius
-            visible: control.visualFocus
-            color: control.Material.checkBoxUncheckedRippleColor
+            pressed: control.pressed
+            anchor: control
+            active: control.pressed || control.visualFocus || control.hovered
+            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
         }
     }
 
