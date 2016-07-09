@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.1 as T
 import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.ToolButton {
     id: control
@@ -58,11 +59,21 @@ T.ToolButton {
         verticalAlignment: Text.AlignVCenter
     }
 
-    background: Rectangle {
+    background: Ripple {
         implicitWidth: 48
         implicitHeight: 48
 
-        color: control.down ? control.Material.buttonPressColor : control.Material.buttonHoverColor
-        visible: control.enabled && (control.down || control.visualFocus || control.checked || control.highlighted)
+        readonly property bool square: parent.width === parent.height
+
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        clip: !square
+        width: square ? parent.height / 2 : parent.width
+        height: square ? parent.height / 2 : parent.height
+        trigger: square ? Ripple.Press : Ripple.Release
+        pressed: control.pressed
+        anchor: control
+        active: control.enabled && (control.down || control.visualFocus || control.hovered)
+        color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
     }
 }
