@@ -102,5 +102,15 @@ T.Button {
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
+
+        Ripple {
+            clipRadius: 2
+            width: parent.width
+            height: parent.height
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+        }
     }
 }
