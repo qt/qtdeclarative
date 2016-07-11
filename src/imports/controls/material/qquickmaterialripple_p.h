@@ -63,6 +63,7 @@ class QQuickMaterialRipple : public QQuickItem
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive FINAL)
     Q_PROPERTY(QQuickItem *anchor READ anchor WRITE setAnchor FINAL)
+    Q_PROPERTY(Trigger trigger READ trigger WRITE setTrigger FINAL)
 
 public:
     QQuickMaterialRipple(QQuickItem *parent = nullptr);
@@ -78,6 +79,12 @@ public:
 
     bool isPressed() const;
     void setPressed(bool pressed);
+
+    enum Trigger { Press, Release };
+    Q_ENUM (Trigger)
+
+    Trigger trigger() const;
+    void setTrigger(Trigger trigger);
 
     QPointF anchorPoint() const;
 
@@ -97,6 +104,7 @@ private:
     bool m_active;
     bool m_pressed;
     int m_enterDelay;
+    Trigger m_trigger;
     qreal m_clipRadius;
     QColor m_color;
     QQuickItem *m_anchor;

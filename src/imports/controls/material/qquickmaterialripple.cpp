@@ -202,7 +202,7 @@ QQuickAnimatorJob *QQuickMaterialRippleAnimator::createJob() const
 }
 
 QQuickMaterialRipple::QQuickMaterialRipple(QQuickItem *parent)
-    : QQuickItem(parent), m_active(false), m_pressed(false), m_enterDelay(0), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
+    : QQuickItem(parent), m_active(false), m_pressed(false), m_enterDelay(0), m_trigger(Press), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
 {
     setOpacity(0.0);
     setFlag(ItemHasContents);
@@ -275,10 +275,27 @@ void QQuickMaterialRipple::setPressed(bool pressed)
 
     m_pressed = pressed;
 
-    if (pressed)
-        prepareWave();
-    else
-        exitWave();
+    if (pressed) {
+        if (m_trigger == Press)
+            prepareWave();
+        else
+            exitWave();
+    } else {
+        if (m_trigger == Release)
+            enterWave();
+        else
+            exitWave();
+    }
+}
+
+QQuickMaterialRipple::Trigger QQuickMaterialRipple::trigger() const
+{
+    return m_trigger;
+}
+
+void QQuickMaterialRipple::setTrigger(Trigger trigger)
+{
+    m_trigger = trigger;
 }
 
 QPointF QQuickMaterialRipple::anchorPoint() const
