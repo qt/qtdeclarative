@@ -72,6 +72,12 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-control.png
 
+    All controls, except non-interactive indicators, do not let clicks and
+    touches through to items below them. For example, if \l Pane is used as the
+    \l {ApplicationWindow::}{header} or \l {ApplicationWindow::}{footer} of
+    \l ApplicationWindow, items underneath it will not get mouse or touch
+    events.
+
     \sa ApplicationWindow, Container
 */
 
