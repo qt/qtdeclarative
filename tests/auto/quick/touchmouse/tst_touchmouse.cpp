@@ -250,7 +250,6 @@ void tst_TouchMouse::simpleTouchEvent()
     QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
     QPoint localPos = eventItem1->mapFromScene(p1).toPoint();
