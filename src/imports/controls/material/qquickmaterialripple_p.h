@@ -87,13 +87,16 @@ public:
 protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
+    void timerEvent(QTimerEvent *event) override;
 
+    void prepareWave();
     void enterWave();
     void exitWave();
 
 private:
     bool m_active;
     bool m_pressed;
+    int m_enterDelay;
     qreal m_clipRadius;
     QColor m_color;
     QQuickItem *m_anchor;

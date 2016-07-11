@@ -97,7 +97,7 @@ void QQuickMaterialRippleAnimatorJob::initialize(QQuickAnimatorController *contr
 
 void QQuickMaterialRippleAnimatorJob::updateCurrentTime(int time)
 {
-    if (!m_itemNode || !m_rectNode || (m_phase == WaveEnter && time < RIPPLE_ENTER_DELAY))
+    if (!m_itemNode || !m_rectNode)
         return;
 
     qreal duration = 0;
@@ -202,7 +202,7 @@ QQuickAnimatorJob *QQuickMaterialRippleAnimator::createJob() const
 }
 
 QQuickMaterialRipple::QQuickMaterialRipple(QQuickItem *parent)
-    : QQuickItem(parent), m_active(false), m_pressed(false), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
+    : QQuickItem(parent), m_active(false), m_pressed(false), m_enterDelay(0), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
 {
     setOpacity(0.0);
     setFlag(ItemHasContents);
@@ -276,7 +276,7 @@ void QQuickMaterialRipple::setPressed(bool pressed)
     m_pressed = pressed;
 
     if (pressed)
-        enterWave();
+        prepareWave();
     else
         exitWave();
 }
@@ -375,8 +375,27 @@ QSGNode *QQuickMaterialRipple::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     return transformNode;
 }
 
+void QQuickMaterialRipple::timerEvent(QTimerEvent *event)
+{
+    QQuickItem::timerEvent(event);
+
+    if (event->timerId() == m_enterDelay)
+        enterWave();
+}
+
+void QQuickMaterialRipple::prepareWave()
+{
+    if (m_enterDelay <= 0)
+        m_enterDelay = startTimer(RIPPLE_ENTER_DELAY);
+}
+
 void QQuickMaterialRipple::enterWave()
 {
+    if (m_enterDelay > 0) {
+        killTimer(m_enterDelay);
+        m_enterDelay = 0;
+    }
+
     const qreal w = width();
     const qreal h = height();
     const qreal sz = qSqrt(w * w + h * h);
@@ -389,7 +408,7 @@ void QQuickMaterialRipple::enterWave()
     wave->setOpacity(0.0);
 
     QQuickMaterialRippleAnimator *animator = new QQuickMaterialRippleAnimator(anchorPoint(), boundingRect(), wave);
-    animator->setDuration(qRound(RIPPLE_ENTER_DELAY + 1000.0 * qSqrt(sz / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
+    animator->setDuration(qRound(1000.0 * qSqrt(sz / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
     animator->setTargetItem(wave);
     animator->setTo(sz);
     animator->start();
@@ -398,6 +417,11 @@ void QQuickMaterialRipple::enterWave()
 
 void QQuickMaterialRipple::exitWave()
 {
+    if (m_enterDelay > 0) {
+        killTimer(m_enterDelay);
+        m_enterDelay = 0;
+    }
+
     for (QQuickMaterialRippleAnimator *animator : m_rippleAnimators) {
         if (animator->phase() == WaveEnter) {
             animator->stop(); // -> writeBack() -> setSize()
