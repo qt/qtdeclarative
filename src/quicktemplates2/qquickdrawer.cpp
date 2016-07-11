@@ -244,10 +244,12 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
         // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
         int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         bool overThreshold = false;
-        if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
-        else
-            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
+        if (position > 0 || dragMargin > 0) {
+            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+                overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
+            else
+                overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
+        }
 
         // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
         if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
