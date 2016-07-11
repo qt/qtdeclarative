@@ -398,26 +398,16 @@ public:
       , m_pointCount(0)
       , m_mousePoint(nullptr) { }
 
-    /** Reset the current event to \a ev.
-     *
-     * ev must be a touch, mouse or tablet event.
-     */
-    QQuickPointerEvent *reset(QEvent *ev);
-
+public: // property accessors
     const QQuickPointerDevice *device() const { return m_device; }
     Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
 
-    // ----------------------------------------------------
-    // helpers for C++ event delivery, not for QML properties
+public: // helpers for C++ only (during event delivery)
+    QQuickPointerEvent *reset(QEvent *ev);
 
-    /** Returns the original touch event. */
     QTouchEvent *asTouchEvent() const;
-
-    /** Returns the original mouse event.
-     *
-     * Returns nullptr in case the original event was not a mouse event. */
     QMouseEvent *asMouseEvent() const;
 
     bool isMouseEvent() const;
@@ -426,21 +416,17 @@ public:
     bool isValid() const { return m_event != nullptr; }
 
     int pointCount() const { return m_pointCount; }
-    const QQuickEventPoint *point(int i) const {
-        if (Q_UNLIKELY(i < 0 || i >= m_pointCount))
-            return nullptr;
-        if (isTouchEvent())
-            return m_touchPoints.at(i);
-        if (isMouseEvent())
-            return m_mousePoint;
-        return nullptr;
-    }
+    const QQuickEventPoint *point(int i) const;
 
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
 
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
 
-protected:
+private:
+    void initFromMouse(QMouseEvent *ev);
+    void initFromTouch(QTouchEvent *ev);
+
+private:
     const QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
@@ -448,10 +434,6 @@ protected:
     int m_pointCount;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     QQuickEventPoint *m_mousePoint;
-
-private:
-    void initFromMouse(QMouseEvent *ev);
-    void initFromTouch(QTouchEvent *ev);
 
     Q_DISABLE_COPY(QQuickPointerEvent)
 };

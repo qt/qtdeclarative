@@ -439,7 +439,24 @@ Item {
     \l inverted always returns false.
 */
 
+/*!
+    \internal
+    \class QQuickPointerEvent
 
+    QQuickPointerEvent is used as a long-lived object to store data related to
+    an event from a pointing device, such as a mouse, touch or tablet event,
+    during event delivery. It also provides properties which may be used later
+    to expose the event to QML, the same as is done with QQuickMouseEvent,
+    QQuickTouchPoint, QQuickKeyEvent, etc. Since only one event can be
+    delivered at a time, this class is effectively a singleton.  We don't worry
+    about the QObject overhead because we never dynamically create and destroy
+    objects of this type.
+*/
+
+/*!
+    \internal
+    Reset the current event to \a ev, which must be a touch, mouse or tablet event.
+*/
 QQuickPointerEvent *QQuickPointerEvent::reset(QEvent *ev) {
     m_event = static_cast<QInputEvent*>(ev);
     if (isMouseEvent()) {
@@ -495,18 +512,25 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
         m_touchPoints.at(i)->reset(tps.at(i));
 }
 
+/*!
+    \internal
+    Returns the original touch event, or nullptr if it was not a touch event.
+*/
 QTouchEvent *QQuickPointerEvent::asTouchEvent() const {
     if (!isTouchEvent())
         return nullptr;
     return static_cast<QTouchEvent *>(m_event);
 }
 
+/*!
+    \internal
+    Returns the original mouse event, or nullptr if it was not a mouse event.
+*/
 QMouseEvent *QQuickPointerEvent::asMouseEvent() const {
     if (isMouseEvent())
         return static_cast<QMouseEvent *>(m_event);
     return nullptr;
 }
-
 
 bool QQuickPointerEvent::isMouseEvent() const
 {
@@ -538,10 +562,36 @@ bool QQuickPointerEvent::isTabletEvent() const
     }
 }
 
-/*
-   \internal
+const QQuickEventPoint *QQuickPointerEvent::point(int i) const {
+    if (Q_UNLIKELY(i < 0 || i >= m_pointCount))
+        return nullptr;
+    if (isTouchEvent())
+        return m_touchPoints.at(i);
+    if (isMouseEvent())
+        return m_mousePoint;
+    return nullptr;
+}
 
-   make a new QTouchEvent, giving it a subset of the original touch points
+/*!
+    \internal
+    Returns a pointer to the original TouchPoint which has the same
+    \l {QTouchEvent::TouchPoint::id}{id} as \a pointId, if the original event is a
+    QTouchEvent, and if that point is found. Otherwise, returns nullptr.
+*/
+const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) const {
+    const QTouchEvent *ev = asTouchEvent();
+    if (!ev)
+        return nullptr;
+    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
+    auto it = std::find_if(tps.constBegin(), tps.constEnd(),
+        [&pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
+    // return the pointer to the actual TP in QTouchEvent::_touchPoints
+    return (it == tps.end() ? nullptr : it.operator->());
+}
+
+/*!
+    \internal
+    Make a new QTouchEvent, giving it a subset of the original touch points.
 */
 QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const
 {
@@ -590,17 +640,6 @@ QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEvent
     touchEvent->setTimestamp(event.timestamp());
     touchEvent->accept();
     return touchEvent;
-}
-
-const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) const {
-    const QTouchEvent *ev = asTouchEvent();
-    if (!ev)
-        return nullptr;
-    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
-    auto it = std::find_if(tps.constBegin(), tps.constEnd(),
-        [&pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
-    // return the pointer to the actual TP in QTouchEvent::_touchPoints
-    return (it == tps.end() ? nullptr : it.operator->());
 }
 
 QT_END_NAMESPACE
