@@ -395,6 +395,7 @@ public:
       , m_event(nullptr)
       , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
+      , m_pointCount(0)
       , m_mousePoint(nullptr) { }
 
     /** Reset the current event to \a ev.
@@ -424,11 +425,15 @@ public:
     bool isTabletEvent() const;
     bool isValid() const { return m_event != nullptr; }
 
-    int pointCount() const { return isTouchEvent() ? m_touchPoints.count() : 1; }
+    int pointCount() const { return m_pointCount; }
     const QQuickEventPoint *point(int i) const {
+        if (Q_UNLIKELY(i < 0 || i >= m_pointCount))
+            return nullptr;
         if (isTouchEvent())
             return m_touchPoints.at(i);
-        return i == 0 ? m_mousePoint : nullptr;
+        if (isMouseEvent())
+            return m_mousePoint;
+        return nullptr;
     }
 
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
@@ -440,6 +445,7 @@ protected:
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
     Qt::MouseButtons m_pressedButtons;
+    int m_pointCount;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     QQuickEventPoint *m_mousePoint;
 

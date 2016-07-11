@@ -475,6 +475,7 @@ void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
 
     if (!m_mousePoint)
         m_mousePoint = new QQuickEventPoint;
+    m_pointCount = 1;
     m_mousePoint->reset(state, ev->windowPos(), 0);  // mouse is 0
 }
 
@@ -485,11 +486,12 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
     m_pressedButtons = Qt::NoButton;
 
     const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
-    const int pointCount = tps.count();
-    while (pointCount > m_touchPoints.count())
-        m_touchPoints.append(new QQuickEventTouchPoint);
+    m_pointCount = tps.count();
+    m_touchPoints.reserve(m_pointCount);
+    for (int i = m_touchPoints.size(); i < m_pointCount; ++i)
+        m_touchPoints.insert(i, new QQuickEventTouchPoint);
 
-    for (int i = 0; i < pointCount; ++i)
+    for (int i = 0; i < m_pointCount; ++i)
         m_touchPoints.at(i)->reset(tps.at(i));
 }
 
