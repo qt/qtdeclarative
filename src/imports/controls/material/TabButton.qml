@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.1 as T
 import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.TabButton {
     id: control
@@ -58,7 +59,14 @@ T.TabButton {
         verticalAlignment: Text.AlignVCenter
     }
 
-    background: Item {
+    background: Ripple {
         implicitHeight: 48
+
+        clip: true
+        trigger: Ripple.Release
+        pressed: control.pressed
+        anchor: control
+        active: control.down || control.visualFocus || control.hovered
+        color: control.Material.checkBoxUncheckedRippleColor
     }
 }
