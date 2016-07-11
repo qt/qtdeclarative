@@ -910,4 +910,33 @@ TestCase {
 
         control.destroy();
     }
+
+    Component {
+        id: closeSwipeDelegateComponent
+
+        SwipeDelegate {
+            text: "SwipeDelegate"
+            width: 150
+
+            onClicked: close()
+
+            swipe.right: Item {
+                width: parent.width
+                height: parent.height
+            }
+        }
+    }
+
+    function test_close() {
+        var control = swipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        swipe(control, 0.0, -1.0);
+        compare(control.swipe.rightItem.visible, true);
+        // Should animate, so it shouldn't change right away.
+        compare(control.swipe.rightItem.x, 0);
+        tryCompare(control.swipe.rightItem, "x", control.background.x + control.background.width);
+
+        control.destroy();
+    }
 }

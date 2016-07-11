@@ -522,6 +522,12 @@ void QQuickSwipe::setComplete(bool complete)
     emit completeChanged();
 }
 
+void QQuickSwipe::close()
+{
+    setPosition(0);
+    setComplete(false);
+}
+
 class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwipeDelegate)
@@ -711,10 +717,11 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.leftItem
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.behindItem
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.rightItem
+    \qmlmethod void QtQuick.Controls::SwipeDelegate::swipe.close()
 
     \table
     \header
-        \li Property
+        \li Property/Method
         \li Description
     \row
         \li position
@@ -770,6 +777,13 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
             If \c right has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.
+    \row
+        \li close()
+        \li This method sets the \c position of the swipe to \c 0. Any animations
+            defined for the \l {Item::}{x} position of \l {Control::}{contentItem}
+            and \l {Control::}{background} will be triggered.
+
+            This method was added in QtQuick.Controls 2.1.
     \endtable
 
     \sa {Control::}{contentItem}, {Control::}{background}

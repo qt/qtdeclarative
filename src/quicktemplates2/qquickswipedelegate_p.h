@@ -123,6 +123,8 @@ public:
     QQuickItem *rightItem() const;
     void setRightItem(QQuickItem *item);
 
+    Q_REVISION(1) Q_INVOKABLE void close();
+
 Q_SIGNALS:
     void positionChanged();
     void completeChanged();
