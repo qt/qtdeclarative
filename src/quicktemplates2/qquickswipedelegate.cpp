@@ -736,6 +736,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             The left delegate sits behind both \l {Control::}{contentItem} and
             \l {Control::}{background}. When the SwipeDelegate is swiped to the right,
             this item will be gradually revealed.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li behind
         \li This property holds the delegate that is shown when the
@@ -745,6 +747,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             \l {Control::}{contentItem} and \l {Control::}{background}. However, a
             SwipeDelegate whose \c behind has been set can be continuously swiped
             from either side, and will always show the same item.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li right
         \li This property holds the right delegate.
@@ -752,6 +756,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             The right delegate sits behind both \l {Control::}{contentItem} and
             \l {Control::}{background}. When the SwipeDelegate is swiped to the left,
             this item will be gradually revealed.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li leftItem
         \li This property holds the item instantiated from the \c left component.
