@@ -1395,8 +1395,10 @@ bool QQuickWidget::event(QEvent *e)
                 d->offscreenWindow->setScreen(newScreen);
             if (d->offscreenSurface)
                 d->offscreenSurface->setScreen(newScreen);
+#ifndef QT_NO_OPENGL
             if (d->context)
                 d->context->setScreen(newScreen);
+#endif
         }
 
         if (d->useSoftwareRenderer
