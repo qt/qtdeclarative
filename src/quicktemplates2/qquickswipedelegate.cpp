@@ -92,6 +92,13 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing SwipeDelegate}, {Delegate Controls}
 */
 
+namespace {
+    enum PositionAnimation {
+        DontAnimatePosition,
+        AnimatePosition
+    };
+}
+
 class QQuickSwipePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwipe)
@@ -117,6 +124,7 @@ public:
     QQuickItem *createDelegateItem(QQmlComponent *component);
     QQuickItem *showRelevantItemForPosition(qreal position);
     QQuickItem *createRelevantItemForDistance(qreal distance);
+    void reposition(PositionAnimation animationPolicy);
     void createLeftItem();
     void createBehindItem();
     void createRightItem();
@@ -232,6 +240,27 @@ QQuickItem *QQuickSwipePrivate::createRelevantItemForDistance(qreal distance)
     }
 
     return nullptr;
+}
+
+void QQuickSwipePrivate::reposition(PositionAnimation animationPolicy)
+{
+    QQuickItem *relevantItem = showRelevantItemForPosition(position);
+    const qreal relevantWidth = relevantItem ? relevantItem->width() : 0.0;
+    const qreal contentItemX = position * relevantWidth + control->leftPadding();
+
+    // "Behavior on x" relies on the property system to know when it should update,
+    // so we can prevent it from animating by setting the x position directly.
+    if (animationPolicy == AnimatePosition) {
+        if (QQuickItem *contentItem = control->contentItem())
+            contentItem->setProperty("x", contentItemX);
+        if (QQuickItem *background = control->background())
+            background->setProperty("x", position * relevantWidth);
+    } else {
+        if (QQuickItem *contentItem = control->contentItem())
+            contentItem->setX(contentItemX);
+        if (QQuickItem *background = control->background())
+            background->setX(position * relevantWidth);
+    }
 }
 
 void QQuickSwipePrivate::createLeftItem()
@@ -496,13 +525,7 @@ void QQuickSwipe::setPosition(qreal position)
         return;
 
     d->position = adjustedPosition;
-
-    QQuickItem *relevantItem = d->showRelevantItemForPosition(d->position);
-    const qreal relevantWidth = relevantItem ? relevantItem->width() : 0.0;
-    d->control->contentItem()->setProperty("x", d->position * relevantWidth + d->control->leftPadding());
-    if (QQuickItem *background = d->control->background())
-        background->setProperty("x", d->position * relevantWidth);
-
+    d->reposition(AnimatePosition);
     emit positionChanged();
 }
 
@@ -843,6 +866,17 @@ void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickSwipeDelegate);
     QQuickItemDelegate::mouseReleaseEvent(event);
     d->handleMouseReleaseEvent(this, event);
+}
+
+void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickSwipeDelegate);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+
+    if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
+        QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
+        swipePrivate->reposition(DontAnimatePosition);
+    }
 }
 
 QFont QQuickSwipeDelegate::defaultFont() const

@@ -910,4 +910,22 @@ TestCase {
 
         control.destroy();
     }
+
+    // When the width of a SwipeDelegate changes (as it does upon portrait => landscape
+    // rotation, for example), the positions of the contentItem and background items
+    // should be updated accordingly.
+    function test_contentItemPosOnWidthChanged() {
+        var control = swipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        swipe(control, 0.0, 1.0);
+
+        var oldContentItemX = control.contentItem.x;
+        var oldBackgroundX = control.background.x;
+        control.width += 100;
+        compare(control.contentItem.x, oldContentItemX + 100);
+        compare(control.background.x, oldBackgroundX + 100);
+
+        control.destroy();
+    }
 }
