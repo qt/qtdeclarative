@@ -378,6 +378,8 @@ private:
     QPointerUniqueId m_uniqueId;
 };
 
+class QQuickItem;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
 {
     Q_OBJECT
@@ -406,6 +408,9 @@ public:
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
 
+    // ----------------------------------------------------
+    // helpers for C++ event delivery, not for QML properties
+
     /** Returns the original touch event. */
     QTouchEvent *asTouchEvent() const;
 
@@ -414,13 +419,16 @@ public:
      * Returns nullptr in case the original event was not a mouse event. */
     QMouseEvent *asMouseEvent() const;
 
-    // helpers for C++ event delivery, not for QML properties
     int pointCount() const { return asTouchEvent() ? m_touchPoints.count() : 1; }
     const QQuickEventPoint *point(int i) const {
         if (asTouchEvent())
             return m_touchPoints.at(i);
         return i == 0 ? m_mousePoint : nullptr;
     }
+
+    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
+
+    QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
 
 protected:
     bool isValid() const { return m_event != nullptr; }

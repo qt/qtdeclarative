@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickevents_p_p.h"
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -533,6 +534,71 @@ bool QQuickPointerEvent::isTabletEvent() const
     default:
         return false;
     }
+}
+
+/*
+   \internal
+
+   make a new QTouchEvent, giving it a subset of the original touch points
+*/
+QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const
+{
+    QList<QTouchEvent::TouchPoint> touchPoints;
+    Qt::TouchPointStates eventStates;
+    // TODO maybe add QQuickItem::mapVector2DFromScene(QVector2D) to avoid needing QQuickItemPrivate here
+    // Or else just document that velocity is always scene-relative and is not scaled and rotated with the item
+    // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
+    QMatrix4x4 transformMatrix(QQuickItemPrivate::get(relativeTo)->windowToItemTransform());
+    for (const QQuickEventPoint * p : newPoints) {
+        const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
+        if (tp) {
+            eventStates |= tp->state();
+            QTouchEvent::TouchPoint tpCopy = *tp;
+            tpCopy.setPos(relativeTo->mapFromScene(tpCopy.scenePos()));
+            tpCopy.setLastPos(relativeTo->mapFromScene(tpCopy.lastPos()));
+            tpCopy.setStartPos(relativeTo->mapFromScene(tpCopy.startScenePos()));
+            tpCopy.setRect(relativeTo->mapRectFromScene(tpCopy.sceneRect()));
+            tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
+            touchPoints << tpCopy;
+        }
+    }
+
+    // if all points have the same state, set the event type accordingly
+    const QTouchEvent &event = *asTouchEvent();
+    QEvent::Type eventType = event.type();
+    switch (eventStates) {
+    case Qt::TouchPointPressed:
+        eventType = QEvent::TouchBegin;
+        break;
+    case Qt::TouchPointReleased:
+        eventType = QEvent::TouchEnd;
+        break;
+    default:
+        eventType = QEvent::TouchUpdate;
+        break;
+    }
+
+    QTouchEvent *touchEvent = new QTouchEvent(eventType);
+    touchEvent->setWindow(event.window());
+    touchEvent->setTarget(relativeTo);
+    touchEvent->setDevice(event.device());
+    touchEvent->setModifiers(event.modifiers());
+    touchEvent->setTouchPoints(touchPoints);
+    touchEvent->setTouchPointStates(eventStates);
+    touchEvent->setTimestamp(event.timestamp());
+    touchEvent->accept();
+    return touchEvent;
+}
+
+const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) const {
+    const QTouchEvent *ev = asTouchEvent();
+    if (!ev)
+        return nullptr;
+    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
+    auto it = std::find_if(tps.constBegin(), tps.constEnd(),
+        [&pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
+    // return the pointer to the actual TP in QTouchEvent::_touchPoints
+    return (it == tps.end() ? nullptr : it.operator->());
 }
 
 QT_END_NAMESPACE
