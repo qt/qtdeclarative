@@ -2118,8 +2118,8 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
 
     if (QMouseEvent *mouse = event->asMouseEvent()) {
         deliverMouseEvent(mouse);
-    } else if (QTouchEvent *touch = event->asTouchEvent()) {
-        deliverTouchEvent(touch);
+    } else if (event->asTouchEvent()) {
+        deliverTouchEvent(event);
     } else {
         Q_ASSERT(false);
     }
@@ -2127,8 +2127,9 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     --pointerEventRecursionGuard;
 }
 
-void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
+void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *pointerEvent)
 {
+    QTouchEvent *event = pointerEvent->asTouchEvent();
     qCDebug(DBG_TOUCH) << " - delivering" << event;
 
     // List of all items that received an event before

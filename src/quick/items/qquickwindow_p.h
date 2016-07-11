@@ -163,7 +163,7 @@ public:
     void handleTouchEvent(QTouchEvent *);
     void handleMouseEvent(QMouseEvent *);
     void deliverPointerEvent(QQuickPointerEvent *);
-    void deliverTouchEvent(QTouchEvent *);
+    void deliverTouchEvent(QQuickPointerEvent *);
     bool compressTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
     void deliverDelayedTouchEvent();
