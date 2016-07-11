@@ -1652,7 +1652,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     lastMousePosition = event->windowPos();
 
     if (!mouseGrabberItem &&
-         event->type() == QEvent::MouseButtonPress &&
+         (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
          (event->buttons() & event->button()) == event->buttons()) {
         if (deliverInitialMousePressEvent(contentItem, event))
             event->accept();
@@ -2050,15 +2050,6 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
                               event->button(), event->buttons());
-
-        if (!mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
-            if (deliverInitialMousePressEvent(contentItem, event))
-                event->accept();
-            else
-                event->ignore();
-            return;
-        }
-
         deliverPointerEvent(currentPointerEvent.reset(event));
         break;
     case QEvent::MouseMove:
