@@ -1092,9 +1092,8 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        static const double magic = double(INT_MAX) + 1;
-        move(TrustedImmPtr(&magic), scratchReg);
-        subDouble(Address(scratchReg, 0), FPGpr0);
+        Address inversionAddress = constantTable().loadValueAddress(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
+        subDouble(inversionAddress, FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
         or32(TrustedImm32(1 << 31), scratchReg);
