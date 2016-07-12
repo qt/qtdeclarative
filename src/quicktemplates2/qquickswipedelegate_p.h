@@ -128,6 +128,7 @@ public:
 Q_SIGNALS:
     void positionChanged();
     void completeChanged();
+    Q_REVISION(1) void completed();
     void leftChanged();
     void behindChanged();
     void rightChanged();

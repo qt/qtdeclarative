@@ -520,6 +520,8 @@ void QQuickSwipe::setComplete(bool complete)
 
     d->complete = complete;
     emit completeChanged();
+    if (d->complete)
+        emit completed();
 }
 
 void QQuickSwipe::close()
@@ -721,7 +723,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
     \table
     \header
-        \li Property/Method
+        \li Name
         \li Description
     \row
         \li position
@@ -784,6 +786,15 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             and \l {Control::}{background} will be triggered.
 
             This method was added in QtQuick.Controls 2.1.
+    \row
+        \li completed()
+        \li This signal is emitted when \c complete becomes \c true.
+
+            It is useful for performing some action upon completion of a swipe.
+            For example, it can be used to remove the delegate from the list
+            that it is in.
+
+            This signal was added in QtQuick.Controls 2.1.
     \endtable
 
     \sa {Control::}{contentItem}, {Control::}{background}
