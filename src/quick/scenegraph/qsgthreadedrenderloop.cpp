@@ -593,7 +593,7 @@ void QSGRenderThread::syncAndRender()
 #endif
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
-    if (!syncResultedInChanges && !repaintRequested) {
+    if (!syncResultedInChanges && !repaintRequested && sgrc->isValid()) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- no changes, render aborted";
         int waitTime = vsyncDelta - (int) waitTimer.elapsed();
         if (waitTime > 0)
