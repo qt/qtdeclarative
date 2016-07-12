@@ -26,7 +26,8 @@ SOURCES += \
     $$PWD/qsgd3d12layer.cpp \
     $$PWD/qsgd3d12shadereffectnode.cpp \
     $$PWD/qsgd3d12painternode.cpp \
-    $$PWD/qsgd3d12publicnodes.cpp
+    $$PWD/qsgd3d12publicnodes.cpp \
+    $$PWD/qsgd3d12spritenode.cpp
 
 NO_PCH_SOURCES += \
     $$PWD/qsgd3d12engine.cpp
@@ -50,7 +51,8 @@ HEADERS += \
     $$PWD/qsgd3d12layer_p.h \
     $$PWD/qsgd3d12shadereffectnode_p.h \
     $$PWD/qsgd3d12painternode_p.h \
-    $$PWD/qsgd3d12publicnodes_p.h
+    $$PWD/qsgd3d12publicnodes_p.h \
+    $$PWD/qsgd3d12spritenode_p.h
 
 LIBS += -ldxgi -ld3d12 -ld3dcompiler
 

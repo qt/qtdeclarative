@@ -117,8 +117,7 @@ QSGRenderer *QSGD3D12RenderContext::createRenderer()
 
 int QSGD3D12RenderContext::maxTextureSize() const
 {
-    // XXX: Do it the correct way
-    return 4096;
+    return 16384; // D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION
 }
 
 void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)

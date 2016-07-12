@@ -46,6 +46,7 @@
 #include "qsgd3d12shadereffectnode_p.h"
 #include "qsgd3d12painternode_p.h"
 #include "qsgd3d12publicnodes_p.h"
+#include "qsgd3d12spritenode_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -129,7 +130,7 @@ QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
 
 QSGSpriteNode *QSGD3D12Context::createSpriteNode()
 {
-    return nullptr;
+    return new QSGD3D12SpriteNode;
 }
 
 QT_END_NAMESPACE
