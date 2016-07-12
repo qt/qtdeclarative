@@ -62,6 +62,7 @@
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qjson_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qqmltypenamecache_p.h>
 #include <private/qqmlpropertycache_p.h>
@@ -90,6 +91,12 @@ struct Function;
 
 namespace CompiledData {
 
+typedef QJsonPrivate::q_littleendian<qint16> LEInt16;
+typedef QJsonPrivate::q_littleendian<quint16> LEUInt16;
+typedef QJsonPrivate::q_littleendian<quint32> LEUInt32;
+typedef QJsonPrivate::q_littleendian<qint32> LEInt32;
+typedef QJsonPrivate::q_littleendian<quint64> LEUInt64;
+
 struct String;
 struct Function;
 struct Lookup;
@@ -115,10 +122,12 @@ struct TableIterator
 
 struct Location
 {
-    quint32 line : 20;
-    quint32 column : 12;
+    union {
+        QJsonPrivate::qle_bitfield<0, 20> line;
+        QJsonPrivate::qle_bitfield<20, 12> column;
+    };
 
-    Location(): line(0), column(0) {}
+    Location() { line = 0; column = 0; }
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
@@ -128,20 +137,22 @@ struct Location
 
 struct RegExp
 {
-    enum Flags {
+    enum Flags : unsigned int {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
         RegExp_Multiline  = 0x04
     };
-    quint32 flags : 4;
-    quint32 stringIndex : 28;
+    union {
+        QJsonPrivate::qle_bitfield<0, 4> flags;
+        QJsonPrivate::qle_bitfield<4, 28> stringIndex;
+    };
 
     static int calculateSize() { return sizeof(RegExp); }
 };
 
 struct Lookup
 {
-    enum Type {
+    enum Type : unsigned int {
         Type_Getter = 0x0,
         Type_Setter = 0x1,
         Type_GlobalGetter = 2,
@@ -149,21 +160,29 @@ struct Lookup
         Type_IndexedSetter = 4
     };
 
-    quint32 type_and_flags : 4;
-    quint32 nameIndex : 28;
+    union {
+        QJsonPrivate::qle_bitfield<0, 4> type_and_flags;
+        QJsonPrivate::qle_bitfield<4, 28> nameIndex;
+    };
+
+    Lookup() { type_and_flags = 0; nameIndex = 0; }
 
     static int calculateSize() { return sizeof(Lookup); }
 };
 
 struct JSClassMember
 {
-    quint32 nameOffset : 31;
-    quint32 isAccessor : 1;
+    union {
+        QJsonPrivate::qle_bitfield<0, 31> nameOffset;
+        QJsonPrivate::qle_bitfield<31, 1> isAccessor;
+    };
+
+    JSClassMember() { nameOffset = 0; isAccessor = 0; }
 };
 
 struct JSClass
 {
-    uint nMembers;
+    LEUInt32 nMembers;
     // JSClassMember[nMembers]
 
     static int calculateSize(int nMembers) { return (sizeof(JSClass) + nMembers * sizeof(JSClassMember) + 7) & ~7; }
@@ -171,7 +190,7 @@ struct JSClass
 
 struct String
 {
-    qint32 size;
+    LEInt32 size;
     // uint16 strdata[]
 
     static int calculateSize(const QString &str) {
@@ -181,7 +200,7 @@ struct String
 
 struct Function
 {
-    enum Flags {
+    enum Flags : unsigned int {
         HasDirectEval       = 0x1,
         UsesArgumentsObject = 0x2,
         IsStrict            = 0x4,
@@ -190,43 +209,43 @@ struct Function
     };
 
     quint8 flags;
-    quint32 nameIndex;
-    quint32 nFormals;
-    quint32 formalsOffset;
-    quint32 nLocals;
-    quint32 localsOffset;
-    quint32 nInnerFunctions;
-    quint32 innerFunctionsOffset;
+    LEUInt32 nameIndex;
+    LEUInt32 nFormals;
+    LEUInt32 formalsOffset;
+    LEUInt32 nLocals;
+    LEUInt32 localsOffset;
+    LEUInt32 nInnerFunctions;
+    LEUInt32 innerFunctionsOffset;
     Location location;
 
     // Qml Extensions Begin
-    quint32 nDependingIdObjects;
-    quint32 dependingIdObjectsOffset; // Array of resolved ID objects
-    quint32 nDependingContextProperties;
-    quint32 dependingContextPropertiesOffset; // Array of int pairs (property index and notify index)
-    quint32 nDependingScopeProperties;
-    quint32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
+    LEUInt32 nDependingIdObjects;
+    LEUInt32 dependingIdObjectsOffset; // Array of resolved ID objects
+    LEUInt32 nDependingContextProperties;
+    LEUInt32 dependingContextPropertiesOffset; // Array of int pairs (property index and notify index)
+    LEUInt32 nDependingScopeProperties;
+    LEUInt32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
     // Qml Extensions End
 
     // Absolute offset into file where the code for this function is located. Only used when the function
     // is serialized.
-    quint64 codeOffset;
-    quint64 codeSize;
+    LEUInt64 codeOffset;
+    LEUInt64 codeSize;
 
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
 //    Function[nInnerFunctions]
 
-    const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
-    const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
-    const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
-    const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
-    const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
+    const LEUInt32 *formalsTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
+    const LEUInt32 *localsTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
+    const LEUInt32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
+    const LEUInt32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
+    const LEUInt32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
 
     // --- QQmlPropertyCacheCreator interface
-    const quint32 *formalsBegin() const { return formalsTable(); }
-    const quint32 *formalsEnd() const { return formalsTable() + nFormals; }
+    const LEUInt32 *formalsBegin() const { return formalsTable(); }
+    const LEUInt32 *formalsEnd() const { return formalsTable() + nFormals; }
     // ---
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
@@ -239,15 +258,15 @@ struct Function
 // Qml data structures
 
 struct Q_QML_EXPORT TranslationData {
-    quint32 commentIndex;
-    int number;
+    LEUInt32 commentIndex;
+    LEInt32 number;
 };
 
 struct Q_QML_PRIVATE_EXPORT Binding
 {
-    quint32 propertyNameIndex;
+    LEUInt32 propertyNameIndex;
 
-    enum ValueType {
+    enum ValueType : unsigned int {
         Type_Invalid,
         Type_Boolean,
         Type_Number,
@@ -260,7 +279,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
         Type_GroupProperty
     };
 
-    enum Flags {
+    enum Flags : unsigned int {
         IsSignalHandlerExpression = 0x1,
         IsSignalHandlerObject = 0x2,
         IsOnAssignment = 0x4,
@@ -272,16 +291,18 @@ struct Q_QML_PRIVATE_EXPORT Binding
         IsCustomParserBinding = 0x100,
     };
 
-    quint32 flags : 16;
-    quint32 type : 16;
+    union {
+        QJsonPrivate::qle_bitfield<0, 16> flags;
+        QJsonPrivate::qle_bitfield<16, 16> type;
+    };
     union {
         bool b;
-        double d;
-        quint32 compiledScriptIndex; // used when Type_Script
-        quint32 objectIndex;
+        quint64 doubleValue; // do not access directly, needs endian protected access
+        LEUInt32 compiledScriptIndex; // used when Type_Script
+        LEUInt32 objectIndex;
         TranslationData translationData; // used when Type_Translation
     } value;
-    quint32 stringIndex; // Set for Type_String, Type_Translation and Type_Script (the latter because of script strings)
+    LEUInt32 stringIndex; // Set for Type_String, Type_Translation and Type_Script (the latter because of script strings)
 
     Location location;
     Location valueLocation;
@@ -341,11 +362,20 @@ struct Q_QML_PRIVATE_EXPORT Binding
     QString valueAsScriptString(const Unit *unit) const;
     double valueAsNumber() const
     {
-        if (type == Type_Number)
-            return value.d;
-        return 0.0;
-
+        if (type != Type_Number)
+            return 0.0;
+        quint64 intval = qFromLittleEndian<quint64>(value.doubleValue);
+        double d;
+        memcpy(&d, &intval, sizeof(double));
+        return d;
     }
+    void setNumberValueInternal(double d)
+    {
+        quint64 intval;
+        memcpy(&intval, &d, sizeof(double));
+        value.doubleValue = qToLittleEndian<quint64>(intval);
+    }
+
     bool valueAsBoolean() const
     {
         if (type == Type_Boolean)
@@ -357,16 +387,16 @@ struct Q_QML_PRIVATE_EXPORT Binding
 
 struct Parameter
 {
-    quint32 nameIndex;
-    quint32 type;
-    quint32 customTypeNameIndex;
+    LEUInt32 nameIndex;
+    LEUInt32 type;
+    LEUInt32 customTypeNameIndex;
     Location location;
 };
 
 struct Signal
 {
-    quint32 nameIndex;
-    quint32 nParameters;
+    LEUInt32 nameIndex;
+    LEUInt32 nParameters;
     Location location;
     // Parameter parameters[1];
 
@@ -389,37 +419,41 @@ struct Signal
 
 struct Property
 {
-    enum Type { Var = 0, Variant, Int, Bool, Real, String, Url, Color,
+    enum Type : unsigned int { Var = 0, Variant, Int, Bool, Real, String, Url, Color,
                 Font, Time, Date, DateTime, Rect, Point, Size,
                 Vector2D, Vector3D, Vector4D, Matrix4x4, Quaternion,
                 Custom, CustomList };
 
-    enum Flags {
+    enum Flags : unsigned int {
         IsReadOnly = 0x1
     };
 
-    quint32 nameIndex;
-    quint32 type : 31;
-    quint32 flags : 1; // readonly
-    quint32 customTypeNameIndex; // If type >= Custom
+    LEUInt32 nameIndex;
+    union {
+        QJsonPrivate::qle_bitfield<0, 31> type;
+        QJsonPrivate::qle_bitfield<31, 1> flags; // readonly
+    };
+    LEUInt32 customTypeNameIndex; // If type >= Custom
     Location location;
 };
 
 struct Alias {
-    enum Flags {
+    enum Flags : unsigned int {
         IsReadOnly = 0x1,
         Resolved = 0x2,
         AliasPointsToPointerObject = 0x4
     };
-    quint32 nameIndex : 29;
-    quint32 flags : 3;
     union {
-        quint32 idIndex; // string index
-        quint32 targetObjectId; // object id index (in QQmlContextData::idValues)
+        QJsonPrivate::qle_bitfield<0, 29> nameIndex;
+        QJsonPrivate::qle_bitfield<29, 3> flags;
     };
     union {
-        quint32 propertyNameIndex; // string index
-        qint32 encodedMetaPropertyIndex;
+        LEUInt32 idIndex; // string index
+        LEUInt32 targetObjectId; // object id index (in QQmlContextData::idValues)
+    };
+    union {
+        LEUInt32 propertyNameIndex; // string index
+        LEInt32 encodedMetaPropertyIndex;
     };
     Location location;
     Location referenceLocation;
@@ -432,7 +466,7 @@ struct Alias {
 
 struct Object
 {
-    enum Flags {
+    enum Flags : unsigned int {
         NoFlag = 0x0,
         IsComponent = 0x1, // object was identified to be an explicit or implicit component boundary
         HasDeferredBindings = 0x2, // any of the bindings are deferred
@@ -442,24 +476,26 @@ struct Object
     // Depending on the use, this may be the type name to instantiate before instantiating this
     // object. For grouped properties the type name will be empty and for attached properties
     // it will be the name of the attached type.
-    quint32 inheritedTypeNameIndex;
-    quint32 idNameIndex;
-    qint32 id : 16;
-    qint32 flags : 15;
-    quint32 defaultPropertyIsAlias : 1;
-    qint32 indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
-    quint32 nFunctions;
-    quint32 offsetToFunctions;
-    quint32 nProperties;
-    quint32 offsetToProperties;
-    quint32 nAliases;
-    quint32 offsetToAliases;
-    quint32 nSignals;
-    quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
-    quint32 nBindings;
-    quint32 offsetToBindings;
-    quint32 nNamedObjectsInComponent;
-    quint32 offsetToNamedObjectsInComponent;
+    LEUInt32 inheritedTypeNameIndex;
+    LEUInt32 idNameIndex;
+    union {
+        QJsonPrivate::qle_bitfield<0, 15> flags;
+        QJsonPrivate::qle_bitfield<15, 1> defaultPropertyIsAlias;
+        QJsonPrivate::qle_signedbitfield<16, 16> id;
+    };
+    LEInt32 indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
+    LEUInt32 nFunctions;
+    LEUInt32 offsetToFunctions;
+    LEUInt32 nProperties;
+    LEUInt32 offsetToProperties;
+    LEUInt32 nAliases;
+    LEUInt32 offsetToAliases;
+    LEUInt32 nSignals;
+    LEUInt32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
+    LEUInt32 nBindings;
+    LEUInt32 offsetToBindings;
+    LEUInt32 nNamedObjectsInComponent;
+    LEUInt32 offsetToNamedObjectsInComponent;
     Location location;
     Location locationOfIdProperty;
 //    Function[]
@@ -480,9 +516,9 @@ struct Object
                ) & ~0x7;
     }
 
-    const quint32 *functionOffsetTable() const
+    const LEUInt32 *functionOffsetTable() const
     {
-        return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToFunctions);
+        return reinterpret_cast<const LEUInt32*>(reinterpret_cast<const char *>(this) + offsetToFunctions);
     }
 
     const Property *propertyTable() const
@@ -502,14 +538,14 @@ struct Object
 
     const Signal *signalAt(int idx) const
     {
-        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
-        const uint offset = offsetTable[idx];
+        const LEUInt32 *offsetTable = reinterpret_cast<const LEUInt32*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
+        const LEUInt32 offset = offsetTable[idx];
         return reinterpret_cast<const Signal*>(reinterpret_cast<const char*>(this) + offset);
     }
 
-    const quint32 *namedObjectsInComponentTable() const
+    const LEUInt32 *namedObjectsInComponentTable() const
     {
-        return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
+        return reinterpret_cast<const LEUInt32*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
     }
 
     // --- QQmlPropertyCacheCreator interface
@@ -535,22 +571,22 @@ struct Object
 
 struct Import
 {
-    enum ImportType {
+    enum ImportType : unsigned int {
         ImportLibrary = 0x1,
         ImportFile = 0x2,
         ImportScript = 0x3
     };
-    quint32 type;
+    quint8 type;
 
-    quint32 uriIndex;
-    quint32 qualifierIndex;
+    LEUInt32 uriIndex;
+    LEUInt32 qualifierIndex;
 
-    qint32 majorVersion;
-    qint32 minorVersion;
+    LEInt32 majorVersion;
+    LEInt32 minorVersion;
 
     Location location;
 
-    Import(): type(0), uriIndex(0), qualifierIndex(0), majorVersion(0), minorVersion(0) {}
+    Import() { type = 0; uriIndex = 0; qualifierIndex = 0; majorVersion = 0; minorVersion = 0; }
 };
 
 static const char magic_str[] = "qv4cdata";
@@ -558,47 +594,47 @@ static const char magic_str[] = "qv4cdata";
 struct Unit
 {
     char magic[8];
-    qint16 architecture;
-    qint16 version;
-    quint32 unitSize; // Size of the Unit and any depending data.
+    LEInt16 architecture;
+    LEInt16 version;
+    LEUInt32 unitSize; // Size of the Unit and any depending data.
 
-    enum {
+    enum : unsigned int {
         IsJavascript = 0x1,
         IsQml = 0x2,
         StaticData = 0x4, // Unit data persistent in memory?
         IsSingleton = 0x8,
         IsSharedLibrary = 0x10 // .pragma shared?
     };
-    quint32 flags;
-    uint stringTableSize;
-    uint offsetToStringTable;
-    uint functionTableSize;
-    uint offsetToFunctionTable;
-    uint lookupTableSize;
-    uint offsetToLookupTable;
-    uint regexpTableSize;
-    uint offsetToRegexpTable;
-    uint constantTableSize;
-    uint offsetToConstantTable;
-    uint jsClassTableSize;
-    uint offsetToJSClassTable;
-    qint32 indexOfRootFunction;
-    quint32 sourceFileIndex;
+    LEUInt32 flags;
+    LEUInt32 stringTableSize;
+    LEUInt32 offsetToStringTable;
+    LEUInt32 functionTableSize;
+    LEUInt32 offsetToFunctionTable;
+    LEUInt32 lookupTableSize;
+    LEUInt32 offsetToLookupTable;
+    LEUInt32 regexpTableSize;
+    LEUInt32 offsetToRegexpTable;
+    LEUInt32 constantTableSize;
+    LEUInt32 offsetToConstantTable;
+    LEUInt32 jsClassTableSize;
+    LEUInt32 offsetToJSClassTable;
+    LEInt32 indexOfRootFunction;
+    LEUInt32 sourceFileIndex;
 
     /* QML specific fields */
-    quint32 nImports;
-    quint32 offsetToImports;
-    quint32 nObjects;
-    quint32 offsetToObjects;
-    quint32 indexOfRootObject;
+    LEUInt32 nImports;
+    LEUInt32 offsetToImports;
+    LEUInt32 nObjects;
+    LEUInt32 offsetToObjects;
+    LEUInt32 indexOfRootObject;
 
     const Import *importAt(int idx) const {
         return reinterpret_cast<const Import*>((reinterpret_cast<const char *>(this)) + offsetToImports + idx * sizeof(Import));
     }
 
     const Object *objectAt(int idx) const {
-        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToObjects);
-        const uint offset = offsetTable[idx];
+        const LEUInt32 *offsetTable = reinterpret_cast<const LEUInt32*>((reinterpret_cast<const char *>(this)) + offsetToObjects);
+        const LEUInt32 offset = offsetTable[idx];
         return reinterpret_cast<const Object*>(reinterpret_cast<const char*>(this) + offset);
     }
 
@@ -608,22 +644,31 @@ struct Unit
     /* end QML specific fields*/
 
     QString stringAt(int idx) const {
-        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
-        const uint offset = offsetTable[idx];
+        const LEUInt32 *offsetTable = reinterpret_cast<const LEUInt32*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
+        const LEUInt32 offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
         if (str->size == 0)
             return QString();
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
         if (flags & StaticData)
             return QString::fromRawData(characters, str->size);
         return QString(characters, str->size);
+#else
+        const LEUInt16 *characters = reinterpret_cast<const LEUInt16 *>(str + 1);
+        QString qstr(str->size, Qt::Uninitialized);
+        QChar *ch = qstr.data();
+        for (int i = 0; i < str->size; ++i)
+             ch[i] = QChar(characters[i]);
+         return qstr;
+#endif
     }
 
-    const uint *functionOffsetTable() const { return reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable); }
+    const LEUInt32 *functionOffsetTable() const { return reinterpret_cast<const LEUInt32*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable); }
 
     const Function *functionAt(int idx) const {
-        const uint *offsetTable = functionOffsetTable();
-        const uint offset = offsetTable[idx];
+        const LEUInt32 *offsetTable = functionOffsetTable();
+        const LEUInt32 offset = offsetTable[idx];
         return reinterpret_cast<const Function*>(reinterpret_cast<const char *>(this) + offset);
     }
 
@@ -636,8 +681,8 @@ struct Unit
     }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
-        const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
-        const uint offset = offsetTable[idx];
+        const LEUInt32 *offsetTable = reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
+        const LEUInt32 offset = offsetTable[idx];
         const char *ptr = reinterpret_cast<const char *>(this) + offset;
         const JSClass *klass = reinterpret_cast<const JSClass *>(ptr);
         *nMembers = klass->nMembers;

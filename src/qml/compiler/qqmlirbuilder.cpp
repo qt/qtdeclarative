@@ -193,7 +193,7 @@ void Object::appendFunction(QmlIR::Function *f)
 
 QString Object::appendBinding(Binding *b, bool isListBinding)
 {
-    const bool bindingToDefaultProperty = (b->propertyNameIndex == 0);
+    const bool bindingToDefaultProperty = (b->propertyNameIndex == quint32(0));
     if (!isListBinding && !bindingToDefaultProperty
         && b->type != QV4::CompiledData::Binding::Type_GroupProperty
         && b->type != QV4::CompiledData::Binding::Type_AttachedProperty
@@ -640,7 +640,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     }
 
     if (node->versionToken.isValid()) {
-        extractVersion(textRefAt(node->versionToken), &import->majorVersion, &import->minorVersion);
+        int major, minor;
+        extractVersion(textRefAt(node->versionToken), &major, &minor);
+        import->majorVersion = major;
+        import->minorVersion = minor;
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
         recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Library import requires a version"));
         return false;
@@ -997,13 +1000,13 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
             binding->value.b = false;
         } else if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(expr)) {
             binding->type = QV4::CompiledData::Binding::Type_Number;
-            binding->value.d = lit->value;
+            binding->setNumberValueInternal(lit->value);
         } else {
 
             if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
                if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
                    binding->type = QV4::CompiledData::Binding::Type_Number;
-                   binding->value.d = -lit->value;
+                   binding->setNumberValueInternal(-lit->value);
                }
             }
         }

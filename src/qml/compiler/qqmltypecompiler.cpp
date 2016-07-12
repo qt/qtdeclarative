@@ -546,7 +546,7 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QS
         COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName.toString()));
     }
     binding->type = QV4::CompiledData::Binding::Type_Number;
-    binding->value.d = (double)enumValue;
+    binding->setNumberValueInternal((double)enumValue);
     binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
     return true;
 }
@@ -701,7 +701,7 @@ void QQmlAliasAnnotator::annotateBindingsToAliases()
             if (!binding->isValueBinding())
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != 0 ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (pd && pd->isAlias())
                 binding->flags |= QV4::CompiledData::Binding::IsBindingToAlias;
         }
@@ -733,7 +733,7 @@ void QQmlScriptStringScanner::scan()
             if (binding->type != QV4::CompiledData::Binding::Type_Script)
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != 0 ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (!pd || pd->propType != scriptStringMetaType)
                 continue;
 
@@ -783,7 +783,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         }
 
         QQmlPropertyData *pd = 0;
-        if (binding->propertyNameIndex != 0) {
+        if (binding->propertyNameIndex != quint32(0)) {
             bool notInRevision = false;
             pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
         } else {
@@ -1346,7 +1346,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
     QmlIR::Binding *previousBinding = 0;
     QmlIR::Binding *binding = object->firstBinding();
     while (binding) {
-        if (binding->propertyNameIndex == 0 || stringAt(binding->propertyNameIndex) != defaultProperty) {
+        if (binding->propertyNameIndex == quint32(0) || stringAt(binding->propertyNameIndex) != defaultProperty) {
             previousBinding = binding;
             binding = binding->next;
             continue;

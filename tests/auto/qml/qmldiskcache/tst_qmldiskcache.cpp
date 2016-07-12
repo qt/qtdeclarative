@@ -133,14 +133,14 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(testUnit->nObjects, quint32(1));
+        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
 
         const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
-        QCOMPARE(obj->nBindings, quint32(1));
-        QCOMPARE(obj->bindingTable()->type, quint32(QV4::CompiledData::Binding::Type_Script));
-        QCOMPARE(obj->bindingTable()->value.compiledScriptIndex, quint32(1));
+        QCOMPARE(quint32(obj->nBindings), quint32(1));
+        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Script));
+        QCOMPARE(quint32(obj->bindingTable()->value.compiledScriptIndex), quint32(1));
 
-        QCOMPARE(testUnit->functionTableSize, quint32(2));
+        QCOMPARE(quint32(testUnit->functionTableSize), quint32(2));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
@@ -163,14 +163,14 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(testUnit->nObjects, quint32(1));
+        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
 
         const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
-        QCOMPARE(obj->nBindings, quint32(2));
-        QCOMPARE(obj->bindingTable()->type, quint32(QV4::CompiledData::Binding::Type_Number));
-        QCOMPARE(obj->bindingTable()->value.d, double(42));
+        QCOMPARE(quint32(obj->nBindings), quint32(2));
+        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Number));
+        QCOMPARE(obj->bindingTable()->valueAsNumber(), double(42));
 
-        QCOMPARE(testUnit->functionTableSize, quint32(2));
+        QCOMPARE(quint32(testUnit->functionTableSize), quint32(2));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);

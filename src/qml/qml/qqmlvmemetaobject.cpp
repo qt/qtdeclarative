@@ -630,7 +630,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= propOffset();
 
             if (id < propertyCount) {
-                const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(compiledObject->propertyTable()[id].type);
+                const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(qint32(compiledObject->propertyTable()[id].type));
                 bool needActivate = false;
 
                 if (t == QV4::CompiledData::Property::Var) {

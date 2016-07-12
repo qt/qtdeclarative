@@ -350,7 +350,7 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
-    int flags;
+    quint32 flags;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
