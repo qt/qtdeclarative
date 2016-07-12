@@ -2362,8 +2362,8 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QT
 QTouchEvent *QQuickWindowPrivate::touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints)
 {
     Qt::TouchPointStates eventStates;
-    for (int i=0; i<newPoints.count(); i++)
-        eventStates |= newPoints[i].state();
+    for (const QTouchEvent::TouchPoint &p : qAsConst(newPoints))
+        eventStates |= p.state();
     // if all points have the same state, set the event type accordingly
     QEvent::Type eventType = event.type();
     switch (eventStates) {
