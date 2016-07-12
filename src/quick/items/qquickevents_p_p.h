@@ -419,9 +419,14 @@ public:
      * Returns nullptr in case the original event was not a mouse event. */
     QMouseEvent *asMouseEvent() const;
 
-    int pointCount() const { return asTouchEvent() ? m_touchPoints.count() : 1; }
+    bool isMouseEvent() const;
+    bool isTouchEvent() const;
+    bool isTabletEvent() const;
+    bool isValid() const { return m_event != nullptr; }
+
+    int pointCount() const { return isTouchEvent() ? m_touchPoints.count() : 1; }
     const QQuickEventPoint *point(int i) const {
-        if (asTouchEvent())
+        if (isTouchEvent())
             return m_touchPoints.at(i);
         return i == 0 ? m_mousePoint : nullptr;
     }
@@ -431,13 +436,6 @@ public:
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
 
 protected:
-    bool isValid() const { return m_event != nullptr; }
-
-protected:
-    bool isMouseEvent() const;
-    bool isTouchEvent() const;
-    bool isTabletEvent() const;
-
     const QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;

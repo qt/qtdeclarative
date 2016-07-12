@@ -2118,7 +2118,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
 
     if (QMouseEvent *mouse = event->asMouseEvent()) {
         deliverMouseEvent(mouse);
-    } else if (event->asTouchEvent()) {
+    } else if (event->isTouchEvent()) {
         deliverTouchEvent(event);
     } else {
         Q_ASSERT(false);
