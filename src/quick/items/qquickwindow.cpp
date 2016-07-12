@@ -2161,9 +2161,8 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
     if (newPoints.count() > 0 || updatedPoints.count() > 0) {
         QSet<int> acceptedNewPoints;
         QSet<QQuickItem *> hasFiltered;
-        event->setAccepted(deliverTouchPoints(contentItem, event, newPoints, &acceptedNewPoints, &updatedPoints, &hasFiltered));
-    } else
-        event->ignore();
+        deliverTouchPoints(contentItem, event, newPoints, &acceptedNewPoints, &updatedPoints, &hasFiltered);
+    }
 
     // Remove released points from itemForTouchPointId
     if (event->touchPointStates() & Qt::TouchPointReleased) {
