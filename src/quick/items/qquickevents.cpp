@@ -555,7 +555,7 @@ QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEvent
             eventStates |= tp->state();
             QTouchEvent::TouchPoint tpCopy = *tp;
             tpCopy.setPos(relativeTo->mapFromScene(tpCopy.scenePos()));
-            tpCopy.setLastPos(relativeTo->mapFromScene(tpCopy.lastPos()));
+            tpCopy.setLastPos(relativeTo->mapFromScene(tpCopy.lastScenePos()));
             tpCopy.setStartPos(relativeTo->mapFromScene(tpCopy.startScenePos()));
             tpCopy.setRect(relativeTo->mapRectFromScene(tpCopy.sceneRect()));
             tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
