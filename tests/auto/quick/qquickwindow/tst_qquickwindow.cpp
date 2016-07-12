@@ -303,6 +303,9 @@ private slots:
     void touchEvent_reentrant();
     void touchEvent_velocity();
 
+    void mergeTouchPointLists_data();
+    void mergeTouchPointLists();
+
     void mouseFromTouch_basic();
 
     void clearWindow();
@@ -901,6 +904,63 @@ void tst_qquickwindow::touchEvent_velocity()
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
     delete item;
+}
+
+void tst_qquickwindow::mergeTouchPointLists_data()
+{
+    QTest::addColumn<QVector<QQuickItem*>>("list1");
+    QTest::addColumn<QVector<QQuickItem*>>("list2");
+    QTest::addColumn<QVector<QQuickItem*>>("expected");
+    QTest::addColumn<bool>("showItem");
+
+    // FIXME: do not leak all these items
+    auto item1 = new QQuickItem();
+    auto item2 = new QQuickItem();
+    auto item3 = new QQuickItem();
+    auto item4 = new QQuickItem();
+    auto item5 = new QQuickItem();
+
+    QTest::newRow("empty") << QVector<QQuickItem*>() << QVector<QQuickItem*>() << QVector<QQuickItem*>();
+    QTest::newRow("single list left")
+            << (QVector<QQuickItem*>() << item1 << item2 << item3)
+            << QVector<QQuickItem*>()
+            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+    QTest::newRow("single list right")
+            << QVector<QQuickItem*>()
+            << (QVector<QQuickItem*>() << item1 << item2 << item3)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+    QTest::newRow("two lists identical")
+            << (QVector<QQuickItem*>() << item1 << item2 << item3)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+    QTest::newRow("two lists 1")
+            << (QVector<QQuickItem*>() << item1 << item2 << item5)
+            << (QVector<QQuickItem*>() << item3 << item4 << item5)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+    QTest::newRow("two lists 2")
+            << (QVector<QQuickItem*>() << item1 << item2 << item5)
+            << (QVector<QQuickItem*>() << item3 << item4 << item5)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+    QTest::newRow("two lists 3")
+            << (QVector<QQuickItem*>() << item1 << item2 << item3)
+            << (QVector<QQuickItem*>() << item1 << item4 << item5)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+    QTest::newRow("two lists 3")
+            << (QVector<QQuickItem*>() << item1 << item3 << item4)
+            << (QVector<QQuickItem*>() << item2 << item3 << item5)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+}
+
+void tst_qquickwindow::mergeTouchPointLists()
+{
+    QFETCH(QVector<QQuickItem*>, list1);
+    QFETCH(QVector<QQuickItem*>, list2);
+    QFETCH(QVector<QQuickItem*>, expected);
+
+    QQuickWindow win;
+    auto windowPrivate = QQuickWindowPrivate::get(&win);
+    auto targetList = windowPrivate->mergePointerTargets(list1, list2);
+    QCOMPARE(targetList, expected);
 }
 
 void tst_qquickwindow::mouseFromTouch_basic()

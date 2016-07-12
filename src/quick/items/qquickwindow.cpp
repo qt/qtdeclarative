@@ -2169,6 +2169,28 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, cons
     return targets;
 }
 
+// return the joined lists
+// list1 has priority, common items come last
+QVector<QQuickItem *> QQuickWindowPrivate::mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const
+{
+    QVector<QQuickItem *> targets = list1;
+    // start at the end of list2
+    // if item not in list, append it
+    // if item found, move to next one, inserting before the last found one
+    int insertPosition = targets.length();
+    for (int i = list2.length() - 1; i >= 0; --i) {
+        int newInsertPosition = targets.lastIndexOf(list2.at(i), insertPosition);
+        if (newInsertPosition >= 0) {
+            Q_ASSERT(newInsertPosition <= insertPosition);
+            insertPosition = newInsertPosition;
+        }
+        // check for duplicates, only insert if the item isn't there already
+        if (insertPosition == targets.size() || list2.at(i) != targets.at(insertPosition))
+            targets.insert(insertPosition, list2.at(i));
+    }
+    return targets;
+}
+
 void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
