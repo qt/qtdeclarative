@@ -173,6 +173,7 @@ public:
     static QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
     bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem*> *filtered);
 
+    QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &) const;
     // hover delivery
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,

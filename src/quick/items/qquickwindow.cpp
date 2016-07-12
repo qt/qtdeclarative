@@ -2114,6 +2114,36 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     --pointerEventRecursionGuard;
 }
 
+// check if item or any of its child items contain the point
+// FIXME: should this be iterative instead of recursive?
+QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, const QPointF &scenePos) const
+{
+    QVector<QQuickItem *> targets;
+    auto itemPrivate = QQuickItemPrivate::get(item);
+    QPointF itemPos = item->mapFromScene(scenePos);
+    // if the item clips, we can potentially return early
+    if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
+        if (!item->contains(itemPos))
+            return targets;
+    }
+
+    // recurse for children
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        QQuickItem *child = children.at(ii);
+        auto childPrivate = QQuickItemPrivate::get(child);
+        if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
+            continue;
+        targets << pointerTargets(child, scenePos);
+    }
+
+    if (item->contains(itemPos) && itemPrivate->acceptedMouseButtons()) {
+        // add this item last - children take precedence
+        targets << item;
+    }
+    return targets;
+}
+
 void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *event)
 {
     qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
