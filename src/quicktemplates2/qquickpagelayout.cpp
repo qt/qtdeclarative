@@ -172,7 +172,7 @@ void QQuickPageLayout::itemImplicitHeightChanged(QQuickItem *)
     update();
 }
 
-void QQuickPageLayout::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+void QQuickPageLayout::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     update();
 }

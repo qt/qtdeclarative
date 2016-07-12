@@ -182,7 +182,7 @@ void QQuickTextAreaPrivate::attachFlickable(QQuickFlickable *item)
     QObject::connect(flickable, &QQuickFlickable::contentXChanged, q, &QQuickItem::update);
     QObject::connect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
 
-    QQuickItemPrivate::get(flickable)->updateOrAddGeometryChangeListener(this, QQuickItemPrivate::SizeChange);
+    QQuickItemPrivate::get(flickable)->updateOrAddGeometryChangeListener(this, QQuickGeometryChange::Size);
     QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
     QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
@@ -202,7 +202,7 @@ void QQuickTextAreaPrivate::detachFlickable()
     QObject::disconnect(flickable, &QQuickFlickable::contentXChanged, q, &QQuickItem::update);
     QObject::disconnect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
 
-    QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickItemPrivate::SizeChange);
+    QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickGeometryChange::Size);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
@@ -269,11 +269,11 @@ void QQuickTextAreaPrivate::resizeFlickableContent()
     flickable->setContentHeight(q->contentHeight() + q->topPadding() + q->bottomPadding());
 }
 
-void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
     Q_UNUSED(item);
-    Q_UNUSED(newGeometry);
-    Q_UNUSED(oldGeometry);
+    Q_UNUSED(change);
+    Q_UNUSED(diff);
 
     resizeFlickableControl();
 }

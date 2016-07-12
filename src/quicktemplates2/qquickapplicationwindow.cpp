@@ -119,7 +119,7 @@ public:
 
     void relayout();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
@@ -195,11 +195,11 @@ void QQuickApplicationWindowPrivate::relayout()
     }
 }
 
-void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
     Q_UNUSED(item)
-    Q_UNUSED(newRect)
-    Q_UNUSED(oldRect)
+    Q_UNUSED(change)
+    Q_UNUSED(diff)
     relayout();
 }
 

@@ -405,7 +405,7 @@ public:
     void layoutHorizontal(bool move = true);
     void layoutVertical(bool move = true);
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemDestroyed(QQuickItem *item) override;
 
     QQuickFlickable *flickable;
@@ -476,16 +476,16 @@ void QQuickScrollBarAttachedPrivate::layoutVertical(bool move)
         vertical->setX(vertical->isMirrored() ? 0 : flickable->width() - vertical->width());
 }
 
-void QQuickScrollBarAttachedPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickScrollBarAttachedPrivate::itemGeometryChanged(QQuickItem *item, const QQuickGeometryChange change, const QRectF &diff)
 {
     Q_UNUSED(item);
-    Q_UNUSED(newGeometry);
+    Q_UNUSED(change);
     if (horizontal && horizontal->height() > 0) {
-        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), oldGeometry.height() - horizontal->height());
+        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), item->height() - diff.height());
         layoutHorizontal(move);
     }
     if (vertical && vertical->width() > 0) {
-        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), oldGeometry.width() - vertical->width());
+        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), item->width() - diff.width());
         layoutVertical(move);
     }
 }
@@ -504,7 +504,7 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QQuickFlickable *flickable) :
     Q_D(QQuickScrollBarAttached);
     if (flickable) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(flickable);
-        p->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+        p->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
     }
 }
 

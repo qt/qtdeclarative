@@ -77,7 +77,7 @@ public:
     void itemSiblingOrderChanged(QQuickItem *item) override;
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
     void itemDestroyed(QQuickItem *item) override;
-    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
 
     void onItemPressed();
     void onItemActiveFocusChanged();

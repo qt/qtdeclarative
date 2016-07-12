@@ -87,7 +87,7 @@ public:
     void resizeFlickableControl();
     void resizeFlickableContent();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;

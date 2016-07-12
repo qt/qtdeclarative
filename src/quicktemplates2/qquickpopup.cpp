@@ -529,7 +529,7 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
         m_popup->reposition();
 }
 
-void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     if (m_parentItem && m_popup->popupItem->isVisible())
         m_popup->reposition();

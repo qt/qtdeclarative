@@ -133,7 +133,7 @@ public:
     void setParentItem(QQuickItem *parent);
 
 protected:
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &);
     void itemParentChanged(QQuickItem *, QQuickItem *parent);
     void itemChildRemoved(QQuickItem *, QQuickItem *child);
     void itemDestroyed(QQuickItem *item);

@@ -702,7 +702,7 @@ public:
     ~QQuickTumblerAttachedPrivate() {
     }
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
@@ -716,7 +716,7 @@ public:
     qreal displacement;
 };
 
-void QQuickTumblerAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+void QQuickTumblerAttachedPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     _q_calculateDisplacement();
 }

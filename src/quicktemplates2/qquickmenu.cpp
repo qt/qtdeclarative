@@ -201,7 +201,7 @@ void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
         removeItem(index, item);
 }
 
-void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     if (complete)
         resizeItems();
