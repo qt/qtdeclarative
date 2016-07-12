@@ -70,16 +70,16 @@ Pane {
             text: labelText
             width: parent.width
 
-            onClicked: if (swipe.complete) view.model.remove(ourIndex)
-
             Component {
                 id: removeComponent
 
                 Rectangle {
-                    color: swipeDelegate.swipe.complete && swipeDelegate.pressed ? "#333" : "#444"
+                    color: SwipeDelegate.pressed ? "#333" : "#444"
                     width: parent.width
                     height: parent.height
                     clip: true
+
+                    SwipeDelegate.onClicked: view.model.remove(ourIndex)
 
                     Label {
                         font.pixelSize: swipeDelegate.font.pixelSize

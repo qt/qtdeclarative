@@ -92,6 +92,14 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing SwipeDelegate}, {Delegate Controls}
 */
 
+namespace {
+    typedef QQuickSwipeDelegateAttached Attached;
+
+    Attached *attachedObject(QQuickItem *item) {
+        return qobject_cast<Attached*>(qmlAttachedPropertiesObject<QQuickSwipeDelegate>(item, false));
+    }
+}
+
 class QQuickSwipePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwipe)
@@ -561,9 +569,22 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         return true;
     }
 
+    // The position is non-zero, this press could be either for a delegate or the control itself
+    // (the control can be clicked to e.g. close the swipe). Either way, we must begin measuring
+    // mouse movement in case it turns into a swipe, in which case we grab the mouse.
     swipePrivate->positionBeforePress = swipePrivate->position;
     swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
     pressPoint = item->mapToItem(q, event->pos());
+
+    // When a delegate uses the attached properties and signals, it declares that it wants mouse events.
+    Attached *attached = attachedObject(item);
+    if (attached) {
+        attached->setPressed(true);
+        // Stop the event from propagating, as QQuickItem explicitly ignores events.
+        event->accept();
+        return true;
+    }
+
     return false;
 }
 
@@ -589,7 +610,8 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     if (item == q && !pressed)
         return false;
 
-    const qreal distance = (event->pos() - pressPoint).x();
+    const QPointF mappedEventPos = item->mapToItem(q, event->pos());
+    const qreal distance = (mappedEventPos - pressPoint).x();
     if (!q->keepMouseGrab()) {
         // Taken from QQuickDrawer::handleMouseMoveEvent; see comments there.
         int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
@@ -598,9 +620,12 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
             QQuickItem *grabber = q->window()->mouseGrabberItem();
             if (!grabber || !grabber->keepMouseGrab()) {
                 q->grabMouse();
-                q->setKeepMouseGrab(overThreshold);
+                q->setKeepMouseGrab(true);
                 q->setPressed(true);
                 swipe.setComplete(false);
+
+                if (Attached *attached = attachedObject(item))
+                    attached->setPressed(false);
             }
         }
     }
@@ -660,7 +685,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
 
 static const qreal exposeVelocityThreshold = 300.0;
 
-bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEvent *event)
+bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
@@ -685,6 +710,14 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEve
         swipe.setPosition(0.0);
         swipe.setComplete(false);
         swipePrivate->wasComplete = false;
+    }
+
+    if (Attached *attached = attachedObject(item)) {
+        const bool wasPressed = attached->isPressed();
+        if (wasPressed) {
+            attached->setPressed(false);
+            emit attached->clicked();
+        }
     }
 
     // Only consume child events if we had grabbed the mouse.
@@ -805,6 +838,11 @@ QQuickSwipe *QQuickSwipeDelegate::swipe() const
     return const_cast<QQuickSwipe*>(&d->swipe);
 }
 
+QQuickSwipeDelegateAttached *QQuickSwipeDelegate::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickSwipeDelegateAttached(object);
+}
+
 static bool isChildOrGrandchildOf(QQuickItem *child, QQuickItem *item)
 {
     return item && (child == item || item->isAncestorOf(child));
@@ -835,6 +873,14 @@ bool QQuickSwipeDelegate::childMouseEventFilter(QQuickItem *child, QEvent *event
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
         QQuickItemDelegate::mouseReleaseEvent(mouseEvent);
         return d->handleMouseReleaseEvent(child, mouseEvent);
+    } case QEvent::UngrabMouse: {
+        // If the mouse was pressed over e.g. rightItem and then dragged down,
+        // the ListView would eventually grab the mouse, at which point we must
+        // clear the pressed flag so that it doesn't stay pressed after the release.
+        Attached *attached = attachedObject(child);
+        if (attached)
+            attached->setPressed(false);
+        return false;
     } default:
         return false;
     }
@@ -875,5 +921,156 @@ QAccessible::Role QQuickSwipeDelegate::accessibleRole() const
     return QAccessible::ListItem;
 }
 #endif
+
+class QQuickSwipeDelegateAttachedPrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickSwipeDelegateAttached)
+
+public:
+    QQuickSwipeDelegateAttachedPrivate() :
+        pressed(false)
+    {
+    }
+
+    // True when left/right/behind is non-interactive and is pressed.
+    bool pressed;
+};
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlattachedsignal QtQuick.Controls::SwipeDelegate::clicked()
+
+    This signal can be attached to a non-interactive item declared in
+    \c swipe.left, \c swipe.right, or \c swipe.behind, in order to react to
+    clicks. Items can only be clicked when \c swipe.complete is \c true.
+
+    For interactive controls (such as \l Button) declared in these
+    items, use their respective \c clicked() signal instead.
+
+    To respond to clicks on the SwipeDelegate itself, use its
+    \l {AbstractButton::}{clicked()} signal.
+
+    \note See the documentation for \l pressed for information on
+    how to use the event-related properties correctly.
+
+    \sa pressed
+*/
+
+QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object) :
+    QObject(*(new QQuickSwipeDelegateAttachedPrivate), object)
+{
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (item) {
+        // This allows us to be notified when an otherwise non-interactive item
+        // is pressed and clicked. The alternative is much more more complex:
+        // iterating through children that contain the event pos and finding
+        // the first one with an attached object.
+        item->setAcceptedMouseButtons(Qt::AllButtons);
+    } else {
+        qWarning() << "Attached properties of SwipeDelegate must be accessed through an Item";
+    }
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlattachedproperty bool QtQuick.Controls::SwipeDelegate::pressed
+    \readonly
+
+    This property can be attached to a non-interactive item declared in
+    \c swipe.left, \c swipe.right, or \c swipe.behind, in order to detect if it
+    is pressed. Items can only be pressed when \c swipe.complete is \c true.
+
+    For example:
+
+    \code
+    swipe.right: Label {
+        anchors.right: parent.right
+        height: parent.height
+        text: "Action"
+        color: "white"
+        padding: 12
+        background: Rectangle {
+            color: SwipeDelegate.pressed ? Qt.darker("tomato", 1.1) : "tomato"
+        }
+    }
+    \endcode
+
+    It is possible to have multiple items which individually receive mouse and
+    touch events. For example, to have two actions in the \c swipe.right item,
+    use the following code:
+
+    \code
+    swipe.right: Row {
+        anchors.right: parent.right
+        height: parent.height
+
+        Label {
+            id: moveLabel
+            text: qsTr("Move")
+            color: "white"
+            verticalAlignment: Label.AlignVCenter
+            padding: 12
+            height: parent.height
+
+            SwipeDelegate.onClicked: console.log("Moving...")
+
+            background: Rectangle {
+                color: moveLabel.SwipeDelegate.pressed ? Qt.darker("#ffbf47", 1.1) : "#ffbf47"
+            }
+        }
+        Label {
+            id: deleteLabel
+            text: qsTr("Delete")
+            color: "white"
+            verticalAlignment: Label.AlignVCenter
+            padding: 12
+            height: parent.height
+
+            SwipeDelegate.onClicked: console.log("Deleting...")
+
+            background: Rectangle {
+                color: deleteLabel.SwipeDelegate.pressed ? Qt.darker("tomato", 1.1) : "tomato"
+            }
+        }
+    }
+    \endcode
+
+    Note how the \c color assignment in each \l {Control::}{background} item
+    qualifies the attached property with the \c id of the label. This
+    is important; using the attached properties on an item causes that item
+    to accept events. Suppose we had left out the \c id in the previous example:
+
+    \code
+    color: SwipeDelegate.pressed ? Qt.darker("tomato", 1.1) : "tomato"
+    \endcode
+
+    The \l Rectangle background item is a child of the label, so it naturally
+    receives events before it. In practice, this means that the background
+    color will change, but the \c onClicked handler in the label will never
+    get called.
+
+    For interactive controls (such as \l Button) declared in these
+    items, use their respective \c pressed property instead.
+
+    For presses on the SwipeDelegate itself, use its
+    \l {AbstractButton::}{pressed} property.
+
+    \sa clicked()
+*/
+bool QQuickSwipeDelegateAttached::isPressed() const
+{
+    Q_D(const QQuickSwipeDelegateAttached);
+    return d->pressed;
+}
+
+void QQuickSwipeDelegateAttached::setPressed(bool pressed)
+{
+    Q_D(QQuickSwipeDelegateAttached);
+    if (pressed == d->pressed)
+        return;
+
+    d->pressed = pressed;
+    emit pressedChanged();
+}
 
 QT_END_NAMESPACE

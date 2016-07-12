@@ -40,6 +40,7 @@
 
 import QtQuick 2.6
 import QtTest 1.0
+import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.1
 
 TestCase {
@@ -138,7 +139,7 @@ TestCase {
         verify(control);
 
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+            ":79:9: QML SwipeDelegate: cannot set both behind and left/right properties")
         control.swipe.behind = itemComponent;
 
         // Shouldn't be any warnings when unsetting delegates.
@@ -147,7 +148,7 @@ TestCase {
 
         // right is still set.
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+            ":79:9: QML SwipeDelegate: cannot set both behind and left/right properties")
         control.swipe.behind = itemComponent;
 
         control.swipe.right = null;
@@ -156,11 +157,11 @@ TestCase {
         control.swipe.behind = itemComponent;
 
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+            ":79:9: QML SwipeDelegate: cannot set both behind and left/right properties")
         control.swipe.left = itemComponent;
 
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+            ":79:9: QML SwipeDelegate: cannot set both behind and left/right properties")
         control.swipe.right = itemComponent;
 
         control.swipe.behind = null;
@@ -175,7 +176,7 @@ TestCase {
         var oldLeft = control.swipe.left;
         var oldLeftItem = control.swipe.leftItem;
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+            ":79:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
         control.swipe.left = null;
         compare(control.swipe.left, oldLeft);
         compare(control.swipe.leftItem, oldLeftItem);
@@ -186,7 +187,7 @@ TestCase {
         var oldRight = control.swipe.right;
         var oldRightItem = control.swipe.rightItem;
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+            ":79:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
         control.swipe.right = null;
         compare(control.swipe.right, oldRight);
         compare(control.swipe.rightItem, oldRightItem);
@@ -212,7 +213,7 @@ TestCase {
         var oldBehind = control.swipe.behind;
         var oldBehindItem = control.swipe.behindItem;
         ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":78:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+            ":79:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
         control.swipe.behind = null;
         compare(control.swipe.behind, oldBehind);
         compare(control.swipe.behindItem, oldBehindItem);
@@ -564,8 +565,6 @@ TestCase {
                 text: modelData
                 width: listView.width
 
-                onClicked: if (swipe.complete) ListView.view.model.remove(index)
-
                 property alias removeAnimation: onRemoveAnimation
 
                 ListView.onRemove: SequentialAnimation {
@@ -590,8 +589,11 @@ TestCase {
                 }
 
                 swipe.left: Rectangle {
-                    color: rootDelegate.swipe.complete && rootDelegate.pressed ? "#333" : "#444"
+                    objectName: "rectangle"
+                    color: SwipeDelegate.pressed ? "#333" : "#444"
                     anchors.fill: parent
+
+                    SwipeDelegate.onClicked: listView.model.remove(index)
 
                     Label {
                         objectName: "label"
@@ -615,11 +617,14 @@ TestCase {
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.0);
         verify(!firstItem.swipe.complete);
+        verify(!firstItem.swipe.leftItem);
 
         mouseMove(listView, firstItem.width * 1.1, firstItem.height / 2);
         verify(firstItem.pressed);
         compare(firstItem.swipe.position, 0.6);
         verify(!firstItem.swipe.complete);
+        verify(firstItem.swipe.leftItem);
+        verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
 
         mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.pressed);
@@ -630,9 +635,23 @@ TestCase {
         // Wait for it to settle down.
         tryCompare(firstItem.contentItem, "x", firstItem.leftPadding + firstItem.width);
 
-        // Click the button to remove the item.
+        var leftClickedSpy = signalSpyComponent.createObject(firstItem.swipe.leftItem,
+            { target: firstItem.swipe.leftItem.SwipeDelegate, signalName: "clicked" });
+        verify(leftClickedSpy);
+        verify(leftClickedSpy.valid);
+
+        // Click the left item to remove the delegate from the list.
         var contentItemX = firstItem.contentItem.x;
-        mouseClick(listView, firstItem.width / 2, firstItem.height / 2);
+        mousePress(listView, firstItem.width / 2, firstItem.height / 2);
+        verify(firstItem.swipe.leftItem.SwipeDelegate.pressed);
+        compare(leftClickedSpy.count, 0);
+        verify(!firstItem.pressed);
+
+        mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
+        verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
+        compare(leftClickedSpy.count, 1);
+        verify(!firstItem.pressed);
+        leftClickedSpy = null;
         tryCompare(firstItem.removeAnimation, "running", true);
         // There was a bug where the resizeContent() would be called because the height
         // of the control was changing due to the animation. contentItem would then
@@ -954,5 +973,130 @@ TestCase {
         tryCompare(control.swipe.rightItem, "x", control.background.x + control.background.width);
 
         control.destroy();
+    }
+
+    Component {
+        id: multiActionSwipeDelegateComponent
+
+        SwipeDelegate {
+            text: "SwipeDelegate"
+            width: 150
+
+            swipe.right: Item {
+                objectName: "rightItemRoot"
+                width: parent.width
+                height: parent.height
+
+                property alias firstAction: firstAction
+                property alias secondAction: secondAction
+
+                property int firstClickCount: 0
+                property int secondClickCount: 0
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 5
+
+                    Rectangle {
+                        id: firstAction
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "tomato"
+
+                        SwipeDelegate.onClicked: ++firstClickCount
+                    }
+                    Rectangle {
+                        id: secondAction
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "navajowhite"
+
+                        SwipeDelegate.onClicked: ++secondClickCount
+                    }
+                }
+            }
+        }
+    }
+
+    // Tests that it's possible to have multiple non-interactive items in one delegate
+    // (e.g. left/right/behind) that can each receive clicks.
+    function test_multipleClickableActions() {
+        var control = multiActionSwipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        swipe(control, 0.0, -1.0);
+        verify(control.swipe.rightItem);
+        tryCompare(control.swipe, "complete", true);
+
+        var firstClickedSpy = signalSpyComponent.createObject(control,
+            { target: control.swipe.rightItem.firstAction.SwipeDelegate, signalName: "clicked" });
+        verify(firstClickedSpy);
+        verify(firstClickedSpy.valid);
+
+        // Clicked within rightItem, but not within an item using the attached properties.
+        mousePress(control, 2, 2);
+        compare(control.swipe.rightItem.firstAction.SwipeDelegate.pressed, false);
+        compare(firstClickedSpy.count, 0);
+
+        mouseRelease(control, 2, 2);
+        compare(control.swipe.rightItem.firstAction.SwipeDelegate.pressed, false);
+        compare(firstClickedSpy.count, 0);
+
+        // Click within the first item.
+        mousePress(control.swipe.rightItem.firstAction, 0, 0);
+        compare(control.swipe.rightItem.firstAction.SwipeDelegate.pressed, true);
+        compare(firstClickedSpy.count, 0);
+
+        mouseRelease(control.swipe.rightItem.firstAction, 0, 0);
+        compare(control.swipe.rightItem.firstAction.SwipeDelegate.pressed, false);
+        compare(firstClickedSpy.count, 1);
+        compare(control.swipe.rightItem.firstClickCount, 1);
+
+        var secondClickedSpy = signalSpyComponent.createObject(control,
+            { target: control.swipe.rightItem.secondAction.SwipeDelegate, signalName: "clicked" });
+        verify(secondClickedSpy);
+        verify(secondClickedSpy.valid);
+
+        // Click within the second item.
+        mousePress(control.swipe.rightItem.secondAction, 0, 0);
+        compare(control.swipe.rightItem.secondAction.SwipeDelegate.pressed, true);
+        compare(secondClickedSpy.count, 0);
+
+        mouseRelease(control.swipe.rightItem.secondAction, 0, 0);
+        compare(control.swipe.rightItem.secondAction.SwipeDelegate.pressed, false);
+        compare(secondClickedSpy.count, 1);
+        compare(control.swipe.rightItem.secondClickCount, 1);
+
+        control.destroy();
+    }
+
+    // Pressing on a "side action" and then dragging should eventually
+    // cause the ListView to grab the mouse and start changing its contentY.
+    // When this happens, it will grab the mouse and hence we must clear
+    // that action's pressed state so that it doesn't stay pressed after releasing.
+    function test_dragSideAction() {
+        var listView = removableDelegatesComponent.createObject(testCase);
+        verify(listView);
+
+        var control = listView.itemAt(0, 0);
+        verify(control);
+
+        // Expose the side action.
+        swipe(control, 0.0, 1.0);
+        verify(control.swipe.leftItem);
+        tryCompare(control.swipe, "complete", true);
+
+        var pressedSpy = signalSpyComponent.createObject(control,
+            { target: control.swipe.leftItem.SwipeDelegate, signalName: "pressedChanged" });
+        verify(pressedSpy);
+        verify(pressedSpy.valid);
+
+        mouseDrag(listView, 20, 20, 0, listView.height);
+        compare(pressedSpy.count, 2);
+        verify(listView.contentY !== 0);
+
+        compare(control.swipe.leftItem.SwipeDelegate.pressed, false);
+
+        listView.destroy();
     }
 }

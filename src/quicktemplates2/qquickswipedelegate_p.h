@@ -54,6 +54,8 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSwipeDelegatePrivate;
 class QQuickSwipe;
+class QQuickSwipeDelegateAttached;
+class QQuickSwipeDelegateAttachedPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
 {
@@ -64,6 +66,8 @@ public:
     explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);
 
     QQuickSwipe *swipe() const;
+
+    static QQuickSwipeDelegateAttached *qmlAttachedProperties(QObject *object);
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
@@ -141,8 +145,29 @@ private:
     Q_DECLARE_PRIVATE(QQuickSwipe)
 };
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegateAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+
+public:
+    explicit QQuickSwipeDelegateAttached(QObject *object = nullptr);
+
+    bool isPressed() const;
+    void setPressed(bool pressed);
+
+Q_SIGNALS:
+    void pressedChanged();
+    void clicked();
+
+private:
+    Q_DISABLE_COPY(QQuickSwipeDelegateAttached)
+    Q_DECLARE_PRIVATE(QQuickSwipeDelegateAttached)
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickSwipeDelegate)
+QML_DECLARE_TYPEINFO(QQuickSwipeDelegate, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKSWIPEDELEGATE_P_H

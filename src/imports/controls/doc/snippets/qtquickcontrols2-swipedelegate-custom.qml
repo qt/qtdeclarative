@@ -37,7 +37,7 @@ SwipeDelegate {
         id: component
 
         Rectangle {
-            color: control.swipe.complete && control.down ? "#333" : "#444"
+            color: SwipeDelegate.pressed ? "#333" : "#444"
             width: parent.width
             height: parent.height
             clip: true
