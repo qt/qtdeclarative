@@ -2308,10 +2308,8 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!touchEventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
-        event->setAccepted(translateTouchToMouse(item, touchEvent.data()));
-        if (event->isAccepted()) {
+        if (translateTouchToMouse(item, touchEvent.data()))
             touchEventAccepted = true;
-        }
     }
 
     if (touchEventAccepted) {
