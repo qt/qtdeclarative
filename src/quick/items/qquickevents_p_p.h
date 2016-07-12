@@ -317,7 +317,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickEventPoint() : QObject(), m_pointId(0), m_valid(false), m_accept(false), m_state(Qt::TouchPointReleased)
+    QQuickEventPoint() : QObject(), m_pointId(0), m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
     {
         Q_UNUSED(m_reserved);
     }
@@ -343,10 +343,10 @@ public:
 private:
     QPointF m_scenePos;
     quint64 m_pointId;
+    Qt::TouchPointState m_state;
     bool m_valid : 1;
     bool m_accept : 1;
-    Qt::TouchPointState m_state : 4;
-    int m_reserved : 26;
+    int m_reserved : 30;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
