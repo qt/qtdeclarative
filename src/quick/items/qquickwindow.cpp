@@ -1606,42 +1606,28 @@ QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *t
     return me;
 }
 
-bool QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouseEvent *event)
+bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickWindow);
 
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-    if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->windowPos());
-        if (!item->contains(p))
-            return false;
-    }
-
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverInitialMousePressEvent(child, event))
-            return true;
-    }
-
-    if (itemPrivate->acceptedMouseButtons() & event->button()) {
-        QPointF localPos = item->mapFromScene(event->windowPos());
-        if (item->contains(localPos)) {
-            QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
-            me->accept();
-            item->grabMouse();
-            q->sendEvent(item, me.data());
-            event->setAccepted(me->isAccepted());
-            if (me->isAccepted())
-                return true;
-            if (mouseGrabberItem)
-                mouseGrabberItem->ungrabMouse();
+    QVector<QQuickItem *> targets = pointerTargets(contentItem, event->windowPos());
+    for (QQuickItem *item: qAsConst(targets)) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        if (itemPrivate->acceptedMouseButtons() & event->button()) {
+            QPointF localPos = item->mapFromScene(event->windowPos());
+            if (item->contains(localPos)) {
+                QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
+                me->accept();
+                item->grabMouse();
+                q->sendEvent(item, me.data());
+                event->setAccepted(me->isAccepted());
+                if (me->isAccepted())
+                    return true;
+                if (mouseGrabberItem)
+                    mouseGrabberItem->ungrabMouse();
+            }
         }
     }
-
     return false;
 }
 
@@ -1654,7 +1640,8 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     if (!mouseGrabberItem &&
          (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
          (event->buttons() & event->button()) == event->buttons()) {
-        if (deliverInitialMousePressEvent(contentItem, event))
+
+        if (deliverInitialMousePressEvent(event))
             event->accept();
         else
             event->ignore();
