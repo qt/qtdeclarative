@@ -115,10 +115,10 @@ struct TableIterator
 
 struct Location
 {
-    qint32 line : 20;
-    qint32 column : 12;
+    quint32 line : 20;
+    quint32 column : 12;
 
-    Location(): line(-1), column(-1) {}
+    Location(): line(0), column(0) {}
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
