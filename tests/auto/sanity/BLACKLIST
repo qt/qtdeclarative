@@ -14,3 +14,7 @@
 *
 [attachedObjects:universal/ComboBox.qml]
 *
+[functions:material/RectangularGlow.qml]
+*
+[anchors:material/RectangularGlow.qml]
+*

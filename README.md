@@ -31,8 +31,6 @@ If you have problems or questions, don't hesitate to:
 
 The MINIMUM REQUIREMENT for building this project is to use the same branch
 of Qt 5. The dependencies are *qtbase*, *qtxmlpatterns* and *qtdeclarative*.
-Other optional dependencies include *qtgraphicaleffects* for the Material
-style.
 
 To install the controls into your Qt directory (```QTDIR/qml```):
 

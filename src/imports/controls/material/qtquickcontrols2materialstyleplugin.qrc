@@ -8,5 +8,8 @@
         <file>images/drop-indicator@2x.png</file>
         <file>images/drop-indicator@3x.png</file>
         <file>images/drop-indicator@4x.png</file>
+        <file>shaders/RectangularGlow.frag</file>
+        <file>shaders/+glslcore/RectangularGlow.frag</file>
+        <file>shaders/+hlsl/RectangularGlow.frag</file>
     </qresource>
 </RCC>

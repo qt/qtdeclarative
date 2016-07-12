@@ -95,6 +95,7 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 1, "BoxShadow");
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 1, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 1, "ElevationEffect");
+    qmlRegisterType(typeUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 1, "RectangularGlow");
     qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 1, "SliderHandle");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 1, "SwitchIndicator");
 }
