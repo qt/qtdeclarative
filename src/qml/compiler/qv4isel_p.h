@@ -61,7 +61,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlAccessors;
 class QQmlEnginePrivate;
 
 namespace QV4 {
@@ -183,8 +182,8 @@ public: // to implement by subclasses:
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(IR::Closure *closure, IR::Expr *target) = 0;
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target) = 0;
-    virtual void getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target) = 0;
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target) = 0;
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName) = 0;
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex) = 0;
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex) = 0;

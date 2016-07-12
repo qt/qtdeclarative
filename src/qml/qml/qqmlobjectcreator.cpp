@@ -54,6 +54,7 @@
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmlaccessors_p.h>
 
 QT_USE_NAMESPACE
 
