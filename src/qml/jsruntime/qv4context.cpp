@@ -73,6 +73,7 @@ Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *functi
 
     c->compilationUnit = function->function()->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
+    c->constantTable = c->compilationUnit->data->constants();
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
     const CompiledData::Function *compiledFunction = function->function()->compiledFunction;
@@ -172,6 +173,7 @@ Heap::WithContext::WithContext(ExecutionContext *outerContext, Object *with)
     outer = outerContext;
     callData = outer->callData;
     lookups = outer->lookups;
+    constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
     withObject = with;
@@ -184,6 +186,7 @@ Heap::CatchContext::CatchContext(ExecutionContext *outerContext, String *excepti
     strictMode = outer->strictMode;
     callData = outer->callData;
     lookups = outer->lookups;
+    constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
     this->exceptionVarName = exceptionVarName;
@@ -197,6 +200,7 @@ Heap::QmlContext::QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContex
     strictMode = false;
     callData = outer->callData;
     lookups = outer->lookups;
+    constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
     this->qml = qml->d();

@@ -108,6 +108,7 @@ struct ExecutionContext : Base {
     ExecutionEngine *engine;
     Pointer<ExecutionContext> outer;
     Lookup *lookups;
+    const QV4::Value *constantTable;
     CompiledData::CompilationUnit *compilationUnit;
 
     ContextType type : 8;
@@ -118,9 +119,10 @@ struct ExecutionContext : Base {
 inline
 ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     : engine(engine)
-    , outer(0)
-    , lookups(0)
-    , compilationUnit(0)
+    , outer(nullptr)
+    , lookups(nullptr)
+    , constantTable(nullptr)
+    , compilationUnit(nullptr)
     , type(t)
     , strictMode(false)
     , lineNumber(-1)

@@ -81,7 +81,6 @@ public:
 
     virtual void run(int functionIndex);
 
-    const void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> backendCompileStep();
 

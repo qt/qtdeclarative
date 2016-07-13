@@ -43,6 +43,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4alloca_p.h>
+#include <wtf/MathExtras.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -378,6 +379,9 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     nextOffset += unit.regexpTableSize * sizeof(CompiledData::RegExp);
 
     unit.constantTableSize = constants.size();
+
+    // Ensure we load constants from well-aligned addresses into for example SSE registers.
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(16, nextOffset));
     unit.offsetToConstantTable = nextOffset;
     nextOffset += unit.constantTableSize * sizeof(ReturnedValue);
 

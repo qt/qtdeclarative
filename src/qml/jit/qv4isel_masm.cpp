@@ -177,7 +177,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
     }
-    _constTable.finalize(linkBuffer, _isel);
 
     *codeSize = linkBuffer.offsetOf(endOfCode);
 
@@ -368,16 +367,6 @@ void InstructionSelection::run(int functionIndex)
     delete _as;
     _as = oldAssembler;
     qSwap(_removableJumps, removableJumps);
-}
-
-const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
-{
-    compilationUnit->constantValues.append(*values);
-    values->clear();
-
-    QVector<QV4::Primitive> &finalValues = compilationUnit->constantValues.last();
-    finalValues.squeeze();
-    return finalValues.constData();
 }
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backendCompileStep()
@@ -1718,38 +1707,6 @@ bool operator==(const Primitive &v1, const Primitive &v2)
 }
 } // QV4 namespace
 QT_END_NAMESPACE
-
-int Assembler::ConstantTable::add(const Primitive &v)
-{
-    int idx = _values.indexOf(v);
-    if (idx == -1) {
-        idx = _values.size();
-        _values.append(v);
-    }
-    return idx;
-}
-
-Assembler::Address Assembler::ConstantTable::loadValueAddress(IR::Const *c, RegisterID baseReg)
-{
-    return loadValueAddress(convertToValue(c), baseReg);
-}
-
-Assembler::Address Assembler::ConstantTable::loadValueAddress(const Primitive &v, RegisterID baseReg)
-{
-    _toPatch.append(_as->moveWithPatch(TrustedImmPtr(0), baseReg));
-    Address addr(baseReg);
-    addr.offset = add(v) * sizeof(QV4::Primitive);
-    Q_ASSERT(addr.offset >= 0);
-    return addr;
-}
-
-void Assembler::ConstantTable::finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel)
-{
-    const void *tablePtr = isel->addConstantTable(&_values);
-
-    foreach (DataLabelPtr label, _toPatch)
-        linkBuffer.patch(label, const_cast<void *>(tablePtr));
-}
 
 bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
