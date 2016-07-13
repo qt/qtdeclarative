@@ -399,6 +399,14 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     an \l Item, \l Component, or a \l [QML] url. Returns the item that became
     current.
 
+    StackView creates an instance automatically if the pushed item is a \l Component,
+    or a \l [QML] url. The optional \a properties argument specifies a map of initial
+    property values for the pushed item. For dynamically created items, these values
+    are applied before the creation is finalized. This is more efficient than setting
+    property values after creation, particularly where large sets of property values
+    are defined, and also allows property bindings to be set up (using \l{Qt::binding}
+    {Qt.binding()}) before the item is created.
+
     Pushing a single item:
     \code
     stackView.push(rect)
@@ -574,6 +582,14 @@ void QQuickStackView::pop(QQmlV4Function *args)
     If the \a target argument is specified, all items down to the \target
     item will be replaced. If \a target is \c null, all items in the stack
     will be replaced. If not specified, only the top item will be replaced.
+
+    StackView creates an instance automatically if the replacing item is a \l Component,
+    or a \l [QML] url. The optional \a properties argument specifies a map of initial
+    property values for the replacing item. For dynamically created items, these values
+    are applied before the creation is finalized. This is more efficient than setting
+    property values after creation, particularly where large sets of property values
+    are defined, and also allows property bindings to be set up (using \l{Qt::binding}
+    {Qt.binding()}) before the item is created.
 
     Replace the top item:
     \code
