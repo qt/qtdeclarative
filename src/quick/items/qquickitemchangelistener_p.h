@@ -120,7 +120,7 @@ class QQuickItemChangeListener
 public:
     virtual ~QQuickItemChangeListener() {}
 
-    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) {}
+    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF & /* diff */) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}
