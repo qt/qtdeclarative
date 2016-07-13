@@ -370,6 +370,9 @@ private slots:
     void testRenderJob();
 
     void testHoverChildMouseEventFilter();
+
+    void pointerEventTypeAndPointCount();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2324,6 +2327,52 @@ void tst_qquickwindow::testHoverChildMouseEventFilter()
     QTRY_VERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverEnter) > 0);
     QCOMPARE(topItem->eventCount(QEvent::HoverEnter), 0);
     QCOMPARE(middleItem->eventCount(QEvent::HoverEnter), 0);
+}
+
+void tst_qquickwindow::pointerEventTypeAndPointCount()
+{
+    QQuickPointerEvent pe;
+    QMouseEvent me(QEvent::MouseButtonPress, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QTouchEvent te(QEvent::TouchBegin, touchDevice, Qt::NoModifier, Qt::TouchPointPressed,
+        QList<QTouchEvent::TouchPoint>() << QTouchEvent::TouchPoint(1));
+
+    QVERIFY(!pe.isValid());
+
+    pe.reset(&me);
+    QVERIFY(pe.isValid());
+    QVERIFY(pe.isMouseEvent());
+    QVERIFY(!pe.isTouchEvent());
+    QVERIFY(!pe.isTabletEvent());
+    QVERIFY(pe.asMouseEvent());
+    QVERIFY(!pe.asTouchEvent());
+//    QVERIFY(!pe.asTabletEvent()); // TODO
+    QCOMPARE(pe.pointCount(), 1);
+
+    pe.reset(&te);
+    QVERIFY(pe.isValid());
+    QVERIFY(!pe.isMouseEvent());
+    QVERIFY(pe.isTouchEvent());
+    QVERIFY(!pe.isTabletEvent());
+    QVERIFY(!pe.asMouseEvent());
+    QVERIFY(pe.asTouchEvent());
+//    QVERIFY(!pe.asTabletEvent()); // TODO
+    QCOMPARE(pe.pointCount(), 1);
+    QCOMPARE(pe.touchPointById(1)->id(), 1);
+    QVERIFY(!pe.touchPointById(0));
+
+    te.setTouchPoints(QList<QTouchEvent::TouchPoint>() << QTouchEvent::TouchPoint(1) << QTouchEvent::TouchPoint(2));
+    pe.reset(&te);
+    QCOMPARE(pe.pointCount(), 2);
+    QCOMPARE(pe.touchPointById(1)->id(), 1);
+    QCOMPARE(pe.touchPointById(2)->id(), 2);
+    QVERIFY(!pe.touchPointById(0));
+
+    te.setTouchPoints(QList<QTouchEvent::TouchPoint>() << QTouchEvent::TouchPoint(2));
+    pe.reset(&te);
+    QCOMPARE(pe.pointCount(), 1);
+    QCOMPARE(pe.touchPointById(2)->id(), 2);
+    QVERIFY(!pe.touchPointById(1));
+    QVERIFY(!pe.touchPointById(0));
 }
 
 QTEST_MAIN(tst_qquickwindow)
