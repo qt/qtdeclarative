@@ -215,8 +215,8 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 void CompilationUnit::destroy()
 {
     QQmlEngine *qmlEngine = 0;
-    if (engine)
-        qmlEngine = engine->qmlEngine();
+    if (engine && engine->v8Engine)
+        qmlEngine = engine->v8Engine->engine();
     if (qmlEngine)
         QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
     else
