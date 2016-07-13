@@ -2329,7 +2329,7 @@ QQuickItem::~QQuickItem()
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(0);
 
-    const auto listeners = d->changeListeners;
+    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
     for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
         if (anchor)
@@ -3572,7 +3572,7 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners;
+    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
     for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::SiblingOrder) {
             change.listener->itemSiblingOrderChanged(q);
@@ -3686,7 +3686,8 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     change.setWidthChange(diff.width() != 0);
     change.setHeightChange(diff.height() != 0);
 
-    for (const QQuickItemPrivate::ChangeListener &listener : qAsConst(d->changeListeners)) {
+    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+    for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
         if (listener.types & QQuickItemPrivate::Geometry) {
             if (change.matches(listener.gTypes))
                 listener.listener->itemGeometryChanged(this, change, diff);
@@ -4245,7 +4246,7 @@ void QQuickItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    const auto listeners = d->changeListeners;
+    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
     for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::Geometry) {
             QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
@@ -5920,7 +5921,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Children) {
                 change.listener->itemChildAdded(q, data.item);
@@ -5930,7 +5931,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     }
     case QQuickItem::ItemChildRemovedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Children) {
                 change.listener->itemChildRemoved(q, data.item);
@@ -5943,7 +5944,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Visibility) {
                 change.listener->itemVisibilityChanged(q);
@@ -5953,7 +5954,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     }
     case QQuickItem::ItemParentHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Parent) {
                 change.listener->itemParentChanged(q, data.item);
@@ -5963,7 +5964,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     }
     case QQuickItem::ItemOpacityHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Opacity) {
                 change.listener->itemOpacityChanged(q);
@@ -5976,7 +5977,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners;
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &change : listeners) {
             if (change.types & QQuickItemPrivate::Rotation) {
                 change.listener->itemRotationChanged(q);
@@ -6338,7 +6339,7 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners;
+    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
     for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::ImplicitWidth) {
             change.listener->itemImplicitWidthChanged(q);
@@ -6502,7 +6503,7 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners;
+    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
     for (const QQuickItemPrivate::ChangeListener &change : listeners) {
         if (change.types & QQuickItemPrivate::ImplicitHeight) {
             change.listener->itemImplicitHeightChanged(q);
