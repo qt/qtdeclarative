@@ -88,27 +88,27 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \enum QSGRendererInterface::ShaderType
-    \value UnknownShadingLanguage - Not yet known due to no window and scenegraph associated
-    \value GLSL - GLSL or GLSL ES
-    \value HLSL - HLSL
+    \value UnknownShadingLanguage Not yet known due to no window and scenegraph associated
+    \value GLSL GLSL or GLSL ES
+    \value HLSL HLSL
  */
 
 /*!
     \enum QSGRendererInterface::ShaderCompilationType
-    \value RuntimeCompilation - Runtime compilation of shader source code is supported
-    \value OfflineCompilation - Pre-compiled bytecode supported
+    \value RuntimeCompilation Runtime compilation of shader source code is supported
+    \value OfflineCompilation Pre-compiled bytecode supported
  */
 
 /*!
     \enum QSGRendererInterface::ShaderSourceType
 
-    \value ShaderSourceString - Shader source can be provided as a string in
+    \value ShaderSourceString Shader source can be provided as a string in
     the corresponding properties of ShaderEffect
 
-    \value ShaderSourceFile - Local or resource files containing shader source
+    \value ShaderSourceFile Local or resource files containing shader source
     code are supported
 
-    \value ShaderByteCode - Local or resource files containing shader bytecode are
+    \value ShaderByteCode Local or resource files containing shader bytecode are
     supported
  */
 
