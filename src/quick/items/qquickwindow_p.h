@@ -69,13 +69,19 @@
 
 QT_BEGIN_NAMESPACE
 
-//Make it easy to identify and customize the root item if needed
-
+class QOpenGLVertexArrayObjectHelper;
 class QQuickAnimatorController;
-class QSGRenderLoop;
-class QQuickRenderControl;
 class QQuickDragGrabber;
+class QQuickItemPrivate;
+class QQuickPointerDevice;
+class QQuickRenderControl;
+class QQuickWindowIncubationController;
+class QQuickWindowPrivate;
+class QQuickWindowRenderLoop;
+class QSGRenderLoop;
+class QTouchEvent;
 
+//Make it easy to identify and customize the root item if needed
 class QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
@@ -85,16 +91,6 @@ public Q_SLOTS:
     void setWidth(int w) {QQuickItem::setWidth(qreal(w));}
     void setHeight(int h) {QQuickItem::setHeight(qreal(h));}
 };
-
-class QQuickItemPrivate;
-class QQuickWindowPrivate;
-
-class QTouchEvent;
-class QQuickPointerDevice;
-class QQuickWindowRenderLoop;
-class QQuickWindowIncubationController;
-
-class QOpenGLVertexArrayObjectHelper;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickCustomRenderStage
 {
