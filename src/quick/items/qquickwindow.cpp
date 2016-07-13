@@ -1654,8 +1654,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
         me->accept();
         q->sendEvent(mouseGrabberItem, me.data());
         event->setAccepted(me->isAccepted());
-        if (me->isAccepted())
-            return true;
+        return me->isAccepted();
     }
 
     return false;
