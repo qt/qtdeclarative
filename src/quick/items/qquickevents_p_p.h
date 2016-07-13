@@ -222,10 +222,27 @@ private:
     bool _accepted;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+
+public:
+    QQuickCloseEvent()
+        : _accepted(true) {}
+
+    bool isAccepted() { return _accepted; }
+    void setAccepted(bool accepted) { _accepted = accepted; }
+
+private:
+    bool _accepted;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickKeyEvent)
 QML_DECLARE_TYPE(QQuickMouseEvent)
 QML_DECLARE_TYPE(QQuickWheelEvent)
+QML_DECLARE_TYPE(QQuickCloseEvent)
 
 #endif // QQUICKEVENTS_P_P_H
