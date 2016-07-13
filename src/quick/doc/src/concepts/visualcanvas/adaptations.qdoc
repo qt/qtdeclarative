@@ -249,12 +249,29 @@ See the ShaderEffect documentation for more details.
 \section2 Multisample Render Targets
 
 The Direct3D 12 adaptation ignores the QSurfaceFormat set on the QQuickWindow
-or QQuickView (or set via QSurfaceFormat::setDefaultFormat()), with one
-exception: QSurfaceFormat::samples() is still taken into account. When the
-value is greater than 1, multisample offscreen render targets will be created
-with the specified sample count and a quality of the maximum supported quality
-level. The backend automatically performs resolving into the non-multisample
-swapchain buffers after each frame.
+or QQuickView (or set via QSurfaceFormat::setDefaultFormat()), with two
+exceptions: QSurfaceFormat::samples() and QSurfaceFormat::alphaBufferSize() are
+still taken into account. When the samples value is greater than 1, multisample
+offscreen render targets will be created with the specified sample count and a
+quality of the maximum supported quality level. The backend automatically
+performs resolving into the non-multisample swapchain buffers after each frame.
+
+\section2 Semi-transparent windows
+
+When the alpha channel is enabled either via
+QQuickWindow::setDefaultAlphaBuffer() or by setting alphaBufferSize to a
+non-zero value in the window's QSurfaceFormat or in the global format managed
+by QSurfaceFormat::setDefaultFormat(), the D3D12 backend will create a
+swapchain for composition and go through DirectComposition since the flip model
+swapchain (which is mandatory) would not support transparency otherwise.
+
+It is therefore important not to unneccessarily request an alpha channel. When
+the alphaBufferSize is 0 or the default -1, all these extra steps can be
+avoided and the traditional window-based swapchain is sufficient.
+
+This is not relevant on WinRT because there the backend always uses a
+composition swapchain which is associated with the ISwapChainPanel that backs
+QWindow on that platform.
 
 \section2 Mipmaps
 

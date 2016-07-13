@@ -287,7 +287,7 @@ public:
     QSGD3D12Engine();
     ~QSGD3D12Engine();
 
-    bool attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples);
+    bool attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha);
     void releaseResources();
     bool hasResources() const;
     void setWindowSize(const QSize &size, float dpr);

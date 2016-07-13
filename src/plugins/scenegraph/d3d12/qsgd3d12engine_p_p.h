@@ -56,6 +56,7 @@
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <dcomp.h>
 #include <wrl/client.h>
 
 using namespace Microsoft::WRL;
@@ -130,7 +131,7 @@ struct QSGD3D12CPUWaitableFence
 class QSGD3D12EnginePrivate : public QSGD3D12DeviceManager::DeviceLossObserver
 {
 public:
-    void initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples);
+    void initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha);
     bool isInitialized() const { return initialized; }
     void releaseResources();
     void setWindowSize(const QSize &size, float dpr);
@@ -269,6 +270,7 @@ private:
     QSize windowSize;
     float windowDpr;
     uint windowSamples;
+    bool windowAlpha;
     int swapChainBufferCount;
     int frameInFlightCount;
     int waitableSwapChainMaxLatency;
@@ -432,6 +434,10 @@ private:
     };
 
     DeviceLossTester devLossTest;
+
+    ComPtr<IDCompositionDevice> dcompDevice;
+    ComPtr<IDCompositionTarget> dcompTarget;
+    ComPtr<IDCompositionVisual> dcompVisual;
 };
 
 inline uint qHash(const QSGD3D12EnginePrivate::PersistentFrameData::PendingRelease &pr, uint seed = 0)

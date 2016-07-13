@@ -318,14 +318,14 @@ QSGD3D12Engine::~QSGD3D12Engine()
     delete d;
 }
 
-bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples)
+bool QSGD3D12Engine::attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha)
 {
     if (d->isInitialized()) {
         qWarning("QSGD3D12Engine: Cannot attach active engine to window");
         return false;
     }
 
-    d->initialize(window, size, dpr, surfaceFormatSamples);
+    d->initialize(window, size, dpr, surfaceFormatSamples, alpha);
     return d->isInitialized();
 }
 
@@ -669,6 +669,11 @@ void QSGD3D12EnginePrivate::releaseResources()
 
     commandQueue = nullptr;
     copyCommandQueue = nullptr;
+
+    dcompTarget = nullptr;
+    dcompVisual = nullptr;
+    dcompDevice = nullptr;
+
     swapChain = nullptr;
 
     delete presentFence;
@@ -681,7 +686,7 @@ void QSGD3D12EnginePrivate::releaseResources()
     // 'window' must be kept, may just be a device loss
 }
 
-void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples)
+void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha)
 {
     if (initialized)
         return;
@@ -690,6 +695,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     windowSize = size;
     windowDpr = dpr;
     windowSamples = qMax(1, surfaceFormatSamples); // may be -1 or 0, whereas windowSamples is uint and >= 1
+    windowAlpha = alpha;
 
     swapChainBufferCount = qMin(qEnvironmentVariableIntValue("QT_D3D_BUFFER_COUNT"), MAX_SWAP_CHAIN_BUFFER_COUNT);
     if (swapChainBufferCount < 2)
@@ -764,28 +770,91 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
 #ifndef Q_OS_WINRT
     HWND hwnd = reinterpret_cast<HWND>(w);
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-    swapChainDesc.BufferCount = swapChainBufferCount;
-    swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
-    swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
-    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // D3D12 requires the flip model
-    swapChainDesc.OutputWindow = hwnd;
-    swapChainDesc.SampleDesc.Count = 1; // Flip does not support MSAA so no choice here
-    swapChainDesc.Windowed = TRUE;
-    if (waitableSwapChainMaxLatency)
-        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-
-    ComPtr<IDXGISwapChain> baseSwapChain;
-    HRESULT hr = dev->dxgi()->CreateSwapChain(commandQueue.Get(), &swapChainDesc, &baseSwapChain);
-    if (FAILED(hr)) {
-        qWarning("Failed to create swap chain: 0x%x", hr);
-        return;
+    if (windowAlpha) {
+        // Go through DirectComposition for semi-transparent windows since the
+        // traditional approaches won't fly with flip model swapchains.
+        HRESULT hr = DCompositionCreateDevice(nullptr, IID_PPV_ARGS(&dcompDevice));
+        if (SUCCEEDED(hr)) {
+            hr = dcompDevice->CreateTargetForHwnd(hwnd, true, &dcompTarget);
+            if (SUCCEEDED(hr)) {
+                hr = dcompDevice->CreateVisual(&dcompVisual);
+                if (FAILED(hr)) {
+                    qWarning("Failed to create DirectComposition visual: 0x%x", hr);
+                    windowAlpha = false;
+                }
+            } else {
+                qWarning("Failed to create DirectComposition target: 0x%x", hr);
+                windowAlpha = false;
+            }
+        } else {
+            qWarning("Failed to create DirectComposition device: 0x%x", hr);
+            windowAlpha = false;
+        }
     }
-    if (FAILED(baseSwapChain.As(&swapChain))) {
-        qWarning("Failed to cast swap chain");
-        return;
+
+    if (windowAlpha) {
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+        swapChainDesc.Width = windowSize.width() * windowDpr;
+        swapChainDesc.Height = windowSize.height() * windowDpr;
+        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.SampleDesc.Count = 1;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount = swapChainBufferCount;
+        swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+        if (waitableSwapChainMaxLatency)
+            swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+
+        ComPtr<IDXGISwapChain1> baseSwapChain;
+        HRESULT hr = dev->dxgi()->CreateSwapChainForComposition(commandQueue.Get(), &swapChainDesc, nullptr, &baseSwapChain);
+        if (SUCCEEDED(hr)) {
+            if (SUCCEEDED(baseSwapChain.As(&swapChain))) {
+                hr = dcompVisual->SetContent(swapChain.Get());
+                if (SUCCEEDED(hr)) {
+                    hr = dcompTarget->SetRoot(dcompVisual.Get());
+                    if (FAILED(hr)) {
+                        qWarning("SetRoot failed for DirectComposition target: 0x%x", hr);
+                        windowAlpha = false;
+                    }
+                } else {
+                    qWarning("SetContent failed for DirectComposition visual: 0x%x", hr);
+                    windowAlpha = false;
+                }
+            } else {
+                qWarning("Failed to cast swap chain");
+                windowAlpha = false;
+            }
+        } else {
+            qWarning("Failed to create swap chain for composition: 0x%x", hr);
+            windowAlpha = false;
+        }
+    }
+
+    if (!windowAlpha) {
+        DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+        swapChainDesc.BufferCount = swapChainBufferCount;
+        swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
+        swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
+        swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // D3D12 requires the flip model
+        swapChainDesc.OutputWindow = hwnd;
+        swapChainDesc.SampleDesc.Count = 1; // Flip does not support MSAA so no choice here
+        swapChainDesc.Windowed = TRUE;
+        if (waitableSwapChainMaxLatency)
+            swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+
+        ComPtr<IDXGISwapChain> baseSwapChain;
+        HRESULT hr = dev->dxgi()->CreateSwapChain(commandQueue.Get(), &swapChainDesc, &baseSwapChain);
+        if (FAILED(hr)) {
+            qWarning("Failed to create swap chain: 0x%x", hr);
+            return;
+        }
+        if (FAILED(baseSwapChain.As(&swapChain))) {
+            qWarning("Failed to cast swap chain");
+            return;
+        }
     }
 
     dev->dxgi()->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
@@ -810,7 +879,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         return;
     }
     if (FAILED(baseSwapChain.As(&swapChain))) {
-        qWarning("Failed to case swap chain");
+        qWarning("Failed to cast swap chain");
         return;
     }
 
@@ -1240,7 +1309,7 @@ void QSGD3D12EnginePrivate::updateBuffer(Buffer *buf)
 void QSGD3D12EnginePrivate::ensureDevice()
 {
     if (!initialized && window)
-        initialize(window, windowSize, windowDpr, windowSamples);
+        initialize(window, windowSize, windowDpr, windowSamples, windowAlpha);
 }
 
 void QSGD3D12EnginePrivate::beginFrame()
@@ -2091,6 +2160,11 @@ void QSGD3D12EnginePrivate::present()
         qWarning("Present failed: 0x%x", hr);
         return;
     }
+
+#ifndef Q_OS_WINRT
+    if (dcompDevice)
+        dcompDevice->Commit();
+#endif
 
     ++presentFrameIndex;
 }

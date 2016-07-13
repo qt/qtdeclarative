@@ -54,7 +54,7 @@ HEADERS += \
     $$PWD/qsgd3d12publicnodes_p.h \
     $$PWD/qsgd3d12spritenode_p.h
 
-LIBS += -ldxgi -ld3d12 -ld3dcompiler
+LIBS += -ldxgi -ld3d12 -ld3dcompiler -ldcomp
 
 include($$PWD/shaders/shaders.pri)
 

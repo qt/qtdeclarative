@@ -164,12 +164,13 @@ void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)
     m_windows[window] = data;
 
     const int samples = window->format().samples();
+    const bool alpha = window->format().alphaBufferSize() > 0;
     const qreal dpr = window->effectiveDevicePixelRatio();
 
     if (Q_UNLIKELY(debug_loop()))
-        qDebug() << "initializing D3D12 engine" << window << window->size() << dpr << samples;
+        qDebug() << "initializing D3D12 engine" << window << window->size() << dpr << samples << alpha;
 
-    data.engine->attachToWindow(window->winId(), window->size(), dpr, samples);
+    data.engine->attachToWindow(window->winId(), window->size(), dpr, samples, alpha);
 }
 
 void QSGD3D12RenderLoop::obscureWindow(QQuickWindow *window)
@@ -437,10 +438,11 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     if (needsWindow) {
         // Must only ever get here when there is no window or releaseResources() has been called.
         const int samples = window->format().samples();
+        const bool alpha = window->format().alphaBufferSize() > 0;
         const qreal dpr = window->effectiveDevicePixelRatio();
         if (Q_UNLIKELY(debug_loop()))
-            qDebug() << "sync - reinitializing D3D12 engine" << window << window->size() << dpr << samples;
-        data.engine->attachToWindow(window->winId(), window->size(), dpr, samples);
+            qDebug() << "sync - reinitializing D3D12 engine" << window << window->size() << dpr << samples << alpha;
+        data.engine->attachToWindow(window->winId(), window->size(), dpr, samples, alpha);
     }
 
     // Recover from device loss.
