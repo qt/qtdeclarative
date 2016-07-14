@@ -146,8 +146,6 @@ struct RegExp
         QJsonPrivate::qle_bitfield<0, 4> flags;
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
-
-    static int calculateSize() { return sizeof(RegExp); }
 };
 
 struct Lookup
@@ -166,8 +164,6 @@ struct Lookup
     };
 
     Lookup() { type_and_flags = 0; nameIndex = 0; }
-
-    static int calculateSize() { return sizeof(Lookup); }
 };
 
 struct JSClassMember
@@ -687,15 +683,6 @@ struct Unit
         *nMembers = klass->nMembers;
         return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
     }
-
-    static int calculateSize(uint nFunctions, uint nRegExps, uint nConstants,
-                             uint nLookups, uint nClasses) {
-        return (sizeof(Unit)
-                + (nFunctions + nClasses) * sizeof(uint)
-                + nRegExps * RegExp::calculateSize()
-                + nConstants * sizeof(QV4::ReturnedValue)
-                + nLookups * Lookup::calculateSize()
-                + 7) & ~7; }
 };
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
