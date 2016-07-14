@@ -314,21 +314,27 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(QPointF scenePos READ scenePos)
     Q_PROPERTY(Qt::TouchPointState state READ state)
     Q_PROPERTY(quint64 pointId READ pointId)
+    Q_PROPERTY(qreal timeHeld READ timeHeld)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickEventPoint() : QObject(), m_pointId(0), m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
+    QQuickEventPoint() : QObject(), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
+        m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
     {
         Q_UNUSED(m_reserved);
     }
 
-    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId)
+    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
     {
         m_scenePos = scenePos;
         m_pointId = pointId;
         m_valid = true;
         m_accept = false;
         m_state = state;
+        m_timestamp = timestamp;
+        if (state == Qt::TouchPointPressed)
+            m_pressTimestamp = timestamp;
+        // TODO calculate velocity
     }
 
     void invalidate() { m_valid = false; }
@@ -337,12 +343,15 @@ public:
     Qt::TouchPointState state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
     bool isValid() const { return m_valid; }
+    qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true) { m_accept = accepted; }
 
 private:
     QPointF m_scenePos;
     quint64 m_pointId;
+    ulong m_timestamp;
+    ulong m_pressTimestamp;
     Qt::TouchPointState m_state;
     bool m_valid : 1;
     bool m_accept : 1;
@@ -359,10 +368,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
 public:
     QQuickEventTouchPoint() : QQuickEventPoint(), m_rotation(0), m_pressure(0) { }
 
-    void reset(const QTouchEvent::TouchPoint &tp)
+    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
     {
-        QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id());
-        // TODO times and velocity
+        QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
         m_rotation = tp.rotation();
         m_pressure = tp.pressure();
         m_uniqueId = tp.uniqueId();
