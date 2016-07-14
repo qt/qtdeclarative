@@ -621,6 +621,28 @@ QMouseEvent *QQuickPointerEvent::syntheticMouseEvent(int pointID, QQuickItem *re
 
 /*!
     \internal
+    Returns a pointer to the QQuickEventPoint which has the \a pointId as
+    \l {QQuickEventPoint::pointId}{pointId}.
+    Returns nullptr if there is no point with that ID.
+*/
+QQuickEventPoint *QQuickPointerEvent::pointById(quint64 pointId) {
+    if (isMouseEvent()) {
+        if (m_mousePoint && pointId == m_mousePoint->pointId())
+            return m_mousePoint;
+    }
+    if (isTouchEvent()) {
+        auto it = std::find_if(m_touchPoints.constBegin(), m_touchPoints.constEnd(),
+            [pointId](const QQuickEventTouchPoint *tp) { return tp->pointId() == pointId; } );
+        if (it != m_touchPoints.constEnd()) {
+            return *it;
+        }
+    }
+    // TODO it could alternatively be a tablet point
+    return nullptr;
+}
+
+/*!
+    \internal
     Returns a pointer to the original TouchPoint which has the same
     \l {QTouchEvent::TouchPoint::id}{id} as \a pointId, if the original event is a
     QTouchEvent, and if that point is found. Otherwise, returns nullptr.

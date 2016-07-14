@@ -418,6 +418,7 @@ public: // helpers for C++ only (during event delivery)
 
     int pointCount() const { return m_pointCount; }
     const QQuickEventPoint *point(int i) const;
+    QQuickEventPoint *pointById(quint64 pointId);
 
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
 
