@@ -305,8 +305,16 @@ void QQuickGenericShaderEffect::maybeUpdateShaders()
         m_vertNeedsUpdate = !updateShader(Vertex, m_vertShader);
     if (m_fragNeedsUpdate)
         m_fragNeedsUpdate = !updateShader(Fragment, m_fragShader);
-    if (m_vertNeedsUpdate || m_fragNeedsUpdate)
-        m_item->polish();
+    if (m_vertNeedsUpdate || m_fragNeedsUpdate) {
+        // This function is invoked either from componentComplete or in a
+        // response to a previous invocation's polish() request. If this is
+        // case #1 then updateShader can fail due to not having a window or
+        // scenegraph ready. Schedule the polish to try again later. In case #2
+        // the backend probably does not have shadereffect support so there is
+        // nothing to do for us here.
+        if (!m_item->window() || !m_item->window()->isSceneGraphInitialized())
+            m_item->polish();
+    }
 }
 
 void QQuickGenericShaderEffect::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
