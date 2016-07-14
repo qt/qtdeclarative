@@ -161,6 +161,16 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    Value *bigEndianConstants = new Value[data->constantTableSize];
+    const LEUInt64 *littleEndianConstants = data->constants();
+    for (uint i = 0; i < data->constantTableSize; ++i)
+        bigEndianConstants[i] = Value::fromReturnedValue(littleEndianConstants[i]);
+    constants = bigEndianConstants;
+#else
+    constants = reinterpret_cast<const Value*>(data->constants());
+#endif
+
     linkBackendToEngine(engine);
 
     if (data->indexOfRootFunction != -1)
@@ -203,6 +213,9 @@ void CompilationUnit::unlink()
     runtimeClasses = 0;
     qDeleteAll(runtimeFunctions);
     runtimeFunctions.clear();
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    delete [] constants;
+#endif
 }
 
 void CompilationUnit::markObjects(QV4::ExecutionEngine *e)

@@ -222,7 +222,7 @@ ReturnedValue Script::run()
         ContextStateSaver stateSaver(valueScope, scope);
         scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
-        scope->d()->constantTable = vmFunction->compilationUnit->data->constants();
+        scope->d()->constantTable = vmFunction->compilationUnit->constants;
         scope->d()->compilationUnit = vmFunction->compilationUnit;
 
         return Q_V4_PROFILE(engine, vmFunction);

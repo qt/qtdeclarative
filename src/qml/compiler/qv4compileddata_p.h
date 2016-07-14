@@ -691,8 +691,8 @@ struct Unit
     const RegExp *regexpAt(int index) const {
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
-    const QV4::Value *constants() const {
-        return reinterpret_cast<const QV4::Value*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    const LEUInt64 *constants() const {
+        return reinterpret_cast<const LEUInt64*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
     }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
@@ -852,6 +852,9 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     // this is initialized on-demand by QQmlContextData
     QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
     IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
+
+    // pointers either to data->constants() or little-endian memory copy.
+    const Value* constants;
 
     void finalize(QQmlEnginePrivate *engine);
 

@@ -248,8 +248,14 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);
     memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
 
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     ReturnedValue *constantTable = reinterpret_cast<ReturnedValue *>(dataPtr + unit->offsetToConstantTable);
     memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
+#else
+    CompiledData::LEUInt64 *constantTable = reinterpret_cast<CompiledData::LEUInt64 *>(dataPtr + unit->offsetToConstantTable);
+    for (int i = 0; i < constants.count(); ++i)
+        constantTable[i] = constants.at(i);
+#endif
 
     {
         memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
