@@ -311,6 +311,11 @@ Custom Qt Quick items using custom scenegraph nodes can be problematic.
 Materials are inherently tied to the graphics API. Therefore only items using
 the utility rectangle and image nodes are functional across all adaptations.
 
+QQuickWidget and its underlying OpenGL-based compositing architecture is not
+supported. If mixing with QWidget-based user interfaces is desired, use
+QWidget::createWindowContainer() to embed the native window of the QQuickWindow
+or QQuickView.
+
 Finally, rendering via QSGEngine and QSGAbstractRenderer is not feasible with
 the D3D12 adaptation at the moment.
 
