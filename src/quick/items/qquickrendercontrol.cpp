@@ -124,6 +124,10 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
   To send events, for example mouse or keyboard events, to the scene, use
   QCoreApplication::sendEvent() with the QQuickWindow instance as the receiver.
 
+  \note In general QQuickRenderControl is supported in combination with all Qt
+  Quick backends. However, some functionality, in particular grab(), may not be
+  available in all cases.
+
   \inmodule QtQuick
 */
 
@@ -209,8 +213,9 @@ void QQuickRenderControl::prepareThread(QThread *targetThread)
 }
 
 /*!
-  Initializes the scene graph resources. The context \a gl has to
-  be the current context.
+  Initializes the scene graph resources. The context \a gl has to be the
+  current OpenGL context or null if it is not relevant because a Qt Quick
+  backend other than OpenGL is in use.
 
   \note Qt Quick does not take ownership of the context. It is up to the
   application to destroy it after a call to invalidate() or after the

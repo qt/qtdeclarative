@@ -468,6 +468,13 @@ QObject *QQuickWidgetPrivate::focusObject()
     Qt::WA_TranslucentBackground on the top-level window, request an alpha channel, and
     change the Qt Quick Scenegraph's clear color to Qt::transparent via setClearColor().
 
+    \section1 Support when not using OpenGL
+
+    In addition to OpenGL, the \c software backend of Qt Quick also supports
+    QQuickWidget. Other backends, for example the Direct 3D 12 one, are not
+    compatible however and attempting to construct a QQuickWidget will lead to
+    problems.
+
     \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
 
