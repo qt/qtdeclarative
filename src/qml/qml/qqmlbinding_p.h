@@ -87,9 +87,9 @@ public:
 
     void refresh() Q_DECL_OVERRIDE;
 
-    void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding) Q_DECL_OVERRIDE;
+    void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) Q_DECL_OVERRIDE;
     QString expression() const Q_DECL_OVERRIDE;
-    void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
+    void update(QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding);
 
     typedef int Identifier;
     enum {
@@ -103,7 +103,7 @@ public:
 
 protected:
     virtual void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
-                          QQmlPropertyPrivate::WriteFlags flags, QV4::Scope &scope,
+                          QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                           const QV4::ScopedFunctionObject &f) = 0;
 
     QQmlPropertyData getPropertyData() const;
@@ -111,7 +111,7 @@ protected:
     int getPropertyType() const;
 
     bool slowWrite(const QQmlPropertyData &core, const QV4::Value &result, bool isUndefined,
-                   QQmlPropertyPrivate::WriteFlags flags);
+                   QQmlPropertyData::WriteFlags flags);
 
 private:
     inline bool updatingFlag() const;

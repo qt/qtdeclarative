@@ -159,9 +159,9 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
         for (int ii = 0; ii < applyList.size(); ++ii) {
             const QQuickStateAction &action = applyList.at(ii);
             if (action.toBinding) {
-                QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+                QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             } else if (!action.event) {
-                QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+                QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             } else if (action.event->isReversable()) {
                 if (action.reverseEvent)
                     action.event->reverse();
@@ -197,7 +197,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             if (action.toBinding)
                 QQmlPropertyPrivate::removeBinding(action.property); // Make sure this is disabled during the transition
 
-            QQmlPropertyPrivate::write(action.property, action.fromValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+            QQmlPropertyPrivate::write(action.property, action.fromValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         }
     }
 

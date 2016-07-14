@@ -63,7 +63,7 @@ public:
     QQmlAbstractBinding *binding(int targetPropertyIndex);
     void removeBindings(quint32 mask);
 
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
+    virtual void setEnabled(bool, QQmlPropertyData::WriteFlags);
     virtual bool isValueTypeProxy() const;
 
 protected:

@@ -194,7 +194,7 @@ class MyOffsetValueInterceptor : public QObject, public QQmlPropertyValueInterce
     Q_INTERFACES(QQmlPropertyValueInterceptor)
 public:
     virtual void setTarget(const QQmlProperty &p) { prop = p; }
-    virtual void write(const QVariant &value) { QQmlPropertyPrivate::write(prop, value.toInt() + 13, QQmlPropertyPrivate::BypassInterceptor); }
+    virtual void write(const QVariant &value) { QQmlPropertyPrivate::write(prop, value.toInt() + 13, QQmlPropertyData::BypassInterceptor); }
 
 private:
     QQmlProperty prop;
@@ -215,7 +215,7 @@ public:
         c.getRgb(&r, &g, &b, &a);
         c.setRgb(a, b, g, r);
 
-        QQmlPropertyPrivate::write(prop, c, QQmlPropertyPrivate::BypassInterceptor);
+        QQmlPropertyPrivate::write(prop, c, QQmlPropertyData::BypassInterceptor);
     }
 
 private:
@@ -230,7 +230,7 @@ public:
     virtual void setTarget(const QQmlProperty &p) { prop = p; }
     virtual void write(const QVariant &)
     {
-        QQmlPropertyPrivate::write(prop, 0.0f, QQmlPropertyPrivate::BypassInterceptor);
+        QQmlPropertyPrivate::write(prop, 0.0f, QQmlPropertyData::BypassInterceptor);
     }
 
 private:

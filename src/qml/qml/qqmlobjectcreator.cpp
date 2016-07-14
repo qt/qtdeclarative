@@ -275,11 +275,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 
 void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
-    QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
-                                                               QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
-    int propertyWriteStatus = -1;
-    void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
-
+    QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor | QQmlPropertyData::RemoveBindingOnAliasWrite;
     QV4::Scope scope(v4);
 
     int propertyType = property->propType;
@@ -307,16 +303,14 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 } else {
                     int i = int(n);
                     QVariant value(i);
-                    argv[0] = &value;
-                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                    property->writeProperty(_qobject, &value, propertyWriteFlags);
                 }
             } else {
                 if (property->isVarProperty()) {
                     _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Primitive::fromDouble(n));
                 } else {
                     QVariant value(n);
-                    argv[0] = &value;
-                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                    property->writeProperty(_qobject, &value, propertyWriteFlags);
                 }
             }
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
@@ -324,8 +318,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Primitive::fromBoolean(binding->valueAsBoolean()));
             } else {
                 QVariant value(binding->valueAsBoolean());
-                argv[0] = &value;
-                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                property->writeProperty(_qobject, &value, propertyWriteFlags);
             }
         } else {
             QString stringValue = binding->valueAsString(qmlUnit);
@@ -334,8 +327,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 _vmeMetaObject->setVMEProperty(property->coreIndex, s);
             } else {
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
-                argv[0] = &value;
-                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                property->writeProperty(_qobject, &value, propertyWriteFlags);
             }
         }
     }
@@ -343,26 +335,19 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::String: {
         Q_ASSERT(binding->evaluatesToString());
         QString value = binding->valueAsString(qmlUnit);
-        if (property->hasAccessors()) {
-            property->accessors->write(_qobject, &value);
-        } else {
-            argv[0] = &value;
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
-        }
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::StringList: {
         Q_ASSERT(binding->evaluatesToString());
         QStringList value(binding->valueAsString(qmlUnit));
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::ByteArray: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
         QByteArray value(binding->valueAsString(qmlUnit).toUtf8());
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Url: {
@@ -374,16 +359,14 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::UInt: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         double d = binding->valueAsNumber();
         uint value = uint(d);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     break;
@@ -391,35 +374,20 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         double d = binding->valueAsNumber();
         int value = int(d);
-        if (property->hasAccessors()) {
-            property->accessors->write(_qobject, &value);
-        } else {
-            argv[0] = &value;
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
-        }
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     break;
     case QMetaType::Float: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         float value = float(binding->valueAsNumber());
-        if (property->hasAccessors()) {
-            property->accessors->write(_qobject, &value);
-        } else {
-            argv[0] = &value;
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
-        }
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Double: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
         double value = binding->valueAsNumber();
-        if (property->hasAccessors()) {
-            property->accessors->write(_qobject, &value);
-        } else {
-            argv[0] = &value;
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
-        }
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Color: {
@@ -428,8 +396,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         Q_ASSERT(ok);
         struct { void *data[4]; } buffer;
         if (QQml_valueTypeProvider()->storeValueType(property->propType, &colorValue, &buffer, sizeof(buffer))) {
-            argv[0] = reinterpret_cast<void *>(&buffer);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &buffer, propertyWriteFlags);
         }
     }
     break;
@@ -438,16 +405,14 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         bool ok = false;
         QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Time: {
         bool ok = false;
         QTime value = QQmlStringConverters::timeFromString(binding->valueAsString(qmlUnit), &ok);
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::DateTime: {
@@ -460,8 +425,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             value = QDateTime(QDate::fromJulianDay(date), QTime::fromMSecsSinceStartOfDay(msecsSinceStartOfDay));
         }
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
 #endif // QT_NO_DATESTRING
@@ -469,59 +433,48 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         bool ok = false;
         QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok).toPoint();
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::PointF: {
         bool ok = false;
         QPointF value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok);
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Size: {
         bool ok = false;
         QSize value = QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok).toSize();
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::SizeF: {
         bool ok = false;
         QSizeF value = QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok);
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Rect: {
         bool ok = false;
         QRect value = QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok).toRect();
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::RectF: {
         bool ok = false;
         QRectF value = QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok);
         Q_ASSERT(ok);
-        argv[0] = &value;
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Bool: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Boolean);
         bool value = binding->valueAsBoolean();
-        if (property->hasAccessors()) {
-            property->accessors->write(_qobject, &value);
-        } else {
-            argv[0] = &value;
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
-        }
+        property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Vector3D: {
@@ -533,8 +486,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
-        argv[0] = reinterpret_cast<void *>(&vec);
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
     case QVariant::Vector4D: {
@@ -547,8 +499,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
-        argv[0] = reinterpret_cast<void *>(&vec);
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
     case QVariant::RegExp:
@@ -560,23 +511,20 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
             QList<qreal> value;
             value.append(binding->valueAsNumber());
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType == qMetaTypeId<QList<int> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
             double n = binding->valueAsNumber();
             QList<int> value;
             value.append(int(n));
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType == qMetaTypeId<QList<bool> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Boolean);
             QList<bool> value;
             value.append(binding->valueAsBoolean());
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
@@ -584,15 +532,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             QUrl u = urlString.isEmpty() ? QUrl() : compilationUnit->url().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType == qMetaTypeId<QList<QString> >()) {
             Q_ASSERT(binding->evaluatesToString());
             QList<QString> value;
             value.append(binding->valueAsString(qmlUnit));
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType == qMetaTypeId<QJSValue>()) {
             QJSValue value;
@@ -607,8 +553,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             } else {
                 value = QJSValue(binding->valueAsString(qmlUnit));
             }
-            argv[0] = reinterpret_cast<void *>(&value);
-            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         }
 
@@ -624,8 +569,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             break;
         }
 
-        argv[0] = value.data();
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        property->writeProperty(_qobject, value.data(), propertyWriteFlags);
     }
     break;
     }
@@ -755,8 +699,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         ss.d.data()->isNumberLiteral = binding->type == QV4::CompiledData::Binding::Type_Number;
         ss.d.data()->numberValue = binding->valueAsNumber();
 
-        QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
-                                                                   QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+        QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
+                                                            QQmlPropertyData::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;
         void *argv[] = { &ss, 0, &propertyWriteStatus, &propertyWriteFlags };
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
@@ -808,7 +752,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 return false;
 
             if (valueType)
-                valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
+                valueType->write(_qobject, property->coreIndex, QQmlPropertyData::BypassInterceptor);
 
             return true;
         }
@@ -934,8 +878,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             return true;
         }
 
-        QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
-                                                                   QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+        QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
+                                                            QQmlPropertyData::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;
         void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
 
@@ -1213,8 +1157,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         QQmlData *data = QQmlData::get(b->targetObject());
         Q_ASSERT(data);
         data->clearPendingBindingBit(b->targetPropertyIndex());
-        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                      QQmlPropertyPrivate::DontRemoveBinding);
+        b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
+                      QQmlPropertyData::DontRemoveBinding);
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;

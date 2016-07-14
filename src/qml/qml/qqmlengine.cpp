@@ -848,8 +848,8 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
         b = b->nextBinding();
 
     if (b && b->targetPropertyIndex() == coreIndex)
-        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                            QQmlPropertyPrivate::DontRemoveBinding);
+        b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
+                            QQmlPropertyData::DontRemoveBinding);
 }
 
 bool QQmlEnginePrivate::baseModulesUninitialized = true;

@@ -194,7 +194,7 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
 #endif
         if (qmlBinding)
             qmlBinding->setTarget(property);
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
         if (qmlBinding)
             qmlBinding->update();
 
@@ -262,7 +262,7 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
         binding->setTarget(property);
         binding->setNotifyOnValueChanged(true);
 
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
         //Refcounting is taking take care of deletion
         binding->update();
         if (binding->hasError()) {

@@ -58,7 +58,7 @@ QQmlValueTypeProxyBinding::~QQmlValueTypeProxyBinding()
     }
 }
 
-void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
+void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 {
     QQmlAbstractBinding *b = m_bindings.data();
     while (b) {

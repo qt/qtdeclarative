@@ -61,6 +61,7 @@
 #include <QtCore/qvector.h>
 
 #include <private/qv4value_p.h>
+#include <private/qqmlaccessors_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -228,6 +229,13 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyRawData::Flags)
 class QQmlPropertyData : public QQmlPropertyRawData
 {
 public:
+    enum WriteFlag {
+        BypassInterceptor = 0x01,
+        DontRemoveBinding = 0x02,
+        RemoveBindingOnAliasWrite = 0x04
+    };
+    Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
+
     inline QQmlPropertyData();
     inline QQmlPropertyData(const QQmlPropertyRawData &);
 
@@ -240,6 +248,33 @@ public:
     QString name(const QMetaObject *) const;
 
     void markAsOverrideOf(QQmlPropertyData *predecessor);
+
+    inline void readProperty(QObject *target, void *property) const
+    {
+        void *args[] = { property, 0 };
+        readPropertyWithArgs(target, args);
+    }
+
+    inline void readPropertyWithArgs(QObject *target, void *args[]) const
+    {
+        if (hasAccessors()) {
+            accessors->read(target, args[0]);
+        } else {
+            QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, args);
+        }
+    }
+
+    bool writeProperty(QObject *target, void *value, WriteFlags flags) const
+    {
+        if (flags.testFlag(BypassInterceptor) && hasAccessors() && accessors->write) {
+            accessors->write(target, value);
+        } else {
+            int status = -1;
+            void *argv[] = { value, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, coreIndex, argv);
+        }
+        return true;
+    }
 
 private:
     friend class QQmlPropertyCache;
@@ -769,6 +804,8 @@ private:
     Q_DISABLE_COPY(QQmlPropertyCacheVector)
     QVector<QFlagPointer<QQmlPropertyCache>> data;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyData::WriteFlags)
 
 QT_END_NAMESPACE
 

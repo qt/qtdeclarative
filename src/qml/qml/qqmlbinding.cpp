@@ -157,7 +157,7 @@ void QQmlBinding::setNotifyOnValueChanged(bool v)
     QQmlJavaScriptExpression::setNotifyOnValueChanged(v);
 }
 
-void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
+void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 {
     if (!enabledFlag() || !context() || !context()->isValid())
         return;
@@ -181,6 +181,9 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     QV4::ScopedFunctionObject f(scope, m_function.value());
     Q_ASSERT(f);
 
+    if (canUseAccessor())
+        flags.setFlag(QQmlPropertyData::BypassInterceptor);
+
     QQmlBindingProfiler prof(ep->profiler, this, f);
     doUpdate(this, watcher, flags, scope, f);
 
@@ -197,7 +200,7 @@ class QQmlBindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(QQmlBinding *binding, const DeleteWatcher &,
-                  QQmlPropertyPrivate::WriteFlags flags, QV4::Scope &,
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &,
                   const QV4::ScopedFunctionObject &) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         QQmlPropertyData pd = getPropertyData();
@@ -216,7 +219,7 @@ class GenericBinding: public QQmlBinding
 {
 protected:
     void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
-                  QQmlPropertyPrivate::WriteFlags flags, QV4::Scope &scope,
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                   const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         auto ep = QQmlEnginePrivate::get(scope.engine);
@@ -251,7 +254,7 @@ protected:
 
     // Returns true if successful, false if an error description was set on expression
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
-                               QQmlPropertyPrivate::WriteFlags flags)
+                               QQmlPropertyData::WriteFlags flags)
     {
         QQmlPropertyData pd = getPropertyData();
         int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
@@ -298,22 +301,15 @@ protected:
     }
 
     template <typename T>
-    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData &pd, QQmlPropertyPrivate::WriteFlags flags) const
+    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData &pd, QQmlPropertyData::WriteFlags flags) const
     {
         void *o = &value;
-        if (pd.hasAccessors() && canUseAccessor()) {
-            pd.accessors->write(m_target.data(), o);
-        } else {
-            int status = -1;
-            void *argv[] = { o, 0, &status, &flags };
-            QMetaObject::metacall(targetObject(), QMetaObject::WriteProperty, pd.coreIndex, argv);
-        }
-        return true;
+        return pd.writeProperty(targetObject(), o, flags);
     }
 };
 
 Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const QV4::Value &result,
-                                           bool isUndefined, QQmlPropertyPrivate::WriteFlags flags)
+                                           bool isUndefined, QQmlPropertyData::WriteFlags flags)
 {
     QQmlEngine *engine = context()->engine;
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
@@ -458,7 +454,7 @@ void QQmlBinding::refresh()
     update();
 }
 
-void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
+void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 {
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);

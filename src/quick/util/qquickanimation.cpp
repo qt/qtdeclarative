@@ -1202,7 +1202,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
         {
             for (int ii = 0; ii < actions.count(); ++ii) {
                 const QQuickStateAction &action = actions.at(ii);
-                QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+                QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             }
         }
         virtual void debugAction(QDebug d, int indentLevel) const {
@@ -2535,7 +2535,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
         QQuickStateAction &action = actions[ii];
 
         if (v == 1.) {
-            QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+            QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         } else {
             if (!fromSourced && !fromDefined) {
                 action.fromValue = action.property.read();
@@ -2551,7 +2551,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
                 }
             }
             if (interpolator)
-                QQmlPropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+                QQmlPropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         }
         if (deleted)
             return;
