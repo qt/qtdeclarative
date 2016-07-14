@@ -222,6 +222,150 @@ private:
     bool _accepted;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QPointF scenePos READ scenePos)
+    Q_PROPERTY(Qt::TouchPointState state READ state)
+    Q_PROPERTY(quint64 pointId READ pointId)
+    Q_PROPERTY(qreal timeHeld READ timeHeld)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+
+public:
+    QQuickEventPoint() : QObject(), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
+        m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
+    {
+        Q_UNUSED(m_reserved);
+    }
+
+    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
+    {
+        m_scenePos = scenePos;
+        m_pointId = pointId;
+        m_valid = true;
+        m_accept = false;
+        m_state = state;
+        m_timestamp = timestamp;
+        if (state == Qt::TouchPointPressed)
+            m_pressTimestamp = timestamp;
+        // TODO calculate velocity
+    }
+
+    void invalidate() { m_valid = false; }
+
+    QPointF scenePos() const { return m_scenePos; }
+    Qt::TouchPointState state() const { return m_state; }
+    quint64 pointId() const { return m_pointId; }
+    bool isValid() const { return m_valid; }
+    qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
+    bool isAccepted() const { return m_accept; }
+    void setAccepted(bool accepted = true) { m_accept = accepted; }
+
+private:
+    QPointF m_scenePos;
+    quint64 m_pointId;
+    ulong m_timestamp;
+    ulong m_pressTimestamp;
+    Qt::TouchPointState m_state;
+    bool m_valid : 1;
+    bool m_accept : 1;
+    int m_reserved : 30;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal rotation READ rotation)
+    Q_PROPERTY(qreal pressure READ pressure)
+    Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
+
+public:
+    QQuickEventTouchPoint() : QQuickEventPoint(), m_rotation(0), m_pressure(0) { }
+
+    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
+    {
+        QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
+        m_rotation = tp.rotation();
+        m_pressure = tp.pressure();
+        m_uniqueId = tp.uniqueId();
+    }
+
+    qreal rotation() const { return m_rotation; }
+    qreal pressure() const { return m_pressure; }
+    QPointerUniqueId uniqueId() const { return m_uniqueId; }
+
+private:
+    qreal m_rotation;
+    qreal m_pressure;
+    QPointerUniqueId m_uniqueId;
+};
+
+class QQuickItem;
+class QQuickPointerDevice;
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(const QQuickPointerDevice *device READ device)
+    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers)
+    Q_PROPERTY(Qt::MouseButtons button READ button)
+    Q_PROPERTY(Qt::MouseButtons buttons READ buttons)
+
+public:
+    QQuickPointerEvent(QObject *parent = nullptr)
+      : QObject(parent)
+      , m_device(nullptr)
+      , m_event(nullptr)
+      , m_button(Qt::NoButton)
+      , m_pressedButtons(Qt::NoButton)
+      , m_pointCount(0)
+      , m_mousePoint(nullptr)
+      , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier) { }
+
+public: // property accessors
+    const QQuickPointerDevice *device() const { return m_device; }
+    Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
+    Qt::MouseButton button() const { return m_button; }
+    Qt::MouseButtons buttons() const { return m_pressedButtons; }
+
+public: // helpers for C++ only (during event delivery)
+    QQuickPointerEvent *reset(QEvent *ev);
+
+    QTouchEvent *asTouchEvent() const;
+    QMouseEvent *asMouseEvent() const;
+
+    bool isMouseEvent() const;
+    bool isTouchEvent() const;
+    bool isTabletEvent() const;
+    bool isValid() const { return m_event != nullptr; }
+
+    int pointCount() const { return m_pointCount; }
+    const QQuickEventPoint *point(int i) const;
+    QQuickEventPoint *pointById(quint64 pointId);
+
+    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
+
+    QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
+
+    QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
+
+private:
+    void initFromMouse(QMouseEvent *ev);
+    void initFromTouch(QTouchEvent *ev);
+
+private:
+    const QQuickPointerDevice *m_device;
+    QInputEvent *m_event; // original event as received by QQuickWindow
+    Qt::MouseButton m_button;
+    Qt::MouseButtons m_pressedButtons;
+    int m_pointCount;
+    QVector<QQuickEventTouchPoint *> m_touchPoints;
+    QQuickEventPoint *m_mousePoint;
+    mutable QMouseEvent m_synthMouseEvent;
+
+    Q_DISABLE_COPY(QQuickPointerEvent)
+};
+
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
 {
@@ -307,149 +451,6 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::DeviceTypes)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::PointerTypes)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::Capabilities)
-
-class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QPointF scenePos READ scenePos)
-    Q_PROPERTY(Qt::TouchPointState state READ state)
-    Q_PROPERTY(quint64 pointId READ pointId)
-    Q_PROPERTY(qreal timeHeld READ timeHeld)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-
-public:
-    QQuickEventPoint() : QObject(), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
-        m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
-    {
-        Q_UNUSED(m_reserved);
-    }
-
-    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
-    {
-        m_scenePos = scenePos;
-        m_pointId = pointId;
-        m_valid = true;
-        m_accept = false;
-        m_state = state;
-        m_timestamp = timestamp;
-        if (state == Qt::TouchPointPressed)
-            m_pressTimestamp = timestamp;
-        // TODO calculate velocity
-    }
-
-    void invalidate() { m_valid = false; }
-
-    QPointF scenePos() const { return m_scenePos; }
-    Qt::TouchPointState state() const { return m_state; }
-    quint64 pointId() const { return m_pointId; }
-    bool isValid() const { return m_valid; }
-    qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
-    bool isAccepted() const { return m_accept; }
-    void setAccepted(bool accepted = true) { m_accept = accepted; }
-
-private:
-    QPointF m_scenePos;
-    quint64 m_pointId;
-    ulong m_timestamp;
-    ulong m_pressTimestamp;
-    Qt::TouchPointState m_state;
-    bool m_valid : 1;
-    bool m_accept : 1;
-    int m_reserved : 30;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
-{
-    Q_OBJECT
-    Q_PROPERTY(qreal rotation READ rotation)
-    Q_PROPERTY(qreal pressure READ pressure)
-    Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
-
-public:
-    QQuickEventTouchPoint() : QQuickEventPoint(), m_rotation(0), m_pressure(0) { }
-
-    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
-    {
-        QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
-        m_rotation = tp.rotation();
-        m_pressure = tp.pressure();
-        m_uniqueId = tp.uniqueId();
-    }
-
-    qreal rotation() const { return m_rotation; }
-    qreal pressure() const { return m_pressure; }
-    QPointerUniqueId uniqueId() const { return m_uniqueId; }
-
-private:
-    qreal m_rotation;
-    qreal m_pressure;
-    QPointerUniqueId m_uniqueId;
-};
-
-class QQuickItem;
-
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(const QQuickPointerDevice *device READ device)
-    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers)
-    Q_PROPERTY(Qt::MouseButtons button READ button)
-    Q_PROPERTY(Qt::MouseButtons buttons READ buttons)
-
-public:
-    QQuickPointerEvent(QObject *parent = nullptr)
-      : QObject(parent)
-      , m_device(nullptr)
-      , m_event(nullptr)
-      , m_button(Qt::NoButton)
-      , m_pressedButtons(Qt::NoButton)
-      , m_pointCount(0)
-      , m_mousePoint(nullptr)
-      , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier) { }
-
-public: // property accessors
-    const QQuickPointerDevice *device() const { return m_device; }
-    Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
-    Qt::MouseButton button() const { return m_button; }
-    Qt::MouseButtons buttons() const { return m_pressedButtons; }
-
-public: // helpers for C++ only (during event delivery)
-    QQuickPointerEvent *reset(QEvent *ev);
-
-    QTouchEvent *asTouchEvent() const;
-    QMouseEvent *asMouseEvent() const;
-
-    bool isMouseEvent() const;
-    bool isTouchEvent() const;
-    bool isTabletEvent() const;
-    bool isValid() const { return m_event != nullptr; }
-
-    int pointCount() const { return m_pointCount; }
-    const QQuickEventPoint *point(int i) const;
-    QQuickEventPoint *pointById(quint64 pointId);
-
-    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
-
-    QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
-
-    QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
-
-private:
-    void initFromMouse(QMouseEvent *ev);
-    void initFromTouch(QTouchEvent *ev);
-
-private:
-    const QQuickPointerDevice *m_device;
-    QInputEvent *m_event; // original event as received by QQuickWindow
-    Qt::MouseButton m_button;
-    Qt::MouseButtons m_pressedButtons;
-    int m_pointCount;
-    QVector<QQuickEventTouchPoint *> m_touchPoints;
-    QQuickEventPoint *m_mousePoint;
-    mutable QMouseEvent m_synthMouseEvent;
-
-    Q_DISABLE_COPY(QQuickPointerEvent)
-};
 
 QT_END_NAMESPACE
 
