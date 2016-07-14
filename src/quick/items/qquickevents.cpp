@@ -584,7 +584,7 @@ const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) c
         return nullptr;
     const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
     auto it = std::find_if(tps.constBegin(), tps.constEnd(),
-        [&pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
+        [pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
     // return the pointer to the actual TP in QTouchEvent::_touchPoints
     return (it == tps.end() ? nullptr : it.operator->());
 }
