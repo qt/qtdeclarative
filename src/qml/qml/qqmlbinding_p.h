@@ -119,7 +119,7 @@ private:
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
 
-    static QQmlBinding *newBinding(const QQmlPropertyData *property);
+    static QQmlBinding *newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property);
 };
 
 bool QQmlBinding::updatingFlag() const
