@@ -262,10 +262,10 @@ public:
     Q_FLAG(PointerTypes)
 
     enum CapabilityFlag {
-        Position    = 0x0001,
-        Area        = 0x0002,
-        Pressure    = 0x0004,
-        Velocity    = 0x0008,
+        Position    = QTouchDevice::Position,
+        Area        = QTouchDevice::Area,
+        Pressure    = QTouchDevice::Pressure,
+        Velocity    = QTouchDevice::Velocity,
         // some bits reserved in case we need more of QTouchDevice::Capabilities
         Scroll      = 0x0100, // mouse has a wheel, or there is OS-level scroll gesture recognition (dubious?)
         Hover       = 0x0200,
