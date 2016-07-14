@@ -219,6 +219,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     int unitSize = QV4::CompiledData::Unit::calculateSize(irModule->functions.size(), regexps.size(),
                                                           constants.size(), lookups.size(), jsClasses.count());
 
+    QHash<IR::Function *, uint> functionOffsets;
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QV4::IR::Function *f = irModule->functions.at(i);
@@ -313,7 +314,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     return unit;
 }
 
-int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *irFunction)
+int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *irFunction) const
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
@@ -340,8 +341,6 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *ir
     currentOffset += function->nLocals * sizeof(quint32);
 
     function->nInnerFunctions = irFunction->nestedFunctions.size();
-    function->innerFunctionsOffset = currentOffset;
-    currentOffset += function->nInnerFunctions * sizeof(quint32);
 
     function->nDependingIdObjects = 0;
     function->nDependingContextProperties = 0;
@@ -380,11 +379,6 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *ir
     quint32 *locals = (quint32 *)(f + function->localsOffset);
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(*irFunction->locals.at(i));
-
-    // write inner functions
-    quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);
-    for (int i = 0; i < irFunction->nestedFunctions.size(); ++i)
-        innerFunctions[i] = functionOffsets.value(irFunction->nestedFunctions.at(i));
 
     // write QML dependencies
     quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);

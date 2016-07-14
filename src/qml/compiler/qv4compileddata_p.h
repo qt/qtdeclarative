@@ -215,7 +215,6 @@ struct Function
     LEUInt32 nLocals;
     LEUInt32 localsOffset;
     LEUInt32 nInnerFunctions;
-    LEUInt32 innerFunctionsOffset;
     Location location;
 
     // Qml Extensions Begin

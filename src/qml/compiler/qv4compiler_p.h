@@ -114,13 +114,12 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     // Returns bytes written
-    int writeFunction(char *f, IR::Function *irFunction);
+    int writeFunction(char *f, IR::Function *irFunction) const;
 
     StringTableGenerator stringTable;
 private:
     IR::Module *irModule;
 
-    QHash<IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
