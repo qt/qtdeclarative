@@ -97,7 +97,6 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::IR::Module *module)
     : irModule(module)
-    , jsClassDataSize(0)
 {
     // Make sure the empty string always gets index 0
     registerString(QString());
@@ -179,30 +178,32 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
 {
     // ### re-use existing class definitions.
 
-    QList<CompiledData::JSClassMember> members;
-    members.reserve(count);
+    const int size = CompiledData::JSClass::calculateSize(count);
+    jsClassOffsets.append(jsClassData.size());
+    const int oldSize = jsClassData.size();
+    jsClassData.resize(jsClassData.size() + size);
+    memset(jsClassData.data() + oldSize, 0, size);
+
+    CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
+    jsClass->nMembers = count;
+    CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
     IR::ExprList *it = args;
-    for (int i = 0; i < count; ++i, it = it->next) {
-        CompiledData::JSClassMember member;
-
+    for (int i = 0; i < count; ++i, it = it->next, ++member) {
         QV4::IR::Name *name = it->expr->asName();
         it = it->next;
 
         const bool isData = it->expr->asConst()->value;
         it = it->next;
 
-        member.nameOffset = registerString(*name->id);
-        member.isAccessor = !isData;
-        members << member;
+        member->nameOffset = registerString(*name->id);
+        member->isAccessor = !isData;
 
         if (!isData)
             it = it->next;
     }
 
-    jsClasses << members;
-    jsClassDataSize += CompiledData::JSClass::calculateSize(members.count());
-    return jsClasses.size() - 1;
+    return jsClassOffsets.size() - 1;
 }
 
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
@@ -217,7 +218,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     }
 
     int unitSize = QV4::CompiledData::Unit::calculateSize(irModule->functions.size(), regexps.size(),
-                                                          constants.size(), lookups.size(), jsClasses.count());
+                                                          constants.size(), lookups.size(), jsClassOffsets.count());
 
     QHash<IR::Function *, uint> functionOffsets;
     uint functionDataSize = 0;
@@ -230,7 +231,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
-    const int totalSize = unitSize + functionDataSize + jsClassDataSize + (option == GenerateWithStringTable ? stringTable.sizeOfTableAndData() : 0);
+    const int totalSize = unitSize + functionDataSize + jsClassData.size() + (option == GenerateWithStringTable ? stringTable.sizeOfTableAndData() : 0);
     char *data = (char *)malloc(totalSize);
     memset(data, 0, totalSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
@@ -248,11 +249,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
     unit->constantTableSize = constants.size();
     unit->offsetToConstantTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
-    unit->jsClassTableSize = jsClasses.count();
+    unit->jsClassTableSize = jsClassOffsets.count();
     unit->offsetToJSClassTable = unit->offsetToConstantTable + unit->constantTableSize * sizeof(ReturnedValue);
     if (option == GenerateWithStringTable) {
         unit->stringTableSize = stringTable.stringCount();
-        unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
+        unit->offsetToStringTable = unitSize + functionDataSize + jsClassData.size();
     } else {
         unit->stringTableSize = 0;
         unit->offsetToStringTable = 0;
@@ -289,22 +290,14 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     ReturnedValue *constantTable = (ReturnedValue *)(data + unit->offsetToConstantTable);
     memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
 
-    // write js classes and js class lookup table
-    uint *jsClassTable = (uint*)(data + unit->offsetToJSClassTable);
-    char *jsClass = data + unitSize + functionDataSize;
-    for (int i = 0; i < jsClasses.count(); ++i) {
-        jsClassTable[i] = jsClass - data;
+    {
+        char *jsClassDataPtrToWrite = data + unitSize + functionDataSize;
+        memcpy(jsClassDataPtrToWrite, jsClassData.constData(), jsClassData.size());
 
-        const QList<CompiledData::JSClassMember> members = jsClasses.at(i);
-
-        CompiledData::JSClass *c = reinterpret_cast<CompiledData::JSClass*>(jsClass);
-        c->nMembers = members.count();
-
-        CompiledData::JSClassMember *memberToWrite = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + sizeof(CompiledData::JSClass));
-        foreach (const CompiledData::JSClassMember &member, members)
-            *memberToWrite++ = member;
-
-        jsClass += CompiledData::JSClass::calculateSize(members.count());
+        // write js classes and js class lookup table
+        uint *jsClassOffsetTable = (uint*)(data + unit->offsetToJSClassTable);
+        for (int i = 0; i < jsClassOffsets.count(); ++i)
+            jsClassOffsetTable[i] = jsClassDataPtrToWrite - data + jsClassOffsets.at(i);
     }
 
     // write strings and string table

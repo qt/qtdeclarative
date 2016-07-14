@@ -123,8 +123,8 @@ private:
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
-    QList<QList<CompiledData::JSClassMember> > jsClasses;
-    uint jsClassDataSize;
+    QByteArray jsClassData;
+    QVector<int> jsClassOffsets;
 };
 
 }
