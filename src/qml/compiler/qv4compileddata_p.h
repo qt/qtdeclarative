@@ -446,11 +446,13 @@ struct Alias {
     };
     union {
         LEUInt32 idIndex; // string index
-        LEUInt32 targetObjectId; // object id index (in QQmlContextData::idValues)
+        QJsonPrivate::qle_bitfield<0, 31> targetObjectId; // object id index (in QQmlContextData::idValues)
+        QJsonPrivate::qle_bitfield<31, 1> aliasToLocalAlias;
     };
     union {
         LEUInt32 propertyNameIndex; // string index
         LEInt32 encodedMetaPropertyIndex;
+        LEUInt32 localAliasIndex; // index in list of aliases local to the object (if targetObjectId == objectId)
     };
     Location location;
     Location referenceLocation;

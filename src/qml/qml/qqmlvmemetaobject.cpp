@@ -845,6 +845,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 if (!ctxt) return -1;
 
+                while (aliasData->aliasToLocalAlias)
+                    aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
+
                 QQmlContext *context = ctxt->asQQmlContext();
                 QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
