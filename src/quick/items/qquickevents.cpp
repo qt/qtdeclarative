@@ -450,8 +450,8 @@ Item {
     to expose the event to QML, the same as is done with QQuickMouseEvent,
     QQuickTouchPoint, QQuickKeyEvent, etc. Since only one event can be
     delivered at a time, this class is effectively a singleton.  We don't worry
-    about the QObject overhead because we never dynamically create and destroy
-    objects of this type.
+    about the QObject overhead because the instances are long-lived: we don't
+    dynamically create and destroy objects of this type for each event.
 */
 
 /*!

@@ -435,6 +435,7 @@ public:
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
     qint64 uniqueId() const { return m_uniqueId; }
+    QQuickPointerEvent *pointerEvent() const { return &m_event; }
 
 private:
     DeviceType m_deviceType;
@@ -444,6 +445,8 @@ private:
     int m_buttonCount;
     QString m_name;
     qint64 m_uniqueId;
+    // the device-specific event instance which is reused during event delivery
+    mutable QQuickPointerEvent m_event;
 
     Q_DISABLE_COPY(QQuickPointerDevice)
 };

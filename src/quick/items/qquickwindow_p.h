@@ -163,6 +163,7 @@ public:
     void deliverDelayedTouchEvent();
 
     // delivery of pointer events:
+    QQuickPointerEvent *pointerEventInstance(QEvent *ev);
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
@@ -245,9 +246,10 @@ public:
     QQuickAnimatorController *animationController;
     QScopedPointer<QTouchEvent> delayedTouch;
 
-    // The current touch or mouse event that is delivered.
-    // This event gets re-used (reset) for every incoming mouse/touch event.
-    QQuickPointerEvent currentPointerEvent;
+    // An event instance for each device that we've seen so far.
+    // One of these gets re-used (reset) for every incoming mouse/touch/tablet event.
+    // One reason to keep them separate is so that m_touchPoints will be only those from a single device.
+    QVector<QQuickPointerEvent> pointerEventsByDevice;
     int pointerEventRecursionGuard;
     QQuickCustomRenderStage *customRenderStage;
 
