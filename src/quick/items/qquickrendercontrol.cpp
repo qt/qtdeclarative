@@ -56,8 +56,8 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgsoftwarerenderer_p.h>
 #include <QtCore/private/qobject_p.h>
-
 
 QT_BEGIN_NAMESPACE
 #ifndef QT_NO_OPENGL
@@ -369,12 +369,31 @@ QImage QQuickRenderControl::grab()
     if (!d->window)
         return QImage();
 
-    render();
+    QImage grabContent;
+
+    if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
 #ifndef QT_NO_OPENGL
-    QImage grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
-#else
-    QImage grabContent = d->window->grabWindow();
+        render();
+        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
 #endif
+    } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
+        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+        QSGSoftwareRenderer *softwareRenderer = static_cast<QSGSoftwareRenderer *>(cd->renderer);
+        if (softwareRenderer) {
+            const qreal dpr = d->window->effectiveDevicePixelRatio();
+            const QSize imageSize = d->window->size() * dpr;
+            grabContent = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
+            grabContent.setDevicePixelRatio(dpr);
+            QPaintDevice *prevDev = softwareRenderer->currentPaintDevice();
+            softwareRenderer->setCurrentPaintDevice(&grabContent);
+            softwareRenderer->markDirty();
+            render();
+            softwareRenderer->setCurrentPaintDevice(prevDev);
+        }
+    } else {
+        qWarning("QQuickRenderControl: grabs are not supported with the current Qt Quick backend");
+    }
+
     return grabContent;
 }
 

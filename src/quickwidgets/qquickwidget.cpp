@@ -894,6 +894,12 @@ void QQuickWidget::createFramebufferObject()
     if (size().isEmpty())
         return;
 
+    // Even though this is just an offscreen window we should set the position on it, as it might be
+    // useful for an item to know the actual position of the scene.
+    // Note: The position will be update when we get a move event (see: updatePosition()).
+    const QPoint &globalPos = mapToGlobal(QPoint(0, 0));
+    d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
+
     if (d->useSoftwareRenderer) {
         const QSize imageSize = size() * devicePixelRatio();
         d->softwareImage = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
@@ -961,11 +967,6 @@ void QQuickWidget::createFramebufferObject()
     }
 #endif
 
-    // Even though this is just an offscreen window we should set the position on it, as it might be
-    // useful for an item to know the actual position of the scene.
-    // Note: The position will be update when we get a move event (see: updatePosition()).
-    const QPoint &globalPos = mapToGlobal(QPoint(0, 0));
-    d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
     d->offscreenWindow->setRenderTarget(d->fbo);
 
     if (samples > 0)

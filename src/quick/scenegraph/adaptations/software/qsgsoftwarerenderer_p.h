@@ -65,6 +65,7 @@ public:
     virtual ~QSGSoftwareRenderer();
 
     void setCurrentPaintDevice(QPaintDevice *device);
+    QPaintDevice *currentPaintDevice() const;
     void setBackingStore(QBackingStore *backingStore);
     QRegion flushRegion() const;
 
