@@ -42,6 +42,7 @@
 #include <qv4isel_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4alloca_p.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -220,11 +221,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     int unitSize = QV4::CompiledData::Unit::calculateSize(irModule->functions.size(), regexps.size(),
                                                           constants.size(), lookups.size(), jsClassOffsets.count());
 
-    QHash<IR::Function *, uint> functionOffsets;
+    CompiledData::LEUInt32 *functionOffsets = reinterpret_cast<CompiledData::LEUInt32*>(alloca(irModule->functions.size() * sizeof(CompiledData::LEUInt32)));
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QV4::IR::Function *f = irModule->functions.at(i);
-        functionOffsets.insert(f, functionDataSize + unitSize);
+        functionOffsets[i] = functionDataSize + unitSize;
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
@@ -266,11 +267,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     unit->offsetToObjects = 0;
     unit->indexOfRootObject = 0;
 
-    {
-        CompiledData::LEUInt32 *functionTable = reinterpret_cast<CompiledData::LEUInt32 *>(data + unit->offsetToFunctionTable);
-        for (int i = 0; i < irModule->functions.size(); ++i)
-            functionTable[i] = functionOffsets.value(irModule->functions.at(i));
-    }
+    memcpy(data + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(CompiledData::LEUInt32));
 
     char *f = data + unitSize;
     for (int i = 0; i < irModule->functions.size(); ++i) {
