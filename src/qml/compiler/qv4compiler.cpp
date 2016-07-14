@@ -75,13 +75,13 @@ void QV4::Compiler::StringTableGenerator::clear()
 void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
-    uint *stringTable = reinterpret_cast<uint *>(dataStart + unit->offsetToStringTable);
+    CompiledData::LEUInt32 *stringTable = reinterpret_cast<CompiledData::LEUInt32 *>(dataStart + unit->offsetToStringTable);
     char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     for (int i = 0; i < strings.size(); ++i) {
         stringTable[i] = stringData - dataStart;
         const QString &qstr = strings.at(i);
 
-        QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
+        QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
         s->size = qstr.length();
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
@@ -266,9 +266,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     unit->offsetToObjects = 0;
     unit->indexOfRootObject = 0;
 
-    uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
-    for (int i = 0; i < irModule->functions.size(); ++i)
-        functionTable[i] = functionOffsets.value(irModule->functions.at(i));
+    {
+        CompiledData::LEUInt32 *functionTable = reinterpret_cast<CompiledData::LEUInt32 *>(data + unit->offsetToFunctionTable);
+        for (int i = 0; i < irModule->functions.size(); ++i)
+            functionTable[i] = functionOffsets.value(irModule->functions.at(i));
+    }
 
     char *f = data + unitSize;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -295,7 +297,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         memcpy(jsClassDataPtrToWrite, jsClassData.constData(), jsClassData.size());
 
         // write js classes and js class lookup table
-        uint *jsClassOffsetTable = (uint*)(data + unit->offsetToJSClassTable);
+        CompiledData::LEUInt32 *jsClassOffsetTable = reinterpret_cast<CompiledData::LEUInt32 *>(data + unit->offsetToJSClassTable);
         for (int i = 0; i < jsClassOffsets.count(); ++i)
             jsClassOffsetTable[i] = jsClassDataPtrToWrite - data + jsClassOffsets.at(i);
     }
