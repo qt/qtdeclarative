@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlContext;
 class QQmlComponent;
+struct QQuickStackTransition;
 
 class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuickItemChangeListener
 {
@@ -123,9 +124,7 @@ public:
     bool replaceElements(QQuickStackElement *element, const QList<QQuickStackElement *> &elements);
 
     void ensureTransitioner();
-    void popTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate);
-    void pushTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate);
-    void replaceTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate);
+    void startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate);
     void completeTransition(QQuickStackElement *element, QQuickTransition *transition);
 
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
@@ -137,6 +136,21 @@ public:
     QList<QQuickStackElement*> removals;
     QStack<QQuickStackElement *> elements;
     QQuickItemViewTransitioner *transitioner;
+};
+
+struct QQuickStackTransition
+{
+    enum Operation { Push, Replace, Pop };
+
+    static QQuickStackTransition exit(Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition enter(Operation operation, QQuickStackElement *element, QQuickStackView *view);
+
+    bool target;
+    QQuickStackView::Status status;
+    QQuickItemViewTransitioner::TransitionType type;
+    QRectF viewBounds;
+    QQuickStackElement *element;
+    QQuickTransition *transition;
 };
 
 class QQuickStackAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

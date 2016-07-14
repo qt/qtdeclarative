@@ -466,7 +466,9 @@ void QQuickStackView::push(QQmlV4Function *args)
     if (d->pushElements(elements)) {
         emit depthChanged();
         QQuickStackElement *enter = d->elements.top();
-        d->pushTransition(enter, exit, boundingRect(), operation == Immediate);
+        d->startTransition(QQuickStackTransition::enter(QQuickStackTransition::Push, enter, this),
+                           QQuickStackTransition::exit(QQuickStackTransition::Push, exit, this),
+                           operation == Immediate);
         d->setCurrentItem(enter->item);
     }
 
@@ -548,10 +550,14 @@ void QQuickStackView::pop(QQmlV4Function *args)
     QQuickItem *previousItem = nullptr;
 
     if (d->popElements(enter)) {
-        if (exit)
+        if (exit) {
+            exit->removal = true;
             previousItem = exit->item;
+        }
         emit depthChanged();
-        d->popTransition(enter, exit, boundingRect(), operation == Immediate);
+        d->startTransition(QQuickStackTransition::exit(QQuickStackTransition::Pop, exit, this),
+                           QQuickStackTransition::enter(QQuickStackTransition::Pop, enter, this),
+                           operation == Immediate);
         d->setCurrentItem(enter->item);
     }
 
@@ -650,8 +656,12 @@ void QQuickStackView::replace(QQmlV4Function *args)
     if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
         if (depth != d->elements.count())
             emit depthChanged();
+        if (exit)
+            exit->removal = true;
         QQuickStackElement *enter = d->elements.top();
-        d->replaceTransition(enter, exit, boundingRect(), operation == Immediate);
+        d->startTransition(QQuickStackTransition::exit(QQuickStackTransition::Replace, exit, this),
+                           QQuickStackTransition::enter(QQuickStackTransition::Replace, enter, this),
+                           operation == Immediate);
         d->setCurrentItem(enter->item);
     }
 
