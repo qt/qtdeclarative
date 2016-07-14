@@ -223,7 +223,7 @@ TestCase {
 
     SignalSequenceSpy {
         id: mouseSignalSequenceSpy
-        signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged"]
+        signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "pressAndHold"]
     }
 
     function test_swipe() {
@@ -541,6 +541,26 @@ TestCase {
             "clicked"
         ];
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+
+        // press and hold
+        var pressAndHoldSpy = signalSpyComponent.createObject(control, { target: control, signalName: "pressAndHold" });
+        verify(pressAndHoldSpy);
+        verify(pressAndHoldSpy.valid);
+
+        mouseSignalSequenceSpy.expectedSequence = [
+            ["pressedChanged", { "pressed": true }],
+            "pressed",
+            "pressAndHold",
+            ["pressedChanged", { "pressed": false }],
+            "released"
+        ];
+        mousePress(control);
+        compare(control.pressed, true);
+        tryCompare(pressAndHoldSpy, "count", 1);
+
+        mouseRelease(control);
+        compare(control.pressed, false);
         verify(mouseSignalSequenceSpy.success);
 
         control.destroy();
