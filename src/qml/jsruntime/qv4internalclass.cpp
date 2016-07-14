@@ -155,8 +155,8 @@ static void insertHoleIntoPropertyData(Object *object, int idx)
 static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
 {
     int inlineSize = object->d()->inlineMemberSize;
-    int icSize = object->internalClass()->size;
     int delta = (accessor ? 2 : 1);
+    int oldSize = object->internalClass()->size + delta;
     int to = idx;
     int from = to + delta;
     if (from < inlineSize) {
@@ -164,15 +164,15 @@ static void removeFromPropertyData(Object *object, int idx, bool accessor = fals
         to = inlineSize - delta;
         from = inlineSize;
     }
-    if (to < inlineSize && from < icSize) {
+    if (to < inlineSize && from < oldSize) {
         Q_ASSERT(from >= inlineSize);
         memcpy(object->propertyData(to), object->d()->propertyData(from), (inlineSize - to)*sizeof(Value));
         to = inlineSize;
         from = inlineSize + delta;
     }
-    if (from < icSize + delta) {
+    if (from < oldSize) {
         Q_ASSERT(to >= inlineSize && from > to);
-        memmove(object->propertyData(to), object->d()->propertyData(from), (icSize + delta - to)*sizeof(Value));
+        memmove(object->propertyData(to), object->d()->propertyData(from), (oldSize - to)*sizeof(Value));
     }
 }
 
