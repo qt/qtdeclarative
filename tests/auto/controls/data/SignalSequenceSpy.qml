@@ -42,6 +42,11 @@ import QtQuick 2.5
 
 QtObject {
     property QtObject target: null
+    // We could just listen to all signals (try { signal.connect(/*...*/) } catch (e))
+    // if it weren't for the fact the spy is often declared as a property of the control,
+    // which creates a "spyChanged" signal, which leads to an unexpected spyChanged signal
+    // emission. However, we don't know what the property will be called, so the signals
+    // have to be listed explicitly.
     property var signals: []
     property var expectedSequence: []
     property int sequenceIndex: 0
@@ -114,7 +119,7 @@ QtObject {
                 return
             }
         }
-        console.warn("SignalSequenceSpy: Received unexpected signal." +
+        console.warn("SignalSequenceSpy: Received unexpected signal (is \"" + expectedSignal + "\" listed in the signals array?)" +
                      __mismatchValuesFormat(signalName, expectedSignal))
         sequenceFailure = true
     }
