@@ -140,10 +140,14 @@ public:
 
 struct QQuickStackTransition
 {
-    enum Operation { Push, Replace, Pop };
+    static QQuickStackTransition popExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition popEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
-    static QQuickStackTransition exit(Operation operation, QQuickStackElement *element, QQuickStackView *view);
-    static QQuickStackTransition enter(Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition pushExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition pushEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+
+    static QQuickStackTransition replaceExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition replaceEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
     bool target;
     QQuickStackView::Status status;

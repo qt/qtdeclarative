@@ -572,29 +572,60 @@ TestCase {
         }
     }
 
-    function test_transitions() {
+    function test_transitions_data() {
+        return [
+            { tag: "undefined", operation: undefined,
+              pushEnterRuns: [0,1,1,1], pushExitRuns: [0,1,1,1], replaceEnterRuns: [0,0,1,1], replaceExitRuns: [0,0,1,1], popEnterRuns: [0,0,0,1], popExitRuns: [0,0,0,1] },
+            { tag: "immediate", operation: StackView.Immediate,
+              pushEnterRuns: [0,0,0,0], pushExitRuns: [0,0,0,0], replaceEnterRuns: [0,0,0,0], replaceExitRuns: [0,0,0,0], popEnterRuns: [0,0,0,0], popExitRuns: [0,0,0,0] },
+            { tag: "push", operation: StackView.PushTransition,
+              pushEnterRuns: [1,2,3,4], pushExitRuns: [0,1,2,3], replaceEnterRuns: [0,0,0,0], replaceExitRuns: [0,0,0,0], popEnterRuns: [0,0,0,0], popExitRuns: [0,0,0,0] },
+            { tag: "pop", operation: StackView.PopTransition,
+              pushEnterRuns: [0,0,0,0], pushExitRuns: [0,0,0,0], replaceEnterRuns: [0,0,0,0], replaceExitRuns: [0,0,0,0], popEnterRuns: [1,2,3,4], popExitRuns: [0,1,2,3] },
+            { tag: "replace", operation: StackView.ReplaceTransition,
+              pushEnterRuns: [0,0,0,0], pushExitRuns: [0,0,0,0], replaceEnterRuns: [1,2,3,4], replaceExitRuns: [0,1,2,3], popEnterRuns: [0,0,0,0], popExitRuns: [0,0,0,0] },
+        ]
+    }
+
+    function test_transitions(data) {
         var control = transitionView.createObject(testCase)
         verify(control)
 
-        control.push(component)
-        verify(!control.busy)
-        compare(control.pushEnterRuns, 0)
-        compare(control.pushExitRuns, 0)
-
-        control.push(component)
+        control.push(component, data.operation)
         tryCompare(control, "busy", false)
-        compare(control.pushEnterRuns, 1)
-        compare(control.pushExitRuns, 1)
+        compare(control.pushEnterRuns, data.pushEnterRuns[0])
+        compare(control.pushExitRuns, data.pushExitRuns[0])
+        compare(control.replaceEnterRuns, data.replaceEnterRuns[0])
+        compare(control.replaceExitRuns, data.replaceExitRuns[0])
+        compare(control.popEnterRuns, data.popEnterRuns[0])
+        compare(control.popExitRuns, data.popExitRuns[0])
 
-        control.replace(component)
+        control.push(component, data.operation)
         tryCompare(control, "busy", false)
-        compare(control.replaceEnterRuns, 1)
-        compare(control.replaceExitRuns, 1)
+        compare(control.pushEnterRuns, data.pushEnterRuns[1])
+        compare(control.pushExitRuns, data.pushExitRuns[1])
+        compare(control.replaceEnterRuns, data.replaceEnterRuns[1])
+        compare(control.replaceExitRuns, data.replaceExitRuns[1])
+        compare(control.popEnterRuns, data.popEnterRuns[1])
+        compare(control.popExitRuns, data.popExitRuns[1])
 
-        control.pop()
+        control.replace(component, data.operation)
         tryCompare(control, "busy", false)
-        compare(control.popEnterRuns, 1)
-        compare(control.popExitRuns, 1)
+        compare(control.pushEnterRuns, data.pushEnterRuns[2])
+        compare(control.pushExitRuns, data.pushExitRuns[2])
+        compare(control.replaceEnterRuns, data.replaceEnterRuns[2])
+        compare(control.replaceExitRuns, data.replaceExitRuns[2])
+        compare(control.popEnterRuns, data.popEnterRuns[2])
+        compare(control.popExitRuns, data.popExitRuns[2])
+
+        control.pop(data.operation)
+        tryCompare(control, "busy", false)
+        compare(control.pushEnterRuns, data.pushEnterRuns[3])
+        compare(control.pushExitRuns, data.pushExitRuns[3])
+        compare(control.replaceEnterRuns, data.replaceEnterRuns[3])
+        compare(control.replaceExitRuns, data.replaceExitRuns[3])
+        compare(control.popEnterRuns, data.popEnterRuns[3])
+        compare(control.popExitRuns, data.popExitRuns[3])
 
         control.destroy()
     }

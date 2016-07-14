@@ -121,8 +121,11 @@ public:
     Q_INVOKABLE QQuickItem *find(const QJSValue &callback, LoadBehavior behavior = DontLoad);
 
     enum Operation {
-        Transition,
-        Immediate
+        Transition = -1, // deprecated
+        Immediate = 0,
+        PushTransition = 1,
+        ReplaceTransition = 2,
+        PopTransition = 3,
     };
     Q_ENUM(Operation)
 

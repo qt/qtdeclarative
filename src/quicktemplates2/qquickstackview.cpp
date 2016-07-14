@@ -430,8 +430,11 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with transitions.
+    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
+    \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
+    \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
+    \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
 
     \sa initialItem
 */
@@ -447,7 +450,7 @@ void QQuickStackView::push(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
-    Operation operation = d->elements.isEmpty() ? Immediate : Transition;
+    Operation operation = d->elements.isEmpty() ? Immediate : PushTransition;
     QV4::ScopedValue lastArg(scope, (*args)[args->length() - 1]);
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
@@ -466,8 +469,8 @@ void QQuickStackView::push(QQmlV4Function *args)
     if (d->pushElements(elements)) {
         emit depthChanged();
         QQuickStackElement *enter = d->elements.top();
-        d->startTransition(QQuickStackTransition::enter(QQuickStackTransition::Push, enter, this),
-                           QQuickStackTransition::exit(QQuickStackTransition::Push, exit, this),
+        d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
+                           QQuickStackTransition::pushExit(operation, exit, this),
                            operation == Immediate);
         d->setCurrentItem(enter->item);
     }
@@ -493,8 +496,11 @@ void QQuickStackView::push(QQmlV4Function *args)
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with transitions.
+    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
+    \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
+    \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
+    \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
 
     Examples:
     \code
@@ -540,7 +546,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
         }
     }
 
-    Operation operation = Transition;
+    Operation operation = PopTransition;
     if (argc > 0) {
         QV4::ScopedValue lastArg(scope, (*args)[argc - 1]);
         if (lastArg->isInt32())
@@ -555,8 +561,8 @@ void QQuickStackView::pop(QQmlV4Function *args)
             previousItem = exit->item;
         }
         emit depthChanged();
-        d->startTransition(QQuickStackTransition::exit(QQuickStackTransition::Pop, exit, this),
-                           QQuickStackTransition::enter(QQuickStackTransition::Pop, enter, this),
+        d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
+                           QQuickStackTransition::popEnter(operation, enter, this),
                            operation == Immediate);
         d->setCurrentItem(enter->item);
     }
@@ -612,8 +618,39 @@ void QQuickStackView::pop(QQmlV4Function *args)
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with transitions.
+    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
+    \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
+    \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
+    \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
+
+    The following example illustrates the use of push and pop transitions with replace().
+
+    \code
+    StackView {
+        id: stackView
+
+        initialItem: Component {
+            id: page
+
+            Page {
+                Row {
+                    spacing: 20
+                    anchors.centerIn: parent
+
+                    Button {
+                        text: "<"
+                        onClicked: stackView.replace(page, StackView.PopTransition)
+                    }
+                    Button {
+                        text: ">"
+                        onClicked: stackView.replace(page, StackView.PushTransition)
+                    }
+                }
+            }
+        }
+    }
+    \endcode
 
     \sa push()
 */
@@ -629,7 +666,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
-    Operation operation = d->elements.isEmpty() ? Immediate : Transition;
+    Operation operation = d->elements.isEmpty() ? Immediate : ReplaceTransition;
     QV4::ScopedValue lastArg(scope, (*args)[args->length() - 1]);
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
@@ -659,8 +696,8 @@ void QQuickStackView::replace(QQmlV4Function *args)
         if (exit)
             exit->removal = true;
         QQuickStackElement *enter = d->elements.top();
-        d->startTransition(QQuickStackTransition::exit(QQuickStackTransition::Replace, exit, this),
-                           QQuickStackTransition::enter(QQuickStackTransition::Replace, enter, this),
+        d->startTransition(QQuickStackTransition::replaceExit(operation, exit, this),
+                           QQuickStackTransition::replaceEnter(operation, enter, this),
                            operation == Immediate);
         d->setCurrentItem(enter->item);
     }
