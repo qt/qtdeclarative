@@ -107,6 +107,13 @@ TestCase {
         compare(vertical.y, 0)
         verify(vertical.width > 0)
         compare(vertical.height, container.height)
+        // vertical scroll bar follows flickable's width
+        container.width += 10
+        compare(vertical.x, container.width - vertical.width)
+        // ...unless explicitly positioned
+        vertical.x = 123
+        container.width += 10
+        compare(vertical.x, 123)
 
         var horizontal = scrollBar.createObject()
         verify(!horizontal.parent)
@@ -128,6 +135,13 @@ TestCase {
         compare(horizontal.y, container.height - horizontal.height)
         compare(horizontal.width, container.width)
         verify(horizontal.height > 0)
+        // horizontal scroll bar follows flickable's height
+        container.height += 10
+        compare(horizontal.y, container.height - horizontal.height)
+        // ...unless explicitly positioned
+        horizontal.y = 123
+        container.height += 10
+        compare(horizontal.y, 123)
 
         var velocity = container.maximumFlickVelocity
 

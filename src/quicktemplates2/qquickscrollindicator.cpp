@@ -281,11 +281,11 @@ void QQuickScrollIndicatorAttachedPrivate::itemGeometryChanged(QQuickItem *item,
     Q_UNUSED(item);
     Q_UNUSED(change);
     if (horizontal && horizontal->height() > 0) {
-        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), item->height() - diff.height());
+        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), item->height() - diff.height() - horizontal->height());
         layoutHorizontal(move);
     }
     if (vertical && vertical->width() > 0) {
-        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), item->width() - diff.width());
+        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), item->width() - diff.width() - vertical->width());
         layoutVertical(move);
     }
 }
