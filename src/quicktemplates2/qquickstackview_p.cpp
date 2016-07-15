@@ -160,6 +160,7 @@ void QQuickStackElement::incubate(QObject *object)
     item = qmlobject_cast<QQuickItem *>(object);
     if (item) {
         QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
+        item->setParent(view);
         initialize();
     }
 }
