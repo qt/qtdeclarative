@@ -111,7 +111,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolTipAttached : public QObject
     Q_PROPERTY(QQuickToolTip *toolTip READ toolTip CONSTANT FINAL)
 
 public:
-    explicit QQuickToolTipAttached(QQuickItem *item);
+    explicit QQuickToolTipAttached(QObject *parent = nullptr);
 
     QString text() const;
     void setText(const QString &text);
