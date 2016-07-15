@@ -706,10 +706,10 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     lastMousePosition = me->windowPos();
 
                     bool accepted = me->isAccepted();
-                    bool delivered = deliverHoverEvent(contentItem, me->windowPos(), last, me->modifiers(), accepted);
+                    bool delivered = deliverHoverEvent(contentItem, me->windowPos(), last, me->modifiers(), me->timestamp(), accepted);
                     if (!delivered) {
                         //take care of any exits
-                        accepted = clearHover();
+                        accepted = clearHover(me->timestamp());
                     }
                     me->setAccepted(accepted);
                     break;
@@ -1442,7 +1442,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
 }
 
 
-bool QQuickWindowPrivate::clearHover()
+bool QQuickWindowPrivate::clearHover(ulong timestamp)
 {
     Q_Q(QQuickWindow);
     if (hoverItems.isEmpty())
@@ -1452,7 +1452,7 @@ bool QQuickWindowPrivate::clearHover()
 
     bool accepted = false;
     foreach (QQuickItem* item, hoverItems)
-        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), true) || accepted;
+        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp, true) || accepted;
     hoverItems.clear();
     return accepted;
 }
@@ -1712,13 +1712,15 @@ void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
                                       const QPointF &scenePos, const QPointF &lastScenePos,
-                                      Qt::KeyboardModifiers modifiers, bool accepted)
+                                      Qt::KeyboardModifiers modifiers, ulong timestamp,
+                                      bool accepted)
 {
     Q_Q(QQuickWindow);
     const QTransform transform = QQuickItemPrivate::get(item)->windowToItemTransform();
 
     //create copy of event
     QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
+    hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(accepted);
 
     QSet<QQuickItem *> hasFiltered;
@@ -1756,10 +1758,10 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
         d->lastMousePosition = event->windowPos();
 
         bool accepted = event->isAccepted();
-        bool delivered = d->deliverHoverEvent(d->contentItem, event->windowPos(), last, event->modifiers(), accepted);
+        bool delivered = d->deliverHoverEvent(d->contentItem, event->windowPos(), last, event->modifiers(), event->timestamp(), accepted);
         if (!delivered) {
             //take care of any exits
-            accepted = d->clearHover();
+            accepted = d->clearHover(event->timestamp());
         }
         event->setAccepted(accepted);
         return;
@@ -1769,7 +1771,7 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 }
 
 bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
-                                         Qt::KeyboardModifiers modifiers, bool &accepted)
+                                         Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted)
 {
     Q_Q(QQuickWindow);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -1785,7 +1787,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
         QQuickItem *child = children.at(ii);
         if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
-        if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
+        if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, timestamp, accepted))
             return true;
     }
 
@@ -1794,7 +1796,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
         if (item->contains(p)) {
             if (!hoverItems.isEmpty() && hoverItems[0] == item) {
                 //move
-                accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
+                accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
             } else {
                 QList<QQuickItem *> itemsToHover;
                 QQuickItem* parent = item;
@@ -1805,12 +1807,12 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                 // Leaving from previous hovered items until we reach the item or one of its ancestors.
                 while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
                     QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
-                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, accepted);
+                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
                     // ### Shouldn't we send moves for the parent items as well?
-                    accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
+                    accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
                 } else {
                     // Enter items that are not entered yet.
                     int startIdx = -1;
@@ -1829,7 +1831,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                         // itemToHoverPrivate->window here prevents that case.
                         if (itemToHoverPrivate->window == q && itemToHoverPrivate->hoverEnabled) {
                             hoverItems.prepend(itemToHover);
-                            sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, accepted);
+                            sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, timestamp, accepted);
                         }
                     }
                 }

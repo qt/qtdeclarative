@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Canonical Limited and/or its subsidiary(-ies).
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -37,50 +37,25 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "pieslice.h"
 
-#include <QPainter>
+import QtQuick 2.4
 
-PieSlice::PieSlice(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_fromAngle(0), m_angleSpan(0)
-{
+Item {
+    width: 400
+    height: 700
+
+    MyIcon {
+        id: icon
+
+        height: 24
+        source: "star.png"
+        shaderActive: true
+    }
+
+    MyIcon {
+        anchors.top: icon.bottom
+
+        height: 24
+        source: "star.png"
+    }
 }
-
-QColor PieSlice::color() const
-{
-    return m_color;
-}
-
-void PieSlice::setColor(const QColor &color)
-{
-    m_color = color;
-}
-
-int PieSlice::fromAngle() const
-{
-    return m_fromAngle;
-}
-
-void PieSlice::setFromAngle(int angle)
-{
-    m_fromAngle = angle;
-}
-
-int PieSlice::angleSpan() const
-{
-    return m_angleSpan;
-}
-
-void PieSlice::setAngleSpan(int angle)
-{
-    m_angleSpan = angle;
-}
-
-void PieSlice::paint(QPainter *painter)
-{
-    QPen pen(m_color, 2);
-    painter->setPen(pen);
-    painter->setRenderHints(QPainter::Antialiasing, true);
-    painter->drawPie(boundingRect().adjusted(1, 1, -1, -1), m_fromAngle * 16, m_angleSpan * 16);
-}
-
