@@ -1,6 +1,6 @@
 TARGET = qtquickcontrols2plugin
 TARGETPATH = QtQuick/Controls.2
-IMPORT_VERSION = 2.0
+IMPORT_VERSION = 2.1
 
 QT += qml quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
