@@ -290,6 +290,7 @@ void QSGD3D12RenderLoop::releaseResources(QQuickWindow *window)
 
 void QSGD3D12RenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 {
+    Q_UNUSED(window);
     Q_ASSERT(job);
     Q_ASSERT(window);
     job->run();
