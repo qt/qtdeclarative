@@ -573,6 +573,21 @@ const QQuickEventPoint *QQuickPointerEvent::point(int i) const {
     return nullptr;
 }
 
+bool QQuickPointerEvent::allPointsAccepted() const
+{
+    Q_ASSERT(m_event && !isTabletEvent());
+    if (isMouseEvent()) {
+        return m_mousePoint->isAccepted();
+    }
+    if (isTouchEvent()) {
+        for (int i = 0; i < m_pointCount; ++i) {
+            if (!m_touchPoints.at(i)->isAccepted())
+                return false;
+        }
+    }
+    return true;
+}
+
 /*!
     \internal
     Populate the reusable synth-mouse event from one touchpoint.

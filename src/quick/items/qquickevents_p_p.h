@@ -338,6 +338,7 @@ public: // helpers for C++ only (during event delivery)
     bool isTouchEvent() const;
     bool isTabletEvent() const;
     bool isValid() const { return m_event != nullptr; }
+    bool allPointsAccepted() const;
 
     int pointCount() const { return m_pointCount; }
     const QQuickEventPoint *point(int i) const;
