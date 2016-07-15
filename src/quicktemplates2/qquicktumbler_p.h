@@ -128,7 +128,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
     Q_PROPERTY(qreal displacement READ displacement NOTIFY displacementChanged FINAL)
 
 public:
-    explicit QQuickTumblerAttached(QQuickItem *delegateItem);
+    explicit QQuickTumblerAttached(QObject *parent = nullptr);
     ~QQuickTumblerAttached();
 
     QQuickTumbler *tumbler() const;

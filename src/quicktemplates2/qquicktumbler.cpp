@@ -36,6 +36,7 @@
 
 #include "qquicktumbler_p.h"
 
+#include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquicktumbler_p_p.h>
@@ -441,13 +442,7 @@ void QQuickTumbler::resetWrap()
 
 QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
 {
-    QQuickItem *delegateItem = qobject_cast<QQuickItem *>(object);
-    if (!delegateItem) {
-        qWarning() << "Tumbler: attached properties of Tumbler must be accessed through a delegate item";
-        return nullptr;
-    }
-
-    return new QQuickTumblerAttached(delegateItem);
+    return new QQuickTumblerAttached(object);
 }
 
 void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -674,10 +669,14 @@ class QQuickTumblerAttachedPrivate : public QObjectPrivate, public QQuickItemCha
 {
     Q_DECLARE_PUBLIC(QQuickTumblerAttached)
 public:
-    QQuickTumblerAttachedPrivate(QQuickItem *delegateItem) :
+    QQuickTumblerAttachedPrivate() :
         tumbler(nullptr),
         index(-1),
         displacement(0)
+    {
+    }
+
+    void init(QQuickItem *delegateItem)
     {
         if (!delegateItem->parentItem()) {
             qWarning() << "Tumbler: attached properties must be accessed through a delegate item that has a parent";
@@ -697,9 +696,6 @@ public:
             if ((tumbler = qobject_cast<QQuickTumbler*>(parentItem)))
                 break;
         }
-    }
-
-    ~QQuickTumblerAttachedPrivate() {
     }
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
@@ -788,10 +784,16 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
         emit q->displacementChanged();
 }
 
-QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
-    QObject(*(new QQuickTumblerAttachedPrivate(delegateItem)), delegateItem)
+QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent) :
+    QObject(*(new QQuickTumblerAttachedPrivate), parent)
 {
     Q_D(QQuickTumblerAttached);
+    QQuickItem *delegateItem = qobject_cast<QQuickItem *>(parent);
+    if (delegateItem)
+        d->init(delegateItem);
+    else if (parent)
+        qmlInfo(parent) << "Tumbler: attached properties of Tumbler must be accessed through a delegate item";
+
     if (d->tumbler) {
         // When the Tumbler is completed, wrapChanged() is emitted to let QQuickTumblerView
         // know that it can create the view. The view itself might instantiate delegates
