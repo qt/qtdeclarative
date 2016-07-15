@@ -65,12 +65,7 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QQuickPixmapData;
 class QQuickTextureFactory;
-
-enum AutoTransform {
-    UsePluginDefault = -1,
-    ApplyTransform = 0,
-    DoNotApplyTransform = 1
-};
+class QQuickImageProviderOptionsPrivate;
 
 class QQuickDefaultTextureFactory : public QQuickTextureFactory
 {
@@ -85,6 +80,45 @@ public:
 private:
     QImage im;
     QSize size;
+};
+
+class QQuickImageProviderPrivate
+{
+public:
+    QQuickImageProvider::ImageType type;
+    QQuickImageProvider::Flags flags;
+    bool isProviderWithOptions;
+};
+
+// ### Qt 6: Make public moving to qquickimageprovider.h
+class Q_QUICK_EXPORT QQuickImageProviderOptions
+{
+public:
+    enum AutoTransform {
+        UsePluginDefaultTransform = -1,
+        ApplyTransform = 0,
+        DoNotApplyTransform = 1
+    };
+
+    QQuickImageProviderOptions();
+    ~QQuickImageProviderOptions();
+
+    QQuickImageProviderOptions(const QQuickImageProviderOptions&);
+    QQuickImageProviderOptions& operator=(const QQuickImageProviderOptions&);
+
+    bool operator==(const QQuickImageProviderOptions&) const;
+
+    AutoTransform autoTransform() const;
+    void setAutoTransform(AutoTransform autoTransform);
+
+    bool preserveAspectRatioCrop() const;
+    void setPreserveAspectRatioCrop(bool preserveAspectRatioCrop);
+
+    bool preserveAspectRatioFit() const;
+    void setPreserveAspectRatioFit(bool preserveAspectRatioFit);
+
+private:
+    QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
@@ -115,7 +149,7 @@ public:
     const QUrl &url() const;
     const QSize &implicitSize() const;
     const QSize &requestSize() const;
-    AutoTransform autoTransform() const;
+    QQuickImageProviderOptions::AutoTransform autoTransform() const;
     QImage image() const;
     void setImage(const QImage &);
     void setPixmap(const QQuickPixmap &other);
@@ -130,7 +164,7 @@ public:
     void load(QQmlEngine *, const QUrl &, QQuickPixmap::Options options);
     void load(QQmlEngine *, const QUrl &, const QSize &);
     void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options);
-    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, AutoTransform autoTransform);
+    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions);
 
     void clear();
     void clear(QObject *);
@@ -151,6 +185,24 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
+
+// This class will disappear with Qt6 and will just be the regular QQuickImageProvider
+// ### Qt 6: Remove this class and fold it with QQuickImageProvider
+class Q_QUICK_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
+{
+public:
+    QQuickImageProviderWithOptions(ImageType type, Flags flags = Flags());
+
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override;
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize) override;
+    QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize) override;
+    QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) override;
+
+    virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize, const QQuickImageProviderOptions &options);
+    virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, const QQuickImageProviderOptions &options);
+    virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options);
+    virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options);
+};
 
 QT_END_NAMESPACE
 
