@@ -3310,7 +3310,9 @@ bool QQuickWindow::isSceneGraphInitialized() const
 /*!
     \fn void QQuickWindow::frameSwapped()
 
-    This signal is emitted when the frame buffers have been swapped.
+    This signal is emitted when a frame has been queued for presenting. With
+    vertical synchronization enabled the signal is emitted at most once per
+    vsync interval in a continuously animating scene.
 
     This signal will be emitted from the scene graph rendering thread.
 */
