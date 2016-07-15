@@ -574,7 +574,7 @@ QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
 }
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
-  : QObject(parent), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
+  : QObject(parent), m_pointId(0), m_grabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
     m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
 {
     Q_UNUSED(m_reserved);
