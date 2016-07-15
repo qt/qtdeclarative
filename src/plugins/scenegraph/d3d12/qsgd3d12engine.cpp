@@ -75,11 +75,14 @@ DECLARE_DEBUG_VAR(render)
 Q_LOGGING_CATEGORY(QSG_LOG_INFO, "qt.scenegraph.general")
 
 
+// Any changes to the defaults below must be reflected in adaptations.qdoc as
+// well and proven by qmlbench or similar.
+
 static const int DEFAULT_SWAP_CHAIN_BUFFER_COUNT = 3;
 static const int DEFAULT_FRAME_IN_FLIGHT_COUNT = 2;
 static const int DEFAULT_WAITABLE_SWAP_CHAIN_MAX_LATENCY = 0;
 
-static const int MAX_DRAW_CALLS_PER_LIST = 128;
+static const int MAX_DRAW_CALLS_PER_LIST = 4096;
 
 static const int MAX_CACHED_ROOTSIG = 16;
 static const int MAX_CACHED_PSO = 64;
