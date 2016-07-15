@@ -63,6 +63,8 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickPointerDevice;
+class QQuickPointerEvent;
+class QQuickPointerTouchEvent;
 
 class QQuickKeyEvent : public QObject
 {
@@ -241,8 +243,6 @@ private:
     bool _accepted;
 };
 
-class QQuickPointerEvent;
-
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
@@ -298,7 +298,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
     Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
 
 public:
-    QQuickEventTouchPoint(QQuickPointerEvent *parent) : QQuickEventPoint(parent), m_rotation(0), m_pressure(0) { }
+    QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
 
     void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
     {
@@ -333,9 +333,9 @@ public:
       , m_event(nullptr)
       , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
-      , m_pointCount(0)
-      , m_mousePoint(nullptr)
       , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier) { }
+
+    virtual ~QQuickPointerEvent();
 
 public: // property accessors
     const QQuickPointerDevice *device() const { return m_device; }
@@ -344,42 +344,72 @@ public: // property accessors
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
 
 public: // helpers for C++ only (during event delivery)
-    QQuickPointerEvent *reset(QEvent *ev);
+    virtual QQuickPointerEvent *reset(QEvent *ev) = 0;
 
     QTouchEvent *asTouchEvent() const;
     QMouseEvent *asMouseEvent() const;
 
-    bool isMouseEvent() const;
-    bool isTouchEvent() const;
-    bool isTabletEvent() const;
+    virtual bool isMouseEvent() const { return false; }
+    virtual bool isTouchEvent() const { return false; }
+    virtual bool isTabletEvent() const { return false; }
     bool isValid() const { return m_event != nullptr; }
-    bool allPointsAccepted() const;
+    virtual bool allPointsAccepted() const = 0;
 
-    int pointCount() const { return m_pointCount; }
-    QQuickEventPoint *point(int i) const;
-    QQuickEventPoint *pointById(quint64 pointId) const;
+    virtual int pointCount() const = 0;
+    virtual QQuickEventPoint *point(int i) const = 0;
+    virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
 
-    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
+protected:
 
-    QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
-
-    QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
-
-private:
-    void initFromMouse(QMouseEvent *ev);
-    void initFromTouch(QTouchEvent *ev);
-
-private:
     const QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
     Qt::MouseButtons m_pressedButtons;
-    int m_pointCount;
-    QVector<QQuickEventTouchPoint *> m_touchPoints;
-    QQuickEventPoint *m_mousePoint;
     mutable QMouseEvent m_synthMouseEvent;
 
     Q_DISABLE_COPY(QQuickPointerEvent)
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickPointerEvent
+{
+public:
+    QQuickPointerMouseEvent(QObject *parent = nullptr)
+        : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this))
+    {
+    }
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    bool isMouseEvent() const override { return true; }
+    int pointCount() const override { return 1; }
+    QQuickEventPoint *point(int i) const override;
+    QQuickEventPoint *pointById(quint64 pointId) const override;
+    bool allPointsAccepted() const override;
+
+private:
+    QQuickEventPoint *m_mousePoint;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
+{
+public:
+    QQuickPointerTouchEvent(QObject *parent = nullptr)
+        : QQuickPointerEvent(parent)
+    {}
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    bool isTouchEvent() const override { return true; }
+    int pointCount() const override { return m_pointCount; }
+    QQuickEventPoint *point(int i) const override;
+    QQuickEventPoint *pointById(quint64 pointId) const override;
+    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
+    bool allPointsAccepted() const override;
+
+    QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
+    QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
+
+private:
+    int m_pointCount;
+    QVector<QQuickEventTouchPoint *> m_touchPoints;
 };
 
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent
@@ -439,10 +469,18 @@ public:
 
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
       : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
-      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name), m_uniqueId(uniqueId)
-    {}
+      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name), m_uniqueId(uniqueId), m_event(nullptr)
+    {
+        if (m_deviceType == Mouse) {
+            m_event = new QQuickPointerMouseEvent;
+        } else if (m_deviceType == TouchScreen || m_deviceType == TouchPad) {
+            m_event = new QQuickPointerTouchEvent;
+        } else {
+            Q_ASSERT(false);
+        }
+    }
 
-    ~QQuickPointerDevice() { }
+    ~QQuickPointerDevice() { delete m_event; }
     DeviceType type() const { return m_deviceType; }
     PointerType pointerType() const { return m_pointerType; }
     Capabilities capabilities() const { return m_capabilities; }
@@ -451,7 +489,7 @@ public:
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
     qint64 uniqueId() const { return m_uniqueId; }
-    QQuickPointerEvent *pointerEvent() const { return &m_event; }
+    QQuickPointerEvent *pointerEvent() const { return m_event; }
 
 private:
     DeviceType m_deviceType;
@@ -462,7 +500,7 @@ private:
     QString m_name;
     qint64 m_uniqueId;
     // the device-specific event instance which is reused during event delivery
-    mutable QQuickPointerEvent m_event;
+    QQuickPointerEvent *m_event;
 
     Q_DISABLE_COPY(QQuickPointerDevice)
 };

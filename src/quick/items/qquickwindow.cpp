@@ -2365,7 +2365,8 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
                                                       const QSet<quint64> &matchingNewPoints, const QList<const QQuickEventPoint *> &matchingPoints,
                                                       QSet<QQuickItem *> *hasFiltered)
 {
-    QScopedPointer<QTouchEvent> touchEvent(event->touchEventForItem(matchingPoints, item));
+    auto pointerTouchEvent = static_cast<const QQuickPointerTouchEvent*>(event);
+    QScopedPointer<QTouchEvent> touchEvent(pointerTouchEvent->touchEventForItem(matchingPoints, item));
     if (touchEvent.data()->touchPoints().isEmpty())
         return false;
     bool touchEventAccepted = false;

@@ -441,6 +441,11 @@ Item {
     \l inverted always returns false.
 */
 
+
+QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
+    : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
+{}
+
 /*!
     \internal
     \class QQuickPointerEvent
@@ -455,23 +460,11 @@ Item {
     dynamically create and destroy objects of this type for each event.
 */
 
-/*!
-    \internal
-    Reset the current event to \a ev, which must be a touch, mouse or tablet event.
-*/
-QQuickPointerEvent *QQuickPointerEvent::reset(QEvent *ev) {
-    m_event = static_cast<QInputEvent*>(ev);
-    if (isMouseEvent()) {
-        initFromMouse(static_cast<QMouseEvent*>(ev));
-    } else if (isTouchEvent()) {
-        initFromTouch(static_cast<QTouchEvent*>(ev));
-    } else {
-        Q_ASSERT_X(false, "", "invalid event type");
-    }
-    return this;
-}
+QQuickPointerEvent::~QQuickPointerEvent()
+{}
 
-void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
+QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event) {
+    auto ev = static_cast<QMouseEvent*>(event);
     m_device = QQuickWindowPrivate::genericMouseDevice;
     m_event = ev;
     m_button = ev->button();
@@ -491,14 +484,12 @@ void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
     default:
         break;
     }
-
-    if (!m_mousePoint)
-        m_mousePoint = new QQuickEventPoint(this);
-    m_pointCount = 1;
     m_mousePoint->reset(state, ev->windowPos(), 0, ev->timestamp());  // mouse is 0
+    return this;
 }
 
-void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
+QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
+    auto ev = static_cast<QTouchEvent*>(event);
     m_device = QQuickWindowPrivate::touchDevice(ev->device());
     m_event = ev;
     m_button = Qt::NoButton;
@@ -512,6 +503,7 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
 
     for (int i = 0; i < m_pointCount; ++i)
         m_touchPoints.at(i)->reset(tps.at(i), ev->timestamp());
+    return this;
 }
 
 /*!
@@ -534,34 +526,16 @@ QMouseEvent *QQuickPointerEvent::asMouseEvent() const {
     return nullptr;
 }
 
-bool QQuickPointerEvent::isMouseEvent() const
-{
-    return m_event
-        && m_event->type() >= QEvent::MouseButtonPress
-        && m_event->type() <= QEvent::MouseMove;
+QQuickEventPoint *QQuickPointerMouseEvent::point(int i) const {
+    if (i == 0)
+        return m_mousePoint;
+    return nullptr;
 }
 
-bool QQuickPointerEvent::isTouchEvent() const
-{
-    return m_event
-        && ((m_event->type() >= QEvent::TouchBegin && m_event->type() <= QEvent::TouchEnd)
-            || m_event->type() == QEvent::TouchCancel);
-}
-
-bool QQuickPointerEvent::isTabletEvent() const
-{
-    if (!m_event)
-        return false;
-    switch (m_event->type()) {
-    case QEvent::TabletPress:
-    case QEvent::TabletRelease:
-    case QEvent::TabletMove:
-    case QEvent::TabletEnterProximity:
-    case QEvent::TabletLeaveProximity:
-        return true;
-    default:
-        return false;
-    }
+QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
+    if (i >= 0 && i < m_pointCount)
+        return m_touchPoints.at(i);
+    return nullptr;
 }
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
@@ -576,27 +550,14 @@ QQuickPointerEvent *QQuickEventPoint::pointerEvent() const
     return static_cast<QQuickPointerEvent *>(parent());
 }
 
-QQuickEventPoint *QQuickPointerEvent::point(int i) const {
-    if (Q_UNLIKELY(i < 0 || i >= m_pointCount))
-        return nullptr;
-    if (isTouchEvent())
-        return m_touchPoints.at(i);
-    if (isMouseEvent())
-        return m_mousePoint;
-    return nullptr;
+bool QQuickPointerMouseEvent::allPointsAccepted() const {
+    return m_mousePoint->isAccepted();
 }
 
-bool QQuickPointerEvent::allPointsAccepted() const
-{
-    Q_ASSERT(m_event && !isTabletEvent());
-    if (isMouseEvent()) {
-        return m_mousePoint->isAccepted();
-    }
-    if (isTouchEvent()) {
-        for (int i = 0; i < m_pointCount; ++i) {
-            if (!m_touchPoints.at(i)->isAccepted())
-                return false;
-        }
+bool QQuickPointerTouchEvent::allPointsAccepted() const {
+    for (int i = 0; i < m_pointCount; ++i) {
+        if (!m_touchPoints.at(i)->isAccepted())
+            return false;
     }
     return true;
 }
@@ -608,7 +569,7 @@ bool QQuickPointerEvent::allPointsAccepted() const
     If the touchpoint cannot be found, this returns nullptr.
     Ownership of the event is NOT transferred to the caller.
 */
-QMouseEvent *QQuickPointerEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const {
+QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const {
     const QTouchEvent::TouchPoint *p = touchPointById(pointID);
     if (!p)
         return nullptr;
@@ -652,22 +613,26 @@ QMouseEvent *QQuickPointerEvent::syntheticMouseEvent(int pointID, QQuickItem *re
     Returns a pointer to the QQuickEventPoint which has the \a pointId as
     \l {QQuickEventPoint::pointId}{pointId}.
     Returns nullptr if there is no point with that ID.
+
+    \fn QQuickPointerEvent::pointById(quint64 pointId) const
 */
-QQuickEventPoint *QQuickPointerEvent::pointById(quint64 pointId) const {
-    if (isMouseEvent()) {
-        if (m_mousePoint && pointId == m_mousePoint->pointId())
-            return m_mousePoint;
-    }
-    if (isTouchEvent()) {
-        auto it = std::find_if(m_touchPoints.constBegin(), m_touchPoints.constEnd(),
-            [pointId](const QQuickEventTouchPoint *tp) { return tp->pointId() == pointId; } );
-        if (it != m_touchPoints.constEnd()) {
-            return *it;
-        }
-    }
-    // TODO it could alternatively be a tablet point
+
+
+
+QQuickEventPoint *QQuickPointerMouseEvent::pointById(quint64 pointId) const {
+    if (m_mousePoint && pointId == m_mousePoint->pointId())
+        return m_mousePoint;
     return nullptr;
 }
+
+QQuickEventPoint *QQuickPointerTouchEvent::pointById(quint64 pointId) const {
+    auto it = std::find_if(m_touchPoints.constBegin(), m_touchPoints.constEnd(),
+        [pointId](const QQuickEventTouchPoint *tp) { return tp->pointId() == pointId; } );
+    if (it != m_touchPoints.constEnd())
+        return *it;
+    return nullptr;
+}
+
 
 /*!
     \internal
@@ -675,7 +640,7 @@ QQuickEventPoint *QQuickPointerEvent::pointById(quint64 pointId) const {
     \l {QTouchEvent::TouchPoint::id}{id} as \a pointId, if the original event is a
     QTouchEvent, and if that point is found. Otherwise, returns nullptr.
 */
-const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) const {
+const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const {
     const QTouchEvent *ev = asTouchEvent();
     if (!ev)
         return nullptr;
@@ -690,7 +655,7 @@ const QTouchEvent::TouchPoint *QQuickPointerEvent::touchPointById(int pointId) c
     \internal
     Make a new QTouchEvent, giving it a subset of the original touch points.
 */
-QTouchEvent *QQuickPointerEvent::touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const
+QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const
 {
     QList<QTouchEvent::TouchPoint> touchPoints;
     Qt::TouchPointStates eventStates;
