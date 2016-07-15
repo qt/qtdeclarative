@@ -174,13 +174,7 @@ void QQuickSwipeView::setInteractive(bool interactive)
 
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
 {
-    QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (!item) {
-        qWarning() << "SwipeView: attached properties must be accessed from within a child item";
-        return nullptr;
-    }
-
-    return new QQuickSwipeViewAttached(item);
+    return new QQuickSwipeViewAttached(object);
 }
 
 void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -249,8 +243,8 @@ class QQuickSwipeViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
 {
     Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
 public:
-    QQuickSwipeViewAttachedPrivate(QQuickItem *item) :
-        item(item),
+    QQuickSwipeViewAttachedPrivate() :
+        item(nullptr),
         swipeView(nullptr),
         index(-1),
         currentIndex(-1)
@@ -394,15 +388,20 @@ void QQuickSwipeViewAttachedPrivate::itemDestroyed(QQuickItem *item)
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
 }
 
-QQuickSwipeViewAttached::QQuickSwipeViewAttached(QQuickItem *item) :
-    QObject(*(new QQuickSwipeViewAttachedPrivate(item)), item)
+QQuickSwipeViewAttached::QQuickSwipeViewAttached(QObject *parent) :
+    QObject(*(new QQuickSwipeViewAttachedPrivate), parent)
 {
     Q_D(QQuickSwipeViewAttached);
-    if (item->parentItem())
-        d->updateView(item->parentItem());
+    d->item = qobject_cast<QQuickItem *>(parent);
+    if (d->item) {
+        if (d->item->parentItem())
+            d->updateView(d->item->parentItem());
 
-    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->addItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
+        p->addItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
+    } else if (parent) {
+        qmlInfo(parent) << "SwipeView: attached properties must be accessed from within a child item";
+    }
 }
 
 QQuickSwipeViewAttached::~QQuickSwipeViewAttached()

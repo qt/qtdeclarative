@@ -92,7 +92,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
     Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
 
 public:
-    explicit QQuickSwipeViewAttached(QQuickItem *delegateItem);
+    explicit QQuickSwipeViewAttached(QObject *parent = nullptr);
     ~QQuickSwipeViewAttached();
 
     int index() const;
