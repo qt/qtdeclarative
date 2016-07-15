@@ -928,4 +928,28 @@ TestCase {
 
         control.destroy();
     }
+
+    function test_contentItemHeightOnHeightChanged() {
+        var control = swipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        // Try when swipe.complete is false.
+        var originalHeight = control.height;
+        var originalContentItemHeight = control.contentItem.height;
+        verify(control.height !== 10);
+        control.height = 10;
+        compare(control.contentItem.height, control.availableHeight);
+        verify(control.contentItem.height < originalContentItemHeight);
+        compare(control.contentItem.y, control.topPadding);
+
+        // Try when swipe.complete is true.
+        control.height = originalHeight;
+        swipe(control, 0.0, 1.0);
+        control.height = 10;
+        compare(control.contentItem.height, control.availableHeight);
+        verify(control.contentItem.height < originalContentItemHeight);
+        compare(control.contentItem.y, control.topPadding);
+
+        control.destroy();
+    }
 }

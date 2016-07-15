@@ -708,13 +708,17 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *, QMouseEve
 
 void QQuickSwipeDelegatePrivate::resizeContent()
 {
-    // If the background and contentItem are outside the visible bounds
-    // of the control (we clip anything outside the bounds), we don't want
-    // to call QQuickControlPrivate's implementation of this function,
+    // If the background and contentItem are repositioned due to a swipe,
+    // we don't want to call QQuickControlPrivate's implementation of this function,
     // as it repositions the contentItem to be visible.
+    // However, we still want to resize the control vertically.
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     if (!swipePrivate->complete) {
-        QQuickAbstractButtonPrivate::resizeContent();
+        QQuickItemDelegatePrivate::resizeContent();
+    } else if (contentItem) {
+        Q_Q(QQuickSwipeDelegate);
+        contentItem->setY(q->topPadding());
+        contentItem->setHeight(q->availableHeight());
     }
 }
 
