@@ -209,9 +209,9 @@ ApplicationWindow {
 
     Popup {
         id: settingsDialog
-        x: (window.width - width) / 2
-        y: window.height / 6
-        width: Math.min(window.width, window.height) / 3 * 2
+        x: Math.round((window.width - width) / 2)
+        y: Math.round(window.height / 6)
+        width: Math.round(Math.min(window.width, window.height) / 3 * 2)
         height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
