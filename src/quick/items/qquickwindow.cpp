@@ -633,6 +633,8 @@ bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
 
 bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *event)
 {
+    Q_Q(QQuickWindow);
+
     // For each point, check if it is accepted, if not, try the next point.
     // Any of the fingers can become the mouse one.
     // This can happen because a mouse area might not accept an event at some point but another.
@@ -655,7 +657,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
 
             // Send a single press and see if that's accepted
-            if (!mouseGrabberItem)
+            if (!q->mouseGrabberItem())
                 item->grabMouse();
             item->grabTouchPoints(QVector<int>() << touchMouseId);
 
@@ -668,7 +670,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     itemForTouchPointId.remove(p.id());
                 }
 
-                if (mouseGrabberItem == item)
+                if (q->mouseGrabberItem() == item)
                     item->ungrabMouse();
             }
 
@@ -696,13 +698,13 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
         // Touch point was there before and moved
         } else if (p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
-                if (mouseGrabberItem) {
+                if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
                         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << mouseGrabberItem;
-                        itemForTouchPointId[p.id()] = mouseGrabberItem; // N.B. the mouseGrabberItem may be different after returning from sendEvent()
+                        itemForTouchPointId[p.id()] = q->mouseGrabberItem(); // N.B. the mouseGrabberItem may be different after returning from sendEvent()
                         return true;
                     }
                 } else {
@@ -727,7 +729,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             } else if (p.state() & Qt::TouchPointReleased) {
                 // currently handled point was released
                 touchMouseId = -1;
-                if (mouseGrabberItem) {
+                if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
 
@@ -739,8 +741,8 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                                        Qt::NoButton, Qt::NoButton, event->modifiers());
                         QCoreApplication::sendEvent(item, &mm);
                     }
-                    if (mouseGrabberItem) // might have ungrabbed due to event
-                        mouseGrabberItem->ungrabMouse();
+                    if (q->mouseGrabberItem()) // might have ungrabbed due to event
+                        q->mouseGrabberItem()->ungrabMouse();
                     return me->isAccepted();
                 }
             }
@@ -753,18 +755,18 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
 void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 {
     Q_Q(QQuickWindow);
-    if (mouseGrabberItem == grabber)
+    if (q->mouseGrabberItem() == grabber)
         return;
 
-    qCDebug(DBG_MOUSE_TARGET) << "grabber" << mouseGrabberItem << "->" << grabber;
-    QQuickItem *oldGrabber = mouseGrabberItem;
+    qCDebug(DBG_MOUSE_TARGET) << "grabber" << q->mouseGrabberItem() << "->" << grabber;
+    QQuickItem *oldGrabber = q->mouseGrabberItem();
     mouseGrabberItem = grabber;
 
     if (touchMouseId != -1) {
         // update the touch item for mouse touch id to the new grabber
         itemForTouchPointId.remove(touchMouseId);
         if (grabber) {
-            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << touchMouseId << "->" << mouseGrabberItem;
+            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << touchMouseId << "->" << q->mouseGrabberItem();
             itemForTouchPointId[touchMouseId] = grabber;
         }
     }
@@ -787,8 +789,8 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
             }
         }
     }
-    if (Q_LIKELY(mouse) && mouseGrabberItem == grabber) {
-        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << mouseGrabberItem << "-> null";
+    if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
+        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
         mouseGrabberItem = 0;
         QEvent ev(QEvent::UngrabMouse);
         q->sendEvent(grabber, &ev);
@@ -1539,8 +1541,8 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
 #endif
-        if (d->mouseGrabberItem)
-            d->mouseGrabberItem->ungrabMouse();
+        if (mouseGrabberItem())
+            mouseGrabberItem()->ungrabMouse();
         break;
     case QEvent::UpdateRequest: {
         if (d->windowManager)
@@ -1623,8 +1625,8 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
                 event->setAccepted(me->isAccepted());
                 if (me->isAccepted())
                     return true;
-                if (mouseGrabberItem)
-                    mouseGrabberItem->ungrabMouse();
+                if (q->mouseGrabberItem())
+                    q->mouseGrabberItem()->ungrabMouse();
             }
         }
     }
@@ -1637,7 +1639,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
 
     lastMousePosition = event->windowPos();
 
-    if (!mouseGrabberItem &&
+    if (!q->mouseGrabberItem() &&
          (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
          (event->buttons() & event->button()) == event->buttons()) {
 
@@ -1648,7 +1650,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
         return event->isAccepted();
     }
 
-    if (mouseGrabberItem) {
+    if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
         QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
         QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
         me->accept();
@@ -1879,8 +1881,8 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
         q->sendEvent(item, event);
     }
     touchMouseId = -1;
-    if (mouseGrabberItem)
-        mouseGrabberItem->ungrabMouse();
+    if (q->mouseGrabberItem())
+        q->mouseGrabberItem()->ungrabMouse();
     // The next touch event can only be a TouchBegin so clean up.
     itemForTouchPointId.clear();
     return true;
@@ -2009,6 +2011,8 @@ void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
 {
+    Q_Q(QQuickWindow);
+
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         event->accept();
         return;
@@ -2024,14 +2028,14 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonRelease:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
                               event->buttons());
-        if (!mouseGrabberItem) {
+        if (!q->mouseGrabberItem()) {
             event->ignore();
             return;
         }
 
         deliverPointerEvent(pointerEventInstance(event));
-        if (mouseGrabberItem && !event->buttons())
-            mouseGrabberItem->ungrabMouse();
+        if (q->mouseGrabberItem() && !event->buttons())
+            q->mouseGrabberItem()->ungrabMouse();
         break;
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
@@ -2048,7 +2052,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         updateCursor(event->windowPos());
     #endif
 
-        if (!mouseGrabberItem) {
+        if (!q->mouseGrabberItem()) {
             if (lastMousePosition.isNull())
                 lastMousePosition = event->windowPos();
             QPointF last = lastMousePosition;
@@ -2073,6 +2077,8 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
 
 void QQuickWindowPrivate::flushFrameSynchronousEvents()
 {
+    Q_Q(QQuickWindow);
+
     if (delayedTouch) {
         deliverDelayedTouchEvent();
 
@@ -2087,7 +2093,7 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
     // For instance, during animation (including the case of a ListView
     // whose delegates contain MouseAreas), a MouseArea needs to know
     // whether it has moved into a position where it is now under the cursor.
-    if (!mouseGrabberItem && !lastMousePosition.isNull()) {
+    if (!q->mouseGrabberItem() && !lastMousePosition.isNull()) {
         bool accepted = false;
         bool delivered = deliverHoverEvent(contentItem, lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), accepted);
         if (!delivered)
@@ -2615,6 +2621,8 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 // Child event filtering is legacy stuff, so here we use QTouchEvent
 bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
+    Q_Q(QQuickWindow);
+
     if (!target)
         return false;
 
@@ -2633,8 +2641,8 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                 for (int i = 0; i < touchPointCount; ++i)
                     touchIds.append(targetEvent->touchPoints().at(i).id());
                 target->grabTouchPoints(touchIds);
-                if (mouseGrabberItem) {
-                    mouseGrabberItem->ungrabMouse();
+                if (q->mouseGrabberItem()) {
+                    q->mouseGrabberItem()->ungrabMouse();
                     touchMouseId = -1;
                 }
                 filtered = true;
