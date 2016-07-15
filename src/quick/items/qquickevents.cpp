@@ -652,6 +652,16 @@ void QQuickPointerTouchEvent::clearGrabbers() const {
         point(i)->setGrabber(nullptr);
 }
 
+QVector<QPointF> QQuickPointerEvent::unacceptedPointScenePositions() const
+{
+    QVector<QPointF> points;
+    for (int i = 0; i < pointCount(); ++i) {
+        if (!point(i)->isAccepted())
+            points << point(i)->scenePos();
+    }
+    return points;
+}
+
 /*!
     \internal
     Populate the reusable synth-mouse event from one touchpoint.

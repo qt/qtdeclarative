@@ -360,6 +360,7 @@ public: // helpers for C++ only (during event delivery)
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
+    QVector<QPointF> unacceptedPointScenePositions() const;
 
     virtual int pointCount() const = 0;
     virtual QQuickEventPoint *point(int i) const = 0;
