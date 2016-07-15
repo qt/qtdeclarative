@@ -204,7 +204,6 @@ struct Function
         HasCatchOrWith      = 0x10
     };
 
-    quint8 flags;
     LEUInt32 nameIndex;
     LEUInt32 nFormals;
     LEUInt32 formalsOffset;
@@ -231,6 +230,9 @@ struct Function
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
 //    Function[nInnerFunctions]
+
+    // Keep all unaligned data at the end
+    quint8 flags;
 
     const LEUInt32 *formalsTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const LEUInt32 *localsTable() const { return reinterpret_cast<const LEUInt32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
