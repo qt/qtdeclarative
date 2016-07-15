@@ -38,47 +38,25 @@
 **
 ****************************************************************************/
 
-#include "customrenderitem.h"
-#include <QQuickWindow>
-#include <QSGRendererInterface>
+#ifndef SOFTWARERENDERER_H
+#define SOFTWARERENDERER_H
 
-#include "openglrenderer.h"
-#include "d3d12renderer.h"
-#include "softwarerenderer.h"
+#include <qsgrendernode.h>
 
-CustomRenderItem::CustomRenderItem(QQuickItem *parent)
-    : QQuickItem(parent)
+class QQuickItem;
+
+class SoftwareRenderNode : public QSGRenderNode
 {
-    // Our item shows something so set the flag.
-    setFlag(ItemHasContents);
-}
+public:
+    SoftwareRenderNode(QQuickItem *item);
+    ~SoftwareRenderNode();
 
-QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
-{
-    QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
-    if (!n) {
-        QSGRendererInterface *ri = window()->rendererInterface();
-        if (!ri)
-            return nullptr;
-        switch (ri->graphicsApi()) {
-            case QSGRendererInterface::OpenGL:
-#ifndef QT_NO_OPENGL
-                n = new OpenGLRenderNode(this);
-                break;
+    void render(const RenderState *state) override;
+    void releaseResources() override;
+    StateFlags changedStates() const override;
+
+private:
+    QQuickItem *m_item;
+};
+
 #endif
-            case QSGRendererInterface::Direct3D12:
-#ifdef HAS_D3D12
-                n = new D3D12RenderNode(this);
-                break;
-#endif
-            case QSGRendererInterface::Software:
-                n = new SoftwareRenderNode(this);
-                break;
-
-            default:
-                return nullptr;
-        }
-    }
-
-    return n;
-}

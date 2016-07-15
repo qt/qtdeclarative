@@ -90,7 +90,10 @@ Item {
             anchors.margins: 20
             wrapMode: Text.WordWrap
             property int api: GraphicsInfo.api
-            text: "Custom rendering via the graphics API " + (api === GraphicsInfo.OpenGL ? "OpenGL" : (api === GraphicsInfo.Direct3D12 ? "Direct3D 12" : ""))
+            text: "Custom rendering via the graphics API "
+                  + (api === GraphicsInfo.OpenGL ? "OpenGL"
+                     : api === GraphicsInfo.Direct3D12 ? "Direct3D 12"
+                     : api === GraphicsInfo.Software ? "Software" : "")
             color: "yellow"
         }
     }

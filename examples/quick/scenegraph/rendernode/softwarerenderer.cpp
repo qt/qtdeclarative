@@ -38,47 +38,54 @@
 **
 ****************************************************************************/
 
-#include "customrenderitem.h"
+#include "softwarerenderer.h"
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QPainter>
 
-#include "openglrenderer.h"
-#include "d3d12renderer.h"
-#include "softwarerenderer.h"
-
-CustomRenderItem::CustomRenderItem(QQuickItem *parent)
-    : QQuickItem(parent)
+SoftwareRenderNode::SoftwareRenderNode(QQuickItem *item)
+    : m_item(item)
 {
-    // Our item shows something so set the flag.
-    setFlag(ItemHasContents);
 }
 
-QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+SoftwareRenderNode::~SoftwareRenderNode()
 {
-    QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
-    if (!n) {
-        QSGRendererInterface *ri = window()->rendererInterface();
-        if (!ri)
-            return nullptr;
-        switch (ri->graphicsApi()) {
-            case QSGRendererInterface::OpenGL:
-#ifndef QT_NO_OPENGL
-                n = new OpenGLRenderNode(this);
-                break;
-#endif
-            case QSGRendererInterface::Direct3D12:
-#ifdef HAS_D3D12
-                n = new D3D12RenderNode(this);
-                break;
-#endif
-            case QSGRendererInterface::Software:
-                n = new SoftwareRenderNode(this);
-                break;
+    releaseResources();
+}
 
-            default:
-                return nullptr;
-        }
-    }
+void SoftwareRenderNode::releaseResources()
+{
+}
 
-    return n;
+void SoftwareRenderNode::render(const RenderState *renderState)
+{
+    QSGRendererInterface *rif = m_item->window()->rendererInterface();
+    QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::Painter));
+    Q_ASSERT(p);
+
+    p->setTransform(matrix()->toTransform());
+    p->setOpacity(inheritedOpacity());
+    const QRegion *clipRegion = renderState->clipRegion();
+    if (clipRegion && !clipRegion->isEmpty())
+        p->setClipRegion(*clipRegion);
+
+    const QPointF p0(m_item->width() - 1, m_item->height() - 1);
+    const QPointF p1(0, 0);
+    const QPointF p2(0, m_item->height() - 1);
+    QPainterPath path(p0);
+    path.lineTo(p1);
+    path.lineTo(p2);
+    path.closeSubpath();
+
+    QLinearGradient gradient(QPointF(0, 0), QPointF(m_item->width(), m_item->height()));
+    gradient.setColorAt(0, Qt::green);
+    gradient.setColorAt(1, Qt::red);
+
+    p->fillPath(path, gradient);
+}
+
+QSGRenderNode::StateFlags SoftwareRenderNode::changedStates() const
+{
+    return 0;
 }

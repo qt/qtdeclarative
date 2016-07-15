@@ -75,7 +75,7 @@ public:
 
     // QSGRendererInterface
     GraphicsApi graphicsApi() const override;
-    void *getResource(Resource resource) const override;
+    void *getResource(QQuickWindow *window, Resource resource) const override;
     ShaderType shaderType() const override;
     ShaderCompilationTypes shaderCompilationType() const override;
     ShaderSourceTypes shaderSourceType() const override;

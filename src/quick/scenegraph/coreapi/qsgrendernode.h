@@ -68,6 +68,7 @@ public:
         virtual bool scissorEnabled() const = 0;
         virtual int stencilValue() const = 0;
         virtual bool stencilEnabled() const = 0;
+        virtual const QRegion *clipRegion() const = 0;
         virtual void *get(const char *state) const;
     };
 

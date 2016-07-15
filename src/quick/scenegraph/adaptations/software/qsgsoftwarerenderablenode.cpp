@@ -47,8 +47,9 @@
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwarespritenode_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
-#include <QtQuick/qsgsimpletexturenode.h>
+#include <qsgsimplerectnode.h>
+#include <qsgsimpletexturenode.h>
+#include <private/qsgrendernode_p.h>
 #include <private/qsgtexture_p.h>
 
 Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
@@ -92,6 +93,9 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
         break;
     case QSGSoftwareRenderableNode::SpriteNode:
         m_handle.spriteNode = static_cast<QSGSoftwareSpriteNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::RenderNode:
+        m_handle.renderNode = static_cast<QSGRenderNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Invalid:
         m_handle.simpleRectNode = nullptr;
@@ -182,6 +186,8 @@ void QSGSoftwareRenderableNode::update()
         m_isOpaque = m_handle.spriteNode->isOpaque();
         boundingRect = m_handle.spriteNode->rect().toRect();
         break;
+    case QSGSoftwareRenderableNode::RenderNode:
+        break;
     default:
         break;
     }
@@ -203,15 +209,50 @@ void QSGSoftwareRenderableNode::update()
     m_dirtyRegion = QRegion(m_boundingRect);
 }
 
+struct RenderNodeState : public QSGRenderNode::RenderState
+{
+    const QMatrix4x4 *projectionMatrix() const override { return &ident; }
+    QRect scissorRect() const { return QRect(); }
+    bool scissorEnabled() const { return false; }
+    int stencilValue() const { return 0; }
+    bool stencilEnabled() const { return false; }
+    const QRegion *clipRegion() const { return &cr; }
+    QMatrix4x4 ident;
+    QRegion cr;
+};
+
 QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaquePainting)
 {
     Q_ASSERT(painter);
 
     // Check for don't paint conditions
-    if (!m_isDirty || qFuzzyIsNull(m_opacity) || m_dirtyRegion.isEmpty()) {
-        m_isDirty = false;
-        m_dirtyRegion = QRegion();
-        return QRegion();
+    if (m_nodeType != RenderNode) {
+        if (!m_isDirty || qFuzzyIsNull(m_opacity) || m_dirtyRegion.isEmpty()) {
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return QRegion();
+        }
+    } else {
+        if (!m_isDirty || qFuzzyIsNull(m_opacity)) {
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return QRegion();
+        } else {
+            QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(m_handle.renderNode);
+            QMatrix4x4 m = m_transform;
+            rd->m_matrix = &m;
+            rd->m_opacity = m_opacity;
+            RenderNodeState rs;
+            rs.cr = m_clipRegion;
+            painter->save();
+            m_handle.renderNode->render(&rs);
+            painter->restore();
+            const QRect fullRect = QRect(0, 0, painter->device()->width(), painter->device()->height());
+            m_previousDirtyRegion = fullRect;
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return fullRect;
+        }
     }
 
     painter->save();

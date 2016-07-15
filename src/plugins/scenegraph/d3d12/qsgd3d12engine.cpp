@@ -549,7 +549,7 @@ void QSGD3D12Engine::simulateDeviceLoss()
     d->simulateDeviceLoss();
 }
 
-void *QSGD3D12Engine::getResource(QSGRendererInterface::Resource resource) const
+void *QSGD3D12Engine::getResource(QQuickWindow *, QSGRendererInterface::Resource resource) const
 {
     return d->getResource(resource);
 }

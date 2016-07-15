@@ -88,6 +88,8 @@ public:
     void endVisit(QSGRootNode *) override;
     bool visit(QSGSpriteNode *) override;
     void endVisit(QSGSpriteNode *) override;
+    bool visit(QSGRenderNode *) override;
+    void endVisit(QSGRenderNode *) override;
 
     void updateNodes(QSGNode *node, bool isNodeRemoved = false);
 

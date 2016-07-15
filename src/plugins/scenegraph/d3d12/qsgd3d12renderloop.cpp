@@ -279,6 +279,8 @@ QSGContext *QSGD3D12RenderLoop::sceneGraphContext() const
 
 QSGRenderContext *QSGD3D12RenderLoop::createRenderContext(QSGContext *) const
 {
+    // The rendercontext and engine are per-window, like with the threaded
+    // loop, but unlike the non-threaded OpenGL variants.
     return sg->createRenderContext();
 }
 

@@ -47,8 +47,9 @@
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
+#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -190,6 +191,15 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGSpriteNode *)
 
 }
 
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGRenderNode *node)
+{
+    return updateRenderableNode(QSGSoftwareRenderableNode::RenderNode, node);
+}
+
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRenderNode *)
+{
+}
+
 void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRemoved)
 {
     m_opacityState.clear();
@@ -267,6 +277,13 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
     }
     case QSGNode::BasicNodeType: {
             visitChildren(node);
+        break;
+    }
+    case QSGNode::RenderNodeType: {
+        QSGRenderNode *r = static_cast<QSGRenderNode*>(node);
+        if (visit(r))
+            visitChildren(r);
+        endVisit(r);
         break;
     }
     default:

@@ -138,6 +138,9 @@ void QSGSoftwareRenderer::render()
 
     QPainter painter(m_paintDevice);
     painter.setRenderHint(QPainter::Antialiasing);
+    auto rc = static_cast<QSGSoftwareRenderContext *>(context());
+    QPainter *prevPainter = rc->m_activePainter;
+    rc->m_activePainter = &painter;
 
     // Render the contents Renderlist
     m_flushRegion = renderNodes(&painter);
@@ -146,6 +149,7 @@ void QSGSoftwareRenderer::render()
     if (m_backingStore != nullptr)
         m_backingStore->endPaint();
 
+    rc->m_activePainter = prevPainter;
     qCDebug(lcRenderer) << "render" << m_flushRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
 }
 

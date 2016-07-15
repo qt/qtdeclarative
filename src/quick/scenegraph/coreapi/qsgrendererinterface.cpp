@@ -81,9 +81,10 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \enum QSGRendererInterface::Resource
-    \value Device The graphics device
-    \value CommandQueue The graphics command queue used by the scenergaph
-    \value CommandList The command list or buffer used by the scenegraph
+    \value Device The graphics device, when applicable.
+    \value CommandQueue The graphics command queue used by the scenegraph, when applicable.
+    \value CommandList The command list or buffer used by the scenegraph, when applicable.
+    \value Painter The active QPainter used by the scenegraph, when running with the software backend.
  */
 
 /*!
@@ -134,10 +135,13 @@ QSGRendererInterface::~QSGRendererInterface()
     example, \c{VkDevice dev = *static_cast<VkDevice *>(result)}). The latter
     is necessary since such handles may have sizes different from a pointer.
 
+    \note The ownership of the returned pointer is never transferred to the caller.
+
     \note This function must only be called on the render thread.
  */
-void *QSGRendererInterface::getResource(Resource resource) const
+void *QSGRendererInterface::getResource(QQuickWindow *window, Resource resource) const
 {
+    Q_UNUSED(window);
     Q_UNUSED(resource);
     return nullptr;
 }
@@ -147,10 +151,13 @@ void *QSGRendererInterface::getResource(Resource resource) const
     allows supporting any future resources that are not listed in the
     Resource enum.
 
+    \note The ownership of the returned pointer is never transferred to the caller.
+
     \note This function must only be called on the render thread.
  */
-void *QSGRendererInterface::getResource(const char *resource) const
+void *QSGRendererInterface::getResource(QQuickWindow *window, const char *resource) const
 {
+    Q_UNUSED(window);
     Q_UNUSED(resource);
     return nullptr;
 }

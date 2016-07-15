@@ -78,6 +78,7 @@ public:
     int maxTextureSize() const override;
 
     bool m_initialized;
+    QPainter *m_activePainter;
 };
 
 class QSGSoftwareContext : public QSGContext, public QSGRendererInterface
@@ -103,6 +104,7 @@ public:
     ShaderType shaderType() const override;
     ShaderCompilationTypes shaderCompilationType() const override;
     ShaderSourceTypes shaderSourceType() const override;
+    void *getResource(QQuickWindow *window, Resource resource) const override;
 };
 
 QT_END_NAMESPACE

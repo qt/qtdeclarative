@@ -82,6 +82,7 @@ class QSGInternalRectangleNode;
 class QSGGlyphNode;
 class QSGRootNode;
 class QSGSpriteNode;
+class QSGRenderNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -109,6 +110,8 @@ public:
     virtual void endVisit(QSGRootNode *) = 0;
     virtual bool visit(QSGSpriteNode *) = 0;
     virtual void endVisit(QSGSpriteNode *) = 0;
+    virtual bool visit(QSGRenderNode *) = 0;
+    virtual void endVisit(QSGRenderNode *) = 0;
 
     void visitChildren(QSGNode *node);
 };

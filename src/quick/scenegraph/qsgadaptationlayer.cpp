@@ -46,6 +46,7 @@
 #include <private/qrawfont_p.h>
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
+#include <qsgrendernode.h>
 
 #include <private/qquickprofiler_p.h>
 #include <QElapsedTimer>
@@ -510,6 +511,13 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
         }
         case QSGNode::BasicNodeType: {
             visitChildren(child);
+            break;
+        }
+        case QSGNode::RenderNodeType: {
+            QSGRenderNode *r = static_cast<QSGRenderNode*>(child);
+            if (visit(r))
+                visitChildren(r);
+            endVisit(r);
             break;
         }
         default:

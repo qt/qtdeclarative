@@ -372,7 +372,7 @@ public:
 
     void simulateDeviceLoss();
 
-    void *getResource(QSGRendererInterface::Resource resource) const;
+    void *getResource(QQuickWindow *window, QSGRendererInterface::Resource resource) const;
 
 private:
     QSGD3D12EnginePrivate *d;

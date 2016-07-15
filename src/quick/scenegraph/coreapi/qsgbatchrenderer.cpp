@@ -2768,6 +2768,7 @@ struct RenderNodeState : public QSGRenderNode::RenderState
     bool scissorEnabled() const override { return m_scissorEnabled; }
     int stencilValue() const override { return m_stencilValue; }
     bool stencilEnabled() const override { return m_stencilEnabled; }
+    const QRegion *clipRegion() const override { return nullptr; }
 
     const QMatrix4x4 *m_projectionMatrix;
     QRect m_scissorRect;
