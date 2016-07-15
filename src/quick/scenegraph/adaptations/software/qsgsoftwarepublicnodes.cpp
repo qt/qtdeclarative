@@ -57,7 +57,10 @@ void QSGSoftwareRectangleNode::paint(QPainter *painter)
 
 QSGSoftwareImageNode::QSGSoftwareImageNode()
     : m_texture(nullptr),
-      m_owns(false)
+      m_owns(false),
+      m_filtering(QSGTexture::None),
+      m_transformMode(NoTransform),
+      m_cachedMirroredPixmapIsDirty(false)
 {
     setMaterial((QSGMaterial*)1);
     setGeometry((QSGGeometry*)1);
@@ -69,15 +72,62 @@ QSGSoftwareImageNode::~QSGSoftwareImageNode()
         delete m_texture;
 }
 
+void QSGSoftwareImageNode::setTexture(QSGTexture *texture)
+{
+    m_texture = texture; markDirty(DirtyMaterial);
+    m_cachedMirroredPixmapIsDirty = true;
+}
+
+void QSGSoftwareImageNode::setTextureCoordinatesTransform(QSGImageNode::TextureCoordinatesTransformMode transformNode)
+{
+    if (m_transformMode == transformNode)
+        return;
+
+    m_transformMode = transformNode;
+    m_cachedMirroredPixmapIsDirty = true;
+
+    markDirty(DirtyGeometry);
+}
+
 void QSGSoftwareImageNode::paint(QPainter *painter)
 {
-    if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+    if (m_cachedMirroredPixmapIsDirty)
+        updateCachedMirroredPixmap();
+
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, (m_filtering == QSGTexture::Linear));
+
+    if (!m_cachedPixmap.isNull()) {
+        painter->drawPixmap(m_rect, m_cachedPixmap, m_sourceRect);
+    } else if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
         const QPixmap &pm = pt->pixmap();
         painter->drawPixmap(m_rect, pm, m_sourceRect);
     } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(m_texture)) {
         const QImage &im = pt->image();
         painter->drawImage(m_rect, im, m_sourceRect);
     }
+}
+
+void QSGSoftwareImageNode::updateCachedMirroredPixmap()
+{
+    if (m_transformMode == NoTransform) {
+        m_cachedPixmap = QPixmap();
+    } else {
+
+        if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+            QTransform mirrorTransform;
+            if (m_transformMode.testFlag(MirrorVertically))
+                mirrorTransform = mirrorTransform.scale(1, -1);
+            if (m_transformMode.testFlag(MirrorHorizontally))
+                mirrorTransform = mirrorTransform.scale(-1, 1);
+            m_cachedPixmap = pt->pixmap().transformed(mirrorTransform);
+        } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(m_texture)) {
+            m_cachedPixmap = QPixmap::fromImage(pt->image().mirrored(m_transformMode.testFlag(MirrorHorizontally), m_transformMode.testFlag(MirrorVertically)));
+        } else {
+            m_cachedPixmap = QPixmap();
+        }
+    }
+
+    m_cachedMirroredPixmapIsDirty = false;
 }
 
 QSGSoftwareNinePatchNode::QSGSoftwareNinePatchNode()

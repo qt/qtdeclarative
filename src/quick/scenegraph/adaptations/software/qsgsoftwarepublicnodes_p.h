@@ -88,17 +88,17 @@ public:
     void setSourceRect(const QRectF &r) override { m_sourceRect = r; }
     QRectF sourceRect() const override { return m_sourceRect; }
 
-    void setTexture(QSGTexture *texture) override { m_texture = texture; markDirty(DirtyMaterial); }
+    void setTexture(QSGTexture *texture) override;
     QSGTexture *texture() const override { return m_texture; }
 
-    void setFiltering(QSGTexture::Filtering) override { }
-    QSGTexture::Filtering filtering() const override { return QSGTexture::None; }
+    void setFiltering(QSGTexture::Filtering filtering) override { m_filtering = filtering; markDirty(DirtyMaterial); }
+    QSGTexture::Filtering filtering() const override { return m_filtering; }
 
     void setMipmapFiltering(QSGTexture::Filtering) override { }
     QSGTexture::Filtering mipmapFiltering() const override { return QSGTexture::None; }
 
-    void setTextureCoordinatesTransform(TextureCoordinatesTransformMode) override { }
-    TextureCoordinatesTransformMode textureCoordinatesTransform() const override { return NoTransform; }
+    void setTextureCoordinatesTransform(TextureCoordinatesTransformMode transformNode) override;
+    TextureCoordinatesTransformMode textureCoordinatesTransform() const override { return m_transformMode; }
 
     void setOwnsTexture(bool owns) override { m_owns = owns; }
     bool ownsTexture() const override { return m_owns; }
@@ -106,11 +106,16 @@ public:
     void paint(QPainter *painter);
 
 private:
-    QPixmap m_pixmap;
+    void updateCachedMirroredPixmap();
+
+    QPixmap m_cachedPixmap;
     QSGTexture *m_texture;
     QRectF m_rect;
     QRectF m_sourceRect;
     bool m_owns;
+    QSGTexture::Filtering m_filtering;
+    TextureCoordinatesTransformMode m_transformMode;
+    bool m_cachedMirroredPixmapIsDirty;
 };
 
 class QSGSoftwareNinePatchNode : public QSGNinePatchNode
