@@ -146,6 +146,8 @@ struct RegExp
         QJsonPrivate::qle_bitfield<0, 4> flags;
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
+
+    RegExp() { flags = 0; stringIndex = 0; }
 };
 
 struct Lookup
