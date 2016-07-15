@@ -344,7 +344,8 @@ QQuickWindow::createRectangleNode() and QQuickWindow::createImageNode().
 The D3D12 adaptation can keep multiple frames in flight, similarly to modern
 game engines. This is somewhat different from the traditional render - swap -
 wait for vsync model and allows better GPU utilization at the expense of higher
-resource usage.
+resource usage. This means that the renderer will be a number of frames ahead
+of what is displayed on the screen.
 
 For a discussion of flip model swap chains and the typical configuration
 parameters, refer to
@@ -358,25 +359,31 @@ The configuration can be changed by setting the following environment variables:
 
 \list
 
-\li \c{QT_D3D_BUFFER_COUNT} - The number of swap chain buffers. Defaults to 3.
+\li \c{QT_D3D_BUFFER_COUNT} - The number of swap chain buffers in range 2 - 4.
+The default value is 3.
 
-\li \c{QT_D3D_FRAME_COUNT} - The number of frames prepared without blocking.
-Defaults to 2. Note that Present will start blocking after queuing 3 frames
+\li \c{QT_D3D_FRAME_COUNT} - The number of frames prepared without blocking in
+range 1 - 4. Note that Present will start blocking after queuing 3 frames
 (regardless of \c{QT_D3D_BUFFER_COUNT}), unless the waitable object is in use.
 Note that every additional frame increases GPU resource usage since geometry
 and constant buffer data will have to be duplicated, and involves more
-bookkeeping on the CPU side.
+bookkeeping on the CPU side. The default value is 2.
 
-\li \c{QT_D3D_WAITABLE_SWAP_CHAIN_MAX_LATENCY} - When set, the frame latency is
-set to the specified value (0-16). This changes the limit for Present() and
-will trigger a wait for an available swap chain buffer when beginning each
-frame. By default this is disabled. Refer to the article above for a detailed
-discussion.
+\li \c{QT_D3D_WAITABLE_SWAP_CHAIN_MAX_LATENCY} - When set to a value between 1
+and 16, the frame latency is set to the specified value. This changes the limit
+for Present() and will trigger a wait for an available swap chain buffer when
+beginning each frame. Refer to the article above for a detailed discussion.
+This is considered experimental for now and the default value is 0 (disabled).
+
+\li \c{QT_D3D_BLOCKING_PRESENT} - When set to a non-zero value, there will be
+CPU-side wait for the GPU to finish its work after each call to Present. This
+effectively kills all parallelism but makes the behavior resemble the
+traditional swap-blocks-for-vsync model, and can therefore be useful in some
+special cases. This is not the same as setting the frame count to 1 because
+that still avoids blocking after Present, and may block only when starting to
+prepare the next frame (or may not block at all depending on the time gap
+between the frames). By default blocking present is disabled.
 
 \endlist
-
-Note that typical Qt Quick applications are expected to generate fairly low
-workloads compared to true 3D applications like games. Therefore this level of
-tuning will likely be unnecessary in most cases.
 
 */
