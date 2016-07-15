@@ -289,12 +289,7 @@ QQuickStackView::~QQuickStackView()
 
 QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
 {
-    QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (!item) {
-        qmlInfo(object) << "StackView must be attached to an Item";
-        return nullptr;
-    }
-    return new QQuickStackAttached(item);
+    return new QQuickStackAttached(object);
 }
 
 /*!
@@ -993,19 +988,25 @@ void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem 
         emit q->statusChanged();
 }
 
-QQuickStackAttached::QQuickStackAttached(QQuickItem *parent) :
+QQuickStackAttached::QQuickStackAttached(QObject *parent) :
     QObject(*(new QQuickStackAttachedPrivate), parent)
 {
     Q_D(QQuickStackAttached);
-    QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Parent);
-    d->itemParentChanged(parent, parent->parentItem());
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
+    if (item) {
+        QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
+        d->itemParentChanged(item, item->parentItem());
+    } else if (parent) {
+        qmlInfo(parent) << "StackView must be attached to an Item";
+    }
 }
 
 QQuickStackAttached::~QQuickStackAttached()
 {
     Q_D(QQuickStackAttached);
-    QQuickItem *parentItem = static_cast<QQuickItem *>(parent());
-    QQuickItemPrivate::get(parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
+    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    if (parentItem)
+        QQuickItemPrivate::get(parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
 }
 
 /*!

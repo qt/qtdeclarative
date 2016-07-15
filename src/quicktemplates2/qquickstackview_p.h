@@ -167,7 +167,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackAttached : public QObject
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
 
 public:
-    explicit QQuickStackAttached(QQuickItem *parent = nullptr);
+    explicit QQuickStackAttached(QObject *parent = nullptr);
     ~QQuickStackAttached();
 
     int index() const;
