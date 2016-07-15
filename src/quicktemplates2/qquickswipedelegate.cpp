@@ -103,6 +103,11 @@ namespace {
     Attached *attachedObject(QQuickItem *item) {
         return qobject_cast<Attached*>(qmlAttachedPropertiesObject<QQuickSwipeDelegate>(item, false));
     }
+
+    enum PositionAnimation {
+        DontAnimatePosition,
+        AnimatePosition
+    };
 }
 
 class QQuickSwipePrivate : public QObjectPrivate
@@ -130,6 +135,7 @@ public:
     QQuickItem *createDelegateItem(QQmlComponent *component);
     QQuickItem *showRelevantItemForPosition(qreal position);
     QQuickItem *createRelevantItemForDistance(qreal distance);
+    void reposition(PositionAnimation animationPolicy);
     void createLeftItem();
     void createBehindItem();
     void createRightItem();
@@ -245,6 +251,27 @@ QQuickItem *QQuickSwipePrivate::createRelevantItemForDistance(qreal distance)
     }
 
     return nullptr;
+}
+
+void QQuickSwipePrivate::reposition(PositionAnimation animationPolicy)
+{
+    QQuickItem *relevantItem = showRelevantItemForPosition(position);
+    const qreal relevantWidth = relevantItem ? relevantItem->width() : 0.0;
+    const qreal contentItemX = position * relevantWidth + control->leftPadding();
+
+    // "Behavior on x" relies on the property system to know when it should update,
+    // so we can prevent it from animating by setting the x position directly.
+    if (animationPolicy == AnimatePosition) {
+        if (QQuickItem *contentItem = control->contentItem())
+            contentItem->setProperty("x", contentItemX);
+        if (QQuickItem *background = control->background())
+            background->setProperty("x", position * relevantWidth);
+    } else {
+        if (QQuickItem *contentItem = control->contentItem())
+            contentItem->setX(contentItemX);
+        if (QQuickItem *background = control->background())
+            background->setX(position * relevantWidth);
+    }
 }
 
 void QQuickSwipePrivate::createLeftItem()
@@ -509,13 +536,7 @@ void QQuickSwipe::setPosition(qreal position)
         return;
 
     d->position = adjustedPosition;
-
-    QQuickItem *relevantItem = d->showRelevantItemForPosition(d->position);
-    const qreal relevantWidth = relevantItem ? relevantItem->width() : 0.0;
-    d->control->contentItem()->setProperty("x", d->position * relevantWidth + d->control->leftPadding());
-    if (QQuickItem *background = d->control->background())
-        background->setProperty("x", d->position * relevantWidth);
-
+    d->reposition(AnimatePosition);
     emit positionChanged();
 }
 
@@ -731,13 +752,17 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
 
 void QQuickSwipeDelegatePrivate::resizeContent()
 {
-    // If the background and contentItem are outside the visible bounds
-    // of the control (we clip anything outside the bounds), we don't want
-    // to call QQuickControlPrivate's implementation of this function,
+    // If the background and contentItem are repositioned due to a swipe,
+    // we don't want to call QQuickControlPrivate's implementation of this function,
     // as it repositions the contentItem to be visible.
+    // However, we still want to resize the control vertically.
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     if (!swipePrivate->complete) {
-        QQuickAbstractButtonPrivate::resizeContent();
+        QQuickItemDelegatePrivate::resizeContent();
+    } else if (contentItem) {
+        Q_Q(QQuickSwipeDelegate);
+        contentItem->setY(q->topPadding());
+        contentItem->setHeight(q->availableHeight());
     }
 }
 
@@ -783,6 +808,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             The left delegate sits behind both \l {Control::}{contentItem} and
             \l {Control::}{background}. When the SwipeDelegate is swiped to the right,
             this item will be gradually revealed.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li behind
         \li This property holds the delegate that is shown when the
@@ -792,6 +819,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             \l {Control::}{contentItem} and \l {Control::}{background}. However, a
             SwipeDelegate whose \c behind has been set can be continuously swiped
             from either side, and will always show the same item.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li right
         \li This property holds the right delegate.
@@ -799,6 +828,8 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             The right delegate sits behind both \l {Control::}{contentItem} and
             \l {Control::}{background}. When the SwipeDelegate is swiped to the left,
             this item will be gradually revealed.
+
+            \include qquickswipedelegate-interaction.qdocinc
     \row
         \li leftItem
         \li This property holds the item instantiated from the \c left component.
@@ -913,6 +944,17 @@ void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickSwipeDelegate);
     QQuickItemDelegate::mouseReleaseEvent(event);
     d->handleMouseReleaseEvent(this, event);
+}
+
+void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickSwipeDelegate);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+
+    if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
+        QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
+        swipePrivate->reposition(DontAnimatePosition);
+    }
 }
 
 QFont QQuickSwipeDelegate::defaultFont() const

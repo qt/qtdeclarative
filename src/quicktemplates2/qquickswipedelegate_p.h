@@ -75,6 +75,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+
     QFont defaultFont() const override;
 
 #ifndef QT_NO_ACCESSIBILITY
