@@ -563,7 +563,7 @@ bool QQuickPointerEvent::isTabletEvent() const
     }
 }
 
-const QQuickEventPoint *QQuickPointerEvent::point(int i) const {
+QQuickEventPoint *QQuickPointerEvent::point(int i) const {
     if (Q_UNLIKELY(i < 0 || i >= m_pointCount))
         return nullptr;
     if (isTouchEvent())
@@ -640,7 +640,7 @@ QMouseEvent *QQuickPointerEvent::syntheticMouseEvent(int pointID, QQuickItem *re
     \l {QQuickEventPoint::pointId}{pointId}.
     Returns nullptr if there is no point with that ID.
 */
-QQuickEventPoint *QQuickPointerEvent::pointById(quint64 pointId) {
+QQuickEventPoint *QQuickPointerEvent::pointById(quint64 pointId) const {
     if (isMouseEvent()) {
         if (m_mousePoint && pointId == m_mousePoint->pointId())
             return m_mousePoint;
