@@ -75,6 +75,7 @@ public:
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
     QSGRenderer *createRenderer() override;
+    int maxTextureSize() const override;
 
     bool m_initialized;
 };
@@ -96,6 +97,7 @@ public:
     QSGRectangleNode *createRectangleNode() override;
     QSGImageNode *createImageNode() override;
     QSGNinePatchNode *createNinePatchNode() override;
+    QSGSpriteNode *createSpriteNode() override;
 
     GraphicsApi graphicsApi() const override;
     ShaderType shaderType() const override;

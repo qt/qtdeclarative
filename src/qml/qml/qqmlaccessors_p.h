@@ -102,11 +102,15 @@ class QQmlNotifier;
         } \
     } while (false);
 
-#define QML_PRIVATE_ACCESSOR(clazz, cpptype, name, variable) \
+#define QML_PRIVATE_ACCESSOR(clazz, cpptype, name, variable, setter) \
     static void clazz ## _ ## name ## Read(QObject *o, void *rv) \
     { \
         clazz ## Private *d = clazz ## Private::get(static_cast<clazz *>(o)); \
         *static_cast<cpptype *>(rv) = d->variable; \
+    } \
+    static void clazz ## _ ## name ## Write(QObject *o, void *rv) \
+    { \
+        static_cast<clazz *>(o)->setter(*static_cast<cpptype *>(rv)); \
     }
 
 #define QML_PROPERTY_NAME(name) #name, sizeof #name - 1
@@ -115,6 +119,7 @@ class QQmlAccessors
 {
 public:
     void (*read)(QObject *object, void *output);
+    void (*write)(QObject *object, void *output);
     void (*notifier)(QObject *object, QQmlNotifier **notifier);
 };
 

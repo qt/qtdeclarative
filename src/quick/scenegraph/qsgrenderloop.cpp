@@ -100,7 +100,7 @@ void QSGRenderLoop::cleanup()
 {
     if (!s_instance)
         return;
-    foreach (QQuickWindow *w, s_instance->windows()) {
+    for (QQuickWindow *w : s_instance->windows()) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(w);
         if (wd->windowManager == s_instance) {
            s_instance->windowDestroyed(w);

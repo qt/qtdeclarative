@@ -49,7 +49,6 @@
 #include "qv4assembler_p.h"
 #include "qv4unop_p.h"
 #include "qv4binop_p.h"
-#include <private/qqmlpropertycache_p.h>
 
 #include <QtCore/QBuffer>
 #include <QtCore/QCoreApplication>
@@ -754,39 +753,8 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (kind == IR::Member::MemberOfQmlScopeObject) {
-            if (property->propType == QMetaType::QReal) {
-                generateRuntimeCall(target, accessQmlScopeObjectQRealProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->isQObject()) {
-                generateRuntimeCall(target, accessQmlScopeObjectQObjectProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                generateRuntimeCall(target, accessQmlScopeObjectIntProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                generateRuntimeCall(target, accessQmlScopeObjectBoolProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                generateRuntimeCall(target, accessQmlScopeObjectQStringProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            }
-        }
-    }
-
     if (kind == IR::Member::MemberOfQmlScopeObject)
         generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else if (kind == IR::Member::MemberOfQmlContextObject)
@@ -797,51 +765,8 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::Mem
         Q_ASSERT(false);
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (!attachedPropertiesId && !isSingleton) {
-            const int notifyIndex = captureRequired ? property->notifyIndex : -1;
-            if (property->propType == QMetaType::QReal) {
-                generateRuntimeCall(target, accessQObjectQRealProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->isQObject()) {
-                generateRuntimeCall(target, accessQObjectQObjectProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                generateRuntimeCall(target, accessQObjectIntProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                generateRuntimeCall(target, accessQObjectBoolProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                generateRuntimeCall(target, accessQObjectQStringProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            }
-        }
-    }
-
-    const int propertyIndex = property->coreIndex;
     if (attachedPropertiesId != 0)
         generateRuntimeCall(target, getQmlAttachedProperty, Assembler::EngineRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
     else if (isSingleton)

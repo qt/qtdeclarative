@@ -102,6 +102,7 @@ QSGMaterialType *QSGD3D12VertexColorMaterial::type() const
 
 int QSGD3D12VertexColorMaterial::compare(const QSGMaterial *other) const
 {
+    Q_UNUSED(other);
     Q_ASSERT(other && type() == other->type());
     // As the vertex color material has all its state in the vertex attributes
     // defined by the geometry, all such materials will be equal.
@@ -229,6 +230,7 @@ QSGMaterialType *QSGD3D12SmoothColorMaterial::type() const
 
 int QSGD3D12SmoothColorMaterial::compare(const QSGMaterial *other) const
 {
+    Q_UNUSED(other);
     Q_ASSERT(other && type() == other->type());
     return 0;
 }

@@ -250,8 +250,7 @@ void tst_TouchMouse::simpleTouchEvent()
     QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-    QCOMPARE(windowPriv->mouseGrabberItem, eventItem1);
+    QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
     QPoint localPos = eventItem1->mapFromScene(p1).toPoint();
     QPoint globalPos = window->mapToGlobal(p1);
@@ -574,7 +573,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
     QCOMPARE(windowPriv->touchMouseId, 0);
     QCOMPARE(windowPriv->itemForTouchPointId[0], eventItem1);
-    QCOMPARE(windowPriv->mouseGrabberItem, eventItem1);
+    QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
     p1 += QPoint(0, -10);
     QPoint p2 = p1 + QPoint(0, -10);
@@ -592,7 +591,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchUpdate);
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
 
-    QCOMPARE(windowPriv->mouseGrabberItem, flickable);
+    QCOMPARE(window->mouseGrabberItem(), flickable);
     QCOMPARE(windowPriv->touchMouseId, 0);
     QCOMPARE(windowPriv->itemForTouchPointId[0], flickable);
     QVERIFY(flickable->isMovingVertically());
@@ -659,7 +658,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
     QCOMPARE(windowPriv->touchMouseId, 0);
     QCOMPARE(windowPriv->itemForTouchPointId[0], eventItem1);
-    QCOMPARE(windowPriv->mouseGrabberItem, eventItem1);
+    QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
     p1 += QPoint(0, -10);
     QPoint p2 = p1 + QPoint(0, -10);
@@ -675,7 +674,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
 
     // flickable should have the mouse grab, and have moved the itemForTouchPointId
     // for the touchMouseId to the new grabber.
-    QCOMPARE(windowPriv->mouseGrabberItem, flickable);
+    QCOMPARE(window->mouseGrabberItem(), flickable);
     QCOMPARE(windowPriv->touchMouseId, 0);
     QCOMPARE(windowPriv->itemForTouchPointId[0], flickable);
 
@@ -1092,8 +1091,8 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QQuickTouchUtils::flush(window);
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-    qDebug() << "Mouse Grabber: " << windowPriv->mouseGrabberItem << " itemForTouchPointId: " << windowPriv->itemForTouchPointId;
-    QCOMPARE(windowPriv->mouseGrabberItem, flickable);
+    qDebug() << "Mouse Grabber: " << window->mouseGrabberItem() << " itemForTouchPointId: " << windowPriv->itemForTouchPointId;
+    QCOMPARE(window->mouseGrabberItem(), flickable);
 
     // Add a second finger, this should lead to stealing
     p1 = QPoint(40, 100);

@@ -87,6 +87,7 @@ class QSGGuiThreadShaderEffectManager;
 class QSGRectangleNode;
 class QSGImageNode;
 class QSGNinePatchNode;
+class QSGSpriteNode;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -125,6 +126,8 @@ public:
     virtual QSGRenderer *createRenderer() = 0;
 
     virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }
+
+    virtual int maxTextureSize() const = 0;
 
     void registerFontengineForCleanup(QFontEngine *engine);
 
@@ -174,6 +177,7 @@ public:
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
                                                         QSGGuiThreadShaderEffectManager *mgr);
+    virtual QSGSpriteNode *createSpriteNode() = 0;
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;

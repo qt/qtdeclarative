@@ -432,7 +432,9 @@ QT_BEGIN_NAMESPACE
     do its job. The selector-less version is the GLSL source, while the \c hlsl
     selector is used when running on the D3D12 backend. The file under
     \c{+hlsl} can then contain either HLSL source code or compiled bytecode
-    from the \c fxc tool.
+    from the \c fxc tool. Additionally, when using a version 3.2 or newer core
+    profile context with OpenGL, GLSL sources with a core profile compatible
+    syntax can be placed under \c{+glslcore}.
         \qml
         import QtQuick 2.8 // for GraphicsInfo
 

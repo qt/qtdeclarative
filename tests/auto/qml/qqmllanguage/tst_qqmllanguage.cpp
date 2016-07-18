@@ -494,6 +494,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidAlias.8") << "invalidAlias.8.qml" << "invalidAlias.8.errors.txt" << false;
     QTest::newRow("invalidAlias.9") << "invalidAlias.9.qml" << "invalidAlias.9.errors.txt" << false;
     QTest::newRow("invalidAlias.10") << "invalidAlias.10.qml" << "invalidAlias.10.errors.txt" << false;
+    QTest::newRow("invalidAlias.11") << "invalidAlias.11.qml" << "invalidAlias.11.errors.txt" << false;
 
     QTest::newRow("invalidAttachedProperty.1") << "invalidAttachedProperty.1.qml" << "invalidAttachedProperty.1.errors.txt" << false;
     QTest::newRow("invalidAttachedProperty.2") << "invalidAttachedProperty.2.qml" << "invalidAttachedProperty.2.errors.txt" << false;
@@ -1802,6 +1803,48 @@ void tst_qqmllanguage::aliasProperties()
         QCOMPARE(object->property("rectProperty").toRect(), QRect(4, 8, 102, 111));
 
         delete object;
+    }
+
+    // Nested aliases with a qml file
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.12.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
+
+    // Nested aliases with a qml file with reverse ordering
+    {
+        // This is known to fail at the moment.
+        QQmlComponent component(&engine, testFileUrl("alias.13.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
+
+    // "Nested" aliases within an object that require iterative resolution
+    {
+        // This is known to fail at the moment.
+        QQmlComponent component(&engine, testFileUrl("alias.14.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
     }
 }
 

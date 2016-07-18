@@ -187,7 +187,7 @@ public:
 
     explicit MappedSlotObject(PropChangedFunc func)
         : QSlotObjectBase(&impl), _signalIndex(-1), func(func)
-    {}
+    { ref(); }
 
     void setSignalIndex(int idx) { _signalIndex = idx; }
     int signalIndex() const { return _signalIndex; }
@@ -213,6 +213,12 @@ private:
         }
     }
 };
+}
+
+QQuickOpenGLShaderEffectCommon::~QQuickOpenGLShaderEffectCommon()
+{
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
+        clearSignalMappers(shaderType);
 }
 
 void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType)
@@ -363,7 +369,7 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item,
 {
     disconnectPropertySignals(item, shaderType);
     uniformData[shaderType].clear();
-    signalMappers[shaderType].clear();
+    clearSignalMappers(shaderType);
     if (shaderType == Key::VertexShader)
         attributes.clear();
 
@@ -591,6 +597,15 @@ void QQuickOpenGLShaderEffectCommon::propertyChanged(QQuickItem *item,
         if (textureProviderChanged)
             *textureProviderChanged = false;
     }
+}
+
+void QQuickOpenGLShaderEffectCommon::clearSignalMappers(int shader)
+{
+    for (auto mapper : qAsConst(signalMappers[shader])) {
+        if (mapper)
+            mapper->destroyIfLastRef();
+    }
+    signalMappers[shader].clear();
 }
 
 QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent)

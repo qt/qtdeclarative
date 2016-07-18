@@ -331,10 +331,11 @@ bool QSGD3D12RenderThread::event(QEvent *e)
         if (needsWindow) {
             // Must only ever get here when there is no window or releaseResources() has been called.
             const int samples = wme->window->format().samples();
+            const bool alpha = wme->window->format().alphaBufferSize() > 0;
             if (Q_UNLIKELY(debug_loop()))
                 qDebug() << "RT - WM_RequestSync - initializing D3D12 engine" << wme->window
-                         << wme->size << wme->dpr << samples;
-            engine->attachToWindow(wme->window->winId(), wme->size, wme->dpr, samples);
+                         << wme->size << wme->dpr << samples << alpha;
+            engine->attachToWindow(wme->window->winId(), wme->size, wme->dpr, samples, alpha);
         }
         exposedWindow = wme->window;
         engine->setWindowSize(wme->size, wme->dpr);

@@ -1205,10 +1205,11 @@ void QQuickItemViewPrivate::showVisibleItems() const
     }
 }
 
-void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
+                                                const QRectF &diff)
 {
     Q_Q(QQuickItemView);
-    QQuickFlickablePrivate::itemGeometryChanged(item, newGeometry, oldGeometry);
+    QQuickFlickablePrivate::itemGeometryChanged(item, change, diff);
     if (!q->isComponentComplete())
         return;
 

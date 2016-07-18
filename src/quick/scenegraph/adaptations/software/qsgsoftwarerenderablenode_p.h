@@ -67,6 +67,7 @@ class QSGSoftwarePainterNode;
 class QSGSoftwareInternalRectangleNode;
 class QSGSoftwareGlyphNode;
 class QSGSoftwareNinePatchNode;
+class QSGSoftwareSpriteNode;
 
 class QSGSoftwareRenderableNode
 {
@@ -81,7 +82,8 @@ public:
         Glyph,
         NinePatch,
         SimpleRectangle,
-        SimpleImage
+        SimpleImage,
+        SpriteNode
     };
 
     QSGSoftwareRenderableNode(NodeType type, QSGNode *node);
@@ -123,6 +125,7 @@ private:
         QSGSoftwareNinePatchNode *ninePatchNode;
         QSGRectangleNode *simpleRectangleNode;
         QSGImageNode *simpleImageNode;
+        QSGSoftwareSpriteNode *spriteNode;
     };
 
     const NodeType m_nodeType;

@@ -59,8 +59,8 @@ QT_BEGIN_NAMESPACE
 class QSGContext;
 class QQuickSprite;
 class QQuickSpriteEngine;
-class QSGGeometryNode;
-class QQuickSpriteSequenceMaterial;
+class QQuickSpriteSequencePrivate;
+class QSGSpriteNode;
 class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
 {
     Q_OBJECT
@@ -77,25 +77,10 @@ public:
 
     QQmlListProperty<QQuickSprite> sprites();
 
-    bool running() const
-    {
-        return m_running;
-    }
-
-    bool interpolate() const
-    {
-        return m_interpolate;
-    }
-
-    QString goalSprite() const
-    {
-        return m_goalState;
-    }
-
-    QString currentSprite() const
-    {
-        return m_curState;
-    }
+    bool running() const;
+    bool interpolate() const;
+    QString goalSprite() const;
+    QString currentSprite() const;
 
 Q_SIGNALS:
 
@@ -108,46 +93,23 @@ public Q_SLOTS:
 
     void jumpTo(const QString &sprite);
     void setGoalSprite(const QString &sprite);
-
-    void setRunning(bool arg)
-    {
-        if (m_running != arg) {
-            m_running = arg;
-            Q_EMIT runningChanged(arg);
-        }
-    }
-
-    void setInterpolate(bool arg)
-    {
-        if (m_interpolate != arg) {
-            m_interpolate = arg;
-            Q_EMIT interpolateChanged(arg);
-        }
-    }
+    void setRunning(bool arg);
+    void setInterpolate(bool arg);
 
 private Q_SLOTS:
     void createEngine();
-    void sizeVertices();
 
 protected:
     void reset();
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
-    void prepareNextFrame();
-    QSGGeometryNode* buildNode();
-    QSGGeometryNode *m_node;
-    QQuickSpriteSequenceMaterial *m_material;
-    QList<QQuickSprite*> m_sprites;
-    QQuickSpriteEngine* m_spriteEngine;
-    QTime m_timestamp;
-    int m_curFrame;
-    bool m_pleaseReset;
-    bool m_running;
-    bool m_interpolate;
-    QString m_goalState;
-    QString m_curState;
-    int m_curStateIdx;
-    QSizeF m_sheetSize;
+    void prepareNextFrame(QSGSpriteNode *node);
+    QSGSpriteNode* initNode();
+
+
+private:
+    Q_DISABLE_COPY(QQuickSpriteSequence)
+    Q_DECLARE_PRIVATE(QQuickSpriteSequence)
 };
 
 QT_END_NAMESPACE

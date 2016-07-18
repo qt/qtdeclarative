@@ -52,6 +52,7 @@
 
 #include <QtCore/qstring.h>
 #include "qv4managed_p.h"
+#include <QtCore/private/qnumeric_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,7 +63,6 @@ struct Identifier;
 
 namespace Heap {
 
-#ifndef V4_BOOTSTRAP
 struct Q_QML_PRIVATE_EXPORT String : Base {
     enum StringType {
         StringType_Unknown,
@@ -70,6 +70,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         StringType_ArrayIndex
     };
 
+#ifndef V4_BOOTSTRAP
     String(MemoryManager *mm, const QString &text);
     String(MemoryManager *mm, String *l, String *n);
     ~String() {
@@ -130,8 +131,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     MemoryManager *mm;
 private:
     static void append(const String *data, QChar *ch);
-};
 #endif
+};
 
 }
 
@@ -183,8 +184,17 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     void makeIdentifierImpl(ExecutionEngine *e) const;
 
-    static uint createHashValue(const QChar *ch, int length, uint *subtype);
-    static uint createHashValue(const char *ch, int length, uint *subtype);
+    static uint createHashValue(const QChar *ch, int length, uint *subtype)
+    {
+        const QChar *end = ch + length;
+        return calculateHashValue(ch, end, subtype);
+    }
+
+    static uint createHashValue(const char *ch, int length, uint *subtype)
+    {
+        const char *end = ch + length;
+        return calculateHashValue(ch, end, subtype);
+    }
 
     bool startsWithUpper() const {
         const String::Data *l = d();
@@ -203,6 +213,54 @@ protected:
 
 public:
     static uint toArrayIndex(const QString &str);
+
+private:
+    static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
+    static inline uint toUInt(const char *ch) { return *ch; }
+
+    template <typename T>
+    static inline uint toArrayIndex(const T *ch, const T *end)
+    {
+        uint i = toUInt(ch) - '0';
+        if (i > 9)
+            return UINT_MAX;
+        ++ch;
+        // reject "01", "001", ...
+        if (i == 0 && ch != end)
+            return UINT_MAX;
+
+        while (ch < end) {
+            uint x = toUInt(ch) - '0';
+            if (x > 9)
+                return UINT_MAX;
+            if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i)) // i = i * 10 + x
+                return UINT_MAX;
+            ++ch;
+        }
+        return i;
+    }
+
+public:
+    template <typename T>
+    static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
+    {
+        // array indices get their number as hash value
+        uint h = toArrayIndex(ch, end);
+        if (h != UINT_MAX) {
+            if (subtype)
+                *subtype = Heap::String::StringType_ArrayIndex;
+            return h;
+        }
+
+        while (ch < end) {
+            h = 31 * h + toUInt(ch);
+            ++ch;
+        }
+
+        if (subtype)
+            *subtype = Heap::String::StringType_Regular;
+        return h;
+    }
 };
 
 template<>

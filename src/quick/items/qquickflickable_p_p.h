@@ -194,7 +194,7 @@ public:
 
     qreal overShootDistance(qreal size);
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
 
     void draggingStarting();
     void draggingEnding();

@@ -122,7 +122,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup *l = runtimeLookups + i;
 
-            Lookup::Type type = Lookup::Type(compiledLookups[i].type_and_flags);
+            Lookup::Type type = Lookup::Type(uint(compiledLookups[i].type_and_flags));
             if (type == CompiledData::Lookup::Type_Getter)
                 l->getter = QV4::Lookup::getterGeneric;
             else if (type == CompiledData::Lookup::Type_Setter)
@@ -215,8 +215,8 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 void CompilationUnit::destroy()
 {
     QQmlEngine *qmlEngine = 0;
-    if (engine)
-        qmlEngine = engine->qmlEngine();
+    if (engine && engine->v8Engine)
+        qmlEngine = engine->v8Engine->engine();
     if (qmlEngine)
         QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
     else
@@ -229,7 +229,7 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     if (it == namedObjectsPerComponentCache.end()) {
         IdentifierHash<int> namedObjectCache(engine);
         const CompiledData::Object *component = data->objectAt(componentObjectIndex);
-        const quint32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+        const LEUInt32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
         for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
             const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
             namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
@@ -355,7 +355,7 @@ QString Binding::valueAsString(const Unit *unit) const
     case Type_Boolean:
         return value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Type_Number:
-        return QString::number(value.d);
+        return QString::number(valueAsNumber());
     case Type_Invalid:
         return QString();
 #ifdef QT_NO_TRANSLATION

@@ -47,11 +47,11 @@ QT_BEGIN_NAMESPACE
 
 QSGDefaultRectangleNode::QSGDefaultRectangleNode()
     : m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 4)
-    , m_color(QColor(255, 255, 255))
 {
     QSGGeometry::updateColoredRectGeometry(&m_geometry, QRectF());
     setMaterial(&m_material);
     setGeometry(&m_geometry);
+    setColor(QColor(255, 255, 255));
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("rectangle"));
 #endif

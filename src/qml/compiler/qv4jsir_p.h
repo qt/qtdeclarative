@@ -1275,9 +1275,9 @@ struct Function {
     uint isQmlBinding: 1;
     uint unused : 24;
 
-    // Location of declaration in source code (-1 if not specified)
-    int line;
-    int column;
+    // Location of declaration in source code (0 if not specified)
+    uint line;
+    uint column;
 
     // Qml extension:
     SmallSet<int> idObjectDependencies;

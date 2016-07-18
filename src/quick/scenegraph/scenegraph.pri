@@ -115,6 +115,7 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qsgdefaultinternalrectanglenode.cpp \
         $$PWD/qsgdefaultrendercontext.cpp \
         $$PWD/qsgdefaultcontext.cpp \
+        $$PWD/qsgdefaultspritenode.cpp \
         $$PWD/util/qsgdefaultpainternode.cpp \
         $$PWD/util/qsgdefaultrectanglenode.cpp \
         $$PWD/util/qsgdefaultimagenode.cpp \
@@ -130,6 +131,7 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qsgdefaultglyphnode_p_p.h \
         $$PWD/qsgdefaultinternalimagenode_p.h \
         $$PWD/qsgdefaultinternalrectanglenode_p.h \
+        $$PWD/qsgdefaultspritenode_p.h \
         $$PWD/qsgdefaultrendercontext_p.h \
         $$PWD/qsgdefaultcontext_p.h \
         $$PWD/util/qsgdefaultpainternode_p.h \

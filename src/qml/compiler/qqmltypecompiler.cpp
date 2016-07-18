@@ -271,6 +271,28 @@ QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scrip
     return object->bindingAsString(document, scriptIndex);
 }
 
+void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion)
+{
+    const quint32 moduleIdx = registerString(module);
+    const quint32 qualifierIdx = registerString(qualifier);
+
+    for (int i = 0, count = document->imports.count(); i < count; ++i) {
+        const QV4::CompiledData::Import *existingImport = document->imports.at(i);
+        if (existingImport->type == QV4::CompiledData::Import::ImportLibrary
+            && existingImport->uriIndex == moduleIdx
+            && existingImport->qualifierIndex == qualifierIdx)
+            return;
+    }
+    auto pool = memoryPool();
+    QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
+    import->type = QV4::CompiledData::Import::ImportLibrary;
+    import->majorVersion = majorVersion;
+    import->minorVersion = minorVersion;
+    import->uriIndex = moduleIdx;
+    import->qualifierIndex = qualifierIdx;
+    document->imports.append(import);
+}
+
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
     : compiler(typeCompiler)
 {
@@ -546,7 +568,7 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QS
         COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName.toString()));
     }
     binding->type = QV4::CompiledData::Binding::Type_Number;
-    binding->value.d = (double)enumValue;
+    binding->setNumberValueInternal((double)enumValue);
     binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
     return true;
 }
@@ -701,7 +723,7 @@ void QQmlAliasAnnotator::annotateBindingsToAliases()
             if (!binding->isValueBinding())
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != 0 ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (pd && pd->isAlias())
                 binding->flags |= QV4::CompiledData::Binding::IsBindingToAlias;
         }
@@ -733,7 +755,7 @@ void QQmlScriptStringScanner::scan()
             if (binding->type != QV4::CompiledData::Binding::Type_Script)
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != 0 ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (!pd || pd->propType != scriptStringMetaType)
                 continue;
 
@@ -753,7 +775,6 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , pool(typeCompiler->memoryPool())
     , qmlObjects(typeCompiler->qmlObjects())
     , indexOfRootObject(typeCompiler->rootObjectIndex())
-    , _componentIndex(-1)
     , resolvedTypes(&typeCompiler->resolvedTypes)
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
@@ -783,7 +804,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         }
 
         QQmlPropertyData *pd = 0;
-        if (binding->propertyNameIndex != 0) {
+        if (binding->propertyNameIndex != quint32(0)) {
             bool notInRevision = false;
             pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
         } else {
@@ -803,11 +824,15 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!mo)
             continue;
 
+        // emulate "import Qml 2.0 as QmlInternals" and then wrap the component in "QmlInternals.Component {}"
         QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
         Q_ASSERT(componentType);
+        const QString qualifier = QStringLiteral("QmlInternals");
+
+        compiler->addImport(componentType->module(), qualifier, componentType->majorVersion(), componentType->minorVersion());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
-        syntheticComponent->init(pool, compiler->registerString(QString::fromUtf8(componentType->typeName())), compiler->registerString(QString()));
+        syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType->elementName()), compiler->registerString(QString()));
         syntheticComponent->location = binding->valueLocation;
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
@@ -898,7 +923,6 @@ bool QQmlComponentAndAliasResolver::resolve()
         QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
         const QmlIR::Binding *rootBinding = component->firstBinding();
 
-        _componentIndex = i;
         _idToObjectIndex.clear();
 
         _objectsWithAliases.clear();
@@ -906,23 +930,23 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (!collectIdsAndAliases(rootBinding->value.objectIndex))
             return false;
 
-        if (!resolveAliases())
-            return false;
-
         component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
+
+        if (!resolveAliases(componentRoots.at(i)))
+            return false;
     }
 
     // Collect ids and aliases for root
-    _componentIndex = -1;
     _idToObjectIndex.clear();
     _objectsWithAliases.clear();
 
     collectIdsAndAliases(indexOfRootObject);
 
-    resolveAliases();
-
     QmlIR::Object *rootComponent = qmlObjects->at(indexOfRootObject);
     rootComponent->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
+
+    if (!resolveAliases(indexOfRootObject))
+        return false;
 
     // Implicit component insertion may have added objects and thus we also need
     // to extend the symmetric propertyCaches.
@@ -965,139 +989,169 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
     return true;
 }
 
-bool QQmlComponentAndAliasResolver::resolveAliases()
+bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 {
-    foreach (int objectIndex, _objectsWithAliases) {
-        const QmlIR::Object *obj = qmlObjects->at(objectIndex);
+    if (_objectsWithAliases.isEmpty())
+        return true;
 
-        QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
-        Q_ASSERT(propertyCache);
+    QQmlPropertyCacheAliasCreator<QQmlTypeCompiler> aliasCacheCreator(&propertyCaches, compiler);
 
-        int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();
-        int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
+    bool atLeastOneAliasResolved;
+    do {
+        atLeastOneAliasResolved = false;
+        QVector<int> pendingObjects;
 
-        int aliasIndex = 0;
-        for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next, ++aliasIndex) {
-            const int idIndex = alias->idIndex;
-            const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
-            if (targetObjectIndex == -1) {
-                recordError(alias->referenceLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+        for (int objectIndex: qAsConst(_objectsWithAliases)) {
+
+            QQmlCompileError error;
+            const auto result = resolveAliasesInObject(objectIndex, &error);
+
+            if (error.isSet()) {
+                recordError(error);
                 return false;
             }
-            Q_ASSERT(!(alias->flags & QV4::CompiledData::Alias::Resolved));
-            alias->flags |= QV4::CompiledData::Alias::Resolved;
-            const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
-            Q_ASSERT(targetObject->id >= 0);
-            alias->targetObjectId = targetObject->id;
 
-            const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
-
-            QStringRef property;
-            QStringRef subProperty;
-
-            const int propertySeparator = aliasPropertyValue.indexOf(QLatin1Char('.'));
-            if (propertySeparator != -1) {
-                property = aliasPropertyValue.leftRef(propertySeparator);
-                subProperty = aliasPropertyValue.midRef(propertySeparator + 1);
-            } else
-                property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
-
-            int propIdx = -1;
-            int type = 0;
-            bool writable = false;
-            bool resettable = false;
-
-            quint32 propertyFlags = QQmlPropertyData::IsAlias;
-
-            if (property.isEmpty()) {
-                const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
-                auto *typeRef = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
-                Q_ASSERT(typeRef);
-
-                if (typeRef->type)
-                    type = typeRef->type->typeId();
-                else
-                    type = typeRef->compilationUnit->metaTypeId;
-
-                alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
-                propertyFlags |= QQmlPropertyData::IsQObjectDerived;
+            if (result == AllAliasesResolved) {
+                aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
+                atLeastOneAliasResolved = true;
+            } else if (result == SomeAliasesResolved) {
+                atLeastOneAliasResolved = true;
+                pendingObjects.append(objectIndex);
             } else {
-                QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
-                Q_ASSERT(targetCache);
-                QmlIR::PropertyResolver resolver(targetCache);
+                pendingObjects.append(objectIndex);
+            }
+        }
+        qSwap(_objectsWithAliases, pendingObjects);
+    } while (!_objectsWithAliases.isEmpty() && atLeastOneAliasResolved);
 
-                QQmlPropertyData *targetProperty = resolver.property(property.toString());
-                if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
-                    recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
-                    return false;
+    if (!atLeastOneAliasResolved && !_objectsWithAliases.isEmpty()) {
+        const QmlIR::Object *obj = qmlObjects->at(_objectsWithAliases.first());
+        for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
+            if (!(alias->flags & QV4::CompiledData::Alias::Resolved)) {
+                recordError(alias->location, tr("Circular alias reference detected"));
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex, QQmlCompileError *error)
+{
+    const QmlIR::Object * const obj = qmlObjects->at(objectIndex);
+    if (!obj->aliasCount())
+        return AllAliasesResolved;
+
+    int numResolvedAliases = 0;
+    bool seenUnresolvedAlias = false;
+
+    for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next) {
+        if (alias->flags & QV4::CompiledData::Alias::Resolved)
+            continue;
+
+        seenUnresolvedAlias = true;
+
+        const int idIndex = alias->idIndex;
+        const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
+        if (targetObjectIndex == -1) {
+            *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+            break;
+        }
+
+        const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
+        Q_ASSERT(targetObject->id >= 0);
+        alias->targetObjectId = targetObject->id;
+        alias->aliasToLocalAlias = false;
+
+        const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
+
+        QStringRef property;
+        QStringRef subProperty;
+
+        const int propertySeparator = aliasPropertyValue.indexOf(QLatin1Char('.'));
+        if (propertySeparator != -1) {
+            property = aliasPropertyValue.leftRef(propertySeparator);
+            subProperty = aliasPropertyValue.midRef(propertySeparator + 1);
+        } else
+            property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
+
+        int propIdx = -1;
+
+        if (property.isEmpty()) {
+            alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
+        } else {
+            QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
+            Q_ASSERT(targetCache);
+            QmlIR::PropertyResolver resolver(targetCache);
+
+            QQmlPropertyData *targetProperty = resolver.property(property.toString());
+
+            // If it's an alias that we haven't resolved yet, try again later.
+            if (!targetProperty) {
+                bool aliasPointsToOtherAlias = false;
+                int localAliasIndex = 0;
+                for (auto targetAlias = targetObject->aliasesBegin(), end = targetObject->aliasesEnd(); targetAlias != end; ++targetAlias, ++localAliasIndex) {
+                    if (stringAt(targetAlias->nameIndex) == property) {
+                        aliasPointsToOtherAlias = true;
+                        break;
+                    }
                 }
-
-                propIdx = targetProperty->coreIndex;
-                type = targetProperty->propType;
-
-                writable = targetProperty->isWritable();
-                resettable = targetProperty->isResettable();
-
-                if (!subProperty.isEmpty()) {
-                    const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
-                    if (!valueTypeMetaObject) {
-                        recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
-                        return false;
+                if (aliasPointsToOtherAlias) {
+                    if (targetObjectIndex == objectIndex) {
+                        alias->localAliasIndex = localAliasIndex;
+                        alias->aliasToLocalAlias = true;
+                        alias->flags |= QV4::CompiledData::Alias::Resolved;
+                        ++numResolvedAliases;
+                        continue;
                     }
 
-                    int valueTypeIndex =
-                        valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
-                    if (valueTypeIndex == -1) {
-                        recordError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
-                        return false;
-                    }
-                    Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
-
-                    propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
-                    if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                        type = QVariant::Int;
-                    else
-                        type = valueTypeMetaObject->property(valueTypeIndex).userType();
-
-                } else {
-                    if (targetProperty->isEnum()) {
-                        type = QVariant::Int;
-                    } else {
-                        // Copy type flags
-                        propertyFlags |= targetProperty->getFlags() & QQmlPropertyData::PropTypeFlagMask;
-
-                        if (targetProperty->isVarProperty())
-                            propertyFlags |= QQmlPropertyData::IsQVariant;
-
-                        if (targetProperty->isQObject())
-                            alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
-                    }
+                    // Try again later and resolve the target alias first.
+                    _objectsWithAliases.append(objectIndex);
+                    // restore
+                    alias->idIndex = idIndex;
+                    break;
                 }
             }
 
-            alias->encodedMetaPropertyIndex = propIdx;
+            if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
+                *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                break;
+            }
 
-            if (!(alias->flags & QV4::CompiledData::Property::IsReadOnly) && writable)
-                propertyFlags |= QQmlPropertyData::IsWritable;
-            else
-                propertyFlags &= ~QQmlPropertyData::IsWritable;
+            propIdx = targetProperty->coreIndex;
 
-            if (resettable)
-                propertyFlags |= QQmlPropertyData::IsResettable;
-            else
-                propertyFlags &= ~QQmlPropertyData::IsResettable;
+            if (!subProperty.isEmpty()) {
+                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType);
+                if (!valueTypeMetaObject) {
+                    *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                    break;
+                }
 
-            QString propertyName = stringAt(alias->nameIndex);
+                int valueTypeIndex =
+                        valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
+                if (valueTypeIndex == -1) {
+                    *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                    break;
+                }
+                Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
-            if (obj->defaultPropertyIsAlias && aliasIndex == obj->indexOfDefaultPropertyOrAlias)
-                propertyCache->_defaultPropertyName = propertyName;
-
-            propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                          type, effectiveSignalIndex++);
-
+                propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
+            } else {
+                if (targetProperty->isQObject())
+                    alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
+            }
         }
+
+        alias->encodedMetaPropertyIndex = propIdx;
+        alias->flags |= QV4::CompiledData::Alias::Resolved;
+        numResolvedAliases++;
     }
-    return true;
+
+    if (numResolvedAliases == 0)
+        return seenUnresolvedAlias ? NoAliasResolved : AllAliasesResolved;
+
+    return SomeAliasesResolved;
 }
 
 QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler)
@@ -1346,7 +1400,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
     QmlIR::Binding *previousBinding = 0;
     QmlIR::Binding *binding = object->firstBinding();
     while (binding) {
-        if (binding->propertyNameIndex == 0 || stringAt(binding->propertyNameIndex) != defaultProperty) {
+        if (binding->propertyNameIndex == quint32(0) || stringAt(binding->propertyNameIndex) != defaultProperty) {
             previousBinding = binding;
             binding = binding->next;
             continue;

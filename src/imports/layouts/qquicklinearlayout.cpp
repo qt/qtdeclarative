@@ -333,10 +333,10 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
     */
     for (int i = 0; i < itemCount(); ++i) {
         QQuickItem *item = itemAt(i);
-        QObject::disconnect(item, SIGNAL(destroyed()), this, SLOT(onItemDestroyed()));
-        QObject::disconnect(item, SIGNAL(visibleChanged()), this, SLOT(onItemVisibleChanged()));
-        QObject::disconnect(item, SIGNAL(implicitWidthChanged()), this, SLOT(invalidateSenderItem()));
-        QObject::disconnect(item, SIGNAL(implicitHeightChanged()), this, SLOT(invalidateSenderItem()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickGridLayoutBase, SLOT(invalidateSenderItem()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickGridLayoutBase, SLOT(invalidateSenderItem()));
     }
     delete d->styleInfo;
 }
@@ -465,13 +465,13 @@ void QQuickGridLayoutBase::itemChange(ItemChange change, const ItemChangeData &v
     if (change == ItemChildAddedChange) {
         quickLayoutDebug() << "ItemChildAddedChange";
         QQuickItem *item = value.item;
-        QObject::connect(item, SIGNAL(destroyed()), this, SLOT(onItemDestroyed()));
-        QObject::connect(item, SIGNAL(visibleChanged()), this, SLOT(onItemVisibleChanged()));
+        qmlobject_connect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
+        qmlobject_connect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
     } else if (change == ItemChildRemovedChange) {
         quickLayoutDebug() << "ItemChildRemovedChange";
         QQuickItem *item = value.item;
-        QObject::disconnect(item, SIGNAL(destroyed()), this, SLOT(onItemDestroyed()));
-        QObject::disconnect(item, SIGNAL(visibleChanged()), this, SLOT(onItemVisibleChanged()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
     }
 
     QQuickLayout::itemChange(change, value);

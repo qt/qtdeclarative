@@ -244,14 +244,15 @@ void QQuickWidgetPrivate::execute()
     }
 }
 
-void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
+                                              const QRectF &diff)
 {
     Q_Q(QQuickWidget);
     if (resizeItem == root && resizeMode == QQuickWidget::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
 }
 
 void QQuickWidgetPrivate::render(bool needsSync)
@@ -466,6 +467,13 @@ QObject *QQuickWidgetPrivate::focusObject()
     and the desktop visible in the background, is done in the traditional way: Set
     Qt::WA_TranslucentBackground on the top-level window, request an alpha channel, and
     change the Qt Quick Scenegraph's clear color to Qt::transparent via setClearColor().
+
+    \section1 Support when not using OpenGL
+
+    In addition to OpenGL, the \c software backend of Qt Quick also supports
+    QQuickWidget. Other backends, for example the Direct 3D 12 one, are not
+    compatible however and attempting to construct a QQuickWidget will lead to
+    problems.
 
     \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
@@ -757,9 +765,14 @@ void QQuickWidgetPrivate::updateSize()
             q->resize(newSize);
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
-        if (!qFuzzyCompare(q->width(), root->width()))
+        bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
+        bool needToUpdateHeight = !qFuzzyCompare(q->height(), root->height());
+
+        if (needToUpdateWidth && needToUpdateHeight)
+            root->setSize(QSizeF(q->width(), q->height()));
+        else if (needToUpdateWidth)
             root->setWidth(q->width());
-        if (!qFuzzyCompare(q->height(), root->height()))
+        else if (needToUpdateHeight)
             root->setHeight(q->height());
     }
 }
@@ -888,6 +901,12 @@ void QQuickWidget::createFramebufferObject()
     if (size().isEmpty())
         return;
 
+    // Even though this is just an offscreen window we should set the position on it, as it might be
+    // useful for an item to know the actual position of the scene.
+    // Note: The position will be update when we get a move event (see: updatePosition()).
+    const QPoint &globalPos = mapToGlobal(QPoint(0, 0));
+    d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
+
     if (d->useSoftwareRenderer) {
         const QSize imageSize = size() * devicePixelRatio();
         d->softwareImage = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
@@ -955,11 +974,6 @@ void QQuickWidget::createFramebufferObject()
     }
 #endif
 
-    // Even though this is just an offscreen window we should set the position on it, as it might be
-    // useful for an item to know the actual position of the scene.
-    // Note: The position will be update when we get a move event (see: updatePosition()).
-    const QPoint &globalPos = mapToGlobal(QPoint(0, 0));
-    d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
     d->offscreenWindow->setRenderTarget(d->fbo);
 
     if (samples > 0)
@@ -1394,8 +1408,10 @@ bool QQuickWidget::event(QEvent *e)
                 d->offscreenWindow->setScreen(newScreen);
             if (d->offscreenSurface)
                 d->offscreenSurface->setScreen(newScreen);
+#ifndef QT_NO_OPENGL
             if (d->context)
                 d->context->setScreen(newScreen);
+#endif
         }
 
         if (d->useSoftwareRenderer

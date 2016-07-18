@@ -68,6 +68,7 @@ public:
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer() override;
+    int maxTextureSize() const override;
 
     void setEngine(QSGD3D12Engine *engine);
     QSGD3D12Engine *engine() { return m_engine; }

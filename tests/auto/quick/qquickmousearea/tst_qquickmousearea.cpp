@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtQuick/private/qquickdrag_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qquickflickable_p.h>
@@ -107,6 +108,7 @@ private slots:
     void hoverPropagation();
     void hoverVisible();
     void hoverAfterPress();
+    void subtreeHoverEnabled();
     void disableAfterPress();
     void onWheel();
     void transformedMouseArea_data();
@@ -1316,6 +1318,26 @@ void tst_QQuickMouseArea::hoverAfterPress()
     QCOMPARE(mouseArea->hovered(), false);
 }
 
+void tst_QQuickMouseArea::subtreeHoverEnabled()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("qtbug54019.qml"), true, &errorMessage), errorMessage.constData());
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea*>();
+    QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
+    QVERIFY(mouseArea != 0);
+    QTest::mouseMove(&window, QPoint(10, 160));
+    QCOMPARE(mouseArea->hovered(), false);
+    QVERIFY(rootPrivate->subtreeHoverEnabled);
+    QTest::mouseMove(&window, QPoint(10, 10));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mouseMove(&window, QPoint(160, 10));
+    QCOMPARE(mouseArea->hovered(), false);
+}
+
 void tst_QQuickMouseArea::disableAfterPress()
 {
     QQuickView window;
@@ -1718,11 +1740,17 @@ void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
 
     QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
 
+    // the press was not accepted, make sure there is no move or release event
     QTest::mouseMove(&window, QPoint(110,110), 50);
-    QTRY_COMPARE(root->property("hadMove").toBool(), false);
+
+    // use qwait here because we want to make sure an event does NOT happen
+    // the test fails if the default state changes, while it shouldn't
+    QTest::qWait(100);
+    QCOMPARE(root->property("hadMove").toBool(), false);
 
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(110,110));
-    QTRY_COMPARE(root->property("hadRelease").toBool(), false);
+    QTest::qWait(100);
+    QCOMPARE(root->property("hadRelease").toBool(), false);
 }
 
 void tst_QQuickMouseArea::nestedStopAtBounds_data()

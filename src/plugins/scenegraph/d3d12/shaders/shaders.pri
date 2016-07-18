@@ -108,6 +108,16 @@ shadereffectdefault_pshader.header = ps_shadereffectdefault.hlslh
 shadereffectdefault_pshader.entry = PS_DefaultShaderEffect
 shadereffectdefault_pshader.type = ps_5_0
 
+sprite_VSPS = $$PWD/sprite.hlsl
+sprite_vshader.input = sprite_VSPS
+sprite_vshader.header = vs_sprite.hlslh
+sprite_vshader.entry = VS_Sprite
+sprite_vshader.type = vs_5_0
+sprite_pshader.input = sprite_VSPS
+sprite_pshader.header = ps_sprite.hlslh
+sprite_pshader.entry = PS_Sprite
+sprite_pshader.type = ps_5_0
+
 tdr_CS = $$PWD/tdr.hlsl
 tdr_cshader.input = tdr_CS
 tdr_cshader.header = cs_tdr.hlslh
@@ -125,6 +135,7 @@ HLSL_SHADERS = \
     textmask_vshader textmask_pshader24 textmask_pshader32 textmask_pshader8 \
     styledtext_vshader styledtext_pshader outlinedtext_vshader outlinedtext_pshader \
     shadereffectdefault_vshader shadereffectdefault_pshader \
+    sprite_vshader sprite_pshader \
     tdr_cshader
 
 load(hlsl_bytecode_header)

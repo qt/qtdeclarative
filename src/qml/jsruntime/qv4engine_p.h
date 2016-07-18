@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4internalclass_p.h"
 #include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
@@ -85,6 +84,9 @@ class Profiler;
 namespace CompiledData {
 struct CompilationUnit;
 }
+
+struct InternalClass;
+struct InternalClassPool;
 
 struct Q_QML_EXPORT ExecutionEngine
 {

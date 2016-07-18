@@ -45,6 +45,7 @@
 #include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
+#include "qsgsoftwarespritenode_p.h"
 
 #include <QtQuick/QSGSimpleRectNode>
 #include <QtQuick/qsgsimpletexturenode.h>
@@ -88,6 +89,9 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
         break;
     case QSGSoftwareRenderableNode::SimpleImage:
         m_handle.simpleImageNode = static_cast<QSGImageNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        m_handle.spriteNode = static_cast<QSGSoftwareSpriteNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Invalid:
         m_handle.simpleRectNode = nullptr;
@@ -174,6 +178,10 @@ void QSGSoftwareRenderableNode::update()
 
         boundingRect = m_handle.simpleImageNode->rect().toRect();
         break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        m_isOpaque = m_handle.spriteNode->isOpaque();
+        boundingRect = m_handle.spriteNode->rect().toRect();
+        break;
     default:
         break;
     }
@@ -255,6 +263,9 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
         break;
     case QSGSoftwareRenderableNode::SimpleImage:
         static_cast<QSGSoftwareImageNode *>(m_handle.simpleImageNode)->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        static_cast<QSGSoftwareSpriteNode *>(m_handle.spriteNode)->paint(painter);
         break;
     default:
         break;

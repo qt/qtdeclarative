@@ -43,6 +43,7 @@
 #include "qqmlcontext.h"
 #include "qqmlinfo.h"
 #include "qqmldata_p.h"
+#include "qqmlaccessors_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
@@ -210,21 +211,10 @@ protected:
     }
 };
 
-#define QUICK_STORE(cpptype, conversion) \
-        { \
-            cpptype o = (conversion); \
-            int status = -1; \
-            void *argv[] = { &o, 0, &status, &flags }; \
-            QMetaObject::metacall(m_target.data(), QMetaObject::WriteProperty, coreIndex, argv); \
-            return true; \
-        } \
-
-
 template<int StaticPropType>
 class GenericBinding: public QQmlBinding
 {
 protected:
-
     void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
                   QQmlPropertyPrivate::WriteFlags flags, QV4::Scope &scope,
                   const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
@@ -238,13 +228,8 @@ protected:
         binding->QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
 
         bool error = false;
-        if (!watcher.wasDeleted() && isAddedToObject() && !hasError()) {
-            if (StaticPropType == QMetaType::UnknownType) {
-                error = !write(scope.result, isUndefined, flags);
-            } else {
-                error = !fastWrite(scope.result, isUndefined, flags);
-            }
-        }
+        if (!watcher.wasDeleted() && isAddedToObject() && !hasError())
+            error = !write(scope.result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
 
@@ -264,99 +249,72 @@ protected:
         ep->dereferenceScarceResources();
     }
 
-private:
     // Returns true if successful, false if an error description was set on expression
-    Q_ALWAYS_INLINE bool fastWrite(const QV4::Value &result, bool isUndefined,
-                                   QQmlPropertyPrivate::WriteFlags flags)
+    Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
+                               QQmlPropertyPrivate::WriteFlags flags)
     {
-        int coreIndex = getPropertyCoreIndex();
+        QQmlPropertyData pd = getPropertyData();
+        int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
+        if (propertyType == QMetaType::UnknownType)
+            propertyType = pd.propType;
+        Q_ASSERT(targetObject());
 
-        Q_ASSERT(m_target.data());
-
-        if (Q_LIKELY(!isUndefined && coreIndex != -1 )) {
-            switch (StaticPropType) {
+        if (Q_LIKELY(!isUndefined && !pd.isValueTypeVirtual())) {
+            switch (propertyType) {
+            case QMetaType::Bool:
+                if (result.isBoolean())
+                    return doStore<bool>(result.booleanValue(), pd, flags);
+                else
+                    return doStore<bool>(result.toBoolean(), pd, flags);
             case QMetaType::Int:
                 if (result.isInteger())
-                    QUICK_STORE(int, result.integerValue())
+                    return doStore<int>(result.integerValue(), pd, flags);
                 else if (result.isNumber())
-                    QUICK_STORE(int, result.doubleValue())
+                    return doStore<int>(result.doubleValue(), pd, flags);
                 break;
             case QMetaType::Double:
                 if (result.isNumber())
-                    QUICK_STORE(double, result.asDouble())
+                    return doStore<double>(result.asDouble(), pd, flags);
                 break;
             case QMetaType::Float:
                 if (result.isNumber())
-                    QUICK_STORE(float, result.asDouble())
+                    return doStore<float>(result.asDouble(), pd, flags);
                 break;
             case QMetaType::QString:
                 if (result.isString())
-                    QUICK_STORE(QString, result.toQStringNoThrow())
+                    return doStore<QString>(result.toQStringNoThrow(), pd, flags);
                 break;
             default:
                 if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                    if (vtw->d()->valueType->typeId == StaticPropType) {
-                        return vtw->write(m_target.data(), coreIndex);
+                    if (vtw->d()->valueType->typeId == pd.propType) {
+                        return vtw->write(m_target.data(), pd.coreIndex);
                     }
                 }
                 break;
             }
         }
 
-        return slowWrite(result, isUndefined, flags);
+        return slowWrite(pd, result, isUndefined, flags);
+    }
+
+    template <typename T>
+    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData &pd, QQmlPropertyPrivate::WriteFlags flags) const
+    {
+        void *o = &value;
+        if (pd.hasAccessors() && canUseAccessor()) {
+            pd.accessors->write(m_target.data(), o);
+        } else {
+            int status = -1;
+            void *argv[] = { o, 0, &status, &flags };
+            QMetaObject::metacall(targetObject(), QMetaObject::WriteProperty, pd.coreIndex, argv);
+        }
+        return true;
     }
 };
 
-// Returns true if successful, false if an error description was set on expression
-Q_ALWAYS_INLINE bool QQmlBinding::write(const QV4::Value &result, bool isUndefined,
-                                        QQmlPropertyPrivate::WriteFlags flags)
+Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const QV4::Value &result,
+                                           bool isUndefined, QQmlPropertyPrivate::WriteFlags flags)
 {
-    Q_ASSERT(m_target.data());
-
-    int coreIndex = getPropertyCoreIndex();
-    int propertyType = getPropertyType();
-
-    Q_ASSERT(m_target.data());
-
-    if (Q_LIKELY(!isUndefined && coreIndex != -1 )) {
-        switch (propertyType) {
-        case QMetaType::Int:
-            if (result.isInteger())
-                QUICK_STORE(int, result.integerValue())
-            else if (result.isNumber())
-                QUICK_STORE(int, result.doubleValue())
-            break;
-        case QMetaType::Double:
-            if (result.isNumber())
-                QUICK_STORE(double, result.asDouble())
-            break;
-        case QMetaType::Float:
-            if (result.isNumber())
-                QUICK_STORE(float, result.asDouble())
-            break;
-        case QMetaType::QString:
-            if (result.isString())
-                QUICK_STORE(QString, result.toQStringNoThrow())
-            break;
-        default:
-            if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                if (vtw->d()->valueType->typeId == propertyType) {
-                    return vtw->write(m_target.data(), coreIndex);
-                }
-            }
-            break;
-        }
-    }
-
-    return slowWrite(result, isUndefined, flags);
-}
-#undef QUICK_STORE
-
-Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QV4::Value &result, bool isUndefined,
-                                           QQmlPropertyPrivate::WriteFlags flags)
-{
-    QQmlPropertyData core = getPropertyData();
-
     QQmlEngine *engine = context()->engine;
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
 
@@ -505,6 +463,13 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
+    m_nextBinding.clearFlag2();
+    if (auto interceptorMetaObject = QQmlInterceptorMetaObject::get(targetObject())) {
+        int coreIndex = getPropertyCoreIndex();
+        if (coreIndex != -1 && !interceptorMetaObject->intercepts(coreIndex))
+            m_nextBinding.setFlag2();
+    }
+
     if (e)
         update(flags);
 }
@@ -611,38 +576,26 @@ Q_ALWAYS_INLINE int QQmlBinding::getPropertyCoreIndex() const
     }
 }
 
-int QQmlBinding::getPropertyType() const
-{
-    int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(m_targetIndex, &coreIndex);
-
-    QQmlData *data = QQmlData::get(*m_target, false);
-    Q_ASSERT(data && data->propertyCache);
-
-    QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
-    Q_ASSERT(propertyData);
-
-    if (valueTypeIndex == -1)
-        return propertyData->propType;
-    else
-        return QMetaType::UnknownType;
-}
-
 QQmlBinding *QQmlBinding::newBinding(const QQmlPropertyData *property)
 {
     const int type = (property && property->isFullyResolved()) ? property->propType : QMetaType::UnknownType;
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;
-    } else if (type == QMetaType::Int) {
+    }
+
+    switch (type) {
+    case QMetaType::Bool:
+        return new GenericBinding<QMetaType::Bool>;
+    case QMetaType::Int:
         return new GenericBinding<QMetaType::Int>;
-    } else if (type == QMetaType::Double) {
+    case QMetaType::Double:
         return new GenericBinding<QMetaType::Double>;
-    } else if (type == QMetaType::Float) {
+    case QMetaType::Float:
         return new GenericBinding<QMetaType::Float>;
-    } else if (type == QMetaType::QString) {
+    case QMetaType::QString:
         return new GenericBinding<QMetaType::QString>;
-    } else {
+    default:
         return new GenericBinding<QMetaType::UnknownType>;
     }
 }

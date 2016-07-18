@@ -124,7 +124,7 @@ public:
 
     void clearItem(QQuickItem *);
 
-    int calculateDependency(QQuickItem *);
+    QQuickGeometryChange calculateDependency(QQuickItem *);
     void addDepend(QQuickItem *);
     void remDepend(QQuickItem *);
     bool isItemComplete() const;
@@ -141,7 +141,7 @@ public:
     void updateMe();
 
     // QQuickItemGeometryListener interface
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
     QQuickAnchorsPrivate *anchorPrivate() Q_DECL_OVERRIDE { return this; }
 
     bool checkHValid() const;

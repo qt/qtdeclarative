@@ -59,7 +59,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     Q_UNUSED(engine);
 
     internalClass = engine->emptyClass;
-    const quint32 *formalsIndices = compiledFunction->formalsTable();
+    const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
     ScopedString arg(scope);
@@ -78,7 +78,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     }
     nFormals = compiledFunction->nFormals;
 
-    const quint32 *localsIndices = compiledFunction->localsTable();
+    const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
@@ -110,7 +110,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     }
     nFormals = parameters.size();
 
-    const quint32 *localsIndices = compiledFunction->localsTable();
+    const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 

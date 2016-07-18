@@ -141,6 +141,7 @@ public:
     bool translateTouchToMouse(QQuickItem *item, QTouchEvent *event);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void setMouseGrabber(QQuickItem *grabber);
+    void grabTouchPoints(QQuickItem *grabber, const QVector<int> &ids);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
@@ -310,22 +311,6 @@ private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-
-public:
-    QQuickCloseEvent()
-        : _accepted(true) {}
-
-    bool isAccepted() { return _accepted; }
-    void setAccepted(bool accepted) { _accepted = accepted; }
-
-private:
-    bool _accepted;
-};
-
 class QQuickWindowQObjectCleanupJob : public QRunnable
 {
 public:
@@ -342,7 +327,5 @@ public:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::FocusOptions)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickCloseEvent)
 
 #endif // QQUICKWINDOW_P_H

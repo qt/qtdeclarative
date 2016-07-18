@@ -93,7 +93,7 @@ public:
     static QSGDefaultRenderContext *from(QOpenGLContext *context);
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
-    int maxTextureSize() const { return m_maxTextureSize; }
+    int maxTextureSize() const override { return m_maxTextureSize; }
 
 protected:
     QOpenGLContext *m_gl;

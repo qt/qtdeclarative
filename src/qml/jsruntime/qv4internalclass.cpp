@@ -101,20 +101,6 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     ++d->size;
 }
 
-uint PropertyHash::lookup(const Identifier *identifier) const
-{
-    Q_ASSERT(d->entries);
-
-    uint idx = identifier->hashValue % d->alloc;
-    while (1) {
-        if (d->entries[idx].identifier == identifier)
-            return d->entries[idx].index;
-        if (!d->entries[idx].identifier)
-            return UINT_MAX;
-        ++idx;
-        idx %= d->alloc;
-    }
-}
 
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
@@ -358,18 +344,6 @@ void InternalClass::removeMember(Object *object, Identifier *id)
 
     t.lookup = object->internalClass();
     Q_ASSERT(t.lookup);
-}
-
-uint InternalClass::find(const String *string)
-{
-    engine->identifierTable->identifier(string);
-    const Identifier *id = string->d()->identifier;
-
-    uint index = propertyTable.lookup(id);
-    if (index < size)
-        return index;
-
-    return UINT_MAX;
 }
 
 uint InternalClass::find(const Identifier *id)

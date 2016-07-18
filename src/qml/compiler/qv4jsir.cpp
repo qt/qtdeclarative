@@ -370,8 +370,8 @@ Function::Function(Module *module, Function *outer, const QString &name)
     , hasWith(false)
     , isQmlBinding(false)
     , unused(0)
-    , line(-1)
-    , column(-1)
+    , line(0)
+    , column(0)
     , _allBasicBlocks(0)
     , _statementCount(0)
 {
@@ -910,16 +910,12 @@ void IRPrinter::visitMember(Member *e)
         visit(e->base);
     *out << '.' << *e->name;
 #ifndef V4_BOOTSTRAP
-    if (e->property) {
+    if (e->property)
         *out << " (meta-property " << e->property->coreIndex
-            << " <" << QMetaType::typeName(e->property->propType) << ">";
-        if (e->property->hasAccessors() && e->property->isFullyResolved()) {
-            *out << ", accessible";
-        }
-        *out << ")";
-    } else if (e->kind == Member::MemberOfIdObjectsArray) {
+            << " <" << QMetaType::typeName(e->property->propType)
+            << ">)";
+    else if (e->kind == Member::MemberOfIdObjectsArray)
         *out << "(id object " << e->idIndex << ")";
-    }
 #endif
 }
 
