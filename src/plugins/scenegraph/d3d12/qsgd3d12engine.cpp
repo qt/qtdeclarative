@@ -197,13 +197,17 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
 
     if (qEnvironmentVariableIsSet("QT_D3D_ADAPTER_INDEX")) {
         const int adapterIndex = qEnvironmentVariableIntValue("QT_D3D_ADAPTER_INDEX");
-        if (SUCCEEDED(factory->EnumAdapters1(adapterIndex, &adapter))
-                && SUCCEEDED(D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr))) {
+        if (SUCCEEDED(factory->EnumAdapters1(adapterIndex, &adapter))) {
             adapter->GetDesc1(&desc);
             const QString name = QString::fromUtf16((char16_t *) desc.Description);
-            qCDebug(QSG_LOG_INFO, "Using requested adapter '%s'", qPrintable(name));
-            *outAdapter = adapter.Detach();
-            return;
+            HRESULT hr = D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr);
+            if (SUCCEEDED(hr)) {
+                qCDebug(QSG_LOG_INFO, "Using requested adapter '%s'", qPrintable(name));
+                *outAdapter = adapter.Detach();
+                return;
+            } else {
+                qWarning("Failed to create device for requested adapter '%s': 0x%x", qPrintable(name), hr);
+            }
         }
     }
 
