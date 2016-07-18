@@ -55,11 +55,11 @@ QT_BEGIN_NAMESPACE
 
     \section2 Using Containers
 
-    Container provides API to \l {addItem}{add}, \l {insertItem}{insert},
+    Container provides an API to \l {addItem}{add}, \l {insertItem}{insert},
     \l {moveItem}{move} and \l {removeItem}{remove} items dynamically. The
     items in a container can be accessed using \l itemAt() or \l contentChildren.
 
-    Most containers have a concept of a "current" item. The current item is
+    Most containers have the concept of a "current" item. The current item is
     specified via the \l currentIndex property, and can be accessed using the
     read-only \l currentItem property.
 
