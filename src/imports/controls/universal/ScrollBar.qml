@@ -52,7 +52,8 @@ T.ScrollBar {
         implicitWidth: 12
         implicitHeight: 12
 
-        color: control.pressed ? control.Universal.baseMediumColor : control.Universal.chromeHighColor
+        color: control.pressed ? control.Universal.baseMediumColor :
+               control.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor
         visible: control.size < 1.0
         opacity: 0.0
     }
