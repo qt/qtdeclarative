@@ -89,6 +89,8 @@ static const int MAX_CACHED_PSO = 64;
 
 static const int GPU_CBVSRVUAV_DESCRIPTORS = 512;
 
+static const DXGI_FORMAT RT_COLOR_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 static const int BUCKETS_PER_HEAP = 8; // must match freeMap
 static const int DESCRIPTORS_PER_BUCKET = 32; // the bit map (freeMap) is quint32
 static const int MAX_DESCRIPTORS_PER_HEAP = BUCKETS_PER_HEAP * DESCRIPTORS_PER_BUCKET;
@@ -803,7 +805,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width = windowSize.width() * windowDpr;
         swapChainDesc.Height = windowSize.height() * windowDpr;
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.Format = RT_COLOR_FORMAT;
         swapChainDesc.SampleDesc.Count = 1;
         swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount = swapChainBufferCount;
@@ -843,7 +845,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         swapChainDesc.BufferCount = swapChainBufferCount;
         swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
         swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
-        swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferDesc.Format = RT_COLOR_FORMAT;
         swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // D3D12 requires the flip model
         swapChainDesc.OutputWindow = hwnd;
@@ -869,7 +871,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.Width = windowSize.width() * windowDpr;
     swapChainDesc.Height = windowSize.height() * windowDpr;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Format = RT_COLOR_FORMAT;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = swapChainBufferCount;
@@ -1020,7 +1022,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
                                                          const QVector4D &clearColor, uint samples)
 {
     D3D12_CLEAR_VALUE clearValue = {};
-    clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    clearValue.Format = RT_COLOR_FORMAT;
     clearValue.Color[0] = clearColor.x();
     clearValue.Color[1] = clearColor.y();
     clearValue.Color[2] = clearColor.z();
@@ -1035,7 +1037,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
     rtDesc.Height = size.height();
     rtDesc.DepthOrArraySize = 1;
     rtDesc.MipLevels = 1;
-    rtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    rtDesc.Format = RT_COLOR_FORMAT;
     rtDesc.SampleDesc = makeSampleDesc(rtDesc.Format, samples);
     rtDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
@@ -1144,7 +1146,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
 
     const int w = windowSize.width() * windowDpr;
     const int h = windowSize.height() * windowDpr;
-    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, DXGI_FORMAT_R8G8B8A8_UNORM,
+    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, RT_COLOR_FORMAT,
                                           waitableSwapChainMaxLatency ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();
@@ -1228,7 +1230,7 @@ void QSGD3D12EnginePrivate::resolveMultisampledTarget(ID3D12Resource *msaa,
     barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
     commandList->ResourceBarrier(2, barriers);
 
-    commandList->ResolveSubresource(resolve, 0, msaa, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+    commandList->ResolveSubresource(resolve, 0, msaa, 0, RT_COLOR_FORMAT);
 
     barriers[0].Transition.pResource = msaa;
     barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
@@ -1853,7 +1855,7 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE(pipelineState.topologyType);
         psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[0] = RT_COLOR_FORMAT;
         psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
         psoDesc.SampleDesc = defaultRT[0]->GetDesc().SampleDesc;
 
@@ -2921,7 +2923,7 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
         textureDesc.Height = size.height();
         textureDesc.DepthOrArraySize = 1;
         textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Format = RT_COLOR_FORMAT;
         textureDesc.SampleDesc.Count = 1;
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
