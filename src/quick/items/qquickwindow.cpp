@@ -2242,7 +2242,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *event)
 }
 
 // This function recurses and sends the events to the individual items
-bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, const QQuickPointerEvent *event, const QList<const QQuickEventPoint *> &newPoints,
+bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerEvent *event, const QList<const QQuickEventPoint *> &newPoints,
                                         QSet<quint64> *acceptedNewPoints, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *updatedPoints,
                                         QSet<QQuickItem *> *hasFiltered)
 {

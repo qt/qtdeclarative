@@ -167,7 +167,7 @@ public:
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
-    bool deliverPoints(QQuickItem *, const QQuickPointerEvent *, const QList<const QQuickEventPoint *> &,
+    bool deliverPoints(QQuickItem *, QQuickPointerEvent *, const QList<const QQuickEventPoint *> &,
                        QSet<quint64> *, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *, QSet<QQuickItem *> *);
     bool deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerEvent *event, QSet<quint64> *acceptedNewPoints, const QSet<quint64> &matchingNewPoints, const QList<const QQuickEventPoint *> &matchingPoints, QSet<QQuickItem*> *filtered);
     static QTouchEvent *touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds = false);
