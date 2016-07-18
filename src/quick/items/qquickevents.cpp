@@ -492,7 +492,7 @@ void QQuickPointerEvent::initFromMouse(QMouseEvent *ev) {
     }
 
     if (!m_mousePoint)
-        m_mousePoint = new QQuickEventPoint;
+        m_mousePoint = new QQuickEventPoint(this);
     m_pointCount = 1;
     m_mousePoint->reset(state, ev->windowPos(), 0, ev->timestamp());  // mouse is 0
 }
@@ -507,7 +507,7 @@ void QQuickPointerEvent::initFromTouch(QTouchEvent *ev) {
     m_pointCount = tps.count();
     m_touchPoints.reserve(m_pointCount);
     for (int i = m_touchPoints.size(); i < m_pointCount; ++i)
-        m_touchPoints.insert(i, new QQuickEventTouchPoint);
+        m_touchPoints.insert(i, new QQuickEventTouchPoint(this));
 
     for (int i = 0; i < m_pointCount; ++i)
         m_touchPoints.at(i)->reset(tps.at(i), ev->timestamp());
@@ -561,6 +561,18 @@ bool QQuickPointerEvent::isTabletEvent() const
     default:
         return false;
     }
+}
+
+QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
+  : QObject(parent), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
+    m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
+{
+    Q_UNUSED(m_reserved);
+}
+
+QQuickPointerEvent *QQuickEventPoint::pointerEvent() const
+{
+    return static_cast<QQuickPointerEvent *>(parent());
 }
 
 QQuickEventPoint *QQuickPointerEvent::point(int i) const {

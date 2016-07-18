@@ -238,6 +238,8 @@ private:
     bool _accepted;
 };
 
+class QQuickPointerEvent;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
@@ -248,11 +250,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickEventPoint() : QObject(), m_pointId(0), m_timestamp(0), m_pressTimestamp(0),
-        m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
-    {
-        Q_UNUSED(m_reserved);
-    }
+    QQuickEventPoint(QQuickPointerEvent *parent);
 
     void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
     {
@@ -269,6 +267,7 @@ public:
 
     void invalidate() { m_valid = false; }
 
+    QQuickPointerEvent *pointerEvent() const;
     QPointF scenePos() const { return m_scenePos; }
     Qt::TouchPointState state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
@@ -296,7 +295,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
     Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
 
 public:
-    QQuickEventTouchPoint() : QQuickEventPoint(), m_rotation(0), m_pressure(0) { }
+    QQuickEventTouchPoint(QQuickPointerEvent *parent) : QQuickEventPoint(parent), m_rotation(0), m_pressure(0) { }
 
     void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
     {
