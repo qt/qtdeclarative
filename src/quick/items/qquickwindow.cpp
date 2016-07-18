@@ -2628,6 +2628,15 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouch
     return overThreshold;
 }
 
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QQuickEventPoint *p, int startDragThreshold)
+{
+    QStyleHints *styleHints = qApp->styleHints();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+    qreal velocity = axis == Qt::XAxis ? p->velocity().x() : p->velocity().y();
+    overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+    return overThreshold;
+}
+
 /*!
     \qmlproperty list<Object> Window::data
     \default

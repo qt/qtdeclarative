@@ -271,6 +271,7 @@ public:
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
     static bool dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold = -1);
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QQuickEventPoint *tp, int startDragThreshold = -1);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
