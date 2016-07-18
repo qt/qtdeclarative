@@ -97,6 +97,7 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor switchDisabledTrackColor READ switchDisabledTrackColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor switchDisabledHandleColor READ switchDisabledHandleColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor scrollBarHoveredColor READ scrollBarHoveredColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor drawerBackgroundColor READ drawerBackgroundColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
@@ -226,6 +227,7 @@ public:
     QColor switchDisabledTrackColor() const;
     QColor switchDisabledHandleColor() const;
     QColor scrollBarColor() const;
+    QColor scrollBarHoveredColor() const;
     QColor scrollBarPressedColor() const;
     QColor drawerBackgroundColor() const;
     QColor dialogColor() const;

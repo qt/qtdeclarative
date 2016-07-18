@@ -1015,6 +1015,11 @@ QColor QQuickMaterialStyle::scrollBarColor() const
     return QColor::fromRgba(m_theme == Light ? 0x40000000 : 0x40FFFFFF);
 }
 
+QColor QQuickMaterialStyle::scrollBarHoveredColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? 0x60000000 : 0x60FFFFFF);
+}
+
 QColor QQuickMaterialStyle::scrollBarPressedColor() const
 {
     return QColor::fromRgba(m_theme == Light ? 0x80000000 : 0x80FFFFFF);
