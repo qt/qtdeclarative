@@ -39,6 +39,7 @@
 
 #include "qquickhandlersmodule_p.h"
 #include "qquickpointerhandler_p.h"
+#include "qquickdraghandler_p.h"
 
 static void initResources()
 {
@@ -74,6 +75,9 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
         QQuickPointerHandler::tr("PointerUniqueId is only available as a property of PointerEvent"));
 
     qmlRegisterType<QQuickPointerHandler>(uri,major,minor,"PointerHandler");
+    qmlRegisterType<QQuickDragHandler>(uri,major,minor,"DragHandler");
+    qmlRegisterUncreatableType<QQuickDragAxis>(uri, major, minor, "DragAxis",
+        QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
 }
 
 void QQuickHandlersModule::defineModule()

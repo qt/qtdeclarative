@@ -39,19 +39,37 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
+Rectangle {
+    width: 480
+    height: 480
+    color: "black"
+
+    Image {
+        id: knob
+        source: "resources/redball.png"
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            verticalCenter: parent.verticalCenter
         }
+        DragHandler {
+            id: dragHandler
+        }
+        states: [
+            State {
+                when: dragHandler.dragging
+                AnchorChanges {
+                    target: knob
+                    anchors.horizontalCenter: undefined
+                    anchors.verticalCenter: undefined
+                }
+            }
+        ]
+        transitions: [
+            Transition {
+                AnchorAnimation { easing.type: Easing.OutElastic }
+            }
+        ]
     }
 }

@@ -39,19 +39,34 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
+import "content"
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
+Rectangle {
+    id: root
+    width: 1280
+    height: 960
+    objectName: "root"
+    color: "#222222"
+
+    ListView {
+        id: list
+        objectName: "listView"
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
+        anchors.margins: 10
+        orientation: Qt.Horizontal
+
+        model: 20
+
+        delegate: Item {
+            objectName: "delegateItem" + index
+            width: 154
+            height: list.height
+
+            Slider {
+                anchors.fill: parent
+                label: "Channel " + (index + 1)
+            }
         }
     }
 }
