@@ -162,6 +162,7 @@ void tst_QQuickView::resizemodeitem()
     QCOMPARE(QSize(item->width(), item->height()), view->sizeHint());
 
     // size update from view
+    QCoreApplication::processEvents(); // make sure the last resize events are gone
     SizeChangesListener sizeListener(item);
     view->resize(QSize(200,300));
     QTRY_COMPARE(item->width(), 200.0);
