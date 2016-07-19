@@ -594,12 +594,32 @@ QMouseEvent *QQuickPointerMouseEvent::asMouseEvent() const
     return static_cast<QMouseEvent *>(m_event);
 }
 
+QVector<QQuickItem *> QQuickPointerMouseEvent::grabbers() const
+{
+    QVector<QQuickItem *> result;
+    if (QQuickItem *grabber = m_mousePoint->grabber())
+        result << grabber;
+    return result;
+}
+
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
             return false;
     }
     return true;
+}
+
+QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
+{
+    QVector<QQuickItem *> result;
+    for (auto point : qAsConst(m_touchPoints)) {
+        if (QQuickItem *grabber = point->grabber()) {
+            if (!result.contains(grabber))
+                result << grabber;
+        }
+    }
+    return result;
 }
 
 /*!

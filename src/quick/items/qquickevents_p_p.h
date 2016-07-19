@@ -364,6 +364,7 @@ public: // helpers for C++ only (during event delivery)
     virtual int pointCount() const = 0;
     virtual QQuickEventPoint *point(int i) const = 0;
     virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
+    virtual QVector<QQuickItem *> grabbers() const = 0;
 
 protected:
 
@@ -391,6 +392,7 @@ public:
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(quint64 pointId) const override;
     bool allPointsAccepted() const override;
+    QVector<QQuickItem *> grabbers() const override;
 
     QMouseEvent *asMouseEvent() const;
 
@@ -413,6 +415,7 @@ public:
     QQuickEventPoint *pointById(quint64 pointId) const override;
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
+    QVector<QQuickItem *> grabbers() const override;
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
