@@ -107,11 +107,11 @@ T.Button {
             clipRadius: 2
             width: parent.width
             height: parent.height
-            trigger: Ripple.Release
+            trigger: control.flat ? Ripple.Press : Ripple.Release
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered
-            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+            color: control.highlighted && !control.flat ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
         }
     }
 }
