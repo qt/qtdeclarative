@@ -64,28 +64,10 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Heap {
 
-struct CompilationUnitHolder : Object {
-    inline CompilationUnitHolder(CompiledData::CompilationUnit *unit);
-
-    QQmlRefPointer<CompiledData::CompilationUnit> unit;
-};
-
 struct QmlBindingWrapper : FunctionObject {
     QmlBindingWrapper(QV4::QmlContext *scope, Function *f);
 };
 
-}
-
-struct CompilationUnitHolder : public Object
-{
-    V4_OBJECT2(CompilationUnitHolder, Object)
-    V4_NEEDS_DESTROY
-};
-
-inline
-Heap::CompilationUnitHolder::CompilationUnitHolder(CompiledData::CompilationUnit *unit)
-    : unit(unit)
-{
 }
 
 struct QmlBindingWrapper : FunctionObject {
@@ -101,7 +83,6 @@ QT_END_NAMESPACE
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
-DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::QmlContext *scope, Function *f)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
@@ -139,7 +120,7 @@ void QmlBindingWrapper::call(const Managed *that, Scope &scope, CallData *callDa
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , vmFunction(0), parseAsBinding(true)
+    , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
 {
     if (qml)
         qmlContext.set(v4, *qml);
@@ -147,11 +128,6 @@ Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUn
     parsed = true;
 
     vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
-    if (vmFunction) {
-        Scope valueScope(v4);
-        ScopedObject holder(valueScope, v4->memoryManager->allocObject<CompilationUnitHolder>(compilationUnit));
-        compilationUnitHolder.set(v4, holder);
-    }
 }
 
 Script::~Script()
@@ -218,10 +194,8 @@ void Script::parse()
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
             isel->setUseFastLookups(false);
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
+        compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
-        ScopedObject holder(valueScope, v4->memoryManager->allocObject<CompilationUnitHolder>(compilationUnit));
-        compilationUnitHolder.set(v4, holder);
     }
 
     if (!vmFunction) {
