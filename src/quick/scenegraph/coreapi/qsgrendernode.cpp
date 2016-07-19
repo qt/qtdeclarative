@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QSGRenderNode
-    \brief The QSGMaterialShader class represents a set of custom rendering commands
+    \brief The QSGRenderNode class represents a set of custom rendering commands
     targeting the graphics API that is in use by the scenegraph.
     \inmodule QtQuick
     \since 5.8

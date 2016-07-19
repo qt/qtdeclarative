@@ -127,9 +127,6 @@ It is not possible to render particle effects with the Software adaptation. When
 possible, remove particles completely from the scene. Otherwise they will still
 require some processing, even though they are not visible.
 
-\section2 Sprites
-The Sprite item depends on OpenGL functions and will not be visible.
-
 \section2 Rendering Text
 The text rendering with the Software adaptation is based on software
 rasterization and does not respond as well to transformations such as scaling
@@ -243,8 +240,8 @@ GraphicsInfo.shaderCompilationType and GraphicsInfo.shaderSourceType.
 Unlike OpenGL, there is a QFileSelector with the extra selector \c hlsl used
 whenever opening a file. This allows easy creation of ShaderEffect items that
 are functional across both backends, for example by placing the GLSL source
-code into "shaders/effect.frag", the HLSL source code or - preferably -
-pre-compiled bytecode into "shaders/+hlsl/effect.frag", while simply writing
+code into \c{shaders/effect.frag}, the HLSL source code or - preferably -
+pre-compiled bytecode into \c{shaders/+hlsl/effect.frag}, while simply writing
 \c{fragmentShader: "qrc:shaders/effect.frag"} in QML.
 
 See the ShaderEffect documentation for more details.
@@ -252,12 +249,29 @@ See the ShaderEffect documentation for more details.
 \section2 Multisample Render Targets
 
 The Direct3D 12 adaptation ignores the QSurfaceFormat set on the QQuickWindow
-or QQuickView (or set via QSurfaceFormat::setDefaultFormat()), with one
-exception: QSurfaceFormat::samples() is still taken into account. When the
-value is greater than 1, multisample offscreen render targets will be created
-with the specified sample count and a quality of the maximum supported quality
-level. The backend automatically performs resolving into the non-multisample
-swapchain buffers after each frame.
+or QQuickView (or set via QSurfaceFormat::setDefaultFormat()), with two
+exceptions: QSurfaceFormat::samples() and QSurfaceFormat::alphaBufferSize() are
+still taken into account. When the samples value is greater than 1, multisample
+offscreen render targets will be created with the specified sample count and a
+quality of the maximum supported quality level. The backend automatically
+performs resolving into the non-multisample swapchain buffers after each frame.
+
+\section2 Semi-transparent windows
+
+When the alpha channel is enabled either via
+QQuickWindow::setDefaultAlphaBuffer() or by setting alphaBufferSize to a
+non-zero value in the window's QSurfaceFormat or in the global format managed
+by QSurfaceFormat::setDefaultFormat(), the D3D12 backend will create a
+swapchain for composition and go through DirectComposition since the flip model
+swapchain (which is mandatory) would not support transparency otherwise.
+
+It is therefore important not to unneccessarily request an alpha channel. When
+the alphaBufferSize is 0 or the default -1, all these extra steps can be
+avoided and the traditional window-based swapchain is sufficient.
+
+This is not relevant on WinRT because there the backend always uses a
+composition swapchain which is associated with the ISwapChainPanel that backs
+QWindow on that platform.
 
 \section2 Mipmaps
 
@@ -277,12 +291,16 @@ conversion on the CPU first.
 
 \section2 Unsupported Features
 
-Particles, sprites, and other OpenGL-dependent tools like
-QQuickFramebufferObject are not currently supported.
+Particles and some other OpenGL-dependent utilities, like
+QQuickFramebufferObject, are not currently supported.
 
 Like with the \l{qtquick-visualcanvas-adaptations-software.html}{Software
 adaptation}, text is always rendered using the native method. Distance
 field-based text rendering is not currently implemented.
+
+The shader sources in the \l {Qt Graphical Effects} module have not been ported
+to any format other than the OpenGL 2.0 compatible one, meaning the QML types
+provided by that module are not currently functional with the D3D12 backend.
 
 Texture atlases are not currently in use.
 
@@ -292,6 +310,11 @@ points and lines with a width other than 1.
 Custom Qt Quick items using custom scenegraph nodes can be problematic.
 Materials are inherently tied to the graphics API. Therefore only items using
 the utility rectangle and image nodes are functional across all adaptations.
+
+QQuickWidget and its underlying OpenGL-based compositing architecture is not
+supported. If mixing with QWidget-based user interfaces is desired, use
+QWidget::createWindowContainer() to embed the native window of the QQuickWindow
+or QQuickView.
 
 Finally, rendering via QSGEngine and QSGAbstractRenderer is not feasible with
 the D3D12 adaptation at the moment.
@@ -321,7 +344,8 @@ QQuickWindow::createRectangleNode() and QQuickWindow::createImageNode().
 The D3D12 adaptation can keep multiple frames in flight, similarly to modern
 game engines. This is somewhat different from the traditional render - swap -
 wait for vsync model and allows better GPU utilization at the expense of higher
-resource usage.
+resource usage. This means that the renderer will be a number of frames ahead
+of what is displayed on the screen.
 
 For a discussion of flip model swap chains and the typical configuration
 parameters, refer to
@@ -335,25 +359,31 @@ The configuration can be changed by setting the following environment variables:
 
 \list
 
-\li \c{QT_D3D_BUFFER_COUNT} - The number of swap chain buffers. Defaults to 3.
+\li \c{QT_D3D_BUFFER_COUNT} - The number of swap chain buffers in range 2 - 4.
+The default value is 3.
 
-\li \c{QT_D3D_FRAME_COUNT} - The number of frames prepared without blocking.
-Defaults to 2. Note that Present will start blocking after queuing 3 frames
+\li \c{QT_D3D_FRAME_COUNT} - The number of frames prepared without blocking in
+range 1 - 4. Note that Present will start blocking after queuing 3 frames
 (regardless of \c{QT_D3D_BUFFER_COUNT}), unless the waitable object is in use.
 Note that every additional frame increases GPU resource usage since geometry
 and constant buffer data will have to be duplicated, and involves more
-bookkeeping on the CPU side.
+bookkeeping on the CPU side. The default value is 2.
 
-\li \c{QT_D3D_WAITABLE_SWAP_CHAIN_MAX_LATENCY} - When set, the frame latency is
-set to the specified value (0-16). This changes the limit for Present() and
-will trigger a wait for an available swap chain buffer when beginning each
-frame. By default this is disabled. Refer to the article above for a detailed
-discussion.
+\li \c{QT_D3D_WAITABLE_SWAP_CHAIN_MAX_LATENCY} - When set to a value between 1
+and 16, the frame latency is set to the specified value. This changes the limit
+for Present() and will trigger a wait for an available swap chain buffer when
+beginning each frame. Refer to the article above for a detailed discussion.
+This is considered experimental for now and the default value is 0 (disabled).
+
+\li \c{QT_D3D_BLOCKING_PRESENT} - When set to a non-zero value, there will be
+CPU-side wait for the GPU to finish its work after each call to Present. This
+effectively kills all parallelism but makes the behavior resemble the
+traditional swap-blocks-for-vsync model, and can therefore be useful in some
+special cases. This is not the same as setting the frame count to 1 because
+that still avoids blocking after Present, and may block only when starting to
+prepare the next frame (or may not block at all depending on the time gap
+between the frames). By default blocking present is disabled.
 
 \endlist
-
-Note that typical Qt Quick applications are expected to generate fairly low
-workloads compared to true 3D applications like games. Therefore this level of
-tuning will likely be unnecessary in most cases.
 
 */

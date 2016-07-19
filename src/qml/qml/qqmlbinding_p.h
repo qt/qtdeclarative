@@ -110,9 +110,7 @@ protected:
     int getPropertyCoreIndex() const;
     int getPropertyType() const;
 
-    bool write(const QV4::Value &result, bool isUndefined, QQmlPropertyPrivate::WriteFlags flags);
-
-    bool slowWrite(const QV4::Value &result, bool isUndefined,
+    bool slowWrite(const QQmlPropertyData &core, const QV4::Value &result, bool isUndefined,
                    QQmlPropertyPrivate::WriteFlags flags);
 
 private:

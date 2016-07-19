@@ -62,6 +62,8 @@ class QQuickSprite;
 class QQuickSpriteEngine;
 class QSGGeometryNode;
 class QQuickAnimatedSpriteMaterial;
+class QQuickAnimatedSpritePrivate;
+class QSGSpriteNode;
 class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem
 {
     Q_OBJECT
@@ -94,80 +96,21 @@ public:
     };
     Q_ENUM(LoopParameters)
 
-    bool running() const
-    {
-        return m_running;
-    }
-
-    bool interpolate() const
-    {
-        return m_interpolate;
-    }
-
-    QUrl source() const
-    {
-        return m_sprite->source();
-    }
-
-    bool reverse() const
-    {
-        return m_sprite->reverse();
-    }
-
-    bool frameSync() const
-    {
-        return m_sprite->frameSync();
-    }
-
-    int frameCount() const
-    {
-        return m_sprite->frames();
-    }
-
-    int frameHeight() const
-    {
-        return m_sprite->frameHeight();
-    }
-
-    int frameWidth() const
-    {
-        return m_sprite->frameWidth();
-    }
-
-    int frameX() const
-    {
-        return m_sprite->frameX();
-    }
-
-    int frameY() const
-    {
-        return m_sprite->frameY();
-    }
-
-    qreal frameRate() const
-    {
-        return m_sprite->frameRate();
-    }
-
-    int frameDuration() const
-    {
-        return m_sprite->frameDuration();
-    }
-
-    int loops() const
-    {
-        return m_loops;
-    }
-
-    bool paused() const
-    {
-        return m_paused;
-    }
-
-    int currentFrame() const
-    {
-        return m_curFrame;
-    }
+    bool running() const;
+    bool interpolate() const;
+    QUrl source() const;
+    bool reverse() const;
+    bool frameSync() const;
+    int frameCount() const;
+    int frameHeight() const;
+    int frameWidth() const;
+    int frameX() const;
+    int frameY() const;
+    qreal frameRate() const;
+    int frameDuration() const;
+    int loops() const;
+    bool paused() const;
+    int currentFrame() const;
 
 Q_SIGNALS:
 
@@ -176,27 +119,16 @@ Q_SIGNALS:
     void interpolateChanged(bool arg);
 
     void sourceChanged(QUrl arg);
-
     void reverseChanged(bool arg);
-
     void frameSyncChanged(bool arg);
-
     void frameCountChanged(int arg);
-
     void frameHeightChanged(int arg);
-
     void frameWidthChanged(int arg);
-
     void frameXChanged(int arg);
-
     void frameYChanged(int arg);
-
     void frameRateChanged(qreal arg);
-
     void frameDurationChanged(int arg);
-
     void loopsChanged(int arg);
-
     void currentFrameChanged(int arg);
 
 public Q_SLOTS:
@@ -207,157 +139,27 @@ public Q_SLOTS:
     void pause();
     void resume();
 
-    void setRunning(bool arg)
-    {
-        if (m_running != arg) {
-            if (m_running)
-                stop();
-            else
-                start();
-        }
-    }
-
-    void setPaused(bool arg)
-    {
-        if (m_paused != arg) {
-            if (m_paused)
-                resume();
-            else
-                pause();
-        }
-    }
-
-    void setInterpolate(bool arg)
-    {
-        if (m_interpolate != arg) {
-            m_interpolate = arg;
-            Q_EMIT interpolateChanged(arg);
-        }
-    }
-
-    void setSource(QUrl arg)
-    {
-        if (m_sprite->m_source != arg) {
-            m_sprite->setSource(arg);
-            Q_EMIT sourceChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setReverse(bool arg)
-    {
-        if (m_sprite->m_reverse != arg) {
-            m_sprite->setReverse(arg);
-            Q_EMIT reverseChanged(arg);
-        }
-    }
-
-    void setFrameSync(bool arg)
-    {
-        if (m_sprite->m_frameSync != arg) {
-            m_sprite->setFrameSync(arg);
-            Q_EMIT frameSyncChanged(arg);
-            if (m_running)
-                restart();
-        }
-    }
-
-    void setFrameCount(int arg)
-    {
-        if (m_sprite->m_frames != arg) {
-            m_sprite->setFrameCount(arg);
-            Q_EMIT frameCountChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setFrameHeight(int arg)
-    {
-        if (m_sprite->m_frameHeight != arg) {
-            m_sprite->setFrameHeight(arg);
-            Q_EMIT frameHeightChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setFrameWidth(int arg)
-    {
-        if (m_sprite->m_frameWidth != arg) {
-            m_sprite->setFrameWidth(arg);
-            Q_EMIT frameWidthChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setFrameX(int arg)
-    {
-        if (m_sprite->m_frameX != arg) {
-            m_sprite->setFrameX(arg);
-            Q_EMIT frameXChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setFrameY(int arg)
-    {
-        if (m_sprite->m_frameY != arg) {
-            m_sprite->setFrameY(arg);
-            Q_EMIT frameYChanged(arg);
-            reloadImage();
-        }
-    }
-
-    void setFrameRate(qreal arg)
-    {
-        if (m_sprite->m_frameRate != arg) {
-            m_sprite->setFrameRate(arg);
-            Q_EMIT frameRateChanged(arg);
-            if (m_running)
-                restart();
-        }
-    }
-
-    void setFrameDuration(int arg)
-    {
-        if (m_sprite->m_frameDuration != arg) {
-            m_sprite->setFrameDuration(arg);
-            Q_EMIT frameDurationChanged(arg);
-            if (m_running)
-                restart();
-        }
-    }
-
-    void resetFrameRate()
-    {
-        setFrameRate(-1.0);
-    }
-
-    void resetFrameDuration()
-    {
-        setFrameDuration(-1);
-    }
-
-    void setLoops(int arg)
-    {
-        if (m_loops != arg) {
-            m_loops = arg;
-            Q_EMIT loopsChanged(arg);
-        }
-    }
-
-    void setCurrentFrame(int arg) //TODO-C: Probably only works when paused
-    {
-        if (m_curFrame != arg) {
-            m_curFrame = arg;
-            Q_EMIT currentFrameChanged(arg); //TODO-C Only emitted on manual advance!
-            update();
-        }
-    }
+    void setRunning(bool arg);
+    void setPaused(bool arg);
+    void setInterpolate(bool arg);
+    void setSource(QUrl arg);
+    void setReverse(bool arg);
+    void setFrameSync(bool arg);
+    void setFrameCount(int arg);
+    void setFrameHeight(int arg);
+    void setFrameWidth(int arg);
+    void setFrameX(int arg);
+    void setFrameY(int arg);
+    void setFrameRate(qreal arg);
+    void setFrameDuration(int arg);
+    void resetFrameRate();
+    void resetFrameDuration();
+    void setLoops(int arg);
+    void setCurrentFrame(int arg);
 
 
 private Q_SLOTS:
     void createEngine();
-    void sizeVertices(QSGGeometryNode *node);
 
 protected Q_SLOTS:
     void reset();
@@ -367,21 +169,13 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
     bool isCurrentFrameChangedConnected();
-    void prepareNextFrame(QSGGeometryNode *node);
+    void prepareNextFrame(QSGSpriteNode *node);
     void reloadImage();
-    QSGGeometryNode* buildNode();
-    QQuickSprite* m_sprite;
-    QQuickSpriteEngine* m_spriteEngine;
-    QElapsedTimer m_timestamp;
-    int m_curFrame;
-    bool m_pleaseReset;
-    bool m_running;
-    bool m_paused;
-    bool m_interpolate;
-    QSizeF m_sheetSize;
-    int m_loops;
-    int m_curLoop;
-    int m_pauseOffset;
+    QSGSpriteNode* initNode();
+
+private:
+    Q_DISABLE_COPY(QQuickAnimatedSprite)
+    Q_DECLARE_PRIVATE(QQuickAnimatedSprite)
 };
 
 QT_END_NAMESPACE

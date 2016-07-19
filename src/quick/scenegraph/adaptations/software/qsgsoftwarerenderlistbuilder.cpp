@@ -140,6 +140,16 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGRootNode *)
 {
 }
 
+bool QSGSoftwareRenderListBuilder::visit(QSGSpriteNode *node)
+{
+    return addRenderableNode(node);
+}
+
+void QSGSoftwareRenderListBuilder::endVisit(QSGSpriteNode *)
+{
+
+}
+
 bool QSGSoftwareRenderListBuilder::addRenderableNode(QSGNode *node)
 {
     auto renderableNode = m_renderer->renderableNode(node);

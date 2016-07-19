@@ -18,7 +18,8 @@ SOURCES += \
     $$PWD/qsgsoftwarerenderlistbuilder.cpp \
     $$PWD/qsgsoftwarerenderloop.cpp \
     $$PWD/qsgsoftwarelayer.cpp \
-    $$PWD/qsgsoftwareadaptation.cpp
+    $$PWD/qsgsoftwareadaptation.cpp \
+    $$PWD/qsgsoftwarespritenode.cpp
 
 HEADERS += \
     $$PWD/qsgsoftwarecontext_p.h \
@@ -36,4 +37,5 @@ HEADERS += \
     $$PWD/qsgsoftwarerenderlistbuilder_p.h \
     $$PWD/qsgsoftwarerenderloop_p.h \
     $$PWD/qsgsoftwarelayer_p.h \
-    $$PWD/qsgsoftwareadaptation_p.h
+    $$PWD/qsgsoftwareadaptation_p.h \
+    $$PWD/qsgsoftwarespritenode_p.h

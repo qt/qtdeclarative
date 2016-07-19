@@ -40,6 +40,7 @@ private slots:
     void initTestCase();
 
     void regenerateAfterChange();
+    void registerImportForImplicitComponent();
 };
 
 struct TestCompiler
@@ -133,14 +134,14 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(testUnit->nObjects, quint32(1));
+        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
 
         const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
-        QCOMPARE(obj->nBindings, quint32(1));
-        QCOMPARE(obj->bindingTable()->type, quint32(QV4::CompiledData::Binding::Type_Script));
-        QCOMPARE(obj->bindingTable()->value.compiledScriptIndex, quint32(1));
+        QCOMPARE(quint32(obj->nBindings), quint32(1));
+        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Script));
+        QCOMPARE(quint32(obj->bindingTable()->value.compiledScriptIndex), quint32(1));
 
-        QCOMPARE(testUnit->functionTableSize, quint32(2));
+        QCOMPARE(quint32(testUnit->functionTableSize), quint32(2));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
@@ -163,18 +164,59 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(testUnit->nObjects, quint32(1));
+        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
 
         const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
-        QCOMPARE(obj->nBindings, quint32(2));
-        QCOMPARE(obj->bindingTable()->type, quint32(QV4::CompiledData::Binding::Type_Number));
-        QCOMPARE(obj->bindingTable()->value.d, double(42));
+        QCOMPARE(quint32(obj->nBindings), quint32(2));
+        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Number));
+        QCOMPARE(obj->bindingTable()->valueAsNumber(), double(42));
 
-        QCOMPARE(testUnit->functionTableSize, quint32(2));
+        QCOMPARE(quint32(testUnit->functionTableSize), quint32(2));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
     }
+}
+
+void tst_qmldiskcache::registerImportForImplicitComponent()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral("import QtQuick 2.0\n"
+                                                  "Loader {\n"
+                                                   "    sourceComponent: Item {}\n"
+                                                   "}");
+
+    QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+#ifdef V4_ENABLE_JIT
+    {
+        const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
+        QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
+
+        QCOMPARE(quint32(testUnit->nImports), quint32(2));
+        QCOMPARE(testUnit->stringAt(testUnit->importAt(0)->uriIndex), QStringLiteral("QtQuick"));
+
+        QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+
+        QCOMPARE(testUnit->stringAt(testUnit->importAt(1)->uriIndex), QString(componentType->module()));
+        QCOMPARE(testUnit->stringAt(testUnit->importAt(1)->qualifierIndex), QStringLiteral("QmlInternals"));
+
+        QCOMPARE(quint32(testUnit->nObjects), quint32(3));
+
+        const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
+        QCOMPARE(quint32(obj->nBindings), quint32(1));
+        QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Object));
+
+        const QV4::CompiledData::Object *implicitComponent = testUnit->objectAt(obj->bindingTable()->value.objectIndex);
+        QCOMPARE(testUnit->stringAt(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType->elementName());
+    }
+#else
+    QVERIFY(!testCompiler.mapUnit());
+    return;
+#endif
 }
 
 QTEST_MAIN(tst_qmldiskcache)

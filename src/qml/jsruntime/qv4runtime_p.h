@@ -56,11 +56,6 @@
 #include "qv4engine_p.h"
 #include "qv4math_p.h"
 #include "qv4runtimeapi_p.h"
-#ifndef V4_BOOTSTRAP
-#include <private/qqmlaccessors_p.h>
-#include <private/qqmlcontextwrapper_p.h>
-#endif
-
 #include <QtCore/qnumeric.h>
 
 QT_BEGIN_NAMESPACE

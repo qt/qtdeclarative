@@ -73,6 +73,7 @@ class QMetaObjectBuilder;
 class QQmlPropertyCacheMethodArguments;
 class QQmlVMEMetaObject;
 template <typename T> class QQmlPropertyCacheCreator;
+template <typename T> class QQmlPropertyCacheAliasCreator;
 
 // We have this somewhat awful split between RawData and Data so that RawData can be
 // used in unions.  In normal code, you should always use Data which initializes RawData
@@ -338,6 +339,7 @@ private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
     template <typename T> friend class QQmlPropertyCacheCreator;
+    template <typename T> friend class QQmlPropertyCacheAliasCreator;
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
 
@@ -526,6 +528,21 @@ inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) 
     return p;
 }
 
+// Returns this property cache's metaObject.  May be null if it hasn't been created yet.
+inline const QMetaObject *QQmlPropertyCache::metaObject() const
+{
+    return _metaObject;
+}
+
+// Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
+// QML
+inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
+{
+    while (_parent && (_metaObject == 0 || _ownMetaObject))
+        return _parent->firstCppMetaObject();
+    return _metaObject;
+}
+
 inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
 {
     if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
@@ -536,6 +553,57 @@ inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
     return ensureResolved(rv);
+}
+
+inline QQmlPropertyData *QQmlPropertyCache::method(int index) const
+{
+    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
+        return 0;
+
+    if (index < methodIndexCacheStart)
+        return _parent->method(index);
+
+    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
+    return ensureResolved(rv);
+}
+
+/*! \internal
+    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
+{
+    if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
+        return 0;
+
+    if (index < signalHandlerIndexCacheStart)
+        return _parent->signal(index);
+
+    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
+    Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
+    return ensureResolved(rv);
+}
+
+inline int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
+{
+    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
+        return index;
+
+    if (index < methodIndexCacheStart)
+        return _parent->methodIndexToSignalIndex(index);
+
+    return index - methodIndexCacheStart + signalHandlerIndexCacheStart;
+}
+
+// Returns the name of the default property for this cache
+inline QString QQmlPropertyCache::defaultPropertyName() const
+{
+    return _defaultPropertyName;
+}
+
+inline QQmlPropertyCache *QQmlPropertyCache::parent() const
+{
+    return _parent;
 }
 
 QQmlPropertyData *

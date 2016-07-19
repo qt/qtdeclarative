@@ -350,7 +350,7 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
-    int flags;
+    quint32 flags;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
@@ -400,6 +400,8 @@ public:
     FixedPoolArray<int> runtimeFunctionIndices;
 
     FixedPoolArray<quint32> namedObjectsInComponent;
+    int namedObjectsInComponentCount() const { return namedObjectsInComponent.count; }
+    const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
     friend struct IRLoader;
@@ -436,7 +438,6 @@ struct Q_QML_PRIVATE_EXPORT Document
     quint32 unitFlags;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
-    QHash<int, QStringList> extraSignalParameters;
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }

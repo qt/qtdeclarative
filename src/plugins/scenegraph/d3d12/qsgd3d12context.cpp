@@ -46,6 +46,8 @@
 #include "qsgd3d12shadereffectnode_p.h"
 #include "qsgd3d12painternode_p.h"
 #include "qsgd3d12publicnodes_p.h"
+#include "qsgd3d12spritenode_p.h"
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,7 +106,12 @@ QSize QSGD3D12Context::minimumFBOSize() const
 
 QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
 {
-    return QSurfaceFormat::defaultFormat();
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+
+    if (QQuickWindow::hasDefaultAlphaBuffer())
+        format.setAlphaBufferSize(8);
+
+    return format;
 }
 
 QSGRendererInterface *QSGD3D12Context::rendererInterface(QSGRenderContext *renderContext)
@@ -125,6 +132,11 @@ QSGImageNode *QSGD3D12Context::createImageNode()
 QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
 {
     return new QSGD3D12NinePatchNode;
+}
+
+QSGSpriteNode *QSGD3D12Context::createSpriteNode()
+{
+    return new QSGD3D12SpriteNode;
 }
 
 QT_END_NAMESPACE

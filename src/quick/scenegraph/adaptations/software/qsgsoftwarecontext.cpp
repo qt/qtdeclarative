@@ -47,6 +47,7 @@
 #include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarerenderer_p.h"
+#include "qsgsoftwarespritenode_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -154,6 +155,11 @@ void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
     renderer->renderScene(fbo);
 }
 
+int QSGSoftwareRenderContext::maxTextureSize() const
+{
+    return 2048;
+}
+
 QSGRendererInterface *QSGSoftwareContext::rendererInterface(QSGRenderContext *renderContext)
 {
     Q_UNUSED(renderContext);
@@ -173,6 +179,11 @@ QSGImageNode *QSGSoftwareContext::createImageNode()
 QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
 {
     return new QSGSoftwareNinePatchNode;
+}
+
+QSGSpriteNode *QSGSoftwareContext::createSpriteNode()
+{
+    return new QSGSoftwareSpriteNode;
 }
 
 QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const

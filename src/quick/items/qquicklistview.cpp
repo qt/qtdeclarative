@@ -131,7 +131,7 @@ public:
 
     void updateAverage();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) Q_DECL_OVERRIDE;
     void fixupPosition() Q_DECL_OVERRIDE;
     void fixup(AxisData &data, qreal minExtent, qreal maxExtent) Q_DECL_OVERRIDE;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
@@ -1400,10 +1400,12 @@ bool QQuickListViewPrivate::hasStickyFooter() const
     return footer && footerPositioning != QQuickListView::InlineFooter;
 }
 
-void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
+                                                const QRectF &diff)
 {
     Q_Q(QQuickListView);
-    QQuickItemViewPrivate::itemGeometryChanged(item, newGeometry, oldGeometry);
+
+    QQuickItemViewPrivate::itemGeometryChanged(item, change, diff);
     if (!q->isComponentComplete())
         return;
 
@@ -1417,29 +1419,31 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     }
 
     if (item != contentItem && (!highlight || item != highlight->item)) {
-        if ((orient == QQuickListView::Vertical && newGeometry.height() != oldGeometry.height())
-            || (orient == QQuickListView::Horizontal && newGeometry.width() != oldGeometry.width())) {
+        if ((orient == QQuickListView::Vertical && change.heightChange())
+            || (orient == QQuickListView::Horizontal && change.widthChange())) {
 
             // if visibleItems.first() has resized, adjust its pos since it is used to
             // position all subsequent items
             if (visibleItems.count() && item == visibleItems.first()->item) {
                 FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
+                const QRectF oldGeometry(item->x() - diff.x(),
+                                         item->y() - diff.y(),
+                                         item->width() - diff.width(),
+                                         item->height() - diff.height());
                 if (listItem->transitionScheduledOrRunning())
                     return;
                 if (orient == QQuickListView::Vertical) {
                     const qreal oldItemEndPosition = verticalLayoutDirection == QQuickItemView::BottomToTop ? -oldGeometry.y() : oldGeometry.y() + oldGeometry.height();
-                    qreal diff = newGeometry.height() - oldGeometry.height();
                     if (verticalLayoutDirection == QQuickListView::TopToBottom && oldItemEndPosition < q->contentY())
-                        listItem->setPosition(listItem->position() - diff, true);
+                        listItem->setPosition(listItem->position() - diff.height(), true);
                     else if (verticalLayoutDirection == QQuickListView::BottomToTop && oldItemEndPosition > q->contentY())
-                        listItem->setPosition(listItem->position() + diff, true);
+                        listItem->setPosition(listItem->position() + diff.height(), true);
                 } else {
                     const qreal oldItemEndPosition = q->effectiveLayoutDirection() == Qt::RightToLeft ? -oldGeometry.x() : oldGeometry.x() + oldGeometry.width();
-                    qreal diff = newGeometry.width() - oldGeometry.width();
                     if (q->effectiveLayoutDirection() == Qt::LeftToRight && oldItemEndPosition < q->contentX())
-                        listItem->setPosition(listItem->position() - diff, true);
+                        listItem->setPosition(listItem->position() - diff.width(), true);
                     else if (q->effectiveLayoutDirection() == Qt::RightToLeft && oldItemEndPosition > q->contentX())
-                        listItem->setPosition(listItem->position() + diff, true);
+                        listItem->setPosition(listItem->position() + diff.width(), true);
                 }
             }
             forceLayoutPolish();

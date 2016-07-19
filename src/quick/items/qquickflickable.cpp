@@ -292,14 +292,14 @@ void QQuickFlickablePrivate::AxisData::updateVelocity()
     }
 }
 
-void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeom, const QRectF &oldGeom)
+void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &)
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
         Qt::Orientations orient = 0;
-        if (newGeom.x() != oldGeom.x())
+        if (change.xChange())
             orient |= Qt::Horizontal;
-        if (newGeom.y() != oldGeom.y())
+        if (change.yChange())
             orient |= Qt::Vertical;
         if (orient)
             q->viewportMoved(orient);

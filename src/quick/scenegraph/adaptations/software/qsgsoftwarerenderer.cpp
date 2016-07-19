@@ -69,6 +69,11 @@ void QSGSoftwareRenderer::setCurrentPaintDevice(QPaintDevice *device)
     m_backingStore = nullptr;
 }
 
+QPaintDevice *QSGSoftwareRenderer::currentPaintDevice() const
+{
+    return m_paintDevice;
+}
+
 void QSGSoftwareRenderer::setBackingStore(QBackingStore *backingStore)
 {
     m_backingStore = backingStore;

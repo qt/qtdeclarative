@@ -236,7 +236,7 @@ void QSGAbstractSoftwareRenderer::setBackgroundSize(const QSize &size)
     m_background->setRect(0.0f, 0.0f, size.width(), size.height());
     renderableNode(m_background)->markGeometryDirty();
     // Invalidate the whole scene when the background is resized
-    m_dirtyRegion = QRegion(m_background->rect().toRect());
+    markDirty();
 }
 
 QColor QSGAbstractSoftwareRenderer::backgroundColor()
@@ -320,6 +320,11 @@ void QSGAbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 
     // Update children nodes
     m_nodeUpdater->updateNodes(node);
+}
+
+void QSGAbstractSoftwareRenderer::markDirty()
+{
+    m_dirtyRegion = QRegion(m_background->rect().toRect());
 }
 
 QT_END_NAMESPACE

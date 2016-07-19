@@ -72,6 +72,7 @@
 
 #include <private/qv4object_p.h>
 #include <private/qv4value_p.h>
+#include <private/qqmlpropertyvalueinterceptor_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,6 +105,15 @@ public:
 
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache; }
+
+    bool intercepts(int coreIndex) const
+    {
+        for (auto it = interceptors; it; it = it->m_next) {
+            if (it->m_coreIndex == coreIndex)
+                return true;
+        }
+        return false;
+    }
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) Q_DECL_OVERRIDE;

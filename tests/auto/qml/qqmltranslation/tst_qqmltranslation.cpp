@@ -95,7 +95,7 @@ void tst_qqmltranslation::translation()
             if (expectCompiledTranslation) {
                 if (binding->type != QV4::CompiledData::Binding::Type_Translation)
                     qDebug() << "binding for property" << propertyName << "is not a compiled translation";
-                QCOMPARE(binding->type, quint32(QV4::CompiledData::Binding::Type_Translation));
+                QCOMPARE(quint32(binding->type), quint32(QV4::CompiledData::Binding::Type_Translation));
             } else {
                 if (binding->type == QV4::CompiledData::Binding::Type_Translation)
                     qDebug() << "binding for property" << propertyName << "is not supposed to be a compiled translation";
@@ -147,7 +147,7 @@ void tst_qqmltranslation::idTranslation()
             if (propertyName == "idTranslation") {
                 if (binding->type != QV4::CompiledData::Binding::Type_TranslationById)
                     qDebug() << "binding for property" << propertyName << "is not a compiled translation";
-                QCOMPARE(binding->type, quint32(QV4::CompiledData::Binding::Type_TranslationById));
+                QCOMPARE(quint32(binding->type), quint32(QV4::CompiledData::Binding::Type_TranslationById));
             } else {
                 QVERIFY(binding->type != QV4::CompiledData::Binding::Type_Translation);
             }

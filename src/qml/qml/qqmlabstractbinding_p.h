@@ -91,6 +91,8 @@ public:
 
     inline QQmlAbstractBinding *nextBinding() const;
 
+    inline bool canUseAccessor() const
+    { return m_nextBinding.flag2(); }
 
     struct RefCount {
         RefCount() : refCount(0) {}
@@ -112,8 +114,15 @@ protected:
     inline void setNextBinding(QQmlAbstractBinding *);
 
     int m_targetIndex;
+
+    // Pointer is the target object to which the binding binds
+    // flag1 is the updating flag
+    // flag2 is the enabled flag
     QFlagPointer<QObject> m_target;
+
     // Pointer to the next binding in the linked list of bindings.
+    // flag1 is used for addedToObject
+    // flag2 indicates if an accessor is can be used (i.e. there is no interceptor on the target)
     QFlagPointer<QQmlAbstractBinding> m_nextBinding;
 };
 

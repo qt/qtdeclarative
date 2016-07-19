@@ -642,7 +642,7 @@ public:
                     qout << from;
                 else
                     qout << "(none)";
-                qout << " -> " << to->index() << endl;
+                qout << " dominates " << to->index() << endl;
             }
             qDebug("%s", buf.data().constData());
         }
@@ -738,6 +738,21 @@ public:
                 ++i;
         }
         return order;
+    }
+
+    void mergeIntoPredecessor(BasicBlock *successor)
+    {
+        int succIdx = successor->index();
+        if (succIdx == InvalidBasicBlockIndex) {
+            return;
+        }
+
+        int succDom = idom[unsigned(succIdx)];
+        for (BasicBlockIndex &idx : idom) {
+            if (idx == succIdx) {
+                idx = succDom;
+            }
+        }
     }
 
 private:
@@ -1173,6 +1188,15 @@ public:
     {
         Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
         return _defUses[variable.index].blockOfStatement;
+    }
+
+    void replaceBasicBlock(BasicBlock *from, BasicBlock *to)
+    {
+        for (auto &du : _defUses) {
+            if (du.blockOfStatement == from) {
+                du.blockOfStatement = to;
+            }
+        }
     }
 
     void removeUse(Stmt *usingStmt, const Temp &var)
@@ -3327,6 +3351,15 @@ class BlockScheduler
                 // this is a loop, where there in -> candidate edge is the jump back to the top of the loop.
                 continue;
 
+            if (in == candidate)
+                // this is a very tight loop, e.g.:
+                //   L1: ...
+                //       goto L1
+                // This can happen when, for example, the basic-block merging gets rid of the empty
+                // body block. In this case, we can safely schedule this block (if all other
+                // incoming edges are either loop-back edges, or have been scheduled already).
+                continue;
+
             return false; // an incoming edge that is not yet emitted, and is not a back-edge
         }
 
@@ -3709,6 +3742,8 @@ namespace {
 void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUses,
             StatementWorklist &W, DominatorTree &dt)
 {
+    enum { DebugUnlinking = 0 };
+
     struct Util {
         static void removeIncomingEdge(BasicBlock *from, BasicBlock *to, DefUses &defUses, StatementWorklist &W)
         {
@@ -3747,10 +3782,16 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
         }
     };
 
+    Q_ASSERT(!from->isRemoved());
+    Q_ASSERT(!to->isRemoved());
+
     // don't purge blocks that are entry points for catch statements. They might not be directly
     // connected, but are required anyway
     if (to->isExceptionHandler())
         return;
+
+    if (DebugUnlinking)
+        qDebug("Unlinking L%d -> L%d...", from->index(), to->index());
 
     // First, unlink the edge
     from->out.removeOne(to);
@@ -3761,8 +3802,12 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
 
     // Check if the target is still reachable...
     if (Util::isReachable(to, dt)) { // yes, recalculate the immediate dominator, and we're done.
+        if (DebugUnlinking)
+            qDebug(".. L%d is still reachable, recalulate idom.", to->index());
         dt.collectSiblings(to, siblings);
     } else {
+        if (DebugUnlinking)
+            qDebug(".. L%d is unreachable, purging it:", to->index());
         // The target is unreachable, so purge it:
         QVector<BasicBlock *> toPurge;
         toPurge.reserve(8);
@@ -3770,6 +3815,8 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
         while (!toPurge.isEmpty()) {
             BasicBlock *bb = toPurge.first();
             toPurge.removeFirst();
+            if (DebugUnlinking)
+                qDebug("... purging L%d", bb->index());
 
             if (bb->isRemoved())
                 continue;
@@ -3813,6 +3860,8 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
     }
 
     dt.recalculateIDoms(siblings);
+    if (DebugUnlinking)
+        qDebug("Unlinking done.");
 }
 
 bool tryOptimizingComparison(Expr *&expr)
@@ -4784,13 +4833,20 @@ static void verifyCFG(IR::Function *function)
         Q_ASSERT(function->basicBlock(bb->index()) == bb);
 
         // Check the terminators:
-        if (Jump *jump = bb->terminator()->asJump()) {
+        Stmt *terminator = bb->terminator();
+        if (terminator == nullptr) {
+            Stmt *last = bb->statements().last();
+            Call *call = last->asExp()->expr->asCall();
+            Name *baseName = call->base->asName();
+            Q_ASSERT(baseName->builtin == Name::builtin_rethrow);
+            Q_UNUSED(baseName);
+        } else if (Jump *jump = terminator->asJump()) {
             Q_UNUSED(jump);
             Q_ASSERT(jump->target);
             Q_ASSERT(!jump->target->isRemoved());
             Q_ASSERT(bb->out.size() == 1);
             Q_ASSERT(bb->out.first() == jump->target);
-        } else if (CJump *cjump = bb->terminator()->asCJump()) {
+        } else if (CJump *cjump = terminator->asCJump()) {
             Q_UNUSED(cjump);
             Q_ASSERT(bb->out.size() == 2);
             Q_ASSERT(cjump->iftrue);
@@ -4799,7 +4855,7 @@ static void verifyCFG(IR::Function *function)
             Q_ASSERT(cjump->iffalse);
             Q_ASSERT(!cjump->iffalse->isRemoved());
             Q_ASSERT(cjump->iffalse == bb->out[1]);
-        } else if (bb->terminator()->asRet()) {
+        } else if (terminator->asRet()) {
             Q_ASSERT(bb->out.size() == 0);
         } else {
             Q_UNREACHABLE();
@@ -4933,6 +4989,65 @@ private:
 
     void visitTemp(Temp *) Q_DECL_OVERRIDE Q_DECL_FINAL {}
 };
+
+void mergeBasicBlocks(IR::Function *function, DefUses *du, DominatorTree *dt)
+{
+    enum { DebugBlockMerging = 0 };
+
+    if (function->hasTry)
+        return;
+
+    showMeTheCode(function, "Before basic block merging");
+
+    // Now merge a basic block with its successor when there is one outgoing edge, and the
+    // successor has one incoming edge.
+    for (int i = 0, ei = function->basicBlockCount(); i != ei; ++i) {
+        BasicBlock *bb = function->basicBlock(i);
+
+        bb->nextLocation = QQmlJS::AST::SourceLocation(); // make sure appendStatement doesn't mess with the line info
+
+        if (bb->isRemoved()) continue; // the block has been removed, so ignore it
+        if (bb->out.size() != 1) continue; // more than one outgoing edge
+        BasicBlock *successor = bb->out.first();
+        if (successor->in.size() != 1) continue; // more than one incoming edge
+
+        // Ok, we can merge the two basic blocks.
+        if (DebugBlockMerging) {
+            qDebug("Merging L%d into L%d", successor->index(), bb->index());
+        }
+        Q_ASSERT(bb->terminator()->asJump());
+        bb->removeStatement(bb->statementCount() - 1); // remove the terminator, and replace it with:
+        for (Stmt *s : successor->statements()) {
+            bb->appendStatement(s); // add all statements from the successor to the current basic block
+            if (auto cjump = s->asCJump())
+                cjump->parent = bb;
+        }
+        bb->out = successor->out; // set the outgoing edges to the successor's so they're now in sync with our new terminator
+        for (auto newSuccessor : bb->out) {
+            for (auto &backlink : newSuccessor->in) {
+                if (backlink == successor) {
+                    backlink = bb; // for all successors of our successor: set the incoming edges to come from bb, because we'll now jump there.
+                }
+            }
+        }
+        if (du) {
+            // all statements in successor have moved to bb, so make sure that the containing blocks
+            // stored in DefUses get updated (meaning: point to bb)
+            du->replaceBasicBlock(successor, bb);
+        }
+        if (dt) {
+            // update the immediate dominators to: any block that was dominated by the successor
+            // will now need to point to bb's immediate dominator. The reason is that bb itself
+            // won't be anyones immediate dominator, because it had just one outgoing edge.
+            dt->mergeIntoPredecessor(successor);
+        }
+        function->removeBasicBlock(successor);
+        --i; // re-run on the current basic-block, so any chain gets collapsed.
+    }
+
+    showMeTheCode(function, "After basic block merging");
+    verifyCFG(function);
+}
 
 } // anonymous namespace
 
@@ -5168,6 +5283,8 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
     if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA && statementCount <= 300) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
 
+        mergeBasicBlocks(function, nullptr, nullptr);
+
         ConvertArgLocals(function).toTemps();
         showMeTheCode(function, "After converting arguments to locals");
 
@@ -5243,6 +5360,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
         }
 
         verifyNoPointerSharing(function);
+        mergeBasicBlocks(function, &defUses, &df);
 
         // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
         // condition is calculated to be always false) are not yet removed. This will choke the

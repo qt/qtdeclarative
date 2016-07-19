@@ -340,11 +340,6 @@ public:
         IR::Expr *value;
     };
 
-    struct ReentryBlock {
-        ReentryBlock(IR::BasicBlock *b) : block(b) {}
-        IR::BasicBlock *block;
-    };
-
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
     {
         call(lookupCall.addr);
@@ -433,13 +428,6 @@ public:
         move(source, dest);
     }
 
-    void loadArgumentInRegister(TrustedImmPtr ptr, RegisterID dest, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        move(TrustedImmPtr(ptr), dest);
-    }
-
     void loadArgumentInRegister(const Pointer& ptr, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
@@ -449,7 +437,7 @@ public:
     void loadArgumentInRegister(PointerToValue temp, RegisterID dest, int argumentNumber)
     {
         if (!temp.value) {
-            loadArgumentInRegister(TrustedImmPtr(0), dest, argumentNumber);
+            move(TrustedImmPtr(0), dest);
         } else {
             Pointer addr = toAddress(dest, temp.value, argumentNumber);
             loadArgumentInRegister(addr, dest, argumentNumber);
@@ -466,15 +454,6 @@ public:
         Q_ASSERT(temp.value);
         Pointer addr = loadAddress(dest, temp.value);
         loadArgumentInRegister(addr, dest, argumentNumber);
-    }
-
-    void loadArgumentInRegister(ReentryBlock block, RegisterID dest, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        Q_ASSERT(block.block);
-        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
-        addPatch(patch, block.block);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -535,11 +514,6 @@ public:
         Q_ASSERT(!"unimplemented: expression in loadArgument");
     }
 #endif
-
-    void loadArgumentInRegister(QV4::String* string, RegisterID dest, int argumentNumber)
-    {
-        loadArgumentInRegister(TrustedImmPtr(string), dest, argumentNumber);
-    }
 
     void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest, int argumentNumber)
     {
@@ -695,34 +669,6 @@ public:
 
         Pointer ptr = loadAddress(ScratchRegister, temp.value);
         loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
-    }
-
-    template <int StackSlot>
-    void loadArgumentOnStack(ReentryBlock block, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        Q_ASSERT(block.block);
-        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
-        poke(ScratchRegister, StackSlot);
-        addPatch(patch, block.block);
-    }
-
-    template <int StackSlot>
-    void loadArgumentOnStack(TrustedImmPtr ptr, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        move(TrustedImmPtr(ptr), ScratchRegister);
-        poke(ScratchRegister, StackSlot);
-    }
-
-    template <int StackSlot>
-    void loadArgumentOnStack(QV4::String* name, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        poke(TrustedImmPtr(name), StackSlot);
     }
 
     void loadDouble(IR::Expr *source, FPRegisterID dest)
@@ -1146,9 +1092,8 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        static const double magic = double(INT_MAX) + 1;
-        move(TrustedImmPtr(&magic), scratchReg);
-        subDouble(Address(scratchReg, 0), FPGpr0);
+        Address inversionAddress = constantTable().loadValueAddress(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
+        subDouble(inversionAddress, FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
         or32(TrustedImm32(1 << 31), scratchReg);

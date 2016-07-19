@@ -81,19 +81,9 @@ QT_BEGIN_NAMESPACE
     F(SetLookup, setLookup) \
     F(StoreQObjectProperty, storeQObjectProperty) \
     F(LoadQObjectProperty, loadQObjectProperty) \
-    F(LoadQRealQObjectPropertyDirectly, loadQRealQObjectPropertyDirectly) \
-    F(LoadQObjectQObjectPropertyDirectly, loadQObjectQObjectPropertyDirectly) \
-    F(LoadIntQObjectPropertyDirectly, loadIntQObjectPropertyDirectly) \
-    F(LoadBoolQObjectPropertyDirectly, loadBoolQObjectPropertyDirectly) \
-    F(LoadQStringQObjectPropertyDirectly, loadQStringQObjectPropertyDirectly) \
     F(StoreScopeObjectProperty, storeScopeObjectProperty) \
     F(StoreContextObjectProperty, storeContextObjectProperty) \
     F(LoadScopeObjectProperty, loadScopeObjectProperty) \
-    F(LoadScopeObjectQRealPropertyDirectly, loadScopeObjectQRealPropertyDirectly) \
-    F(LoadScopeObjectQObjectPropertyDirectly, loadScopeObjectQObjectPropertyDirectly) \
-    F(LoadScopeObjectIntPropertyDirectly, loadScopeObjectIntPropertyDirectly) \
-    F(LoadScopeObjectBoolPropertyDirectly, loadScopeObjectBoolPropertyDirectly) \
-    F(LoadScopeObjectQStringPropertyDirectly, loadScopeObjectQStringPropertyDirectly) \
     F(LoadContextObjectProperty, loadContextObjectProperty) \
     F(LoadIdObject, loadIdObject) \
     F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
@@ -333,36 +323,6 @@ union Instr
         Param base;
         Param result;
     };
-    struct instr_loadScopeObjectQRealPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-    };
-    struct instr_loadScopeObjectQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-    };
-    struct instr_loadScopeObjectIntPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-    };
-    struct instr_loadScopeObjectBoolPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-    };
-    struct instr_loadScopeObjectQStringPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-    };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
@@ -381,46 +341,6 @@ union Instr
         Param base;
         Param result;
         bool captureRequired;
-    };
-    struct instr_loadQRealQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-        int coreIndex;
-        int notifyIndex;
-    };
-    struct instr_loadQObjectQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-        int coreIndex;
-        int notifyIndex;
-    };
-    struct instr_loadIntQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-        int coreIndex;
-        int notifyIndex;
-    };
-    struct instr_loadBoolQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-        int coreIndex;
-        int notifyIndex;
-    };
-    struct instr_loadQStringQObjectPropertyDirectly {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param result;
-        QQmlAccessors *accessors;
-        int coreIndex;
-        int notifyIndex;
     };
     struct instr_loadAttachedQObjectProperty {
         MOTH_INSTR_HEADER
@@ -880,19 +800,9 @@ union Instr
     instr_loadProperty loadProperty;
     instr_getLookup getLookup;
     instr_loadScopeObjectProperty loadScopeObjectProperty;
-    instr_loadScopeObjectQRealPropertyDirectly loadScopeObjectQRealPropertyDirectly;
-    instr_loadScopeObjectQObjectPropertyDirectly loadScopeObjectQObjectPropertyDirectly;
-    instr_loadScopeObjectIntPropertyDirectly loadScopeObjectIntPropertyDirectly;
-    instr_loadScopeObjectBoolPropertyDirectly loadScopeObjectBoolPropertyDirectly;
-    instr_loadScopeObjectQStringPropertyDirectly loadScopeObjectQStringPropertyDirectly;
     instr_loadContextObjectProperty loadContextObjectProperty;
     instr_loadIdObject loadIdObject;
     instr_loadQObjectProperty loadQObjectProperty;
-    instr_loadQRealQObjectPropertyDirectly loadQRealQObjectPropertyDirectly;
-    instr_loadQObjectQObjectPropertyDirectly loadQObjectQObjectPropertyDirectly;
-    instr_loadIntQObjectPropertyDirectly loadIntQObjectPropertyDirectly;
-    instr_loadBoolQObjectPropertyDirectly loadBoolQObjectPropertyDirectly;
-    instr_loadQStringQObjectPropertyDirectly loadQStringQObjectPropertyDirectly;
     instr_loadAttachedQObjectProperty loadAttachedQObjectProperty;
     instr_storeProperty storeProperty;
     instr_setLookup setLookup;

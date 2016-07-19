@@ -75,6 +75,8 @@ public:
 
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
+    void markDirty();
+
 protected:
     QRegion renderNodes(QPainter *painter);
     void buildRenderList();

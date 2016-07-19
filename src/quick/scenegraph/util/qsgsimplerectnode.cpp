@@ -51,8 +51,8 @@ QT_BEGIN_NAMESPACE
 
   \warning This utility class is only functional when running with the OpenGL
   or software backends of the Qt Quick scenegraph. For a proper cross-platform
-  alternative prefer using QSGSimpleRectangleNode via
-  QQuickWindow::createSimpleRectangleNode() or QSGEngine::createSimpleRectangleNode().
+  alternative prefer using QSGRectangleNode via
+  QQuickWindow::createRectangleNode() or QSGEngine::createRectangleNode().
 
   \deprecated
  */

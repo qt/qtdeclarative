@@ -133,6 +133,8 @@ public:
 
     QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
 
+    void addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion);
+
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
@@ -263,7 +265,16 @@ public:
 protected:
     void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
-    bool resolveAliases();
+    bool resolveAliases(int componentIndex);
+    void propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags);
+
+    enum AliasResolutionResult {
+        NoAliasResolved,
+        SomeAliasesResolved,
+        AllAliasesResolved
+    };
+
+    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlCompileError *error);
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;
@@ -274,9 +285,8 @@ protected:
     // indices of the objects that are actually Component {}
     QVector<quint32> componentRoots;
 
-    int _componentIndex;
     QHash<int, int> _idToObjectIndex;
-    QList<int> _objectsWithAliases;
+    QVector<int> _objectsWithAliases;
 
     QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;

@@ -40,7 +40,6 @@
 #include "../shared/visualtestutil.h"
 #include "../shared/viewtestutil.h"
 #include <QSignalSpy>
-#include <qpa/qwindowsysteminterface.h>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QRunnable>
@@ -275,22 +274,14 @@ class tst_qquickwindow : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qquickwindow()
+      : touchDevice(QTest::createTouchDevice())
+      , touchDeviceWithVelocity(QTest::createTouchDevice())
     {
         QQuickWindow::setDefaultAlphaBuffer(true);
+        touchDeviceWithVelocity->setCapabilities(QTouchDevice::Position | QTouchDevice::Velocity);
     }
 
 private slots:
-    void initTestCase()
-    {
-        QQmlDataTest::initTestCase();
-        touchDevice = new QTouchDevice;
-        touchDevice->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(touchDevice);
-        touchDeviceWithVelocity = new QTouchDevice;
-        touchDeviceWithVelocity->setType(QTouchDevice::TouchScreen);
-        touchDeviceWithVelocity->setCapabilities(QTouchDevice::Position | QTouchDevice::Velocity);
-        QWindowSystemInterface::registerTouchDevice(touchDeviceWithVelocity);
-    }
     void cleanup();
 #ifndef QT_NO_OPENGL
     void openglContextCreatedSignal();

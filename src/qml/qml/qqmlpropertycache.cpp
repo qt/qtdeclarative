@@ -230,9 +230,10 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
         flags |= NotFullyResolved;
     }
 
-    if (m.parameterCount()) {
+    const int paramCount = m.parameterCount();
+    if (paramCount) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
             flags |= IsV4Function;
         }
     }
@@ -423,12 +424,6 @@ void QQmlPropertyCache::appendMethod(const QString &name, quint32 flags, int cor
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
 }
 
-// Returns this property cache's metaObject.  May be null if it hasn't been created yet.
-const QMetaObject *QQmlPropertyCache::metaObject() const
-{
-    return _metaObject;
-}
-
 // Returns this property cache's metaObject, creating it if necessary.
 const QMetaObject *QQmlPropertyCache::createMetaObject()
 {
@@ -444,20 +439,9 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
     return _metaObject;
 }
 
-// Returns the name of the default property for this cache
-QString QQmlPropertyCache::defaultPropertyName() const
-{
-    return _defaultPropertyName;
-}
-
 QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
 {
     return property(defaultPropertyName(), 0, 0);
-}
-
-QQmlPropertyCache *QQmlPropertyCache::parent() const
-{
-    return _parent;
 }
 
 void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
@@ -468,15 +452,6 @@ void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
         _parent->release();
     _parent = newParent;
     _parent->addref();
-}
-
-// Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
-// QML
-const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
-{
-    while (_parent && (_metaObject == 0 || _ownMetaObject))
-        return _parent->firstCppMetaObject();
-    return _metaObject;
 }
 
 QQmlPropertyCache *
@@ -535,11 +510,12 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         bool hasFastProperty = false;
         for (int ii = 0; ii < classInfoCount; ++ii) {
             int idx = ii + classInfoOffset;
-
-            if (0 == qstrcmp(metaObject->classInfo(idx).name(), "qt_HasQmlAccessors")) {
+            QMetaClassInfo mci = metaObject->classInfo(idx);
+            const char *name = mci.name();
+            if (0 == qstrcmp(name, "qt_HasQmlAccessors")) {
                 hasFastProperty = true;
-            } else if (0 == qstrcmp(metaObject->classInfo(idx).name(), "DefaultProperty")) {
-                _defaultPropertyName = QString::fromUtf8(metaObject->classInfo(idx).value());
+            } else if (0 == qstrcmp(name, "DefaultProperty")) {
+                _defaultPropertyName = QString::fromUtf8(mci.value());
             }
         }
 
@@ -814,48 +790,6 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     }
 }
 
-/*! \internal
-    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
-    This is different from QMetaMethod::methodIndex().
-*/
-QQmlPropertyData *
-QQmlPropertyCache::signal(int index) const
-{
-    if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
-        return 0;
-
-    if (index < signalHandlerIndexCacheStart)
-        return _parent->signal(index);
-
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
-    Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
-    return ensureResolved(rv);
-}
-
-int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
-{
-    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
-        return index;
-
-    if (index < methodIndexCacheStart)
-        return _parent->methodIndexToSignalIndex(index);
-
-    return index - methodIndexCacheStart + signalHandlerIndexCacheStart;
-}
-
-QQmlPropertyData *
-QQmlPropertyCache::method(int index) const
-{
-    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
-        return 0;
-
-    if (index < methodIndexCacheStart)
-        return _parent->method(index);
-
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
-    return ensureResolved(rv);
-}
-
 QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, QObject *object, QQmlContextData *context) const
 {
     QQmlData *data = (object ? QQmlData::get(object) : 0);
@@ -872,11 +806,11 @@ inline bool contextHasNoExtensions(QQmlContextData *context)
     return (!context->parent || !context->parent->imports);
 }
 
-inline int maximumIndexForProperty(QQmlPropertyData *prop, const QQmlVMEMetaObject *vmemo)
+inline int maximumIndexForProperty(QQmlPropertyData *prop, const int methodCount, const int signalCount, const int propertyCount)
 {
-    return (prop->isFunction() ? vmemo->methodCount()
-                               : prop->isSignalHandler() ? vmemo->signalCount()
-                                                         : vmemo->propertyCount());
+    return prop->isFunction() ? methodCount
+                              : prop->isSignalHandler() ? signalCount
+                                                        : propertyCount;
 }
 
 }
@@ -903,11 +837,15 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
         }
 
         if (vmemo) {
+            const int methodCount = vmemo->methodCount();
+            const int signalCount = vmemo->signalCount();
+            const int propertyCount = vmemo->propertyCount();
+
             // Ensure that the property we resolve to is accessible from this meta-object
             do {
                 const StringCache::mapped_type &property(it.value());
 
-                if (property.first < maximumIndexForProperty(property.second, vmemo)) {
+                if (property.first < maximumIndexForProperty(property.second, methodCount, signalCount, propertyCount)) {
                     // This property is available in the specified context
                     if (property.second->isFunction() || property.second->isSignalHandler()) {
                         // Prefer the earlier resolution

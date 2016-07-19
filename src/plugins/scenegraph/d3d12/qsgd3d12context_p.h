@@ -75,6 +75,8 @@ public:
     QSGRectangleNode *createRectangleNode() override;
     QSGImageNode *createImageNode() override;
     QSGNinePatchNode *createNinePatchNode() override;
+    QSGSpriteNode *createSpriteNode() override;
+
 };
 
 QT_END_NAMESPACE

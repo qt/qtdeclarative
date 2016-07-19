@@ -131,14 +131,15 @@ void QQuickViewPrivate::execute()
     }
 }
 
-void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
+                                            const QRectF &diff)
 {
     Q_Q(QQuickView);
     if (resizeItem == root && resizeMode == QQuickView::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
 }
 
 /*!
@@ -432,9 +433,14 @@ void QQuickViewPrivate::updateSize()
             q->resize(newSize);
         }
     } else if (resizeMode == QQuickView::SizeRootObjectToView) {
-        if (!qFuzzyCompare(q->width(), root->width()))
+        bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
+        bool needToUpdateHeight = !qFuzzyCompare(q->height(), root->height());
+
+        if (needToUpdateWidth && needToUpdateHeight)
+            root->setSize(QSizeF(q->width(), q->height()));
+        else if (needToUpdateWidth)
             root->setWidth(q->width());
-        if (!qFuzzyCompare(q->height(), root->height()))
+        else if (needToUpdateHeight)
             root->setHeight(q->height());
     }
 }

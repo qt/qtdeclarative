@@ -528,14 +528,14 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, QQmlPropertyData * /*property*/, int /*index*/, IR::Expr *target)
+    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getQObjectProperty(IR::Expr *base, QQmlPropertyData * /*property*/, bool /*captureRequired*/, bool /*isSingleton*/, int /*attachedPropertiesId*/, IR::Expr *target)
+    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, bool /*isSingleton*/, int /*attachedPropertiesId*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);

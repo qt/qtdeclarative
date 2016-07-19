@@ -136,8 +136,7 @@ void QSGD3D12ShaderLinker::feedSamplers(const QSGShaderEffectNode::ShaderData &s
     for (int i = 0; i < shader.shaderInfo.variables.count(); ++i) {
         const auto &var(shader.shaderInfo.variables.at(i));
         if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler) {
-            const auto &vd(shader.varData.at(i));
-            Q_ASSERT(vd.specialType == QSGShaderEffectNode::VariableData::Unused);
+            Q_ASSERT(shader.varData.at(i).specialType == QSGShaderEffectNode::VariableData::Unused);
             samplers.insert(var.bindPoint);
         }
     }

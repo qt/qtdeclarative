@@ -54,6 +54,8 @@
 
 #include <QHash>
 #include <private/qqmljsmemorypool_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4identifiertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -117,6 +119,20 @@ inline PropertyHash::~PropertyHash()
         delete d;
 }
 
+inline uint PropertyHash::lookup(const Identifier *identifier) const
+{
+    Q_ASSERT(d->entries);
+
+    uint idx = identifier->hashValue % d->alloc;
+    while (1) {
+        if (d->entries[idx].identifier == identifier)
+            return d->entries[idx].index;
+        if (!d->entries[idx].identifier)
+            return UINT_MAX;
+        ++idx;
+        idx %= d->alloc;
+    }
+}
 
 template <typename T>
 struct SharedInternalClassData {
@@ -245,7 +261,7 @@ struct InternalClass : public QQmlJS::Managed {
     InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
     static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
     static void removeMember(Object *object, Identifier *id);
-    uint find(const String *s);
+    uint find(const String *string);
     uint find(const Identifier *id);
 
     InternalClass *sealed();
@@ -260,6 +276,18 @@ private:
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);
 };
+
+inline uint InternalClass::find(const String *string)
+{
+    engine->identifierTable->identifier(string);
+    const Identifier *id = string->d()->identifier;
+
+    uint index = propertyTable.lookup(id);
+    if (index < size)
+        return index;
+
+    return UINT_MAX;
+}
 
 struct InternalClassPool : public QQmlJS::MemoryPool
 {

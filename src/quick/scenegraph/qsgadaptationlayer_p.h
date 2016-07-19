@@ -81,6 +81,7 @@ class QSGPainterNode;
 class QSGInternalRectangleNode;
 class QSGGlyphNode;
 class QSGRootNode;
+class QSGSpriteNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -106,6 +107,8 @@ public:
     virtual void endVisit(QSGGlyphNode *) = 0;
     virtual bool visit(QSGRootNode *) = 0;
     virtual void endVisit(QSGRootNode *) = 0;
+    virtual bool visit(QSGSpriteNode *) = 0;
+    virtual void endVisit(QSGSpriteNode *) = 0;
 
     void visitChildren(QSGNode *node);
 };
@@ -205,6 +208,23 @@ public:
 Q_SIGNALS:
     void updateRequested();
     void scheduledUpdateCompleted();
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGSpriteNode : public QSGVisitableNode
+{
+public:
+    virtual void setTexture(QSGTexture *texture) = 0;
+    virtual void setTime(float time) = 0;
+    virtual void setSourceA(const QPoint &source) = 0;
+    virtual void setSourceB(const QPoint &source) = 0;
+    virtual void setSpriteSize(const QSize &size) = 0;
+    virtual void setSheetSize(const QSize &size) = 0;
+    virtual void setSize(const QSizeF &size) = 0;
+    virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
+
+    virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject

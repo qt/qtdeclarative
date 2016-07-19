@@ -79,7 +79,13 @@ HEADERS += \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickgraphicsinfo_p.h \
-    $$PWD/qquickitemgrabresult.h
+    $$PWD/qquickitemgrabresult.h \
+    $$PWD/qquickspriteengine_p.h \
+    $$PWD/qquicksprite_p.h \
+    $$PWD/qquickspritesequence_p.h \
+    $$PWD/qquickanimatedsprite_p.h \
+    $$PWD/qquickanimatedsprite_p_p.h \
+    $$PWD/qquickspritesequence_p_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -134,7 +140,11 @@ SOURCES += \
     $$PWD/qquickgenericshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
-    $$PWD/qquickitemgrabresult.cpp
+    $$PWD/qquickitemgrabresult.cpp \
+    $$PWD/qquickspriteengine.cpp \
+    $$PWD/qquicksprite.cpp \
+    $$PWD/qquickspritesequence.cpp \
+    $$PWD/qquickanimatedsprite.cpp
 
 # Items that depend on OpenGL Renderer
 contains(QT_CONFIG, opengl(es1|es2)?) {
@@ -142,31 +152,19 @@ contains(QT_CONFIG, opengl(es1|es2)?) {
         $$PWD/qquickopenglinfo.cpp \
         $$PWD/qquickopenglshadereffect.cpp \
         $$PWD/qquickopenglshadereffectnode.cpp \
-        $$PWD/qquickframebufferobject.cpp \
-        $$PWD/qquickspriteengine.cpp \
-        $$PWD/qquicksprite.cpp \
-        $$PWD/qquickspritesequence.cpp \
-        $$PWD/qquickanimatedsprite.cpp
+        $$PWD/qquickframebufferobject.cpp
 
     HEADERS += \
         $$PWD/qquickopenglinfo_p.h \
-        $$PWD/qquickspriteengine_p.h \
-        $$PWD/qquicksprite_p.h \
-        $$PWD/qquickspritesequence_p.h \
-        $$PWD/qquickanimatedsprite_p.h \
         $$PWD/qquickopenglshadereffect_p.h \
         $$PWD/qquickopenglshadereffectnode_p.h \
         $$PWD/qquickframebufferobject.h
 
     OTHER_FILES += \
-        $$PWD/shaders/sprite.vert \
-        $$PWD/shaders/sprite.frag \
         $$PWD/shaders/shadereffect.vert \
         $$PWD/shaders/shadereffect.frag \
         $$PWD/shaders/shadereffectfallback.vert \
         $$PWD/shaders/shadereffectfallback.frag \
-        $$PWD/shaders/sprite_core.vert \
-        $$PWD/shaders/sprite_core.frag \
         $$PWD/shaders/shadereffect_core.vert \
         $$PWD/shaders/shadereffect_core.frag \
         $$PWD/shaders/shadereffectfallback_core.vert \

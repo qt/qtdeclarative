@@ -711,8 +711,8 @@ Item {
         \sa compare(), SignalSpy::wait()
     */
     function tryCompare(obj, prop, value, timeout, msg) {
-        if (arguments.length == 1 || typeof(prop) != "string") {
-            qtest_results.fail("A property name as string is required for tryCompare",
+        if (arguments.length == 1 || (typeof(prop) != "string" && typeof(prop) != "number")) {
+            qtest_results.fail("A property name as string or index is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }

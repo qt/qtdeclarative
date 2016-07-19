@@ -56,8 +56,8 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgsoftwarerenderer_p.h>
 #include <QtCore/private/qobject_p.h>
-
 
 QT_BEGIN_NAMESPACE
 #ifndef QT_NO_OPENGL
@@ -123,6 +123,10 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
   To send events, for example mouse or keyboard events, to the scene, use
   QCoreApplication::sendEvent() with the QQuickWindow instance as the receiver.
+
+  \note In general QQuickRenderControl is supported in combination with all Qt
+  Quick backends. However, some functionality, in particular grab(), may not be
+  available in all cases.
 
   \inmodule QtQuick
 */
@@ -209,8 +213,9 @@ void QQuickRenderControl::prepareThread(QThread *targetThread)
 }
 
 /*!
-  Initializes the scene graph resources. The context \a gl has to
-  be the current context.
+  Initializes the scene graph resources. The context \a gl has to be the
+  current OpenGL context or null if it is not relevant because a Qt Quick
+  backend other than OpenGL is in use.
 
   \note Qt Quick does not take ownership of the context. It is up to the
   application to destroy it after a call to invalidate() or after the
@@ -369,12 +374,31 @@ QImage QQuickRenderControl::grab()
     if (!d->window)
         return QImage();
 
-    render();
+    QImage grabContent;
+
+    if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
 #ifndef QT_NO_OPENGL
-    QImage grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
-#else
-    QImage grabContent = d->window->grabWindow();
+        render();
+        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
 #endif
+    } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
+        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+        QSGSoftwareRenderer *softwareRenderer = static_cast<QSGSoftwareRenderer *>(cd->renderer);
+        if (softwareRenderer) {
+            const qreal dpr = d->window->effectiveDevicePixelRatio();
+            const QSize imageSize = d->window->size() * dpr;
+            grabContent = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
+            grabContent.setDevicePixelRatio(dpr);
+            QPaintDevice *prevDev = softwareRenderer->currentPaintDevice();
+            softwareRenderer->setCurrentPaintDevice(&grabContent);
+            softwareRenderer->markDirty();
+            render();
+            softwareRenderer->setCurrentPaintDevice(prevDev);
+        }
+    } else {
+        qWarning("QQuickRenderControl: grabs are not supported with the current Qt Quick backend");
+    }
+
     return grabContent;
 }
 

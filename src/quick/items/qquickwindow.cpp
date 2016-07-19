@@ -777,6 +777,31 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     }
 }
 
+void QQuickWindowPrivate::grabTouchPoints(QQuickItem *grabber, const QVector<int> &ids)
+{
+    Q_Q(QQuickWindow);
+    QSet<QQuickItem*> ungrab;
+    for (int i = 0; i < ids.count(); ++i) {
+        QQuickItem *oldGrabber = itemForTouchPointId.value(ids.at(i));
+        if (oldGrabber == grabber)
+            continue;
+
+        itemForTouchPointId[ids.at(i)] = grabber;
+        if (oldGrabber)
+            ungrab.insert(oldGrabber);
+
+        QQuickItem *originalMouseGrabberItem = mouseGrabberItem;
+        if (touchMouseId == ids.at(i) && mouseGrabberItem && mouseGrabberItem != grabber) {
+            qCDebug(DBG_MOUSE_TARGET) << "grabTouchPoints: grabber" << mouseGrabberItem << "-> null";
+            mouseGrabberItem = 0;
+            QEvent ev(QEvent::UngrabMouse);
+            q->sendEvent(originalMouseGrabberItem, &ev);
+        }
+    }
+    foreach (QQuickItem *oldGrabber, ungrab)
+        oldGrabber->touchUngrabEvent();
+}
+
 void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool touch)
 {
     Q_Q(QQuickWindow);
@@ -2598,7 +2623,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
             return 0;
     }
 
-    if (itemPrivate->hasCursorInChild) {
+    if (itemPrivate->subtreeCursorEnabled) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);
@@ -3371,7 +3396,9 @@ bool QQuickWindow::isSceneGraphInitialized() const
 /*!
     \fn void QQuickWindow::frameSwapped()
 
-    This signal is emitted when the frame buffers have been swapped.
+    This signal is emitted when a frame has been queued for presenting. With
+    vertical synchronization enabled the signal is emitted at most once per
+    vsync interval in a continuously animating scene.
 
     This signal will be emitted from the scene graph rendering thread.
 */
@@ -4524,7 +4551,7 @@ void QQuickWindowPrivate::runAndClearJobs(QList<QRunnable *> *jobs)
     jobs->clear();
     renderJobMutex.unlock();
 
-    foreach (QRunnable *r, jobList) {
+    for (QRunnable *r : qAsConst(jobList)) {
         r->run();
         delete r;
     }

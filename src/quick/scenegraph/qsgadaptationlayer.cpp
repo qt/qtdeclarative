@@ -195,7 +195,7 @@ void QSGDistanceFieldGlyphCache::update()
     storeGlyphs(distanceFields);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-    foreach (Texture texture, m_textures)
+    for (Texture texture : qAsConst(m_textures))
         saveTexture(texture.textureId, texture.size.width(), texture.size.height());
 #endif
 

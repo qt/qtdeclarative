@@ -285,26 +285,26 @@ void QQuickAnchorsPrivate::clearItem(QQuickItem *item)
     }
 }
 
-int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
+QQuickGeometryChange QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
 {
-    QQuickItemPrivate::GeometryChangeTypes dependency = QQuickItemPrivate::NoChange;
+    QQuickGeometryChange dependency;
 
     if (!controlItem || inDestructor)
         return dependency;
 
     if (fill == controlItem) {
         if (controlItem == readParentItem(item))
-            dependency |= QQuickItemPrivate::SizeChange;
+            dependency.setSizeChange(true);
         else    //sibling
-            dependency |= QQuickItemPrivate::GeometryChange;
+            dependency.setAllChanged(true);
         return dependency;  //exit early
     }
 
     if (centerIn == controlItem) {
         if (controlItem == readParentItem(item))
-            dependency |= QQuickItemPrivate::SizeChange;
+            dependency.setSizeChange(true);
         else    //sibling
-            dependency |= QQuickItemPrivate::GeometryChange;
+            dependency.setAllChanged(true);
         return dependency;  //exit early
     }
 
@@ -312,9 +312,9 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         (usedAnchors & QQuickAnchors::RightAnchor && rightAnchorItem == controlItem) ||
         (usedAnchors & QQuickAnchors::HCenterAnchor && hCenterAnchorItem == controlItem)) {
         if (controlItem == readParentItem(item))
-            dependency |= QQuickItemPrivate::WidthChange;
+            dependency.setWidthChange(true);
         else    //sibling
-            dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::XChange | QQuickItemPrivate::WidthChange);
+            dependency.setHorizontalChange(true);
     }
 
     if ((usedAnchors & QQuickAnchors::TopAnchor && topAnchorItem == controlItem) ||
@@ -322,9 +322,9 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         (usedAnchors & QQuickAnchors::VCenterAnchor && vCenterAnchorItem == controlItem) ||
         (usedAnchors & QQuickAnchors::BaselineAnchor && baselineAnchorItem == controlItem)) {
         if (controlItem == readParentItem(item))
-            dependency |= QQuickItemPrivate::HeightChange;
+            dependency.setHeightChange(true);
         else    //sibling
-            dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::YChange | QQuickItemPrivate::HeightChange);
+            dependency.setVerticalChange(true);
     }
 
     return dependency;
@@ -336,7 +336,7 @@ void QQuickAnchorsPrivate::addDepend(QQuickItem *item)
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->updateOrAddGeometryChangeListener(this, QFlags<QQuickItemPrivate::GeometryChangeType>(calculateDependency(item)));
+    p->updateOrAddGeometryChangeListener(this, calculateDependency(item));
 }
 
 void QQuickAnchorsPrivate::remDepend(QQuickItem *item)
@@ -345,7 +345,7 @@ void QQuickAnchorsPrivate::remDepend(QQuickItem *item)
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->updateOrRemoveGeometryChangeListener(this, QFlags<QQuickItemPrivate::GeometryChangeType>(calculateDependency(item)));
+    p->updateOrRemoveGeometryChangeListener(this, calculateDependency(item));
 }
 
 bool QQuickAnchors::mirrored()
@@ -492,7 +492,7 @@ void QQuickAnchorsPrivate::update()
     }
 }
 
-void QQuickAnchorsPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newG, const QRectF &oldG)
+void QQuickAnchorsPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
 {
     if (!isItemComplete())
         return;
@@ -502,11 +502,9 @@ void QQuickAnchorsPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newG,
     } else if (centerIn) {
         centerInChanged();
     } else {
-        if ((usedAnchors & QQuickAnchors::Horizontal_Mask)
-                && (newG.x() != oldG.x() || newG.width() != oldG.width()))
+        if ((usedAnchors & QQuickAnchors::Horizontal_Mask) && change.horizontalChange())
             updateHorizontalAnchors();
-        if ((usedAnchors & QQuickAnchors::Vertical_Mask)
-                && (newG.y() != oldG.y() || newG.height() != oldG.height()))
+        if ((usedAnchors & QQuickAnchors::Vertical_Mask) && change.verticalChange())
             updateVerticalAnchors();
     }
 }
