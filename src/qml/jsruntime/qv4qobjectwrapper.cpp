@@ -362,7 +362,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
         Scope scope(engine);
         QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(engine, object, *property, nptr));
 
-        if (captureRequired) {
+        if (captureRequired && !property->isConstant()) {
             if (property->accessors->notifier) {
                 if (n && ep->propertyCapture)
                     ep->propertyCapture->captureProperty(n);
