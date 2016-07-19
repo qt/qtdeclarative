@@ -96,13 +96,13 @@ public:
     Q_ALWAYS_INLINE quint64 rawValue() const { return _val; }
     Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
 
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN || defined(QV4_USE_64_BIT_VALUE_ENCODING)
     static inline int valueOffset() { return 0; }
     static inline int tagOffset() { return 4; }
     Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
     Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
     Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
-#else // !Q_LITTLE_ENDIAN
+#else // !Q_LITTLE_ENDIAN && !defined(QV4_USE_64_BIT_VALUE_ENCODING)
     static inline int valueOffset() { return 4; }
     static inline int tagOffset() { return 0; }
     Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(value) << 32 | tag; }
