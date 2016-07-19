@@ -61,6 +61,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickItem;
+class QQuickPointerDevice;
+
 class QQuickKeyEvent : public QObject
 {
     Q_OBJECT
@@ -314,9 +317,6 @@ private:
     qreal m_pressure;
     QPointerUniqueId m_uniqueId;
 };
-
-class QQuickItem;
-class QQuickPointerDevice;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
 {
