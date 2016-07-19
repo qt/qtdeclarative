@@ -166,8 +166,9 @@
 
     With this in mind, a good way to prepare for a migration to Qt Quick
     Controls 2 is to place each control that you have a custom style for in its
-    own QML file. For example, the Qt Quick Controls button above could be moved to a
-    file named Button.qml, and used in the following manner:
+    own QML file. For example, the Qt Quick Controls button above could be
+    moved to a file named \c Button.qml in a directory named \c controls, and
+    used in the following manner:
 
     \badcode
     import "controls" as Controls
