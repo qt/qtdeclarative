@@ -2305,14 +2305,16 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (tryLoadFromDiskCache())
         return;
 
+    qint64 sourceTimeStamp;
     QString error;
-    QString code = QString::fromUtf8(data.readAll(&error));
+    QString code = QString::fromUtf8(data.readAll(&error, &sourceTimeStamp));
     if (!error.isEmpty()) {
         setError(error);
         return;
     }
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    m_document->jsModule.sourceTimeStamp = sourceTimeStamp;
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
@@ -2833,15 +2835,16 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+    QmlIR::Document irUnit(v4->debugger != 0);
+
     QString error;
-    QString source = QString::fromUtf8(data.readAll(&error));
+    QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));
     if (!error.isEmpty()) {
         setError(error);
         return;
     }
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-    QmlIR::Document irUnit(v4->debugger != 0);
     QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
 
     QList<QQmlError> errors;
@@ -3006,11 +3009,13 @@ void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
     Q_UNIMPLEMENTED();
 }
 
-QByteArray QQmlDataBlob::Data::readAll(QString *error) const
+QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) const
 {
     Q_ASSERT(!d.isNull());
     error->clear();
     if (d.isT1()) {
+        if (sourceTimeStamp)
+            *sourceTimeStamp = 0;
         return *d.asT1();
     }
     QFile f(*d.asT2());
@@ -3018,6 +3023,8 @@ QByteArray QQmlDataBlob::Data::readAll(QString *error) const
         *error = f.errorString();
         return QByteArray();
     }
+    if (sourceTimeStamp)
+        *sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     QByteArray data(f.size(), Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();

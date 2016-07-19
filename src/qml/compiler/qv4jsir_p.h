@@ -932,6 +932,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
+    qint64 sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     bool debugMode;
 
@@ -939,6 +940,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
 
     Module(bool debugMode)
         : rootFunction(0)
+        , sourceTimeStamp(0)
         , isQmlModule(false)
         , debugMode(debugMode)
     {}

@@ -131,7 +131,7 @@ public:
 
     class Data {
     public:
-        QByteArray readAll(QString *error) const;
+        QByteArray readAll(QString *error, qint64 *sourceTimeStamp = 0) const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;

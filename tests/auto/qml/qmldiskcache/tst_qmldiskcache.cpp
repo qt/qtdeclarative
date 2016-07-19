@@ -31,6 +31,7 @@
 #include <private/qv4compileddata_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QThread>
 
 class tst_qmldiskcache: public QObject
 {
@@ -63,6 +64,10 @@ struct TestCompiler
         }
         mappedFile.close();
 
+        // Qt API limits the precision of QFileInfo::modificationTime() to seconds, so to ensure that
+        // the newly written file has a modification date newer than an existing cache file, we must
+        // wait.
+        QThread::sleep(1);
         {
             QFile f(testFilePath);
             if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {

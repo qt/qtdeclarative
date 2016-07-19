@@ -339,14 +339,6 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, QString *errorString)
 
     QScopedPointer<QFile> cacheFile(new QFile(url.toLocalFile() + QLatin1Char('c')));
 
-    {
-        QFileInfo sourceCode(url.toLocalFile());
-        if (sourceCode.exists() && sourceCode.lastModified() >= QFileInfo(*cacheFile).lastModified()) {
-            *errorString = QStringLiteral("QML source file is equal or newer than cached file.");
-            return false;
-        }
-    }
-
     if (!cacheFile->open(QIODevice::ReadOnly)) {
         *errorString = cacheFile->errorString();
         return false;
@@ -359,6 +351,15 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, QString *errorString)
     }
 
     QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
+
+    {
+        QFileInfo sourceCode(url.toLocalFile());
+        if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != data->sourceTimeStamp) {
+            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            return false;
+        }
+    }
+
 
     if (!memoryMapCode(errorString))
         return false;

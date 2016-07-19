@@ -96,6 +96,7 @@ typedef QJsonPrivate::q_littleendian<quint16> LEUInt16;
 typedef QJsonPrivate::q_littleendian<quint32> LEUInt32;
 typedef QJsonPrivate::q_littleendian<qint32> LEInt32;
 typedef QJsonPrivate::q_littleendian<quint64> LEUInt64;
+typedef QJsonPrivate::q_littleendian<qint64> LEInt64;
 
 struct String;
 struct Function;
@@ -599,6 +600,7 @@ struct Unit
     char magic[8];
     LEInt16 architecture;
     LEInt16 version;
+    LEInt64 sourceTimeStamp;
     LEUInt32 unitSize; // Size of the Unit and any depending data.
 
     enum : unsigned int {

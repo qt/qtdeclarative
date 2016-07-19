@@ -404,6 +404,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     }
     unit.indexOfRootFunction = -1;
     unit.sourceFileIndex = getStringId(irModule->fileName);
+    unit.sourceTimeStamp = irModule->sourceTimeStamp;
     unit.nImports = 0;
     unit.offsetToImports = 0;
     unit.nObjects = 0;
