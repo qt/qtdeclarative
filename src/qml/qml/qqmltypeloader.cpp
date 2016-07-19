@@ -2836,6 +2836,19 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+
+    if (diskCache() && !forceDiskCacheRefresh()) {
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+        QString error;
+        if (unit->loadFromDisk(url(), &error)) {
+            initializeFromCompilationUnit(unit);
+            return;
+        } else {
+            qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
+        }
+    }
+
+
     QmlIR::Document irUnit(v4->debugger != 0);
 
     QString error;
@@ -2868,6 +2881,13 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;
+
+    if (diskCache() || forceDiskCacheRefresh()) {
+        QString errorString;
+        if (!unit->saveToDisk(&errorString)) {
+            qDebug() << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;
+        }
+    }
 
     initializeFromCompilationUnit(unit);
 }
