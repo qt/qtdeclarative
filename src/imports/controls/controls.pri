@@ -51,6 +51,7 @@ QML_CONTROLS = \
     TextField.qml \
     ToolBar.qml \
     ToolButton.qml \
+    ToolSeparator.qml \
     ToolTip.qml \
     Tumbler.qml
 

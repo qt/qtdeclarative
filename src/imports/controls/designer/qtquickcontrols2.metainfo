@@ -388,6 +388,19 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.ToolSeparator"
+        icon: "images/toolseparator-icon16.png"
+
+        ItemLibraryEntry {
+            name: "ToolSeparator"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolseparator-icon.png"
+            version: "2.1"
+            requiredImport: "QtQuick.Controls"
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.Tumbler"
         icon: "images/tumbler-icon16.png"
 

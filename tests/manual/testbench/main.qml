@@ -125,6 +125,18 @@ ApplicationWindow {
                 text: "Disabled"
                 enabled: false
             }
+
+            ToolSeparator {}
+
+            ToolButton {
+                text: "1"
+            }
+            ToolButton {
+                text: "2"
+            }
+
+            ToolSeparator {}
+
             Item {
                 Layout.fillWidth: true
             }

@@ -80,6 +80,7 @@
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickTemplates2/private/qquicktoolbar_p.h>
 #include <QtQuickTemplates2/private/qquicktoolbutton_p.h>
+#include <QtQuickTemplates2/private/qquicktoolseparator_p.h>
 #include <QtQuickTemplates2/private/qquicktooltip_p.h>
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 
@@ -189,6 +190,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwipeView, 1>(uri, 2, 1, "SwipeView");
     qmlRegisterType<QQuickTextArea, 1>(uri, 2, 1, "TextArea");
     qmlRegisterType<QQuickTextField, 1>(uri, 2, 1, "TextField");
+    qmlRegisterType<QQuickToolSeparator>(uri, 2, 1, "ToolSeparator");
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
 }
 

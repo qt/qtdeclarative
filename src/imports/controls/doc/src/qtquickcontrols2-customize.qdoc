@@ -673,6 +673,16 @@
         \snippet qtquickcontrols2-toolbutton-custom.qml file
 
 
+    \section2 Customizing ToolSeparator
+
+        ToolSeparator consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \image qtquickcontrols2-toolseparator-custom.png
+
+        \snippet qtquickcontrols2-toolseparator-custom.qml file
+
+
     \section2 Customizing ToolTip
 
         ToolTip consists of two visual items: \l {Popup::background}{background}
