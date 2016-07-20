@@ -132,6 +132,7 @@ public:
     QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
+    QQuickPointerDevice *touchMouseDevice;
     bool checkIfDoubleClicked(ulong newPressEventTimestamp);
     ulong touchMousePressTimestamp;
 
