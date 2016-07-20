@@ -78,16 +78,19 @@ T.Button {
         width: parent.width
         height: parent.height - 12
         radius: 2
-        color: !control.enabled
-                    ? control.Material.buttonDisabledColor
-                : control.down
-                    ? control.highlighted ? control.Material.highlightedButtonPressColor
-                                          : control.Material.buttonPressColor
-                : control.visualFocus || control.checked
-                    ? control.highlighted ? control.Material.highlightedButtonHoverColor
-                                          : control.Material.buttonHoverColor
-                    : control.highlighted ? control.Material.highlightedButtonColor
-                                          : control.Material.buttonColor
+        color: !control.enabled ? control.Material.buttonDisabledColor :
+                control.highlighted ? control.Material.highlightedButtonColor : control.Material.buttonColor
+
+        PaddedRectangle {
+            y: parent.height - 4
+            width: parent.width
+            height: 4
+            radius: 2
+            topPadding: -2
+            clip: true
+            visible: control.checkable && (!control.highlighted || control.flat)
+            color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
+        }
 
         Behavior on color {
             ColorAnimation {
@@ -111,7 +114,7 @@ T.Button {
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered
-            color: control.highlighted && !control.flat ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+            color: control.Material.checkBoxUncheckedRippleColor
         }
     }
 }

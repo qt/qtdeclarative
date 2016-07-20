@@ -418,16 +418,6 @@ static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
 static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
 static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 
-static QColor alphaBlend(const QColor &bg, const QColor &fg)
-{
-    QColor result;
-    result.setRedF(fg.redF() * fg.alphaF() + bg.redF() * (1.0 - fg.alphaF()));
-    result.setGreenF(fg.greenF() * fg.alphaF() + bg.greenF() * (1.0 - fg.alphaF()));
-    result.setBlueF(fg.blueF() * fg.alphaF() + bg.blueF() * (1.0 - fg.alphaF()));
-    result.setAlphaF(bg.alphaF() + fg.alphaF() * (1.0 - bg.alphaF()));
-    return result;
-}
-
 extern bool qt_is_dark_system_theme();
 
 static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
@@ -893,12 +883,7 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hov
         }
     }
 
-    if (pressed || hover) {
-        // Add overlaying black shadow 12% opacity
-        return alphaBlend(color, QColor::fromRgba(0x1F000000));
-    } else {
-        return color;
-    }
+    return color;
 }
 
 QColor QQuickMaterialStyle::buttonColor() const
