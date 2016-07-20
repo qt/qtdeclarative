@@ -134,7 +134,6 @@ void tst_qmldiskcache::regenerateAfterChange()
 
     QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
 
-#ifdef V4_ENABLE_JIT
     {
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
@@ -151,10 +150,6 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
     }
-#else
-    QVERIFY(!testCompiler.mapUnit());
-    return;
-#endif
 
     engine.clearComponentCache();
 
@@ -196,7 +191,6 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
                                                    "}");
 
     QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
-#ifdef V4_ENABLE_JIT
     {
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
@@ -218,10 +212,6 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         const QV4::CompiledData::Object *implicitComponent = testUnit->objectAt(obj->bindingTable()->value.objectIndex);
         QCOMPARE(testUnit->stringAt(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType->elementName());
     }
-#else
-    QVERIFY(!testCompiler.mapUnit());
-    return;
-#endif
 }
 
 QTEST_MAIN(tst_qmldiskcache)

@@ -46,6 +46,7 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlengine_p.h>
+#include <wtf/MathExtras.h>
 
 #undef USE_TYPE_INFO
 
@@ -1611,6 +1612,77 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
         runtimeFunctions[i] = runtimeFunction;
     }
+}
+
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
+{
+    const int codeAlignment = 16;
+    quint64 offset = WTF::roundUpToMultipleOf(codeAlignment, unit->unitSize);
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        CompiledData::Function *compiledFunction = const_cast<CompiledData::Function *>(unit->functionAt(i));
+        compiledFunction->codeOffset = offset;
+        compiledFunction->codeSize = codeRefs.at(i).size();
+        offset = WTF::roundUpToMultipleOf(codeAlignment, offset + compiledFunction->codeSize);
+    }
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString)
+{
+    Q_ASSERT(device->pos() == unit->unitSize);
+    Q_ASSERT(device->atEnd());
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+
+    QByteArray padding;
+
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        const CompiledData::Function *compiledFunction = unit->functionAt(i);
+
+        if (device->pos() > qint64(compiledFunction->codeOffset)) {
+            *errorString = QStringLiteral("Invalid state of cache file to write.");
+            return false;
+        }
+
+        const quint64 paddingSize = compiledFunction->codeOffset - device->pos();
+        padding.fill(0, paddingSize);
+        qint64 written = device->write(padding);
+        if (written != padding.size()) {
+            *errorString = device->errorString();
+            return false;
+        }
+
+        const void *codePtr = codeRefs.at(i).constData();
+        written = device->write(reinterpret_cast<const char *>(codePtr), compiledFunction->codeSize);
+        if (written != qint64(compiledFunction->codeSize)) {
+            *errorString = device->errorString();
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    Q_UNUSED(errorString);
+    Q_ASSERT(codeRefs.isEmpty());
+    codeRefs.reserve(data->functionTableSize);
+
+    const char *basePtr = reinterpret_cast<const char *>(data);
+
+    for (uint i = 0; i < data->functionTableSize; ++i) {
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+        const char *codePtr = const_cast<const char *>(reinterpret_cast<const char *>(basePtr + compiledFunction->codeOffset));
+#ifdef MOTH_THREADED_INTERPRETER
+        // for the threaded interpreter we need to make a copy of the data because it needs to be
+        // modified for the instruction handler addresses.
+        QByteArray code(codePtr, compiledFunction->codeSize);
+#else
+        QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
+#endif
+        codeRefs.append(code);
+    }
+
+    return true;
 }
 
 QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
