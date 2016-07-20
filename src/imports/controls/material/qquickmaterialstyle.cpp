@@ -395,18 +395,6 @@ static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
 static const QRgb raisedButtonColorDark = 0x3FCCCCCC;
 static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
 static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
-static const QRgb flatButtonPressColorLight = 0x66999999;
-static const QRgb flatButtonPressColorDark = 0x3FCCCCCC;
-static const QRgb flatButtonFocusColorLight = 0x33CCCCCC;
-static const QRgb flatButtonFocusColorDark = 0x26CCCCCC;
-static const QRgb swipeDelegateColorLight = 0xFFD6D7D7;
-static const QRgb swipeDelegateColorDark = 0xFF525252;
-static const QRgb swipeDelegateHoverColorLight = 0xFFDFDFDF;
-static const QRgb swipeDelegateHoverColorDark = 0xFF5D5D5D;
-static const QRgb swipeDelegatePressColorLight = 0xFFCFCFCF;
-static const QRgb swipeDelegatePressColorDark = 0xFF484848;
-static const QRgb swipeDelegateDisabledColorLight = 0xFFEFEFEF;
-static const QRgb swipeDelegateDisabledColorDark = 0xFF7C7C7C;
 static const QRgb frameColorLight = hintTextColorLight;
 static const QRgb frameColorDark = hintTextColorDark;
 static const QRgb switchUncheckedTrackColorLight = 0x42000000;
@@ -851,10 +839,9 @@ QColor QQuickMaterialStyle::dividerColor() const
     return QColor::fromRgba(m_theme == Light ? dividerColorLight : dividerColorDark);
 }
 
-QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hover) const
+QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
 {
-    Shade shade = pressed ? (m_theme == Light ? Shade700 : Shade100)
-                          : themeShade();
+    Shade shade = themeShade();
 
     QColor color = Qt::transparent;
 
@@ -865,22 +852,6 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hov
     } else if (elevation() > 0) {
         color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
                                                   : raisedButtonColorDark);
-
-        if (pressed) {
-            color = this->shade(color, shade);
-        }
-    }
-
-    if (color == Qt::transparent) {
-        if (pressed) {
-            return QColor::fromRgba(m_theme == Light ? flatButtonPressColorLight
-                                                     : flatButtonPressColorDark);
-        } else if (hover) {
-            return QColor::fromRgba(m_theme == Light ? flatButtonFocusColorLight
-                                                     : flatButtonFocusColorDark);
-        } else {
-            return color;
-        }
     }
 
     return color;
@@ -888,17 +859,7 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hov
 
 QColor QQuickMaterialStyle::buttonColor() const
 {
-    return buttonColor(false, false, false);
-}
-
-QColor QQuickMaterialStyle::buttonHoverColor() const
-{
-    return buttonColor(false, false, true);
-}
-
-QColor QQuickMaterialStyle::buttonPressColor() const
-{
-    return buttonColor(false, true, false);
+    return buttonColor(false);
 }
 
 QColor QQuickMaterialStyle::buttonDisabledColor() const
@@ -913,37 +874,7 @@ QColor QQuickMaterialStyle::buttonDisabledColor() const
 
 QColor QQuickMaterialStyle::highlightedButtonColor() const
 {
-    return buttonColor(true, false, false);
-}
-
-QColor QQuickMaterialStyle::highlightedButtonHoverColor() const
-{
-    return buttonColor(true, false, true);
-}
-
-QColor QQuickMaterialStyle::highlightedButtonPressColor() const
-{
-    return buttonColor(true, true, false);
-}
-
-QColor QQuickMaterialStyle::swipeDelegateColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? swipeDelegateColorLight : swipeDelegateColorDark);
-}
-
-QColor QQuickMaterialStyle::swipeDelegateHoverColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? swipeDelegateHoverColorLight : swipeDelegateHoverColorDark);
-}
-
-QColor QQuickMaterialStyle::swipeDelegatePressColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? swipeDelegatePressColorLight : swipeDelegatePressColorDark);
-}
-
-QColor QQuickMaterialStyle::swipeDelegateDisabledColor() const
-{
-    return QColor::fromRgba(m_theme == Light ? swipeDelegateDisabledColorLight : swipeDelegateDisabledColorDark);
+    return buttonColor(true);
 }
 
 QColor QQuickMaterialStyle::frameColor() const

@@ -77,16 +77,8 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor dropShadowColor READ dropShadowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor buttonHoverColor READ buttonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor buttonPressColor READ buttonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlightedButtonHoverColor READ highlightedButtonHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlightedButtonPressColor READ highlightedButtonPressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor swipeDelegateColor READ swipeDelegateColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor swipeDelegateHoverColor READ swipeDelegateHoverColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor swipeDelegatePressColor READ swipeDelegatePressColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor swipeDelegateDisabledColor READ swipeDelegateDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor checkBoxUncheckedRippleColor READ checkBoxUncheckedRippleColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor checkBoxCheckedRippleColor READ checkBoxCheckedRippleColor NOTIFY paletteChanged FINAL)
@@ -206,17 +198,9 @@ public:
     QColor dropShadowColor() const;
     QColor dividerColor() const;
     QColor buttonColor() const;
-    QColor buttonHoverColor() const;
-    QColor buttonPressColor() const;
     QColor buttonDisabledColor() const;
     QColor highlightedButtonColor() const;
-    QColor highlightedButtonHoverColor() const;
-    QColor highlightedButtonPressColor() const;
     QColor highlightedButtonDisabledColor() const;
-    QColor swipeDelegateColor() const;
-    QColor swipeDelegateHoverColor() const;
-    QColor swipeDelegatePressColor() const;
-    QColor swipeDelegateDisabledColor() const;
     QColor frameColor() const;
     QColor checkBoxUncheckedRippleColor() const;
     QColor checkBoxCheckedRippleColor() const;
@@ -259,7 +243,7 @@ private:
 
     QColor backgroundColor(Shade shade) const;
     QColor accentColor(Shade shade) const;
-    QColor buttonColor(bool highlighted, bool pressed, bool hover) const;
+    QColor buttonColor(bool highlighted) const;
     Shade themeShade() const;
 
     bool m_explicitTheme;
