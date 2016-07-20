@@ -83,9 +83,21 @@ T.SwipeDelegate {
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.down || control.highlighted || control.visualFocus
-            color: control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor :
-                   control.Material.listHighlightColor
+            visible: control.highlighted
+            color: control.Material.listHighlightColor
+        }
+
+        Ripple {
+            width: parent.width
+            height: parent.height
+
+            clip: visible
+            trigger: Ripple.Release
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.Material.checkBoxUncheckedRippleColor
+            enabled: control.swipe.position === 0
         }
 
         Behavior on x {
