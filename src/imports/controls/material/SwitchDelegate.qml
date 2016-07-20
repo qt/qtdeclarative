@@ -76,7 +76,7 @@ T.SwitchDelegate {
     background: Rectangle {
         implicitHeight: 48
 
-        color: control.down ? control.Material.buttonPressColor : control.highlighted ? control.Material.listHighlightColor : "transparent"
+        color: control.highlighted ? control.Material.listHighlightColor : "transparent"
 
         Ripple {
             width: parent.width

@@ -84,8 +84,7 @@ T.SwipeDelegate {
             width: parent.width
             height: parent.height
             visible: control.down || control.highlighted || control.visualFocus
-            color: control.down ? control.Material.buttonPressColor :
-                   control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor :
+            color: control.visualFocus || control.hovered ? control.Material.swipeDelegateHoverColor :
                    control.Material.listHighlightColor
         }
 
