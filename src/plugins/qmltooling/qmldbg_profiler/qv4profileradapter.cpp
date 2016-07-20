@@ -46,7 +46,7 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     m_functionCallPos(0), m_memoryPos(0)
 {
     setService(service);
-    engine->enableProfiler();
+    engine->setProfiler(new QV4::Profiling::Profiler(engine));
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabled,
             this, &QV4ProfilerAdapter::forwardEnabled);
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,

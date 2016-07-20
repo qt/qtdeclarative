@@ -473,10 +473,10 @@ void ExecutionEngine::setDebugger(Debugging::Debugger *debugger_)
     debugger = debugger_;
 }
 
-void ExecutionEngine::enableProfiler()
+void ExecutionEngine::setProfiler(Profiling::Profiler *profiler_)
 {
     Q_ASSERT(!profiler);
-    profiler = new QV4::Profiling::Profiler(this);
+    profiler = profiler_;
 }
 
 void ExecutionEngine::initRootContext()

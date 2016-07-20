@@ -383,7 +383,7 @@ public:
     ~ExecutionEngine();
 
     void setDebugger(Debugging::Debugger *debugger);
-    void enableProfiler();
+    void setProfiler(Profiling::Profiler *profiler);
 
     ExecutionContext *pushGlobalContext();
     void pushContext(Heap::ExecutionContext *context);

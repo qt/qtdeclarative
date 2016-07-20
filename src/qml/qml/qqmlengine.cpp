@@ -648,11 +648,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     delete profiler;
 }
 
-void QQmlEnginePrivate::enableProfiler()
-{
-    profiler = new QQmlProfiler();
-}
-
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     QObjectPrivate *p = QObjectPrivate::get(o);

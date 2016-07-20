@@ -48,7 +48,7 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
     next(0)
 {
     setService(service);
-    engine->enableProfiler();
+    engine->profiler = new QQmlProfiler;
     connect(this, &QQmlProfilerAdapter::profilingEnabled,
             engine->profiler, &QQmlProfiler::startProfiling);
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,

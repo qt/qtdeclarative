@@ -135,7 +135,6 @@ public:
 
     QQmlContext *rootContext;
     QQmlProfiler *profiler;
-    void enableProfiler();
 
     bool outputWarningsToMsgLog;
 
