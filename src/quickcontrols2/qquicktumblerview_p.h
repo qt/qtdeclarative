@@ -87,7 +87,7 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void updatePolish();
+    void updatePolish() override;
 
 private:
     QQuickItem *view();
