@@ -309,14 +309,8 @@ QPointF QQuickMaterialRipple::anchorPoint() const
         return center;
 
     QPointF anchorPoint = bounds.center();
-    if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(m_anchor)) {
-        if (QQuickWindow *window = button->window()) {
-            if (button == window->mouseGrabberItem()) {
-                QQuickAbstractButtonPrivate *p = QQuickAbstractButtonPrivate::get(button);
-                anchorPoint = p->pressPoint;
-            }
-        }
-    }
+    if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(m_anchor))
+        anchorPoint = QQuickAbstractButtonPrivate::get(button)->pressPoint;
     anchorPoint = mapFromItem(m_anchor, anchorPoint);
 
     // calculate whether the anchor point is within the ripple circle bounds,
