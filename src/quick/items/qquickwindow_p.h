@@ -154,7 +154,6 @@ public:
 #ifndef QT_NO_GESTURES
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
-    static QQuickPointerDevice *touchDevice(QTouchDevice *d);
 
     // entry point of events to the window
     void handleTouchEvent(QTouchEvent *);
@@ -273,10 +272,6 @@ public:
     QSet<int> touchMouseIdCandidates;
 
     mutable QQuickWindowIncubationController *incubationController;
-
-    static QQuickPointerDevice *genericMouseDevice;
-    static QHash<QTouchDevice *, QQuickPointerDevice *> touchDevices;
-    static QHash<qint64, QQuickPointerDevice *> tabletDevices;
 
     static bool defaultAlphaBuffer;
 

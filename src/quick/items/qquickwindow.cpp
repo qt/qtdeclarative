@@ -93,10 +93,6 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
-QQuickPointerDevice *QQuickWindowPrivate::genericMouseDevice(nullptr);
-QHash<QTouchDevice *, QQuickPointerDevice *> QQuickWindowPrivate::touchDevices;
-QHash<qint64, QQuickPointerDevice *> QQuickWindowPrivate::tabletDevices;
-
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
 #ifndef QT_NO_IM
@@ -507,11 +503,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #ifndef QT_NO_DRAGANDDROP
     dragGrabber = new QQuickDragGrabber;
 #endif
-    if (!genericMouseDevice) {
-        genericMouseDevice = new QQuickPointerDevice(QQuickPointerDevice::Mouse, QQuickPointerDevice::GenericPointer,
-            QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
-            1, 3, QStringLiteral("core pointer"), 0);
-    }
 }
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
@@ -1874,34 +1865,6 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
 }
 #endif // QT_NO_GESTURES
 
-QQuickPointerDevice *QQuickWindowPrivate::touchDevice(QTouchDevice *d)
-{
-    if (touchDevices.contains(d))
-        return touchDevices.value(d);
-
-    QQuickPointerDevice::DeviceType type = QQuickPointerDevice::TouchScreen;
-    QString name;
-    int maximumTouchPoints = 10;
-    QQuickPointerDevice::Capabilities caps = QQuickPointerDevice::Capabilities(QTouchDevice::Position);
-    if (d) {
-        QQuickPointerDevice::Capabilities caps =
-            static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
-        if (d->type() == QTouchDevice::TouchPad) {
-            type = QQuickPointerDevice::TouchPad;
-            caps |= QQuickPointerDevice::Scroll;
-        }
-        name = d->name();
-        maximumTouchPoints = d->maximumTouchPoints();
-    } else {
-        qWarning() << "QQuickWindowPrivate::touchDevice: creating touch device from nullptr device in QTouchEvent";
-    }
-
-    QQuickPointerDevice *dev = new QQuickPointerDevice(type, QQuickPointerDevice::Finger,
-        caps, maximumTouchPoints, 0, name, 0);
-    touchDevices.insert(d, dev);
-    return dev;
-}
-
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << event;
@@ -2151,13 +2114,13 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event)
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
-        dev = genericMouseDevice;
+        dev = QQuickPointerDevice::genericMouseDevice();
         break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
     case QEvent::TouchCancel:
-        dev = touchDevice(static_cast<QTouchEvent *>(event)->device());
+        dev = QQuickPointerDevice::touchDevice(static_cast<QTouchEvent *>(event)->device());
         break;
     // TODO tablet event types
     default:

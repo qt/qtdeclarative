@@ -499,6 +499,10 @@ public:
     qint64 uniqueId() const { return m_uniqueId; }
     QQuickPointerEvent *pointerEvent() const { return m_event; }
 
+    static QQuickPointerDevice *touchDevice(QTouchDevice *d);
+    static QQuickPointerDevice *genericMouseDevice();
+    static QQuickPointerDevice *tabletDevice(qint64);
+
 private:
     DeviceType m_deviceType;
     PointerType m_pointerType;

@@ -441,6 +441,61 @@ Item {
     \l inverted always returns false.
 */
 
+typedef QHash<QTouchDevice *, QQuickPointerDevice *> PointerDeviceForTouchDeviceHash;
+Q_GLOBAL_STATIC(PointerDeviceForTouchDeviceHash, g_touchDevices)
+
+Q_GLOBAL_STATIC_WITH_ARGS(QQuickPointerDevice, g_genericMouseDevice,
+                            (QQuickPointerDevice::Mouse,
+                             QQuickPointerDevice::GenericPointer,
+                             QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
+                             1, 3, QLatin1String("core pointer"), 0))
+
+typedef QHash<qint64, QQuickPointerDevice *> PointerDeviceForDeviceIdHash;
+Q_GLOBAL_STATIC(PointerDeviceForDeviceIdHash, g_tabletDevices)
+
+QQuickPointerDevice *QQuickPointerDevice::touchDevice(QTouchDevice *d)
+{
+    if (g_touchDevices->contains(d))
+        return g_touchDevices->value(d);
+
+    QQuickPointerDevice::DeviceType type = QQuickPointerDevice::TouchScreen;
+    QString name;
+    int maximumTouchPoints = 10;
+    QQuickPointerDevice::Capabilities caps = QQuickPointerDevice::Capabilities(QTouchDevice::Position);
+    if (d) {
+        QQuickPointerDevice::Capabilities caps =
+            static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
+        if (d->type() == QTouchDevice::TouchPad) {
+            type = QQuickPointerDevice::TouchPad;
+            caps |= QQuickPointerDevice::Scroll;
+        }
+        name = d->name();
+        maximumTouchPoints = d->maximumTouchPoints();
+    } else {
+        qWarning() << "QQuickWindowPrivate::touchDevice: creating touch device from nullptr device in QTouchEvent";
+    }
+
+    QQuickPointerDevice *dev = new QQuickPointerDevice(type, QQuickPointerDevice::Finger,
+        caps, maximumTouchPoints, 0, name, 0);
+    g_touchDevices->insert(d, dev);
+    return dev;
+}
+
+QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
+{
+    return g_genericMouseDevice;
+}
+
+QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
+{
+    auto it = g_tabletDevices->find(id);
+    if (it != g_tabletDevices->end())
+        return it.value();
+
+    // ### Figure out how to populate the tablet devices
+    return nullptr;
+}
+
 
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
@@ -465,7 +520,7 @@ QQuickPointerEvent::~QQuickPointerEvent()
 
 QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event) {
     auto ev = static_cast<QMouseEvent*>(event);
-    m_device = QQuickWindowPrivate::genericMouseDevice;
+    m_device = QQuickPointerDevice::genericMouseDevice();
     m_event = ev;
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
@@ -490,7 +545,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event) {
 
 QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
     auto ev = static_cast<QTouchEvent*>(event);
-    m_device = QQuickWindowPrivate::touchDevice(ev->device());
+    m_device = QQuickPointerDevice::touchDevice(ev->device());
     m_event = ev;
     m_button = Qt::NoButton;
     m_pressedButtons = Qt::NoButton;
