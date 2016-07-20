@@ -495,8 +495,15 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             QQuickItem *stackBefore = index + items.count() < d->deletables.count()
                     ? d->deletables.at(index + items.count())
                     : this;
-            for (int i = index; i < index + items.count(); ++i)
-                d->deletables.at(i)->stackBefore(stackBefore);
+            if (stackBefore) {
+                for (int i = index; i < index + items.count(); ++i) {
+                    if (i < d->deletables.count()) {
+                        QPointer<QQuickItem> item = d->deletables.at(i);
+                        if (item)
+                            item->stackBefore(stackBefore);
+                    }
+                }
+            }
         } else for (int i = 0; i < insert.count; ++i) {
             int modelIndex = index + i;
             ++d->itemCount;
