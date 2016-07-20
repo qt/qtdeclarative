@@ -63,8 +63,12 @@ QT_BEGIN_NAMESPACE
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
     QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(0)
 {
-    QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
-                     this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
+    connect(m_watch, &QQmlWatcher::propertyChanged,
+            this, &QQmlEngineDebugServiceImpl::propertyChanged);
+
+    // Move the message into the correct thread for processing
+    connect(this, &QQmlEngineDebugServiceImpl::scheduleMessage,
+            this, &QQmlEngineDebugServiceImpl::processMessage, Qt::QueuedConnection);
 }
 
 QQmlEngineDebugServiceImpl::~QQmlEngineDebugServiceImpl()
@@ -420,7 +424,7 @@ QQmlEngineDebugServiceImpl::objectData(QObject *object)
 
 void QQmlEngineDebugServiceImpl::messageReceived(const QByteArray &message)
 {
-    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+    emit scheduleMessage(message);
 }
 
 /*!

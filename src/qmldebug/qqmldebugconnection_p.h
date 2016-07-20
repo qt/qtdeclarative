@@ -92,7 +92,7 @@ signals:
     void socketError(QAbstractSocket::SocketError socketError);
     void socketStateChanged(QAbstractSocket::SocketState socketState);
 
-private Q_SLOTS:
+private:
     void newConnection();
     void socketConnected();
     void socketDisconnected();

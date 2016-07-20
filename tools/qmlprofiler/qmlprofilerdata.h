@@ -58,12 +58,6 @@ public:
 
     bool isEmpty() const;
 
-signals:
-    void error(QString);
-    void stateChanged();
-    void dataReady();
-
-public slots:
     void clear();
     void setTraceEndTime(qint64 time);
     void setTraceStartTime(qint64 time);
@@ -82,6 +76,11 @@ public slots:
 
     void complete();
     bool save(const QString &filename);
+
+signals:
+    void error(QString);
+    void stateChanged();
+    void dataReady();
 
 private:
     void sortStartTimes();

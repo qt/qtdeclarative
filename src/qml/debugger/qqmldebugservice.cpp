@@ -132,7 +132,6 @@ public:
 
     int nextId;
 
-private slots:
     void remove(QObject *obj);
 };
 }
@@ -163,7 +162,7 @@ int QQmlDebugService::idForObject(QObject *object)
         int id = hash->nextId++;
         hash->ids.insert(id, object);
         iter = hash->objects.insert(object, id);
-        connect(object, SIGNAL(destroyed(QObject*)), hash, SLOT(remove(QObject*)));
+        connect(object, &QObject::destroyed, hash, &ObjectReferenceHash::remove);
     }
     return iter.value();
 }

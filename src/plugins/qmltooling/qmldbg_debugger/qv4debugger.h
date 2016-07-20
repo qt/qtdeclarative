@@ -140,15 +140,14 @@ public:
 
 signals:
     void debuggerPaused(QV4Debugger *self, QV4Debugger::PauseReason reason);
-
-private slots:
-    void runJobUnpaused();
+    void scheduleJob();
 
 private:
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
     bool reallyHitTheBreakPoint(const QString &filename, int linenr);
     void runInEngine_havingLock(QV4DebugJob *job);
+    void runJobUnpaused();
 
     QV4::ExecutionEngine *m_engine;
     QV4::PersistentValue m_currentContext;

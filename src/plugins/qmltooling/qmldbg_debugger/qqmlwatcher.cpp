@@ -69,7 +69,7 @@ public:
                   QQmlWatcher *parent = 0);
 
 public slots:
-    void notifyValueChanged();
+    void notifyValueChanged(); // Needs to be a slot because of QQmlPropertyPrivate::connect()
 
 private:
     friend class QQmlWatcher;
@@ -88,7 +88,8 @@ QQmlWatchProxy::QQmlWatchProxy(int id,
                              QQmlWatcher *parent)
 : QObject(parent), m_id(id), m_watch(parent), m_object(0), m_debugId(debugId), m_expr(exp)
 {
-    QObject::connect(m_expr, SIGNAL(valueChanged()), this, SLOT(notifyValueChanged()));
+    QObject::connect(m_expr, &QQmlExpression::valueChanged,
+                     this, &QQmlWatchProxy::notifyValueChanged);
 }
 
 QQmlWatchProxy::QQmlWatchProxy(int id,

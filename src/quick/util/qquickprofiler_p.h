@@ -325,6 +325,9 @@ public:
 
     virtual ~QQuickProfiler();
 
+signals:
+    void dataReady(const QVector<QQuickProfilerData> &data);
+
 protected:
     friend class QQuickProfilerAdapter;
 
@@ -342,10 +345,6 @@ protected:
         m_data.append(message);
     }
 
-signals:
-    void dataReady(const QVector<QQuickProfilerData> &data);
-
-protected slots:
     void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
     void reportDataImpl(bool trackLocations);

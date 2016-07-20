@@ -87,17 +87,21 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_connectionAttempts(0)
 {
     m_connectTimer.setInterval(1000);
-    connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(tryToConnect()));
+    connect(&m_connectTimer, &QTimer::timeout, this, &QmlProfilerApplication::tryToConnect);
 
-    connect(&m_connection, SIGNAL(connected()), this, SLOT(connected()));
+    connect(&m_connection, &QQmlDebugConnection::connected,
+            this, &QmlProfilerApplication::connected);
 
-    connect(&m_qmlProfilerClient, SIGNAL(enabledChanged(bool)),
-            this, SLOT(traceClientEnabledChanged(bool)));
-    connect(&m_qmlProfilerClient, SIGNAL(recordingStarted()), this, SLOT(notifyTraceStarted()));
-    connect(&m_qmlProfilerClient, SIGNAL(error(QString)), this, SLOT(logError(QString)));
+    connect(&m_qmlProfilerClient, &QmlProfilerClient::enabledChanged,
+            this, &QmlProfilerApplication::traceClientEnabledChanged);
+    connect(&m_qmlProfilerClient, &QmlProfilerClient::recordingStarted,
+            this, &QmlProfilerApplication::notifyTraceStarted);
+    connect(&m_qmlProfilerClient, &QmlProfilerClient::error,
+            this, &QmlProfilerApplication::logError);
 
-    connect(&m_profilerData, SIGNAL(error(QString)), this, SLOT(logError(QString)));
-    connect(&m_profilerData, SIGNAL(dataReady()), this, SLOT(traceFinished()));
+    connect(&m_profilerData, &QmlProfilerData::error, this, &QmlProfilerApplication::logError);
+    connect(&m_profilerData, &QmlProfilerData::dataReady,
+            this, &QmlProfilerApplication::traceFinished);
 
 }
 
@@ -257,7 +261,7 @@ void QmlProfilerApplication::parseArguments()
 
 int QmlProfilerApplication::exec()
 {
-    QTimer::singleShot(0, this, SLOT(run()));
+    QTimer::singleShot(0, this, &QmlProfilerApplication::run);
     return QCoreApplication::exec();
 }
 
@@ -460,9 +464,9 @@ void QmlProfilerApplication::run()
         arguments << m_programArguments;
 
         m_process->setProcessChannelMode(QProcess::MergedChannels);
-        connect(m_process, SIGNAL(readyRead()), this, SLOT(processHasOutput()));
-        connect(m_process, SIGNAL(finished(int,QProcess::ExitStatus)), this,
-                SLOT(processFinished()));
+        connect(m_process, &QIODevice::readyRead, this, &QmlProfilerApplication::processHasOutput);
+        connect(m_process, static_cast<void(QProcess::*)(int)>(&QProcess::finished),
+                this, [this](int){ processFinished(); });
         logStatus(QString("Starting '%1 %2' ...").arg(m_programPath,
                                                       arguments.join(QLatin1Char(' '))));
         m_process->start(m_programPath, arguments);

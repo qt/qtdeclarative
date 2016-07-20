@@ -58,16 +58,14 @@ public:
     void parseArguments();
     int exec();
     bool isInteractive() const;
-
-signals:
-    void readyForCommand();
-
-public slots:
     void userCommand(const QString &command);
     void notifyTraceStarted();
     void outputData();
 
-private slots:
+signals:
+    void readyForCommand();
+
+private:
     void run();
     void tryToConnect();
     void connected();
@@ -81,7 +79,6 @@ private slots:
     void logError(const QString &error);
     void logStatus(const QString &status);
 
-private:
     quint64 parseFeatures(const QStringList &featureList, const QString &values, bool exclude);
     bool checkOutputFile(PendingRequest pending);
     void flush();

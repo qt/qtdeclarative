@@ -72,10 +72,8 @@ public:
 signals:
     void messageToClient(const QString &name, const QByteArray &data);
 
-private slots:
-    void sendResult(int requestId, bool success);
-
 private:
+    void sendResult(int requestId, bool success);
     void sendCurrentObjects(const QList<QObject *> &objects);
     void removeFromSelectedItems(QObject *object);
     QString titleForItem(QQuickItem *item) const;

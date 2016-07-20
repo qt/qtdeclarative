@@ -409,14 +409,16 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
     if (!stream.atEnd()) {
         stream >> flushInterval;
         m_flushTimer.setInterval(flushInterval);
+        auto timerStart = static_cast<void(QTimer::*)()>(&QTimer::start);
         if (flushInterval > 0) {
-            connect(&m_flushTimer, SIGNAL(timeout()), this, SLOT(flush()));
-            connect(this, SIGNAL(startFlushTimer()), &m_flushTimer, SLOT(start()));
-            connect(this, SIGNAL(stopFlushTimer()), &m_flushTimer, SLOT(stop()));
+            connect(&m_flushTimer, &QTimer::timeout, this, &QQmlProfilerServiceImpl::flush);
+            connect(this, &QQmlProfilerServiceImpl::startFlushTimer, &m_flushTimer, timerStart);
+            connect(this, &QQmlProfilerServiceImpl::stopFlushTimer, &m_flushTimer, &QTimer::stop);
         } else {
-            disconnect(&m_flushTimer, SIGNAL(timeout()), this, SLOT(flush()));
-            disconnect(this, SIGNAL(startFlushTimer()), &m_flushTimer, SLOT(start()));
-            disconnect(this, SIGNAL(stopFlushTimer()), &m_flushTimer, SLOT(stop()));
+            disconnect(&m_flushTimer, &QTimer::timeout, this, &QQmlProfilerServiceImpl::flush);
+            disconnect(this, &QQmlProfilerServiceImpl::startFlushTimer, &m_flushTimer, timerStart);
+            disconnect(this, &QQmlProfilerServiceImpl::stopFlushTimer,
+                       &m_flushTimer, &QTimer::stop);
         }
     }
     if (!stream.atEnd())

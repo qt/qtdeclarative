@@ -77,7 +77,7 @@ public:
     QStringList removedPlugins;
 
     void advertisePlugins();
-    void connectDeviceSignals();
+    void createProtocol();
     void flush();
 };
 
@@ -254,7 +254,7 @@ QQmlDebugConnection::QQmlDebugConnection(QObject *parent) :
     QObject(*(new QQmlDebugConnectionPrivate), parent)
 {
     Q_D(QQmlDebugConnection);
-    connect(&d->handshakeTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
+    connect(&d->handshakeTimer, &QTimer::timeout, this, &QQmlDebugConnection::handshakeTimeout);
 }
 
 QQmlDebugConnection::~QQmlDebugConnection()
@@ -387,12 +387,12 @@ void QQmlDebugConnection::connectToHost(const QString &hostName, quint16 port)
         close();
     QTcpSocket *socket = new QTcpSocket(this);
     d->device = socket;
-    d->connectDeviceSignals();
-    connect(socket, SIGNAL(connected()), this, SLOT(socketConnected()));
-    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SIGNAL(socketError(QAbstractSocket::SocketError)));
-    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)));
+    d->createProtocol();
+    connect(socket, &QAbstractSocket::disconnected, this, &QQmlDebugConnection::socketDisconnected);
+    connect(socket, &QAbstractSocket::connected, this, &QQmlDebugConnection::socketConnected);
+    connect(socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(
+                &QAbstractSocket::error), this, &QQmlDebugConnection::socketError);
+    connect(socket, &QAbstractSocket::stateChanged, this, &QQmlDebugConnection::socketStateChanged);
     socket->connectToHost(hostName, port);
 }
 
@@ -405,7 +405,8 @@ void QQmlDebugConnection::startLocalServer(const QString &fileName)
         d->server->deleteLater();
     d->server = new QLocalServer(this);
     // QueuedConnection so that waitForNewConnection() returns true.
-    connect(d->server, SIGNAL(newConnection()), this, SLOT(newConnection()), Qt::QueuedConnection);
+    connect(d->server, &QLocalServer::newConnection,
+            this, &QQmlDebugConnection::newConnection, Qt::QueuedConnection);
     d->server->listen(fileName);
 }
 
@@ -415,17 +416,12 @@ class LocalSocketSignalTranslator : public QObject
 public:
     LocalSocketSignalTranslator(QLocalSocket *parent) : QObject(parent)
     {
-        connect(parent, SIGNAL(stateChanged(QLocalSocket::LocalSocketState)),
-                this, SLOT(onStateChanged(QLocalSocket::LocalSocketState)));
-        connect(parent, SIGNAL(error(QLocalSocket::LocalSocketError)),
-                this, SLOT(onError(QLocalSocket::LocalSocketError)));
+        connect(parent, &QLocalSocket::stateChanged,
+                this, &LocalSocketSignalTranslator::onStateChanged);
+        connect(parent, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
+                    &QLocalSocket::error), this, &LocalSocketSignalTranslator::onError);
     }
 
-signals:
-    void socketError(QAbstractSocket::SocketError error);
-    void socketStateChanged(QAbstractSocket::SocketState state);
-
-public slots:
     void onError(QLocalSocket::LocalSocketError error)
     {
         emit socketError(static_cast<QAbstractSocket::SocketError>(error));
@@ -435,6 +431,10 @@ public slots:
     {
         emit socketStateChanged(static_cast<QAbstractSocket::SocketState>(state));
     }
+
+signals:
+    void socketError(QAbstractSocket::SocketError error);
+    void socketStateChanged(QAbstractSocket::SocketState state);
 };
 
 void QQmlDebugConnection::newConnection()
@@ -444,23 +444,24 @@ void QQmlDebugConnection::newConnection()
     QLocalSocket *socket = d->server->nextPendingConnection();
     d->server->close();
     d->device = socket;
-    d->connectDeviceSignals();
+    d->createProtocol();
+    connect(socket, &QLocalSocket::disconnected, this, &QQmlDebugConnection::socketDisconnected);
     LocalSocketSignalTranslator *translator = new LocalSocketSignalTranslator(socket);
 
-    QObject::connect(translator, SIGNAL(socketError(QAbstractSocket::SocketError)),
-                     this, SIGNAL(socketError(QAbstractSocket::SocketError)));
-    QObject::connect(translator, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)),
-                     this, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)));
+    connect(translator, &LocalSocketSignalTranslator::socketError,
+            this, &QQmlDebugConnection::socketError);
+    connect(translator, &LocalSocketSignalTranslator::socketStateChanged,
+            this, &QQmlDebugConnection::socketStateChanged);
     socketConnected();
 }
 
-void QQmlDebugConnectionPrivate::connectDeviceSignals()
+void QQmlDebugConnectionPrivate::createProtocol()
 {
     Q_Q(QQmlDebugConnection);
     delete protocol;
     protocol = new QPacketProtocol(device, q);
-    QObject::connect(protocol, SIGNAL(readyRead()), q, SLOT(protocolReadyRead()));
-    QObject::connect(device, SIGNAL(disconnected()), q, SLOT(socketDisconnected()));
+    QObject::connect(protocol, &QPacketProtocol::readyRead,
+                     q, &QQmlDebugConnection::protocolReadyRead);
 }
 
 QT_END_NAMESPACE

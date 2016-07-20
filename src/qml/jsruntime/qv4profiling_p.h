@@ -228,7 +228,6 @@ public:
 
     quint64 featuresEnabled;
 
-public slots:
     void stopProfiling();
     void startProfiling(quint64 features);
     void reportData(bool trackLocations);

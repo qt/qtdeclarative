@@ -51,20 +51,20 @@ QQuickProfilerAdapter::QQuickProfilerAdapter(QObject *parent) :
     QQuickProfiler::initialize(this);
 
     // We can always do DirectConnection here as all methods are protected by mutexes
-    connect(this, SIGNAL(profilingEnabled(quint64)),
-            QQuickProfiler::s_instance, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
-            QQuickProfiler::s_instance, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
-            QQuickProfiler::s_instance, SLOT(setTimer(QElapsedTimer)), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabled()),
-            QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabledWhileWaiting()),
-            QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested(bool)),
-            QQuickProfiler::s_instance, SLOT(reportDataImpl(bool)), Qt::DirectConnection);
-    connect(QQuickProfiler::s_instance, SIGNAL(dataReady(QVector<QQuickProfilerData>)),
-            this, SLOT(receiveData(QVector<QQuickProfilerData>)), Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingEnabled,
+            QQuickProfiler::s_instance, &QQuickProfiler::startProfilingImpl, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,
+            QQuickProfiler::s_instance, &QQuickProfiler::startProfilingImpl, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::referenceTimeKnown,
+            QQuickProfiler::s_instance, &QQuickProfiler::setTimer, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabled,
+            QQuickProfiler::s_instance, &QQuickProfiler::stopProfilingImpl, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting,
+            QQuickProfiler::s_instance, &QQuickProfiler::stopProfilingImpl, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::dataRequested,
+            QQuickProfiler::s_instance, &QQuickProfiler::reportDataImpl, Qt::DirectConnection);
+    connect(QQuickProfiler::s_instance, &QQuickProfiler::dataReady,
+            this, &QQuickProfilerAdapter::receiveData, Qt::DirectConnection);
 }
 
 QQuickProfilerAdapter::~QQuickProfilerAdapter()

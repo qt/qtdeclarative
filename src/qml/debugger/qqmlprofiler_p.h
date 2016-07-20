@@ -94,7 +94,7 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData : public QQmlProfilerDefinitions
 
 Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
 
-class QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
+class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 
@@ -250,7 +250,6 @@ public:
         return reinterpret_cast<quintptr>(pointer);
     }
 
-public slots:
     void startProfiling(quint64 features);
     void stopProfiling();
     void reportData(bool trackLocations);

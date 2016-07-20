@@ -49,19 +49,20 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
 {
     setService(service);
     engine->enableProfiler();
-    connect(this, SIGNAL(profilingEnabled(quint64)), engine->profiler, SLOT(startProfiling(quint64)));
-    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
-            engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
-    connect(this, SIGNAL(profilingDisabledWhileWaiting()),
-            engine->profiler, SLOT(stopProfiling()), Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested(bool)), engine->profiler, SLOT(reportData(bool)));
-    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
-            engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler,
-            SIGNAL(dataReady(QVector<QQmlProfilerData>,QQmlProfiler::LocationHash)),
-            this,
-            SLOT(receiveData(QVector<QQmlProfilerData>,QQmlProfiler::LocationHash)));
+    connect(this, &QQmlProfilerAdapter::profilingEnabled,
+            engine->profiler, &QQmlProfiler::startProfiling);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,
+            engine->profiler, &QQmlProfiler::startProfiling, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabled,
+            engine->profiler, &QQmlProfiler::stopProfiling);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting,
+            engine->profiler, &QQmlProfiler::stopProfiling, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::dataRequested,
+            engine->profiler, &QQmlProfiler::reportData);
+    connect(this, &QQmlAbstractProfilerAdapter::referenceTimeKnown,
+            engine->profiler, &QQmlProfiler::setTimer);
+    connect(engine->profiler, &QQmlProfiler::dataReady,
+            this, &QQmlProfilerAdapter::receiveData);
 }
 
 // convert to QByteArrays that can be sent to the debug client

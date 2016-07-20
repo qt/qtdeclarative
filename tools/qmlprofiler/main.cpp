@@ -39,8 +39,10 @@ int main(int argc, char *argv[])
         QThread listenerThread;
         CommandListener listener;
         listener.moveToThread(&listenerThread);
-        QObject::connect(&listener, SIGNAL(command(QString)), &app, SLOT(userCommand(QString)));
-        QObject::connect(&app, SIGNAL(readyForCommand()), &listener, SLOT(readCommand()));
+        QObject::connect(&listener, &CommandListener::command,
+                         &app, &QmlProfilerApplication::userCommand);
+        QObject::connect(&app, &QmlProfilerApplication::readyForCommand,
+                         &listener, &CommandListener::readCommand);
         listenerThread.start();
         int exitValue = app.exec();
         listenerThread.quit();
