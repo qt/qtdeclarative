@@ -1039,10 +1039,18 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         if (type) {
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
                                  compilationUnit, obj, type->qmlTypeName(), context->url()));
-            instance = type->create();
+
+            void *ddataMemory = 0;
+            type->create(&instance, &ddataMemory, sizeof(QQmlData));
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
+            }
+
+            {
+                QQmlData *ddata = new (ddataMemory) QQmlData;
+                ddata->ownMemory = false;
+                QObjectPrivate::get(instance)->declarativeData = ddata;
             }
 
             const int parserStatusCast = type->parserStatusCast();

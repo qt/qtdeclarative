@@ -1713,6 +1713,8 @@ void QQmlData::destroyed(QObject *object)
 
     if (ownMemory)
         delete this;
+    else
+        this->~QQmlData();
 }
 
 DEFINE_BOOL_CONFIG_OPTION(parentTest, QML_PARENT_TEST);
