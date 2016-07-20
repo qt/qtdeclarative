@@ -47,6 +47,8 @@ T.Button {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     padding: 8
     topPadding: padding - 4
     bottomPadding: padding - 4

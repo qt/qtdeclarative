@@ -48,6 +48,8 @@ T.RangeSlider {
         Math.max(first.handle ? first.handle.implicitHeight : 0,
                  second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     padding: 6
 
     first.handle: Rectangle {

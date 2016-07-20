@@ -48,6 +48,8 @@ T.MenuItem {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     padding: 12
     topPadding: padding - 1
     bottomPadding: padding + 1

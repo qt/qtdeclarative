@@ -47,6 +47,8 @@ T.ToolButton {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     padding: 6
 
     property bool useSystemFocusVisuals: true
