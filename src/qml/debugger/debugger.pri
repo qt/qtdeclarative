@@ -6,6 +6,7 @@ SOURCES += \
     $$PWD/qqmldebugservice.cpp \
     $$PWD/qqmldebugserviceinterfaces.cpp \
     $$PWD/qqmlabstractprofileradapter.cpp \
+    $$PWD/qqmlmemoryprofiler.cpp \
     $$PWD/qqmlprofiler.cpp
 
 HEADERS += \
@@ -16,6 +17,7 @@ HEADERS += \
     $$PWD/qqmldebugserviceinterfaces_p.h \
     $$PWD/qqmldebugstatesdelegate_p.h \
     $$PWD/qqmldebug.h \
+    $$PWD/qqmlmemoryprofiler_p.h \
     $$PWD/qqmlprofilerdefinitions_p.h \
     $$PWD/qqmlabstractprofileradapter_p.h \
     $$PWD/qqmlprofiler_p.h
