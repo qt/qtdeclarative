@@ -162,7 +162,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
 #ifdef MOTH_THREADED_INTERPRETER
-#  define MOTH_INSTR_HEADER void *code;
+#  define MOTH_INSTR_HEADER union { quint32 instructionType; void *code; };
 #else
 #  define MOTH_INSTR_HEADER quint32 instructionType;
 #endif

@@ -1493,12 +1493,7 @@ void QV4::Moth::InstructionSelection::callBuiltinConvertThisToObject()
 
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
-
-#ifdef MOTH_THREADED_INTERPRETER
-    instr.common.code = VME::instructionJumpTable()[static_cast<int>(type)];
-#else
     instr.common.instructionType = type;
-#endif
 
     int instructionSize = Instr::size(type);
     if (_codeEnd - _codeNext < instructionSize) {
@@ -1584,6 +1579,29 @@ CompilationUnit::~CompilationUnit()
 
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
+#ifdef MOTH_THREADED_INTERPRETER
+    // link byte code against addresses of instructions
+    for (int i = 0; i < codeRefs.count(); ++i) {
+        QByteArray &codeRef = codeRefs[i];
+        char *code = codeRef.data();
+        int index = 0;
+        while (index < codeRef.size()) {
+            Instr *genericInstr = reinterpret_cast<Instr *>(code + index);
+
+            switch (genericInstr->common.instructionType) {
+#define LINK_INSTRUCTION(InstructionType, Member) \
+            case Instr::InstructionType: \
+                genericInstr->common.code = VME::instructionJumpTable()[static_cast<int>(genericInstr->common.instructionType)]; \
+                index += InstrMeta<(int)Instr::InstructionType>::Size; \
+            break;
+
+            FOR_EACH_MOTH_INSTR(LINK_INSTRUCTION)
+
+            }
+        }
+    }
+#endif
+
     runtimeFunctions.resize(data->functionTableSize);
     runtimeFunctions.fill(0);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
