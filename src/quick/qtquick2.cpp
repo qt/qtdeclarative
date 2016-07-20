@@ -49,7 +49,6 @@
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qquickprofiler_p.h>
 #include <private/qquickapplication_p.h>
 #include <QtQuick/private/qquickpropertychanges_p.h>
 #include <QtQuick/private/qquickstate_p.h>

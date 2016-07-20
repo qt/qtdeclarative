@@ -57,7 +57,6 @@
 #include "qqmllist_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
-#include <private/qqmldebugconnector_p.h>
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
 #include <private/qqmlboundsignal_p.h>

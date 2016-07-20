@@ -44,7 +44,6 @@
 #include "qsgd3d12shadereffectnode_p.h"
 #include <private/qsgrenderer_p.h>
 #include <private/qquickwindow_p.h>
-#include <private/qquickprofiler_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
