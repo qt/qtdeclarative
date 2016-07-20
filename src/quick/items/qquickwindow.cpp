@@ -1880,14 +1880,24 @@ QQuickPointerDevice *QQuickWindowPrivate::touchDevice(QTouchDevice *d)
         return touchDevices.value(d);
 
     QQuickPointerDevice::DeviceType type = QQuickPointerDevice::TouchScreen;
-    QQuickPointerDevice::Capabilities caps =
-        static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
-    if (d->type() == QTouchDevice::TouchPad) {
-        type = QQuickPointerDevice::TouchPad;
-        caps |= QQuickPointerDevice::Scroll;
+    QString name;
+    int maximumTouchPoints = 10;
+    QQuickPointerDevice::Capabilities caps = QQuickPointerDevice::Capabilities(QTouchDevice::Position);
+    if (d) {
+        QQuickPointerDevice::Capabilities caps =
+            static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
+        if (d->type() == QTouchDevice::TouchPad) {
+            type = QQuickPointerDevice::TouchPad;
+            caps |= QQuickPointerDevice::Scroll;
+        }
+        name = d->name();
+        maximumTouchPoints = d->maximumTouchPoints();
+    } else {
+        qWarning() << "QQuickWindowPrivate::touchDevice: creating touch device from nullptr device in QTouchEvent";
     }
+
     QQuickPointerDevice *dev = new QQuickPointerDevice(type, QQuickPointerDevice::Finger,
-        caps, d->maximumTouchPoints(), 0, d->name(), 0);
+        caps, maximumTouchPoints, 0, name, 0);
     touchDevices.insert(d, dev);
     return dev;
 }
