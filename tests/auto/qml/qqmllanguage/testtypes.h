@@ -38,8 +38,10 @@
 #include <QtCore/qdatetime.h>
 #include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
+#include <QtGui/qvector2d.h>
 #include <QtGui/qvector3d.h>
 #include <QtGui/qvector4d.h>
+#include <QtGui/qquaternion.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlparserstatus.h>
@@ -247,8 +249,10 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QRectF rectFProperty READ rectFProperty WRITE setRectFProperty NOTIFY rectFPropertyChanged)
     Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty NOTIFY boolPropertyChanged)
     Q_PROPERTY(QVariant variantProperty READ variantProperty WRITE setVariantProperty NOTIFY variantPropertyChanged)
+    Q_PROPERTY(QVector2D vector2Property READ vector2Property WRITE setVector2Property NOTIFY vector2PropertyChanged)
     Q_PROPERTY(QVector3D vectorProperty READ vectorProperty WRITE setVectorProperty NOTIFY vectorPropertyChanged)
     Q_PROPERTY(QVector4D vector4Property READ vector4Property WRITE setVector4Property NOTIFY vector4PropertyChanged)
+    Q_PROPERTY(QQuaternion quaternionProperty READ quaternionProperty WRITE setQuaternionProperty NOTIFY quaternionPropertyChanged)
     Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty NOTIFY urlPropertyChanged)
 
     Q_PROPERTY(QQmlScriptString scriptProperty READ scriptProperty WRITE setScriptProperty)
@@ -529,6 +533,15 @@ public:
         emit vectorPropertyChanged();
     }
 
+    QVector2D vector2PropertyValue;
+    QVector2D vector2Property() const {
+        return vector2PropertyValue;
+    }
+    void setVector2Property(const QVector2D &v) {
+        vector2PropertyValue = v;
+        emit vector2PropertyChanged();
+    }
+
     QVector4D vector4PropertyValue;
     QVector4D vector4Property() const {
         return vector4PropertyValue;
@@ -536,6 +549,15 @@ public:
     void setVector4Property(const QVector4D &v) {
         vector4PropertyValue = v;
         emit vector4PropertyChanged();
+    }
+
+    QQuaternion quaternionPropertyValue;
+    QQuaternion quaternionProperty() const {
+        return quaternionPropertyValue;
+    }
+    void setQuaternionProperty(const QQuaternion &v) {
+        quaternionPropertyValue = v;
+        emit quaternionPropertyChanged();
     }
 
     QUrl urlPropertyValue;
@@ -591,7 +613,9 @@ signals:
     void boolPropertyChanged();
     void variantPropertyChanged();
     void vectorPropertyChanged();
+    void vector2PropertyChanged();
     void vector4PropertyChanged();
+    void quaternionPropertyChanged();
     void urlPropertyChanged();
 
 };

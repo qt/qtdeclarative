@@ -26,7 +26,9 @@ MyTypeObject {
     boolProperty: true
     variantProperty: "Hello World!"
     vectorProperty: "10,1,2.2"
+    vector2Property: "2, 3"
     vector4Property: "10,1,2.2,2.3"
+    quaternionProperty: "4,5,6,7"
     urlProperty: "main.qml?with%3cencoded%3edata"
 
     objectProperty: MyTypeObject { intProperty: 8 }
