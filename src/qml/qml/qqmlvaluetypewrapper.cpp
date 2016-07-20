@@ -332,7 +332,8 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
     if (QMetaType::convert(w->d()->gadgetPtr, w->d()->valueType->typeId, &convertResult, QMetaType::QString)) {
         result = convertResult;
     } else {
-        result = QString::fromUtf8(QMetaType::typeName(w->d()->valueType->typeId)) + QLatin1Char('(');
+        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType->typeId))
+                + QLatin1Char('(');
         const QMetaObject *mo = w->d()->propertyCache->metaObject();
         const int propCount = mo->propertyCount();
         for (int i = 0; i < propCount; ++i) {

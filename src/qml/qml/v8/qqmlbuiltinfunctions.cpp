@@ -1057,7 +1057,9 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     struct Error {
         static ReturnedValue create(QV4::ExecutionEngine *v4, const QList<QQmlError> &errors) {
             Scope scope(v4);
-            QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
+            QString errorstr;
+            // '+=' reserves extra capacity. Follow-up appending will be probably free.
+            errorstr += QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
             QV4::ScopedArrayObject qmlerrors(scope, v4->newArrayObject());
             QV4::ScopedObject qmlerror(scope);
@@ -1497,15 +1499,13 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
-            result.append(QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']'));
+            result += QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']');
         else
             result.append(ctx->args()[i].toQStringNoThrow());
     }
 
-    if (printStack) {
-        result.append(QLatin1Char('\n'));
-        result.append(jsStack(v4));
-    }
+    if (printStack)
+        result += QLatin1Char('\n') + jsStack(v4);
 
     static QLoggingCategory qmlLoggingCategory("qml");
     static QLoggingCategory jsLoggingCategory("js");

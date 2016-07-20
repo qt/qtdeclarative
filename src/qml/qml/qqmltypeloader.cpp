@@ -2534,13 +2534,13 @@ void QQmlTypeData::resolveTypes()
 
         ScriptReference ref;
         //ref.location = ...
-        ref.qualifier = script.nameSpace;
         if (!script.qualifier.isEmpty())
         {
-            ref.qualifier.prepend(script.qualifier + QLatin1Char('.'));
-
+            ref.qualifier = script.qualifier + QLatin1Char('.') + script.nameSpace;
             // Add a reference to the enclosing namespace
             m_namespaces.insert(script.qualifier);
+        } else {
+            ref.qualifier = script.nameSpace;
         }
 
         ref.script = blob;
@@ -2550,12 +2550,13 @@ void QQmlTypeData::resolveTypes()
     // Lets handle resolved composite singleton types
     foreach (const QQmlImports::CompositeSingletonReference &csRef, m_importCache.resolvedCompositeSingletons()) {
         TypeReference ref;
-        QString typeName = csRef.typeName;
-
+        QString typeName;
         if (!csRef.prefix.isEmpty()) {
-            typeName.prepend(csRef.prefix + QLatin1Char('.'));
+            typeName = csRef.prefix + QLatin1Char('.') + csRef.typeName;
             // Add a reference to the enclosing namespace
             m_namespaces.insert(csRef.prefix);
+        } else {
+            typeName = csRef.typeName;
         }
 
         int majorVersion = csRef.majorVersion > -1 ? csRef.majorVersion : -1;

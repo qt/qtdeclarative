@@ -378,12 +378,11 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                                QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
                            context(), flags);
     } else if (isUndefined) {
-        QString errorStr = QLatin1String("Unable to assign [undefined] to ");
-        if (!QMetaType::typeName(type))
-            errorStr += QLatin1String("[unknown property type]");
-        else
-            errorStr += QLatin1String(QMetaType::typeName(type));
-        delayedError()->setErrorDescription(errorStr);
+        const QLatin1String typeName(QMetaType::typeName(type)
+                                     ? QMetaType::typeName(type)
+                                     : "[unknown property type]");
+        delayedError()->setErrorDescription(QLatin1String("Unable to assign [undefined] to ")
+                                            + typeName);
         return false;
     } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
         if (f->isBinding())
@@ -458,8 +457,7 @@ QString QQmlBinding::expressionIdentifier()
     QString url = function->sourceFile();
     quint16 lineNumber = function->compiledFunction->location.line;
     quint16 columnNumber = function->compiledFunction->location.column;
-
-    return url + QLatin1Char(':') + QString::number(lineNumber) + QLatin1Char(':') + QString::number(columnNumber);
+    return url + QString::asprintf(":%u:%u", uint(lineNumber), uint(columnNumber));
 }
 
 void QQmlBinding::expressionChanged()

@@ -538,10 +538,10 @@ QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
 {
     if (version == QQmlImports::FullyVersioned) {
         // extension with fully encoded version number (eg. MyModule.3.2)
-        return QString(QLatin1String(".%1.%2")).arg(vmaj).arg(vmin);
+        return QString::asprintf(".%d.%d", vmaj, vmin);
     } else if (version == QQmlImports::PartiallyVersioned) {
         // extension with encoded version major (eg. MyModule.3)
-        return QString(QLatin1String(".%1")).arg(vmaj);
+        return QString::asprintf(".%d", vmaj);
     } // else extension without version number (eg. MyModule)
     return QString();
 }
@@ -1393,15 +1393,9 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     // The uri for this import.  For library imports this is the same as uri
     // specified by the user, but it may be different in the case of file imports.
     QString importUri = uri;
-
-    QString qmldirPath = importUri;
-    if (importUri.endsWith(Slash))
-        qmldirPath += String_qmldir;
-    else
-        qmldirPath += Slash_qmldir;
-
-    QString qmldirUrl = resolveLocalUrl(base, qmldirPath);
-
+    QString qmldirUrl = resolveLocalUrl(base, importUri + (importUri.endsWith(Slash)
+                                                           ? String_qmldir
+                                                           : Slash_qmldir));
     QString qmldirIdentifier;
 
     if (QQmlFile::isLocalFile(qmldirUrl)) {
@@ -1699,10 +1693,9 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         if (!resolvedPath.endsWith(Slash))
             resolvedPath += Slash;
 
+        resolvedPath += prefix + baseName;
         foreach (const QString &suffix, suffixes) {
-            QString pluginFileName = prefix + baseName + suffix;
-
-            QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + pluginFileName);
+            const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
             if (!absolutePath.isEmpty())
                 return absolutePath;
         }
@@ -1955,7 +1948,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
 #ifndef QT_NO_LIBRARY
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
-    QString uniquePluginID = QString().sprintf("%p", instance);
+    const QString uniquePluginID = QString::asprintf("%p", instance);
     StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
     QMutexLocker lock(&plugins->mutex);
 

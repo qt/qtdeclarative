@@ -644,15 +644,11 @@ QString QQmlProperty::name() const
         // ###
         if (!d->object) {
         } else if (d->isValueType()) {
-            QString rv = d->core.name(d->object) + QLatin1Char('.');
-
             const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType);
             Q_ASSERT(valueTypeMetaObject);
 
             const char *vtName = valueTypeMetaObject->property(d->valueTypeData.coreIndex).name();
-            rv += QString::fromUtf8(vtName);
-
-            d->nameCache = rv;
+            d->nameCache = d->core.name(d->object) + QLatin1Char('.') + QString::fromUtf8(vtName);
         } else if (type() & SignalProperty) {
             QString name = QLatin1String("on") + d->core.name(d->object);
             name[2] = name.at(2).toUpper();

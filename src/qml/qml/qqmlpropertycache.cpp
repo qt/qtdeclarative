@@ -1195,7 +1195,9 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         if (data->propType != 0)
             returnType = QMetaType::typeName(data->propType);
 
-        QByteArray signature = methods.at(ii).first.toUtf8() + '(';
+        QByteArray signature;
+        // '+=' reserves extra capacity. Follow-up appending will be probably free.
+        signature += methods.at(ii).first.toUtf8() + '(';
 
         QQmlPropertyCacheMethodArguments *arguments = 0;
         if (data->hasArguments()) {

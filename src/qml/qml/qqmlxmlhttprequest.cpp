@@ -1162,8 +1162,8 @@ QString QQmlXMLHttpRequest::headers() const
     foreach (const HeaderPair &header, m_headersList) {
         if (ret.length())
             ret.append(QLatin1String("\r\n"));
-        ret = ret % QString::fromUtf8(header.first) % QLatin1String(": ")
-                % QString::fromUtf8(header.second);
+        ret += QString::fromUtf8(header.first) + QLatin1String(": ")
+             + QString::fromUtf8(header.second);
     }
     return ret;
 }
