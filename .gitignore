@@ -33,6 +33,7 @@
 /tests/auto/styles/tst_styles
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
+/tests/manual/buttons/buttons
 /tests/manual/fonts/fonts
 /tests/manual/gifs/tst_gifs
 /tests/manual/styles/styles

@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    buttons \
     gifs \
     fonts \
     styles \
