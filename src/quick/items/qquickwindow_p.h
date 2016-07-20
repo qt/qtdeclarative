@@ -247,10 +247,6 @@ public:
     QQuickAnimatorController *animationController;
     QScopedPointer<QTouchEvent> delayedTouch;
 
-    // An event instance for each device that we've seen so far.
-    // One of these gets re-used (reset) for every incoming mouse/touch/tablet event.
-    // One reason to keep them separate is so that m_touchPoints will be only those from a single device.
-    QVector<QQuickPointerEvent> pointerEventsByDevice;
     int pointerEventRecursionGuard;
     QQuickCustomRenderStage *customRenderStage;
 
