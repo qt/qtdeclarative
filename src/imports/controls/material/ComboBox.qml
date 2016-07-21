@@ -108,7 +108,7 @@ T.ComboBox {
             pressed: control.pressed
             anchor: control
             active: control.pressed || control.visualFocus || control.hovered
-            color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
+            color: control.Material.rippleColor
         }
     }
 
