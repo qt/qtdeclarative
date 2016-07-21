@@ -159,7 +159,7 @@ void QQmlDebugConnection::protocolReadyRead()
 
         if (!validHello) {
             qWarning("QQmlDebugConnection: Invalid hello message");
-            QObject::disconnect(d->protocol, SIGNAL(protocolReadyRead()), this, SLOT(protocolReadyRead()));
+            close();
             return;
         }
         d->gotHello = true;
@@ -374,8 +374,9 @@ bool QQmlDebugConnection::sendMessage(const QString &name, const QByteArray &mes
 
 void QQmlDebugConnectionPrivate::flush()
 {
-    QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(device);
-    if (socket)
+    if (QAbstractSocket *socket = qobject_cast<QAbstractSocket *>(device))
+        socket->flush();
+    else if (QLocalSocket *socket = qobject_cast<QLocalSocket *>(device))
         socket->flush();
 }
 
