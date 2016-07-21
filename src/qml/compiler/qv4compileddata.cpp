@@ -50,6 +50,7 @@
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
 #include <QQmlPropertyMap>
+#include <QDateTime>
 #include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
