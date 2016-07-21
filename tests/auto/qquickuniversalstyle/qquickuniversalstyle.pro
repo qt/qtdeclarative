@@ -6,7 +6,7 @@ SOURCES += \
     $$PWD/tst_qquickuniversalstyle.cpp
 
 RESOURCES += \
-    $$PWD/qquickuniversalstyle.qrc
+    $$PWD/qtquickcontrols2.conf
 
 OTHER_FILES += \
     $$PWD/data/*
