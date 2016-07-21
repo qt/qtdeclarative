@@ -1961,5 +1961,11 @@ void InstructionSelection::visitCJumpEqual(IR::Binop *binop, IR::BasicBlock *tru
                                 _block, trueBlock, falseBlock);
 }
 
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new JIT::CompilationUnit);
+    return result;
+}
 
 #endif // ENABLE(ASSEMBLER)

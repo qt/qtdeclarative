@@ -126,7 +126,7 @@ struct Q_QML_EXPORT Script {
     bool inheritContext;
     bool parsed;
     QV4::PersistentValue qmlContext;
-    QV4::PersistentValue compilationUnitHolder;
+    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
     Function *vmFunction;
     bool parseAsBinding;
 

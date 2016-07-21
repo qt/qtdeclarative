@@ -44,6 +44,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickWindow;
+
 class Q_QUICK_EXPORT QSGRendererInterface
 {
 public:
@@ -57,7 +59,8 @@ public:
     enum Resource {
         Device,
         CommandQueue,
-        CommandList
+        CommandList,
+        Painter
     };
 
     enum ShaderType {
@@ -83,8 +86,8 @@ public:
 
     virtual GraphicsApi graphicsApi() const = 0;
 
-    virtual void *getResource(Resource resource) const;
-    virtual void *getResource(const char *resource) const;
+    virtual void *getResource(QQuickWindow *window, Resource resource) const;
+    virtual void *getResource(QQuickWindow *window, const char *resource) const;
 
     virtual ShaderType shaderType() const = 0;
     virtual ShaderCompilationTypes shaderCompilationType() const = 0;

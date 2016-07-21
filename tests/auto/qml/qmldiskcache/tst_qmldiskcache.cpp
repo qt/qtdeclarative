@@ -31,6 +31,7 @@
 #include <private/qv4compileddata_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QThread>
 
 class tst_qmldiskcache: public QObject
 {
@@ -63,6 +64,10 @@ struct TestCompiler
         }
         mappedFile.close();
 
+        // Qt API limits the precision of QFileInfo::modificationTime() to seconds, so to ensure that
+        // the newly written file has a modification date newer than an existing cache file, we must
+        // wait.
+        QThread::sleep(1);
         {
             QFile f(testFilePath);
             if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -129,7 +134,6 @@ void tst_qmldiskcache::regenerateAfterChange()
 
     QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
 
-#ifdef V4_ENABLE_JIT
     {
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
@@ -146,10 +150,6 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
     }
-#else
-    QVERIFY(!testCompiler.mapUnit());
-    return;
-#endif
 
     engine.clearComponentCache();
 
@@ -191,7 +191,6 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
                                                    "}");
 
     QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
-#ifdef V4_ENABLE_JIT
     {
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
@@ -213,10 +212,6 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         const QV4::CompiledData::Object *implicitComponent = testUnit->objectAt(obj->bindingTable()->value.objectIndex);
         QCOMPARE(testUnit->stringAt(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType->elementName());
     }
-#else
-    QVERIFY(!testCompiler.mapUnit());
-    return;
-#endif
 }
 
 QTEST_MAIN(tst_qmldiskcache)

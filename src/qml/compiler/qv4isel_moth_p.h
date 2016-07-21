@@ -66,7 +66,10 @@ namespace Moth {
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
-    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
+    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
+    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
+    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
+    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
 
     QVector<QByteArray> codeRefs;
 
@@ -207,6 +210,8 @@ public:
     { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return false; }
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE;
+
 };
 
 template<int InstrT>

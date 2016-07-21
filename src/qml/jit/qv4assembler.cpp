@@ -126,6 +126,25 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
     return true;
 }
 
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    Q_UNUSED(errorString);
+    Q_ASSERT(codeRefs.isEmpty());
+    codeRefs.reserve(data->functionTableSize);
+
+    const char *basePtr = reinterpret_cast<const char *>(data);
+
+    for (uint i = 0; i < data->functionTableSize; ++i) {
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+        void *codePtr = const_cast<void *>(reinterpret_cast<const void *>(basePtr + compiledFunction->codeOffset));
+        JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
+        JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
+        codeRefs.append(codeRef);
+    }
+
+    return true;
+}
+
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)

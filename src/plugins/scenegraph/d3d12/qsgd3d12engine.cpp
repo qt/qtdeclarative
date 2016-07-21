@@ -70,6 +70,9 @@ QT_BEGIN_NAMESPACE
     { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
 
 DECLARE_DEBUG_VAR(render)
+DECLARE_DEBUG_VAR(descheap)
+DECLARE_DEBUG_VAR(buffer)
+DECLARE_DEBUG_VAR(texture)
 
 // Except for system info on startup.
 Q_LOGGING_CATEGORY(QSG_LOG_INFO, "qt.scenegraph.general")
@@ -89,6 +92,8 @@ static const int MAX_CACHED_PSO = 64;
 
 static const int GPU_CBVSRVUAV_DESCRIPTORS = 512;
 
+static const DXGI_FORMAT RT_COLOR_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 static const int BUCKETS_PER_HEAP = 8; // must match freeMap
 static const int DESCRIPTORS_PER_BUCKET = 32; // the bit map (freeMap) is quint32
 static const int MAX_DESCRIPTORS_PER_HEAP = BUCKETS_PER_HEAP * DESCRIPTORS_PER_BUCKET;
@@ -102,8 +107,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DES
                 if (heap.freeMap[bucket]) {
                     uint freePos = qCountTrailingZeroBits(heap.freeMap[bucket]);
                     heap.freeMap[bucket] &= ~(1UL << freePos);
-                    if (Q_UNLIKELY(debug_render()))
-                        qDebug("descriptor handle type %x reserve in bucket %d index %d", type, bucket, freePos);
+                    if (Q_UNLIKELY(debug_descheap()))
+                        qDebug("descriptor handle heap %p type %x reserve in bucket %d index %d", &heap, type, bucket, freePos);
                     freePos += bucket * DESCRIPTORS_PER_BUCKET;
                     h = heap.start;
                     h.ptr += freePos * heap.handleSize;
@@ -129,7 +134,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DES
 
     heap.start = heap.heap->GetCPUDescriptorHandleForHeapStart();
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_descheap()))
         qDebug("new descriptor heap, type %x, start %llu", type, heap.start.ptr);
 
     heap.freeMap[0] = 0xFFFFFFFE;
@@ -153,8 +158,8 @@ void QSGD3D12CPUDescriptorHeapManager::release(D3D12_CPU_DESCRIPTOR_HANDLE handl
             const int bucket = pos / DESCRIPTORS_PER_BUCKET;
             const int indexInBucket = pos - bucket * DESCRIPTORS_PER_BUCKET;
             heap.freeMap[bucket] |= 1UL << indexInBucket;
-            if (Q_UNLIKELY(debug_render()))
-                qDebug("free descriptor handle type %x bucket %d index %d", type, bucket, indexInBucket);
+            if (Q_UNLIKELY(debug_descheap()))
+                qDebug("free descriptor handle heap %p type %x bucket %d index %d", &heap, type, bucket, indexInBucket);
             return;
         }
     }
@@ -197,13 +202,17 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
 
     if (qEnvironmentVariableIsSet("QT_D3D_ADAPTER_INDEX")) {
         const int adapterIndex = qEnvironmentVariableIntValue("QT_D3D_ADAPTER_INDEX");
-        if (SUCCEEDED(factory->EnumAdapters1(adapterIndex, &adapter))
-                && SUCCEEDED(D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr))) {
+        if (SUCCEEDED(factory->EnumAdapters1(adapterIndex, &adapter))) {
             adapter->GetDesc1(&desc);
             const QString name = QString::fromUtf16((char16_t *) desc.Description);
-            qCDebug(QSG_LOG_INFO, "Using requested adapter '%s'", qPrintable(name));
-            *outAdapter = adapter.Detach();
-            return;
+            HRESULT hr = D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr);
+            if (SUCCEEDED(hr)) {
+                qCDebug(QSG_LOG_INFO, "Using requested adapter '%s'", qPrintable(name));
+                *outAdapter = adapter.Detach();
+                return;
+            } else {
+                qWarning("Failed to create device for requested adapter '%s': 0x%x", qPrintable(name), hr);
+            }
         }
     }
 
@@ -543,7 +552,7 @@ void QSGD3D12Engine::simulateDeviceLoss()
     d->simulateDeviceLoss();
 }
 
-void *QSGD3D12Engine::getResource(QSGRendererInterface::Resource resource) const
+void *QSGD3D12Engine::getResource(QQuickWindow *, QSGRendererInterface::Resource resource) const
 {
     return d->getResource(resource);
 }
@@ -799,7 +808,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width = windowSize.width() * windowDpr;
         swapChainDesc.Height = windowSize.height() * windowDpr;
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.Format = RT_COLOR_FORMAT;
         swapChainDesc.SampleDesc.Count = 1;
         swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount = swapChainBufferCount;
@@ -839,7 +848,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         swapChainDesc.BufferCount = swapChainBufferCount;
         swapChainDesc.BufferDesc.Width = windowSize.width() * windowDpr;
         swapChainDesc.BufferDesc.Height = windowSize.height() * windowDpr;
-        swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferDesc.Format = RT_COLOR_FORMAT;
         swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // D3D12 requires the flip model
         swapChainDesc.OutputWindow = hwnd;
@@ -865,7 +874,7 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.Width = windowSize.width() * windowDpr;
     swapChainDesc.Height = windowSize.height() * windowDpr;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Format = RT_COLOR_FORMAT;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = swapChainBufferCount;
@@ -1016,7 +1025,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
                                                          const QVector4D &clearColor, uint samples)
 {
     D3D12_CLEAR_VALUE clearValue = {};
-    clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    clearValue.Format = RT_COLOR_FORMAT;
     clearValue.Color[0] = clearColor.x();
     clearValue.Color[1] = clearColor.y();
     clearValue.Color[2] = clearColor.z();
@@ -1031,7 +1040,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
     rtDesc.Height = size.height();
     rtDesc.DepthOrArraySize = 1;
     rtDesc.MipLevels = 1;
-    rtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    rtDesc.Format = RT_COLOR_FORMAT;
     rtDesc.SampleDesc = makeSampleDesc(rtDesc.Format, samples);
     rtDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
@@ -1140,7 +1149,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
 
     const int w = windowSize.width() * windowDpr;
     const int h = windowSize.height() * windowDpr;
-    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, DXGI_FORMAT_R8G8B8A8_UNORM,
+    HRESULT hr = swapChain->ResizeBuffers(swapChainBufferCount, w, h, RT_COLOR_FORMAT,
                                           waitableSwapChainMaxLatency ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceManager()->deviceLossDetected();
@@ -1224,7 +1233,7 @@ void QSGD3D12EnginePrivate::resolveMultisampledTarget(ID3D12Resource *msaa,
     barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
     commandList->ResourceBarrier(2, barriers);
 
-    commandList->ResolveSubresource(resolve, 0, msaa, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+    commandList->ResolveSubresource(resolve, 0, msaa, 0, RT_COLOR_FORMAT);
 
     barriers[0].Transition.pResource = msaa;
     barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
@@ -1279,7 +1288,7 @@ void QSGD3D12EnginePrivate::ensureBuffer(Buffer *buf)
         // buffer contents rebuild with a slightly larger total size does
         // not lead to creating a new buffer.
         const quint32 sz = alignedSize(buf->cpuDataRef.size, 4096);
-        if (Q_UNLIKELY(debug_render()))
+        if (Q_UNLIKELY(debug_buffer()))
             qDebug("new buffer[pf=%d] of size %d (actual data size %d)", currentPFrameIndex, sz, buf->cpuDataRef.size);
         bfd.buffer.Attach(createBuffer(sz));
         bfd.resourceSize = sz;
@@ -1301,7 +1310,7 @@ void QSGD3D12EnginePrivate::updateBuffer(Buffer *buf)
         return;
     }
     for (const auto &r : qAsConst(buf->cpuDataRef.dirty)) {
-        if (Q_UNLIKELY(debug_render()))
+        if (Q_UNLIKELY(debug_buffer()))
             qDebug("%p o %d s %d", buf, r.first, r.second);
         memcpy(p + r.first, buf->cpuDataRef.p + r.first, r.second);
     }
@@ -1382,13 +1391,13 @@ void QSGD3D12EnginePrivate::beginFrame()
             for (uint id : qAsConst(prevFrameData.buffersUsedInFrame)) {
                 Buffer &b(buffers[id - 1]);
                 if (b.d[currentPFrameIndex].buffer && b.d[currentPFrameIndex].dataSize == b.cpuDataRef.size) {
-                    if (Q_UNLIKELY(debug_render()))
+                    if (Q_UNLIKELY(debug_buffer()))
                         qDebug() << "frame" << frameIndex << "takes dirty" << b.d[prevPFrameIndex].dirty
                                  << "from frame" << frameIndex - delta << "for buffer" << id;
                     for (const auto &range : qAsConst(b.d[prevPFrameIndex].dirty))
                         addDirtyRange(&b.cpuDataRef.dirty, range.first, range.second, b.cpuDataRef.size);
                 } else {
-                    if (Q_UNLIKELY(debug_render()))
+                    if (Q_UNLIKELY(debug_buffer()))
                         qDebug() << "frame" << frameIndex << "makes all dirty from frame" << frameIndex - delta
                                  << "for buffer" << id;
                     addDirtyRange(&b.cpuDataRef.dirty, 0, b.cpuDataRef.size, b.cpuDataRef.size);
@@ -1402,7 +1411,7 @@ void QSGD3D12EnginePrivate::beginFrame()
         const quint64 finishedFrameIndex = frameIndex - frameInFlightCount; // we know since we just blocked for this
         // pfd conveniently refers to the same slot that was used by that frame
         if (!pfd.pendingTextureUploads.isEmpty()) {
-            if (Q_UNLIKELY(debug_render()))
+            if (Q_UNLIKELY(debug_texture()))
                 qDebug("Removing texture upload data for frame %d", finishedFrameIndex);
             for (uint id : qAsConst(pfd.pendingTextureUploads)) {
                 const int idx = id - 1;
@@ -1416,13 +1425,13 @@ void QSGD3D12EnginePrivate::beginFrame()
                     t.lastWaitFenceValue = 0;
                     t.stagingBuffers.clear();
                     t.stagingHeaps.clear();
-                    if (Q_UNLIKELY(debug_render()))
+                    if (Q_UNLIKELY(debug_texture()))
                         qDebug("Cleaned staging data for texture %u", id);
                 }
             }
             pfd.pendingTextureUploads.clear();
             if (!pfd.pendingTextureMipMap.isEmpty()) {
-                if (Q_UNLIKELY(debug_render()))
+                if (Q_UNLIKELY(debug_texture()))
                     qDebug() << "cleaning mipmap generation data for " << pfd.pendingTextureMipMap;
                 // no special cleanup is needed as mipmap generation uses the frame's resources
                 pfd.pendingTextureMipMap.clear();
@@ -1436,7 +1445,7 @@ void QSGD3D12EnginePrivate::beginFrame()
                 }
             }
             if (!hasPending) {
-                if (Q_UNLIKELY(debug_render()))
+                if (Q_UNLIKELY(debug_texture()))
                     qDebug("no more pending textures");
                 copyCommandAllocator->Reset();
             }
@@ -1557,7 +1566,7 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
     PersistentFrameData &pfd(pframeData[currentPFrameIndex]);
 
     // Now is the time to sync all the changed areas in the buffers.
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_buffer()))
         qDebug() << "buffers used in drawcall set" << pfd.buffersUsedInDrawCallSet;
     for (uint id : qAsConst(pfd.buffersUsedInDrawCallSet))
         updateBuffer(&buffers[id - 1]);
@@ -1582,12 +1591,12 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
                 pfd.pendingTextureMipMap.insert(id);
         }
         if (topFenceValue) {
-            if (Q_UNLIKELY(debug_render()))
+            if (Q_UNLIKELY(debug_texture()))
                 qDebug("added wait for texture fence %llu", topFenceValue);
             commandQueue->Wait(textureUploadFence.Get(), topFenceValue);
             // Generate mipmaps after the wait, when necessary.
             if (!pfd.pendingTextureMipMap.isEmpty()) {
-                if (Q_UNLIKELY(debug_render()))
+                if (Q_UNLIKELY(debug_texture()))
                     qDebug() << "starting mipmap generation for" << pfd.pendingTextureMipMap;
                 for (uint id : qAsConst(pfd.pendingTextureMipMap))
                     mipmapper.queueGenerate(textures[id - 1]);
@@ -1666,8 +1675,8 @@ void QSGD3D12EnginePrivate::endLayer()
 
 // Root signature:
 // [0] CBV - always present
-// [1] table with 1 SRV per texture (optional)
-// one static sampler per texture (optional)
+// [1] table with one SRV per texture (must be a table since root descriptor SRVs cannot be textures) - optional
+// one static sampler per texture - optional
 //
 // SRVs can be created freely via QSGD3D12CPUDescriptorHeapManager and stored
 // in QSGD3D12TextureView. The engine will copy them onto a dedicated,
@@ -1849,7 +1858,7 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE(pipelineState.topologyType);
         psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[0] = RT_COLOR_FORMAT;
         psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
         psoDesc.SampleDesc = defaultRT[0]->GetDesc().SampleDesc;
 
@@ -2133,7 +2142,7 @@ void QSGD3D12EnginePrivate::ensureGPUDescriptorHeap(int cbvSrvUavDescriptorCount
     while (pfd.cbvSrvUavNextFreeDescriptorIndex + cbvSrvUavDescriptorCount > newSize)
         newSize *= 2;
     if (newSize != pfd.gpuCbvSrvUavHeapSize) {
-        if (Q_UNLIKELY(debug_render()))
+        if (Q_UNLIKELY(debug_descheap()))
             qDebug("Out of space for SRVs, creating new CBV-SRV-UAV descriptor heap with descriptor count %d", newSize);
         deferredDelete(pfd.gpuCbvSrvUavHeap);
         createCbvSrvUavHeap(currentPFrameIndex, newSize);
@@ -2224,7 +2233,7 @@ void QSGD3D12EnginePrivate::releaseBuffer(uint id)
     const int idx = id - 1;
     Q_ASSERT(idx < buffers.count());
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_buffer()))
         qDebug("releasing buffer %u", id);
 
     Buffer &b(buffers[idx]);
@@ -2258,7 +2267,7 @@ void QSGD3D12EnginePrivate::resetBuffer(uint id, const quint8 *data, int size)
     Q_ASSERT(idx < buffers.count() && buffers[idx].entryInUse());
     Buffer &b(buffers[idx]);
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_buffer()))
         qDebug("reset buffer %u, size %d", id, size);
 
     b.cpuDataRef.p = data;
@@ -2436,7 +2445,7 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
         }
     }
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("created texture %u, size %dx%d, miplevels %d", id, adjustedSize.width(), adjustedSize.height(), textureDesc.MipLevels);
 }
 
@@ -2457,7 +2466,7 @@ void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
         return;
     }
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("resizing texture %u, size %dx%d", id, size.width(), size.height());
 
     D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
@@ -2509,7 +2518,7 @@ void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
     t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
     copyCommandQueue->Signal(textureUploadFence.Get(), t.fenceValue);
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("submitted old content copy for texture %u on the copy queue, fence %llu", id, t.fenceValue);
 }
 
@@ -2541,7 +2550,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
 
     t.fenceValue = nextTextureUploadFenceValue.fetchAndAddAcquire(1) + 1;
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("adding upload for texture %u on the copy queue, fence %llu", id, t.fenceValue);
 
     D3D12_RESOURCE_DESC textureDesc = t.texture->GetDesc();
@@ -2557,7 +2566,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         totalSize += alignedSize(h * stride, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("%d sub-uploads, heap size %d bytes", images.count(), totalSize);
 
     // Instead of individual committed resources for each upload buffer,
@@ -2583,7 +2592,7 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
         QImage::Format convFormat;
         int bytesPerPixel;
         textureFormat(images[i].format(), t.alpha(), t.mipmap(), &convFormat, &bytesPerPixel);
-        if (Q_UNLIKELY(debug_render() && i == 0))
+        if (Q_UNLIKELY(debug_texture() && i == 0))
             qDebug("source image format %d, target format %d, bpp %d", images[i].format(), convFormat, bytesPerPixel);
 
         QImage convImage = images[i].format() == convFormat ? images[i] : images[i].convertToFormat(convFormat);
@@ -2658,7 +2667,7 @@ void QSGD3D12EnginePrivate::releaseTexture(uint id)
     const int idx = id - 1;
     Q_ASSERT(idx < textures.count());
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_texture()))
         qDebug("releasing texture %d", id);
 
     Texture &t(textures[idx]);
@@ -2917,7 +2926,7 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
         textureDesc.Height = size.height();
         textureDesc.DepthOrArraySize = 1;
         textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Format = RT_COLOR_FORMAT;
         textureDesc.SampleDesc.Count = 1;
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 

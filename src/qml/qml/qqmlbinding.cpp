@@ -463,11 +463,11 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
-    m_nextBinding.clearFlag2();
+    m_nextBinding.setFlag2(); // Always use accessors, only not when:
     if (auto interceptorMetaObject = QQmlInterceptorMetaObject::get(targetObject())) {
         int coreIndex = getPropertyCoreIndex();
-        if (coreIndex != -1 && !interceptorMetaObject->intercepts(coreIndex))
-            m_nextBinding.setFlag2();
+        if (coreIndex == -1 || interceptorMetaObject->intercepts(coreIndex))
+            m_nextBinding.clearFlag2();
     }
 
     if (e)

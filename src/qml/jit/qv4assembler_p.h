@@ -84,6 +84,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
     void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
     bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
+    bool memoryMapCode(QString *errorString);
 
     // Coderef + execution engine
 

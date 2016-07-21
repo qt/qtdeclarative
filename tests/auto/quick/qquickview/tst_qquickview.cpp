@@ -151,7 +151,6 @@ void tst_QQuickView::resizemodeitem()
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
     QTRY_COMPARE(view->size(), QSize(80, 100));
-    QCOMPARE(view->size(), QSize(80, 100));
     QCOMPARE(view->size(), view->sizeHint());
 
     // size update from root object disabled
@@ -163,6 +162,7 @@ void tst_QQuickView::resizemodeitem()
     QCOMPARE(QSize(item->width(), item->height()), view->sizeHint());
 
     // size update from view
+    QCoreApplication::processEvents(); // make sure the last resize events are gone
     SizeChangesListener sizeListener(item);
     view->resize(QSize(200,300));
     QTRY_COMPARE(item->width(), 200.0);

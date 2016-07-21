@@ -4592,6 +4592,12 @@ qreal QQuickWindow::effectiveDevicePixelRatio() const
     QSGRendererInterface::graphicsApi() or QSGRendererInterface::shaderType(),
     will always be functional on the other hand.
 
+    \note The ownership of the returned pointer stays with Qt. The returned
+    instance may or may not be shared between different QQuickWindow instances,
+    depending on the scenegraph backend in use. Therefore applications are
+    expected to query the interface object for each QQuickWindow instead of
+    reusing the already queried pointer.
+
     \sa QSGRenderNode, QSGRendererInterface
 
     \since 5.8

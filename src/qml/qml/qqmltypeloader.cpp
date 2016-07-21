@@ -50,6 +50,7 @@
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -99,6 +100,7 @@
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
 DEFINE_BOOL_CONFIG_OPTION(diskCache, QML_DISK_CACHE);
+DEFINE_BOOL_CONFIG_OPTION(forceDiskCacheRefresh, QML_FORCE_DISK_CACHE_REFRESH);
 
 QT_BEGIN_NAMESPACE
 
@@ -1953,7 +1955,9 @@ void QQmlTypeLoader::trimCache()
         QList<TypeCache::Iterator> unneededTypes;
         for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
             QQmlTypeData *typeData = iter.value();
-            if (typeData->m_compiledData && typeData->count() == 1
+            // typeData->m_compiledData may be set early on in the proccess of loading a file, so it's important
+            // to check the general loading status of the typeData before making any other decisions.
+            if (typeData->isComplete() && typeData->m_compiledData && typeData->count() == 1
                     && typeData->m_compiledData->count() == 1) {
                 // There are no live objects of this type
                 unneededTypes.append(iter);
@@ -2038,6 +2042,106 @@ void QQmlTypeData::unregisterCallback(TypeDataCallback *callback)
     Q_ASSERT(!m_callbacks.contains(callback));
 }
 
+bool QQmlTypeData::tryLoadFromDiskCache()
+{
+    if (!diskCache())
+        return false;
+
+    if (forceDiskCacheRefresh())
+        return false;
+
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
+    if (!v4)
+        return false;
+
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+    {
+        QString error;
+        if (!unit->loadFromDisk(url(), &error)) {
+            qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
+            return false;
+        }
+    }
+
+    m_compiledData = unit;
+
+    for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i)
+        m_typeReferences.collectFromObject(m_compiledData->objectAt(i));
+
+    m_importCache.setBaseUrl(finalUrl(), finalUrlString());
+
+    // For remote URLs, we don't delay the loading of the implicit import
+    // because the loading probably requires an asynchronous fetch of the
+    // qmldir (so we can't load it just in time).
+    if (!finalUrl().scheme().isEmpty()) {
+        QUrl qmldirUrl = finalUrl().resolved(QUrl(QLatin1String("qmldir")));
+        if (!QQmlImports::isLocal(qmldirUrl)) {
+            if (!loadImplicitImport())
+                return false;
+
+            // find the implicit import
+            for (quint32 i = 0; i < m_compiledData->data->nImports; ++i) {
+                const QV4::CompiledData::Import *import = m_compiledData->data->importAt(i);
+                if (m_compiledData->stringAt(import->uriIndex) == QLatin1String(".")
+                    && import->qualifierIndex == 0
+                    && import->majorVersion == -1
+                    && import->minorVersion == -1) {
+                    QList<QQmlError> errors;
+                    if (!fetchQmldir(qmldirUrl, import, 1, &errors)) {
+                        setError(errors);
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    for (int i = 0, count = m_compiledData->data->nImports; i < count; ++i) {
+        const QV4::CompiledData::Import *import = m_compiledData->data->importAt(i);
+        QList<QQmlError> errors;
+        if (!addImport(import, &errors)) {
+            Q_ASSERT(errors.size());
+            QQmlError error(errors.takeFirst());
+            error.setUrl(m_importCache.baseUrl());
+            error.setLine(import->location.line);
+            error.setColumn(import->location.column);
+            errors.prepend(error); // put it back on the list after filling out information.
+            setError(errors);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void QQmlTypeData::rebuildTypeAndPropertyCaches()
+{
+    Q_ASSERT(m_compiledData);
+
+    QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
+
+    {
+        QQmlCompileError error = buildTypeResolutionCaches(&m_compiledData->importCache, &m_compiledData->resolvedTypes);
+        if (error.isSet()) {
+            setError(error);
+            return;
+        }
+    }
+
+    {
+        QQmlPropertyCacheCreator<QV4::CompiledData::CompilationUnit> propertyCacheCreator(&m_compiledData->propertyCaches, engine, m_compiledData, &m_importCache);
+        QQmlCompileError error = propertyCacheCreator.buildMetaObjects();
+        if (error.isSet()) {
+            setError(error);
+            return;
+        }
+    }
+
+    QQmlPropertyCacheAliasCreator<QV4::CompiledData::CompilationUnit> aliasCreator(&m_compiledData->propertyCaches, m_compiledData);
+    aliasCreator.appendAliasPropertiesToMetaObjects();
+}
+
 void QQmlTypeData::done()
 {
     // Check all script dependencies for errors
@@ -2062,7 +2166,7 @@ void QQmlTypeData::done()
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
-            QString typeName = m_document->stringAt(it.key());
+            const QString typeName = stringAt(it.key());
 
             QList<QQmlError> errors = type.typeData->errors();
             QQmlError error;
@@ -2093,9 +2197,14 @@ void QQmlTypeData::done()
         }
     }
 
-    // Compile component
-    if (!isError())
-        compile();
+    if (!isError()) {
+        if (!m_document.isNull()) {
+            // Compile component
+            compile();
+        } else {
+            rebuildTypeAndPropertyCaches();
+        }
+    }
 
     if (!isError()) {
         QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
@@ -2193,14 +2302,19 @@ bool QQmlTypeData::loadImplicitImport()
 
 void QQmlTypeData::dataReceived(const Data &data)
 {
+    if (tryLoadFromDiskCache())
+        return;
+
+    qint64 sourceTimeStamp;
     QString error;
-    QString code = QString::fromUtf8(data.readAll(&error));
+    QString code = QString::fromUtf8(data.readAll(&error, &sourceTimeStamp));
     if (!error.isEmpty()) {
         setError(error);
         return;
     }
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    m_document->jsModule.sourceTimeStamp = sourceTimeStamp;
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
@@ -2315,6 +2429,8 @@ void QQmlTypeData::downloadProgressChanged(qreal p)
 
 QString QQmlTypeData::stringAt(int index) const
 {
+    if (m_compiledData)
+        return m_compiledData->stringAt(index);
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
@@ -2336,7 +2452,7 @@ void QQmlTypeData::compile()
         setError(compiler.compilationErrors());
         return;
     }
-    if (diskCache()) {
+    if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
         if (!m_compiledData->saveToDisk(&errorString)) {
             qDebug() << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
@@ -2719,15 +2835,29 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+
+    if (diskCache() && !forceDiskCacheRefresh()) {
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+        QString error;
+        if (unit->loadFromDisk(url(), &error)) {
+            initializeFromCompilationUnit(unit);
+            return;
+        } else {
+            qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
+        }
+    }
+
+
+    QmlIR::Document irUnit(v4->debugger != 0);
+
     QString error;
-    QString source = QString::fromUtf8(data.readAll(&error));
+    QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));
     if (!error.isEmpty()) {
         setError(error);
         return;
     }
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-    QmlIR::Document irUnit(v4->debugger != 0);
     QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
 
     QList<QQmlError> errors;
@@ -2751,6 +2881,13 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;
+
+    if (diskCache() || forceDiskCacheRefresh()) {
+        QString errorString;
+        if (!unit->saveToDisk(&errorString)) {
+            qDebug() << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;
+        }
+    }
 
     initializeFromCompilationUnit(unit);
 }
@@ -2892,11 +3029,13 @@ void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
     Q_UNIMPLEMENTED();
 }
 
-QByteArray QQmlDataBlob::Data::readAll(QString *error) const
+QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) const
 {
     Q_ASSERT(!d.isNull());
     error->clear();
     if (d.isT1()) {
+        if (sourceTimeStamp)
+            *sourceTimeStamp = 0;
         return *d.asT1();
     }
     QFile f(*d.asT2());
@@ -2904,6 +3043,8 @@ QByteArray QQmlDataBlob::Data::readAll(QString *error) const
         *error = f.errorString();
         return QByteArray();
     }
+    if (sourceTimeStamp)
+        *sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     QByteArray data(f.size(), Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();

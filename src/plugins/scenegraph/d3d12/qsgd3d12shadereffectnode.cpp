@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     static bool debug_ ## variable() \
     { static bool value = qgetenv("QSG_RENDERER_DEBUG").contains(QT_STRINGIFY(variable)); return value; }
 
-DECLARE_DEBUG_VAR(render)
+DECLARE_DEBUG_VAR(shader)
 
 void QSGD3D12ShaderLinker::reset(const QByteArray &vertBlob, const QByteArray &fragBlob)
 {
@@ -598,7 +598,7 @@ QRectF QSGD3D12ShaderEffectNode::updateNormalizedTextureSubRect(bool supportsAtl
 
 void QSGD3D12ShaderEffectNode::syncMaterial(SyncData *syncData)
 {
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_shader()))
         qDebug() << "shadereffect node sync" << syncData->dirty;
 
     if (bool(m_material.flags() & QSGMaterial::Blending) != syncData->blending) {
@@ -715,7 +715,7 @@ void QSGD3D12ShaderEffectNode::syncMaterial(SyncData *syncData)
 
         markDirty(QSGNode::DirtyMaterial);
 
-        if (Q_UNLIKELY(debug_render()))
+        if (Q_UNLIKELY(debug_shader()))
             m_material.linker.dump();
     } else  {
         if (syncData->dirty & QSGShaderEffectNode::DirtyShaderConstant) {
@@ -724,7 +724,7 @@ void QSGD3D12ShaderEffectNode::syncMaterial(SyncData *syncData)
             if (!syncData->fragment.dirtyConstants->isEmpty())
                 m_material.linker.feedConstants(*syncData->fragment.shader, syncData->fragment.dirtyConstants);
             markDirty(QSGNode::DirtyMaterial);
-            if (Q_UNLIKELY(debug_render()))
+            if (Q_UNLIKELY(debug_shader()))
                 m_material.linker.dump();
         }
 
@@ -736,7 +736,7 @@ void QSGD3D12ShaderEffectNode::syncMaterial(SyncData *syncData)
             m_material.linker.linkTextureSubRects();
             m_material.updateTextureProviders(false);
             markDirty(QSGNode::DirtyMaterial);
-            if (Q_UNLIKELY(debug_render()))
+            if (Q_UNLIKELY(debug_shader()))
                 m_material.linker.dump();
         }
     }
@@ -939,7 +939,7 @@ bool QSGD3D12GuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         return false;
     }
 
-    if (Q_UNLIKELY(debug_render()))
+    if (Q_UNLIKELY(debug_shader()))
         qDebug("Shader reflection size %d type %d v%u.%u input elems %d cbuffers %d boundres %d",
                result->blob.size(), result->type, major, minor, ieCount, cbufferCount, boundResCount);
 
@@ -1036,7 +1036,7 @@ bool QSGD3D12GuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         }
     }
 
-    if (Q_UNLIKELY(debug_render())) {
+    if (Q_UNLIKELY(debug_shader())) {
         qDebug() << "Input:" << result->inputParameters;
         qDebug() << "Variables:" << result->variables << "cbuffer size" << result->constantDataSize;
     }

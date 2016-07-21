@@ -96,6 +96,7 @@ typedef QJsonPrivate::q_littleendian<quint16> LEUInt16;
 typedef QJsonPrivate::q_littleendian<quint32> LEUInt32;
 typedef QJsonPrivate::q_littleendian<qint32> LEInt32;
 typedef QJsonPrivate::q_littleendian<quint64> LEUInt64;
+typedef QJsonPrivate::q_littleendian<qint64> LEInt64;
 
 struct String;
 struct Function;
@@ -146,6 +147,8 @@ struct RegExp
         QJsonPrivate::qle_bitfield<0, 4> flags;
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
+
+    RegExp() { flags = 0; stringIndex = 0; }
 };
 
 struct Lookup
@@ -597,6 +600,7 @@ struct Unit
     char magic[8];
     LEInt16 architecture;
     LEInt16 version;
+    LEInt64 sourceTimeStamp;
     LEUInt32 unitSize; // Size of the Unit and any depending data.
 
     enum : unsigned int {
@@ -843,6 +847,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
+    QScopedPointer<QIODevice> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
@@ -875,11 +880,13 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     void destroy() Q_DECL_OVERRIDE;
 
     bool saveToDisk(QString *errorString);
+    bool loadFromDisk(const QUrl &url, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
     virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
     virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
+    virtual bool memoryMapCode(QString *errorString);
 #endif // V4_BOOTSTRAP
 };
 

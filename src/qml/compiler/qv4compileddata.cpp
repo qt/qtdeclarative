@@ -51,6 +51,9 @@
 #include <private/qqmlengine_p.h>
 #include <QQmlPropertyMap>
 #include <QSaveFile>
+#include <QFile>
+#include <QFileInfo>
+#include <QScopedValueRollback>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -327,6 +330,45 @@ bool CompilationUnit::saveToDisk(QString *errorString)
     return true;
 }
 
+bool CompilationUnit::loadFromDisk(const QUrl &url, QString *errorString)
+{
+    if (!url.isLocalFile()) {
+        *errorString = QStringLiteral("File has to be a local file.");
+        return false;
+    }
+
+    QScopedPointer<QFile> cacheFile(new QFile(url.toLocalFile() + QLatin1Char('c')));
+
+    if (!cacheFile->open(QIODevice::ReadOnly)) {
+        *errorString = cacheFile->errorString();
+        return false;
+    }
+
+    uchar *cacheData = cacheFile->map(/*offset*/0, cacheFile->size());
+    if (!cacheData) {
+        *errorString = cacheFile->errorString();
+        return false;
+    }
+
+    QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
+
+    {
+        QFileInfo sourceCode(url.toLocalFile());
+        if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != data->sourceTimeStamp) {
+            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            return false;
+        }
+    }
+
+
+    if (!memoryMapCode(errorString))
+        return false;
+
+    dataPtrChange.commit();
+    backingFile.reset(cacheFile.take());
+    return true;
+}
+
 void CompilationUnit::prepareCodeOffsetsForDiskStorage(Unit *unit)
 {
     Q_UNUSED(unit);
@@ -337,6 +379,12 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const Unit *unit, QStrin
     Q_UNUSED(device);
     Q_UNUSED(unit);
     *errorString = QStringLiteral("Saving code to disk is not supported in this configuration");
+    return false;
+}
+
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    *errorString = QStringLiteral("Missing code mapping backend");
     return false;
 }
 #endif // V4_BOOTSTRAP

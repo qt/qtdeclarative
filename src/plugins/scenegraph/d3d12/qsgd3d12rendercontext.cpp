@@ -141,14 +141,14 @@ QSGRendererInterface::GraphicsApi QSGD3D12RenderContext::graphicsApi() const
     return Direct3D12;
 }
 
-void *QSGD3D12RenderContext::getResource(Resource resource) const
+void *QSGD3D12RenderContext::getResource(QQuickWindow *window, Resource resource) const
 {
     if (!m_engine) {
         qWarning("getResource: No D3D12 engine available yet (window not exposed?)");
         return nullptr;
     }
-
-    return m_engine->getResource(resource);
+    // window can be ignored since the rendercontext and engine are both per window
+    return m_engine->getResource(window, resource);
 }
 
 QSGRendererInterface::ShaderType QSGD3D12RenderContext::shaderType() const

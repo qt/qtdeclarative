@@ -48,8 +48,9 @@
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
+#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -148,6 +149,15 @@ bool QSGSoftwareRenderListBuilder::visit(QSGSpriteNode *node)
 void QSGSoftwareRenderListBuilder::endVisit(QSGSpriteNode *)
 {
 
+}
+
+bool QSGSoftwareRenderListBuilder::visit(QSGRenderNode *node)
+{
+    return addRenderableNode(node);
+}
+
+void QSGSoftwareRenderListBuilder::endVisit(QSGRenderNode *)
+{
 }
 
 bool QSGSoftwareRenderListBuilder::addRenderableNode(QSGNode *node)

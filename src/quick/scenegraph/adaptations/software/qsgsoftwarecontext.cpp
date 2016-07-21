@@ -53,6 +53,7 @@
 #include <QtCore/QElapsedTimer>
 
 #include <QtGui/QWindow>
+#include <QtQuick/private/qquickwindow_p.h>
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.
@@ -82,8 +83,10 @@ QT_BEGIN_NAMESPACE
 QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
     , m_initialized(false)
+    , m_activePainter(nullptr)
 {
 }
+
 QSGSoftwareContext::QSGSoftwareContext(QObject *parent)
     : QSGContext(parent)
 {
@@ -204,6 +207,14 @@ QSGRendererInterface::ShaderCompilationTypes QSGSoftwareContext::shaderCompilati
 QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() const
 {
     return 0;
+}
+
+void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) const
+{
+    if (resource == Painter && window && window->isSceneGraphInitialized())
+        return static_cast<QSGSoftwareRenderContext *>(QQuickWindowPrivate::get(window)->context)->m_activePainter;
+
+    return nullptr;
 }
 
 QT_END_NAMESPACE
