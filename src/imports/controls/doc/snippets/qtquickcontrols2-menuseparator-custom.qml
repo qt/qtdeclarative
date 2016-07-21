@@ -25,39 +25,45 @@
 **
 ****************************************************************************/
 
-/*!
-    \page qtquickcontrols2-separators.html
-    \title Separator Controls
-    \ingroup qtquickcontrols2-guidelines
-    \brief Guidelines for separator controls
+//! [file]
+import QtQuick 2.6
+import QtQuick.Controls 2.1
 
-    Qt Quick Controls 2 offers a selection of separators.
+Item {
+    id: window
+    width: menu.contentItem.width
+    height: menu.contentItem.height
+    visible: true
 
-    \annotatedlist qtquickcontrols2-separators
+// Indent it like this so that the indenting in the generated doc is normal.
+Menu {
+    id: menu
+    contentItem.parent: window
 
-    Each type of separator has its own specific use case. The following
-    sections offer guidelines for choosing the appropriate type of separator,
-    depending on the use case.
+    MenuItem {
+        text: qsTr("New...")
+    }
+    MenuItem {
+        text: qsTr("Open...")
+    }
+    MenuItem {
+        text: qsTr("Save")
+    }
 
-    \section1 MenuSeparator Control
+    MenuSeparator {
+        padding: 0
+        topPadding: 12
+        bottomPadding: 12
+        contentItem: Rectangle {
+            implicitWidth: 200
+            implicitHeight: 1
+            color: "#1E000000"
+        }
+    }
 
-    \image qtquickcontrols2-menuseparator.png
-
-    \l MenuSeparator should be used to separate items (typically MenuItem
-    controls) in a Menu. Grouping related menu items together makes it easier
-    for the user to interact with the menu. For example, a typical desktop
-    user interface might have \c Undo and \c Redo items in one group, and
-    \c Cut, \c Copy and \c Paste in another.
-
-    \section1 ToolSeparator Control
-
-    \image qtquickcontrols2-toolseparator.png
-
-    \l ToolSeparator should be used to separate items (typically ToolButton
-    controls) in a ToolBar. It can be used in horizontal or vertical toolbars.
-
-    \section1 Related Information
-    \list
-    \li \l {Qt Quick Controls 2 Guidelines}
-    \endlist
-*/
+    MenuItem {
+        text: qsTr("Exit")
+    }
+}
+}
+//! [file]

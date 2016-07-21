@@ -26,6 +26,7 @@ QML_CONTROLS = \
     Label.qml \
     Menu.qml \
     MenuItem.qml \
+    MenuSeparator.qml \
     Page.qml \
     PageIndicator.qml \
     Pane.qml \

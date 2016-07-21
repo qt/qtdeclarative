@@ -471,6 +471,23 @@
         \l {Customizing Button}{Button}.
 
 
+    \section2 Customizing MenuSeparator
+
+        MenuSeparator consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \image qtquickcontrols2-menuseparator-custom.png
+
+        \quotefromfile qtquickcontrols2-menuseparator-custom.qml
+        \skipto import QtQuick 2.6
+        \printuntil import QtQuick.Controls 2.1
+        \skipto Menu
+        \printto contentItem.parent: window
+        \skipline contentItem.parent: window
+        \printuntil text: qsTr("Exit")
+        \printuntil }
+        \printuntil }
+
     \section2 Customizing PageIndicator
 
         PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.

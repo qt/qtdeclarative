@@ -50,6 +50,7 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -65,6 +66,7 @@ private slots:
     void contextMenuKeyboard();
     void menuButton();
     void addItem();
+    void menuSeparator();
 };
 
 void tst_menu::defaults()
@@ -269,6 +271,49 @@ void tst_menu::addItem()
 
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+    QTRY_VERIFY(!menu->isVisible());
+}
+
+void tst_menu::menuSeparator()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    QQuickMenuItem *newMenuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(0));
+    QVERIFY(newMenuItem);
+    QCOMPARE(newMenuItem->text(), QStringLiteral("New"));
+
+    QQuickMenuSeparator *menuSeparator = qobject_cast<QQuickMenuSeparator*>(menu->itemAt(1));
+    QVERIFY(menuSeparator);
+
+    QQuickMenuItem *saveMenuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(2));
+    QVERIFY(saveMenuItem);
+    QCOMPARE(saveMenuItem->text(), QStringLiteral("Save"));
+    QTRY_VERIFY(!QQuickItemPrivate::get(saveMenuItem)->culled); // QTBUG-53262
+
+    // Clicking on items should still close the menu.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        newMenuItem->mapToScene(QPointF(newMenuItem->width() / 2, newMenuItem->height() / 2)).toPoint());
+    QTRY_VERIFY(!menu->isVisible());
+
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    // Clicking on a separator shouldn't close the menu.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        menuSeparator->mapToScene(QPointF(menuSeparator->width() / 2, menuSeparator->height() / 2)).toPoint());
+    QVERIFY(menu->isVisible());
+
+    // Clicking on items should still close the menu.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        saveMenuItem->mapToScene(QPointF(saveMenuItem->width() / 2, saveMenuItem->height() / 2)).toPoint());
     QTRY_VERIFY(!menu->isVisible());
 }
 

@@ -97,6 +97,12 @@ ApplicationWindow {
                         text: "Option 3"
                         checkable: true
                     }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Option A"
+                    }
                 }
             }
             ToolButton {

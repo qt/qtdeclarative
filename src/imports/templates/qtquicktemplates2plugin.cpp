@@ -56,6 +56,7 @@
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpage_p.h>
 #include <QtQuickTemplates2/private/qquickpageindicator_p.h>
@@ -181,6 +182,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialog>(uri, 2, 1, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 1, "DialogButtonBox");
     qmlRegisterType<QQuickDialogButtonBoxAttached>();
+    qmlRegisterType<QQuickMenuSeparator>(uri, 2, 1, "MenuSeparator");
     qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
     qmlRegisterType<QQuickRangeSlider, 1>(uri, 2, 1, "RangeSlider");
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");

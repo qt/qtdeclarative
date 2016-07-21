@@ -30,6 +30,7 @@ HEADERS += \
     $$PWD/qquickmenu_p.h \
     $$PWD/qquickmenu_p_p.h \
     $$PWD/qquickmenuitem_p.h \
+    $$PWD/qquickmenuseparator_p.h \
     $$PWD/qquickoverlay_p.h \
     $$PWD/qquickpage_p.h \
     $$PWD/qquickpageindicator_p.h \
@@ -88,6 +89,7 @@ SOURCES += \
     $$PWD/qquicklabel.cpp \
     $$PWD/qquickmenu.cpp \
     $$PWD/qquickmenuitem.cpp \
+    $$PWD/qquickmenuseparator.cpp \
     $$PWD/qquickoverlay.cpp \
     $$PWD/qquickpage.cpp \
     $$PWD/qquickpageindicator.cpp \
