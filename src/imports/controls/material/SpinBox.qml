@@ -119,7 +119,7 @@ T.SpinBox {
             height: parent.height - 2 * control.spacing
             pressed: control.up.pressed
             active: control.up.pressed || control.up.hovered || control.visualFocus
-            color: control.Material.checkBoxUncheckedRippleColor
+            color: control.Material.rippleColor
         }
 
         Rectangle {
@@ -153,7 +153,7 @@ T.SpinBox {
             height: parent.height - 2 * control.spacing
             pressed: control.down.pressed
             active: control.down.pressed || control.down.hovered || control.visualFocus
-            color: control.Material.checkBoxUncheckedRippleColor
+            color: control.Material.rippleColor
         }
 
         Rectangle {

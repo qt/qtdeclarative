@@ -63,7 +63,7 @@ T.Switch {
             width: 28; height: 28
             pressed: control.pressed
             active: control.down || control.visualFocus || control.hovered
-            color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+            color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
         }
     }
 

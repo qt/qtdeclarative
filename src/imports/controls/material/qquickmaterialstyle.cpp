@@ -401,8 +401,8 @@ static const QRgb switchUncheckedTrackColorLight = 0x42000000;
 static const QRgb switchUncheckedTrackColorDark = 0x4CFFFFFF;
 static const QRgb switchDisabledTrackColorLight = 0x1E000000;
 static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
-static const QRgb checkBoxUncheckedRippleColorLight = 0x10000000;
-static const QRgb checkBoxUncheckedRippleColorDark = 0x20FFFFFF;
+static const QRgb rippleColorLight = 0x10000000;
+static const QRgb rippleColorDark = 0x20FFFFFF;
 static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
 static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 
@@ -882,12 +882,12 @@ QColor QQuickMaterialStyle::frameColor() const
     return QColor::fromRgba(m_theme == Light ? frameColorLight : frameColorDark);
 }
 
-QColor QQuickMaterialStyle::checkBoxUncheckedRippleColor() const
+QColor QQuickMaterialStyle::rippleColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? checkBoxUncheckedRippleColorLight : checkBoxUncheckedRippleColorDark);
+    return QColor::fromRgba(m_theme == Light ? rippleColorLight : rippleColorDark);
 }
 
-QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
+QColor QQuickMaterialStyle::highlightedRippleColor() const
 {
     QColor pressColor = accentColor();
     pressColor.setAlpha(m_theme == Light ? 30 : 50);

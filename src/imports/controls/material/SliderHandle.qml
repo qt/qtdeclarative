@@ -72,6 +72,6 @@ Item {
         width: 22; height: 22
         pressed: root.handlePressed
         active: root.handlePressed || root.handleHasFocus || root.handleHovered
-        color: control.Material.checkBoxUncheckedRippleColor
+        color: control.Material.rippleColor
     }
 }

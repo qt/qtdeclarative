@@ -87,7 +87,7 @@ T.CheckDelegate {
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered
-            color: control.Material.checkBoxUncheckedRippleColor
+            color: control.Material.rippleColor
         }
     }
 }

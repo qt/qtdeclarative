@@ -74,6 +74,6 @@ T.ToolButton {
         pressed: control.pressed
         anchor: control
         active: control.enabled && (control.down || control.visualFocus || control.hovered)
-        color: control.checked ? control.Material.checkBoxCheckedRippleColor : control.Material.checkBoxUncheckedRippleColor
+        color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
     }
 }

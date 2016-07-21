@@ -80,8 +80,8 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor checkBoxUncheckedRippleColor READ checkBoxUncheckedRippleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor checkBoxCheckedRippleColor READ checkBoxCheckedRippleColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor switchUncheckedTrackColor READ switchUncheckedTrackColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor switchCheckedTrackColor READ switchCheckedTrackColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor switchUncheckedHandleColor READ switchUncheckedHandleColor NOTIFY paletteChanged FINAL)
@@ -202,8 +202,8 @@ public:
     QColor highlightedButtonColor() const;
     QColor highlightedButtonDisabledColor() const;
     QColor frameColor() const;
-    QColor checkBoxUncheckedRippleColor() const;
-    QColor checkBoxCheckedRippleColor() const;
+    QColor rippleColor() const;
+    QColor highlightedRippleColor() const;
     QColor switchUncheckedTrackColor() const;
     QColor switchCheckedTrackColor() const;
     QColor switchUncheckedHandleColor() const;
