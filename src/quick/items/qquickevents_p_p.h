@@ -64,6 +64,8 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickPointerDevice;
 class QQuickPointerEvent;
+class QQuickPointerMouseEvent;
+class QQuickPointerTabletEvent;
 class QQuickPointerTouchEvent;
 
 class QQuickKeyEvent : public QObject
@@ -346,12 +348,12 @@ public: // property accessors
 public: // helpers for C++ only (during event delivery)
     virtual QQuickPointerEvent *reset(QEvent *ev) = 0;
 
-    QTouchEvent *asTouchEvent() const;
-    QMouseEvent *asMouseEvent() const;
-
-    virtual bool isMouseEvent() const { return false; }
-    virtual bool isTouchEvent() const { return false; }
-    virtual bool isTabletEvent() const { return false; }
+    virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
+    virtual QQuickPointerTouchEvent *asPointerTouchEvent() { return nullptr; }
+    virtual QQuickPointerTabletEvent *asPointerTabletEvent() { return nullptr; }
+    virtual const QQuickPointerMouseEvent *asPointerMouseEvent() const { return nullptr; }
+    virtual const QQuickPointerTouchEvent *asPointerTouchEvent() const { return nullptr; }
+    virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
 
@@ -379,11 +381,14 @@ public:
     }
 
     QQuickPointerEvent *reset(QEvent *) override;
-    bool isMouseEvent() const override { return true; }
+    QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
+    const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
     int pointCount() const override { return 1; }
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(quint64 pointId) const override;
     bool allPointsAccepted() const override;
+
+    QMouseEvent *asMouseEvent() const;
 
 private:
     QQuickEventPoint *m_mousePoint;
@@ -397,7 +402,8 @@ public:
     {}
 
     QQuickPointerEvent *reset(QEvent *) override;
-    bool isTouchEvent() const override { return true; }
+    QQuickPointerTouchEvent *asPointerTouchEvent() override { return this; }
+    const QQuickPointerTouchEvent *asPointerTouchEvent() const override { return this; }
     int pointCount() const override { return m_pointCount; }
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(quint64 pointId) const override;
@@ -406,6 +412,8 @@ public:
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
+
+    QTouchEvent *asTouchEvent() const;
 
 private:
     int m_pointCount;

@@ -2329,21 +2329,20 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
     QQuickPointerMouseEvent pme;
     pme.reset(&me);
     QVERIFY(pme.isValid());
-    QVERIFY(pme.isMouseEvent());
-    QVERIFY(!pme.isTouchEvent());
-    QVERIFY(!pme.isTabletEvent());
-    QVERIFY(pme.asMouseEvent());
-    QVERIFY(!pme.asTouchEvent());
+    QCOMPARE(pme.asMouseEvent(), &me);
+    QVERIFY(pme.asPointerMouseEvent());
+    QVERIFY(!pme.asPointerTouchEvent());
+    QVERIFY(!pme.asPointerTabletEvent());
 //    QVERIFY(!pe->asTabletEvent()); // TODO
     QCOMPARE(pme.pointCount(), 1);
 
     QQuickPointerTouchEvent pte;
     pte.reset(&te);
     QVERIFY(pte.isValid());
-    QVERIFY(!pte.isMouseEvent());
-    QVERIFY(pte.isTouchEvent());
-    QVERIFY(!pte.isTabletEvent());
-    QVERIFY(!pte.asMouseEvent());
+    QCOMPARE(pte.asTouchEvent(), &te);
+    QVERIFY(!pte.asPointerMouseEvent());
+    QVERIFY(pte.asPointerTouchEvent());
+    QVERIFY(!pte.asPointerTabletEvent());
     QVERIFY(pte.asTouchEvent());
 //    QVERIFY(!pte.asTabletEvent()); // TODO
     QCOMPARE(pte.pointCount(), 1);

@@ -506,26 +506,6 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
     return this;
 }
 
-/*!
-    \internal
-    Returns the original touch event, or nullptr if it was not a touch event.
-*/
-QTouchEvent *QQuickPointerEvent::asTouchEvent() const {
-    if (!isTouchEvent())
-        return nullptr;
-    return static_cast<QTouchEvent *>(m_event);
-}
-
-/*!
-    \internal
-    Returns the original mouse event, or nullptr if it was not a mouse event.
-*/
-QMouseEvent *QQuickPointerEvent::asMouseEvent() const {
-    if (isMouseEvent())
-        return static_cast<QMouseEvent *>(m_event);
-    return nullptr;
-}
-
 QQuickEventPoint *QQuickPointerMouseEvent::point(int i) const {
     if (i == 0)
         return m_mousePoint;
@@ -552,6 +532,11 @@ QQuickPointerEvent *QQuickEventPoint::pointerEvent() const
 
 bool QQuickPointerMouseEvent::allPointsAccepted() const {
     return m_mousePoint->isAccepted();
+}
+
+QMouseEvent *QQuickPointerMouseEvent::asMouseEvent() const
+{
+    return static_cast<QMouseEvent *>(m_event);
 }
 
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
@@ -702,6 +687,11 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(const QList<const QQuick
     touchEvent->setTimestamp(event.timestamp());
     touchEvent->accept();
     return touchEvent;
+}
+
+QTouchEvent *QQuickPointerTouchEvent::asTouchEvent() const
+{
+    return static_cast<QTouchEvent *>(m_event);
 }
 
 #ifndef QT_NO_DEBUG_STREAM
