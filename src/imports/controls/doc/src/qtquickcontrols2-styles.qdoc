@@ -154,25 +154,16 @@
 
     In order to make it possible for Qt Quick Controls 2 to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
-    Here's an example \c .qrc file:
-
-    \code
-    <!DOCTYPE RCC><RCC version="1.0">
-    <qresource prefix="/">
-        <file>qtquickcontrols2.conf</file>
-    </qresource>
-    </RCC>
-    \endcode
 
     \note Qt Quick Controls 2 uses a file selector to load the configuration file. It
     is possible to provide a different configuration file for different platforms and
     locales. See \l QFileSelector documentation for more details.
 
-    Finally, the \c .qrc file must be listed in the application's \c .pro file so that
-    the build system knows about it. For example:
+    Finally, the configuration file must be listed in the application's \c .pro file so
+    that the build system knows about it. For example:
 
     \code
-    RESOURCES = application.qrc
+    RESOURCES += qtquickcontrols2.conf
     \endcode
 
     \section1 Related Information
