@@ -58,6 +58,7 @@ private slots:
     void closePolicy();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
+    void hover_data();
     void hover();
 };
 
@@ -331,8 +332,18 @@ void tst_popup::activeFocusOnClose2()
     QVERIFY(popup1->hasActiveFocus());
 }
 
+void tst_popup::hover_data()
+{
+    QTest::addColumn<bool>("modal");
+
+    QTest::newRow("modal") << true;
+    QTest::newRow("modeless") << false;
+}
+
 void tst_popup::hover()
 {
+    QFETCH(bool, modal);
+
     QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
     QQuickApplicationWindow *window = helper.window;
     window->show();
@@ -341,6 +352,7 @@ void tst_popup::hover()
 
     QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
+    popup->setModal(modal);
 
     QQuickButton *parentButton = helper.window->property("parentButton").value<QQuickButton*>();
     QVERIFY(parentButton);
@@ -357,7 +369,7 @@ void tst_popup::hover()
 
     // hover the parent button outside the popup
     QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
-    QVERIFY(parentButton->isHovered());
+    QCOMPARE(parentButton->isHovered(), !modal);
     QVERIFY(!childButton->isHovered());
 
     // hover the popup background
