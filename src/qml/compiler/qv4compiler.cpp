@@ -352,17 +352,19 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
     }
 }
 
-QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset) const
+QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset)
 {
     CompiledData::Unit unit;
     memcpy(unit.magic, CompiledData::magic_str, sizeof(unit.magic));
-    unit.architecture = 0; // ###
     unit.flags = QV4::CompiledData::Unit::IsJavascript;
-    unit.version = 1;
-    unit.functionTableSize = irModule->functions.size();
+    unit.version = QV4_DATA_STRUCTURE_VERSION;
+    unit.qtVersion = QT_VERSION;
+    unit.architectureIndex = registerString(QSysInfo::buildAbi());
+    unit.codeGeneratorIndex = registerString(codeGeneratorName);
 
     quint32 nextOffset = sizeof(CompiledData::Unit);
 
+    unit.functionTableSize = irModule->functions.size();
     unit.offsetToFunctionTable = nextOffset;
     nextOffset += unit.functionTableSize * sizeof(uint);
 

@@ -258,8 +258,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     return codeRef;
 }
 
-InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
-    : EvalInstructionSelection(execAllocator, module, jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator, iselFactory)
     , _block(0)
     , _as(0)
     , compilationUnit(new CompilationUnit)

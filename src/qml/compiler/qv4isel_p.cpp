@@ -52,7 +52,7 @@
 using namespace QV4;
 using namespace QV4::IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
     : useFastLookups(true)
     , useTypeInference(true)
     , executableAllocator(execAllocator)
@@ -67,6 +67,7 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *exe
     Q_ASSERT(execAllocator);
 #endif
     Q_ASSERT(module);
+    jsGenerator->codeGeneratorName = iselFactory->codeGeneratorName;
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()

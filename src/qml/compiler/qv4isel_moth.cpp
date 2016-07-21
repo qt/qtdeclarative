@@ -313,8 +313,8 @@ protected:
 };
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    : EvalInstructionSelection(execAllocator, module, jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator, iselFactory)
     , qmlEngine(qmlEngine)
     , _block(0)
     , _codeStart(0)

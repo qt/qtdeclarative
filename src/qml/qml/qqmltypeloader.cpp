@@ -2057,7 +2057,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), &error)) {
+        if (!unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
             qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
@@ -2840,7 +2840,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     if (diskCache() && !forceDiskCacheRefresh()) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
         QString error;
-        if (unit->loadFromDisk(url(), &error)) {
+        if (unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
             initializeFromCompilationUnit(unit);
             return;
         } else {

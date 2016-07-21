@@ -70,6 +70,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// Bump this whenever the compiler data structures change in an incompatible way.
+#define QV4_DATA_STRUCTURE_VERSION 0x01
+
 class QIODevice;
 class QQmlPropertyCache;
 class QQmlPropertyData;
@@ -88,6 +91,7 @@ struct Function;
 }
 
 struct Function;
+class EvalISelFactory;
 
 namespace CompiledData {
 
@@ -597,11 +601,16 @@ static const char magic_str[] = "qv4cdata";
 
 struct Unit
 {
+    // DO NOT CHANGE THESE FIELDS EVER
     char magic[8];
-    LEInt16 architecture;
-    LEInt16 version;
+    LEUInt32 version;
+    LEUInt32 qtVersion;
     LEInt64 sourceTimeStamp;
     LEUInt32 unitSize; // Size of the Unit and any depending data.
+    // END DO NOT CHANGE THESE FIELDS EVER
+
+    LEUInt32 architectureIndex; // string index to QSysInfo::buildAbi()
+    LEUInt32 codeGeneratorIndex;
 
     enum : unsigned int {
         IsJavascript = 0x1,
@@ -880,7 +889,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     void destroy() Q_DECL_OVERRIDE;
 
     bool saveToDisk(QString *errorString);
-    bool loadFromDisk(const QUrl &url, QString *errorString);
+    bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

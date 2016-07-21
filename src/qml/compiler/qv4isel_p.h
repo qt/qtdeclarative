@@ -65,13 +65,14 @@ class QQmlEnginePrivate;
 
 namespace QV4 {
 
+class EvalISelFactory;
 class ExecutableAllocator;
 struct Function;
 
 class Q_QML_PRIVATE_EXPORT EvalInstructionSelection
 {
 public:
-    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory);
     virtual ~EvalInstructionSelection() = 0;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile(bool generateUnitData = true);
@@ -104,10 +105,13 @@ protected:
 class Q_QML_PRIVATE_EXPORT EvalISelFactory
 {
 public:
+    EvalISelFactory(const QString &codeGeneratorName) : codeGeneratorName(codeGeneratorName) {}
     virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
     virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() = 0;
+
+    const QString codeGeneratorName;
 };
 
 namespace IR {

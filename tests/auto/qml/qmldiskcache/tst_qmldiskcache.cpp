@@ -29,6 +29,11 @@
 #include <qtest.h>
 
 #include <private/qv4compileddata_p.h>
+#include <private/qv4compiler_p.h>
+#include <private/qv4jsir_p.h>
+#include <private/qv4isel_p.h>
+#include <private/qv8engine_p.h>
+#include <private/qv4engine_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QThread>
@@ -42,6 +47,7 @@ private slots:
 
     void regenerateAfterChange();
     void registerImportForImplicitComponent();
+    void basicVersionChecks();
 };
 
 struct TestCompiler
@@ -58,11 +64,8 @@ struct TestCompiler
 
     bool compile(const QByteArray &contents)
     {
-        if (currentMapping) {
-            mappedFile.unmap(currentMapping);
-            currentMapping = nullptr;
-        }
-        mappedFile.close();
+        closeMapping();
+        engine->clearComponentCache();
 
         // Qt API limits the precision of QFileInfo::modificationTime() to seconds, so to ensure that
         // the newly written file has a modification date newer than an existing cache file, we must
@@ -104,6 +107,44 @@ struct TestCompiler
         QV4::CompiledData::Unit *unitPtr;
         memcpy(&unitPtr, &currentMapping, sizeof(unitPtr));
         return unitPtr;
+    }
+
+    typedef void (*HeaderTweakFunction)(QV4::CompiledData::Unit *header);
+    bool tweakHeader(HeaderTweakFunction function)
+    {
+        closeMapping();
+
+        QFile f(cacheFilePath);
+        if (!f.open(QIODevice::ReadWrite))
+            return false;
+        QV4::CompiledData::Unit header;
+        if (f.read(reinterpret_cast<char *>(&header), sizeof(header)) != sizeof(header))
+            return false;
+        function(&header);
+        f.seek(0);
+        return f.write(reinterpret_cast<const char *>(&header), sizeof(header)) == sizeof(header);
+    }
+
+    bool verify()
+    {
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), v4->iselFactory.data(), &lastErrorString);
+    }
+
+    void closeMapping()
+    {
+        if (currentMapping) {
+            mappedFile.unmap(currentMapping);
+            currentMapping = nullptr;
+        }
+        mappedFile.close();
+    }
+
+    void clearCache()
+    {
+        closeMapping();
+        QFile::remove(cacheFilePath);
     }
 
     QQmlEngine *engine;
@@ -150,8 +191,6 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(1);
         QVERIFY(bindingFunction->codeOffset > testUnit->unitSize);
     }
-
-    engine.clearComponentCache();
 
     {
         const QByteArray newContents = QByteArrayLiteral("import QtQml 2.0\n"
@@ -211,6 +250,74 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
 
         const QV4::CompiledData::Object *implicitComponent = testUnit->objectAt(obj->bindingTable()->value.objectIndex);
         QCOMPARE(testUnit->stringAt(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType->elementName());
+    }
+}
+
+void tst_qmldiskcache::basicVersionChecks()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral("import QtQml 2.0\n"
+                                                  "QtObject {\n"
+                                                   "    property string blah: Qt.platform;\n"
+                                                   "}");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+
+        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+            header->qtVersion = 0;
+        });
+
+        QVERIFY(!testCompiler.verify());
+        QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("Qt version mismatch. Found 0 expected %1").arg(QT_VERSION, 0, 16));
+        testCompiler.clearCache();
+    }
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+
+        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+            header->version = 0;
+        });
+
+        QVERIFY(!testCompiler.verify());
+        QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("V4 data structure version mismatch. Found 0 expected %1").arg(QV4_DATA_STRUCTURE_VERSION, 0, 16));
+    }
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+
+        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+            header->architectureIndex = 0;
+        });
+
+        QVERIFY(!testCompiler.verify());
+        QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("Architecture mismatch. Found  expected %1").arg(QSysInfo::buildAbi()));
+    }
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+
+        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+            header->codeGeneratorIndex = 0;
+        });
+
+        QVERIFY(!testCompiler.verify());
+        QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("Code generator mismatch. Found code generated by  but expected %1").arg(QV8Engine::getV4(&engine)->iselFactory->codeGeneratorName));
     }
 }
 

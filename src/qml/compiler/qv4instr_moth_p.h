@@ -174,6 +174,8 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
+    // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
+
 struct Param {
     // Params are looked up as follows:
     // Constant: 0
