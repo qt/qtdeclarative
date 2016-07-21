@@ -364,6 +364,11 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     setVisible(false);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+
+    // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
+    setAcceptHoverEvents(true);
+    // setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
+    // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
 }
 
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)

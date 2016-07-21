@@ -58,6 +58,7 @@ private slots:
     void closePolicy();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
+    void hover();
 };
 
 void tst_popup::visible()
@@ -328,6 +329,55 @@ void tst_popup::activeFocusOnClose2()
         closePopup2Button->mapToScene(QPointF(closePopup2Button->width() / 2, closePopup2Button->height() / 2)).toPoint());
     QVERIFY(!popup2->isVisible());
     QVERIFY(popup1->hasActiveFocus());
+}
+
+void tst_popup::hover()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QQuickButton *parentButton = helper.window->property("parentButton").value<QQuickButton*>();
+    QVERIFY(parentButton);
+    parentButton->setHoverEnabled(true);
+
+    QQuickButton *childButton = helper.window->property("childButton").value<QQuickButton*>();
+    QVERIFY(childButton);
+    childButton->setHoverEnabled(true);
+
+    QSignalSpy openedSpy(popup, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+    popup->open();
+    QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+
+    // hover the parent button outside the popup
+    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
+    QVERIFY(parentButton->isHovered());
+    QVERIFY(!childButton->isHovered());
+
+    // hover the popup background
+    QTest::mouseMove(window, QPoint(1, 1));
+    QVERIFY(!parentButton->isHovered());
+    QVERIFY(!childButton->isHovered());
+
+    // hover the child button in a popup
+    QTest::mouseMove(window, QPoint(2, 2));
+    QVERIFY(!parentButton->isHovered());
+    QVERIFY(childButton->isHovered());
+
+    QSignalSpy closedSpy(popup, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+    popup->close();
+    QVERIFY(closedSpy.count() == 1 || closedSpy.wait());
+
+    // hover the parent button after closing the popup
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+    QVERIFY(parentButton->isHovered());
 }
 
 QTEST_MAIN(tst_popup)
