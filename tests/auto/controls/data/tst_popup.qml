@@ -1033,7 +1033,9 @@ TestCase {
 
         window.requestActivate()
         tryCompare(window, "active", true)
-        compare(window.overlay.children.length, 6) // 3 drawers + 3 overlays
+
+        var countBefore = window.overlay.children.length
+        compare(countBefore, 6) // 3 drawers + 3 overlays
 
         var firstOverlay = findOverlay(window, window.firstDrawer)
         verify(firstOverlay)
@@ -1087,6 +1089,7 @@ TestCase {
         compare(modalOverlay.z, window.modalPopup.z)
         compare(window.modalPopup.visible, true)
         tryCompare(modalOverlay, "opacity", 1.0)
+        compare(window.overlay.children.length, countBefore + 2) // 1 popup + 1 overlay
 
         var modelessOverlay = findOverlay(window, window.modelessPopup)
         verify(!modelessOverlay)
@@ -1096,23 +1099,23 @@ TestCase {
         compare(modelessOverlay.z, window.modelessPopup.z)
         compare(window.modelessPopup.visible, true)
         tryCompare(modelessOverlay, "opacity", 1.0)
+        compare(window.overlay.children.length, countBefore + 4) // 2 popups + 2 overlays
 
         window.modelessPopup.close()
-        tryCompare(modelessOverlay, "opacity", 0.0)
         tryCompare(window.modelessPopup, "visible", false)
         modelessOverlay = findOverlay(window, window.modelessPopup)
         verify(!modelessOverlay)
+        compare(window.overlay.children.length, countBefore + 2) // 1 popup + 1 overlay
 
         compare(window.modalPopup.visible, true)
         compare(modalOverlay.opacity, 1.0)
 
         window.modalPopup.close()
-        tryCompare(modalOverlay, "opacity", 0.0)
         tryCompare(window.modalPopup, "visible", false)
         modalOverlay = findOverlay(window, window.modalPopup)
         verify(!modalOverlay)
+        compare(window.overlay.children.length, countBefore)
 
-        var countBefore = window.overlay.children.length
         window.plainPopup.open()
         tryCompare(window.plainPopup, "visible", true)
         compare(window.overlay.children.length, countBefore + 1) // only popup added, no overlays involved

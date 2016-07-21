@@ -134,6 +134,7 @@ void tst_popup::overlay()
     QVERIFY(!overlay->isVisible());
 
     popup->setModal(true);
+    popup->setClosePolicy(QQuickPopup::CloseOnReleaseOutside);
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -148,7 +149,7 @@ void tst_popup::overlay()
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
     QVERIFY(!popup->isVisible());
-    QVERIFY(overlay->isVisible());
+    QVERIFY(!overlay->isVisible());
 }
 
 void tst_popup::windowChange()

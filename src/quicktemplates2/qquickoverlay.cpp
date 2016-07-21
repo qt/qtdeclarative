@@ -53,7 +53,6 @@ public:
 
     void popupAboutToShow();
     void popupAboutToHide();
-    void popupClosed();
 
     void createOverlay(QQuickPopup *popup);
     void destroyOverlay(QQuickPopup *popup);
@@ -74,8 +73,6 @@ void QQuickOverlayPrivate::popupAboutToShow()
     if (!popup || !popup->dim())
         return;
 
-    createOverlay(popup);
-
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (p->dimmer)
@@ -93,16 +90,6 @@ void QQuickOverlayPrivate::popupAboutToHide()
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (p->dimmer)
         QQmlProperty::write(p->dimmer, QStringLiteral("opacity"), 0.0);
-}
-
-void QQuickOverlayPrivate::popupClosed()
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->dim())
-        return;
-
-    destroyOverlay(popup);
 }
 
 static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
@@ -139,6 +126,7 @@ void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
 {
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (p->dimmer) {
+        p->dimmer->setParentItem(nullptr);
         p->dimmer->deleteLater();
         p->dimmer = nullptr;
     }
@@ -218,33 +206,32 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
     if (change == ItemChildAddedChange) {
         d->popups.append(popup);
+        if (popup->dim())
+            d->createOverlay(popup);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
             d->drawers.append(drawer);
-            d->createOverlay(drawer);
         } else {
             if (popup->isModal())
                 ++d->modalPopups;
 
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-            QObjectPrivate::connect(popup, &QQuickPopup::closed, d, &QQuickOverlayPrivate::popupClosed);
         }
     } else if (change == ItemChildRemovedChange) {
         d->popups.removeOne(popup);
+        d->destroyOverlay(popup);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
             d->drawers.removeOne(drawer);
-            d->destroyOverlay(drawer);
         } else {
             if (popup->isModal())
                 --d->modalPopups;
 
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-            QObjectPrivate::disconnect(popup, &QQuickPopup::closed, d, &QQuickOverlayPrivate::popupClosed);
         }
     }
 }
