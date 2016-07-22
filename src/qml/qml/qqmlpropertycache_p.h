@@ -347,7 +347,6 @@ public:
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int index) const;
     int methodIndexToSignalIndex(int) const;
-    QStringList propertyNames() const;
 
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;

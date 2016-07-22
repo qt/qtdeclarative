@@ -894,14 +894,6 @@ void QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
     predecessor->flags.isOverridden = true;
 }
 
-QStringList QQmlPropertyCache::propertyNames() const
-{
-    QStringList keys;
-    for (StringCache::ConstIterator iter = stringCache.begin(), cend = stringCache.end(); iter != cend; ++iter)
-        keys.append(iter.key());
-    return keys;
-}
-
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
