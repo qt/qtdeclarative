@@ -105,6 +105,9 @@ Q_DECLARE_METATYPE(QQmlProperty)
 
 QT_BEGIN_NAMESPACE
 
+typedef QQmlData::BindingBitsType BindingBitsType;
+enum { MaxInlineBits = QQmlData::MaxInlineBits };
+
 void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
@@ -677,7 +680,8 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 QQmlData::QQmlData()
     : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
-      hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
+      hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
+      bindingBitsSize(MaxInlineBits), bindingBitsValue(0), notifyList(0), context(0), outerContext(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
       lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0), deferredData(0),
       propertyCache(0), guards(0), extendedData(0)
@@ -1690,7 +1694,7 @@ void QQmlData::destroyed(QObject *object)
         signalHandler = next;
     }
 
-    if (bindingBitsSize > 32)
+    if (bindingBitsSize > MaxInlineBits)
         free(bindingBits);
 
     if (propertyCache)
@@ -1740,31 +1744,27 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
 
 static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
 {
-    if (data->bindingBitsSize == 0 && bit < 32) {
-        data->bindingBitsSize = 32;
-    }
-
-    if (data->bindingBitsSize <= bit) {
+    if (Q_UNLIKELY(data->bindingBitsSize <= bit)) {
         int props = QQmlMetaObject(obj).propertyCount();
         Q_ASSERT(bit < 2 * props);
 
-        int arraySize = (2 * props + 31) / 32;
+        int arraySize = (2 * props + MaxInlineBits - 1) / MaxInlineBits;
         Q_ASSERT(arraySize > 1);
 
         // special handling for 32 here is to make sure we wipe the first byte
         // when going from bindingBitsValue to bindingBits, and preserve the old
         // set bits so we can restore them after the allocation
-        int oldArraySize = data->bindingBitsSize > 32 ? data->bindingBitsSize / 32 : 0;
-        quint32 oldValue = data->bindingBitsSize == 32 ? data->bindingBitsValue : 0;
+        int oldArraySize = data->bindingBitsSize > MaxInlineBits ? data->bindingBitsSize / MaxInlineBits : 0;
+        quintptr oldValue = data->bindingBitsSize == MaxInlineBits ? data->bindingBitsValue : 0;
 
-        data->bindingBits = (quint32 *)realloc((data->bindingBitsSize == 32) ? 0 : data->bindingBits,
-                                               arraySize * sizeof(quint32));
+        data->bindingBits = static_cast<BindingBitsType *>(realloc((data->bindingBitsSize == MaxInlineBits) ? 0 : data->bindingBits,
+                                                                   arraySize * sizeof(BindingBitsType)));
 
         memset(data->bindingBits + oldArraySize,
                0x00,
-               sizeof(quint32) * (arraySize - oldArraySize));
+               sizeof(BindingBitsType) * (arraySize - oldArraySize));
 
-        data->bindingBitsSize = arraySize * 32;
+        data->bindingBitsSize = arraySize * MaxInlineBits;
 
         // reinstate bindingBitsValue after we dropped it
         if (oldValue) {
@@ -1772,19 +1772,19 @@ static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
         }
     }
 
-    if (data->bindingBitsSize == 32)
-        data->bindingBitsValue |= (1 << (bit % 32));
+    if (data->bindingBitsSize == MaxInlineBits)
+        data->bindingBitsValue |= BindingBitsType(1) << bit;
     else
-        data->bindingBits[bit / 32] |= (1 << (bit % 32));
+        data->bindingBits[bit / MaxInlineBits] |= (BindingBitsType(1) << (bit % MaxInlineBits));
 }
 
 static void QQmlData_clearBit(QQmlData *data, int bit)
 {
     if (data->bindingBitsSize > bit) {
-        if (data->bindingBitsSize == 32)
-            data->bindingBitsValue &= ~(1 << (bit % 32));
+        if (data->bindingBitsSize == MaxInlineBits)
+            data->bindingBitsValue &= ~(BindingBitsType(1) << (bit % MaxInlineBits));
         else
-            data->bindingBits[bit / 32] &= ~(1 << (bit % 32));
+            data->bindingBits[bit / MaxInlineBits] &= ~(BindingBitsType(1) << (bit % MaxInlineBits));
     }
 }
 
