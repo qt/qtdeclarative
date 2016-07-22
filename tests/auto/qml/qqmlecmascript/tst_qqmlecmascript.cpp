@@ -324,6 +324,8 @@ private slots:
     void switchExpression();
     void qtbug_46022();
     void qtbug_52340();
+    void qtbug_54589();
+    void qtbug_54687();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7963,6 +7965,22 @@ void tst_qqmlecmascript::qtbug_52340()
     QVERIFY(QMetaObject::invokeMethod(object.data(), "testCall", Q_RETURN_ARG(QVariant, returnValue)));
     QVERIFY(returnValue.isValid());
     QVERIFY(returnValue.toBool());
+}
+
+void tst_qqmlecmascript::qtbug_54589()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_54589.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+    QCOMPARE(obj->property("result").toBool(), true);
+}
+
+void tst_qqmlecmascript::qtbug_54687()
+{
+    QJSEngine e;
+    // it's simple: this shouldn't crash.
+    engine.evaluate("12\n----12");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

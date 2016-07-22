@@ -15,8 +15,5 @@ TRANSLATIONS += i18n/qml_fr.ts \
 
 RESOURCES += qml.qrc
 
-# Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
-
-# Default rules for deployment.
-include(deployment.pri)
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/demos/photoviewer
+INSTALLS += target

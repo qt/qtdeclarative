@@ -480,6 +480,17 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
+    case QVariant::Vector2D: {
+        struct {
+            float xp;
+            float yp;
+        } vec;
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector2D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        Q_ASSERT(ok);
+        Q_UNUSED(ok);
+        property->writeProperty(_qobject, &vec, propertyWriteFlags);
+    }
+    break;
     case QVariant::Vector3D: {
         struct {
             float xp;
@@ -500,6 +511,19 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float wp;
         } vec;
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        Q_ASSERT(ok);
+        Q_UNUSED(ok);
+        property->writeProperty(_qobject, &vec, propertyWriteFlags);
+    }
+    break;
+    case QVariant::Quaternion: {
+        struct {
+            float wp;
+            float xp;
+            float yp;
+            float zp;
+        } vec;
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QQuaternion, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
