@@ -399,9 +399,7 @@ bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QSt
 
     if (baseUrl.startsWith(importUrl))
     {
-        QString typeUrl(importUrl);
-        typeUrl.append(fileName);
-        if (typeUrl == baseUrl)
+        if (fileName == baseUrl.midRef(importUrl.size()))
             return false;
     }
 
