@@ -134,7 +134,7 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
         break;
     case QQmlComponent::Ready:
         objects << c->create();
-        q->objectCreated(objects.last(), c->url());
+        q->objectCreated(objects.constLast(), c->url());
         break;
     case QQmlComponent::Loading:
     case QQmlComponent::Null:

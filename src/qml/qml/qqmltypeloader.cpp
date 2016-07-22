@@ -2002,8 +2002,7 @@ void QQmlTypeLoader::trimCache()
             break;
 
         while (!unneededTypes.isEmpty()) {
-            TypeCache::Iterator iter = unneededTypes.last();
-            unneededTypes.removeLast();
+            TypeCache::Iterator iter = unneededTypes.takeLast();
 
             iter.value()->release();
             m_typeCache.erase(iter);

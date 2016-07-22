@@ -195,7 +195,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         flags.hasArguments = true;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             flags.isV4Function = true;
         }
     }
@@ -231,7 +231,7 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     const int paramCount = m.parameterCount();
     if (paramCount) {
         flags.hasArguments = true;
-        if ((paramCount == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             flags.isV4Function = true;
         }
     }
@@ -390,7 +390,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     signalHandlerIndexCache.append(handler);
 
     QString handlerName = QLatin1String("on") + name;
-    handlerName[2] = handlerName[2].toUpper();
+    handlerName[2] = handlerName.at(2).toUpper();
 
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
     setNamedProperty(handlerName, signalHandlerIndex + signalOffset(), signalHandlerIndexCache.data() + signalHandlerIndex, (old != 0));

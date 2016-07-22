@@ -502,7 +502,7 @@ ReturnedValue NodePrototype::method_get_firstChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.first());
+        return Node::create(scope.engine, r->d()->d->children.constFirst());
 }
 
 ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
@@ -515,7 +515,7 @@ ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.last());
+        return Node::create(scope.engine, r->d()->d->children.constLast());
 }
 
 ReturnedValue NodePrototype::method_get_previousSibling(CallContext *ctx)
