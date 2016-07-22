@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -39,45 +39,31 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.0
 
 ApplicationWindow {
     width: 400
     height: 400
 
     property alias popup: popup
-    property alias popup2: popup2
-    property alias button: button
+    property alias parentButton: parentButton
+    property alias childButton: childButton
 
     Button {
-        id: button
-        text: "Open"
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: -height
+        id: parentButton
+        text: "Parent"
+        anchors.fill: parent
 
         Popup {
             id: popup
-            y: parent.height
+            x: 1
+            y: 1
+            padding: 1
 
-            Text {
-                color: "white"
-                text: "Hello, world!"
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: popup.close()
-                }
+            Button {
+                id: childButton
+                text: "Child"
             }
-        }
-    }
-
-    Popup {
-        id: popup2
-        y: popup.y
-        z: 1
-        contentItem: Text {
-            text: "Popup2"
-            font.pixelSize: 36
         }
     }
 }

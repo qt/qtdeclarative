@@ -48,10 +48,13 @@ import QtQuick.Controls.Universal 2.1
 ApplicationWindow {
     id: window
     visible: true
-    x: Screen.width / 2 - width / 2
-    y: Screen.height / 2 - height / 2
     width: 750
     height: 1000
+
+    Component.onCompleted: {
+        x = Screen.width / 2 - width / 2
+        y = Screen.height / 2 - height / 2
+    }
 
     Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
     Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light

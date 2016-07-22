@@ -431,8 +431,12 @@ void QQuickDrawer::setPosition(qreal position)
     d->position = position;
     if (isComponentComplete())
         d->reposition();
-    if (d->dimmer)
+    if (d->dimmer) {
         d->dimmer->setOpacity(position);
+        // TODO: check QStyleHints::useHoverEffects in Qt 5.8
+        d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0);
+        // d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0 && QGuiApplication::styleHints()->useHoverEffects());
+    }
     emit positionChanged();
 }
 

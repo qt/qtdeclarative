@@ -53,11 +53,12 @@ public:
 
     void popupAboutToShow();
     void popupAboutToHide();
-    void popupClosed();
 
     void createOverlay(QQuickPopup *popup);
     void destroyOverlay(QQuickPopup *popup);
     void resizeOverlay(QQuickPopup *popup);
+
+    QVector<QQuickPopup *> stackingOrderPopups() const;
 
     QQmlComponent *modal;
     QQmlComponent *modeless;
@@ -73,8 +74,6 @@ void QQuickOverlayPrivate::popupAboutToShow()
     QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
     if (!popup || !popup->dim())
         return;
-
-    createOverlay(popup);
 
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
@@ -95,16 +94,6 @@ void QQuickOverlayPrivate::popupAboutToHide()
         QQmlProperty::write(p->dimmer, QStringLiteral("opacity"), 0.0);
 }
 
-void QQuickOverlayPrivate::popupClosed()
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->dim())
-        return;
-
-    destroyOverlay(popup);
-}
-
 static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
 {
     if (!component)
@@ -121,6 +110,12 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
+        if (popup->isModal() && !qobject_cast<QQuickDrawer *>(popup)) {
+            // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
+            item->setAcceptHoverEvents(true);
+            // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
+            // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, item, &QQuickItem::setAcceptHoverEvents);
+        }
         component->completeCreate();
     }
     return item;
@@ -139,6 +134,7 @@ void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
 {
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (p->dimmer) {
+        p->dimmer->setParentItem(nullptr);
         p->dimmer->deleteLater();
         p->dimmer = nullptr;
     }
@@ -152,6 +148,22 @@ void QQuickOverlayPrivate::resizeOverlay(QQuickPopup *popup)
         p->dimmer->setWidth(q->width());
         p->dimmer->setHeight(q->height());
     }
+}
+
+QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
+{
+    const QList<QQuickItem *> children = paintOrderChildItems();
+
+    QVector<QQuickPopup *> popups;
+    popups.reserve(children.count());
+
+    for (auto it = children.crbegin(), end = children.crend(); it != end; ++it) {
+        QQuickPopup *popup = qobject_cast<QQuickPopup *>((*it)->parent());
+        if (popup)
+            popups += popup;
+    }
+
+    return popups;
 }
 
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
@@ -218,33 +230,32 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
     if (change == ItemChildAddedChange) {
         d->popups.append(popup);
+        if (popup->dim())
+            d->createOverlay(popup);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
             d->drawers.append(drawer);
-            d->createOverlay(drawer);
         } else {
             if (popup->isModal())
                 ++d->modalPopups;
 
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-            QObjectPrivate::connect(popup, &QQuickPopup::closed, d, &QQuickOverlayPrivate::popupClosed);
         }
     } else if (change == ItemChildRemovedChange) {
         d->popups.removeOne(popup);
+        d->destroyOverlay(popup);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
             d->drawers.removeOne(drawer);
-            d->destroyOverlay(drawer);
         } else {
             if (popup->isModal())
                 --d->modalPopups;
 
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-            QObjectPrivate::disconnect(popup, &QQuickPopup::closed, d, &QQuickOverlayPrivate::popupClosed);
         }
     }
 }
@@ -261,22 +272,25 @@ bool QQuickOverlay::event(QEvent *event)
 {
     Q_D(QQuickOverlay);
     switch (event->type()) {
-    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonPress: {
         emit pressed();
-        for (auto it = d->popups.crbegin(), end = d->popups.crend(); it != end; ++it) {
-            if ((*it)->overlayEvent(this, event)) {
-                d->mouseGrabberPopup = *it;
+        const auto popups = d->stackingOrderPopups();
+        for (QQuickPopup *popup : popups) {
+            if (popup->overlayEvent(this, event)) {
+                d->mouseGrabberPopup = popup;
                 return true;
             }
         }
         break;
+    }
     case QEvent::MouseMove:
         if (d->mouseGrabberPopup) {
             if (d->mouseGrabberPopup->overlayEvent(this, event))
                 return true;
         } else {
-            for (auto it = d->popups.crbegin(), end = d->popups.crend(); it != end; ++it) {
-                if ((*it)->overlayEvent(this, event))
+            const auto popups = d->stackingOrderPopups();
+            for (QQuickPopup *popup : popups) {
+                if (popup->overlayEvent(this, event))
                     return true;
             }
         }
@@ -289,8 +303,9 @@ bool QQuickOverlay::event(QEvent *event)
             if (grabber->overlayEvent(this, event))
                 return true;
         } else {
-            for (auto it = d->popups.crbegin(), end = d->popups.crend(); it != end; ++it) {
-                if ((*it)->overlayEvent(this, event))
+            const auto popups = d->stackingOrderPopups();
+            for (QQuickPopup *popup : popups) {
+                if (popup->overlayEvent(this, event))
                     return true;
             }
         }
@@ -313,14 +328,12 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     while (item->parentItem() != this)
         item = item->parentItem();
 
-    const QList<QQuickItem *> sortedChildren = d->paintOrderChildItems();
-    for (auto it = sortedChildren.rbegin(), end = sortedChildren.rend(); it != end; ++it) {
-        QQuickItem *popupItem = *it;
-        if (popupItem == item)
+    const auto popups = d->stackingOrderPopups();
+    for (QQuickPopup *popup : popups) {
+        if (popup->popupItem() == item)
             break;
 
-        QQuickPopup *popup = qobject_cast<QQuickPopup *>(popupItem->parent());
-        if (popup && popup->overlayEvent(item, event))
+        if (popup->overlayEvent(item, event))
             return true;
     }
 

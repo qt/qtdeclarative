@@ -53,11 +53,14 @@ class tst_popup : public QQmlDataTest
 private slots:
     void visible();
     void overlay();
+    void zOrder();
     void windowChange();
     void closePolicy_data();
     void closePolicy();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
+    void hover_data();
+    void hover();
 };
 
 void tst_popup::visible()
@@ -134,6 +137,7 @@ void tst_popup::overlay()
     QVERIFY(!overlay->isVisible());
 
     popup->setModal(true);
+    popup->setClosePolicy(QQuickPopup::CloseOnReleaseOutside);
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -148,7 +152,40 @@ void tst_popup::overlay()
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
     QVERIFY(!popup->isVisible());
-    QVERIFY(overlay->isVisible());
+    QVERIFY(!overlay->isVisible());
+}
+
+void tst_popup::zOrder()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->setModal(true);
+
+    QQuickPopup *popup2 = helper.window->property("popup2").value<QQuickPopup*>();
+    QVERIFY(popup2);
+    popup2->setModal(true);
+
+    // show popups in reverse order. popup2 has higher z-order so it appears
+    // on top and must be closed first, even if the other popup was opened last
+    popup2->open();
+    popup->open();
+    QVERIFY(popup2->isVisible());
+    QVERIFY(popup->isVisible());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(!popup2->isVisible());
+    QVERIFY(popup->isVisible());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(!popup2->isVisible());
+    QVERIFY(!popup->isVisible());
 }
 
 void tst_popup::windowChange()
@@ -327,6 +364,66 @@ void tst_popup::activeFocusOnClose2()
         closePopup2Button->mapToScene(QPointF(closePopup2Button->width() / 2, closePopup2Button->height() / 2)).toPoint());
     QVERIFY(!popup2->isVisible());
     QVERIFY(popup1->hasActiveFocus());
+}
+
+void tst_popup::hover_data()
+{
+    QTest::addColumn<bool>("modal");
+
+    QTest::newRow("modal") << true;
+    QTest::newRow("modeless") << false;
+}
+
+void tst_popup::hover()
+{
+    QFETCH(bool, modal);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->setModal(modal);
+
+    QQuickButton *parentButton = helper.window->property("parentButton").value<QQuickButton*>();
+    QVERIFY(parentButton);
+    parentButton->setHoverEnabled(true);
+
+    QQuickButton *childButton = helper.window->property("childButton").value<QQuickButton*>();
+    QVERIFY(childButton);
+    childButton->setHoverEnabled(true);
+
+    QSignalSpy openedSpy(popup, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+    popup->open();
+    QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+
+    // hover the parent button outside the popup
+    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
+    QCOMPARE(parentButton->isHovered(), !modal);
+    QVERIFY(!childButton->isHovered());
+
+    // hover the popup background
+    QTest::mouseMove(window, QPoint(1, 1));
+    QVERIFY(!parentButton->isHovered());
+    QVERIFY(!childButton->isHovered());
+
+    // hover the child button in a popup
+    QTest::mouseMove(window, QPoint(2, 2));
+    QVERIFY(!parentButton->isHovered());
+    QVERIFY(childButton->isHovered());
+
+    QSignalSpy closedSpy(popup, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+    popup->close();
+    QVERIFY(closedSpy.count() == 1 || closedSpy.wait());
+
+    // hover the parent button after closing the popup
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+    QVERIFY(parentButton->isHovered());
 }
 
 QTEST_MAIN(tst_popup)
