@@ -184,8 +184,7 @@ void QQuickTumblerPrivate::_q_updateItemWidths()
 void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
 {
     Q_Q(QQuickTumbler);
-    if (!ignoreCurrentIndexChanges) {
-        Q_ASSERT(view);
+    if (view && !ignoreCurrentIndexChanges) {
         const int oldCurrentIndex = currentIndex;
         currentIndex = view->property("currentIndex").toInt();
         if (oldCurrentIndex != currentIndex)
@@ -495,15 +494,14 @@ void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 void QQuickTumblerPrivate::disconnectFromView()
 {
     Q_Q(QQuickTumbler);
-    if (!view && contentItem && !q->isComponentComplete()) {
+    if (!view) {
         // If a custom content item is declared, it can happen that
         // the original contentItem exists without the view etc. having been
         // determined yet, and then this is called when the custom content item
-        // is eventually set. In all other cases, a view should exist.
+        // is eventually set.
         return;
     }
 
-    Q_ASSERT(view);
     QObject::disconnect(view, SIGNAL(currentIndexChanged()), q, SLOT(_q_onViewCurrentIndexChanged()));
     QObject::disconnect(view, SIGNAL(currentItemChanged()), q, SIGNAL(currentItemChanged()));
     QObject::disconnect(view, SIGNAL(countChanged()), q, SLOT(_q_onViewCountChanged()));
