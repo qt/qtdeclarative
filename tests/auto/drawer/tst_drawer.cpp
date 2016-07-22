@@ -43,6 +43,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -58,6 +59,9 @@ private slots:
     void dragMargin();
 
     void reposition();
+
+    void hover_data();
+    void hover();
 };
 
 void tst_Drawer::position_data()
@@ -173,6 +177,66 @@ void tst_Drawer::reposition()
 
     window->setWidth(window->width() + 100);
     QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
+}
+
+void tst_Drawer::hover_data()
+{
+    QTest::addColumn<bool>("modal");
+
+    QTest::newRow("modal") << true;
+    QTest::newRow("modeless") << false;
+}
+
+void tst_Drawer::hover()
+{
+    QFETCH(bool, modal);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    drawer->setModal(modal);
+
+    QQuickButton *backgroundButton = helper.window->property("backgroundButton").value<QQuickButton*>();
+    QVERIFY(backgroundButton);
+    backgroundButton->setHoverEnabled(true);
+
+    QQuickButton *drawerButton = helper.window->property("drawerButton").value<QQuickButton*>();
+    QVERIFY(drawerButton);
+    drawerButton->setHoverEnabled(true);
+
+    QSignalSpy openedSpy(drawer, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+    drawer->open();
+    QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+
+    // hover the background button outside the drawer
+    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
+    QCOMPARE(backgroundButton->isHovered(), !modal);
+    QVERIFY(!drawerButton->isHovered());
+
+    // hover the drawer background
+    QTest::mouseMove(window, QPoint(1, 1));
+    QVERIFY(!backgroundButton->isHovered());
+    QVERIFY(!drawerButton->isHovered());
+
+    // hover the button in a drawer
+    QTest::mouseMove(window, QPoint(2, 2));
+    QVERIFY(!backgroundButton->isHovered());
+    QVERIFY(drawerButton->isHovered());
+
+    QSignalSpy closedSpy(drawer, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+    drawer->close();
+    QVERIFY(closedSpy.count() == 1 || closedSpy.wait());
+
+    // hover the background button after closing the drawer
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+    QVERIFY(backgroundButton->isHovered());
 }
 
 QTEST_MAIN(tst_Drawer)

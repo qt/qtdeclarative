@@ -108,7 +108,7 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
-        if (popup->isModal()) {
+        if (popup->isModal() && !qobject_cast<QQuickDrawer *>(popup)) {
             // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
             item->setAcceptHoverEvents(true);
             // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
