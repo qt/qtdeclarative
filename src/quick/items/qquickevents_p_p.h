@@ -259,6 +259,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(State state READ state)
     Q_PROPERTY(quint64 pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
+    Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     Q_PROPERTY(QObject *grabber READ grabber WRITE setGrabber)
 
@@ -301,6 +302,9 @@ public:
     void setGrabberPointerHandler(QQuickPointerHandler *grabber);
 
     Q_INVOKABLE void cancelGrab();
+
+private:
+    QVector2D estimatedVelocity() const;
 
 private:
     QPointF m_pos;

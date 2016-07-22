@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickevents_p_p.h"
+#include <QtCore/qmap.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
@@ -531,8 +532,7 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
         m_pressTimestamp = timestamp;
         m_scenePressPos = scenePos;
     }
-    // TODO if Q_LIKELY(velocity.isNull) calculate velocity
-    m_velocity = velocity;
+    m_velocity = (Q_LIKELY(velocity.isNull()) ? estimatedVelocity() : velocity);
 }
 
 void QQuickEventPoint::localize(QQuickItem *target)
@@ -635,6 +635,66 @@ void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong times
     m_rotation = tp.rotation();
     m_pressure = tp.pressure();
     m_uniqueId = tp.uniqueId();
+}
+
+struct PointVelocityData {
+    QVector2D velocity;
+    QPointF pos;
+    ulong timestamp;
+};
+
+typedef QMap<quint64, PointVelocityData*> PointDataForPointIdMap;
+Q_GLOBAL_STATIC(PointDataForPointIdMap, g_previousPointData)
+static const int PointVelocityAgeLimit = 500; // milliseconds
+
+/*!
+ * \interal
+ * \brief Estimates the velocity based on a weighted average of all previous velocities.
+ *        The older the velocity is, the less significant it becomes for the estimate.
+ * \return
+ */
+QVector2D QQuickEventPoint::estimatedVelocity() const
+{
+    PointVelocityData *prevPoint = g_previousPointData->value(m_pointId);
+    if (!prevPoint) {
+        // cleanup events older than PointVelocityAgeLimit
+        auto end = g_previousPointData->end();
+        for (auto it = g_previousPointData->begin(); it != end; ) {
+            PointVelocityData *data = it.value();
+            if (m_timestamp - data->timestamp > PointVelocityAgeLimit) {
+                it = g_previousPointData->erase(it);
+                delete data;
+            } else {
+                ++it;
+            }
+        }
+        // TODO optimize: stop this dynamic memory thrashing
+        prevPoint = new PointVelocityData;
+        prevPoint->velocity = QVector2D();
+        prevPoint->timestamp = 0;
+        prevPoint->pos = QPointF();
+        g_previousPointData->insert(m_pointId, prevPoint);
+    }
+    if (prevPoint) {
+        const ulong timeElapsed = m_timestamp - prevPoint->timestamp;
+        if (timeElapsed == 0)   // in case we call estimatedVelocity() twice on the same QQuickEventPoint
+            return m_velocity;
+
+        QVector2D newVelocity;
+        if (prevPoint->timestamp != 0)
+            newVelocity = QVector2D(m_scenePos - prevPoint->pos)/timeElapsed;
+
+        // VERY simple kalman filter: does a weighted average
+        // where the older velocities get less and less significant
+        static const float KalmanGain = 0.7f;
+        QVector2D filteredVelocity = newVelocity * KalmanGain + m_velocity * (1.0f - KalmanGain);
+
+        prevPoint->velocity = filteredVelocity;
+        prevPoint->pos = m_scenePos;
+        prevPoint->timestamp = m_timestamp;
+        return filteredVelocity;
+    }
+    return QVector2D();
 }
 
 /*!
