@@ -74,7 +74,7 @@ public:
     bool isSystemTrayAvailable() const override;
     bool supportsMessages() const override;
 
-    QPlatformMenu *createMenu() const;
+    QPlatformMenu *createMenu() const override;
 
 private:
     QScopedPointer<QSystemTrayIcon> m_systray;

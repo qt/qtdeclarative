@@ -81,14 +81,14 @@ public:
     void setFont(const QFont &font) override;
     void setMenuType(MenuType type) override;
 
-    void showPopup(const QWindow *window, const QRect &targetRect, const QPlatformMenuItem *item);
+    void showPopup(const QWindow *window, const QRect &targetRect, const QPlatformMenuItem *item) override;
     void dismiss() override;
 
     QPlatformMenuItem *menuItemAt(int position) const override;
     QPlatformMenuItem *menuItemForTag(quintptr tag) const override;
 
-    QPlatformMenuItem *createMenuItem() const;
-    QPlatformMenu *createSubMenu() const;
+    QPlatformMenuItem *createMenuItem() const override;
+    QPlatformMenu *createSubMenu() const override;
 
 private:
     QScopedPointer<QMenu> m_menu;
