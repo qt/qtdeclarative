@@ -154,7 +154,7 @@ TestCase {
     }
 
     function test_flickable() {
-        var control = flickable.createObject(testCase, {text:"line0"})
+        var control = flickable.createObject(testCase, {text:"line0", selectByMouse: true})
         verify(control)
 
         var textArea = control.TextArea.flickable
@@ -168,6 +168,28 @@ TestCase {
 
         compare(control.contentWidth, textArea.contentWidth + textArea.leftPadding + textArea.rightPadding)
         compare(control.contentHeight, textArea.contentHeight + textArea.topPadding + textArea.bottomPadding)
+
+        compare(textArea.cursorPosition, 0)
+
+        var center = textArea.positionAt(control.width / 2, control.height / 2)
+        verify(center > 0)
+        mouseClick(textArea, control.width / 2, control.height / 2)
+        compare(textArea.cursorPosition, center)
+
+        // click inside text area, but below flickable
+        var below = textArea.positionAt(control.width / 2, control.height + 1)
+        verify(below > center)
+        mouseClick(textArea, control.width / 2, control.height + 1)
+        compare(textArea.cursorPosition, center) // no change
+
+        // scroll down
+        control.contentY = -(control.contentHeight - control.height) / 2
+
+        // click inside textarea, but above flickable
+        var above = textArea.positionAt(control.width / 2, textArea.topPadding)
+        verify(above > 0 && above < center)
+        mouseClick(textArea, control.width / 2, 0)
+        compare(textArea.cursorPosition, center) // no change
 
         control.destroy()
     }
