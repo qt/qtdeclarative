@@ -942,7 +942,6 @@ QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engi
 {
     bool unnamedParameter = false;
     const QSet<QString> &illegalNames = engine->v8Engine->illegalNames();
-    QString error;
     QString parameters;
 
     for (int i = 0; i < parameterNameList.count(); ++i) {
