@@ -101,7 +101,7 @@ public:
                                    QQmlPropertyData::WriteFlags flags = 0);
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
                       QQmlContextData *, QQmlPropertyData::WriteFlags flags = 0);
-    static void findAliasTarget(QObject *, int, QObject **, int *);
+    static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
     enum BindingFlag {
         None = 0,
@@ -112,9 +112,9 @@ public:
     static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None, QQmlPropertyData::WriteFlags writeFlags = QQmlPropertyData::DontRemoveBinding);
 
     static void removeBinding(const QQmlProperty &that);
-    static void removeBinding(QObject *o, int index);
+    static void removeBinding(QObject *o, QQmlPropertyIndex index);
     static void removeBinding(QQmlAbstractBinding *b);
-    static QQmlAbstractBinding *binding(QObject *, int index);
+    static QQmlAbstractBinding *binding(QObject *, QQmlPropertyIndex index);
 
     static QQmlPropertyData saveValueType(const QQmlPropertyData &,
                                           const QMetaObject *, int,
@@ -138,7 +138,7 @@ public:
     static void takeSignalExpression(const QQmlProperty &that,
                                                                  QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, QQmlPropertyData::WriteFlags);
-    static int valueTypeCoreIndex(const QQmlProperty &that);
+    static QQmlPropertyIndex propertyIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlPropertyData &that);
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);

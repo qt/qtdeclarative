@@ -576,8 +576,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             const QQmlPropertyCache *targetCache = propertyCaches->at(targetObjectIndex);
             Q_ASSERT(targetCache);
 
-            int coreIndex;
-            QQmlPropertyData::decodeValueTypePropertyIndex(alias->encodedMetaPropertyIndex, &coreIndex);
+            int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
             QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
             if (!targetProperty)
                 return false;
@@ -655,8 +654,8 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
 
         *propertyFlags |= QQmlPropertyData::IsQObjectDerived;
     } else {
-        int coreIndex;
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(alias.encodedMetaPropertyIndex, &coreIndex);
+        int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
+        int valueTypeIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).valueTypeIndex();
 
         QQmlPropertyCache *targetCache = propertyCaches->at(targetObjectIndex);
         Q_ASSERT(targetCache);

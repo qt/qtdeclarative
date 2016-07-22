@@ -90,6 +90,7 @@ HEADERS += \
     $$PWD/qqmlxmlhttprequest_p.h \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \
+    $$PWD/qqmlpropertyindex_p.h \
     $$PWD/qqmlnotifier_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \

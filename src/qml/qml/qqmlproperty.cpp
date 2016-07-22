@@ -741,10 +741,10 @@ QQmlPropertyPrivate::setBinding(const QQmlProperty &that, QQmlAbstractBinding *n
     setBinding(newBinding);
 }
 
-static void removeOldBinding(QObject *object, int index, QQmlPropertyPrivate::BindingFlags flags = QQmlPropertyPrivate::None)
+static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPropertyPrivate::BindingFlags flags = QQmlPropertyPrivate::None)
 {
-    int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
+    int coreIndex = index.coreIndex();
+    int valueTypeIndex = index.valueTypeIndex();
 
     QQmlData *data = QQmlData::get(object, false);
 
@@ -754,7 +754,8 @@ static void removeOldBinding(QObject *object, int index, QQmlPropertyPrivate::Bi
     QQmlAbstractBinding::Ptr oldBinding;
     oldBinding = data->bindings;
 
-    while (oldBinding && oldBinding->targetPropertyIndex() != coreIndex)
+    while (oldBinding && (oldBinding->targetPropertyIndex().coreIndex() != coreIndex ||
+                          oldBinding->targetPropertyIndex().hasValueTypeIndex()))
         oldBinding = oldBinding->nextBinding();
 
     if (!oldBinding)
@@ -776,12 +777,12 @@ void QQmlPropertyPrivate::removeBinding(QQmlAbstractBinding *b)
     removeBinding(b->targetObject(), b->targetPropertyIndex());
 }
 
-void QQmlPropertyPrivate::removeBinding(QObject *o, int index)
+void QQmlPropertyPrivate::removeBinding(QObject *o, QQmlPropertyIndex index)
 {
     Q_ASSERT(o);
 
     QObject *target;
-    int targetIndex;
+    QQmlPropertyIndex targetIndex;
     findAliasTarget(o, index, &target, &targetIndex);
     removeOldBinding(target, targetIndex);
 }
@@ -795,7 +796,7 @@ void QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
 }
 
 QQmlAbstractBinding *
-QQmlPropertyPrivate::binding(QObject *object, int index)
+QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
 {
     QQmlData *data = QQmlData::get(object);
     if (!data)
@@ -803,19 +804,19 @@ QQmlPropertyPrivate::binding(QObject *object, int index)
 
     findAliasTarget(object, index, &object, &index);
 
-    int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
+    const int coreIndex = index.coreIndex();
+    const int valueTypeIndex = index.valueTypeIndex();
 
     if (!data->hasBindingBit(coreIndex))
         return 0;
 
     QQmlAbstractBinding *binding = data->bindings;
-    while (binding && binding->targetPropertyIndex() != coreIndex)
+    while (binding && (binding->targetPropertyIndex().coreIndex() != coreIndex ||
+                       binding->targetPropertyIndex().hasValueTypeIndex()))
         binding = binding->nextBinding();
 
     if (binding && valueTypeIndex != -1) {
         if (binding->isValueTypeProxy()) {
-            int index = QQmlPropertyData::encodeValueTypePropertyIndex(coreIndex, valueTypeIndex);
             binding = static_cast<QQmlValueTypeProxyBinding *>(binding)->binding(index);
         }
     }
@@ -823,13 +824,14 @@ QQmlPropertyPrivate::binding(QObject *object, int index)
     return binding;
 }
 
-void QQmlPropertyPrivate::findAliasTarget(QObject *object, int bindingIndex,
-                                                  QObject **targetObject, int *targetBindingIndex)
+void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bindingIndex,
+                                          QObject **targetObject,
+                                          QQmlPropertyIndex *targetBindingIndex)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (data) {
-        int coreIndex;
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(bindingIndex, &coreIndex);
+        int coreIndex = bindingIndex.coreIndex();
+        int valueTypeIndex = bindingIndex.valueTypeIndex();
 
         QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
@@ -841,11 +843,12 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, int bindingIndex,
                 // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
                 Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
 
-                int aBindingIndex = aCoreIndex;
-                if (aValueTypeIndex != -1)
-                    aBindingIndex = QQmlPropertyData::encodeValueTypePropertyIndex(aBindingIndex, aValueTypeIndex);
-                else if (valueTypeIndex != -1)
-                    aBindingIndex = QQmlPropertyData::encodeValueTypePropertyIndex(aBindingIndex, valueTypeIndex);
+                QQmlPropertyIndex aBindingIndex(aCoreIndex);
+                if (aValueTypeIndex != -1) {
+                    aBindingIndex = QQmlPropertyIndex(aCoreIndex, aValueTypeIndex);
+                } else if (valueTypeIndex != -1) {
+                    aBindingIndex = QQmlPropertyIndex(aCoreIndex, valueTypeIndex);
+                }
 
                 findAliasTarget(aObject, aBindingIndex, targetObject, targetBindingIndex);
                 return;
@@ -863,11 +866,10 @@ void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags 
     Q_ASSERT(binding);
 
     QObject *object = binding->targetObject();
-    int index = binding->targetPropertyIndex();
+    const QQmlPropertyIndex index = binding->targetPropertyIndex();
 
 #ifndef QT_NO_DEBUG
-    int coreIndex;
-    QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
+    int coreIndex = index.coreIndex();
     QQmlData *data = QQmlData::get(object, true);
     if (data->propertyCache) {
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
@@ -1600,9 +1602,9 @@ int QQmlProperty::index() const
     return d ? d->core.coreIndex : -1;
 }
 
-int QQmlPropertyPrivate::valueTypeCoreIndex(const QQmlProperty &that)
+QQmlPropertyIndex QQmlPropertyPrivate::propertyIndex(const QQmlProperty &that)
 {
-    return that.d ? that.d->core.getValueTypeCoreIndex() : -1;
+    return that.d ? that.d->core.encodedIndex() : QQmlPropertyIndex();
 }
 
 /*!

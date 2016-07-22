@@ -76,7 +76,7 @@ public:
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
-    int targetPropertyIndex() const { return m_targetIndex; }
+    QQmlPropertyIndex targetPropertyIndex() const { return m_targetIndex; }
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
@@ -113,7 +113,7 @@ protected:
 
     inline void setNextBinding(QQmlAbstractBinding *);
 
-    int m_targetIndex;
+    QQmlPropertyIndex m_targetIndex;
 
     // Pointer is the target object to which the binding binds
     // flag1 is the updating flag

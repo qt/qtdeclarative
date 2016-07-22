@@ -837,16 +837,18 @@ void QQmlData::setQueuedForDeletion(QObject *object)
     }
 }
 
-void QQmlData::flushPendingBindingImpl(int coreIndex)
+void QQmlData::flushPendingBindingImpl(QQmlPropertyIndex index)
 {
-    clearPendingBindingBit(coreIndex);
+    clearPendingBindingBit(index.coreIndex());
 
     // Find the binding
     QQmlAbstractBinding *b = bindings;
-    while (b && b->targetPropertyIndex() != coreIndex)
+    while (b && (b->targetPropertyIndex().coreIndex() != index.coreIndex() ||
+                 b->targetPropertyIndex().hasValueTypeIndex()))
         b = b->nextBinding();
 
-    if (b && b->targetPropertyIndex() == coreIndex)
+    if (b && b->targetPropertyIndex().coreIndex() == index.coreIndex() &&
+            !b->targetPropertyIndex().hasValueTypeIndex())
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                             QQmlPropertyData::DontRemoveBinding);
 }
@@ -1788,21 +1790,29 @@ static void QQmlData_clearBit(QQmlData *data, int bit)
 
 void QQmlData::clearBindingBit(int coreIndex)
 {
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
     QQmlData_clearBit(this, coreIndex * 2);
 }
 
 void QQmlData::setBindingBit(QObject *obj, int coreIndex)
 {
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
     QQmlData_setBit(this, obj, coreIndex * 2);
 }
 
 void QQmlData::clearPendingBindingBit(int coreIndex)
 {
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
     QQmlData_clearBit(this, coreIndex * 2 + 1);
 }
 
 void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
 {
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
     QQmlData_setBit(this, obj, coreIndex * 2 + 1);
 }
 

@@ -107,7 +107,6 @@ protected:
                           const QV4::ScopedFunctionObject &f) = 0;
 
     QQmlPropertyData getPropertyData() const;
-    int getPropertyCoreIndex() const;
     int getPropertyType() const;
 
     bool slowWrite(const QQmlPropertyData &core, const QV4::Value &result, bool isUndefined,

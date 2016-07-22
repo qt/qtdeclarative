@@ -55,6 +55,7 @@
 #include <private/qflagpointer_p.h>
 #include "qqmlcleanup_p.h"
 #include "qqmlnotifier_p.h"
+#include <private/qqmlpropertyindex_p.h>
 
 #include <private/qhashedstring_p.h>
 #include <QtCore/qvarlengtharray.h>
@@ -174,13 +175,7 @@ public:
 
     // Returns the "encoded" index for use with bindings.  Encoding is:
     //     coreIndex | ((valueTypeCoreIndex + 1) << 16)
-    inline int encodedIndex() const;
-    static int encodeValueTypePropertyIndex(int coreIndex, int valueTypeCoreIndex)
-    { return coreIndex | ((valueTypeCoreIndex + 1) << 16); }
-    static int decodeValueTypePropertyIndex(int index, int *coreIndex = 0) {
-        if (coreIndex) *coreIndex = index & 0xffff;
-        return (index >> 16) - 1;
-    }
+    inline QQmlPropertyIndex encodedIndex() const;
 
     union {
         int propType;             // When !NotFullyResolved
@@ -557,9 +552,10 @@ int QQmlPropertyRawData::getValueTypeCoreIndex() const
     return isValueTypeVirtual()?valueTypeCoreIndex:-1;
 }
 
-int QQmlPropertyRawData::encodedIndex() const
+QQmlPropertyIndex QQmlPropertyRawData::encodedIndex() const
 {
-    return isValueTypeVirtual()?QQmlPropertyData::encodeValueTypePropertyIndex(coreIndex, valueTypeCoreIndex):coreIndex;
+    return isValueTypeVirtual() ? QQmlPropertyIndex(coreIndex, valueTypeCoreIndex)
+                                : QQmlPropertyIndex(coreIndex);
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const

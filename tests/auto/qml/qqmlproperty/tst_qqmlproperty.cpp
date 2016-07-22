@@ -194,7 +194,8 @@ void tst_qqmlproperty::qmlmetaproperty()
     QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
     QVERIFY(sigExprWatcher.wasDeleted());
     QCOMPARE(prop.index(), -1);
-    QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+    QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+    QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
     delete obj;
 }
@@ -445,7 +446,8 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -495,7 +497,8 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -548,7 +551,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -598,7 +602,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -647,7 +652,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QVERIFY(!sigExprWatcher.wasDeleted());
         QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -696,7 +702,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QVERIFY(!sigExprWatcher.wasDeleted());
         QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -749,7 +756,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -799,7 +807,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -852,7 +861,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -902,7 +912,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -951,7 +962,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QVERIFY(!sigExprWatcher.wasDeleted());
         QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }
@@ -1000,7 +1012,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QVERIFY(!sigExprWatcher.wasDeleted());
         QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
-        QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
+        QCOMPARE(QQmlPropertyPrivate::propertyIndex(prop).valueTypeIndex(), -1);
+        QVERIFY(!QQmlPropertyPrivate::propertyIndex(prop).hasValueTypeIndex());
 
         delete obj;
     }

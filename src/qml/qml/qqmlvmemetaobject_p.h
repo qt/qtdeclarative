@@ -97,7 +97,7 @@ public:
     QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
     ~QQmlInterceptorMetaObject();
 
-    void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
+    void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
 
     static QQmlInterceptorMetaObject *get(QObject *obj);
 
@@ -106,10 +106,10 @@ public:
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache; }
 
-    bool intercepts(int coreIndex) const
+    bool intercepts(QQmlPropertyIndex propertyIndex) const
     {
         for (auto it = interceptors; it; it = it->m_next) {
-            if (it->m_coreIndex == coreIndex)
+            if (it->m_propertyIndex == propertyIndex)
                 return true;
         }
         return false;

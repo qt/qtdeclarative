@@ -636,10 +636,10 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
 
     // ### this is best done through type-compile-time binding skip lists.
     if (_valueTypeProperty) {
-        QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex);
+        QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, QQmlPropertyIndex(_valueTypeProperty->coreIndex));
 
         if (binding && !binding->isValueTypeProxy()) {
-            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex);
+            QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(_valueTypeProperty->coreIndex));
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);
 
@@ -788,7 +788,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
     if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
         && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
         && !_valueTypeProperty)
-        QQmlPropertyPrivate::removeBinding(_bindingTarget, property->coreIndex);
+        QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(property->coreIndex));
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
@@ -857,14 +857,16 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 QObject *target = createdSubObject->parent();
 
                 if (targetCorePropertyData.isAlias()) {
-                    int propIndex;
-                    QQmlPropertyPrivate::findAliasTarget(target, targetCorePropertyData.coreIndex, &target, &propIndex);
+                    QQmlPropertyIndex propIndex;
+                    QQmlPropertyPrivate::findAliasTarget(target, QQmlPropertyIndex(targetCorePropertyData.coreIndex), &target, &propIndex);
                     QQmlData *data = QQmlData::get(target);
                     if (!data || !data->propertyCache) {
                         qWarning() << "can't resolve property alias for 'on' assignment";
                         return false;
                     }
-                    targetCorePropertyData = *data->propertyCache->property(propIndex);
+
+                    // we can't have aliasses on subproperties of value types, so:
+                    targetCorePropertyData = *data->propertyCache->property(propIndex.coreIndex());
                 }
 
                 QQmlProperty prop =
@@ -874,7 +876,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 QQmlInterceptorMetaObject *mo = QQmlInterceptorMetaObject::get(target);
                 if (!mo)
                     mo = new QQmlInterceptorMetaObject(target, QQmlData::get(target)->propertyCache);
-                mo->registerInterceptor(prop.index(), QQmlPropertyPrivate::valueTypeCoreIndex(prop), vi);
+                mo->registerInterceptor(QQmlPropertyPrivate::propertyIndex(prop), vi);
                 return true;
             }
             return false;
@@ -1191,7 +1193,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             continue;
         QQmlData *data = QQmlData::get(b->targetObject());
         Q_ASSERT(data);
-        data->clearPendingBindingBit(b->targetPropertyIndex());
+        data->clearPendingBindingBit(b->targetPropertyIndex().coreIndex());
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                       QQmlPropertyData::DontRemoveBinding);
 

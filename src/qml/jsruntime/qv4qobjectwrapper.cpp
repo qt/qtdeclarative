@@ -328,7 +328,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
 
 ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
 {
-    QQmlData::flushPendingBinding(object, property->coreIndex);
+    QQmlData::flushPendingBinding(object, property->encodedIndex());
 
     if (property->isFunction() && !property->isVarProperty()) {
         if (property->isVMEFunction()) {

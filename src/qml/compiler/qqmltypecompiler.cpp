@@ -1078,7 +1078,7 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
         } else
             property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
 
-        int propIdx = -1;
+        QQmlPropertyIndex propIdx;
 
         if (property.isEmpty()) {
             alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
@@ -1121,7 +1121,7 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                 break;
             }
 
-            propIdx = targetProperty->coreIndex;
+            propIdx = QQmlPropertyIndex(targetProperty->coreIndex);
 
             if (!subProperty.isEmpty()) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType);
@@ -1138,14 +1138,14 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                 }
                 Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
-                propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
+                propIdx = QQmlPropertyIndex(propIdx.coreIndex(), valueTypeIndex);
             } else {
                 if (targetProperty->isQObject())
                     alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
             }
         }
 
-        alias->encodedMetaPropertyIndex = propIdx;
+        alias->encodedMetaPropertyIndex = propIdx.toEncoded();
         alias->flags |= QV4::CompiledData::Alias::Resolved;
         numResolvedAliases++;
     }
