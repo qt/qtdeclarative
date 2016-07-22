@@ -40,7 +40,7 @@
 #include <iostream>
 
 QStringList readQmlTypes(const QString &filename) {
-    QRegularExpression re("import QtQuick.tooling 1.2.*Module {\\s*dependencies:\\[([^\\]]*)\\](.*)}",
+    QRegularExpression re("import QtQuick\\.tooling 1\\.2.*Module {\\s*dependencies:\\s*\\[([^\\]]*)\\](.*)}",
                           QRegularExpression::DotMatchesEverythingOption);
     if (!QFileInfo(filename).exists()) {
         std::cerr << "Non existing file: " << filename.toStdString() << std::endl;
