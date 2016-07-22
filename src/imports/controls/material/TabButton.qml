@@ -50,6 +50,8 @@ T.TabButton {
 
     padding: 12
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     contentItem: Text {
         text: control.text
         font: control.font

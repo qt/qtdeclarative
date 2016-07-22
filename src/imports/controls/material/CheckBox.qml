@@ -54,6 +54,8 @@ T.CheckBox {
     topPadding: padding + 7
     bottomPadding: padding + 7
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

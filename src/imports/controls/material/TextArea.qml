@@ -51,6 +51,8 @@ T.TextArea {
     topPadding: 8
     bottomPadding: 16
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     color: enabled ? Material.primaryTextColor : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor

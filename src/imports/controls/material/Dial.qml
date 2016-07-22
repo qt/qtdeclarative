@@ -45,6 +45,8 @@ T.Dial {
     implicitWidth: 100
     implicitHeight: 100
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     background: Rectangle {
         x: control.width / 2 - width / 2
         y: control.height / 2 - height / 2

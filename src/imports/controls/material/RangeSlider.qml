@@ -51,6 +51,8 @@ T.RangeSlider {
 
     padding: 6
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     first.handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))

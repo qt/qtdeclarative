@@ -54,6 +54,8 @@ T.MenuItem {
     bottomPadding: 12
     spacing: 16
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

@@ -48,6 +48,8 @@ T.ScrollBar {
 
     padding: 1
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     contentItem: Rectangle {
         id: handle
 

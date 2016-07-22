@@ -49,6 +49,8 @@ T.Slider {
 
     padding: 6
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))

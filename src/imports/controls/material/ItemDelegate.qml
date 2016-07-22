@@ -52,6 +52,8 @@ T.ItemDelegate {
     padding: 16
     spacing: 16
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0

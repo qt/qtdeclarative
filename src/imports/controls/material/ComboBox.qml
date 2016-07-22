@@ -56,6 +56,8 @@ T.ComboBox {
     spacing: 6
     padding: 16
 
+    hoverEnabled: Qt.styleHints.useHoverEffects
+
     delegate: MenuItem {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
