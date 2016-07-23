@@ -194,33 +194,33 @@ QPointF QQuickParentAnimationPrivate::computeTransformOrigin(QQuickItem::Transfo
     }
 }
 
+struct QQuickParentAnimationData : public QAbstractAnimationAction
+{
+    QQuickParentAnimationData() : reverse(false) {}
+    ~QQuickParentAnimationData() { qDeleteAll(pc); }
+
+    QQuickStateActions actions;
+    //### reverse should probably apply on a per-action basis
+    bool reverse;
+    QList<QQuickParentChange *> pc;
+    void doAction() Q_DECL_OVERRIDE
+    {
+        for (int ii = 0; ii < actions.count(); ++ii) {
+            const QQuickStateAction &action = actions.at(ii);
+            if (reverse)
+                action.event->reverse();
+            else
+                action.event->execute();
+        }
+    }
+};
+
 QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &actions,
                         QQmlProperties &modified,
                         TransitionDirection direction,
                         QObject *defaultTarget)
 {
     Q_D(QQuickParentAnimation);
-
-    struct QQuickParentAnimationData : public QAbstractAnimationAction
-    {
-        QQuickParentAnimationData() : reverse(false) {}
-        ~QQuickParentAnimationData() { qDeleteAll(pc); }
-
-        QQuickStateActions actions;
-        //### reverse should probably apply on a per-action basis
-        bool reverse;
-        QList<QQuickParentChange *> pc;
-        void doAction() Q_DECL_OVERRIDE
-        {
-            for (int ii = 0; ii < actions.count(); ++ii) {
-                const QQuickStateAction &action = actions.at(ii);
-                if (reverse)
-                    action.event->reverse();
-                else
-                    action.event->execute();
-            }
-        }
-    };
 
     QQuickParentAnimationData *data = new QQuickParentAnimationData;
     QQuickParentAnimationData *viaData = new QQuickParentAnimationData;
