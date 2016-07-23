@@ -105,7 +105,7 @@ struct LookupCall {
 struct RuntimeCall {
     JSC::MacroAssembler::Address addr;
 
-    inline RuntimeCall(uint offset = INT_MIN);
+    inline RuntimeCall(uint offset = uint(INT_MIN));
     bool isValid() const { return addr.offset >= 0; }
 };
 
