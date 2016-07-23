@@ -22,7 +22,7 @@ exists("qqml_enable_gcov") {
     LIBS_PRIVATE += -lgcov
 }
 
-greaterThan(QT_GCC_MAJOR_VERSION, 5) {
+gcc:!intel_icc:greaterThan(QT_GCC_MAJOR_VERSION, 5) {
     # Our code is bad. Temporary workaround.
     QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks
 }
