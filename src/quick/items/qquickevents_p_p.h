@@ -365,6 +365,7 @@ public: // helpers for C++ only (during event delivery)
     virtual QQuickEventPoint *point(int i) const = 0;
     virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
     virtual QVector<QQuickItem *> grabbers() const = 0;
+    virtual void clearGrabbers() const = 0;
 
 protected:
 
@@ -393,6 +394,7 @@ public:
     QQuickEventPoint *pointById(quint64 pointId) const override;
     bool allPointsAccepted() const override;
     QVector<QQuickItem *> grabbers() const override;
+    void clearGrabbers() const override;
 
     QMouseEvent *asMouseEvent() const;
 
@@ -416,6 +418,7 @@ public:
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
     QVector<QQuickItem *> grabbers() const override;
+    void clearGrabbers() const override;
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
     QTouchEvent *touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const;
@@ -507,6 +510,7 @@ public:
     QQuickPointerEvent *pointerEvent() const { return m_event; }
 
     static QQuickPointerDevice *touchDevice(QTouchDevice *d);
+    static QList<QQuickPointerDevice *> touchDevices();
     static QQuickPointerDevice *genericMouseDevice();
     static QQuickPointerDevice *tabletDevice(qint64);
 

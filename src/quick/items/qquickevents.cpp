@@ -481,6 +481,11 @@ QQuickPointerDevice *QQuickPointerDevice::touchDevice(QTouchDevice *d)
     return dev;
 }
 
+QList<QQuickPointerDevice*> QQuickPointerDevice::touchDevices()
+{
+    return g_touchDevices->values();
+}
+
 QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
 {
     return g_genericMouseDevice;
@@ -551,13 +556,28 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
     m_pressedButtons = Qt::NoButton;
 
     const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
-    m_pointCount = tps.count();
-    m_touchPoints.reserve(m_pointCount);
-    for (int i = m_touchPoints.size(); i < m_pointCount; ++i)
+    int newPointCount = tps.count();
+    m_touchPoints.reserve(newPointCount);
+
+    for (int i = m_touchPoints.size(); i < newPointCount; ++i)
         m_touchPoints.insert(i, new QQuickEventTouchPoint(this));
 
-    for (int i = 0; i < m_pointCount; ++i)
+    // Make sure the grabbers are right from one event to the next
+    QVector<QQuickItem*> grabbers;
+    // Copy all grabbers, because the order of points might have changed in the event.
+    // The ID is all that we can rely on (release might remove the first point etc).
+    for (int i = 0; i < newPointCount; ++i) {
+        QQuickItem *grabber = nullptr;
+        if (auto point = pointById(tps.at(i).id()))
+            grabber = point->grabber();
+        grabbers.append(grabber);
+    }
+
+    for (int i = 0; i < newPointCount; ++i) {
         m_touchPoints.at(i)->reset(tps.at(i), ev->timestamp());
+        m_touchPoints.at(i)->setGrabber(grabbers.at(i));
+    }
+    m_pointCount = newPointCount;
     return this;
 }
 
@@ -602,6 +622,10 @@ QVector<QQuickItem *> QQuickPointerMouseEvent::grabbers() const
     return result;
 }
 
+void QQuickPointerMouseEvent::clearGrabbers() const {
+    m_mousePoint->setGrabber(nullptr);
+}
+
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
@@ -621,6 +645,11 @@ QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
         }
     }
     return result;
+}
+
+void QQuickPointerTouchEvent::clearGrabbers() const {
+    for (int i = 0; i < pointCount(); ++i)
+        point(i)->setGrabber(nullptr);
 }
 
 /*!

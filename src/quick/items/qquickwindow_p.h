@@ -266,8 +266,6 @@ public:
 
     QOpenGLVertexArrayObjectHelper *vaoHelper;
 
-    // Keeps track of which touch point (int) was last accepted by which item
-    QHash<int, QQuickItem *> itemForTouchPointId;
     QSet<int> touchMouseIdCandidates;
 
     mutable QQuickWindowIncubationController *incubationController;
