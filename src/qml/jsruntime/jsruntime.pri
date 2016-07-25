@@ -39,10 +39,15 @@ SOURCES += \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4vme_moth.cpp \
-    $$PWD/qv4profiling.cpp \
     $$PWD/qv4arraybuffer.cpp \
     $$PWD/qv4typedarray.cpp \
     $$PWD/qv4dataview.cpp
+
+!contains(QT_CONFIG, no-qml-debug) {
+    SOURCES += $$PWD/qv4profiling.cpp
+} else {
+    DEFINES += QT_NO_QML_DEBUGGER
+}
 
 HEADERS += \
     $$PWD/qv4global_p.h \

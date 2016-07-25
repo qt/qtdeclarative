@@ -55,6 +55,13 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_NO_QML_DEBUGGER
+
+#define QML_MEMORY_SCOPE_URL(url)
+#define QML_MEMORY_SCOPE_STRING(s)
+
+#else
+
 class QUrl;
 
 class Q_QML_PRIVATE_EXPORT QQmlMemoryScope
@@ -82,6 +89,8 @@ public:
 
 #define QML_MEMORY_SCOPE_URL(url)       QQmlMemoryScope _qml_memory_scope(url)
 #define QML_MEMORY_SCOPE_STRING(s)      QQmlMemoryScope _qml_memory_scope(s)
+
+#endif
 
 QT_END_NAMESPACE
 #endif // QQMLMEMORYPROFILER_H

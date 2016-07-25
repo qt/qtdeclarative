@@ -62,6 +62,45 @@
 
 QT_BEGIN_NAMESPACE
 
+class QWindow;
+class QQuickWindow;
+
+#ifdef QT_NO_QML_DEBUGGER
+
+struct QV4DebugService
+{
+    void signalEmitted(const QString &) {}
+};
+
+struct QQmlProfilerService
+{
+    void startProfiling(QJSEngine *engine, quint64 features = std::numeric_limits<quint64>::max())
+    {
+        Q_UNUSED(engine);
+        Q_UNUSED(features);
+    }
+
+    void stopProfiling(QJSEngine *) {}
+};
+
+struct QQmlEngineDebugService
+{
+    void objectCreated(QJSEngine *, QObject *) {}
+    virtual void setStatesDelegate(QQmlDebugStatesDelegate *) {}
+};
+
+struct QQmlInspectorService {
+    void addWindow(QQuickWindow *) {}
+    void setParentWindow(QQuickWindow *, QWindow *) {}
+    void removeWindow(QQuickWindow *) {}
+};
+
+struct QDebugMessageService {};
+struct QQmlEngineControlService {};
+struct QQmlNativeDebugService {};
+
+#else
+
 class Q_QML_PRIVATE_EXPORT QV4DebugService : public QQmlDebugService
 {
     Q_OBJECT
@@ -117,8 +156,6 @@ protected:
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
 };
 
-class QWindow;
-class QQuickWindow;
 class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService
 {
     Q_OBJECT
@@ -177,6 +214,8 @@ protected:
 
     static const QString s_key;
 };
+
+#endif
 
 QT_END_NAMESPACE
 

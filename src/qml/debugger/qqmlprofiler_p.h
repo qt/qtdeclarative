@@ -63,6 +63,54 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_NO_QML_DEBUGGER
+
+#define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)
+#define Q_QML_PROFILE(feature, profiler, Method)
+#define Q_QML_OC_PROFILE(member, Code)
+
+struct QQmlProfiler {};
+
+struct QQmlBindingProfiler
+{
+    QQmlBindingProfiler(QQmlProfiler *, QQmlBinding *, QV4::FunctionObject *) {}
+};
+
+struct QQmlHandlingSignalProfiler
+{
+    QQmlHandlingSignalProfiler(QQmlProfiler *, QQmlBoundSignalExpression *) {}
+};
+
+struct QQmlCompilingProfiler
+{
+    QQmlCompilingProfiler(QQmlProfiler *, QQmlDataBlob *) {}
+};
+
+struct QQmlVmeProfiler {
+    QQmlVmeProfiler() {}
+
+    void init(QQmlProfiler *, int) {}
+
+    const QV4::CompiledData::Object *pop() { return nullptr; }
+    void push(const QV4::CompiledData::Object *) {}
+
+    static const quintptr profiler = 0;
+};
+
+struct QQmlObjectCreationProfiler
+{
+    QQmlObjectCreationProfiler(quintptr, const QV4::CompiledData::Object *) {}
+    void update(QV4::CompiledData::CompilationUnit *, const QV4::CompiledData::Object *,
+                const QString &, const QUrl &) {}
+};
+
+struct QQmlObjectCompletionProfiler
+{
+    QQmlObjectCompletionProfiler(QQmlVmeProfiler *) {}
+};
+
+#else
+
 #define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)\
     if (profiler && (profiler->featuresEnabled & (1 << feature))) {\
         Code;\
@@ -71,6 +119,9 @@ QT_BEGIN_NAMESPACE
 
 #define Q_QML_PROFILE(feature, profiler, Method)\
     Q_QML_PROFILE_IF_ENABLED(feature, profiler, profiler->Method)
+
+#define Q_QML_OC_PROFILE(member, Code)\
+    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, member.profiler, Code)
 
 // This struct is somewhat dangerous to use:
 // The messageType is a bit field. You can pack multiple messages into
@@ -348,9 +399,6 @@ private:
     QFiniteStack<const QV4::CompiledData::Object *> ranges;
 };
 
-#define Q_QML_OC_PROFILE(member, Code)\
-    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, member.profiler, Code)
-
 class QQmlObjectCreationProfiler {
 public:
 
@@ -397,5 +445,7 @@ private:
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
+
+#endif // QT_NO_QML_DEBUGGER
 
 #endif // QQMLPROFILER_P_H

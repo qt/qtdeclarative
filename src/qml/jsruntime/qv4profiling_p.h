@@ -57,7 +57,23 @@
 
 #include <QElapsedTimer>
 
+#ifdef QT_NO_QML_DEBUGGER
+
+#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE(engine, function) (function->code(engine, function->codeData))
+
 QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+namespace Profiling {
+struct Profiler {};
+}
+}
+
+QT_END_NAMESPACE
+
+#else
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type)\
     (engine->profiler &&\
@@ -74,6 +90,8 @@ QT_BEGIN_NAMESPACE
             (engine->profiler->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
         Profiling::FunctionCallProfiler::profileCall(engine->profiler, engine, function) :\
         function->code(engine, function->codeData))
+
+QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
@@ -287,5 +305,7 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
+
+#endif // QT_NO_QML_DEBUGGER
 
 #endif // QV4PROFILING_H

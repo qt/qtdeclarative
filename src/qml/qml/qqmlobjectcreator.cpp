@@ -89,9 +89,12 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     sharedState->creationContext = creationContext;
     sharedState->rootContext = 0;
 
-    QQmlProfiler *profiler = QQmlEnginePrivate::get(engine)->profiler;
-    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
-            sharedState->profiler.init(profiler, compilationUnit->totalParserStatusCount));
+    if (QQmlProfiler *profiler = QQmlEnginePrivate::get(engine)->profiler) {
+        Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
+                sharedState->profiler.init(profiler, compilationUnit->totalParserStatusCount));
+    } else {
+        Q_UNUSED(profiler);
+    }
 }
 
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState)

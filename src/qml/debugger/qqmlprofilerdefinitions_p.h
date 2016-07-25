@@ -56,6 +56,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_QML_DEBUGGER
+
 struct QQmlProfilerDefinitions {
     enum Message {
         Event,
@@ -160,6 +162,8 @@ struct QQmlProfilerDefinitions {
         MaximumInputEventType
     };
 };
+
+#endif // QT_NO_QML_DEBUGGER
 
 QT_END_NAMESPACE
 

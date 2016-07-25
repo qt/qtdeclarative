@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_QML_DEBUGGER
+
 class QJSEngine;
 
 class QQmlDebugServicePrivate;
@@ -100,6 +102,8 @@ signals:
     void messageToClient(const QString &name, const QByteArray &message);
     void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
+
+#endif
 
 QT_END_NAMESPACE
 
