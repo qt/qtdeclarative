@@ -142,6 +142,7 @@ Q_QML_EXPORT int qt_v4DebuggerHook(const char *json);
 
 } // extern "C"
 
+#ifndef QT_NO_QML_DEBUGGER
 static int qt_v4BreakpointCount = 0;
 static bool qt_v4IsDebugging = true;
 static bool qt_v4IsStepping = false;
@@ -285,6 +286,7 @@ static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scop
     }
 }
 
+#endif // QT_NO_QML_DEBUGGER
 // End of debugger interface
 
 using namespace QV4;
@@ -904,6 +906,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
 
+#ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
         engine->current->lineNumber = instr.lineNumber;
         QV4::Debugging::Debugger *debugger = context->engine()->debugger;
@@ -918,6 +921,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         if (qt_v4IsDebugging)
             qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Line)
+#endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadThis)
         VALUE(instr.result) = context->thisObject();

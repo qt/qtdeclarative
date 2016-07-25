@@ -177,6 +177,8 @@ private:
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
+    inline void addDebugInstruction();
+
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
