@@ -404,7 +404,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 {
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent)
+        : QQuickPointerEvent(parent), m_pointCount(0)
     {}
 
     QQuickPointerEvent *reset(QEvent *) override;
