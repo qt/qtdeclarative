@@ -283,7 +283,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
         return;
     }
 
-    IR::Module module(scope.engine->debugger != 0);
+    IR::Module module(scope.engine->debugger() != 0);
 
     QQmlJS::RuntimeCodegen cg(scope.engine, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);

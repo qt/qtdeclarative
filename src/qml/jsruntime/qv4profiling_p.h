@@ -76,19 +76,19 @@ QT_END_NAMESPACE
 #else
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type)\
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler->trackAlloc(size, type) : false)
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackAlloc(size, type) : false)
 
 #define Q_V4_PROFILE_DEALLOC(engine, size, type) \
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler->trackDealloc(size, type) : false)
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackDealloc(size, type) : false)
 
 #define Q_V4_PROFILE(engine, function)\
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler, engine, function) :\
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
+        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
         function->code(engine, function->codeData))
 
 QT_BEGIN_NAMESPACE

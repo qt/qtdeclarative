@@ -148,7 +148,7 @@ void Script::parse()
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
-    IR::Module module(v4->debugger != 0);
+    IR::Module module(v4->debugger() != 0);
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);

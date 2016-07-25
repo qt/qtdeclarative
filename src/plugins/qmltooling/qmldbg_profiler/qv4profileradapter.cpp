@@ -52,19 +52,19 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,
             this, &QV4ProfilerAdapter::forwardEnabledWhileWaiting, Qt::DirectConnection);
     connect(this, &QV4ProfilerAdapter::v4ProfilingEnabled,
-            engine->profiler, &QV4::Profiling::Profiler::startProfiling);
+            engine->profiler(), &QV4::Profiling::Profiler::startProfiling);
     connect(this, &QV4ProfilerAdapter::v4ProfilingEnabledWhileWaiting,
-            engine->profiler, &QV4::Profiling::Profiler::startProfiling, Qt::DirectConnection);
+            engine->profiler(), &QV4::Profiling::Profiler::startProfiling, Qt::DirectConnection);
     connect(this, &QQmlAbstractProfilerAdapter::profilingDisabled,
-            engine->profiler, &QV4::Profiling::Profiler::stopProfiling);
+            engine->profiler(), &QV4::Profiling::Profiler::stopProfiling);
     connect(this, &QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting,
-            engine->profiler, &QV4::Profiling::Profiler::stopProfiling,
+            engine->profiler(), &QV4::Profiling::Profiler::stopProfiling,
             Qt::DirectConnection);
     connect(this, &QQmlAbstractProfilerAdapter::dataRequested,
-            engine->profiler, &QV4::Profiling::Profiler::reportData);
+            engine->profiler(), &QV4::Profiling::Profiler::reportData);
     connect(this, &QQmlAbstractProfilerAdapter::referenceTimeKnown,
-            engine->profiler, &QV4::Profiling::Profiler::setTimer);
-    connect(engine->profiler, &QV4::Profiling::Profiler::dataReady,
+            engine->profiler(), &QV4::Profiling::Profiler::setTimer);
+    connect(engine->profiler(), &QV4::Profiling::Profiler::dataReady,
             this, &QV4ProfilerAdapter::receiveData);
 }
 

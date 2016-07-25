@@ -2314,7 +2314,7 @@ void QQmlTypeData::dataReceived(const Data &data)
         return;
     }
     QQmlEngine *qmlEngine = typeLoader()->engine();
-    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
     m_document->jsModule.sourceTimeStamp = sourceTimeStamp;
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
@@ -2338,7 +2338,7 @@ void QQmlTypeData::dataReceived(const Data &data)
 void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     QQmlEngine *qmlEngine = typeLoader()->engine();
-    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
+    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
     unit->loadIR(m_document.data(), unit);
     continueLoadFromIR();
 }
@@ -2850,7 +2850,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     }
 
 
-    QmlIR::Document irUnit(v4->debugger != 0);
+    QmlIR::Document irUnit(v4->debugger() != 0);
 
     QString error;
     QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));

@@ -136,8 +136,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
-    , debugger(0)
-    , profiler(0)
     , globalCode(0)
     , v8Engine(0)
     , argumentsAccessors(0)
@@ -145,6 +143,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
+    , m_debugger(0)
+    , m_profiler(0)
 {
     if (maxCallDepth == -1) {
         bool ok = false;
@@ -442,10 +442,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    delete debugger;
-    debugger = 0;
-    delete profiler;
-    profiler = 0;
+    delete m_debugger;
+    m_debugger = 0;
+    delete m_profiler;
+    m_profiler = 0;
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;
@@ -467,16 +467,16 @@ ExecutionEngine::~ExecutionEngine()
     delete [] argumentsAccessors;
 }
 
-void ExecutionEngine::setDebugger(Debugging::Debugger *debugger_)
+void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
-    Q_ASSERT(!debugger);
-    debugger = debugger_;
+    Q_ASSERT(!m_debugger);
+    m_debugger = debugger;
 }
 
-void ExecutionEngine::setProfiler(Profiling::Profiler *profiler_)
+void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 {
-    Q_ASSERT(!profiler);
-    profiler = profiler_;
+    Q_ASSERT(!m_profiler);
+    m_profiler = profiler;
 }
 
 void ExecutionEngine::initRootContext()
@@ -910,8 +910,8 @@ ReturnedValue ExecutionEngine::throwError(const Value &value)
     else
         exceptionStackTrace = stackTrace();
 
-    if (debugger)
-        debugger->aboutToThrow();
+    if (QV4::Debugging::Debugger *debug = debugger())
+        debug->aboutToThrow();
 
     return Encode::undefined();
 }

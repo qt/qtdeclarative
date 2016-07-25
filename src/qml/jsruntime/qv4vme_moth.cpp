@@ -909,7 +909,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 #ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
         engine->current->lineNumber = instr.lineNumber;
-        QV4::Debugging::Debugger *debugger = context->engine()->debugger;
+        QV4::Debugging::Debugger *debugger = context->engine()->debugger();
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
@@ -974,7 +974,7 @@ void **VME::instructionJumpTable()
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
     VME vme;
-    QV4::Debugging::Debugger *debugger = engine->debugger;
+    QV4::Debugging::Debugger *debugger = engine->debugger();
     if (debugger)
         debugger->enteringFunction();
     QV4::ReturnedValue retVal = vme.run(engine, code);
