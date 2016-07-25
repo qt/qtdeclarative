@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
 class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
-struct QQmlVmeProfiler;
 
 struct QQmlObjectCreatorSharedState : public QSharedData
 {

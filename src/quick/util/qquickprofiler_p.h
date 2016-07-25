@@ -319,12 +319,7 @@ public:
 
     qint64 timestamp() { return m_timer.nsecsElapsed(); }
 
-
     static quint64 featuresEnabled;
-    static bool profilingSceneGraph()
-    {
-        return featuresEnabled & (1 << QQuickProfiler::ProfileSceneGraph);
-    }
 
     static void initialize(QObject *parent);
 
