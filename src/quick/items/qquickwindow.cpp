@@ -2155,7 +2155,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     if (QQuickPointerMouseEvent *mouse = event->asPointerMouseEvent()) {
         deliverMouseEvent(mouse->asMouseEvent());
     } else if (event->asPointerTouchEvent()) {
-        deliverTouchEvent(event);
+        deliverTouchEvent(event->asPointerTouchEvent());
     } else {
         Q_ASSERT(false);
     }
@@ -2193,9 +2193,9 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, cons
     return targets;
 }
 
-void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerEvent *event)
+void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 {
-    qCDebug(DBG_TOUCH) << " - delivering" << event->asPointerTouchEvent()->asTouchEvent();
+    qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
 
     // List of all items that received an event before
     // When we have TouchBegin this is and will stay empty

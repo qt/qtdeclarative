@@ -164,7 +164,7 @@ public:
     // delivery of pointer events:
     QQuickPointerEvent *pointerEventInstance(QEvent *ev);
     void deliverPointerEvent(QQuickPointerEvent *);
-    void deliverTouchEvent(QQuickPointerEvent *);
+    void deliverTouchEvent(QQuickPointerTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
     bool deliverPoints(QQuickItem *, QQuickPointerEvent *, const QList<const QQuickEventPoint *> &,
                        QSet<quint64> *, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *, QSet<QQuickItem *> *);
