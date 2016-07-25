@@ -65,6 +65,7 @@ private slots:
     void QTBUG_35233();
     void disallowExtending();
     void QTBUG_35906();
+    void QTBUG_48136();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -465,6 +466,40 @@ void tst_QQmlPropertyMap::QTBUG_35906()
     QVariant value = obj->property("testValue");
     QCOMPARE(value.type(), QVariant::Int);
     QCOMPARE(value.toInt(), 42);
+}
+
+void tst_QQmlPropertyMap::QTBUG_48136()
+{
+    static const char key[] = "mykey";
+    QQmlPropertyMap map;
+
+    //
+    // Test that the notify signal is emitted correctly
+    //
+
+    const int propIndex = map.metaObject()->indexOfProperty(key);
+    const QMetaProperty prop = map.metaObject()->property(propIndex);
+    QSignalSpy notifySpy(&map, QByteArray::number(QSIGNAL_CODE) + prop.notifySignal().methodSignature());
+
+    map.insert(key, 42);
+    QCOMPARE(notifySpy.count(), 1);
+    map.insert(key, 43);
+    QCOMPARE(notifySpy.count(), 2);
+    map.insert(key, 43);
+    QCOMPARE(notifySpy.count(), 2);
+    map.insert(key, 44);
+    QCOMPARE(notifySpy.count(), 3);
+
+    //
+    // Test that the valueChanged signal is emitted correctly
+    //
+    QSignalSpy valueChangedSpy(&map, &QQmlPropertyMap::valueChanged);
+    map.setProperty(key, 44);
+    QCOMPARE(valueChangedSpy.count(), 0);
+    map.setProperty(key, 45);
+    QCOMPARE(valueChangedSpy.count(), 1);
+    map.setProperty(key, 45);
+    QCOMPARE(valueChangedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
