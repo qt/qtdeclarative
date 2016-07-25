@@ -613,7 +613,8 @@ bool QQuickPointerTouchEvent::allPointsAccepted() const {
 QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
 {
     QVector<QQuickItem *> result;
-    for (auto point : qAsConst(m_touchPoints)) {
+    for (int i = 0; i < m_pointCount; ++i) {
+        auto point = m_touchPoints.at(i);
         if (QQuickItem *grabber = point->grabber()) {
             if (!result.contains(grabber))
                 result << grabber;
