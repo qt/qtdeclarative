@@ -254,6 +254,7 @@ private slots:
 
     void QTBUG_50105();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
+    void itemFiltered();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8279,6 +8280,37 @@ void tst_QQuickListView::QTBUG_50097_stickyHeader_positionViewAtIndex()
     QTRY_COMPARE(listview->contentY(), 400.0); // a full page of items down, sans the original negative header position
     listview->setProperty("currentPage", 1);
     QTRY_COMPARE(listview->contentY(), -100.0); // back to the same position: header visible, items not under the header.
+}
+
+void tst_QQuickListView::itemFiltered()
+{
+    QStringListModel model(QStringList() << "one" << "two" << "three" << "four" << "five" << "six");
+    QSortFilterProxyModel proxy1;
+    proxy1.setSourceModel(&model);
+    proxy1.setSortRole(Qt::DisplayRole);
+    proxy1.setDynamicSortFilter(true);
+    proxy1.sort(0);
+
+    QSortFilterProxyModel proxy2;
+    proxy2.setSourceModel(&proxy1);
+    proxy2.setFilterRole(Qt::DisplayRole);
+    proxy2.setFilterRegExp("^[^ ]*$");
+    proxy2.setDynamicSortFilter(true);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->engine()->rootContext()->setContextProperty("_model", &proxy2);
+    QQmlComponent component(window->engine());
+    component.setData("import QtQuick 2.4; ListView { "
+                      "anchors.fill: parent; model: _model; delegate: Text { width: parent.width;"
+                      "text: model.display; } }",
+                      QUrl());
+    window->setContent(QUrl(), &component, component.create());
+
+    window->show();
+    QTest::qWaitForWindowExposed(window.data());
+
+    // this should not crash
+    model.setData(model.index(2), QStringLiteral("modified three"), Qt::DisplayRole);
 }
 
 QTEST_MAIN(tst_QQuickListView)
