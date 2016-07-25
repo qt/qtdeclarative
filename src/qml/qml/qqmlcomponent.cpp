@@ -874,11 +874,13 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         depthIncreased = false;
     }
 
-    QQmlEngineDebugService *service = QQmlDebugConnector::service<QQmlEngineDebugService>();
-    if (service && rv) {
-        if (!context->isInternal)
-            context->asQQmlContextPrivate()->instances.append(rv);
-        service->objectCreated(engine, rv);
+    if (rv) {
+        if (QQmlEngineDebugService *service =
+                QQmlDebugConnector::service<QQmlEngineDebugService>()) {
+            if (!context->isInternal)
+                context->asQQmlContextPrivate()->instances.append(rv);
+            service->objectCreated(engine, rv);
+        }
     }
 
     return rv;
