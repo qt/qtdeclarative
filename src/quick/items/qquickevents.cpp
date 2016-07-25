@@ -662,6 +662,16 @@ QVector<QPointF> QQuickPointerEvent::unacceptedPointScenePositions() const
     return points;
 }
 
+QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() const
+{
+    QVector<QPointF> points;
+    for (int i = 0; i < pointCount(); ++i) {
+        if (!point(i)->isAccepted() && point(i)->state() == Qt::TouchPointPressed)
+            points << point(i)->scenePos();
+    }
+    return points;
+}
+
 /*!
     \internal
     Populate the reusable synth-mouse event from one touchpoint.

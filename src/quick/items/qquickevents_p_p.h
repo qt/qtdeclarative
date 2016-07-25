@@ -361,6 +361,7 @@ public: // helpers for C++ only (during event delivery)
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
     QVector<QPointF> unacceptedPointScenePositions() const;
+    QVector<QPointF> unacceptedPressedPointScenePositions() const;
 
     virtual int pointCount() const = 0;
     virtual QQuickEventPoint *point(int i) const = 0;
