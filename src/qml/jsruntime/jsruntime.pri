@@ -6,7 +6,6 @@ SOURCES += \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
     $$PWD/qv4persistent.cpp \
-    $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
     $$PWD/qv4identifier.cpp \
     $$PWD/qv4identifiertable.cpp \
