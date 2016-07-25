@@ -176,36 +176,6 @@ const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
     return objectReferenceHash()->ids;
 }
 
-void QQmlDebugService::stateAboutToBeChanged(State)
-{
-}
-
-void QQmlDebugService::stateChanged(State)
-{
-}
-
-void QQmlDebugService::messageReceived(const QByteArray &)
-{
-}
-
-void QQmlDebugService::engineAboutToBeAdded(QJSEngine *engine)
-{
-    emit attachedToEngine(engine);
-}
-
-void QQmlDebugService::engineAboutToBeRemoved(QJSEngine *engine)
-{
-    emit detachedFromEngine(engine);
-}
-
-void QQmlDebugService::engineAdded(QJSEngine *)
-{
-}
-
-void QQmlDebugService::engineRemoved(QJSEngine *)
-{
-}
-
 QT_END_NAMESPACE
 
 #include "qqmldebugservice.moc"
