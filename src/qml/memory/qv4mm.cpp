@@ -42,6 +42,7 @@
 
 #include <QTime>
 #include <QMap>
+#include <QScopedValueRollback>
 
 #include <iostream>
 #include <cstdlib>
@@ -541,6 +542,8 @@ void MemoryManager::runGC()
 //        qDebug() << "Not running GC.";
         return;
     }
+
+    QScopedValueRollback<bool> gcBlocker(m_d->gcBlocked, true);
 
     if (!m_d->gcStats) {
         mark();
