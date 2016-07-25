@@ -915,13 +915,13 @@ void tst_QQuickMultiPointTouchArea::mouseAsTouchpoint()
         // Touch both, release one, manipulate other touchpoint with mouse
         QTest::touchEvent(window.data(), device).press(1, touch1);
         QQuickTouchUtils::flush(window.data());
-        QTest::touchEvent(window.data(), device).press(2, touch2);
+        QTest::touchEvent(window.data(), device).move(1, touch1).press(2, touch2);
         QQuickTouchUtils::flush(window.data());
         QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
         QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
         QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
         QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
-        QTest::touchEvent(window.data(), device).release(1, touch1);
+        QTest::touchEvent(window.data(), device).release(1, touch1).move(2, touch2);
         touch1.setY(20);
         QTest::mousePress(window.data(), Qt::LeftButton, 0, touch1);
         QQuickTouchUtils::flush(window.data());
