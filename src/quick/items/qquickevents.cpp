@@ -648,8 +648,8 @@ QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
 }
 
 void QQuickPointerTouchEvent::clearGrabbers() const {
-    for (int i = 0; i < pointCount(); ++i)
-        point(i)->setGrabber(nullptr);
+    for (auto point: m_touchPoints)
+        point->setGrabber(nullptr);
 }
 
 QVector<QPointF> QQuickPointerEvent::unacceptedPointScenePositions() const
