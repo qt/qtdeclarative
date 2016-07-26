@@ -375,6 +375,8 @@ Message {
  }
 \endqml
 
+To use an enum as a \l {QFlags}{flags} type in QML, see \l Q_FLAG().
+
 \note The names of enum values must begin with a capital letter in order to
 be accessible from QML.
 
