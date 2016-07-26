@@ -2251,7 +2251,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 }
 
 // This function recurses and sends the events to the individual items
-bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerEvent *event, const QList<const QQuickEventPoint *> &newPoints,
+bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerTouchEvent *event, const QList<const QQuickEventPoint *> &newPoints,
                                         QSet<quint64> *acceptedNewPoints, QHash<QQuickItem *, QList<const QQuickEventPoint *> > *updatedPoints,
                                         QSet<QQuickItem *> *hasFiltered)
 {
@@ -2335,13 +2335,11 @@ bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerEvent *ev
 // only the points that are relevant for this item.  Thus the need for
 // matchingPoints to already be that set of interesting points.
 // They are all pre-transformed, too.
-bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerEvent *event, QSet<quint64> *acceptedNewPoints,
+bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerTouchEvent *event, QSet<quint64> *acceptedNewPoints,
                                                       const QSet<quint64> &matchingNewPoints, const QList<const QQuickEventPoint *> &matchingPoints,
                                                       QSet<QQuickItem *> *hasFiltered)
 {
-    auto pointerTouchEvent = event->asPointerTouchEvent();
-    Q_ASSERT(pointerTouchEvent);
-    QScopedPointer<QTouchEvent> touchEvent(pointerTouchEvent->touchEventForItem(matchingPoints, item));
+    QScopedPointer<QTouchEvent> touchEvent(event->touchEventForItem(matchingPoints, item));
     if (touchEvent.data()->touchPoints().isEmpty())
         return false;
     bool touchEventAccepted = false;
@@ -2350,7 +2348,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
 
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
-    if (sendFilteredTouchEvent(item->parentItem(), item, pointerTouchEvent->asTouchEvent(), hasFiltered)) {
+    if (sendFilteredTouchEvent(item->parentItem(), item, event->asTouchEvent(), hasFiltered)) {
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints
         qCDebug(DBG_TOUCH) << " - can't. intercepted " << touchEvent.data() << " to " << item->parentItem() << " instead of " << item;
