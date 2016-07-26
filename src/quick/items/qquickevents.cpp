@@ -764,28 +764,42 @@ const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int point
 /*!
     \internal
     Make a new QTouchEvent, giving it a subset of the original touch points.
+
+    Returns a nullptr if all points are stationary or there are no points inside the item.
 */
-QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(const QList<const QQuickEventPoint *> &newPoints, QQuickItem *relativeTo) const
+QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item) const
 {
     QList<QTouchEvent::TouchPoint> touchPoints;
     Qt::TouchPointStates eventStates;
     // TODO maybe add QQuickItem::mapVector2DFromScene(QVector2D) to avoid needing QQuickItemPrivate here
     // Or else just document that velocity is always scene-relative and is not scaled and rotated with the item
     // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
-    QMatrix4x4 transformMatrix(QQuickItemPrivate::get(relativeTo)->windowToItemTransform());
-    for (const QQuickEventPoint * p : newPoints) {
+
+    QMatrix4x4 transformMatrix(QQuickItemPrivate::get(item)->windowToItemTransform());
+    for (int i = 0; i < m_pointCount; ++i) {
+        auto p = m_touchPoints.at(i);
+        if (p->isAccepted())
+            continue;
+        bool isGrabber = p->grabber() == item;
+        bool isPressInside = p->state() == Qt::TouchPointPressed && item->contains(item->mapFromScene(p->scenePos()));
+        if (!(isGrabber || isPressInside))
+            continue;
+
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
         if (tp) {
             eventStates |= tp->state();
             QTouchEvent::TouchPoint tpCopy = *tp;
-            tpCopy.setPos(relativeTo->mapFromScene(tpCopy.scenePos()));
-            tpCopy.setLastPos(relativeTo->mapFromScene(tpCopy.lastScenePos()));
-            tpCopy.setStartPos(relativeTo->mapFromScene(tpCopy.startScenePos()));
-            tpCopy.setRect(relativeTo->mapRectFromScene(tpCopy.sceneRect()));
+            tpCopy.setPos(item->mapFromScene(tpCopy.scenePos()));
+            tpCopy.setLastPos(item->mapFromScene(tpCopy.lastScenePos()));
+            tpCopy.setStartPos(item->mapFromScene(tpCopy.startScenePos()));
+            tpCopy.setRect(item->mapRectFromScene(tpCopy.sceneRect()));
             tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
             touchPoints << tpCopy;
         }
     }
+
+    if (eventStates == Qt::TouchPointStationary || touchPoints.isEmpty())
+        return nullptr;
 
     // if all points have the same state, set the event type accordingly
     const QTouchEvent &event = *asTouchEvent();
@@ -804,7 +818,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(const QList<const QQuick
 
     QTouchEvent *touchEvent = new QTouchEvent(eventType);
     touchEvent->setWindow(event.window());
-    touchEvent->setTarget(relativeTo);
+    touchEvent->setTarget(item);
     touchEvent->setDevice(event.device());
     touchEvent->setModifiers(event.modifiers());
     touchEvent->setTouchPoints(touchPoints);
