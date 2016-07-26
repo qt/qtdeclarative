@@ -640,12 +640,6 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             if (!item->contains(pos))
                 break;
 
-            // Store the id already here and restore it to -1 if the event does not get
-            // accepted. Cannot defer setting the new value because otherwise if the event
-            // handler spins the event loop all subsequent moves and releases get lost.
-            touchMouseId = p.id();
-            touchMouseDevice = device;
-
             // FIXME: this is a bit backwards, should just have the pointer event passed into the function
             auto pointerEventPoint = device->pointerEvent()->pointById(p.id());
             pointerEventPoint->setGrabber(item);
@@ -653,22 +647,14 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
 
             // Send a single press and see if that's accepted
-            if (!q->mouseGrabberItem())
-                item->grabMouse();
-            item->grabTouchPoints(QVector<int>() << touchMouseId);
-
             QCoreApplication::sendEvent(item, mousePress.data());
             event->setAccepted(mousePress->isAccepted());
-            if (!mousePress->isAccepted()) {
-                touchMouseId = -1;
-                touchMouseDevice = nullptr;
-                if (pointerEventPoint->grabber() == item) {
-                    qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "disassociated";
-                    pointerEventPoint->setGrabber(nullptr);
-                }
-
-                if (q->mouseGrabberItem() == item)
-                    item->ungrabMouse();
+            if (mousePress->isAccepted()) {
+                touchMouseDevice = device;
+                touchMouseId = p.id();
+                if (!q->mouseGrabberItem())
+                    item->grabMouse();
+                item->grabTouchPoints(QVector<int>() << touchMouseId);
             }
 
             if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
@@ -1652,13 +1638,13 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
             if (item->contains(localPos)) {
                 QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
                 me->accept();
-                item->grabMouse();
                 q->sendEvent(item, me.data());
                 event->setAccepted(me->isAccepted());
-                if (me->isAccepted())
+                if (me->isAccepted()) {
+                    if (!q->mouseGrabberItem())
+                        item->grabMouse();
                     return true;
-                if (q->mouseGrabberItem())
-                    q->mouseGrabberItem()->ungrabMouse();
+                }
             }
         }
     }

@@ -285,17 +285,16 @@ void tst_TouchMouse::simpleTouchEvent()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window, device).press(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 3);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
-    QCOMPARE(eventItem1->eventList.at(2).type, QEvent::UngrabMouse);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 3);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 3);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
