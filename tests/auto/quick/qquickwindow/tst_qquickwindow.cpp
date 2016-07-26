@@ -533,9 +533,10 @@ void tst_qquickwindow::touchEvent_basic()
     // would put the decorated window at that position rather than the window itself.
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(topItem, pos)));
     topItem->reset();
+    QTest::touchEvent(window, touchDevice).release(0, topItem->mapToScene(pos).toPoint(), window);
 
     // press multiple points
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),window)
+    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window)
             .press(1, bottomItem->mapToScene(pos).toPoint(), window);
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -545,6 +546,7 @@ void tst_qquickwindow::touchEvent_basic()
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
     bottomItem->reset();
+    QTest::touchEvent(window, touchDevice).release(0, topItem->mapToScene(pos).toPoint(), window).release(1, bottomItem->mapToScene(pos).toPoint(), window);
 
     // touch point on top item moves to bottom item, but top item should still receive the event
     QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window);
@@ -555,6 +557,7 @@ void tst_qquickwindow::touchEvent_basic()
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, Qt::TouchPointMoved,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
+    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), window);
 
     // touch point on bottom item moves to top item, but bottom item should still receive the event
     QTest::touchEvent(window, touchDevice).press(0, bottomItem->mapToScene(pos).toPoint(), window);
@@ -565,6 +568,7 @@ void tst_qquickwindow::touchEvent_basic()
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, Qt::TouchPointMoved,
             makeTouchPoint(bottomItem, bottomItem->mapFromItem(topItem, pos), pos)));
     bottomItem->reset();
+    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), window);
 
     // a single stationary press on an item shouldn't cause an event
     QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window);
@@ -669,6 +673,7 @@ void tst_qquickwindow::touchEvent_propagation()
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed,
             makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))));
+    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window);
 
     // touch top and middle items, middle item should get both events
     QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
@@ -680,6 +685,8 @@ void tst_qquickwindow::touchEvent_propagation()
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed,
            (QList<QTouchEvent::TouchPoint>() << makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))
                                               << makeTouchPoint(middleItem, pos) )));
+    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+            .release(1, pointInMiddleItem, window);
     middleItem->reset();
 
     // disable middleItem as well
@@ -704,6 +711,8 @@ void tst_qquickwindow::touchEvent_propagation()
     bottomItem->acceptTouchEvents = acceptTouchEvents;
     bottomItem->setEnabled(enableItem);
     bottomItem->setVisible(showItem);
+    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+            .release(1, pointInMiddleItem, window);
 
     // no events should be received
     QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
@@ -713,7 +722,9 @@ void tst_qquickwindow::touchEvent_propagation()
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
-
+    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+            .release(1, pointInMiddleItem, window)
+            .release(2, pointInBottomItem, window);
     topItem->reset();
     middleItem->reset();
     bottomItem->reset();
@@ -739,6 +750,7 @@ void tst_qquickwindow::touchEvent_propagation()
         COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed,
                 makeTouchPoint(topItem, pos)));
     }
+    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window);
 
     delete topItem;
     delete middleItem;
