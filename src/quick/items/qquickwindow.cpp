@@ -2352,8 +2352,10 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints
         qCDebug(DBG_TOUCH) << " - can't. intercepted " << touchEvent.data() << " to " << item->parentItem() << " instead of " << item;
-        foreach (int id, matchingNewPoints)
+        foreach (int id, matchingNewPoints) {
+            event->pointById(id)->setAccepted();
             acceptedNewPoints->insert(id);
+        }
         return true;
     }
 
@@ -2379,8 +2381,10 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
     if (touchEventAccepted) {
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints.
-        foreach (int id, matchingNewPoints)
+        foreach (int id, matchingNewPoints) {
+            event->pointById(id)->setAccepted();
             acceptedNewPoints->insert(id);
+        }
     } else {
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
