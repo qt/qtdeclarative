@@ -5,5 +5,7 @@
         <file>fonts/fontello.ttf</file>
         <file>qml/texteditor.qml</file>
         <file>texteditor.html</file>
+        <file>qml/+touch/texteditor.qml</file>
+        <file>+touch/texteditor.html</file>
     </qresource>
 </RCC>

@@ -38,13 +38,17 @@
 **
 ****************************************************************************/
 
+#ifdef QT_WIDGETS_LIB
 #include <QApplication>
+#else
+#include <QGuiApplication>
+#endif
 #include <QFontDatabase>
 #include <QDebug>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlFileSelector>
 #include <QQuickStyle>
-#include <QFileSelector>
 
 #include "documenthandler.h"
 
@@ -54,7 +58,11 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName("QtProject");
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
+#ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);
+#else
+    QGuiApplication app(argc, argv);
+#endif
 
     QFontDatabase fontDatabase;
     if (fontDatabase.addApplicationFont(":/fonts/fontello.ttf") == -1)
@@ -63,6 +71,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<DocumentHandler>("io.qt.examples.texteditor", 1, 0, "DocumentHandler");
 
     QQmlApplicationEngine engine;
+#ifdef QT_EXTRA_FILE_SELECTOR
+    QQmlFileSelector::get(&engine)->setExtraSelectors(QStringList() << QT_EXTRA_FILE_SELECTOR);
+#endif
     engine.load(QUrl("qrc:/qml/texteditor.qml"));
     if (engine.rootObjects().isEmpty())
         return -1;
