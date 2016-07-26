@@ -769,7 +769,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QVERIFY(!window.rootObject()->property("mr1_canceled").toBool());
     QVERIFY(window.rootObject()->property("mr2_pressed").toBool());
     QVERIFY(!window.rootObject()->property("mr2_released").toBool());
-    QVERIFY(window.rootObject()->property("mr2_canceled").toBool());
+    QVERIFY(!window.rootObject()->property("mr2_canceled").toBool());
 
     QTest::qWait(200);
 
