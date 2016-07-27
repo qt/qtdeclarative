@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickbutton_p.h"
-#include "qquickabstractbutton_p_p.h"
+#include "qquickbutton_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -91,17 +91,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Button}, {Button Controls}
 */
 
-class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickButton)
-
-public:
-    QQuickButtonPrivate();
-
-    bool flat;
-    bool highlighted;
-};
-
 QQuickButtonPrivate::QQuickButtonPrivate() :
     flat(false), highlighted(false)
 {
@@ -109,6 +98,11 @@ QQuickButtonPrivate::QQuickButtonPrivate() :
 
 QQuickButton::QQuickButton(QQuickItem *parent) :
     QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
+{
+}
+
+QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
+    QQuickAbstractButton(dd, parent)
 {
 }
 

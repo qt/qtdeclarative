@@ -36,6 +36,7 @@ QML_CONTROLS = \
     RadioDelegate.qml \
     RadioIndicator.qml \
     RangeSlider.qml \
+    RoundButton.qml \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \

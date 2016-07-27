@@ -548,6 +548,12 @@
         \snippet qtquickcontrols2-rangeslider-custom.qml file
 
 
+    \section2 Customizing RoundButton
+
+        RoundButton can be customized in the same manner as
+        \l {Customizing Button}{Button}.
+
+
     \section2 Customizing ScrollBar
 
         ScrollBar consists of two visual items: \l {Control::background}{background}

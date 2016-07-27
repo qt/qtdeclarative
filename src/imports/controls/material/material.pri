@@ -42,6 +42,7 @@ QML_FILES += \
     $$PWD/RadioDelegate.qml \
     $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
+    $$PWD/RoundButton.qml \
     $$PWD/RectangularGlow.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ScrollIndicator.qml \

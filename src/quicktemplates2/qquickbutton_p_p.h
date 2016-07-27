@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKBUTTON_P_H
-#define QQUICKBUTTON_P_H
+#ifndef QQUICKBUTTON_P_P_H
+#define QQUICKBUTTON_P_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,21 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickButtonPrivate;
-
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButton : public QQuickAbstractButton
+class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
-    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
-    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
-    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickButton)
 
 public:
-    explicit QQuickButton(QQuickItem *parent = nullptr);
+    QQuickButtonPrivate();
 
-    bool isHighlighted() const;
-    void setHighlighted(bool highlighted);
-
-    bool isFlat() const;
-    void setFlat(bool flat);
-
-Q_SIGNALS:
-    void checkableChanged();
-    void autoRepeatChanged();
-    void highlightedChanged();
-    void flatChanged();
-
-protected:
-    QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
-
-    void checkableChange() override;
-    void autoRepeatChange() override;
-
-    QFont defaultFont() const override;
-
-private:
-    Q_DISABLE_COPY(QQuickButton)
-    Q_DECLARE_PRIVATE(QQuickButton)
+    bool flat;
+    bool highlighted;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickButton)
-
-#endif // QQUICKBUTTON_P_H
+#endif // QQUICKBUTTON_P_P_H

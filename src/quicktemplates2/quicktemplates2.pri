@@ -6,6 +6,7 @@ HEADERS += \
     $$PWD/qquickapplicationwindow_p.h \
     $$PWD/qquickbusyindicator_p.h \
     $$PWD/qquickbutton_p.h \
+    $$PWD/qquickbutton_p_p.h \
     $$PWD/qquickbuttongroup_p.h \
     $$PWD/qquickcheckbox_p.h \
     $$PWD/qquickcheckdelegate_p.h \
@@ -44,6 +45,7 @@ HEADERS += \
     $$PWD/qquickradiobutton_p.h \
     $$PWD/qquickradiodelegate_p.h \
     $$PWD/qquickrangeslider_p.h \
+    $$PWD/qquickroundbutton_p.h \
     $$PWD/qquickscrollbar_p.h \
     $$PWD/qquickscrollindicator_p.h \
     $$PWD/qquickslider_p.h \
@@ -101,6 +103,7 @@ SOURCES += \
     $$PWD/qquickradiobutton.cpp \
     $$PWD/qquickradiodelegate.cpp \
     $$PWD/qquickrangeslider.cpp \
+    $$PWD/qquickroundbutton.cpp \
     $$PWD/qquickscrollbar.cpp \
     $$PWD/qquickscrollindicator.cpp \
     $$PWD/qquickslider.cpp \

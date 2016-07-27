@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKBUTTON_P_H
-#define QQUICKBUTTON_P_H
+#ifndef QQUICKROUNDBUTTON_P_H
+#define QQUICKROUNDBUTTON_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,37 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickButtonPrivate;
+class QQuickRoundButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButton : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRoundButton : public QQuickButton
 {
     Q_OBJECT
-    Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
-    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
-    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
-    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
+    Q_PROPERTY(qreal radius READ radius WRITE setRadius RESET resetRadius NOTIFY radiusChanged FINAL)
 
 public:
-    explicit QQuickButton(QQuickItem *parent = nullptr);
+    explicit QQuickRoundButton(QQuickItem *parent = nullptr);
 
-    bool isHighlighted() const;
-    void setHighlighted(bool highlighted);
-
-    bool isFlat() const;
-    void setFlat(bool flat);
+    qreal radius() const;
+    void setRadius(qreal radius);
+    void resetRadius();
 
 Q_SIGNALS:
-    void checkableChanged();
-    void autoRepeatChanged();
-    void highlightedChanged();
-    void flatChanged();
+    void radiusChanged();
 
 protected:
-    QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
-
-    void checkableChange() override;
-    void autoRepeatChange() override;
-
-    QFont defaultFont() const override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 private:
-    Q_DISABLE_COPY(QQuickButton)
-    Q_DECLARE_PRIVATE(QQuickButton)
+    Q_DISABLE_COPY(QQuickRoundButton)
+    Q_DECLARE_PRIVATE(QQuickRoundButton)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickButton)
+QML_DECLARE_TYPE(QQuickRoundButton)
 
-#endif // QQUICKBUTTON_P_H
+#endif // QQUICKROUNDBUTTON_P_H

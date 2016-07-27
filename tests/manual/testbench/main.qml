@@ -251,6 +251,108 @@ ApplicationWindow {
                 }
 
                 RowLayout {
+                    spacing: window.controlSpacing * 2
+
+                    Button {
+                        text: "Normal"
+                    }
+                    Button {
+                        text: "Pressed"
+                        down: true
+                    }
+                    Button {
+                        text: "Checked"
+                        checked: true
+                    }
+                    Button {
+                        text: "CH + PR"
+                        checked: true
+                        down: true
+                    }
+                    Button {
+                        text: "Disabled"
+                        enabled: false
+                    }
+                    Button {
+                        text: "CH + DIS"
+                        enabled: false
+                        checked: true
+                    }
+                }
+
+                RowLayout {
+                    spacing: window.controlSpacing * 2
+
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            down: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI + PR"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            checked: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI + CH"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            down: true
+                            checked: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI+CH+PR"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            enabled: false
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI + DIS"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                    ColumnLayout {
+                        RoundButton {
+                            highlighted: true
+                            enabled: false
+                            checked: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Label {
+                            text: "HI+CH+DIS"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                }
+
+                RowLayout {
                     CheckBox {
                         text: "Normal"
                     }
