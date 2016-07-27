@@ -218,12 +218,13 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
         m_opacityState.push(state.opacity);
         m_transformState.push(state.transform);
         m_clipState.push(state.clip);
-
+        m_hasClip = state.hasClip;
     } else {
         // There is no parent, and no previous parent, so likely a root node
         m_opacityState.push(1.0f);
         m_transformState.push(QTransform());
         m_clipState.push(QRegion());
+        m_hasClip = false;
     }
 
     // If the node is being removed, then cleanup the state data
