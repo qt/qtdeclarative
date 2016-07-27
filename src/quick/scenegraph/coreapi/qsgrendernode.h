@@ -61,6 +61,13 @@ public:
     };
     Q_DECLARE_FLAGS(StateFlags, StateFlag)
 
+    enum RenderingFlag {
+        BoundedRectRendering = 0x01,
+        DepthAwareRendering = 0x02,
+        OpaqueRendering = 0x04
+    };
+    Q_DECLARE_FLAGS(RenderingFlags, RenderingFlag)
+
     struct Q_QUICK_EXPORT RenderState {
         virtual ~RenderState();
         virtual const QMatrix4x4 *projectionMatrix() const = 0;
@@ -78,6 +85,8 @@ public:
     virtual StateFlags changedStates() const;
     virtual void render(const RenderState *state) = 0;
     virtual void releaseResources();
+    virtual RenderingFlags flags() const;
+    virtual QRectF rect() const;
 
     const QMatrix4x4 *matrix() const;
     const QSGClipNode *clipList() const;
@@ -89,6 +98,7 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderNode::StateFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderNode::RenderingFlags)
 
 QT_END_NAMESPACE
 

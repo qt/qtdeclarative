@@ -1033,11 +1033,13 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
         m_rebuild |= FullRebuild;
 
     } else if (node->type() == QSGNode::RenderNodeType) {
-        RenderNodeElement *e = new RenderNodeElement(static_cast<QSGRenderNode *>(node));
+        QSGRenderNode *rn = static_cast<QSGRenderNode *>(node);
+        RenderNodeElement *e = new RenderNodeElement(rn);
         snode->data = e;
-        Q_ASSERT(!m_renderNodeElements.contains(static_cast<QSGRenderNode *>(node)));
+        Q_ASSERT(!m_renderNodeElements.contains(rn));
         m_renderNodeElements.insert(e->renderNode, e);
-        m_useDepthBuffer = false;
+        if (!rn->flags().testFlag(QSGRenderNode::DepthAwareRendering))
+            m_useDepthBuffer = false;
         m_rebuild |= FullRebuild;
     }
 

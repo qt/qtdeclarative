@@ -68,7 +68,7 @@ void SoftwareRenderNode::render(const RenderState *renderState)
     p->setOpacity(inheritedOpacity());
     const QRegion *clipRegion = renderState->clipRegion();
     if (clipRegion && !clipRegion->isEmpty())
-        p->setClipRegion(*clipRegion);
+        p->setClipRegion(*clipRegion, Qt::IntersectClip);
 
     const QPointF p0(m_item->width() - 1, m_item->height() - 1);
     const QPointF p1(0, 0);
@@ -88,4 +88,14 @@ void SoftwareRenderNode::render(const RenderState *renderState)
 QSGRenderNode::StateFlags SoftwareRenderNode::changedStates() const
 {
     return 0;
+}
+
+QSGRenderNode::RenderingFlags SoftwareRenderNode::flags() const
+{
+    return BoundedRectRendering;
+}
+
+QRectF SoftwareRenderNode::rect() const
+{
+    return QRect(0, 0, m_item->width(), m_item->height());
 }

@@ -179,6 +179,11 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     default value according to the OpenGL specification. For other APIs, see
     the documentation for changedStates() for more information.
 
+    \note Depth writes are disabled when this function is called (for example,
+    glDepthMask(false) in case of OpenGL). Enabling depth writes can lead to
+    unexpected results, depending on the scenegraph backend in use, so nodes
+    should avoid this.
+
     For APIs other than OpenGL, it will likely be necessary to query certain
     API-specific resources (for example, the graphics device or the command
     list/buffer to add the commands to). This is done via QSGRendererInterface.
@@ -208,6 +213,68 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
  */
 void QSGRenderNode::releaseResources()
 {
+}
+
+/*!
+    \enum QSGRenderNode::RenderingFlag
+
+    Possible values for the bitmask returned from flags().
+
+    \value BoundedRectRendering Indicates that the implementation of render()
+    does not render outside the area reported from rect() in item
+    coordinates. Such node implementations can lead to more efficient rendering,
+    depending on the scenegraph backend. For example, the software backend can
+    continue to use the more optimal partial update path when all render nodes
+    in the scene have this flag set.
+
+    \value DepthAwareRendering Indicates that the implementations of render()
+    conforms to scenegraph expectations by only generating a Z value of 0 in
+    scene coordinates which is then transformed by the matrices retrieved from
+    RenderState::projectionMatrix() and matrix(), as described in the notes for
+    render(). Such node implementations can lead to more efficient rendering,
+    depending on the scenegraph backend. For example, the batching OpenGL
+    renderer can continue to use a more optimal path when all render nodes in
+    the scene have this flag set.
+
+    \value OpaqueRendering Indicates that the implementation of render() writes
+    out opaque pixels for the entire area reported from rect(). By default the
+    renderers must assume that render() can also output semi or fully
+    transparent pixels. Setting this flag can improve performance in some
+    cases.
+
+    \sa render(), rect()
+ */
+
+/*!
+    \return flags describing the behavior of this render node.
+
+    The default implementation returns 0.
+
+    \sa RenderingFlag, rect()
+ */
+QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
+{
+    return 0;
+}
+
+/*!
+    \return the bounding rectangle in item coordinates for the area render()
+    touches. The value is only in use when flags() includes
+    BoundedRectRendering, ignored otherwise.
+
+    Reporting the rectangle in combination with BoundedRectRendering is
+    particularly important with the \c software backend because otherwise
+    having a rendernode in the scene would trigger fullscreen updates, skipping
+    all partial update optimizations.
+
+    For rendernodes covering the entire area of a corresponding QQuickItem the
+    return value will be (0, 0, item->width(), item->height()).
+
+    \sa flags()
+*/
+QRectF QSGRenderNode::rect() const
+{
+    return QRectF();
 }
 
 /*!

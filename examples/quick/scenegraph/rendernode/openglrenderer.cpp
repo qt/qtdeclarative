@@ -151,4 +151,14 @@ QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
     return BlendState;
 }
 
+QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
+{
+    return BoundedRectRendering | DepthAwareRendering;
+}
+
+QRectF OpenGLRenderNode::rect() const
+{
+    return QRect(0, 0, m_item->width(), m_item->height());
+}
+
 #endif // QT_NO_OPENGL
