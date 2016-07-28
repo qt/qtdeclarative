@@ -660,10 +660,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
                     QCoreApplication::sendEvent(item, mouseDoubleClick.data());
                     event->setAccepted(mouseDoubleClick->isAccepted());
-                    if (mouseDoubleClick->isAccepted()) {
-                        touchMouseIdCandidates.clear();
-                        return true;
-                    } else {
+                    if (!mouseDoubleClick->isAccepted()) {
                         touchMouseId = -1;
                         touchMouseDevice = nullptr;
                     }
