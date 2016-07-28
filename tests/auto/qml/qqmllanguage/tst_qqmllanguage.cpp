@@ -2601,7 +2601,7 @@ void tst_qqmllanguage::basicRemote_data()
 
     QTest::newRow("no need for qmldir") << QUrl(serverdir+"Test.qml") << "" << "";
     QTest::newRow("absent qmldir") << QUrl(serverdir+"/noqmldir/Test.qml") << "" << "";
-    QTest::newRow("need qmldir") << QUrl(serverdir+"TestLocal.qml") << "" << "";
+    QTest::newRow("need qmldir") << QUrl(serverdir+"TestNamed.qml") << "" << "";
 }
 
 void tst_qqmllanguage::basicRemote()
@@ -2640,6 +2640,8 @@ void tst_qqmllanguage::importsRemote_data()
     QTest::newRow("remote import with subdir") << "import \""+serverdir+"\"\nTestSubDir {}" << "QQuickText"
         << "";
     QTest::newRow("remote import with local") << "import \""+serverdir+"\"\nTestLocal {}" << "QQuickImage"
+        << "";
+    QTest::newRow("remote import with qualifier") << "import \""+serverdir+"\" as NS\nNS.NamedLocal {}" << "QQuickImage"
         << "";
     QTest::newRow("wrong remote import with undeclared local") << "import \""+serverdir+"\"\nWrongTestLocal {}" << ""
         << "WrongTestLocal is not a type";

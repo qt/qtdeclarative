@@ -1452,13 +1452,10 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
         bool incomplete = false;
 
-        QUrl qmldirUrl;
-        if (importQualifier.isEmpty()) {
-            qmldirUrl = finalUrl().resolved(QUrl(importUri + QLatin1String("/qmldir")));
-            if (!QQmlImports::isLocal(qmldirUrl)) {
-                // This is a remote file; the import is currently incomplete
-                incomplete = true;
-            }
+        QUrl qmldirUrl = finalUrl().resolved(QUrl(importUri + QLatin1String("/qmldir")));
+        if (!QQmlImports::isLocal(qmldirUrl)) {
+            // This is a remote file; the import is currently incomplete
+            incomplete = true;
         }
 
         if (!m_importCache.addFileImport(importDatabase, importUri, importQualifier, import->majorVersion,
