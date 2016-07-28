@@ -602,7 +602,10 @@ the same object as is returned from the Qt.include() call.
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0),
-  profiler(0), outputWarningsToMsgLog(true),
+#ifndef QT_NO_QML_DEBUGGER
+  profiler(0),
+#endif
+  outputWarningsToMsgLog(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0),
   activeObjectCreator(0),
@@ -645,7 +648,9 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         QMetaType::unregisterType(iter.value()->metaTypeId);
         QMetaType::unregisterType(iter.value()->listMetaTypeId);
     }
+#ifndef QT_NO_QML_DEBUGGER
     delete profiler;
+#endif
 }
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)

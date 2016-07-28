@@ -134,7 +134,12 @@ public:
     QRecyclePool<QQmlJavaScriptExpressionGuard> jsExpressionGuardPool;
 
     QQmlContext *rootContext;
+
+#ifdef QT_NO_QML_DEBUGGER
+    static const quintptr profiler = 0;
+#else
     QQmlProfiler *profiler;
+#endif
 
     bool outputWarningsToMsgLog;
 

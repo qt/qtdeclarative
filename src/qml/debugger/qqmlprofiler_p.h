@@ -73,23 +73,23 @@ struct QQmlProfiler {};
 
 struct QQmlBindingProfiler
 {
-    QQmlBindingProfiler(QQmlProfiler *, QQmlBinding *, QV4::FunctionObject *) {}
+    QQmlBindingProfiler(quintptr, QQmlBinding *, QV4::FunctionObject *) {}
 };
 
 struct QQmlHandlingSignalProfiler
 {
-    QQmlHandlingSignalProfiler(QQmlProfiler *, QQmlBoundSignalExpression *) {}
+    QQmlHandlingSignalProfiler(quintptr, QQmlBoundSignalExpression *) {}
 };
 
 struct QQmlCompilingProfiler
 {
-    QQmlCompilingProfiler(QQmlProfiler *, QQmlDataBlob *) {}
+    QQmlCompilingProfiler(quintptr, QQmlDataBlob *) {}
 };
 
 struct QQmlVmeProfiler {
     QQmlVmeProfiler() {}
 
-    void init(QQmlProfiler *, int) {}
+    void init(quintptr, int) {}
 
     const QV4::CompiledData::Object *pop() { return nullptr; }
     void push(const QV4::CompiledData::Object *) {}

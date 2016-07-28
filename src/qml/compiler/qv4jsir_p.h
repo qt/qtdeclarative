@@ -934,7 +934,11 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QString fileName;
     qint64 sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
+#ifdef QT_NO_QML_DEBUGGER
+    static const bool debugMode = false;
+#else
     bool debugMode;
+#endif
 
     Function *newFunction(const QString &name, Function *outer);
 
@@ -942,8 +946,12 @@ struct Q_QML_PRIVATE_EXPORT Module {
         : rootFunction(0)
         , sourceTimeStamp(0)
         , isQmlModule(false)
+#ifndef QT_NO_QML_DEBUGGER
         , debugMode(debugMode)
     {}
+#else
+    { Q_UNUSED(debugMode); }
+#endif
     ~Module();
 
     void setFileName(const QString &name);
