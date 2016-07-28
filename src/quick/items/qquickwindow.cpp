@@ -2307,7 +2307,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
 }
 
 // create touch event containing only points inside the target item
-QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds)
+QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent)
 {
     const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
     QList<QTouchEvent::TouchPoint> pointsInBounds;
@@ -2318,7 +2318,7 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QT
             // Touch presses are relevant to the target item only if they occur inside its bounds.
             // Touch updates and releases are relevant if they occur inside, or if we want to
             // finish the sequence because the press occurred inside.
-            if (tp.state() == Qt::TouchPointPressed || alwaysCheckBounds) {
+            if (tp.state() == Qt::TouchPointPressed) {
                 QPointF p = target->mapFromScene(tp.scenePos());
                 if (target->contains(p))
                     pointsInBounds.append(tp);
