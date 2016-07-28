@@ -655,22 +655,21 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 if (!q->mouseGrabberItem())
                     item->grabMouse();
                 item->grabTouchPoints(QVector<int>() << touchMouseId);
-            }
 
-            if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
-                QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
-                QCoreApplication::sendEvent(item, mouseDoubleClick.data());
-                event->setAccepted(mouseDoubleClick->isAccepted());
-                if (mouseDoubleClick->isAccepted()) {
-                    touchMouseIdCandidates.clear();
-                    return true;
-                } else {
-                    touchMouseId = -1;
-                    touchMouseDevice = nullptr;
+                if (checkIfDoubleClicked(event->timestamp())) {
+                    QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
+                    QCoreApplication::sendEvent(item, mouseDoubleClick.data());
+                    event->setAccepted(mouseDoubleClick->isAccepted());
+                    if (mouseDoubleClick->isAccepted()) {
+                        touchMouseIdCandidates.clear();
+                        return true;
+                    } else {
+                        touchMouseId = -1;
+                        touchMouseDevice = nullptr;
+                    }
                 }
-            }
-            // The event was accepted, we are done.
-            if (mousePress->isAccepted()) {
+
+                // The event was accepted, we are done.
                 touchMouseIdCandidates.clear();
                 return true;
             }
