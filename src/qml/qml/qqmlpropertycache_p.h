@@ -65,6 +65,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QCryptographicHash;
 class QMetaProperty;
 class QQmlEngine;
 class QJSEngine;
@@ -367,6 +368,9 @@ public:
     void toMetaObjectBuilder(QMetaObjectBuilder &);
 
     static bool determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount, int *stringCount);
+    static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
+
+    QByteArray checksum(bool *ok);
 
 protected:
     virtual void destroy();
@@ -437,6 +441,7 @@ private:
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
+    QByteArray _checksum;
 };
 
 // QQmlMetaObject serves as a wrapper around either QMetaObject or QQmlPropertyCache.

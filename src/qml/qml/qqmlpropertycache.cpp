@@ -1413,6 +1413,48 @@ bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fie
     return true;
 }
 
+bool QQmlPropertyCache::addToHash(QCryptographicHash &hash, const QMetaObject &mo)
+{
+    int fieldCount = 0;
+    int stringCount = 0;
+    if (!determineMetaObjectSizes(mo, &fieldCount, &stringCount)) {
+        return false;
+    }
+
+    hash.addData(reinterpret_cast<const char *>(mo.d.data), fieldCount * sizeof(uint));
+    for (int i = 0; i < stringCount; ++i) {
+        const QByteArrayDataPtr data = { const_cast<QByteArrayData*>(&mo.d.stringdata[i]) };
+        hash.addData(QByteArray(data));
+    }
+
+    return true;
+}
+
+QByteArray QQmlPropertyCache::checksum(bool *ok)
+{
+    if (!_checksum.isEmpty()) {
+        *ok = true;
+        return _checksum;
+    }
+
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    if (_parent) {
+        hash.addData(_parent->checksum(ok));
+        if (!*ok)
+            return QByteArray();
+    }
+
+    if (!addToHash(hash, *createMetaObject())) {
+        *ok = false;
+        return QByteArray();
+    }
+
+    _checksum = hash.result();
+    *ok = !_checksum.isEmpty();
+    return _checksum;
+}
+
 /*! \internal
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().

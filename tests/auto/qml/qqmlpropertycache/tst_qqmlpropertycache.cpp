@@ -31,6 +31,7 @@
 #include <QtQml/qqmlengine.h>
 #include <private/qv8engine_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <QCryptographicHash>
 #include "../../shared/util.h"
 
 class tst_qqmlpropertycache : public QObject
@@ -48,6 +49,7 @@ private slots:
     void signalHandlersDerived();
     void metaObjectSize_data();
     void metaObjectSize();
+    void metaObjectChecksum();
 
 private:
     QQmlEngine engine;
@@ -359,6 +361,42 @@ void tst_qqmlpropertycache::metaObjectSize()
 
     QCOMPARE(size, expectedFieldCount - 1); // Remove trailing zero field until fixed in moc.
     QCOMPARE(stringDataSize, expectedStringCount);
+}
+
+void tst_qqmlpropertycache::metaObjectChecksum()
+{
+    QMetaObjectBuilder builder;
+    builder.setClassName("Test");
+    builder.addClassInfo("foo", "bar");
+
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    QScopedPointer<QMetaObject, QScopedPointerPodDeleter> mo(builder.toMetaObject());
+    QVERIFY(!mo.isNull());
+
+    QVERIFY(QQmlPropertyCache::addToHash(hash, *mo.data()));
+    QByteArray initialHash = hash.result();
+    QVERIFY(!initialHash.isEmpty());
+    hash.reset();
+
+    {
+        QVERIFY(QQmlPropertyCache::addToHash(hash, *mo.data()));
+        QByteArray nextHash = hash.result();
+        QVERIFY(!nextHash.isEmpty());
+        hash.reset();
+        QCOMPARE(initialHash, nextHash);
+    }
+
+    builder.addProperty("testProperty", "int", -1);
+
+    mo.reset(builder.toMetaObject());
+    {
+        QVERIFY(QQmlPropertyCache::addToHash(hash, *mo.data()));
+        QByteArray nextHash = hash.result();
+        QVERIFY(!nextHash.isEmpty());
+        hash.reset();
+        QVERIFY(initialHash != nextHash);
+    }
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
