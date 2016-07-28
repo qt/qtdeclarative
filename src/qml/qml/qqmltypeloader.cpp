@@ -64,6 +64,8 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtQml/qqmlextensioninterface.h>
 
+#include <functional>
+
 #if defined (Q_OS_UNIX)
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -114,6 +116,20 @@ namespace {
         LockHolder(LockType *l) : lock(*l) { lock.lock(); }
         ~LockHolder() { lock.unlock(); }
     };
+
+    struct DeferredCall
+    {
+        std::function<void()> callback;
+        ~DeferredCall() { callback(); }
+    };
+
+    template <typename Callback>
+    DeferredCall defer(Callback &&cb)
+    {
+        DeferredCall c;
+        c.callback = std::move(cb);
+        return c;
+    }
 }
 
 #ifndef QT_NO_NETWORK
@@ -2145,8 +2161,18 @@ void QQmlTypeData::rebuildTypeAndPropertyCaches()
 
 void QQmlTypeData::done()
 {
+    auto cleanup = defer([this]{
+        m_document.reset();
+        m_typeReferences.clear();
+        if (isError())
+            m_compiledData = nullptr;
+    });
+
+    if (isError())
+        return;
+
     // Check all script dependencies for errors
-    for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
+    for (int ii = 0; ii < m_scripts.count(); ++ii) {
         const ScriptReference &script = m_scripts.at(ii);
         Q_ASSERT(script.script->isCompleteOrError());
         if (script.script->isError()) {
@@ -2158,12 +2184,13 @@ void QQmlTypeData::done()
             error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->url().toString()));
             errors.prepend(error);
             setError(errors);
+            return;
         }
     }
 
     // Check all type dependencies for errors
     for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
-         !isError() && it != end; ++it) {
+         it != end; ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
@@ -2177,11 +2204,12 @@ void QQmlTypeData::done()
             error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             errors.prepend(error);
             setError(errors);
+            return;
         }
     }
 
     // Check all composite singleton type dependencies for errors
-    for (int ii = 0; !isError() && ii < m_compositeSingletons.count(); ++ii) {
+    for (int ii = 0; ii < m_compositeSingletons.count(); ++ii) {
         const TypeReference &type = m_compositeSingletons.at(ii);
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
@@ -2195,19 +2223,21 @@ void QQmlTypeData::done()
             error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             errors.prepend(error);
             setError(errors);
+            return;
         }
     }
 
-    if (!isError()) {
-        if (!m_document.isNull()) {
-            // Compile component
-            compile();
-        } else {
-            rebuildTypeAndPropertyCaches();
-        }
+    if (!m_document.isNull()) {
+        // Compile component
+        compile();
+    } else {
+        rebuildTypeAndPropertyCaches();
     }
 
-    if (!isError()) {
+    if (isError())
+        return;
+
+    {
         QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
         {
         // Sanity check property bindings
@@ -2215,23 +2245,26 @@ void QQmlTypeData::done()
             QVector<QQmlCompileError> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
+                return;
             }
         }
 
         m_compiledData->finalize(engine);
     }
 
-    if (!isError()) {
+    {
         QQmlType *type = QQmlMetaType::qmlType(finalUrl(), true);
         if (m_compiledData && m_compiledData->data->flags & QV4::CompiledData::Unit::IsSingleton) {
             if (!type) {
                 QQmlError error;
                 error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
                 setError(error);
+                return;
             } else if (!type->isCompositeSingleton()) {
                 QQmlError error;
                 error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(type->qmlTypeName()));
                 setError(error);
+                return;
             }
         } else {
             // If the type is CompositeSingleton but there was no pragma Singleton in the
@@ -2239,11 +2272,12 @@ void QQmlTypeData::done()
             if (type && type->isCompositeSingleton()) {
                 QString typeName = type->qmlTypeName();
                 setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
+                return;
             }
         }
     }
 
-    if (!isError()) {
+    {
         // Collect imported scripts
         m_compiledData->dependentScripts.reserve(m_scripts.count());
         for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
@@ -2263,12 +2297,7 @@ void QQmlTypeData::done()
             scriptData->addref();
             m_compiledData->dependentScripts << scriptData;
         }
-    } else {
-        m_compiledData = nullptr;
     }
-
-    m_document.reset();
-    m_typeReferences.clear();
 }
 
 void QQmlTypeData::completed()
@@ -2900,8 +2929,11 @@ void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
 
 void QQmlScriptBlob::done()
 {
+    if (isError())
+        return;
+
     // Check all script dependencies for errors
-    for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
+    for (int ii = 0; ii < m_scripts.count(); ++ii) {
         const ScriptReference &script = m_scripts.at(ii);
         Q_ASSERT(script.script->isCompleteOrError());
         if (script.script->isError()) {
@@ -2913,17 +2945,15 @@ void QQmlScriptBlob::done()
             error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->url().toString()));
             errors.prepend(error);
             setError(errors);
+            return;
         }
     }
-
-    if (isError())
-        return;
 
     m_scriptData->importCache = new QQmlTypeNameCache();
 
     QSet<QString> ns;
 
-    for (int scriptIndex = 0; !isError() && scriptIndex < m_scripts.count(); ++scriptIndex) {
+    for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
         const ScriptReference &script = m_scripts.at(scriptIndex);
 
         m_scriptData->scripts.append(script.script);
