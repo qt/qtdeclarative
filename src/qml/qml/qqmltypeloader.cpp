@@ -54,6 +54,7 @@
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qdatetime.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qthread.h>
