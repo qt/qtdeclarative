@@ -139,7 +139,7 @@ private:
 };
 
 
-extern uint qt_qhash_seed;
+Q_CORE_EXPORT extern QBasicAtomicInt qt_qhash_seed;
 
 int main(int argc, char *argv[])
 {
