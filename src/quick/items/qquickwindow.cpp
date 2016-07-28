@@ -2182,8 +2182,6 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
 
-    // Deliver the event, but only if there is at least one new point
-    // or some item accepted a point and should receive an update
     QSet<QQuickItem *> hasFiltered;
     deliverPoints(contentItem, event, &hasFiltered);
 
