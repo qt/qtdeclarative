@@ -865,6 +865,9 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QVector<QQmlScriptData *> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
+    bool verifyChecksum(QQmlEngine *engine,
+                        const ResolvedTypeReferenceMap &dependentTypes) const;
+
     int metaTypeId;
     int listMetaTypeId;
     bool isRegisteredWithEngine;

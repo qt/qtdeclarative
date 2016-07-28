@@ -2136,19 +2136,14 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     return true;
 }
 
-void QQmlTypeData::rebuildTypeAndPropertyCaches()
+void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
+                                                const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
 {
     Q_ASSERT(m_compiledData);
+    m_compiledData->importCache = importCache;
+    m_compiledData->resolvedTypes = resolvedTypeCache;
 
     QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
-
-    {
-        QQmlCompileError error = buildTypeResolutionCaches(&m_compiledData->importCache, &m_compiledData->resolvedTypes);
-        if (error.isSet()) {
-            setError(error);
-            return;
-        }
-    }
 
     {
         QQmlPropertyCacheCreator<QV4::CompiledData::CompilationUnit> propertyCacheCreator(&m_compiledData->propertyCaches, engine, m_compiledData, &m_importCache);
@@ -2231,21 +2226,41 @@ void QQmlTypeData::done()
         }
     }
 
+    QQmlRefPointer<QQmlTypeNameCache> importCache;
+    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypeCache;
+    {
+        QQmlCompileError error = buildTypeResolutionCaches(&importCache, &resolvedTypeCache);
+        if (error.isSet()) {
+            setError(error);
+            return;
+        }
+    }
+
+    QQmlEngine *const engine = typeLoader()->engine();
+
+    // verify if any dependencies changed if we're using a cache
+    if (m_document.isNull() && !m_compiledData->verifyChecksum(engine, resolvedTypeCache)) {
+        if (!loadFromSource())
+            return;
+        m_backupSourceCode.clear();
+        m_compiledData = nullptr;
+    }
+
     if (!m_document.isNull()) {
         // Compile component
-        compile();
+        compile(importCache, resolvedTypeCache);
     } else {
-        rebuildTypeAndPropertyCaches();
+        createTypeAndPropertyCaches(importCache, resolvedTypeCache);
     }
 
     if (isError())
         return;
 
     {
-        QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
+        QQmlEnginePrivate *const enginePrivate = QQmlEnginePrivate::get(engine);
         {
         // Sanity check property bindings
-            QQmlPropertyValidator validator(engine, m_importCache, m_compiledData);
+            QQmlPropertyValidator validator(enginePrivate, m_importCache, m_compiledData);
             QVector<QQmlCompileError> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
@@ -2253,7 +2268,7 @@ void QQmlTypeData::done()
             }
         }
 
-        m_compiledData->finalize(engine);
+        m_compiledData->finalize(enginePrivate);
     }
 
     {
@@ -2336,19 +2351,43 @@ bool QQmlTypeData::loadImplicitImport()
 
 void QQmlTypeData::dataReceived(const Data &data)
 {
+    QString error;
+    m_backupSourceCode = data.readAll(&error, &m_sourceTimeStamp);
+    // if we failed to read the source code, process it _after_ we've tried
+    // to use the disk cache, in order to support scenarios where the source
+    // was removed deliberately.
+
     if (tryLoadFromDiskCache())
         return;
 
-    qint64 sourceTimeStamp;
-    QString error;
-    QString code = QString::fromUtf8(data.readAll(&error, &sourceTimeStamp));
+    if (isError())
+        return;
+
     if (!error.isEmpty()) {
         setError(error);
         return;
     }
+
+    if (!loadFromSource())
+        return;
+
+    continueLoadFromIR();
+}
+
+void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
+{
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
-    m_document->jsModule.sourceTimeStamp = sourceTimeStamp;
+    unit->loadIR(m_document.data(), unit);
+    continueLoadFromIR();
+}
+
+bool QQmlTypeData::loadFromSource()
+{
+    QString code = QString::fromUtf8(m_backupSourceCode);
+    QQmlEngine *qmlEngine = typeLoader()->engine();
+    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
+    m_document->jsModule.sourceTimeStamp = m_sourceTimeStamp;
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
@@ -2362,18 +2401,9 @@ void QQmlTypeData::dataReceived(const Data &data)
             errors << e;
         }
         setError(errors);
-        return;
+        return false;
     }
-
-    continueLoadFromIR();
-}
-
-void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
-{
-    QQmlEngine *qmlEngine = typeLoader()->engine();
-    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
-    unit->loadIR(m_document.data(), unit);
-    continueLoadFromIR();
+    return true;
 }
 
 void QQmlTypeData::continueLoadFromIR()
@@ -2468,17 +2498,9 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile()
+void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
 {
     Q_ASSERT(m_compiledData.isNull());
-
-    QQmlRefPointer<QQmlTypeNameCache> importCache;
-    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypeCache;
-    QQmlCompileError error = buildTypeResolutionCaches(&importCache, &resolvedTypeCache);
-    if (error.isSet()) {
-        setError(error);
-        return;
-    }
 
     QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), this, m_document.data(), importCache, resolvedTypeCache);
     m_compiledData = compiler.compile();

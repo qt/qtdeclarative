@@ -301,6 +301,25 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
     totalObjectCount = objectCount;
 }
 
+bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
+                                     const ResolvedTypeReferenceMap &dependentTypes) const
+{
+    if (dependentTypes.isEmpty()) {
+        for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
+            if (data->dependencyMD5Checksum[i] != 0)
+                return false;
+        }
+        return true;
+    }
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (!dependentTypes.addToHash(&hash, engine))
+        return false;
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));
+    return memcmp(data->dependencyMD5Checksum, checksum.constData(),
+                  sizeof(data->dependencyMD5Checksum)) == 0;
+}
+
 bool CompilationUnit::saveToDisk(QString *errorString)
 {
     errorString->clear();
