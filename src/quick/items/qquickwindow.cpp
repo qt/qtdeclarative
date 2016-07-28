@@ -2045,9 +2045,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     #endif
 
         if (!q->mouseGrabberItem()) {
-            if (lastMousePosition.isNull())
-                lastMousePosition = event->windowPos();
-            QPointF last = lastMousePosition;
+            QPointF last = lastMousePosition.isNull() ? event->windowPos() : lastMousePosition;
             lastMousePosition = event->windowPos();
 
             bool accepted = event->isAccepted();
