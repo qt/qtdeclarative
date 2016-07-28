@@ -463,7 +463,9 @@ private:
     QList<TypeReference> m_compositeSingletons;
 
     // map from name index to resolved type
-    QHash<int, TypeReference> m_resolvedTypes;
+    // While this could be a hash, a map is chosen here to provide a stable
+    // order, which is used to calculating a check-sum on dependent meta-objects.
+    QMap<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compiledData;

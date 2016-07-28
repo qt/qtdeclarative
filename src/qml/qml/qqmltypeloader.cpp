@@ -2910,7 +2910,8 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         irUnit.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
+    QV4::CompiledData::ResolvedTypeReferenceMap emptyDependencies;
+    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit, m_typeLoader->engine(), emptyDependencies);
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;

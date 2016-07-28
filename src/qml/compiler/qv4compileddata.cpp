@@ -579,6 +579,19 @@ void ResolvedTypeReference::doDynamicTypeCheck()
         mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
+
+bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
+{
+    for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+        QQmlPropertyCache *pc = it.value()->createPropertyCache(engine);
+        bool ok = false;
+        hash->addData(pc->checksum(&ok));
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
 #endif
 
 }

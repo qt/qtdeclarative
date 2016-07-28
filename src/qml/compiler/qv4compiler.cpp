@@ -361,6 +361,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.qtVersion = QT_VERSION;
     unit.architectureIndex = registerString(QSysInfo::buildAbi());
     unit.codeGeneratorIndex = registerString(codeGeneratorName);
+    memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 
     quint32 nextOffset = sizeof(CompiledData::Unit);
 

@@ -611,6 +611,7 @@ struct Unit
 
     LEUInt32 architectureIndex; // string index to QSysInfo::buildAbi()
     LEUInt32 codeGeneratorIndex;
+    char dependencyMD5Checksum[16];
 
     enum : unsigned int {
         IsJavascript = 0x1,
@@ -788,7 +789,14 @@ struct ResolvedTypeReference
     void doDynamicTypeCheck();
 };
 // map from name index
-typedef QHash<int, ResolvedTypeReference*> ResolvedTypeReferenceMap;
+// While this could be a hash, a map is chosen here to provide a stable
+// order, which is used to calculating a check-sum on dependent meta-objects.
+struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
+{
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
+};
+#else
+struct ResolvedTypeReferenceMap {};
 #endif
 
 // index is per-object binding index

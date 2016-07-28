@@ -156,7 +156,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document);
+    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document, QQmlEnginePrivate::get(engine), resolvedTypes);
 
     Q_ASSERT(document->javaScriptCompilationUnit);
     // The js unit owns the data and will free the qml unit.
