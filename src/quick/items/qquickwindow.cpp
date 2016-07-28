@@ -1647,7 +1647,7 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
     return false;
 }
 
-bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
+void QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
 {
     Q_Q(QQuickWindow);
 
@@ -1661,7 +1661,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
             event->accept();
         else
             event->ignore();
-        return event->isAccepted();
+        return;
     }
 
     if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
@@ -1670,10 +1670,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
         me->accept();
         q->sendEvent(mouseGrabberItem, me.data());
         event->setAccepted(me->isAccepted());
-        return me->isAccepted();
     }
-
-    return false;
 }
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
