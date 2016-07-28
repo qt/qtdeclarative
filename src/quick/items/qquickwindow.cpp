@@ -1653,23 +1653,22 @@ void QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
 
     lastMousePosition = event->windowPos();
 
-    if (!q->mouseGrabberItem() &&
-         (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
-         (event->buttons() & event->button()) == event->buttons()) {
+    QQuickItem *mouseGrabberItem = q->mouseGrabberItem();
 
-        if (deliverInitialMousePressEvent(event))
-            event->accept();
-        else
-            event->ignore();
-        return;
-    }
-
-    if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
+    if (mouseGrabberItem) {
+        // send update
         QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
         QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
         me->accept();
         q->sendEvent(mouseGrabberItem, me.data());
         event->setAccepted(me->isAccepted());
+    } else {
+        // send initial press
+        if ((event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
+                (event->buttons() & event->button()) == event->buttons()) {
+            bool delivered = deliverInitialMousePressEvent(event);
+            event->setAccepted(delivered);
+        }
     }
 }
 
