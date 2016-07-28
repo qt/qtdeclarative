@@ -647,7 +647,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             touchMouseDevice = device;
 
             // FIXME: this is a bit backwards, should just have the pointer event passed into the function
-            auto pointerEventPoint = device->pointerEvent()->pointById(touchMouseId);
+            auto pointerEventPoint = device->pointerEvent()->pointById(p.id());
             pointerEventPoint->setGrabber(item);
             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << item;
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
