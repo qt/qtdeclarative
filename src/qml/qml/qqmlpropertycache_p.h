@@ -366,6 +366,8 @@ public:
 
     void toMetaObjectBuilder(QMetaObjectBuilder &);
 
+    static bool determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount, int *stringCount);
+
 protected:
     virtual void destroy();
     virtual void clear();

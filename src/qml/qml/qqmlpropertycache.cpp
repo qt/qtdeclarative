@@ -1246,6 +1246,173 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
     }
 }
 
+namespace {
+template <typename StringVisitor, typename TypeInfoVisitor>
+int visitMethods(const QMetaObject &mo, int methodOffset, int methodCount,
+                 StringVisitor visitString, TypeInfoVisitor visitTypeInfo)
+{
+    const int intsPerMethod = 5;
+
+    int fieldsForParameterData = 0;
+
+    bool hasRevisionedMethods = false;
+
+    for (int i = 0; i < methodCount; ++i) {
+        const int handle = methodOffset + i * intsPerMethod;
+
+        const uint flags = mo.d.data[handle + 4];
+        if (flags & MethodRevisioned)
+            hasRevisionedMethods = true;
+
+        visitString(mo.d.data[handle + 0]); // name
+        visitString(mo.d.data[handle + 3]); // tag
+
+        const int argc = mo.d.data[handle + 1];
+        const int paramIndex = mo.d.data[handle + 2];
+
+        fieldsForParameterData += argc * 2; // type and name
+        fieldsForParameterData += 1; // + return type
+
+        // return type + args
+        for (int i = 0; i < 1 + argc; ++i) {
+            // type name (maybe)
+            visitTypeInfo(mo.d.data[paramIndex + i]);
+
+            // parameter name
+            if (i > 0)
+                visitString(mo.d.data[paramIndex + argc + i]);
+        }
+    }
+
+    int fieldsForRevisions = 0;
+    if (hasRevisionedMethods)
+        fieldsForRevisions = methodCount;
+
+    return methodCount * intsPerMethod + fieldsForRevisions + fieldsForParameterData;
+}
+
+template <typename StringVisitor, typename TypeInfoVisitor>
+int visitProperties(const QMetaObject &mo, StringVisitor visitString, TypeInfoVisitor visitTypeInfo)
+{
+    const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
+    const int intsPerProperty = 3;
+
+    bool hasRevisionedProperties = false;
+    bool hasNotifySignals = false;
+
+    for (int i = 0; i < priv->propertyCount; ++i) {
+        const int handle = priv->propertyData + i * intsPerProperty;
+
+        const auto flags = mo.d.data[handle + 2];
+        if (flags & Revisioned) {
+            hasRevisionedProperties = true;
+        }
+        if (flags & Notify)
+            hasNotifySignals = true;
+
+        visitString(mo.d.data[handle]); // name
+        visitTypeInfo(mo.d.data[handle + 1]);
+    }
+
+    int fieldsForPropertyRevisions = 0;
+    if (hasRevisionedProperties)
+        fieldsForPropertyRevisions = priv->propertyCount;
+
+    int fieldsForNotifySignals = 0;
+    if (hasNotifySignals)
+        fieldsForNotifySignals = priv->propertyCount;
+
+    return priv->propertyCount * intsPerProperty + fieldsForPropertyRevisions
+            + fieldsForNotifySignals;
+}
+
+template <typename StringVisitor>
+int visitClassInfo(const QMetaObject &mo, StringVisitor visitString)
+{
+    const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
+    const int intsPerClassInfo = 2;
+
+    for (int i = 0; i < priv->classInfoCount; ++i) {
+        const int handle = priv->classInfoData + i * intsPerClassInfo;
+
+        visitString(mo.d.data[handle]); // key
+        visitString(mo.d.data[handle + 1]); // value
+    }
+
+    return priv->classInfoCount * intsPerClassInfo;
+}
+
+template <typename StringVisitor>
+int visitEnumerations(const QMetaObject &mo, StringVisitor visitString)
+{
+    const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
+    const int intsPerEnumerator = 4;
+
+    int fieldCount = priv->enumeratorCount * intsPerEnumerator;
+
+    for (int i = 0; i < priv->enumeratorCount; ++i) {
+        const uint *enumeratorData = mo.d.data + priv->enumeratorData + i * intsPerEnumerator;
+
+        const uint keyCount = enumeratorData[2];
+        fieldCount += keyCount * 2;
+
+        visitString(enumeratorData[0]); // name
+
+        const uint keyOffset = enumeratorData[3];
+
+        for (uint j = 0; j < keyCount; ++j) {
+            visitString(mo.d.data[keyOffset + 2 * j]);
+        }
+    }
+
+    return fieldCount;
+}
+
+template <typename StringVisitor>
+int countMetaObjectFields(const QMetaObject &mo, StringVisitor stringVisitor)
+{
+    const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
+
+    const auto typeInfoVisitor = [&stringVisitor](uint typeInfo) {
+        if (typeInfo & IsUnresolvedType)
+            stringVisitor(typeInfo & TypeNameIndexMask);
+    };
+
+    int fieldCount = MetaObjectPrivateFieldCount;
+
+    fieldCount += visitMethods(mo, priv->methodData, priv->methodCount, stringVisitor,
+                               typeInfoVisitor);
+    fieldCount += visitMethods(mo, priv->constructorData, priv->constructorCount, stringVisitor,
+                               typeInfoVisitor);
+
+    fieldCount += visitProperties(mo, stringVisitor, typeInfoVisitor);
+    fieldCount += visitClassInfo(mo, stringVisitor);
+    fieldCount += visitEnumerations(mo, stringVisitor);
+
+    return fieldCount;
+}
+
+} // anonymous namespace
+
+bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount,
+                                                 int *stringCount)
+{
+    const QMetaObjectPrivate *priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
+    if (priv->revision != 7) {
+        return false;
+    }
+
+    uint highestStringIndex = 0;
+    const auto stringIndexVisitor = [&highestStringIndex](uint index) {
+        highestStringIndex = qMax(highestStringIndex, index);
+    };
+
+    *fieldCount = countMetaObjectFields(mo, stringIndexVisitor);
+    *stringCount = highestStringIndex + 1;
+
+    return true;
+}
+
 /*! \internal
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
