@@ -89,7 +89,7 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
@@ -98,7 +98,7 @@ public:
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
-    QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap resolvedTypes;
+    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypes;
     // ---
 
     QV4::CompiledData::CompilationUnit *compile();
@@ -182,7 +182,7 @@ private:
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
+    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QSet<QString> &illegalNames;
     const QQmlPropertyCacheVector * const propertyCaches;
 };
@@ -213,7 +213,7 @@ private:
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;
     const QQmlImports *imports;
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference *> *resolvedTypes;
+    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes;
 };
 
 class QQmlCustomParserScriptIndexer: public QQmlCompilePass
@@ -288,7 +288,7 @@ protected:
     QHash<int, int> _idToObjectIndex;
     QVector<int> _objectsWithAliases;
 
-    QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> *resolvedTypes;
+    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
 };
 
@@ -321,7 +321,7 @@ private:
     bool compileComponent(int componentRoot);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
-    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
+    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;

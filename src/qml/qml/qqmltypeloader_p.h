@@ -444,7 +444,10 @@ private:
     bool tryLoadFromDiskCache();
     void continueLoadFromIR();
     void resolveTypes();
-    QQmlCompileError buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const;
+    QQmlCompileError buildTypeResolutionCaches(
+            QQmlRefPointer<QQmlTypeNameCache> *importCache,
+            QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
+            ) const;
     void compile();
     void rebuildTypeAndPropertyCaches();
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);

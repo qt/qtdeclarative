@@ -762,6 +762,35 @@ struct TypeReferenceMap : QHash<int, TypeReference>
     }
 };
 
+#ifndef V4_BOOTSTRAP
+struct ResolvedTypeReference
+{
+    ResolvedTypeReference()
+        : type(0)
+        , majorVersion(0)
+        , minorVersion(0)
+        , isFullyDynamicType(false)
+    {}
+
+    QQmlType *type;
+    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+
+    int majorVersion;
+    int minorVersion;
+    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+    // therefore cannot have a property cache installed when instantiated.
+    bool isFullyDynamicType;
+
+    QQmlPropertyCache *propertyCache() const;
+    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+
+    void doDynamicTypeCheck();
+};
+// map from name index
+typedef QHash<int, ResolvedTypeReference*> ResolvedTypeReferenceMap;
+#endif
+
 // index is per-object binding index
 typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
@@ -823,33 +852,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int totalObjectCount; // Number of objects explicitly instantiated
 
     QVector<QQmlScriptData *> dependentScripts;
-
-    struct ResolvedTypeReference
-    {
-        ResolvedTypeReference()
-            : type(0)
-            , majorVersion(0)
-            , minorVersion(0)
-            , isFullyDynamicType(false)
-        {}
-
-        QQmlType *type;
-        QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-
-        int majorVersion;
-        int minorVersion;
-        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-        // therefore cannot have a property cache installed when instantiated.
-        bool isFullyDynamicType;
-
-        QQmlPropertyCache *propertyCache() const;
-        QQmlPropertyCache *createPropertyCache(QQmlEngine *);
-
-        void doDynamicTypeCheck();
-    };
-    // map from name index
-    typedef QHash<int, ResolvedTypeReference*> ResolvedTypeReferenceMap;
     ResolvedTypeReferenceMap resolvedTypes;
 
     int metaTypeId;

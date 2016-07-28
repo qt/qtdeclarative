@@ -675,7 +675,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
-        QV4::CompiledData::CompilationUnit::ResolvedTypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
+        QV4::CompiledData::ResolvedTypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
         Q_ASSERT(tr);
         QQmlType *attachedType = tr->type;
         if (!attachedType) {
@@ -1008,7 +1008,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
     } else {
-        QV4::CompiledData::CompilationUnit::ResolvedTypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        QV4::CompiledData::ResolvedTypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType *type = typeRef->type;

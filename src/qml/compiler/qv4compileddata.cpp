@@ -535,7 +535,7 @@ QString Binding::valueAsScriptString(const Unit *unit) const
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */
-QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
+QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
 {
     if (type)
         return typePropertyCache;
@@ -546,7 +546,7 @@ QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
 {
     if (typePropertyCache) {
         return typePropertyCache;
@@ -568,7 +568,7 @@ bool qtTypeInherits(const QMetaObject *mo) {
     return false;
 }
 
-void CompilationUnit::ResolvedTypeReference::doDynamicTypeCheck()
+void ResolvedTypeReference::doDynamicTypeCheck()
 {
     const QMetaObject *mo = 0;
     if (typePropertyCache)

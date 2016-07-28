@@ -56,7 +56,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap &resolvedTypeCache)
+QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
+                                   QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &importCache,
+                                   const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
     , typeData(typeData)
@@ -837,7 +839,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
         if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
-            auto typeRef = new QV4::CompiledData::CompilationUnit::ResolvedTypeReference;
+            auto typeRef = new QV4::CompiledData::ResolvedTypeReference;
             typeRef->type = componentType;
             typeRef->majorVersion = componentType->majorVersion();
             typeRef->minorVersion = componentType->minorVersion();

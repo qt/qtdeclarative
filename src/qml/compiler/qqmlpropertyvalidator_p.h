@@ -76,7 +76,7 @@ private:
     QQmlEnginePrivate *enginePrivate;
     const QQmlImports &imports;
     const QV4::CompiledData::Unit *qmlUnit;
-    const QHash<int, QV4::CompiledData::CompilationUnit::ResolvedTypeReference*> &resolvedTypes;
+    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QQmlPropertyCacheVector &propertyCaches;
 
     QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;

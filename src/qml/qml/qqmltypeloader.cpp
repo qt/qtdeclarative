@@ -2029,7 +2029,7 @@ QQmlTypeData::~QQmlTypeData()
         if (QQmlTypeData *tdata = m_compositeSingletons.at(ii).typeData)
             tdata->release();
     }
-    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+    for (auto it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
          it != end; ++it) {
         if (QQmlTypeData *tdata = it->typeData)
             tdata->release();
@@ -2189,8 +2189,8 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
-    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
-         it != end; ++it) {
+    for (auto it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); it != end;
+         ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
@@ -2469,7 +2469,7 @@ void QQmlTypeData::compile()
     Q_ASSERT(m_compiledData.isNull());
 
     QQmlRefPointer<QQmlTypeNameCache> importCache;
-    QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap resolvedTypeCache;
+    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypeCache;
     QQmlCompileError error = buildTypeResolutionCaches(&importCache, &resolvedTypeCache);
     if (error.isSet()) {
         setError(error);
@@ -2609,7 +2609,10 @@ void QQmlTypeData::resolveTypes()
     }
 }
 
-QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const
+QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
+        QQmlRefPointer<QQmlTypeNameCache> *importCache,
+        QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
+        ) const
 {
     importCache->adopt(new QQmlTypeNameCache);
 
@@ -2625,7 +2628,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(QQmlRefPointer<QQmlType
     QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
 
     for (auto resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); resolvedType != end; ++resolvedType) {
-        QScopedPointer<QV4::CompiledData::CompilationUnit::ResolvedTypeReference> ref(new QV4::CompiledData::CompilationUnit::ResolvedTypeReference);
+        QScopedPointer<QV4::CompiledData::ResolvedTypeReference> ref(new QV4::CompiledData::ResolvedTypeReference);
         QQmlType *qmlType = resolvedType->type;
         if (resolvedType->typeData) {
             if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
