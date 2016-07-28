@@ -1662,8 +1662,13 @@ void QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
         me->accept();
         q->sendEvent(mouseGrabberItem, me.data());
         event->setAccepted(me->isAccepted());
+
+        // release event, make sure to ungrab if there still is a grabber
+        if (event->type() == QEvent::MouseButtonRelease && !event->buttons() && q->mouseGrabberItem())
+            q->mouseGrabberItem()->ungrabMouse();
     } else {
         // send initial press
+        event->setAccepted(false);
         if ((event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
                 (event->buttons() & event->button()) == event->buttons()) {
             bool delivered = deliverInitialMousePressEvent(event);
@@ -2022,14 +2027,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonRelease:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
                               event->buttons());
-        if (!q->mouseGrabberItem()) {
-            event->ignore();
-            return;
-        }
-
         deliverPointerEvent(pointerEventInstance(event));
-        if (q->mouseGrabberItem() && !event->buttons())
-            q->mouseGrabberItem()->ungrabMouse();
         break;
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
