@@ -1904,9 +1904,9 @@ void tst_QQuickMouseArea::ignoreBySource()
     // MouseArea should grab the press because it's interested in non-synthesized mouse events
     QPoint p = QPoint(80, 80);
     QTest::mousePress(&window, Qt::LeftButton, 0, p);
-    QVERIFY(window.mouseGrabberItem() == mouseArea);
+    QCOMPARE(window.mouseGrabberItem(), mouseArea);
     // That was a real mouse event
-    QVERIFY(root->property("lastEventSource").toInt() == Qt::MouseEventNotSynthesized);
+    QCOMPARE(root->property("lastEventSource").toInt(), int(Qt::MouseEventNotSynthesized));
 
     // Flickable content should not move
     p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
@@ -1919,12 +1919,14 @@ void tst_QQuickMouseArea::ignoreBySource()
     QCOMPARE(flickable->contentY(), 0.);
 
     QTest::mouseRelease(&window, Qt::LeftButton, 0, p);
+    QCOMPARE(window.mouseGrabberItem(), nullptr);
 
     // Now try touch events and confirm that MouseArea ignores them, while Flickable does its thing
     p = QPoint(80, 80);
     QTest::touchEvent(&window, device).press(0, p, &window);
     QQuickTouchUtils::flush(&window);
-    QVERIFY(window.mouseGrabberItem() != mouseArea);
+    QCOMPARE(window.mouseGrabberItem(), flickable);
+
     // That was a fake mouse event
     QCOMPARE(root->property("lastEventSource").toInt(), int(Qt::MouseEventSynthesizedByQt));
     p -= QPoint(startDragDistance() + 1, startDragDistance() + 1);
