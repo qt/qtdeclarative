@@ -1626,7 +1626,7 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickWindow);
 
-    QVector<QQuickItem *> targets = pointerTargets(contentItem, event->windowPos());
+    QVector<QQuickItem *> targets = pointerTargets(contentItem, event->windowPos(), true);
     for (QQuickItem *item: qAsConst(targets)) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (itemPrivate->acceptedMouseButtons() & event->button()) {
@@ -2141,7 +2141,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
 
 // check if item or any of its child items contain the point
 // FIXME: should this be iterative instead of recursive?
-QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, const QPointF &scenePos) const
+QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, const QPointF &scenePos, bool checkMouseButtons) const
 {
     QVector<QQuickItem *> targets;
     auto itemPrivate = QQuickItemPrivate::get(item);
@@ -2159,10 +2159,10 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, cons
         auto childPrivate = QQuickItemPrivate::get(child);
         if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
             continue;
-        targets << pointerTargets(child, scenePos);
+        targets << pointerTargets(child, scenePos, false);
     }
 
-    if (item->contains(itemPos) && itemPrivate->acceptedMouseButtons()) {
+    if (item->contains(itemPos) && (!checkMouseButtons || itemPrivate->acceptedMouseButtons())) {
         // add this item last - children take precedence
         targets << item;
     }
@@ -2197,7 +2197,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 
     QSet<QQuickItem *> hasFiltered;
     if (event->isPressEvent())
-        deliverNewTouchPoints(contentItem, event, &hasFiltered);
+        deliverNewTouchPoints(event, &hasFiltered);
     if (!event->allPointsAccepted())
         deliverUpdatedTouchPoints(event, &hasFiltered);
 
@@ -2236,33 +2236,19 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
     return false;
 }
 
-// This function recurses and sends the events to the individual items
-bool QQuickWindowPrivate::deliverNewTouchPoints(QQuickItem *item, QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
+// Deliver newly pressed touch points
+bool QQuickWindowPrivate::deliverNewTouchPoints(QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-    // Check if our children want the event (or parts of it)
-    // This is the only point where touch event delivery recurses!
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isEnabled() || !child->isVisible() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverNewTouchPoints(child, event, hasFiltered))
-            return true;
+    const QVector<QPointF> points = event->unacceptedPressedPointScenePositions();
+    QVector<QQuickItem *> targetItems;
+    for (QPointF point: points) {
+        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point, false);
+        targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
     }
 
-    // None of the children accepted the event, so check the given item itself.
-    // First, construct matchingPoints as a list of TouchPoints which the
-    // given item might be interested in.  Any newly-pressed point which is
-    // inside the item's bounds will be interesting, and also any updated point
-    // which was already accepted by that item when it was first pressed.
-    // (A point which was already accepted is effectively "grabbed" by the item.)
+    for (QQuickItem *item: targetItems)
+        deliverMatchingPointsToItem(item, event, hasFiltered);
 
-    // This item might be interested in the event.
-    deliverMatchingPointsToItem(item, event, hasFiltered);
-
-    // recursion is done only if ALL touch points have been delivered
     return event->allPointsAccepted();
 }
 
