@@ -291,6 +291,11 @@ bool CompilationUnit::saveToDisk(QString *errorString)
 {
     errorString->clear();
 
+    if (data->sourceTimeStamp == 0) {
+        *errorString = QStringLiteral("Missing time stamp for source file");
+        return false;
+    }
+
     const QUrl unitUrl = url();
     if (!unitUrl.isLocalFile()) {
         *errorString = QStringLiteral("File has to be a local file.");
