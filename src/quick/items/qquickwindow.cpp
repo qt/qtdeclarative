@@ -2175,7 +2175,10 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
     qCDebug(DBG_TOUCH) << " - delivering" << event->asTouchEvent();
 
     QSet<QQuickItem *> hasFiltered;
-    deliverPoints(contentItem, event, &hasFiltered);
+    if (event->isPressEvent())
+        deliverNewTouchPoints(contentItem, event, &hasFiltered);
+    if (!event->allPointsAccepted())
+        deliverUpdatedTouchPoints(event, &hasFiltered);
 
     // Remove released points from itemForTouchPointId
     bool allReleased = true;
@@ -2202,8 +2205,18 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
     }
 }
 
+// Deliver touch points to existing grabbers
+bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
+{
+    for (auto grabber: event->grabbers()) {
+        deliverMatchingPointsToItem(grabber, event, hasFiltered);
+    }
+
+    return false;
+}
+
 // This function recurses and sends the events to the individual items
-bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
+bool QQuickWindowPrivate::deliverNewTouchPoints(QQuickItem *item, QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
@@ -2214,7 +2227,7 @@ bool QQuickWindowPrivate::deliverPoints(QQuickItem *item, QQuickPointerTouchEven
         QQuickItem *child = children.at(ii);
         if (!child->isEnabled() || !child->isVisible() || QQuickItemPrivate::get(child)->culled)
             continue;
-        if (deliverPoints(child, event, hasFiltered))
+        if (deliverNewTouchPoints(child, event, hasFiltered))
             return true;
     }
 
@@ -2272,7 +2285,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
 
     if (touchEventAccepted) {
         // If the touch was accepted (regardless by whom or in what form),
-        // update acceptedNewPoints.
+        // update accepted new points.
         for (auto point: qAsConst(touchEvent->touchPoints())) {
             auto pointerEventPoint = event->pointById(point.id());
             pointerEventPoint->setAccepted();
