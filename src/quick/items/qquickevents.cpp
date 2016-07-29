@@ -501,6 +501,15 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     return nullptr;
 }
 
+QQuickItem *QQuickEventPoint::grabber() const
+{
+    return m_grabber.data();
+}
+
+void QQuickEventPoint::setGrabber(QQuickItem *grabber)
+{
+    m_grabber = QPointer<QQuickItem>(grabber);
+}
 
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)

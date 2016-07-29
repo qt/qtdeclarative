@@ -55,13 +55,14 @@
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qkeysequence.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QQuickPointerDevice;
 class QQuickPointerEvent;
 class QQuickPointerMouseEvent;
@@ -281,13 +282,13 @@ public:
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true) { m_accept = accepted; }
-    QQuickItem *grabber() const { return m_grabber; }
-    void setGrabber(QQuickItem *grabber) { m_grabber = grabber; }
+    QQuickItem *grabber() const;
+    void setGrabber(QQuickItem *grabber);
 
 private:
     QPointF m_scenePos;
     quint64 m_pointId;
-    QQuickItem *m_grabber;
+    QPointer<QQuickItem> m_grabber;
     ulong m_timestamp;
     ulong m_pressTimestamp;
     Qt::TouchPointState m_state;
