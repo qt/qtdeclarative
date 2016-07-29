@@ -352,6 +352,7 @@ public: // property accessors
 public: // helpers for C++ only (during event delivery)
     virtual QQuickPointerEvent *reset(QEvent *ev) = 0;
 
+    virtual bool isPressEvent() const = 0;
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
     virtual QQuickPointerTouchEvent *asPointerTouchEvent() { return nullptr; }
     virtual QQuickPointerTabletEvent *asPointerTabletEvent() { return nullptr; }
@@ -389,6 +390,7 @@ public:
     }
 
     QQuickPointerEvent *reset(QEvent *) override;
+    bool isPressEvent() const override;
     QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
     const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
     int pointCount() const override { return 1; }
@@ -412,6 +414,7 @@ public:
     {}
 
     QQuickPointerEvent *reset(QEvent *) override;
+    bool isPressEvent() const override;
     QQuickPointerTouchEvent *asPointerTouchEvent() override { return this; }
     const QQuickPointerTouchEvent *asPointerTouchEvent() const override { return this; }
     int pointCount() const override { return m_pointCount; }

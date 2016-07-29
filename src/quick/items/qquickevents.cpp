@@ -626,6 +626,13 @@ void QQuickPointerMouseEvent::clearGrabbers() const {
     m_mousePoint->setGrabber(nullptr);
 }
 
+bool QQuickPointerMouseEvent::isPressEvent() const
+{
+    auto me = static_cast<QMouseEvent*>(m_event);
+    return ((me->type() == QEvent::MouseButtonPress || me->type() == QEvent::MouseButtonDblClick) &&
+            (me->buttons() & me->button()) == me->buttons());
+}
+
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
@@ -650,6 +657,11 @@ QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
 void QQuickPointerTouchEvent::clearGrabbers() const {
     for (auto point: m_touchPoints)
         point->setGrabber(nullptr);
+}
+
+bool QQuickPointerTouchEvent::isPressEvent() const
+{
+    return static_cast<QTouchEvent*>(m_event)->touchPointStates() & Qt::TouchPointPressed;
 }
 
 QVector<QPointF> QQuickPointerEvent::unacceptedPointScenePositions() const
