@@ -1647,14 +1647,14 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
     return false;
 }
 
-void QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
+void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
     Q_Q(QQuickWindow);
+    auto event = pointerEvent->asMouseEvent();
 
-    lastMousePosition = event->windowPos();
+    lastMousePosition = pointerEvent->point(0)->scenePos();
 
     QQuickItem *mouseGrabberItem = q->mouseGrabberItem();
-
     if (mouseGrabberItem) {
         // send update
         QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
@@ -1669,8 +1669,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     } else {
         // send initial press
         event->setAccepted(false);
-        if ((event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) &&
-                (event->buttons() & event->button()) == event->buttons()) {
+        if (pointerEvent->isPressEvent()) {
             bool delivered = deliverInitialMousePressEvent(event);
             event->setAccepted(delivered);
         }
@@ -2129,8 +2128,8 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     // the usecase a bit evil, but we at least don't want to lose events.
     ++pointerEventRecursionGuard;
 
-    if (QQuickPointerMouseEvent *mouse = event->asPointerMouseEvent()) {
-        deliverMouseEvent(mouse->asMouseEvent());
+    if (event->asPointerMouseEvent()) {
+        deliverMouseEvent(event->asPointerMouseEvent());
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
     } else {
