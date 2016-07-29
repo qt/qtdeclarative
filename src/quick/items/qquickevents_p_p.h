@@ -401,7 +401,7 @@ public:
     QVector<QQuickItem *> grabbers() const override;
     void clearGrabbers() const override;
 
-    QMouseEvent *asMouseEvent() const;
+    QMouseEvent *asMouseEvent(const QPointF& localPos) const;
 
 private:
     QQuickEventPoint *m_mousePoint;

@@ -1622,56 +1622,57 @@ QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *t
     return me;
 }
 
-bool QQuickWindowPrivate::deliverInitialMousePressEvent(QMouseEvent *event)
+void QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickPointerMouseEvent *event)
 {
     Q_Q(QQuickWindow);
+    QPointF scenePos = event->point(0)->scenePos();
 
-    QVector<QQuickItem *> targets = pointerTargets(contentItem, event->windowPos(), true);
+    QVector<QQuickItem *> targets = pointerTargets(contentItem, scenePos, true);
     for (QQuickItem *item: qAsConst(targets)) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (itemPrivate->acceptedMouseButtons() & event->button()) {
-            QPointF localPos = item->mapFromScene(event->windowPos());
+            QPointF localPos = item->mapFromScene(scenePos);
             if (item->contains(localPos)) {
-                QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
+                QMouseEvent *me = event->asMouseEvent(localPos);
                 me->accept();
-                q->sendEvent(item, me.data());
-                event->setAccepted(me->isAccepted());
+                q->sendEvent(item, me);
                 if (me->isAccepted()) {
                     if (!q->mouseGrabberItem())
                         item->grabMouse();
-                    return true;
+                    return;
                 }
             }
         }
     }
-    return false;
+    // no item accepted the event, make sure we don't accept the original mouse event
+    event->asMouseEvent(QPointF())->setAccepted(false);
 }
 
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
     Q_Q(QQuickWindow);
-    auto event = pointerEvent->asMouseEvent();
 
     lastMousePosition = pointerEvent->point(0)->scenePos();
 
     QQuickItem *mouseGrabberItem = q->mouseGrabberItem();
     if (mouseGrabberItem) {
         // send update
-        QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
-        QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
+        QPointF localPos = mouseGrabberItem->mapFromScene(lastMousePosition);
+        auto me = pointerEvent->asMouseEvent(localPos);
         me->accept();
-        q->sendEvent(mouseGrabberItem, me.data());
-        event->setAccepted(me->isAccepted());
+        q->sendEvent(mouseGrabberItem, me);
+        pointerEvent->point(0)->setAccepted(me->isAccepted());
 
         // release event, make sure to ungrab if there still is a grabber
-        if (event->type() == QEvent::MouseButtonRelease && !event->buttons() && q->mouseGrabberItem())
+        if (me->type() == QEvent::MouseButtonRelease && !me->buttons() && q->mouseGrabberItem())
             q->mouseGrabberItem()->ungrabMouse();
     } else {
         // send initial press
-        event->setAccepted(false);
         if (pointerEvent->isPressEvent()) {
-            bool delivered = deliverInitialMousePressEvent(event);
-            event->setAccepted(delivered);
+            deliverInitialMousePressEvent(pointerEvent);
+        } else {
+            // make sure not to accept unhandled events
+            pointerEvent->asMouseEvent(QPointF())->setAccepted(false);
         }
     }
 }

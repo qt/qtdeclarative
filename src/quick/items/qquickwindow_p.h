@@ -145,7 +145,7 @@ public:
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
-    bool deliverInitialMousePressEvent(QMouseEvent *);
+    void deliverInitialMousePressEvent(QQuickPointerMouseEvent *);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
 #ifndef QT_NO_WHEELEVENT

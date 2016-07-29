@@ -619,9 +619,11 @@ bool QQuickPointerMouseEvent::allPointsAccepted() const {
     return m_mousePoint->isAccepted();
 }
 
-QMouseEvent *QQuickPointerMouseEvent::asMouseEvent() const
+QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
 {
-    return static_cast<QMouseEvent *>(m_event);
+    auto event = static_cast<QMouseEvent *>(m_event);
+    event->setLocalPos(localPos);
+    return event;
 }
 
 QVector<QQuickItem *> QQuickPointerMouseEvent::grabbers() const

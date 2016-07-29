@@ -2400,19 +2400,27 @@ void tst_qquickwindow::testHoverChildMouseEventFilter()
 
 void tst_qquickwindow::pointerEventTypeAndPointCount()
 {
-    QMouseEvent me(QEvent::MouseButtonPress, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QPointF localPosition(33, 66);
+    QPointF scenePosition(133, 166);
+    QPointF screenPosition(333, 366);
+    QMouseEvent me(QEvent::MouseButtonPress, localPosition, scenePosition, screenPosition,
+                   Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     QTouchEvent te(QEvent::TouchBegin, touchDevice, Qt::NoModifier, Qt::TouchPointPressed,
         QList<QTouchEvent::TouchPoint>() << QTouchEvent::TouchPoint(1));
+
 
     QQuickPointerMouseEvent pme;
     pme.reset(&me);
     QVERIFY(pme.isValid());
-    QCOMPARE(pme.asMouseEvent(), &me);
+    QCOMPARE(pme.asMouseEvent(localPosition), &me);
     QVERIFY(pme.asPointerMouseEvent());
     QVERIFY(!pme.asPointerTouchEvent());
     QVERIFY(!pme.asPointerTabletEvent());
 //    QVERIFY(!pe->asTabletEvent()); // TODO
     QCOMPARE(pme.pointCount(), 1);
+    QCOMPARE(pme.point(0)->scenePos(), scenePosition);
+    QCOMPARE(pme.asMouseEvent(localPosition)->localPos(), localPosition);
+    QCOMPARE(pme.asMouseEvent(localPosition)->screenPos(), screenPosition);
 
     QQuickPointerTouchEvent pte;
     pte.reset(&te);
