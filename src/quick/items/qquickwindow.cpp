@@ -2274,11 +2274,10 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints.
         for (auto point: qAsConst(touchEvent->touchPoints())) {
-            if (point.state() == Qt::TouchPointPressed) {
-                auto pointerEventPoint = event->pointById(point.id());
-                pointerEventPoint->setAccepted();
+            auto pointerEventPoint = event->pointById(point.id());
+            pointerEventPoint->setAccepted();
+            if (point.state() == Qt::TouchPointPressed)
                 pointerEventPoint->setGrabber(item);
-            }
         }
     } else {
         // But if the event was not accepted then we know this item
