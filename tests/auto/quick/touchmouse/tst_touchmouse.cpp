@@ -68,7 +68,9 @@ class EventItem : public QQuickItem
 public:
     EventItem(QQuickItem *parent = 0)
         : QQuickItem(parent), acceptMouse(false), acceptTouch(false), filterTouch(false)
-    {}
+    {
+        setAcceptedMouseButtons(Qt::LeftButton);
+    }
 
     void touchEvent(QTouchEvent *event)
     {
@@ -211,15 +213,17 @@ void tst_TouchMouse::simpleTouchEvent()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window, device).press(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 1);
+    // Get a touch and then mouse event offered
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 1);
+    // Not accepted, no updates
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QTest::touchEvent(window, device).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 1);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     eventItem1->eventList.clear();
 
     // Accept touch
