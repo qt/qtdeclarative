@@ -523,9 +523,8 @@ void tst_qquickwindow::touchEvent_basic()
 
     // press single point
     QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),window);
-    QTest::qWait(50);
-
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QQuickTouchUtils::flush(window);
+    QTRY_COMPARE(topItem->lastEvent.touchPoints.count(), 1);
 
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
