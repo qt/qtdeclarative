@@ -869,6 +869,8 @@ void tst_qquickwindow::touchEvent_velocity()
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity, points);
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
+    QCOMPARE(item->touchEventCount, 1);
+
     points[0].state = Qt::TouchPointMoved;
     points[0].area.adjust(5, 5, 5, 5);
     QVector2D velocity(1.5, 2.5);
