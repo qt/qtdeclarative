@@ -157,6 +157,7 @@ public:
         lastVelocity = lastVelocityFromMouseMove = QVector2D();
         lastMousePos = QPointF();
         lastMouseCapabilityFlags = 0;
+        touchEventCount = 0;
     }
 
     static void clearMousePressCounter()
