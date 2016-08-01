@@ -65,6 +65,10 @@ struct Event
 class EventItem : public QQuickItem
 {
     Q_OBJECT
+
+Q_SIGNALS:
+    void onTouchEvent(QQuickItem *receiver);
+
 public:
     EventItem(QQuickItem *parent = 0)
         : QQuickItem(parent), acceptMouse(false), acceptTouch(false), filterTouch(false)
@@ -76,6 +80,7 @@ public:
     {
         eventList.append(Event(event->type(), event->touchPoints()));
         event->setAccepted(acceptTouch);
+        emit onTouchEvent(this);
     }
     void mousePressEvent(QMouseEvent *event)
     {
@@ -156,6 +161,7 @@ private slots:
     void tapOnDismissiveTopMouseAreaClicksBottomOne();
 
     void touchGrabCausesMouseUngrab();
+    void touchPointDeliveryOrder();
 
     void hoverEnabled();
 
@@ -1223,6 +1229,105 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)0);
 
     delete window;
+}
+
+void tst_TouchMouse::touchPointDeliveryOrder()
+{
+    // Touch points should be first delivered to the item under the primary finger
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("touchpointdeliveryorder.qml"));
+    /*
+    The items are positioned from left to right:
+    |      background     |
+    |   left   |
+    |          |   right  |
+          |  middle |
+    0   150   300  450  600
+    */
+    QPoint pLeft = QPoint(100, 100);
+    QPoint pRight = QPoint(500, 100);
+    QPoint pLeftMiddle = QPoint(200, 100);
+    QPoint pRightMiddle = QPoint(350, 100);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QVector<QQuickItem*> events;
+    EventItem *background = window->rootObject()->findChild<EventItem*>("background");
+    EventItem *left = window->rootObject()->findChild<EventItem*>("left");
+    EventItem *middle = window->rootObject()->findChild<EventItem*>("middle");
+    EventItem *right = window->rootObject()->findChild<EventItem*>("right");
+    QVERIFY(background);
+    QVERIFY(left);
+    QVERIFY(middle);
+    QVERIFY(right);
+    connect(background, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
+    connect(left, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
+    connect(middle, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
+    connect(right, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
+
+    QTest::touchEvent(window.data(), device).press(0, pLeft, window.data());
+    QQuickTouchUtils::flush(window.data());
+
+    // Touch on left, then background
+    QCOMPARE(events.size(), 2);
+    QCOMPARE(events.at(0), left);
+    QCOMPARE(events.at(1), background);
+    events.clear();
+
+    // New press events are deliverd first, the stationary point was not accepted, thus it doesn't get delivered
+    QTest::touchEvent(window.data(), device).stationary(0).press(1, pRightMiddle, window.data());
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(events.size(), 3);
+    QCOMPARE(events.at(0), middle);
+    QCOMPARE(events.at(1), right);
+    QCOMPARE(events.at(2), background);
+    events.clear();
+
+    QTest::touchEvent(window.data(), device).release(0, pLeft, window.data()).release(1, pRightMiddle, window.data());
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(events.size(), 0); // no accepted events
+
+    // Two presses, the first point should come first
+    QTest::touchEvent(window.data(), device).press(0, pLeft, window.data()).press(1, pRight, window.data());
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(events.size(), 3);
+    QCOMPARE(events.at(0), left);
+    QCOMPARE(events.at(1), right);
+    QCOMPARE(events.at(2), background);
+    QTest::touchEvent(window.data(), device).release(0, pLeft, window.data()).release(1, pRight, window.data());
+    events.clear();
+
+    // Again, pressing right first
+    QTest::touchEvent(window.data(), device).press(0, pRight, window.data()).press(1, pLeft, window.data());
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(events.size(), 3);
+    QCOMPARE(events.at(0), right);
+    QCOMPARE(events.at(1), left);
+    QCOMPARE(events.at(2), background);
+    QTest::touchEvent(window.data(), device).release(0, pRight, window.data()).release(1, pLeft, window.data());
+    events.clear();
+
+    // Two presses, both hitting the middle item on top, then branching left and right, then bottom
+    // Each target should be offered the events exactly once, middle first, left must come before right (id 0)
+    QTest::touchEvent(window.data(), device).press(0, pLeftMiddle, window.data()).press(1, pRightMiddle, window.data());
+    QCOMPARE(events.size(), 4);
+    QCOMPARE(events.at(0), middle);
+    QCOMPARE(events.at(1), left);
+    QCOMPARE(events.at(2), right);
+    QCOMPARE(events.at(3), background);
+    QTest::touchEvent(window.data(), device).release(0, pLeftMiddle, window.data()).release(1, pRightMiddle, window.data());
+    events.clear();
+
+    QTest::touchEvent(window.data(), device).press(0, pRightMiddle, window.data()).press(1, pLeftMiddle, window.data());
+    qDebug() << events;
+    QCOMPARE(events.size(), 4);
+    QCOMPARE(events.at(0), middle);
+    QCOMPARE(events.at(1), right);
+    QCOMPARE(events.at(2), left);
+    QCOMPARE(events.at(3), background);
+    QTest::touchEvent(window.data(), device).release(0, pRightMiddle, window.data()).release(1, pLeftMiddle, window.data());
 }
 
 void tst_TouchMouse::hoverEnabled()
