@@ -583,8 +583,9 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
     }
 
     for (int i = 0; i < newPointCount; ++i) {
-        m_touchPoints.at(i)->reset(tps.at(i), ev->timestamp());
-        m_touchPoints.at(i)->setGrabber(grabbers.at(i));
+        auto point = m_touchPoints.at(i);
+        point->reset(tps.at(i), ev->timestamp());
+        point->setGrabber(grabbers.at(i));
     }
     m_pointCount = newPointCount;
     return this;
