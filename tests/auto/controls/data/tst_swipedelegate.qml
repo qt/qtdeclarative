@@ -952,4 +952,85 @@ TestCase {
 
         control.destroy();
     }
+
+    Component {
+        id: backgroundFillComponent
+        SwipeDelegate {
+            background: Item { anchors.fill: parent }
+        }
+    }
+
+    Component {
+        id: backgroundCenterInComponent
+        SwipeDelegate {
+            background: Item { anchors.centerIn: parent }
+        }
+    }
+
+    Component {
+        id: backgroundLeftComponent
+        SwipeDelegate {
+            background: Item { anchors.left: parent.left }
+        }
+    }
+
+    Component {
+        id: backgroundRightComponent
+        SwipeDelegate {
+            background: Item { anchors.right: parent.right }
+        }
+    }
+
+    Component {
+        id: contentItemFillComponent
+        SwipeDelegate {
+            contentItem: Item { anchors.fill: parent }
+        }
+    }
+
+    Component {
+        id: contentItemCenterInComponent
+        SwipeDelegate {
+            contentItem: Item { anchors.centerIn: parent }
+        }
+    }
+
+    Component {
+        id: contentItemLeftComponent
+        SwipeDelegate {
+            contentItem: Item { anchors.left: parent.left }
+        }
+    }
+
+    Component {
+        id: contentItemRightComponent
+        SwipeDelegate {
+            contentItem: Item { anchors.right: parent.right }
+        }
+    }
+
+    function test_horizontalAnchors_data() {
+        return [
+            { tag: "background, fill", component: backgroundFillComponent, itemName: "background", warningLocation: ":959:25" },
+            { tag: "background, centerIn", component: backgroundCenterInComponent, itemName: "background", warningLocation: ":966:25" },
+            { tag: "background, left", component: backgroundLeftComponent, itemName: "background", warningLocation: ":973:25" },
+            { tag: "background, right", component: backgroundRightComponent, itemName: "background", warningLocation: ":980:25" },
+            { tag: "contentItem, fill", component: contentItemFillComponent, itemName: "contentItem", warningLocation: ":987:26" },
+            { tag: "contentItem, centerIn", component: contentItemCenterInComponent, itemName: "contentItem", warningLocation: ":994:26" },
+            { tag: "contentItem, left", component: contentItemLeftComponent, itemName: "contentItem", warningLocation: ":1001:26" },
+            { tag: "contentItem, right", component: contentItemRightComponent, itemName: "contentItem", warningLocation: ":1008:26" }
+        ];
+    }
+
+    function test_horizontalAnchors(data) {
+        var warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
+            + ": QML : SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
+
+        ignoreWarning(warningMessage);
+
+        var control = data.component.createObject(testCase);
+        verify(control.contentItem);
+
+        control.destroy();
+    }
 }
