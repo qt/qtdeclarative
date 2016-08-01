@@ -682,9 +682,11 @@ void QSGD3D12EnginePrivate::releaseResources()
     commandQueue = nullptr;
     copyCommandQueue = nullptr;
 
+#ifndef Q_OS_WINRT
     dcompTarget = nullptr;
     dcompVisual = nullptr;
     dcompDevice = nullptr;
+#endif
 
     swapChain = nullptr;
 

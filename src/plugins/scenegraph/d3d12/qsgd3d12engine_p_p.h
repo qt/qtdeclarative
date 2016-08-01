@@ -435,9 +435,11 @@ private:
 
     DeviceLossTester devLossTest;
 
+#ifndef Q_OS_WINRT
     ComPtr<IDCompositionDevice> dcompDevice;
     ComPtr<IDCompositionTarget> dcompTarget;
     ComPtr<IDCompositionVisual> dcompVisual;
+#endif
 };
 
 inline uint qHash(const QSGD3D12EnginePrivate::PersistentFrameData::PendingRelease &pr, uint seed = 0)
