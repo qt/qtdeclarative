@@ -1644,7 +1644,7 @@ void QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickPointerMouseEvent 
         }
     }
     // no item accepted the event, make sure we don't accept the original mouse event
-    event->asMouseEvent(QPointF())->setAccepted(false);
+    event->setAccepted(false);
 }
 
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
@@ -1670,7 +1670,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             deliverInitialMousePressEvent(pointerEvent);
         } else {
             // make sure not to accept unhandled events
-            pointerEvent->asMouseEvent(QPointF())->setAccepted(false);
+            pointerEvent->setAccepted(false);
         }
     }
 }

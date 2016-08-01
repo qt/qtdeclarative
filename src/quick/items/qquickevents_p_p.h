@@ -362,6 +362,8 @@ public: // helpers for C++ only (during event delivery)
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
+    bool isAccepted() { return m_event->isAccepted(); }
+    void setAccepted(bool accepted) { m_event->setAccepted(accepted); }
     QVector<QPointF> unacceptedPointScenePositions() const;
     QVector<QPointF> unacceptedPressedPointScenePositions() const;
 
