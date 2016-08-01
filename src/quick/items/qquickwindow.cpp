@@ -622,7 +622,7 @@ bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
     return doubleClicked;
 }
 
-bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *event)
+bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
     auto device = QQuickPointerDevice::touchDevice(event->device());
@@ -2286,7 +2286,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
-        if (translateTouchToMouse(item, touchEvent.data()))
+        if (deliverTouchAsMouse(item, touchEvent.data()))
             eventAccepted = true;
     }
 

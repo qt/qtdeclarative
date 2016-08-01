@@ -138,7 +138,7 @@ public:
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
-    bool translateTouchToMouse(QQuickItem *item, QTouchEvent *event);
+    bool deliverTouchAsMouse(QQuickItem *item, QTouchEvent *event);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void setMouseGrabber(QQuickItem *grabber);
     void grabTouchPoints(QQuickItem *grabber, const QVector<int> &ids);
