@@ -62,6 +62,7 @@
 #include <QtCore/qdiriterator.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtCore/qwaitcondition.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlextensioninterface.h>
 
 #include <functional>
@@ -104,6 +105,9 @@
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
 DEFINE_BOOL_CONFIG_OPTION(diskCache, QML_DISK_CACHE);
 DEFINE_BOOL_CONFIG_OPTION(forceDiskCacheRefresh, QML_FORCE_DISK_CACHE_REFRESH);
+
+Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
+Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
 
 QT_BEGIN_NAMESPACE
 
@@ -2075,7 +2079,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     {
         QString error;
         if (!unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
-            qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
+            qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
     }
@@ -2485,7 +2489,7 @@ void QQmlTypeData::compile()
     if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
         if (!m_compiledData->saveToDisk(&errorString)) {
-            qDebug() << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
+            qCDebug(DBG_DISK_CACHE) << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
         }
     }
 }
@@ -2877,7 +2881,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
             initializeFromCompilationUnit(unit);
             return;
         } else {
-            qDebug() << "Error loading" << url().toString() << "from disk cache:" << error;
+            qCDebug(DBG_DISK_CACHE()) << "Error loading" << url().toString() << "from disk cache:" << error;
         }
     }
 
@@ -2919,7 +2923,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
         if (!unit->saveToDisk(&errorString)) {
-            qDebug() << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;
+            qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;
         }
     }
 
