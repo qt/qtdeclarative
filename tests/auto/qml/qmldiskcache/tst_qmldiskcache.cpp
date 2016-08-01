@@ -36,6 +36,7 @@
 #include <private/qv4engine_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQmlFileSelector>
 #include <QThread>
 
 class tst_qmldiskcache: public QObject
@@ -49,6 +50,7 @@ private slots:
     void registerImportForImplicitComponent();
     void basicVersionChecks();
     void recompileAfterChange();
+    void fileSelectors();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -430,6 +432,56 @@ void tst_qmldiskcache::recompileAfterChange()
         QScopedPointer<TypeVersion2> obj(qobject_cast<TypeVersion2*>(component.create()));
         QVERIFY(!obj.isNull());
         QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
+    }
+}
+
+void tst_qmldiskcache::fileSelectors()
+{
+    QQmlEngine engine;
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString testFilePath = tempDir.path() + "/test.qml";
+    {
+        QFile f(testFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject { property int value: 42 }"));
+    }
+
+    const QString selector = QStringLiteral("testSelector");
+    const QString selectorPath = tempDir.path() + "/+" + selector;
+    const QString selectedTestFilePath = selectorPath + "/test.qml";
+    {
+        QVERIFY(QDir::root().mkpath(selectorPath));
+        QFile f(selectorPath + "/test.qml");
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject { property int value: 100 }"));
+    }
+
+    {
+        QQmlComponent component(&engine, testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 42);
+
+        QFile cacheFile(testFilePath + "c");
+        QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
+    }
+
+    QQmlFileSelector qmlSelector(&engine);
+    qmlSelector.setExtraSelectors(QStringList() << selector);
+
+    engine.clearComponentCache();
+
+    {
+        QQmlComponent component(&engine, testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 100);
+
+        QFile cacheFile(selectedTestFilePath + "c");
+        QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
     }
 }
 

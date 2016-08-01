@@ -2510,7 +2510,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
     }
     if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
-        if (!m_compiledData->saveToDisk(&errorString)) {
+        if (!m_compiledData->saveToDisk(url(), &errorString)) {
             qCDebug(DBG_DISK_CACHE) << "Error saving cached version of" << m_compiledData->url().toString() << "to disk:" << errorString;
         }
     }
@@ -2944,7 +2944,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     if (diskCache() || forceDiskCacheRefresh()) {
         QString errorString;
-        if (!unit->saveToDisk(&errorString)) {
+        if (!unit->saveToDisk(url(), &errorString)) {
             qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;
         }
     }

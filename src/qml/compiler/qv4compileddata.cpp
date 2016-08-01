@@ -320,7 +320,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-bool CompilationUnit::saveToDisk(QString *errorString)
+bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 {
     errorString->clear();
 
@@ -329,7 +329,6 @@ bool CompilationUnit::saveToDisk(QString *errorString)
         return false;
     }
 
-    const QUrl unitUrl = url();
     if (!unitUrl.isLocalFile()) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;

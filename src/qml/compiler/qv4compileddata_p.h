@@ -904,7 +904,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     void destroy() Q_DECL_OVERRIDE;
 
-    bool saveToDisk(QString *errorString);
+    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
     bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:
