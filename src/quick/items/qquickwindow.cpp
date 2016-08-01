@@ -1651,17 +1651,16 @@ void QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickPointerMouseEvent 
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
     Q_Q(QQuickWindow);
-
-    lastMousePosition = pointerEvent->point(0)->scenePos();
-
-    QQuickItem *mouseGrabberItem = q->mouseGrabberItem();
-    if (mouseGrabberItem) {
+    auto point = pointerEvent->point(0);
+    lastMousePosition = point->scenePos();
+    QQuickItem *grabber = point->grabber();
+    if (grabber) {
         // send update
-        QPointF localPos = mouseGrabberItem->mapFromScene(lastMousePosition);
+        QPointF localPos = grabber->mapFromScene(lastMousePosition);
         auto me = pointerEvent->asMouseEvent(localPos);
         me->accept();
-        q->sendEvent(mouseGrabberItem, me);
-        pointerEvent->point(0)->setAccepted(me->isAccepted());
+        q->sendEvent(grabber, me);
+        point->setAccepted(me->isAccepted());
 
         // release event, make sure to ungrab if there still is a grabber
         if (me->type() == QEvent::MouseButtonRelease && !me->buttons() && q->mouseGrabberItem())
