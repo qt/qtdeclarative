@@ -945,10 +945,14 @@ void tst_qquickwindow::mergeTouchPointLists_data()
             << (QVector<QQuickItem*>() << item1 << item2 << item3)
             << (QVector<QQuickItem*>() << item1 << item4 << item5)
             << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
-    QTest::newRow("two lists 3")
+    QTest::newRow("two lists 4")
             << (QVector<QQuickItem*>() << item1 << item3 << item4)
             << (QVector<QQuickItem*>() << item2 << item3 << item5)
             << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+    QTest::newRow("two lists 5")
+            << (QVector<QQuickItem*>() << item1 << item2 << item4)
+            << (QVector<QQuickItem*>() << item1 << item3 << item4)
+            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4);
 }
 
 void tst_qquickwindow::mergeTouchPointLists()
