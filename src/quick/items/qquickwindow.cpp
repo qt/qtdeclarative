@@ -2263,7 +2263,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
         return false;
 
     qCDebug(DBG_TOUCH) << " - considering delivering " << touchEvent.data() << " to " << item;
-    bool touchEventAccepted = false;
+    bool eventAccepted = false;
 
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
@@ -2280,17 +2280,17 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
     // Deliver the touch event to the given item
     qCDebug(DBG_TOUCH) << " - actually delivering " << touchEvent.data() << " to " << item;
     QCoreApplication::sendEvent(item, touchEvent.data());
-    touchEventAccepted = touchEvent->isAccepted();
+    eventAccepted = touchEvent->isAccepted();
 
     // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (!touchEventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
+    if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
         if (translateTouchToMouse(item, touchEvent.data()))
-            touchEventAccepted = true;
+            eventAccepted = true;
     }
 
-    if (touchEventAccepted) {
+    if (eventAccepted) {
         // If the touch was accepted (regardless by whom or in what form),
         // update accepted new points.
         for (auto point: qAsConst(touchEvent->touchPoints())) {
@@ -2312,7 +2312,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, const QQ
         }
     }
 
-    return touchEventAccepted;
+    return eventAccepted;
 }
 
 // create touch event containing only points inside the target item
