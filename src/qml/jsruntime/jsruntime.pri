@@ -43,11 +43,7 @@ SOURCES += \
     $$PWD/qv4typedarray.cpp \
     $$PWD/qv4dataview.cpp
 
-!contains(QT_CONFIG, no-qml-debug) {
-    SOURCES += $$PWD/qv4profiling.cpp
-} else {
-    DEFINES += QT_NO_QML_DEBUGGER
-}
+!contains(QT_CONFIG, no-qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \

@@ -1,5 +1,6 @@
 contains(QT_CONFIG, no-qml-debug) {
     DEFINES += QT_NO_QML_DEBUGGER
+    MODULE_DEFINES += QT_NO_QML_DEBUGGER
 } else {
     HEADERS += \
         $$PWD/qqmldebugpluginmanager_p.h \

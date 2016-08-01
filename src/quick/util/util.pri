@@ -31,11 +31,7 @@ SOURCES += \
     $$PWD/qquickshortcut.cpp \
     $$PWD/qquickvalidator.cpp
 
-contains(QT_CONFIG, no-qml-debug) {
-    DEFINES += QT_NO_QML_DEBUGGER
-} else {
-    SOURCES += $$PWD/qquickprofiler.cpp
-}
+!contains(QT_CONFIG, no-qml-debug): SOURCES += $$PWD/qquickprofiler.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
