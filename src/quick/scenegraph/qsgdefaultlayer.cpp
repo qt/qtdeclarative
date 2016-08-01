@@ -48,29 +48,6 @@ DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
 #endif
 DEFINE_BOOL_CONFIG_OPTION(qmlFboFlushBeforeDetach, QML_FBO_FLUSH_BEFORE_DETACH)
 
-
-
-static QOpenGLFramebufferObject *createFramebuffer(const QSize &size,
-                                                   QOpenGLFramebufferObjectFormat format)
-{
-#ifdef Q_OS_MACOS
-    QOpenGLContext *context = QOpenGLContext::currentContext();
-    if (context->hasExtension("GL_ARB_framebuffer_sRGB")
-        && context->hasExtension("GL_EXT_texture_sRGB")
-        && context->hasExtension("GL_EXT_texture_sRGB_decode"))
-        format.setInternalTextureFormat(GL_SRGB8_ALPHA8_EXT);
-#endif
-    QOpenGLFramebufferObject *fbo = new QOpenGLFramebufferObject(size, format);
-#ifdef Q_OS_MACOS
-    if (format.internalTextureFormat() == GL_SRGB8_ALPHA8_EXT) {
-        QOpenGLFunctions *funcs = context->functions();
-        funcs->glBindTexture(GL_TEXTURE_2D, fbo->texture());
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
-    }
-#endif
-    return fbo;
-}
-
 namespace
 {
     class BindableFbo : public QSGBindable
@@ -353,7 +330,7 @@ void QSGDefaultLayer::grab()
 
             format.setInternalTextureFormat(m_format);
             format.setSamples(m_context->openglContext()->format().samples());
-            m_secondaryFbo = createFramebuffer(m_size, format);
+            m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
             m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
         } else {
             QOpenGLFramebufferObjectFormat format;
@@ -362,14 +339,14 @@ void QSGDefaultLayer::grab()
             if (m_recursive) {
                 deleteFboLater = true;
                 delete m_secondaryFbo;
-                m_secondaryFbo = createFramebuffer(m_size, format);
+                m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
                 funcs->glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
                 updateBindOptions(true);
                 m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
             } else {
                 delete m_fbo;
                 delete m_secondaryFbo;
-                m_fbo = createFramebuffer(m_size, format);
+                m_fbo = new QOpenGLFramebufferObject(m_size, format);
                 m_secondaryFbo = 0;
                 funcs->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
@@ -383,7 +360,7 @@ void QSGDefaultLayer::grab()
         Q_ASSERT(m_fbo);
         Q_ASSERT(!m_multisampling);
 
-        m_secondaryFbo = createFramebuffer(m_size, m_fbo->format());
+        m_secondaryFbo = new QOpenGLFramebufferObject(m_size, m_fbo->format());
         funcs->glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
         updateBindOptions(true);
     }
