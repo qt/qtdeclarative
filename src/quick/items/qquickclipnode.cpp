@@ -113,7 +113,7 @@ void QQuickDefaultClipNode::updateGeometry()
         }
 
     }
-    markDirty(DirtyGeometry);
     setClipRect(m_rect);
+    markDirty(DirtyGeometry);
 }
 
