@@ -37,17 +37,17 @@
     \section1 Attached Properties
 
     \list
-        \li \l {accent-attached-prop}{\b accent} : color
-        \li \l {background-attached-prop}{\b background} : color
-        \li \l {foreground-attached-prop}{\b foreground} : color
-        \li \l {primary-attached-prop}{\b primary} : color
-        \li \l {theme-attached-prop}{\b theme} : enumeration
+        \li \l {material-accent-attached-prop}{\b accent} : color
+        \li \l {material-background-attached-prop}{\b background} : color
+        \li \l {material-foreground-attached-prop}{\b foreground} : color
+        \li \l {material-primary-attached-prop}{\b primary} : color
+        \li \l {material-theme-attached-prop}{\b theme} : enumeration
     \endlist
 
     \section1 Attached Methods
 
     \list
-        \li color \l {color-attached-method}{\b color}(enumeration predefined, enumeration shade)
+        \li color \l {material-color-attached-method}{\b color}(enumeration predefined, enumeration shade)
     \endlist
 
     \section1 Detailed Description
@@ -72,9 +72,9 @@
 
     \section2 Customization
 
-    The Material style allows customizing five attributes, \l {theme-attached-prop}{theme},
-    \l {primary-attached-prop}{primary}, \l {accent-attached-prop}{accent},
-    \l {foreground-attached-prop}{foreground}, and \l {background-attached-prop}{background}.
+    The Material style allows customizing five attributes, \l {material-theme-attached-prop}{theme},
+    \l {material-primary-attached-prop}{primary}, \l {material-accent-attached-prop}{accent},
+    \l {material-foreground-attached-prop}{foreground}, and \l {material-background-attached-prop}{background}.
 
     \image qtquickcontrols2-material-attributes.png
 
@@ -144,7 +144,7 @@
             \li Description
         \row
             \li \c QT_QUICK_CONTROLS_MATERIAL_THEME
-            \li The value can be one of the available \l {theme-attached-prop}{themes},
+            \li The value can be one of the available \l {material-theme-attached-prop}{themes},
                 for example \c "Dark".
         \row
             \li \c QT_QUICK_CONTROLS_MATERIAL_ACCENT
@@ -237,7 +237,7 @@
     There are several different
     \l {https://material.google.com/style/color.html#color-color-palette}{shades}
     of each \l {Pre-defined Colors}{pre-defined color} that can be passed to the
-    \l {color-attached-method}{Material.color()} function:
+    \l {material-color-attached-method}{Material.color()} function:
     \value Material.Shade50
     \value Material.Shade100
     \value Material.Shade200
@@ -257,8 +257,8 @@
 
     \section1 Attached Property Documentation
 
-    \styleproperty {Material.accent} {color} {accent-attached-prop}
-    \target accent-attached-prop
+    \styleproperty {Material.accent} {color} {material-accent-attached-prop}
+    \target material-accent-attached-prop
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -270,8 +270,8 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.background} {color} {background-attached-prop}
-    \target background-attached-prop
+    \styleproperty {Material.background} {color} {material-background-attached-prop}
+    \target material-background-attached-prop
     This attached property holds the background color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -279,8 +279,8 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.foreground} {color} {foreground-attached-prop}
-    \target foreground-attached-prop
+    \styleproperty {Material.foreground} {color} {material-foreground-attached-prop}
+    \target material-foreground-attached-prop
     This attached property holds the foreground color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -288,8 +288,8 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.primary} {color} {primary-attached-prop}
-    \target primary-attached-prop
+    \styleproperty {Material.primary} {color} {material-primary-attached-prop}
+    \target material-primary-attached-prop
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -301,8 +301,8 @@
 
     \endstyleproperty
 
-    \styleproperty {Material.theme} {enumeration} {theme-attached-prop}
-    \target theme-attached-prop
+    \styleproperty {Material.theme} {enumeration} {material-theme-attached-prop}
+    \target material-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -314,8 +314,8 @@
 
     \section1 Attached Method Documentation
 
-    \stylemethod2 {color} {color} {enumeration} {predefined} {enumeration} {shade} {color-attached-method}
-    \target color-attached-method
+    \stylemethod2 {color} {color} {enumeration} {predefined} {enumeration} {shade} {material-color-attached-method}
+    \target material-color-attached-method
     This attached method returns the color value of the specified \l {pre-defined colors}
     {pre-defined color} combined with the given \l {pre-defined colors}{shade}.
     If omitted, the shade argument defaults to \c Material.Shade500.

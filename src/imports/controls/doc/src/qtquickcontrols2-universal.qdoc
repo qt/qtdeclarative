@@ -37,10 +37,10 @@
     \section1 Attached Properties
 
     \list
-        \li \l {accent-attached-prop}{\b accent} : color
-        \li \l {background-attached-prop}{\b background} : color
-        \li \l {foreground-attached-prop}{\b foreground} : color
-        \li \l {theme-attached-prop}{\b theme} : enumeration
+        \li \l {universal-accent-attached-prop}{\b accent} : color
+        \li \l {universal-background-attached-prop}{\b background} : color
+        \li \l {universal-foreground-attached-prop}{\b foreground} : color
+        \li \l {universal-theme-attached-prop}{\b theme} : enumeration
     \endlist
 
     \section1 Attached Methods
@@ -72,9 +72,9 @@
 
     \section2 Customization
 
-    The Universal style allows customizing four attributes, \l {theme-attached-prop}{theme},
-    \l {accent-attached-prop}{accent}, \l {foreground-attached-prop}{foreground}, and
-    \l {background-attached-prop}{background}.
+    The Universal style allows customizing four attributes, \l {universal-theme-attached-prop}{theme},
+    \l {universal-accent-attached-prop}{accent}, \l {universal-foreground-attached-prop}{foreground}, and
+    \l {universal-background-attached-prop}{background}.
 
     \image qtquickcontrols2-universal-attributes.png
 
@@ -144,12 +144,12 @@
             \li Description
         \row
             \li \c QT_QUICK_CONTROLS_UNIVERSAL_THEME
-            \li The value can be one of the available \l {theme-attached-prop}{themes},
+            \li The value can be one of the available \l {universal-theme-attached-prop}{themes},
                 for example \c "Dark".
         \row
             \li \c QT_QUICK_CONTROLS_UNIVERSAL_ACCENT
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
-                to use one of the pre-defined  \l {accent-attached-prop} {accents}, for
+                to use one of the pre-defined  \l {universal-accent-attached-prop} {accents}, for
                 example \c "Violet".
     \endtable
 
@@ -172,8 +172,8 @@
 
     \section1 Attached Property Documentation
 
-    \styleproperty {Universal.accent} {color} {accent-attached-prop}
-    \target accent-attached-prop
+    \styleproperty {Universal.accent} {color} {universal-accent-attached-prop}
+    \target universal-accent-attached-prop
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -204,8 +204,8 @@
 
     \endstyleproperty
 
-    \styleproperty {Universal.background} {color} {background-attached-prop}
-    \target background-attached-prop
+    \styleproperty {Universal.background} {color} {universal-background-attached-prop}
+    \target universal-background-attached-prop
     This attached property holds the background color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
@@ -213,15 +213,15 @@
 
     \endstyleproperty
 
-    \styleproperty {Universal.foreground} {color} {foreground-attached-prop}
-    \target foreground-attached-prop
+    \styleproperty {Universal.foreground} {color} {universal-foreground-attached-prop}
+    \target universal-foreground-attached-prop
     This attached property holds the foreground color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
     The default value is theme-specific (light or dark).
 
-    \styleproperty {Universal.theme} {enumeration} {theme-attached-prop}
-    \target theme-attached-prop
+    \styleproperty {Universal.theme} {enumeration} {universal-theme-attached-prop}
+    \target universal-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
     can be attached to any window or item. The value is propagated to children.
 
