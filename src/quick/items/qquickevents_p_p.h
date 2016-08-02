@@ -345,7 +345,7 @@ public:
     virtual ~QQuickPointerEvent();
 
 public: // property accessors
-    const QQuickPointerDevice *device() const { return m_device; }
+    QQuickPointerDevice *device() const { return m_device; }
     Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
@@ -375,7 +375,7 @@ public: // helpers for C++ only (during event delivery)
 
 protected:
 
-    const QQuickPointerDevice *m_device;
+    QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
     Qt::MouseButtons m_pressedButtons;
