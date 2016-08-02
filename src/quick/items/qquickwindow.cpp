@@ -2243,7 +2243,11 @@ bool QQuickWindowPrivate::deliverNewTouchPoints(QQuickPointerTouchEvent *event, 
     QVector<QQuickItem *> targetItems;
     for (QPointF point: points) {
         QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point, false);
-        targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
+        if (targetItems.count()) {
+            targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
+        } else {
+            targetItems = targetItemsForPoint;
+        }
     }
 
     for (QQuickItem *item: targetItems)
