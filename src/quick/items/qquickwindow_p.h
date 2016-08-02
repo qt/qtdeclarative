@@ -145,7 +145,6 @@ public:
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
-    void deliverInitialMousePressEvent(QQuickPointerMouseEvent *);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
 #ifndef QT_NO_WHEELEVENT
@@ -167,9 +166,9 @@ public:
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
-    bool deliverNewTouchPoints(QQuickPointerTouchEvent *, QSet<QQuickItem *> *);
+    bool deliverPressEvent(QQuickPointerEvent *, QSet<QQuickItem *> *);
     bool deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered);
-    bool deliverMatchingPointsToItem(QQuickItem *item, const QQuickPointerTouchEvent *event, QSet<QQuickItem*> *filtered);
+    bool deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent, QSet<QQuickItem*> *filtered);
     static QTouchEvent *touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent);
     static QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
     bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem*> *filtered);
