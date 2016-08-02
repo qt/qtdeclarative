@@ -813,19 +813,6 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
     }
 }
 
-void QQuickWindowPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
-{
-    QMatrix4x4 transformMatrix(transform);
-    for (int i=0; i<touchPoints.count(); i++) {
-        QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
-        touchPoint.setRect(transform.mapRect(touchPoint.sceneRect()));
-        touchPoint.setStartPos(transform.map(touchPoint.startScenePos()));
-        touchPoint.setLastPos(transform.map(touchPoint.lastScenePos()));
-        touchPoint.setVelocity(transformMatrix.mapVector(touchPoint.velocity()).toVector2D());
-    }
-}
-
-
 /*!
 Translates the data in \a touchEvent to this window.  This method leaves the item local positions in
 \a touchEvent untouched (these are filled in later).
@@ -2273,7 +2260,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
 
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
-    if (sendFilteredTouchEvent(item->parentItem(), item, event->asTouchEvent(), hasFiltered)) {
+    if (sendFilteredTouchEvent(item->parentItem(), item, event, hasFiltered)) {
         // If the touch was accepted (regardless by whom or in what form),
         // update acceptedNewPoints
         qCDebug(DBG_TOUCH) << " - can't. intercepted " << touchEvent.data() << " to " << item->parentItem() << " instead of " << item;
@@ -2319,67 +2306,6 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     }
 
     return eventAccepted;
-}
-
-// create touch event containing only points inside the target item
-QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent)
-{
-    const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
-    QList<QTouchEvent::TouchPoint> pointsInBounds;
-    // if all points are stationary, the list of points should be empty to signal a no-op
-    if (originalEvent.touchPointStates() != Qt::TouchPointStationary) {
-        for (int i = 0; i < touchPoints.count(); ++i) {
-            const QTouchEvent::TouchPoint &tp = touchPoints.at(i);
-            // Touch presses are relevant to the target item only if they occur inside its bounds.
-            // Touch updates and releases are relevant if they occur inside, or if we want to
-            // finish the sequence because the press occurred inside.
-            if (tp.state() == Qt::TouchPointPressed) {
-                QPointF p = target->mapFromScene(tp.scenePos());
-                if (target->contains(p))
-                    pointsInBounds.append(tp);
-            } else {
-                pointsInBounds.append(tp);
-            }
-        }
-        transformTouchPoints(pointsInBounds, QQuickItemPrivate::get(target)->windowToItemTransform());
-    }
-
-    QTouchEvent* touchEvent = touchEventWithPoints(originalEvent, pointsInBounds);
-    touchEvent->setTarget(target);
-    return touchEvent;
-}
-
-// copy a touch event's basic properties but give it new touch points
-// TODO remove this variant and use QQuickPointerEvent/QQuickEventPoint
-QTouchEvent *QQuickWindowPrivate::touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints)
-{
-    Qt::TouchPointStates eventStates;
-    for (const QTouchEvent::TouchPoint &p : qAsConst(newPoints))
-        eventStates |= p.state();
-    // if all points have the same state, set the event type accordingly
-    QEvent::Type eventType = event.type();
-    switch (eventStates) {
-        case Qt::TouchPointPressed:
-            eventType = QEvent::TouchBegin;
-            break;
-        case Qt::TouchPointReleased:
-            eventType = QEvent::TouchEnd;
-            break;
-        default:
-            eventType = QEvent::TouchUpdate;
-            break;
-    }
-
-    QTouchEvent *touchEvent = new QTouchEvent(eventType);
-    touchEvent->setWindow(event.window());
-    touchEvent->setTarget(event.target());
-    touchEvent->setDevice(event.device());
-    touchEvent->setModifiers(event.modifiers());
-    touchEvent->setTouchPoints(newPoints);
-    touchEvent->setTouchPointStates(eventStates);
-    touchEvent->setTimestamp(event.timestamp());
-    touchEvent->accept();
-    return touchEvent;
 }
 
 #ifndef QT_NO_DRAGANDDROP
@@ -2553,7 +2479,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 #endif
 
 // Child event filtering is legacy stuff, so here we use QTouchEvent
-bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
+bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
     Q_Q(QQuickWindow);
 
@@ -2565,8 +2491,8 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
     if (targetPrivate->filtersChildMouseEvents && !hasFiltered->contains(target)) {
         hasFiltered->insert(target);
-        QScopedPointer<QTouchEvent> targetEvent(touchEventForItem(target, *event));
-        if (!targetEvent->touchPoints().isEmpty()) {
+        QScopedPointer<QTouchEvent> targetEvent(event->touchEventForItem(target, true));
+        if (targetEvent) {
             if (target->childMouseEventFilter(item, targetEvent.data())) {
                 qCDebug(DBG_TOUCH) << " - first chance intercepted on childMouseEventFilter by " << target;
                 QVector<int> touchIds;
@@ -2610,13 +2536,15 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                 // Only deliver mouse event if it is the touchMouseId or it could become the touchMouseId
                 if ((touchMouseIdCandidates.contains(tp.id()) && touchMouseId == -1) || touchMouseId == tp.id()) {
                     // targetEvent is already transformed wrt local position, velocity, etc.
-                    QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, tp, event, item, false));
+
+                    // FIXME: remove asTouchEvent!!!
+                    QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, tp, event->asTouchEvent(), item, false));
                     if (target->childMouseEventFilter(item, mouseEvent.data())) {
                         qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
                             qCDebug(DBG_TOUCH_TARGET) << "TP" << tp.id() << "->" << target;
                             touchMouseId = tp.id();
-                            touchMouseDevice = QQuickPointerDevice::touchDevice(event->device());
+                            touchMouseDevice = event->device();
                             touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabber(target);
                             target->grabMouse();
                         }

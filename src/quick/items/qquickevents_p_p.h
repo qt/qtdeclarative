@@ -429,7 +429,7 @@ public:
     void clearGrabbers() const override;
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
-    QTouchEvent *touchEventForItem(QQuickItem *item) const;
+    QTouchEvent *touchEventForItem(QQuickItem *item, bool isFiltering = false) const;
 
     QTouchEvent *asTouchEvent() const;
 

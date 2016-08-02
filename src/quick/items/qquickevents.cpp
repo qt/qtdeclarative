@@ -791,7 +791,7 @@ const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int point
 
     Returns a nullptr if all points are stationary or there are no points inside the item.
 */
-QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item) const
+QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool isFiltering) const
 {
     QList<QTouchEvent::TouchPoint> touchPoints;
     Qt::TouchPointStates eventStates;
@@ -806,7 +806,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item) const
             continue;
         bool isGrabber = p->grabber() == item;
         bool isPressInside = p->state() == Qt::TouchPointPressed && item->contains(item->mapFromScene(p->scenePos()));
-        if (!(isGrabber || isPressInside))
+        if (!(isGrabber || isPressInside || isFiltering))
             continue;
 
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
