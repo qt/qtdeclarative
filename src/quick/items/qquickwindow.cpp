@@ -1629,8 +1629,7 @@ void QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickPointerMouseEvent 
 
     QVector<QQuickItem *> targets = pointerTargets(contentItem, scenePos, true);
     for (QQuickItem *item: qAsConst(targets)) {
-        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-        if (itemPrivate->acceptedMouseButtons() & event->button()) {
+        if (item->acceptedMouseButtons() & event->button()) {
             QPointF localPos = item->mapFromScene(scenePos);
             if (item->contains(localPos)) {
                 QMouseEvent *me = event->asMouseEvent(localPos);
