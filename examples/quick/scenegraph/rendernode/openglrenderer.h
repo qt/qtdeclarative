@@ -45,6 +45,8 @@
 
 #ifndef QT_NO_OPENGL
 
+QT_BEGIN_NAMESPACE
+
 class QQuickItem;
 class QOpenGLShaderProgram;
 class QOpenGLBuffer;
@@ -70,6 +72,8 @@ private:
     int m_opacityUniform;
     QOpenGLBuffer *m_vbo = nullptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // QT_NO_OPENGL
 
