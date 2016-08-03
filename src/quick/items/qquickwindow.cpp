@@ -2815,15 +2815,6 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
             }
         }
         break;
-    case QEvent::TouchBegin:
-    case QEvent::TouchUpdate:
-    case QEvent::TouchEnd: {
-            QSet<QQuickItem*> hasFiltered;
-            QTouchEvent *ev = static_cast<QTouchEvent *>(e);
-            qCDebug(DBG_TOUCH) << " - sendEvent for " << ev << " to " << item->parentItem() << " and " << item;
-            d->sendFilteredTouchEvent(item->parentItem(), item, ev, &hasFiltered);
-        }
-        break;
     default:
         QCoreApplication::sendEvent(item, e);
         break;
