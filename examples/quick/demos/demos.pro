@@ -5,9 +5,8 @@ SUBDIRS = samegame \
             tweetsearch \
             maroon \
             photosurface \
+            photoviewer \
             stocqt
 
 qtHaveModule(xmlpatterns): SUBDIRS += rssnews
 
-EXAMPLE_FILES = \
-    photoviewer

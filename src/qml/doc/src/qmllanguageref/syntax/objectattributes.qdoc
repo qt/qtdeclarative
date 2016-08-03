@@ -729,7 +729,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onPressed: root.activated(mouse.x, mouse.y)
-        onRelased: root.deactivated()
+        onReleased: root.deactivated()
     }
 }
 \endqml

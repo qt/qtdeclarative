@@ -492,6 +492,16 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
         }
     }
     break;
+    case QVariant::Vector2D: {
+        struct {
+            float xp;
+            float yp;
+        } vec;
+        if (!QQmlStringConverters::createFromString(QMetaType::QVector2D, binding->valueAsString(qmlUnit), &vec, sizeof(vec))) {
+            return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: 2D vector expected"));
+        }
+    }
+    break;
     case QVariant::Vector3D: {
         struct {
             float xp;
@@ -512,6 +522,18 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
         } vec;
         if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(qmlUnit), &vec, sizeof(vec))) {
             return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: 4D vector expected"));
+        }
+    }
+    break;
+    case QVariant::Quaternion: {
+        struct {
+            float wp;
+            float xp;
+            float yp;
+            float zp;
+        } vec;
+        if (!QQmlStringConverters::createFromString(QMetaType::QQuaternion, binding->valueAsString(qmlUnit), &vec, sizeof(vec))) {
+            return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: quaternion expected"));
         }
     }
     break;
