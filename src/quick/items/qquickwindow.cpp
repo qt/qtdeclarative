@@ -1515,7 +1515,7 @@ bool QQuickWindow::event(QEvent *e)
         break;
     case QEvent::Leave:
         d->clearHover();
-        d->lastMousePosition = QPoint();
+        d->lastMousePosition = QPointF();
         break;
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:
