@@ -375,6 +375,7 @@ protected:
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickPointerEvent
 {
+    Q_OBJECT
 public:
     QQuickPointerMouseEvent(QObject *parent = nullptr)
         : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this)) { }
@@ -400,6 +401,7 @@ private:
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 {
+    Q_OBJECT
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr)
         : QQuickPointerEvent(parent), m_pointCount(0) { }
