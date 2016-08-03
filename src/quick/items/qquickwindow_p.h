@@ -265,8 +265,6 @@ public:
 
     QOpenGLVertexArrayObjectHelper *vaoHelper;
 
-    QSet<int> touchMouseIdCandidates;
-
     mutable QQuickWindowIncubationController *incubationController;
 
     static bool defaultAlphaBuffer;

@@ -666,8 +666,6 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *eve
                     }
                 }
 
-                // The event was accepted, we are done.
-                touchMouseIdCandidates.clear();
                 return true;
             }
             // The event was not accepted but touchMouseId was set.
@@ -2177,7 +2175,6 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
                 touchMouseId = -1;
                 touchMouseDevice = nullptr;
             }
-            touchMouseIdCandidates.remove(id);
         } else {
             allReleased = false;
         }
@@ -2515,12 +2512,6 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                 switch (tp.state()) {
                 case Qt::TouchPointPressed:
                     t = QEvent::MouseButtonPress;
-                    if (touchMouseId == -1) {
-                        // We don't want to later filter touches as a mouse event if they were pressed
-                        // while a touchMouseId was already active.
-                        // Remember this touch as a potential to become the touchMouseId.
-                        touchMouseIdCandidates.insert(tp.id());
-                    }
                     break;
                 case Qt::TouchPointReleased:
                     t = QEvent::MouseButtonRelease;
@@ -2533,7 +2524,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                 }
 
                 // Only deliver mouse event if it is the touchMouseId or it could become the touchMouseId
-                if ((touchMouseIdCandidates.contains(tp.id()) && touchMouseId == -1) || touchMouseId == tp.id()) {
+                if (touchMouseId == -1 || touchMouseId == tp.id()) {
                     // targetEvent is already transformed wrt local position, velocity, etc.
 
                     // FIXME: remove asTouchEvent!!!
@@ -2547,7 +2538,6 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                             touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabber(target);
                             target->grabMouse();
                         }
-                        touchMouseIdCandidates.clear();
                         filtered = true;
                     }
                     // Only one event can be filtered as a mouse event.
