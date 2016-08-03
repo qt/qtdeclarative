@@ -824,9 +824,6 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
         touchPoint.setSceneRect(touchPoint.rect());
         touchPoint.setStartScenePos(touchPoint.startPos());
         touchPoint.setLastScenePos(touchPoint.lastPos());
-
-        if (i == 0)
-            lastMousePosition = touchPoint.pos().toPoint();
     }
     touchEvent->setTouchPoints(touchPoints);
 }
@@ -1929,6 +1926,9 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
 {
     translateTouchEvent(event);
+    if (event->touchPoints().size())
+        lastMousePosition = event->touchPoints().at(0).pos();
+
     qCDebug(DBG_TOUCH) << event;
 
     if (qquickwindow_no_touch_compression || pointerEventRecursionGuard) {
