@@ -60,6 +60,9 @@
     \image qtquickcontrols2-universal.png
     \caption The Universal style in light and dark themes
 
+    To run an application with the Universal style, see
+    \l {Using Styles in Qt Quick Controls 2}.
+
     \note The Universal style is not a native Windows 10 style. The Universal
     style is a 100% cross-platform Qt Quick Controls 2 style implementation that
     follows the Microsoft Universal Design Guidelines. The style runs on any
