@@ -44,6 +44,7 @@
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
 
+#include "../../shared/util.h"
 
 class PerPixelRect : public QQuickItem
 {
@@ -89,7 +90,7 @@ private:
     QColor m_color;
 };
 
-class tst_SceneGraph : public QObject
+class tst_SceneGraph : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -109,6 +110,7 @@ private slots:
 
 private:
     bool m_brokenMipmapSupport;
+    QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1);
 };
 
 template <typename T> class ScopedList : public QList<T> {
@@ -119,6 +121,8 @@ public:
 void tst_SceneGraph::initTestCase()
 {
     qmlRegisterType<PerPixelRect>("SceneGraphTest", 1, 0, "PerPixelRect");
+
+    QQmlDataTest::initTestCase();
 
     QSGRenderLoop *loop = QSGRenderLoop::instance();
     qDebug() << "RenderLoop:        " << loop;
@@ -157,24 +161,14 @@ void tst_SceneGraph::initTestCase()
     context.doneCurrent();
 }
 
-QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1)
+QQuickView *tst_SceneGraph::createView(const QString &file, QWindow *parent, int x, int y, int w, int h)
 {
     QQuickView *view = new QQuickView(parent);
-    view->setSource(QUrl::fromLocalFile("data/" + file));
+    view->setSource(testFileUrl(file));
     if (x >= 0 && y >= 0) view->setPosition(x, y);
     if (w >= 0 && h >= 0) view->resize(w, h);
     view->show();
     return view;
-}
-
-QImage showAndGrab(const QString &file, int w, int h)
-{
-    QQuickView view;
-    view.setSource(QUrl::fromLocalFile(QStringLiteral("data/") + file));
-    if (w >= 0 && h >= 0)
-        view.resize(w, h);
-    view.create();
-    return view.grabWindow();
 }
 
 // Assumes the images are opaque white...
@@ -410,17 +404,17 @@ void tst_SceneGraph::render_data()
     QTest::addColumn<QList<Sample> >("finalStage");
 
     QList<QString> files;
-    files << "data/render_DrawSets.qml"
-          << "data/render_Overlap.qml"
-          << "data/render_MovingOverlap.qml"
-          << "data/render_BreakOpacityBatch.qml"
-          << "data/render_OutOfFloatRange.qml"
-          << "data/render_StackingOrder.qml"
-          << "data/render_ImageFiltering.qml"
-          << "data/render_bug37422.qml"
-          << "data/render_OpacityThroughBatchRoot.qml";
+    files << "render_DrawSets.qml"
+          << "render_Overlap.qml"
+          << "render_MovingOverlap.qml"
+          << "render_BreakOpacityBatch.qml"
+          << "render_OutOfFloatRange.qml"
+          << "render_StackingOrder.qml"
+          << "render_ImageFiltering.qml"
+          << "render_bug37422.qml"
+          << "render_OpacityThroughBatchRoot.qml";
     if (!m_brokenMipmapSupport)
-          files << "data/render_Mipmap.qml";
+          files << "render_Mipmap.qml";
 
     QRegExp sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
@@ -428,7 +422,7 @@ void tst_SceneGraph::render_data()
     QRegExp finalSamples("#final: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
 
     foreach (QString fileName, files) {
-        QFile file(fileName);
+        QFile file(testFile(fileName));
         if (!file.open(QFile::ReadOnly)) {
             qFatal("render_data: QFile::open failed! file=%s, error=%s",
                    qPrintable(fileName), qPrintable(file.errorString()));
@@ -471,7 +465,7 @@ void tst_SceneGraph::render()
 
     QQuickView view;
     view.rootContext()->setContextProperty("suite", &suite);
-    view.setSource(QUrl::fromLocalFile(file));
+    view.setSource(testFileUrl(file));
     view.setResizeMode(QQuickView::SizeViewToRootObject);
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -519,7 +513,7 @@ void tst_SceneGraph::hideWithOtherContext()
 
     {
         QQuickView view;
-        view.setSource(QUrl::fromLocalFile("data/simple.qml"));
+        view.setSource(testFileUrl("simple.qml"));
         view.setResizeMode(QQuickView::SizeViewToRootObject);
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));

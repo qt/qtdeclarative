@@ -185,7 +185,7 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     qmlRegisterType<FBOItem>("FBOItem", 1, 0, "FBOItem");
 
     QQuickView view;
-    view.setSource(QUrl::fromLocalFile("data/testStuff.qml"));
+    view.setSource(testFileUrl("testStuff.qml"));
 
     FBOItem *item = view.rootObject()->findChild<FBOItem *>("fbo");
 
@@ -229,7 +229,7 @@ void tst_QQuickFramebufferObject::testInvalidate()
     qmlRegisterType<FBOItem>("FBOItem", 1, 0, "FBOItem");
 
     QQuickView view;
-    view.setSource(QUrl::fromLocalFile("data/testStuff.qml"));
+    view.setSource(testFileUrl("testStuff.qml"));
 
     FBOItem *item = view.rootObject()->findChild<FBOItem *>("fbo");
     item->setTextureFollowsItemSize(false);
