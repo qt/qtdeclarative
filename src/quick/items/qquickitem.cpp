@@ -1426,7 +1426,7 @@ void QQuickKeysAttached::inputMethodEvent(QInputMethodEvent *event, bool post)
         d->inIM = true;
         for (QQuickItem *targetItem : qAsConst(d->targets)) {
             if (targetItem && targetItem->isVisible() && (targetItem->flags() & QQuickItem::ItemAcceptsInputMethod)) {
-                d->item->window()->sendEvent(targetItem, event);
+                QCoreApplication::sendEvent(targetItem, event);
                 if (event->isAccepted()) {
                     d->imeItem = targetItem;
                     d->inIM = false;

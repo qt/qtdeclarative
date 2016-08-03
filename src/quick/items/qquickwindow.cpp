@@ -756,8 +756,10 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     }
 
     if (oldGrabber) {
-        QEvent ev(QEvent::UngrabMouse);
-        q->sendEvent(oldGrabber, &ev);
+        QEvent e(QEvent::UngrabMouse);
+        QSet<QQuickItem *> hasFiltered;
+        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered))
+            oldGrabber->mouseUngrabEvent();
     }
 }
 
@@ -950,17 +952,16 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     }
 
     // Now that all the state is changed, emit signals & events
-    // We must do this last, as this process may result in further changes to
-    // focus.
+    // We must do this last, as this process may result in further changes to focus.
     if (oldActiveFocusItem) {
         QFocusEvent event(QEvent::FocusOut, reason);
-        q->sendEvent(oldActiveFocusItem, &event);
+        QCoreApplication::sendEvent(oldActiveFocusItem, &event);
     }
 
     // Make sure that the FocusOut didn't result in another focus change.
     if (sendFocusIn && activeFocusItem == newActiveFocusItem) {
         QFocusEvent event(QEvent::FocusIn, reason);
-        q->sendEvent(newActiveFocusItem, &event);
+        QCoreApplication::sendEvent(newActiveFocusItem, &event);
     }
 
     if (activeFocusItem != currentActiveFocusItem)
@@ -1047,13 +1048,13 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     // focus.
     if (oldActiveFocusItem) {
         QFocusEvent event(QEvent::FocusOut, reason);
-        q->sendEvent(oldActiveFocusItem, &event);
+        QCoreApplication::sendEvent(oldActiveFocusItem, &event);
     }
 
     // Make sure that the FocusOut didn't result in another focus change.
     if (newActiveFocusItem && activeFocusItem == newActiveFocusItem) {
         QFocusEvent event(QEvent::FocusIn, reason);
-        q->sendEvent(newActiveFocusItem, &event);
+        QCoreApplication::sendEvent(newActiveFocusItem, &event);
     }
 
     if (activeFocusItem != currentActiveFocusItem)
@@ -1570,7 +1571,7 @@ bool QQuickWindow::event(QEvent *e)
 #endif
     case QEvent::ShortcutOverride:
         if (d->activeFocusItem)
-            sendEvent(d->activeFocusItem, static_cast<QKeyEvent *>(e));
+            QCoreApplication::sendEvent(d->activeFocusItem, e);
         return true;
     default:
         break;
@@ -1657,7 +1658,6 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
                                       const QPointF &scenePos, const QPointF &lastScenePos,
                                       Qt::KeyboardModifiers modifiers, bool accepted)
 {
-    Q_Q(QQuickWindow);
     const QTransform transform = QQuickItemPrivate::get(item)->windowToItemTransform();
 
     //create copy of event
@@ -1669,7 +1669,7 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
         return true;
     }
 
-    q->sendEvent(item, &hoverEvent);
+    QCoreApplication::sendEvent(item, &hoverEvent);
 
     return hoverEvent.isAccepted();
 }
@@ -1753,7 +1753,6 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 #ifndef QT_NO_WHEELEVENT
 bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event)
 {
-    Q_Q(QQuickWindow);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1777,7 +1776,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
         QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
         wheel.accept();
-        q->sendEvent(item, &wheel);
+        QCoreApplication::sendEvent(item, &wheel);
         if (wheel.isAccepted()) {
             event->accept();
             return true;
@@ -2386,7 +2385,6 @@ QTouchEvent *QQuickWindowPrivate::touchEventWithPoints(const QTouchEvent &event,
 #ifndef QT_NO_DRAGANDDROP
 void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *event)
 {
-    Q_Q(QQuickWindow);
     grabber->resetTarget();
     QQuickDragGrabber::iterator grabItem = grabber->begin();
     if (grabItem != grabber->end()) {
@@ -2402,7 +2400,7 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
                         e->mouseButtons(),
                         e->keyboardModifiers());
                 QQuickDropEventEx::copyActions(&translatedEvent, *e);
-                q->sendEvent(**grabItem, &translatedEvent);
+                QCoreApplication::sendEvent(**grabItem, &translatedEvent);
                 e->setAccepted(translatedEvent.isAccepted());
                 e->setDropAction(translatedEvent.dropAction());
                 grabber->setTarget(**grabItem);
@@ -2411,7 +2409,7 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
         if (event->type() != QEvent::DragMove) {    // Either an accepted drop or a leave.
             QDragLeaveEvent leaveEvent;
             for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
-                q->sendEvent(**grabItem, &leaveEvent);
+                QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             return;
         } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
@@ -2427,18 +2425,18 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
                                 moveEvent->mouseButtons(),
                                 moveEvent->keyboardModifiers());
                         QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
-                        q->sendEvent(**grabItem, &translatedEvent);
+                        QCoreApplication::sendEvent(**grabItem, &translatedEvent);
                         ++grabItem;
                     } else {
                         QDragLeaveEvent leaveEvent;
-                        q->sendEvent(**grabItem, &leaveEvent);
+                        QCoreApplication::sendEvent(**grabItem, &leaveEvent);
                         grabItem = grabber->release(grabItem);
                     }
                 }
                 return;
             } else {
                 QDragLeaveEvent leaveEvent;
-                q->sendEvent(**grabItem, &leaveEvent);
+                QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             }
         }
     }
@@ -2457,7 +2455,6 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
 
 bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event)
 {
-    Q_Q(QQuickWindow);
     bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
@@ -2492,7 +2489,7 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
                     event->keyboardModifiers(),
                     event->type());
             QQuickDropEventEx::copyActions(&translatedEvent, *event);
-            q->sendEvent(item, &translatedEvent);
+            QCoreApplication::sendEvent(item, &translatedEvent);
             if (event->type() == QEvent::DragEnter) {
                 if (translatedEvent.isAccepted()) {
                     grabber->grab(item);
@@ -2777,8 +2774,13 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
 /*!
     Propagates an event \a e to a QQuickItem \a item on the window.
 
+    Use \l QCoreApplication::sendEvent() directly instead.
+
     The return value is currently not used.
+
+    \deprecated
 */
+// ### Qt6: remove
 bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
 {
     Q_D(QQuickWindow);
@@ -2800,9 +2802,6 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
             QCoreApplication::sendEvent(item, e);
         }
         break;
-    case QEvent::ShortcutOverride:
-        QCoreApplication::sendEvent(item, e);
-        break;
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
@@ -2816,31 +2815,6 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
             }
         }
         break;
-    case QEvent::UngrabMouse: {
-            QSet<QQuickItem *> hasFiltered;
-            if (!d->sendFilteredMouseEvent(item->parentItem(), item, e, &hasFiltered)) {
-                e->accept();
-                item->mouseUngrabEvent();
-            }
-        }
-        break;
-#ifndef QT_NO_WHEELEVENT
-    case QEvent::Wheel:
-#endif
-#ifndef QT_NO_DRAGANDDROP
-    case QEvent::DragEnter:
-    case QEvent::DragMove:
-    case QEvent::DragLeave:
-    case QEvent::Drop:
-#endif
-    case QEvent::FocusIn:
-    case QEvent::FocusOut:
-    case QEvent::HoverEnter:
-    case QEvent::HoverLeave:
-    case QEvent::HoverMove:
-    case QEvent::TouchCancel:
-        QCoreApplication::sendEvent(item, e);
-        break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd: {
@@ -2851,6 +2825,7 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
         }
         break;
     default:
+        QCoreApplication::sendEvent(item, e);
         break;
     }
 
