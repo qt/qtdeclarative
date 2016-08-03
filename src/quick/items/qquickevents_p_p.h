@@ -373,6 +373,8 @@ public: // helpers for C++ only (during event delivery)
     virtual QVector<QQuickItem *> grabbers() const = 0;
     virtual void clearGrabbers() const = 0;
 
+    ulong timestamp() const { return m_event->timestamp(); }
+
 protected:
 
     QQuickPointerDevice *m_device;
