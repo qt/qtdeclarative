@@ -248,6 +248,8 @@ public:
     protected:
         virtual QString stringAt(int) const { return QString(); }
 
+        bool isDebugging() const;
+
         QQmlImports m_importCache;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;

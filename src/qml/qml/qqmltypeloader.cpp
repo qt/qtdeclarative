@@ -1515,6 +1515,11 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
     }
 }
 
+bool QQmlTypeLoader::Blob::isDebugging() const
+{
+    return QV8Engine::getV4(typeLoader()->engine())->debugger() != 0;
+}
+
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlError> *errors)
 {
     bool resolve = true;
@@ -2071,6 +2076,9 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (forceDiskCacheRefresh())
         return false;
 
+    if (isDebugging())
+        return false;
+
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
     if (!v4)
         return false;
@@ -2376,8 +2384,7 @@ void QQmlTypeData::dataReceived(const Data &data)
 
 void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
-    QQmlEngine *qmlEngine = typeLoader()->engine();
-    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
+    m_document.reset(new QmlIR::Document(isDebugging()));
     unit->loadIR(m_document.data(), unit);
     continueLoadFromIR();
 }
@@ -2385,9 +2392,9 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
 bool QQmlTypeData::loadFromSource()
 {
     QString code = QString::fromUtf8(m_backupSourceCode);
-    QQmlEngine *qmlEngine = typeLoader()->engine();
-    m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger() != 0));
+    m_document.reset(new QmlIR::Document(isDebugging()));
     m_document->jsModule.sourceTimeStamp = m_sourceTimeStamp;
+    QQmlEngine *qmlEngine = typeLoader()->engine();
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
@@ -2509,7 +2516,9 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
         setError(compiler.compilationErrors());
         return;
     }
-    if (diskCache() || forceDiskCacheRefresh()) {
+
+    const bool trySaveToDisk = (diskCache() || forceDiskCacheRefresh()) && !m_document->jsModule.debugMode;
+    if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
             QString error;
@@ -2914,7 +2923,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     }
 
 
-    QmlIR::Document irUnit(v4->debugger() != 0);
+    QmlIR::Document irUnit(isDebugging());
 
     QString error;
     QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));
