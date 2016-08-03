@@ -58,6 +58,7 @@
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 
 #include <algorithm>
 
