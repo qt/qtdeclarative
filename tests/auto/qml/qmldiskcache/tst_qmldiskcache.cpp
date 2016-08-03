@@ -190,7 +190,7 @@ struct TestCompiler
 
 void tst_qmldiskcache::initTestCase()
 {
-    qputenv("QML_DISK_CACHE", "1");
+    qputenv("QML_FORCE_DISK_CACHE", "1");
 }
 
 void tst_qmldiskcache::regenerateAfterChange()

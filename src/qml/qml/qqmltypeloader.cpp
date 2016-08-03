@@ -103,11 +103,21 @@
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
-DEFINE_BOOL_CONFIG_OPTION(diskCache, QML_DISK_CACHE);
-DEFINE_BOOL_CONFIG_OPTION(forceDiskCacheRefresh, QML_FORCE_DISK_CACHE_REFRESH);
+DEFINE_BOOL_CONFIG_OPTION(_disableDiskCache, QML_DISABLE_DISK_CACHE);
+DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
+
+static bool disableDiskCache()
+{
+    return _disableDiskCache()
+           // ### FIXME: Fix crashes on Windows with mmap'ed code.
+#if defined(Q_OS_WIN)
+           || true
+#endif
+           ;
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -2068,10 +2078,7 @@ void QQmlTypeData::unregisterCallback(TypeDataCallback *callback)
 
 bool QQmlTypeData::tryLoadFromDiskCache()
 {
-    if (!diskCache())
-        return false;
-
-    if (forceDiskCacheRefresh())
+    if (disableDiskCache() && !forceDiskCache())
         return false;
 
     if (isDebugging())
@@ -2515,7 +2522,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
         return;
     }
 
-    const bool trySaveToDisk = (diskCache() || forceDiskCacheRefresh()) && !m_document->jsModule.debugMode;
+    const bool trySaveToDisk = (!disableDiskCache() || forceDiskCache()) && !m_document->jsModule.debugMode;
     if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
@@ -2909,7 +2916,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
-    if (diskCache() && !forceDiskCacheRefresh()) {
+    if (!disableDiskCache() || forceDiskCache()) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
         QString error;
         if (unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
@@ -2955,7 +2962,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;
 
-    if (diskCache() || forceDiskCacheRefresh()) {
+    if (!disableDiskCache() || forceDiskCache()) {
         QString errorString;
         if (!unit->saveToDisk(url(), &errorString)) {
             qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->url().toString() << "to disk:" << errorString;

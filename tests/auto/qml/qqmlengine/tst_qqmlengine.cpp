@@ -275,6 +275,12 @@ void tst_qqmlengine::clearComponentCache()
 
     // Modify qml file
     {
+        // On macOS with HFS+ the precision of file times is measured in seconds, so to ensure that
+        // the newly written file has a modification date newer than an existing cache file, we must
+        // wait.
+        // Similar effects of lacking precision have been observed on some Linux systems.
+        QThread::sleep(1);
+
         QFile file("temp.qml");
         QVERIFY(file.open(QIODevice::WriteOnly));
         file.write("import QtQuick 2.0\nQtObject {\nproperty int test: 11\n}\n");
