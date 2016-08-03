@@ -819,7 +819,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             const QStringRef &name = node->name;
 
             bool typeFound = false;
-            QV4::CompiledData::Property::Type type;
+            QV4::CompiledData::Property::Type type = QV4::CompiledData::Property::Var;
 
             for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
                 const TypeNameToType *t = propTypeNameToTypes + ii;
