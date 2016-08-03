@@ -328,7 +328,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
 
 ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
 {
-    QQmlData::flushPendingBinding(object, property->encodedIndex());
+    QQmlData::flushPendingBinding(object, QQmlPropertyIndex(property->coreIndex));
 
     if (property->isFunction() && !property->isVarProperty()) {
         if (property->isVMEFunction()) {
@@ -466,14 +466,14 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             bindingFunction->initBindingLocation();
 
             newBinding = QQmlBinding::create(property, value, object, callingQmlContext);
-            newBinding->setTarget(object, *property);
+            newBinding->setTarget(object, *property, nullptr);
         }
     }
 
     if (newBinding)
         QQmlPropertyPrivate::setBinding(newBinding);
     else
-        QQmlPropertyPrivate::removeBinding(object, property->encodedIndex());
+        QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex));
 
     if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
@@ -648,6 +648,9 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, con
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value)
 {
+    Q_ASSERT(propertyIndex < 0xffff);
+    Q_ASSERT(propertyIndex >= 0);
+
     if (QQmlData::wasDeleted(object))
         return;
     QQmlData *ddata = QQmlData::get(object, /*create*/false);

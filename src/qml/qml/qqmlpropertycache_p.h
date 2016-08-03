@@ -95,8 +95,7 @@ public:
             QJSValueType         = 6, // Property type is a QScriptValue
             V4HandleType         = 7, // Property type is a QQmlV4Handle
             VarPropertyType      = 8, // Property type is a "var" property of VMEMO
-            ValueTypeVirtualType = 9, // Property is a value type "virtual" property
-            QVariantType         = 10 // Property is a QVariant
+            QVariantType         = 9  // Property is a QVariant
         };
 
         // Can apply to all properties, except IsFunction
@@ -154,8 +153,6 @@ public:
     bool isQJSValue() const { return flags.type == Flags::QJSValueType; }
     bool isV4Handle() const { return flags.type == Flags::V4HandleType; }
     bool isVarProperty() const { return flags.type == Flags::VarPropertyType; }
-    bool isValueTypeVirtual() const { return flags.type == Flags::ValueTypeVirtualType; }
-    void setAsValueTypeVirtual() { flags.type = Flags::ValueTypeVirtualType; }
     bool isQVariant() const { return flags.type == Flags::QVariantType; }
     bool isVMEFunction() const { return flags.isVMEFunction; }
     bool hasArguments() const { return flags.hasArguments; }
@@ -168,19 +165,11 @@ public:
     bool isCloned() const { return flags.isCloned; }
     bool isConstructor() const { return flags.isConstructor; }
 
-    bool hasOverride() const { return flags.type != Flags::ValueTypeVirtualType &&
-                                      !(flags.hasAccessors) &&
+    bool hasOverride() const { return !(flags.hasAccessors) &&
                                       overrideIndex >= 0; }
     bool hasRevision() const { return !(flags.hasAccessors) && revision != 0; }
 
     bool isFullyResolved() const { return !flags.notFullyResolved; }
-
-    // Returns -1 if not a value type virtual property
-    inline int getValueTypeCoreIndex() const;
-
-    // Returns the "encoded" index for use with bindings.  Encoding is:
-    //     coreIndex | ((valueTypeCoreIndex + 1) << 16)
-    inline QQmlPropertyIndex encodedIndex() const;
 
     union {
         int propType;             // When !NotFullyResolved
@@ -198,18 +187,9 @@ public:
             qint16 revision;
             qint16 metaObjectOffset;
 
-            union {
-                struct { // When IsValueTypeVirtual
-                    quint16 valueTypePropType; // The QVariant::Type of access property on the value
-                                               // type proxy object
-                    quint16 valueTypeCoreIndex; // The prop index of the access property on the value
-                                                // type proxy object
-                };
-
-                struct { // When !IsValueTypeVirtual
-                    uint overrideIndexIsProperty : 1;
-                    signed int overrideIndex : 31;
-                };
+            struct { // When !IsValueTypeVirtual
+                uint overrideIndexIsProperty : 1;
+                signed int overrideIndex : 31;
             };
         };
         struct { // When HasAccessors
@@ -218,8 +198,6 @@ public:
     };
     int coreIndex;
 
-    Flags valueTypeFlags; // flags of the access property on the value type proxy
-                          // object
 private:
     friend class QQmlPropertyData;
     friend class QQmlPropertyCache;
@@ -619,21 +597,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
            propType == other.propType &&
            coreIndex == other.coreIndex &&
            notifyIndex == other.notifyIndex &&
-           revision == other.revision &&
-           (!isValueTypeVirtual() ||
-            (valueTypeCoreIndex == other.valueTypeCoreIndex &&
-             valueTypePropType == other.valueTypePropType));
-}
-
-int QQmlPropertyRawData::getValueTypeCoreIndex() const
-{
-    return isValueTypeVirtual()?valueTypeCoreIndex:-1;
-}
-
-QQmlPropertyIndex QQmlPropertyRawData::encodedIndex() const
-{
-    return isValueTypeVirtual() ? QQmlPropertyIndex(coreIndex, valueTypeCoreIndex)
-                                : QQmlPropertyIndex(coreIndex);
+           revision == other.revision;
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const

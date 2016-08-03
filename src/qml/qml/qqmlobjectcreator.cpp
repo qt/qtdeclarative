@@ -810,16 +810,18 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             // the point property (_qobjectForBindings) and after evaluating the expression,
             // the result is written to a value type virtual property, that contains the sub-index
             // of the "x" property.
-            QQmlPropertyData targetCorePropertyData = *property;
-            if (_valueTypeProperty)
-                targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
+            QQmlBinding *qmlBinding;
+            if (_valueTypeProperty) {
+                qmlBinding = QQmlBinding::create(_valueTypeProperty, function, _scopeObject, context);
+                qmlBinding->setTarget(_bindingTarget, *_valueTypeProperty, property);
+            } else {
+                qmlBinding = QQmlBinding::create(property, function, _scopeObject, context);
+                qmlBinding->setTarget(_bindingTarget, *property, nullptr);
+            }
 
-            QQmlBinding *qmlBinding = QQmlBinding::create(&targetCorePropertyData, function, _scopeObject, context);
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
 
-            qmlBinding->setTarget(_bindingTarget, targetCorePropertyData);
-
-            if (targetCorePropertyData.isAlias()) {
+            if (property->isAlias()) {
                 QQmlPropertyPrivate::setBinding(qmlBinding, QQmlPropertyPrivate::DontEnable);
             } else {
                 qmlBinding->addToObject();
@@ -840,15 +842,16 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             QQmlType *type = qmlTypeForObject(createdSubObject);
             Q_ASSERT(type);
 
-            QQmlPropertyData targetCorePropertyData = *property;
-            if (_valueTypeProperty)
-                targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
-
             int valueSourceCast = type->propertyValueSourceCast();
             if (valueSourceCast != -1) {
                 QQmlPropertyValueSource *vs = reinterpret_cast<QQmlPropertyValueSource *>(reinterpret_cast<char *>(createdSubObject) + valueSourceCast);
                 QObject *target = createdSubObject->parent();
-                vs->setTarget(QQmlPropertyPrivate::restore(target, targetCorePropertyData, context));
+                QQmlProperty prop;
+                if (_valueTypeProperty)
+                    prop = QQmlPropertyPrivate::restore(target, *_valueTypeProperty, property, context);
+                else
+                    prop = QQmlPropertyPrivate::restore(target, *property, nullptr, context);
+                vs->setTarget(prop);
                 return true;
             }
             int valueInterceptorCast = type->propertyValueInterceptorCast();
@@ -856,9 +859,11 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(createdSubObject) + valueInterceptorCast);
                 QObject *target = createdSubObject->parent();
 
-                if (targetCorePropertyData.isAlias()) {
+                QQmlPropertyIndex propertyIndex;
+                if (property->isAlias()) {
+                    QQmlPropertyIndex originalIndex(property->coreIndex, _valueTypeProperty ? _valueTypeProperty->coreIndex : -1);
                     QQmlPropertyIndex propIndex;
-                    QQmlPropertyPrivate::findAliasTarget(target, QQmlPropertyIndex(targetCorePropertyData.coreIndex), &target, &propIndex);
+                    QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
                     QQmlData *data = QQmlData::get(target);
                     if (!data || !data->propertyCache) {
                         qWarning() << "can't resolve property alias for 'on' assignment";
@@ -866,17 +871,24 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                     }
 
                     // we can't have aliasses on subproperties of value types, so:
-                    targetCorePropertyData = *data->propertyCache->property(propIndex.coreIndex());
+                    QQmlPropertyData targetPropertyData = *data->propertyCache->property(propIndex.coreIndex());
+                    auto prop = QQmlPropertyPrivate::restore(target, targetPropertyData, nullptr, context);
+                    vi->setTarget(prop);
+                    propertyIndex = QQmlPropertyPrivate::propertyIndex(prop);
+                } else {
+                    QQmlProperty prop;
+                    if (_valueTypeProperty)
+                        prop = QQmlPropertyPrivate::restore(target, *_valueTypeProperty, property, context);
+                    else
+                        prop = QQmlPropertyPrivate::restore(target, *property, nullptr, context);
+                    vi->setTarget(prop);
+                    propertyIndex = QQmlPropertyPrivate::propertyIndex(prop);
                 }
 
-                QQmlProperty prop =
-                    QQmlPropertyPrivate::restore(target, targetCorePropertyData, context);
-
-                vi->setTarget(prop);
                 QQmlInterceptorMetaObject *mo = QQmlInterceptorMetaObject::get(target);
                 if (!mo)
                     mo = new QQmlInterceptorMetaObject(target, QQmlData::get(target)->propertyCache);
-                mo->registerInterceptor(QQmlPropertyPrivate::propertyIndex(prop), vi);
+                mo->registerInterceptor(propertyIndex, vi);
                 return true;
             }
             return false;

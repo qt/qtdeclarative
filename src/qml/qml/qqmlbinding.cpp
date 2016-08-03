@@ -170,7 +170,11 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 
     // Check for a binding update loop
     if (Q_UNLIKELY(updatingFlag())) {
-        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), getPropertyData(), 0);
+        QQmlPropertyData *d = nullptr;
+        QQmlPropertyData vtd;
+        getPropertyData(&d, &vtd);
+        Q_ASSERT(d);
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, 0);
         QQmlAbstractBinding::printBindingLoopError(p);
         return;
     }
@@ -205,8 +209,10 @@ protected:
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &,
                   const QV4::ScopedFunctionObject &) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
-        QQmlPropertyData pd = getPropertyData();
-        pd.writeProperty(*m_target, &binding, flags);
+        Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
+        QQmlPropertyData *pd = nullptr;
+        getPropertyData(&pd, nullptr);
+        pd->writeProperty(*m_target, &binding, flags);
     }
 };
 
@@ -260,13 +266,18 @@ protected:
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
                                QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
-        QQmlPropertyData pd = getPropertyData();
-        int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
-        if (propertyType == QMetaType::UnknownType)
-            propertyType = pd.propType;
         Q_ASSERT(targetObject());
 
-        if (Q_LIKELY(!isUndefined && !pd.isValueTypeVirtual())) {
+        QQmlPropertyData *pd;
+        QQmlPropertyData vpd;
+        getPropertyData(&pd, &vpd);
+        Q_ASSERT(pd);
+
+        int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
+        if (propertyType == QMetaType::UnknownType)
+            propertyType = pd->propType;
+
+        if (Q_LIKELY(!isUndefined && !vpd.isValid())) {
             switch (propertyType) {
             case QMetaType::Bool:
                 if (result.isBoolean())
@@ -293,32 +304,34 @@ protected:
                 break;
             default:
                 if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                    if (vtw->d()->valueType->typeId == pd.propType) {
-                        return vtw->write(m_target.data(), pd.coreIndex);
+                    if (vtw->d()->valueType->typeId == pd->propType) {
+                        return vtw->write(m_target.data(), pd->coreIndex);
                     }
                 }
                 break;
             }
         }
 
-        return slowWrite(pd, result, isUndefined, flags);
+        return slowWrite(*pd, vpd, result, isUndefined, flags);
     }
 
     template <typename T>
-    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData &pd, QQmlPropertyData::WriteFlags flags) const
+    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData *pd, QQmlPropertyData::WriteFlags flags) const
     {
         void *o = &value;
-        return pd.writeProperty(targetObject(), o, flags);
+        return pd->writeProperty(targetObject(), o, flags);
     }
 };
 
-Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const QV4::Value &result,
+Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
+                                           const QQmlPropertyData &valueTypeData,
+                                           const QV4::Value &result,
                                            bool isUndefined, QQmlPropertyData::WriteFlags flags)
 {
     QQmlEngine *engine = context()->engine;
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
 
-    int type = core.isValueTypeVirtual() ? core.valueTypePropType : core.propType;
+    int type = valueTypeData.isValid() ? valueTypeData.propType : core.propType;
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
@@ -354,14 +367,14 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const Q
         void *args[] = { 0 };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex, args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant(), context(), flags);
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
         const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant::fromValue(
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant::fromValue(
                                QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
                            context(), flags);
     } else if (isUndefined) {
@@ -378,7 +391,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const Q
         else
             delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
         return false;
-    } else if (!QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, value, context(), flags)) {
+    } else if (!QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, value, context(), flags)) {
 
         if (watcher.wasDeleted())
             return true;
@@ -483,10 +496,11 @@ QString QQmlBinding::expression() const
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)
 {
-    setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core);
+    auto pd = QQmlPropertyPrivate::get(prop);
+    setTarget(prop.object(), pd->core, &pd->valueTypeData);
 }
 
-void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
+void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
 {
     m_target = object;
 
@@ -495,11 +509,9 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
         return;
     }
 
-    QQmlPropertyData pd = core;
-
-    while (pd.isAlias()) {
-        int coreIndex = pd.coreIndex;
-        int valueTypeIndex = pd.getValueTypeCoreIndex();
+    int coreIndex = core.coreIndex;
+    int valueTypeIndex = valueType ? valueType->coreIndex : -1;
+    for (bool isAlias = core.isAlias(); isAlias; ) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
@@ -521,18 +533,10 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
         Q_ASSERT(propertyData);
 
         m_target = object;
-        pd = *propertyData;
-        if (valueTypeIndex != -1) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(pd.propType);
-            Q_ASSERT(valueTypeMetaObject);
-            QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
-            pd.setAsValueTypeVirtual();
-            pd.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
-            pd.valueTypePropType = vtProp.userType();
-            pd.valueTypeCoreIndex = valueTypeIndex;
-        }
+        isAlias = propertyData->isAlias();
+        coreIndex = propertyData->coreIndex;
     }
-    m_targetIndex = pd.encodedIndex();
+    m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
 
     QQmlData *data = QQmlData::get(*m_target, true);
     if (!data->propertyCache) {
@@ -541,25 +545,24 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
     }
 }
 
-QQmlPropertyData QQmlBinding::getPropertyData() const
+void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const
 {
+    Q_ASSERT(propertyData);
+
     QQmlData *data = QQmlData::get(*m_target, false);
     Q_ASSERT(data && data->propertyCache);
 
-    QQmlPropertyData *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
-    Q_ASSERT(propertyData);
+    *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
+    Q_ASSERT(*propertyData);
 
-    QQmlPropertyData d = *propertyData;
-    if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex())) {
-        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d.propType);
+    if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType);
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
-        d.setAsValueTypeVirtual();
-        d.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
-        d.valueTypePropType = vtProp.userType();
-        d.valueTypeCoreIndex = m_targetIndex.valueTypeIndex();
+        valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
+        valueTypeData->propType = vtProp.userType();
+        valueTypeData->coreIndex = m_targetIndex.valueTypeIndex();
     }
-    return d;
 }
 
 class QObjectPointerBinding: public QQmlNonbindingBinding
@@ -575,20 +578,22 @@ protected:
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
                                QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
-        QQmlPropertyData pd = getPropertyData();
-        if (Q_UNLIKELY(isUndefined || pd.isValueTypeVirtual()))
-            return slowWrite(pd, result, isUndefined, flags);
+        QQmlPropertyData *pd;
+        QQmlPropertyData vtpd;
+        getPropertyData(&pd, &vtpd);
+        if (Q_UNLIKELY(isUndefined || vtpd.isValid()))
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
 
         // Check if the result is a QObject:
         QObject *resultObject = nullptr;
         QQmlMetaObject resultMo;
         if (result.isNull()) {
             // Special case: we can always write a nullptr. Don't bother checking anything else.
-            return pd.writeProperty(targetObject(), &resultObject, flags);
+            return pd->writeProperty(targetObject(), &resultObject, flags);
         } else if (auto wrapper = result.as<QV4::QObjectWrapper>()) {
             resultObject = wrapper->object();
             if (!resultObject)
-                return pd.writeProperty(targetObject(), &resultObject, flags);
+                return pd->writeProperty(targetObject(), &resultObject, flags);
             if (QQmlData *ddata = QQmlData::get(resultObject, false))
                 resultMo = ddata->propertyCache;
             if (resultMo.isNull()) {
@@ -599,22 +604,22 @@ protected:
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context());
             resultMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, value.userType());
             if (resultMo.isNull())
-                return slowWrite(pd, result, isUndefined, flags);
+                return slowWrite(*pd, vtpd, result, isUndefined, flags);
             resultObject = *static_cast<QObject *const *>(value.constData());
         } else {
-            return slowWrite(pd, result, isUndefined, flags);
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
         }
 
         // Compare & set:
         if (QQmlMetaObject::canConvert(resultMo, targetMetaObject)) {
-            return pd.writeProperty(targetObject(), &resultObject, flags);
+            return pd->writeProperty(targetObject(), &resultObject, flags);
         } else if (!resultObject && QQmlMetaObject::canConvert(targetMetaObject, resultMo)) {
             // In the case of a null QObject, we assign the null if there is
             // any change that the null variant type could be up or down cast to
             // the property type.
-            return pd.writeProperty(targetObject(), &resultObject, flags);
+            return pd->writeProperty(targetObject(), &resultObject, flags);
         } else {
-            return slowWrite(pd, result, isUndefined, flags);
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
         }
     }
 };

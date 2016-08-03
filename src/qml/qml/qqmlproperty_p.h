@@ -73,11 +73,17 @@ public:
     QPointer<QObject> object;
 
     QQmlPropertyData core;
+    QQmlPropertyData valueTypeData;
 
     bool isNameCached:1;
     QString nameCache;
 
     QQmlPropertyPrivate();
+
+    QQmlPropertyIndex encodedIndex() const
+    { return encodedIndex(core, valueTypeData); }
+    static QQmlPropertyIndex encodedIndex(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData)
+    { return QQmlPropertyIndex(core.coreIndex, valueTypeData.coreIndex); }
 
     inline QQmlContextData *effectiveContext() const;
 
@@ -96,7 +102,7 @@ public:
     static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object,
                                   const QVariant &value, int flags);
     static bool writeValueProperty(QObject *,
-                                   const QQmlPropertyData &,
+                                   const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
                                    const QVariant &, QQmlContextData *,
                                    QQmlPropertyData::WriteFlags flags = 0);
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
@@ -116,12 +122,8 @@ public:
     static void removeBinding(QQmlAbstractBinding *b);
     static QQmlAbstractBinding *binding(QObject *, QQmlPropertyIndex index);
 
-    static QQmlPropertyData saveValueType(const QQmlPropertyData &,
-                                          const QMetaObject *, int,
-                                          QQmlEngine *);
-    static QQmlProperty restore(QObject *,
-                                        const QQmlPropertyData &,
-                                        QQmlContextData *);
+    static QQmlProperty restore(QObject *, const QQmlPropertyData &, const QQmlPropertyData *,
+                                QQmlContextData *);
 
     int signalIndex() const;
 
@@ -139,8 +141,6 @@ public:
                                                                  QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, QQmlPropertyData::WriteFlags);
     static QQmlPropertyIndex propertyIndex(const QQmlProperty &that);
-    static int bindingIndex(const QQmlProperty &that);
-    static int bindingIndex(const QQmlPropertyData &that);
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);
     static bool connect(const QObject *sender, int signal_index,
                         const QObject *receiver, int method_index,

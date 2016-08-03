@@ -431,8 +431,6 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
     const QQmlPropertyData *pd = r->d()->propertyCache->property(name, 0, 0);
     if (!pd)
         return;
-    QMetaProperty property = metaObject->property(pd->coreIndex);
-    Q_ASSERT(property.isValid());
 
     if (reference) {
         QV4::ScopedFunctionObject f(scope, value);
@@ -449,25 +447,23 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 
             QQmlPropertyData cacheData;
             cacheData.setWritable(true);
-            cacheData.setAsValueTypeVirtual();
             cacheData.propType = writeBackPropertyType;
             cacheData.coreIndex = reference->d()->property;
-            cacheData.valueTypeCoreIndex = pd->coreIndex;
-            cacheData.valueTypePropType = property.userType();
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
             bindingFunction->initBindingLocation();
 
             QQmlBinding *newBinding = QQmlBinding::create(&cacheData, value, reference->d()->object, context);
-            newBinding->setTarget(reference->d()->object, cacheData);
+            newBinding->setTarget(reference->d()->object, cacheData, pd);
             QQmlPropertyPrivate::setBinding(newBinding);
             return;
         } else {
             QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyIndex(reference->d()->property, pd->coreIndex));
-
         }
     }
 
+    QMetaProperty property = metaObject->property(pd->coreIndex);
+    Q_ASSERT(property.isValid());
 
     QVariant v = v4->toVariant(value, property.userType());
 
