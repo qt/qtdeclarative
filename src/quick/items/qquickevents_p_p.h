@@ -259,18 +259,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 public:
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
-    {
-        m_scenePos = scenePos;
-        m_pointId = pointId;
-        m_valid = true;
-        m_accept = false;
-        m_state = state;
-        m_timestamp = timestamp;
-        if (state == Qt::TouchPointPressed)
-            m_pressTimestamp = timestamp;
-        // TODO calculate velocity
-    }
+    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp);
 
     void invalidate() { m_valid = false; }
 
@@ -281,7 +270,7 @@ public:
     bool isValid() const { return m_valid; }
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
-    void setAccepted(bool accepted = true) { m_accept = accepted; }
+    void setAccepted(bool accepted = true);
     QQuickItem *grabber() const;
     void setGrabber(QQuickItem *grabber);
 
@@ -307,13 +296,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
 public:
     QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
 
-    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
-    {
-        QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
-        m_rotation = tp.rotation();
-        m_pressure = tp.pressure();
-        m_uniqueId = tp.uniqueId();
-    }
+    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp);
 
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
@@ -390,9 +373,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickPointerEvent
 {
 public:
     QQuickPointerMouseEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this))
-    {
-    }
+        : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this)) { }
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -415,8 +396,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 {
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent), m_pointCount(0)
-    {}
+        : QQuickPointerEvent(parent), m_pointCount(0) { }
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;

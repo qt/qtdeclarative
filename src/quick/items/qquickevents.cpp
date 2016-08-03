@@ -501,6 +501,19 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     return nullptr;
 }
 
+void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
+{
+    m_scenePos = scenePos;
+    m_pointId = pointId;
+    m_valid = true;
+    m_accept = false;
+    m_state = state;
+    m_timestamp = timestamp;
+    if (state == Qt::TouchPointPressed)
+        m_pressTimestamp = timestamp;
+    // TODO calculate velocity
+}
+
 QQuickItem *QQuickEventPoint::grabber() const
 {
     return m_grabber.data();
@@ -511,9 +524,22 @@ void QQuickEventPoint::setGrabber(QQuickItem *grabber)
     m_grabber = QPointer<QQuickItem>(grabber);
 }
 
+void QQuickEventPoint::setAccepted(bool accepted)
+{
+    m_accept = accepted;
+}
+
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
 {}
+
+void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
+{
+    QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
+    m_rotation = tp.rotation();
+    m_pressure = tp.pressure();
+    m_uniqueId = tp.uniqueId();
+}
 
 /*!
     \internal
