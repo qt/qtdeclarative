@@ -45,6 +45,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
+
 /*!
     \qmltype KeyEvent
     \instantiates QQuickKeyEvent
@@ -526,7 +528,10 @@ void QQuickEventPoint::setGrabber(QQuickItem *grabber)
 
 void QQuickEventPoint::setAccepted(bool accepted)
 {
-    m_accept = accepted;
+    if (m_accept != accepted) {
+        qCDebug(lcPointerEvents) << this << m_accept << "->" << accepted;
+        m_accept = accepted;
+    }
 }
 
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
