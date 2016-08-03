@@ -69,6 +69,7 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(&statusMapper, SIGNAL(mapped(QObject*)),
             q, SLOT(_q_finishLoad(QObject*)));
     q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
+    q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(), &QCoreApplication::exit);
 #ifndef QT_NO_TRANSLATION
     QTranslator* qtTranslator = new QTranslator;
     if (qtTranslator->load(QLatin1String("qt_") + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))

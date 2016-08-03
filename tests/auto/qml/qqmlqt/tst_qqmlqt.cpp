@@ -87,6 +87,7 @@ private slots:
     void atob();
     void fontFamilies();
     void quit();
+    void exit();
     void resolvedUrl();
     void later_data();
     void later();
@@ -976,6 +977,20 @@ void tst_qqmlqt::quit()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(spy.count(), 1);
+
+    delete object;
+}
+
+void tst_qqmlqt::exit()
+{
+    QQmlComponent component(&engine, testFileUrl("exit.qml"));
+
+    QSignalSpy spy(&engine, &QQmlEngine::exit);
+    QObject *object = component.create();
+    QVERIFY(object != Q_NULLPTR);
+    QCOMPARE(spy.count(), 1);
+    QList<QVariant> arguments = spy.takeFirst();
+    QVERIFY(arguments.at(0).toInt() == object->property("returnCode").toInt());
 
     delete object;
 }
