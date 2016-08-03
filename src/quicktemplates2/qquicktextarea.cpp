@@ -545,6 +545,14 @@ void QQuickTextArea::setHoverEnabled(bool enabled)
     emit hoverEnabledChanged();
 }
 
+bool QQuickTextArea::contains(const QPointF &point) const
+{
+    Q_D(const QQuickTextArea);
+    if (d->flickable && !d->flickable->contains(d->flickable->mapFromItem(this, point)))
+        return false;
+    return QQuickTextEdit::contains(point);
+}
+
 void QQuickTextArea::classBegin()
 {
     Q_D(QQuickTextArea);

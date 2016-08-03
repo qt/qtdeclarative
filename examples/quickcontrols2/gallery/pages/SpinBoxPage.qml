@@ -63,6 +63,7 @@ Pane {
             value: 50
             width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
+            editable: true
         }
     }
 }

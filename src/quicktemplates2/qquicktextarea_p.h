@@ -94,6 +94,8 @@ public:
     bool isHoverEnabled() const;
     void setHoverEnabled(bool enabled);
 
+    bool contains(const QPointF &point) const override;
+
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged3();

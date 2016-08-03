@@ -750,8 +750,24 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
     return hadGrabbedMouse;
 }
 
+static void warnIfHorizontallyAnchored(QQuickItem *item, const QString &itemName)
+{
+    if (!item)
+        return;
+
+    QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+    if (anchors && (anchors->fill() || anchors->centerIn() || anchors->left().item || anchors->right().item)
+            && !item->property("_q_QQuickSwipeDelegate_warned").toBool()) {
+        qmlInfo(item) << QString::fromLatin1("SwipeDelegate: cannot use horizontal anchors with %1; unable to layout the item.").arg(itemName);
+        item->setProperty("_q_QQuickSwipeDelegate_warned", true);
+    }
+}
+
 void QQuickSwipeDelegatePrivate::resizeContent()
 {
+    warnIfHorizontallyAnchored(background, QStringLiteral("background"));
+    warnIfHorizontallyAnchored(contentItem, QStringLiteral("contentItem"));
+
     // If the background and contentItem are repositioned due to a swipe,
     // we don't want to call QQuickControlPrivate's implementation of this function,
     // as it repositions the contentItem to be visible.
