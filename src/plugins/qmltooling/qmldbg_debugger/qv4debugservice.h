@@ -70,7 +70,7 @@ public:
     explicit QV4DebugServiceImpl(QObject *parent = 0);
     ~QV4DebugServiceImpl();
 
-    void engineAboutToBeAdded(QQmlEngine *engine);
+    void engineAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
 
     void stateAboutToBeChanged(State state);
