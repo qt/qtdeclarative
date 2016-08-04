@@ -70,18 +70,13 @@ public:
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
                                 bool trackLocations) override;
 
-signals:
-    void v4ProfilingEnabled(quint64 v4Features);
-    void v4ProfilingEnabledWhileWaiting(quint64 v4Features);
-
-public slots:
     void receiveData(const QV4::Profiling::FunctionLocationHash &,
                      const QVector<QV4::Profiling::FunctionCallProperties> &,
                      const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
-private slots:
-    void forwardEnabled(quint64 features);
-    void forwardEnabledWhileWaiting(quint64 features);
+signals:
+    void v4ProfilingEnabled(quint64 v4Features);
+    void v4ProfilingEnabledWhileWaiting(quint64 v4Features);
 
 private:
     QV4::Profiling::FunctionLocationHash m_functionLocations;
@@ -93,6 +88,8 @@ private:
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages, QQmlDebugPacket &d);
     qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext,
                             QQmlDebugPacket &d);
+    void forwardEnabled(quint64 features);
+    void forwardEnabledWhileWaiting(quint64 features);
 
     static quint64 translateFeatures(quint64 qmlFeatures);
 };

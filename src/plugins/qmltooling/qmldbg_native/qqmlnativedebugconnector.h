@@ -63,11 +63,9 @@ public:
     bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
     static void setDataStreamVersion(int version);
 
-private slots:
+private:
     void sendMessage(const QString &name, const QByteArray &message);
     void sendMessages(const QString &name, const QList<QByteArray> &messages);
-
-private:
     void announceObjectAvailability(const QString &objectType, QObject *object, bool available);
 
     QVector<QQmlDebugService *> m_services;

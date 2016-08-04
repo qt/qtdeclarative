@@ -2078,15 +2078,15 @@ void tst_qqmlproperty::floatToStringPrecision()
     QFETCH(QString, qtString);
     QFETCH(QString, jsString);
 
-    const char *name = propertyName.toLatin1().constData();
+    QByteArray name = propertyName.toLatin1();
     QCOMPARE(obj->property(name).toDouble(), number);
     QCOMPARE(obj->property(name).toString(), qtString);
 
-    const char *name1 = (propertyName + QLatin1Char('1')).toLatin1().constData();
+    QByteArray name1 = (propertyName + QLatin1Char('1')).toLatin1();
     QCOMPARE(obj->property(name1).toDouble(), number);
     QCOMPARE(obj->property(name1).toString(), qtString);
 
-    const char *name2 = (propertyName + QLatin1Char('2')).toLatin1().constData();
+    QByteArray name2 = (propertyName + QLatin1Char('2')).toLatin1();
     QCOMPARE(obj->property(name2).toDouble(), number);
     QCOMPARE(obj->property(name2).toString(), jsString);
 

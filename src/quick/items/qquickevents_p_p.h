@@ -284,6 +284,8 @@ private:
     bool m_valid : 1;
     bool m_accept : 1;
     int m_reserved : 30;
+
+    Q_DISABLE_COPY(QQuickEventPoint)
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
@@ -306,6 +308,8 @@ private:
     qreal m_rotation;
     qreal m_pressure;
     QPointerUniqueId m_uniqueId;
+
+    Q_DISABLE_COPY(QQuickEventTouchPoint)
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
@@ -390,6 +394,8 @@ public:
 
 private:
     QQuickEventPoint *m_mousePoint;
+
+    Q_DISABLE_COPY(QQuickPointerMouseEvent)
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
@@ -418,6 +424,8 @@ public:
 private:
     int m_pointCount;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
+
+    Q_DISABLE_COPY(QQuickPointerTouchEvent)
 };
 
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent

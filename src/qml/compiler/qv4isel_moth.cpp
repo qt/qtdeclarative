@@ -313,8 +313,8 @@ protected:
 };
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    : EvalInstructionSelection(execAllocator, module, jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator, iselFactory)
     , qmlEngine(qmlEngine)
     , _block(0)
     , _codeStart(0)
@@ -412,6 +412,7 @@ void InstructionSelection::run(int functionIndex)
                 if (s->location.startLine != currentLine) {
                     blockNeedsDebugInstruction = false;
                     currentLine = s->location.startLine;
+#ifndef QT_NO_QML_DEBUGGER
                     if (irModule->debugMode) {
                         Instruction::Debug debug;
                         debug.lineNumber = currentLine;
@@ -421,6 +422,7 @@ void InstructionSelection::run(int functionIndex)
                         line.lineNumber = currentLine;
                         addInstruction(line);
                     }
+#endif
                 }
             }
 
@@ -1092,6 +1094,17 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     }
 }
 
+void InstructionSelection::addDebugInstruction()
+{
+#ifndef QT_NO_QML_DEBUGGER
+    if (blockNeedsDebugInstruction) {
+        Instruction::Debug debug;
+        debug.lineNumber = -int(currentLine);
+        addInstruction(debug);
+    }
+#endif
+}
+
 void InstructionSelection::visitJump(IR::Jump *s)
 {
     if (s->target == _nextBlock)
@@ -1099,11 +1112,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
     if (_removableJumps.contains(s))
         return;
 
-    if (blockNeedsDebugInstruction) {
-        Instruction::Debug debug;
-        debug.lineNumber = -int(currentLine);
-        addInstruction(debug);
-    }
+    addDebugInstruction();
 
     Instruction::Jump jump;
     jump.offset = 0;
@@ -1114,11 +1123,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
-    if (blockNeedsDebugInstruction) {
-        Instruction::Debug debug;
-        debug.lineNumber = -int(currentLine);
-        addInstruction(debug);
-    }
+    addDebugInstruction();
 
     Param condition;
     if (IR::Temp *t = s->cond->asTemp()) {
@@ -1153,12 +1158,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
-    if (blockNeedsDebugInstruction) {
-        // this is required so stepOut will always be guaranteed to stop in every stack frame
-        Instruction::Debug debug;
-        debug.lineNumber = -int(currentLine);
-        addInstruction(debug);
-    }
+    // this is required so stepOut will always be guaranteed to stop in every stack frame
+    addDebugInstruction();
 
     Instruction::Ret ret;
     ret.result = getParam(s->expr);

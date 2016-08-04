@@ -62,7 +62,46 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QV4DebugService : protected QQmlDebugService
+class QWindow;
+class QQuickWindow;
+
+#ifdef QT_NO_QML_DEBUGGER
+
+struct QV4DebugService
+{
+    void signalEmitted(const QString &) {}
+};
+
+struct QQmlProfilerService
+{
+    void startProfiling(QJSEngine *engine, quint64 features = std::numeric_limits<quint64>::max())
+    {
+        Q_UNUSED(engine);
+        Q_UNUSED(features);
+    }
+
+    void stopProfiling(QJSEngine *) {}
+};
+
+struct QQmlEngineDebugService
+{
+    void objectCreated(QJSEngine *, QObject *) {}
+    virtual void setStatesDelegate(QQmlDebugStatesDelegate *) {}
+};
+
+struct QQmlInspectorService {
+    void addWindow(QQuickWindow *) {}
+    void setParentWindow(QQuickWindow *, QWindow *) {}
+    void removeWindow(QQuickWindow *) {}
+};
+
+struct QDebugMessageService {};
+struct QQmlEngineControlService {};
+struct QQmlNativeDebugService {};
+
+#else
+
+class Q_QML_PRIVATE_EXPORT QV4DebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -77,7 +116,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -99,7 +138,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -117,9 +156,7 @@ protected:
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
 };
 
-class QWindow;
-class QQuickWindow;
-class Q_QML_PRIVATE_EXPORT QQmlInspectorService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -136,7 +173,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QDebugMessageService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QDebugMessageService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -151,7 +188,7 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineControlService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlEngineControlService : public QQmlDebugService
 {
     Q_OBJECT
 public:
@@ -165,7 +202,7 @@ protected:
 
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : protected QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : public QQmlDebugService
 {
     Q_OBJECT
 
@@ -177,6 +214,8 @@ protected:
 
     static const QString s_key;
 };
+
+#endif
 
 QT_END_NAMESPACE
 

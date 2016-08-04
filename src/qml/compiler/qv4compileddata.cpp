@@ -50,6 +50,7 @@
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
 #include <QQmlPropertyMap>
+#include <QDateTime>
 #include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
@@ -57,6 +58,7 @@
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 
 #include <algorithm>
 
@@ -160,6 +162,16 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    Value *bigEndianConstants = new Value[data->constantTableSize];
+    const LEUInt64 *littleEndianConstants = data->constants();
+    for (uint i = 0; i < data->constantTableSize; ++i)
+        bigEndianConstants[i] = Value::fromReturnedValue(littleEndianConstants[i]);
+    constants = bigEndianConstants;
+#else
+    constants = reinterpret_cast<const Value*>(data->constants());
+#endif
+
     linkBackendToEngine(engine);
 
     if (data->indexOfRootFunction != -1)
@@ -202,6 +214,9 @@ void CompilationUnit::unlink()
     runtimeClasses = 0;
     qDeleteAll(runtimeFunctions);
     runtimeFunctions.clear();
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    delete [] constants;
+#endif
 }
 
 void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
@@ -290,6 +305,11 @@ bool CompilationUnit::saveToDisk(QString *errorString)
 {
     errorString->clear();
 
+    if (data->sourceTimeStamp == 0) {
+        *errorString = QStringLiteral("Missing time stamp for source file");
+        return false;
+    }
+
     const QUrl unitUrl = url();
     if (!unitUrl.isLocalFile()) {
         *errorString = QStringLiteral("File has to be a local file.");
@@ -330,19 +350,55 @@ bool CompilationUnit::saveToDisk(QString *errorString)
     return true;
 }
 
-bool CompilationUnit::loadFromDisk(const QUrl &url, QString *errorString)
+bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
 {
     if (!url.isLocalFile()) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
 
-    QScopedPointer<QFile> cacheFile(new QFile(url.toLocalFile() + QLatin1Char('c')));
+    const QString sourcePath = url.toLocalFile();
+    QScopedPointer<QFile> cacheFile(new QFile(sourcePath + QLatin1Char('c')));
 
     if (!cacheFile->open(QIODevice::ReadOnly)) {
         *errorString = cacheFile->errorString();
         return false;
     }
+
+    {
+        CompiledData::Unit header;
+        qint64 bytesRead = cacheFile->read(reinterpret_cast<char *>(&header), sizeof(header));
+
+        if (bytesRead != sizeof(header)) {
+            *errorString = QStringLiteral("File too small for the header fields");
+            return false;
+        }
+
+        if (strncmp(header.magic, CompiledData::magic_str, sizeof(header.magic))) {
+            *errorString = QStringLiteral("Magic bytes in the header do not match");
+            return false;
+        }
+
+        if (header.version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
+            *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(header.version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
+            return false;
+        }
+
+        if (header.qtVersion != quint32(QT_VERSION)) {
+            *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(header.qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
+            return false;
+        }
+
+        {
+            QFileInfo sourceCode(sourcePath);
+            if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != header.sourceTimeStamp) {
+                *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+                return false;
+            }
+        }
+
+    }
+    // Data structure and qt version matched, so now we can access the rest of the file safely.
 
     uchar *cacheData = cacheFile->map(/*offset*/0, cacheFile->size());
     if (!cacheData) {
@@ -353,13 +409,22 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, QString *errorString)
     QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
 
     {
-        QFileInfo sourceCode(url.toLocalFile());
-        if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != data->sourceTimeStamp) {
-            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+        const QString foundArchitecture = stringAt(data->architectureIndex);
+        const QString expectedArchitecture = QSysInfo::buildAbi();
+        if (foundArchitecture != expectedArchitecture) {
+            *errorString = QString::fromUtf8("Architecture mismatch. Found %1 expected %2").arg(foundArchitecture).arg(expectedArchitecture);
             return false;
         }
     }
 
+    {
+        const QString foundCodeGenerator = stringAt(data->codeGeneratorIndex);
+        const QString expectedCodeGenerator = iselFactory->codeGeneratorName;
+        if (foundCodeGenerator != expectedCodeGenerator) {
+            *errorString = QString::fromUtf8("Code generator mismatch. Found code generated by %1 but expected %2").arg(foundCodeGenerator).arg(expectedCodeGenerator);
+            return false;
+        }
+    }
 
     if (!memoryMapCode(errorString))
         return false;
@@ -489,7 +554,7 @@ QString Binding::valueAsScriptString(const Unit *unit) const
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */
-QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
+QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
 {
     if (type)
         return typePropertyCache;
@@ -500,7 +565,7 @@ QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlPropertyCache *CompilationUnit::ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
 {
     if (typePropertyCache) {
         return typePropertyCache;
@@ -522,7 +587,7 @@ bool qtTypeInherits(const QMetaObject *mo) {
     return false;
 }
 
-void CompilationUnit::ResolvedTypeReference::doDynamicTypeCheck()
+void ResolvedTypeReference::doDynamicTypeCheck()
 {
     const QMetaObject *mo = 0;
     if (typePropertyCache)
@@ -533,6 +598,19 @@ void CompilationUnit::ResolvedTypeReference::doDynamicTypeCheck()
         mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
+
+bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
+{
+    for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+        QQmlPropertyCache *pc = it.value()->createPropertyCache(engine);
+        bool ok = false;
+        hash->addData(pc->checksum(&ok));
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
 #endif
 
 }

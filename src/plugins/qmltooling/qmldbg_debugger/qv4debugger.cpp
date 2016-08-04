@@ -79,6 +79,8 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     static int pauseReasonId = qRegisterMetaType<QV4Debugger::PauseReason>();
     Q_UNUSED(debuggerId);
     Q_UNUSED(pauseReasonId);
+    connect(this, &QV4Debugger::scheduleJob,
+            this, &QV4Debugger::runJobUnpaused, Qt::QueuedConnection);
 }
 
 QV4::ExecutionEngine *QV4Debugger::engine() const
@@ -320,7 +322,7 @@ void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
     if (state() == Paused)
         m_runningCondition.wakeAll();
     else
-        QMetaObject::invokeMethod(this, "runJobUnpaused", Qt::QueuedConnection);
+        emit scheduleJob();
     m_jobIsRunning.wait(&m_lock);
     m_runningJob = 0;
 }

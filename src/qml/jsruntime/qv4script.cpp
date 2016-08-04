@@ -148,7 +148,7 @@ void Script::parse()
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
-    IR::Module module(v4->debugger != 0);
+    IR::Module module(v4->debugger() != 0);
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -222,6 +222,7 @@ ReturnedValue Script::run()
         ContextStateSaver stateSaver(valueScope, scope);
         scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
+        scope->d()->constantTable = vmFunction->compilationUnit->constants;
         scope->d()->compilationUnit = vmFunction->compilationUnit;
 
         return Q_V4_PROFILE(engine, vmFunction);

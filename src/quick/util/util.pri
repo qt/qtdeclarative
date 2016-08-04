@@ -26,11 +26,12 @@ SOURCES += \
     $$PWD/qquickanimator.cpp \
     $$PWD/qquickanimatorjob.cpp \
     $$PWD/qquickanimatorcontroller.cpp \
-    $$PWD/qquickprofiler.cpp \
     $$PWD/qquickfontmetrics.cpp \
     $$PWD/qquicktextmetrics.cpp \
     $$PWD/qquickshortcut.cpp \
     $$PWD/qquickvalidator.cpp
+
+!contains(QT_CONFIG, no-qml-debug): SOURCES += $$PWD/qquickprofiler.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\

@@ -69,7 +69,7 @@ public:
     QQmlValueType(int userType, const QMetaObject *metaObject);
     ~QQmlValueType();
     void read(QObject *, int);
-    void write(QObject *, int, QQmlPropertyPrivate::WriteFlags flags);
+    void write(QObject *, int, QQmlPropertyData::WriteFlags flags);
     QVariant value();
     void setValue(const QVariant &);
 

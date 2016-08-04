@@ -82,7 +82,7 @@ public:
     // binding is not enabled or added to the object.
     QObject *targetObject() const { return m_target.data(); }
 
-    virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
+    virtual void setEnabled(bool e, QQmlPropertyData::WriteFlags f = QQmlPropertyData::DontRemoveBinding) = 0;
 
     void addToObject();
     void removeFromObject();

@@ -102,8 +102,8 @@
     state and we use it to update the shader program with the current
     color. The previous state is passed in as a second parameter so
     that the user can update only that which has changed. In our
-    usecase, where all the colors are different, the updateState will
-    be called once for every node.
+    use case, where all the colors are different, the updateState()
+    function will be called once for every node.
 
     \snippet scenegraph/simplematerial/simplematerial.cpp 7
 

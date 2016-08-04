@@ -72,24 +72,22 @@ void Highlight::setItem(QQuickItem *item)
         m_item->disconnect(this);
 
     if (item) {
-        connect(item, SIGNAL(xChanged()), SLOT(adjust()));
-        connect(item, SIGNAL(yChanged()), SLOT(adjust()));
-        connect(item, SIGNAL(widthChanged()), SLOT(adjust()));
-        connect(item, SIGNAL(heightChanged()), SLOT(adjust()));
-        connect(item, SIGNAL(rotationChanged()), SLOT(adjust()));
-        connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
-                SLOT(adjust()));
+        connect(item, &QQuickItem::xChanged, this, &Highlight::adjust);
+        connect(item, &QQuickItem::yChanged, this, &Highlight::adjust);
+        connect(item, &QQuickItem::widthChanged, this, &Highlight::adjust);
+        connect(item, &QQuickItem::heightChanged, this, &Highlight::adjust);
+        connect(item, &QQuickItem::rotationChanged, this, &Highlight::adjust);
+        connect(item, &QQuickItem::transformOriginChanged, this, &Highlight::adjust);
     }
     QQuickWindow *view = item->window();
     QQuickItem * contentItem = view->contentItem();
     if (contentItem) {
-        connect(contentItem, SIGNAL(xChanged()), SLOT(adjust()));
-        connect(contentItem, SIGNAL(yChanged()), SLOT(adjust()));
-        connect(contentItem, SIGNAL(widthChanged()), SLOT(adjust()));
-        connect(contentItem, SIGNAL(heightChanged()), SLOT(adjust()));
-        connect(contentItem, SIGNAL(rotationChanged()), SLOT(adjust()));
-        connect(contentItem, SIGNAL(transformOriginChanged(TransformOrigin)),
-                SLOT(adjust()));
+        connect(contentItem, &QQuickItem::xChanged, this, &Highlight::adjust);
+        connect(contentItem, &QQuickItem::yChanged, this, &Highlight::adjust);
+        connect(contentItem, &QQuickItem::widthChanged, this, &Highlight::adjust);
+        connect(contentItem, &QQuickItem::heightChanged, this, &Highlight::adjust);
+        connect(contentItem, &QQuickItem::rotationChanged, this, &Highlight::adjust);
+        connect(contentItem, &QQuickItem::transformOriginChanged, this, &Highlight::adjust);
     }
     m_item = item;
     setContentsSize(view->size());

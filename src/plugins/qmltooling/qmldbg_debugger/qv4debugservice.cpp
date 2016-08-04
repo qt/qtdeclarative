@@ -706,7 +706,7 @@ void QV4DebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
     if (engine){
         const QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (ee) {
-            QV4Debugger *debugger = qobject_cast<QV4Debugger *>(ee->debugger);
+            QV4Debugger *debugger = qobject_cast<QV4Debugger *>(ee->debugger());
             if (debugger)
                 debuggerAgent.removeDebugger(debugger);
         }
@@ -720,7 +720,7 @@ void QV4DebugServiceImpl::stateAboutToBeChanged(State state)
     if (state == Enabled) {
         foreach (QV4Debugger *debugger, debuggerAgent.debuggers()) {
             QV4::ExecutionEngine *ee = debugger->engine();
-            if (!ee->debugger)
+            if (!ee->debugger())
                 ee->setDebugger(debugger);
         }
     }

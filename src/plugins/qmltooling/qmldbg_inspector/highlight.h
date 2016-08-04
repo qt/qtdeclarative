@@ -65,8 +65,6 @@ protected:
 
 private:
     void initRenderDetails();
-
-private slots:
     void adjust();
 
 private:
@@ -86,13 +84,12 @@ public:
     void paint(QPainter *painter);
     void showName(const QPointF &displayPoint);
 
-private slots:
-    void disableNameDisplay();
-
 private:
     QPointF m_displayPoint;
     QString m_name;
     bool m_nameDisplayActive;
+
+    void disableNameDisplay();
 };
 
 /**

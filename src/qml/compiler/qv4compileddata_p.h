@@ -70,6 +70,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// Bump this whenever the compiler data structures change in an incompatible way.
+#define QV4_DATA_STRUCTURE_VERSION 0x01
+
 class QIODevice;
 class QQmlPropertyCache;
 class QQmlPropertyData;
@@ -88,6 +91,7 @@ struct Function;
 }
 
 struct Function;
+class EvalISelFactory;
 
 namespace CompiledData {
 
@@ -597,11 +601,17 @@ static const char magic_str[] = "qv4cdata";
 
 struct Unit
 {
+    // DO NOT CHANGE THESE FIELDS EVER
     char magic[8];
-    LEInt16 architecture;
-    LEInt16 version;
+    LEUInt32 version;
+    LEUInt32 qtVersion;
     LEInt64 sourceTimeStamp;
     LEUInt32 unitSize; // Size of the Unit and any depending data.
+    // END DO NOT CHANGE THESE FIELDS EVER
+
+    LEUInt32 architectureIndex; // string index to QSysInfo::buildAbi()
+    LEUInt32 codeGeneratorIndex;
+    char dependencyMD5Checksum[16];
 
     enum : unsigned int {
         IsJavascript = 0x1,
@@ -681,8 +691,8 @@ struct Unit
     const RegExp *regexpAt(int index) const {
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
-    const QV4::Value *constants() const {
-        return reinterpret_cast<const QV4::Value*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    const LEUInt64 *constants() const {
+        return reinterpret_cast<const LEUInt64*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
     }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
@@ -753,6 +763,42 @@ struct TypeReferenceMap : QHash<int, TypeReference>
     }
 };
 
+#ifndef V4_BOOTSTRAP
+struct ResolvedTypeReference
+{
+    ResolvedTypeReference()
+        : type(0)
+        , majorVersion(0)
+        , minorVersion(0)
+        , isFullyDynamicType(false)
+    {}
+
+    QQmlType *type;
+    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+
+    int majorVersion;
+    int minorVersion;
+    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+    // therefore cannot have a property cache installed when instantiated.
+    bool isFullyDynamicType;
+
+    QQmlPropertyCache *propertyCache() const;
+    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+
+    void doDynamicTypeCheck();
+};
+// map from name index
+// While this could be a hash, a map is chosen here to provide a stable
+// order, which is used to calculating a check-sum on dependent meta-objects.
+struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
+{
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
+};
+#else
+struct ResolvedTypeReferenceMap {};
+#endif
+
 // index is per-object binding index
 typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
@@ -807,6 +853,9 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
     IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
 
+    // pointers either to data->constants() or little-endian memory copy.
+    const Value* constants;
+
     void finalize(QQmlEnginePrivate *engine);
 
     int totalBindingsCount; // Number of bindings used in this type
@@ -814,33 +863,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int totalObjectCount; // Number of objects explicitly instantiated
 
     QVector<QQmlScriptData *> dependentScripts;
-
-    struct ResolvedTypeReference
-    {
-        ResolvedTypeReference()
-            : type(0)
-            , majorVersion(0)
-            , minorVersion(0)
-            , isFullyDynamicType(false)
-        {}
-
-        QQmlType *type;
-        QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-
-        int majorVersion;
-        int minorVersion;
-        // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-        // therefore cannot have a property cache installed when instantiated.
-        bool isFullyDynamicType;
-
-        QQmlPropertyCache *propertyCache() const;
-        QQmlPropertyCache *createPropertyCache(QQmlEngine *);
-
-        void doDynamicTypeCheck();
-    };
-    // map from name index
-    typedef QHash<int, ResolvedTypeReference*> ResolvedTypeReferenceMap;
     ResolvedTypeReferenceMap resolvedTypes;
 
     int metaTypeId;
@@ -880,7 +902,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     void destroy() Q_DECL_OVERRIDE;
 
     bool saveToDisk(QString *errorString);
-    bool loadFromDisk(const QUrl &url, QString *errorString);
+    bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

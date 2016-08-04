@@ -326,7 +326,7 @@ private slots:
 private:
     QV4Debugger *debugger() const
     {
-        return static_cast<QV4Debugger *>(m_v4->debugger);
+        return static_cast<QV4Debugger *>(m_v4->debugger());
     }
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
     {
@@ -444,7 +444,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
 
 static QV4::ReturnedValue someCall(QV4::CallContext *ctx)
 {
-    static_cast<QV4Debugger *>(ctx->d()->engine->debugger)
+    static_cast<QV4Debugger *>(ctx->d()->engine->debugger())
             ->removeBreakPoint("removeBreakPointForNextInstruction", 2);
     return QV4::Encode::undefined();
 }

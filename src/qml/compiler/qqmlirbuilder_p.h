@@ -549,7 +549,7 @@ public:
 
 struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QV4::CompiledData::Unit *generate(Document &output);
+    QV4::CompiledData::Unit *generate(Document &output, QQmlEngine *engine, const QV4::CompiledData::ResolvedTypeReferenceMap &dependentTypes);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;

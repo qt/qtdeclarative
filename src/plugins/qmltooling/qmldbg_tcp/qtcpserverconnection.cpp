@@ -65,10 +65,8 @@ public:
     void waitForConnection();
     void flush();
 
-private slots:
-    void newConnection();
-
 private:
+    void newConnection();
     bool listen();
 
     int m_portFrom;
@@ -152,7 +150,8 @@ void QTcpServerConnection::flush()
 bool QTcpServerConnection::listen()
 {
     m_tcpServer = new QTcpServer(this);
-    QObject::connect(m_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
+    QObject::connect(m_tcpServer, &QTcpServer::newConnection,
+                     this, &QTcpServerConnection::newConnection);
     QHostAddress hostaddress;
     if (!m_hostaddress.isEmpty()) {
         if (!hostaddress.setAddress(m_hostaddress)) {

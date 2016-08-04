@@ -76,12 +76,11 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
 
-    const void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> backendCompileStep();
 
@@ -285,12 +284,13 @@ private:
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
+    ISelFactory() : EvalISelFactory(QStringLiteral("jit")) {}
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
-    virtual bool jitCompileRegexps() const
+    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
+    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator, this); }
+    bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
     { return true; }
-    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE;
+    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE Q_DECL_FINAL;
 };
 
 } // end of namespace JIT

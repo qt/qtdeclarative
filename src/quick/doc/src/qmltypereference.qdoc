@@ -100,9 +100,9 @@ available when you import \c QtQuick.
     \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
         respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
         and a slightly transparent blue to a quad of \c "#800000FF".
-    \li Using the \l{QtQml::Qt::rgba()}{Qt.rgba()}, \l{QtQml::Qt::hsla()}{Qt.hsla()},
-        \l{QtQml::Qt::darker()}{Qt.darker()}, \l{QtQml::Qt::lighter()}{Qt.lighter()} or
-        \l{QtQml::Qt::tint()}{Qt.tint()} functions.
+    \li Using the \l{QtQml::Qt::rgba()}{Qt.rgba()}, \l{QtQml::Qt::hsva()}{Qt.hsva()},
+        \l{QtQml::Qt::hsla()}{Qt.hsla()}, \l{QtQml::Qt::darker()}{Qt.darker()},
+        \l{QtQml::Qt::lighter()}{Qt.lighter()} or \l{QtQml::Qt::tint()}{Qt.tint()} functions.
     \endlist
 
     Example:
@@ -112,8 +112,11 @@ available when you import \c QtQuick.
     \enddiv
     \snippet qml/colors.qml colors
 
-    Additionally, a color type has \c r, \c g, \c b and \c a properties that refer to the
-    red, green, blue and alpha values of the color, respectively:
+    A color type has \c r, \c g, \c b and \c a properties that refer to the red,
+    green, blue and alpha values of the color, respectively. Additionally it has
+    \c hsvHue, \c hsvSaturation, \c hsvValue and \c hslHue, \c hslSaturation,
+    \c hslLightness properties, which allow access to color values in HSV and HSL
+    color models accordingly:
 
     \qml
     Text {

@@ -162,7 +162,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X + constant -> Y = X; Y += [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->addDouble(addr, targetReg);
             break;
         }
@@ -184,7 +184,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X * constant -> Y = X; Y *= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->mulDouble(addr, targetReg);
             break;
         }
@@ -203,7 +203,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X - constant -> Y = X; Y -= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->subDouble(addr, targetReg);
             break;
         }
@@ -231,7 +231,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X / constant -> Y = X; Y /= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->divDouble(addr, targetReg);
             break;
         }

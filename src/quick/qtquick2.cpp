@@ -49,7 +49,6 @@
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qquickprofiler_p.h>
 #include <private/qquickapplication_p.h>
 #include <QtQuick/private/qquickpropertychanges_p.h>
 #include <QtQuick/private/qquickstate_p.h>
@@ -62,6 +61,12 @@ static void initResources()
 }
 
 QT_BEGIN_NAMESPACE
+
+#ifdef QT_NO_QML_DEBUGGER
+
+class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate {};
+
+#else
 
 class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate
 {
@@ -175,6 +180,7 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
     }
 }
 
+#endif // QT_NO_QML_DEBUGGER
 
 void QQmlQtQuick2Module::defineModule()
 {

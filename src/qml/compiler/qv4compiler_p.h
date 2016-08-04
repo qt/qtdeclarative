@@ -118,8 +118,9 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     void writeFunction(char *f, IR::Function *irFunction) const;
 
     StringTableGenerator stringTable;
+    QString codeGeneratorName;
 private:
-    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset) const;
+    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
 
     IR::Module *irModule;
 

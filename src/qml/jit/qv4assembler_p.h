@@ -89,7 +89,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     // Coderef + execution engine
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
-    QList<QVector<QV4::Primitive> > constantValues;
 };
 
 struct LookupCall {
@@ -105,7 +104,7 @@ struct LookupCall {
 struct RuntimeCall {
     JSC::MacroAssembler::Address addr;
 
-    inline RuntimeCall(uint offset = INT_MIN);
+    inline RuntimeCall(uint offset = uint(INT_MIN));
     bool isValid() const { return addr.offset >= 0; }
 };
 
@@ -297,22 +296,6 @@ public:
         int savedRegCount;
     };
 
-    class ConstantTable
-    {
-    public:
-        ConstantTable(Assembler *as): _as(as) {}
-
-        int add(const QV4::Primitive &v);
-        Address loadValueAddress(IR::Const *c, RegisterID baseReg);
-        Address loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
-        void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
-
-    private:
-        Assembler *_as;
-        QVector<QV4::Primitive> _values;
-        QVector<DataLabelPtr> _toPatch;
-    };
-
     struct VoidType { VoidType() {} };
     static const VoidType Void;
 
@@ -382,6 +365,8 @@ public:
     Pointer loadTempAddress(IR::Temp *t);
     Pointer loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
+    Address loadConstant(IR::Const *c, RegisterID baseReg);
+    Address loadConstant(const Primitive &v, RegisterID baseReg);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(IR::Temp *t) const
     {
@@ -1029,7 +1014,7 @@ public:
             move(TrustedImm64(i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
-            JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+            JSC::MacroAssembler::loadDouble(loadConstant(c, ScratchRegister), target);
 #endif
             return target;
         }
@@ -1093,7 +1078,7 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        Address inversionAddress = constantTable().loadValueAddress(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
+        Address inversionAddress = loadConstant(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
         subDouble(inversionAddress, FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
@@ -1111,14 +1096,12 @@ public:
 
     void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave);
     const StackLayout &stackLayout() const { return *_stackLayout.data(); }
-    ConstantTable &constantTable() { return _constTable; }
 
     Label exceptionReturnLabel;
     IR::BasicBlock * catchBlock;
     QVector<Jump> exceptionPropagationJumps;
 private:
     QScopedPointer<const StackLayout> _stackLayout;
-    ConstantTable _constTable;
     IR::Function *_function;
     QHash<IR::BasicBlock *, Label> _addrs;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;

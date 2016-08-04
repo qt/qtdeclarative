@@ -101,15 +101,17 @@ public:
 
     void setStatesDelegate(QQmlDebugStatesDelegate *) Q_DECL_OVERRIDE;
 
+signals:
+    void scheduleMessage(const QByteArray &);
+
 protected:
     virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
 
-private Q_SLOTS:
-    void processMessage(const QByteArray &msg);
-    void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
-
 private:
     friend class QQmlDebuggerServiceFactory;
+
+    void processMessage(const QByteArray &msg);
+    void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
 
     void prepareDeferredObjects(QObject *);
     void buildObjectList(QDataStream &, QQmlContext *,

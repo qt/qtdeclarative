@@ -33,7 +33,7 @@
 
 class CommandListener : public QObject {
     Q_OBJECT
-public slots:
+public:
     void readCommand();
 
 signals:

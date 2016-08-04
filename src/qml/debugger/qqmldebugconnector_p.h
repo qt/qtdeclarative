@@ -59,6 +59,29 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_NO_QML_DEBUGGER
+
+class Q_QML_PRIVATE_EXPORT QQmlDebugConnector
+{
+public:
+    static QQmlDebugConnector *instance() { return nullptr; }
+
+    template<class Service>
+    static Service *service() { return nullptr; }
+
+    bool hasEngine(QJSEngine *) const { return false; }
+    void addEngine(QJSEngine *) {}
+    void removeEngine(QJSEngine *) {}
+
+    bool open(const QVariantHash &configuration = QVariantHash())
+    {
+        Q_UNUSED(configuration);
+        return false;
+    }
+};
+
+#else
+
 class QQmlDebugService;
 class Q_QML_PRIVATE_EXPORT QQmlDebugConnector : public QObject
 {
@@ -105,6 +128,8 @@ public:
 };
 
 #define QQmlDebugConnectorFactory_iid "org.qt-project.Qt.QQmlDebugConnectorFactory"
+
+#endif
 
 QT_END_NAMESPACE
 

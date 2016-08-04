@@ -220,7 +220,7 @@ int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id,
 bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 {
     if (c == QMetaObject::WriteProperty && interceptors &&
-       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {
+       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyData::BypassInterceptor)) {
 
         for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
             if (vi->m_coreIndex != id)
@@ -278,7 +278,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     bool updated = false;
                     if (newComponentValue != prevComponentValue) {
                         valueProp.write(valueType, prevComponentValue);
-                        valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                        valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                         vi->write(newComponentValue);
                         updated = true;
@@ -872,7 +872,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 // Remove binding (if any) on write
                 if(c == QMetaObject::WriteProperty) {
                     int flags = *reinterpret_cast<int*>(a[3]);
-                    if (flags & QQmlPropertyPrivate::RemoveBindingOnAliasWrite) {
+                    if (flags & QQmlPropertyData::RemoveBindingOnAliasWrite) {
                         QQmlData *targetData = QQmlData::get(target);
                         if (targetData && targetData->hasBindingBit(coreIndex))
                             QQmlPropertyPrivate::removeBinding(target, aliasData->encodedMetaPropertyIndex);

@@ -219,7 +219,7 @@ void QQmlValueType::read(QObject *obj, int idx)
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
-void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
+void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags)
 {
     Q_ASSERT(gadgetPtr);
     int status = -1;

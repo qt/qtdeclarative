@@ -270,4 +270,14 @@ void D3D12RenderNode::render(const RenderState *state)
 // No need to reimplement changedStates() because no relevant commands are
 // added to the command list in render().
 
+QSGRenderNode::RenderingFlags D3D12RenderNode::flags() const
+{
+    return BoundedRectRendering | DepthAwareRendering;
+}
+
+QRectF D3D12RenderNode::rect() const
+{
+    return QRect(0, 0, m_item->width(), m_item->height());
+}
+
 #endif // HAS_D3D12

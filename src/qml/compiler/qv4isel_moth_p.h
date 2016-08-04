@@ -80,7 +80,7 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
@@ -177,6 +177,8 @@ private:
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
+    inline void addDebugInstruction();
+
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
@@ -205,10 +207,11 @@ private:
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
+    ISelFactory() : EvalISelFactory(QStringLiteral("moth")) {}
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
-    virtual bool jitCompileRegexps() const
+    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
+    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator, this); }
+    bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
     { return false; }
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE;
 

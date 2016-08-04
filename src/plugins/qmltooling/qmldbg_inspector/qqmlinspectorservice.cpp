@@ -55,11 +55,11 @@ public:
     void setParentWindow(QQuickWindow *window, QWindow *parent) Q_DECL_OVERRIDE;
     void removeWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
 
+signals:
+    void scheduleMessage(const QByteArray &message);
+
 protected:
     virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
-
-private slots:
-    void messageFromClient(const QByteArray &message);
 
 private:
     friend class QQmlInspectorServiceFactory;
@@ -67,11 +67,15 @@ private:
     QmlJSDebugger::GlobalInspector *checkInspector();
     QmlJSDebugger::GlobalInspector *m_globalInspector;
     QHash<QQuickWindow *, QWindow *> m_waitingWindows;
+
+    void messageFromClient(const QByteArray &message);
 };
 
 QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
     QQmlInspectorService(1, parent), m_globalInspector(0)
 {
+    connect(this, &QQmlInspectorServiceImpl::scheduleMessage,
+            this, &QQmlInspectorServiceImpl::messageFromClient, Qt::QueuedConnection);
 }
 
 QmlJSDebugger::GlobalInspector *QQmlInspectorServiceImpl::checkInspector()
@@ -122,8 +126,8 @@ void QQmlInspectorServiceImpl::setParentWindow(QQuickWindow *window, QWindow *pa
 
 void QQmlInspectorServiceImpl::messageReceived(const QByteArray &message)
 {
-    QMetaObject::invokeMethod(this, "messageFromClient", Qt::QueuedConnection,
-                              Q_ARG(QByteArray, message));
+    // Move the message to the right thread via queued signal
+    emit scheduleMessage(message);
 }
 
 void QQmlInspectorServiceImpl::messageFromClient(const QByteArray &message)

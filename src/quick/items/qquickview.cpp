@@ -44,9 +44,6 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <private/qqmldebugconnector_p.h>
-#include <private/qquickprofiler_p.h>
-#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtQml/qqmlengine.h>

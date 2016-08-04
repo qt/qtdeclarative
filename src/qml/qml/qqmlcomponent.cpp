@@ -874,11 +874,13 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         depthIncreased = false;
     }
 
-    QQmlEngineDebugService *service = QQmlDebugConnector::service<QQmlEngineDebugService>();
-    if (service && rv) {
-        if (!context->isInternal)
-            context->asQQmlContextPrivate()->instances.append(rv);
-        service->objectCreated(engine, rv);
+    if (rv) {
+        if (QQmlEngineDebugService *service =
+                QQmlDebugConnector::service<QQmlEngineDebugService>()) {
+            if (!context->isInternal)
+                context->asQQmlContextPrivate()->instances.append(rv);
+            service->objectCreated(engine, rv);
+        }
     }
 
     return rv;
@@ -1133,7 +1135,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 }
 
 /*!
-    \qmlmethod object Component::createObject(Item parent, object properties)
+    \qmlmethod object Component::createObject(QtObject parent, object properties)
 
     Creates and returns an object instance of this component that will have
     the given \a parent and \a properties. The \a properties argument is optional.

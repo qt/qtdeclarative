@@ -135,8 +135,6 @@ public:
     int lastResponseId;
     bool lastResult;
 
-public slots:
-
     void recordResponse(int requestId, bool result)
     {
         lastResponseId = requestId;

@@ -58,10 +58,17 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_NO_QML_DEBUGGER
+#define MOTH_DEBUG_INSTR(F)
+#else
+#define MOTH_DEBUG_INSTR(F) \
+    F(Line, line) \
+    F(Debug, debug)
+#endif
+
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
-    F(Line, line) \
-    F(Debug, debug) \
+    MOTH_DEBUG_INSTR(F) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
@@ -174,6 +181,8 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
+    // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
+
 struct Param {
     // Params are looked up as follows:
     // Constant: 0
@@ -252,6 +261,8 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+
+#ifndef QT_NO_QML_DEBUGGING
     struct instr_line {
         MOTH_INSTR_HEADER
         qint32 lineNumber;
@@ -260,6 +271,8 @@ union Instr
         MOTH_INSTR_HEADER
         qint32 lineNumber;
     };
+#endif // QT_NO_QML_DEBUGGING
+
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;

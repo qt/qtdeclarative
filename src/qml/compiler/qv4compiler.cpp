@@ -43,6 +43,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4alloca_p.h>
+#include <wtf/MathExtras.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -247,8 +248,14 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);
     memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
 
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     ReturnedValue *constantTable = reinterpret_cast<ReturnedValue *>(dataPtr + unit->offsetToConstantTable);
     memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
+#else
+    CompiledData::LEUInt64 *constantTable = reinterpret_cast<CompiledData::LEUInt64 *>(dataPtr + unit->offsetToConstantTable);
+    for (int i = 0; i < constants.count(); ++i)
+        constantTable[i] = constants.at(i);
+#endif
 
     {
         memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
@@ -352,17 +359,20 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
     }
 }
 
-QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset) const
+QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset)
 {
     CompiledData::Unit unit;
     memcpy(unit.magic, CompiledData::magic_str, sizeof(unit.magic));
-    unit.architecture = 0; // ###
     unit.flags = QV4::CompiledData::Unit::IsJavascript;
-    unit.version = 1;
-    unit.functionTableSize = irModule->functions.size();
+    unit.version = QV4_DATA_STRUCTURE_VERSION;
+    unit.qtVersion = QT_VERSION;
+    unit.architectureIndex = registerString(QSysInfo::buildAbi());
+    unit.codeGeneratorIndex = registerString(codeGeneratorName);
+    memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 
     quint32 nextOffset = sizeof(CompiledData::Unit);
 
+    unit.functionTableSize = irModule->functions.size();
     unit.offsetToFunctionTable = nextOffset;
     nextOffset += unit.functionTableSize * sizeof(uint);
 
@@ -375,6 +385,9 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     nextOffset += unit.regexpTableSize * sizeof(CompiledData::RegExp);
 
     unit.constantTableSize = constants.size();
+
+    // Ensure we load constants from well-aligned addresses into for example SSE registers.
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(16, nextOffset));
     unit.offsetToConstantTable = nextOffset;
     nextOffset += unit.constantTableSize * sizeof(ReturnedValue);
 

@@ -137,9 +137,6 @@ public:
 
     IdentifierTable *identifierTable;
 
-    QV4::Debugging::Debugger *debugger;
-    QV4::Profiling::Profiler *profiler;
-
     Object *globalObject;
 
     Function *globalCode;
@@ -382,8 +379,19 @@ public:
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
+#ifdef QT_NO_QML_DEBUGGER
+    QV4::Debugging::Debugger *debugger() const { return nullptr; }
+    QV4::Profiling::Profiler *profiler() const { return nullptr; }
+
+    void setDebugger(Debugging::Debugger *) {}
+    void setProfiler(Profiling::Profiler *) {}
+#else
+    QV4::Debugging::Debugger *debugger() const { return m_debugger; }
+    QV4::Profiling::Profiler *profiler() const { return m_profiler; }
+
     void setDebugger(Debugging::Debugger *debugger);
-    void enableProfiler();
+    void setProfiler(Profiling::Profiler *profiler);
+#endif // QT_NO_QML_DEBUGGER
 
     ExecutionContext *pushGlobalContext();
     void pushContext(Heap::ExecutionContext *context);
@@ -484,6 +492,11 @@ public:
 
 private:
     void failStackLimitCheck(Scope &scope);
+
+#ifndef QT_NO_QML_DEBUGGER
+    QV4::Debugging::Debugger *m_debugger;
+    QV4::Profiling::Profiler *m_profiler;
+#endif
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't

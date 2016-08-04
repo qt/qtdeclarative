@@ -47,15 +47,11 @@ QT_BEGIN_NAMESPACE
 
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
-#ifndef QQML_NO_DEBUG_PROTOCOL
     if (!QQmlEnginePrivate::qml_debugging_enabled
             && printWarning) {
         qDebug("QML debugging is enabled. Only use this in a safe environment.");
     }
     QQmlEnginePrivate::qml_debugging_enabled = true;
-#else
-    Q_UNUSED(printWarning);
-#endif
 }
 
 /*!
@@ -105,11 +101,7 @@ QStringList QQmlDebuggingEnabler::profilerServices()
  */
 void QQmlDebuggingEnabler::setServices(const QStringList &services)
 {
-#ifndef QQML_NO_DEBUG_PROTOCOL
     QQmlDebugConnector::setServices(services);
-#else
-    Q_UNUSED(services);
-#endif
 }
 
 /*!
@@ -172,16 +164,9 @@ bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName,
 bool QQmlDebuggingEnabler::startDebugConnector(const QString &pluginName,
                                                const QVariantHash &configuration)
 {
-#ifndef QQML_NO_DEBUG_PROTOCOL
     QQmlDebugConnector::setPluginKey(pluginName);
     QQmlDebugConnector *connector = QQmlDebugConnector::instance();
-    if (connector)
-        return connector->open(configuration);
-#else
-    Q_UNUSED(pluginName);
-    Q_UNUSED(configuration);
-#endif
-    return false;
+    return connector ? connector->open(configuration) : false;
 }
 
 QT_END_NAMESPACE

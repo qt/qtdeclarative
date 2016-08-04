@@ -42,6 +42,7 @@
 
 #include "qqml.h"
 #include "qqmlbinding_p.h"
+#include "qqmlboundsignal_p.h"
 #include "qqmlcontext.h"
 #include "qqmlcontext_p.h"
 #include "qqmlboundsignal_p.h"
@@ -316,8 +317,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
             if (!property->isQObject())
                 return; // Not an object property
 
-            void *args[] = { &currentObject, 0 };
-            QMetaObject::metacall(currentObject, QMetaObject::ReadProperty, property->coreIndex, args);
+            property->readProperty(currentObject, &currentObject);
             if (!currentObject) return; // No value
 
         }
@@ -858,7 +858,7 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, int bindingIndex,
 }
 
 
-void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, WriteFlags writeFlags)
+void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, QQmlPropertyData::WriteFlags writeFlags)
 {
     Q_ASSERT(binding);
 
@@ -1034,15 +1034,13 @@ QVariant QQmlPropertyPrivate::readValueProperty()
     } else if (core.isQList()) {
 
         QQmlListProperty<QObject> prop;
-        void *args[] = { &prop, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, core.coreIndex, args);
+        core.readProperty(object, &prop);
         return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType, engine));
 
     } else if (core.isQObject()) {
 
         QObject *rv = 0;
-        void *args[] = { &rv, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, core.coreIndex, args);
+        core.readProperty(object, &rv);
         return QVariant::fromValue(rv);
 
     } else {
@@ -1059,7 +1057,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
             value = QVariant(core.propType, (void*)0);
             args[0] = value.data();
         }
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, core.coreIndex, args);
+        core.readPropertyWithArgs(object, args);
         if (core.propType != QMetaType::QVariant && args[0] != value.data())
             return QVariant((QVariant::Type)core.propType, args[0]);
 
@@ -1147,7 +1145,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
     return status;
 }
 
-bool QQmlPropertyPrivate::writeValueProperty(const QVariant &value, WriteFlags flags)
+bool QQmlPropertyPrivate::writeValueProperty(const QVariant &value, QQmlPropertyData::WriteFlags flags)
 {
     return writeValueProperty(object, core, value, effectiveContext(), flags);
 }
@@ -1156,10 +1154,10 @@ bool
 QQmlPropertyPrivate::writeValueProperty(QObject *object,
                                         const QQmlPropertyData &core,
                                         const QVariant &value,
-                                        QQmlContextData *context, WriteFlags flags)
+                                        QQmlContextData *context,QQmlPropertyData::WriteFlags flags)
 {
     // Remove any existing bindings on this property
-    if (!(flags & DontRemoveBinding) && object)
+    if (!(flags & QQmlPropertyData::DontRemoveBinding) && object)
         removeBinding(object, core.encodedIndex());
 
     bool rv = false;
@@ -1189,145 +1187,151 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
 bool QQmlPropertyPrivate::write(QObject *object,
                                         const QQmlPropertyData &property,
                                         const QVariant &value, QQmlContextData *context,
-                                        WriteFlags flags)
+                                        QQmlPropertyData::WriteFlags flags)
 {
-    int coreIdx = property.coreIndex;
-    int status = -1;    //for dbus
+    const int propertyType = property.propType;
+    const int variantType = value.userType();
 
     if (property.isEnum()) {
         QMetaProperty prop = object->metaObject()->property(property.coreIndex);
         QVariant v = value;
         // Enum values come through the script engine as doubles
-        if (value.userType() == QVariant::Double) {
+        if (variantType == QVariant::Double) {
             double integral;
             double fractional = std::modf(value.toDouble(), &integral);
             if (qFuzzyIsNull(fractional))
                 v.convert(QVariant::Int);
         }
-        return writeEnumProperty(prop, coreIdx, object, v, flags);
+        return writeEnumProperty(prop, property.coreIndex, object, v, flags);
     }
 
-    int propertyType = property.propType;
-    int variantType = value.userType();
-
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(context);
+    const bool isUrl = propertyType == QVariant::Url; // handled separately
 
-    if (propertyType == QVariant::Url) {
+    // The cases below are in approximate order of likelyhood:
+    if (propertyType == variantType && !isUrl && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
+        return property.writeProperty(object, const_cast<void *>(value.constData()), flags);
+    } else if (property.isQObject()) {
+        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, variantType);
+        if (valMo.isNull())
+            return false;
+        QObject *o = *static_cast<QObject *const *>(value.constData());
+        QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyType);
 
+        if (o)
+            valMo = o;
+
+        if (QQmlMetaObject::canConvert(valMo, propMo)) {
+            return property.writeProperty(object, &o, flags);
+        } else if (!o && QQmlMetaObject::canConvert(propMo, valMo)) {
+            // In the case of a null QObject, we assign the null if there is
+            // any change that the null variant type could be up or down cast to
+            // the property type.
+            return property.writeProperty(object, &o, flags);
+        } else {
+            return false;
+        }
+    } else if (value.canConvert(propertyType) && !isUrl && variantType != QVariant::String && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
+        // common cases:
+        switch (propertyType) {
+        case QMetaType::Bool: {
+            bool b = value.toBool();
+            return property.writeProperty(object, &b, flags);
+        }
+        case QMetaType::Int: {
+            int i = value.toInt();
+            return property.writeProperty(object, &i, flags);
+        }
+        case QMetaType::Double: {
+            double d = value.toDouble();
+            return property.writeProperty(object, &d, flags);
+        }
+        case QMetaType::Float: {
+            float f = value.toFloat();
+            return property.writeProperty(object, &f, flags);
+        }
+        case QMetaType::QString: {
+            QString s = value.toString();
+            return property.writeProperty(object, &s, flags);
+        }
+        default: { // "fallback":
+            QVariant v = value;
+            v.convert(propertyType);
+            return property.writeProperty(object, const_cast<void *>(v.constData()), flags);
+        }
+        }
+    } else if (propertyType == qMetaTypeId<QVariant>()) {
+        return property.writeProperty(object, const_cast<QVariant *>(&value), flags);
+    } else if (isUrl) {
         QUrl u;
-        bool found = false;
         if (variantType == QVariant::Url) {
             u = value.toUrl();
-            found = true;
         } else if (variantType == QVariant::ByteArray) {
             QString input(QString::fromUtf8(value.toByteArray()));
             // Encoded dir-separators defeat QUrl processing - decode them first
             input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             u = QUrl(input);
-            found = true;
         } else if (variantType == QVariant::String) {
             QString input(value.toString());
             // Encoded dir-separators defeat QUrl processing - decode them first
             input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             u = QUrl(input);
-            found = true;
-        }
-
-        if (!found)
-            return false;
-
-        if (context && u.isRelative() && !u.isEmpty())
-            u = context->resolvedUrl(u);
-        int status = -1;
-        void *argv[] = { &u, 0, &status, &flags };
-        QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, argv);
-
-    } else if (propertyType == qMetaTypeId<QList<QUrl> >()) {
-        QList<QUrl> urlSeq = resolvedUrlSequence(value, context).value<QList<QUrl> >();
-        int status = -1;
-        void *argv[] = { &urlSeq, 0, &status, &flags };
-        QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, argv);
-    } else if (variantType == propertyType) {
-
-        void *a[] = { const_cast<void *>(value.constData()), 0, &status, &flags };
-        QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
-
-    } else if (qMetaTypeId<QVariant>() == propertyType) {
-
-        void *a[] = { const_cast<QVariant *>(&value), 0, &status, &flags };
-        QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
-
-    } else if (property.isQObject()) {
-
-        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, value.userType());
-
-        if (valMo.isNull())
-            return false;
-
-        QObject *o = *(QObject *const *)value.constData();
-        QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyType);
-
-        if (o) valMo = o;
-
-        if (QQmlMetaObject::canConvert(valMo, propMo)) {
-            void *args[] = { &o, 0, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, args);
-        } else if (!o && QQmlMetaObject::canConvert(propMo, valMo)) {
-            // In the case of a null QObject, we assign the null if there is
-            // any change that the null variant type could be up or down cast to
-            // the property type.
-            void *args[] = { &o, 0, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, args);
         } else {
             return false;
         }
 
+        if (context && u.isRelative() && !u.isEmpty())
+            u = context->resolvedUrl(u);
+        return property.writeProperty(object, &u, flags);
+    } else if (propertyType == qMetaTypeId<QList<QUrl>>()) {
+        QList<QUrl> urlSeq = resolvedUrlSequence(value, context).value<QList<QUrl>>();
+        return property.writeProperty(object, &urlSeq, flags);
     } else if (property.isQList()) {
-
         QQmlMetaObject listType;
 
         if (enginePriv) {
             listType = enginePriv->rawMetaObjectForType(enginePriv->listType(property.propType));
         } else {
             QQmlType *type = QQmlMetaType::qmlType(QQmlMetaType::listType(property.propType));
-            if (!type) return false;
+            if (!type)
+                return false;
             listType = type->baseMetaObject();
         }
-        if (listType.isNull()) return false;
+        if (listType.isNull())
+            return false;
 
         QQmlListProperty<void> prop;
-        void *args[] = { &prop, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, coreIdx, args);
+        property.readProperty(object, &prop);
 
-        if (!prop.clear) return false;
+        if (!prop.clear)
+            return false;
 
         prop.clear(&prop);
 
-        if (value.userType() == qMetaTypeId<QQmlListReference>()) {
+        if (variantType == qMetaTypeId<QQmlListReference>()) {
             QQmlListReference qdlr = value.value<QQmlListReference>();
 
             for (int ii = 0; ii < qdlr.count(); ++ii) {
                 QObject *o = qdlr.at(ii);
                 if (o && !QQmlMetaObject::canConvert(o, listType))
-                    o = 0;
-                prop.append(&prop, (void *)o);
+                    o = nullptr;
+                prop.append(&prop, o);
             }
-        } else if (value.userType() == qMetaTypeId<QList<QObject *> >()) {
+        } else if (variantType == qMetaTypeId<QList<QObject *> >()) {
             const QList<QObject *> &list = qvariant_cast<QList<QObject *> >(value);
 
             for (int ii = 0; ii < list.count(); ++ii) {
                 QObject *o = list.at(ii);
                 if (o && !QQmlMetaObject::canConvert(o, listType))
-                    o = 0;
-                prop.append(&prop, (void *)o);
+                    o = nullptr;
+                prop.append(&prop, o);
             }
         } else {
             QObject *o = enginePriv?enginePriv->toQObject(value):QQmlMetaType::toQObject(value);
             if (o && !QQmlMetaObject::canConvert(o, listType))
-                o = 0;
-            prop.append(&prop, (void *)o);
+                o = nullptr;
+            prop.append(&prop, o);
         }
-
     } else {
         Q_ASSERT(variantType != propertyType);
 
@@ -1367,7 +1371,8 @@ bool QQmlPropertyPrivate::write(QObject *object,
                 // successful conversion.
                 Q_ASSERT(v.userType() == propertyType);
                 ok = true;
-            } else if ((uint)propertyType >= QVariant::UserType && variantType == QVariant::String) {
+            } else if (static_cast<uint>(propertyType) >= QVariant::UserType &&
+                       variantType == QVariant::String) {
                 QQmlMetaType::StringConverter con = QQmlMetaType::customStringConverter(propertyType);
                 if (con) {
                     v = con(value.toString());
@@ -1410,8 +1415,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
         }
 
         if (ok) {
-            void *a[] = { const_cast<void *>(v.constData()), 0, &status, &flags};
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
+            return property.writeProperty(object, const_cast<void *>(v.constData()), flags);
         } else {
             return false;
         }
@@ -1427,10 +1431,9 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
         return metaType.metaObject();
     if (engine)
         return engine->rawMetaObjectForType(userType);
-    QQmlType *type = QQmlMetaType::qmlType(userType);
-    if (type)
+    if (QQmlType *type = QQmlMetaType::qmlType(userType))
         return QQmlMetaObject(type->baseMetaObject());
-    return QQmlMetaObject((QObject*)0);
+    return QQmlMetaObject();
 }
 
 /*!
@@ -1512,7 +1515,7 @@ bool QQmlProperty::reset() const
 }
 
 bool QQmlPropertyPrivate::write(const QQmlProperty &that,
-                                        const QVariant &value, WriteFlags flags)
+                                const QVariant &value, QQmlPropertyData::WriteFlags flags)
 {
     if (!that.d)
         return false;

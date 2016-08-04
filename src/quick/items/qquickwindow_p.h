@@ -174,10 +174,10 @@ public:
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
 
     // hover delivery
-    bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
+    bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
-                        Qt::KeyboardModifiers modifiers, bool accepted);
-    bool clearHover();
+                        Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
+    bool clearHover(ulong timestamp = 0);
 
 #ifndef QT_NO_DRAGANDDROP
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);

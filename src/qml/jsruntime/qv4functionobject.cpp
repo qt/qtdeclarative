@@ -283,7 +283,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
         return;
     }
 
-    IR::Module module(scope.engine->debugger != 0);
+    IR::Module module(scope.engine->debugger() != 0);
 
     QQmlJS::RuntimeCodegen cg(scope.engine, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
@@ -535,6 +535,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     ctx.function = f->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.constantTable = ctx.compilationUnit->constants;
     ctx.outer = f->scope();
     ctx.locals = scope.alloc(f->varCount());
     for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
@@ -572,6 +573,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
     ctx.function = f->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.constantTable = ctx.compilationUnit->constants;
     ctx.outer = f->scope();
     ctx.locals = scope.alloc(f->varCount());
     for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)

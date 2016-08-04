@@ -761,7 +761,7 @@ void QQmlNativeDebugServiceImpl::stateAboutToBeChanged(QQmlDebugService::State s
     if (state == Enabled) {
         foreach (NativeDebugger *debugger, m_debuggers) {
             QV4::ExecutionEngine *engine = debugger->engine();
-            if (!engine->debugger)
+            if (!engine->debugger())
                 engine->setDebugger(debugger);
         }
     }

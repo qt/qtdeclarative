@@ -40,6 +40,7 @@
 #include "qsgsoftwareadaptation_p.h"
 #include "qsgsoftwarecontext_p.h"
 #include "qsgsoftwarerenderloop_p.h"
+#include "qsgsoftwarethreadedrenderloop_p.h"
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -73,6 +74,16 @@ QSGContextFactoryInterface::Flags QSGSoftwareAdaptation::flags(const QString &) 
 
 QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
 {
+    static bool threaded = false;
+    static bool envChecked = false;
+    if (!envChecked) {
+        envChecked = true;
+        threaded = qgetenv("QSG_RENDER_LOOP") == QByteArrayLiteral("threaded");
+    }
+
+    if (threaded)
+        return new QSGSoftwareThreadedRenderLoop;
+
     return new QSGSoftwareRenderLoop();
 }
 

@@ -67,8 +67,6 @@ class QQmlProfilerClient : public QQmlDebugClient
 public:
     QQmlProfilerClient(QQmlDebugConnection *connection);
     void setFeatures(quint64 features);
-
-public slots:
     void sendRecordingStatus(bool record, int engineId = -1, quint32 flushInterval = 0);
 
 protected:

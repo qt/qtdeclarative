@@ -444,7 +444,10 @@ private:
     bool tryLoadFromDiskCache();
     void continueLoadFromIR();
     void resolveTypes();
-    QQmlCompileError buildTypeResolutionCaches(QQmlRefPointer<QQmlTypeNameCache> *importCache, QV4::CompiledData::CompilationUnit::ResolvedTypeReferenceMap *resolvedTypeCache) const;
+    QQmlCompileError buildTypeResolutionCaches(
+            QQmlRefPointer<QQmlTypeNameCache> *importCache,
+            QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
+            ) const;
     void compile();
     void rebuildTypeAndPropertyCaches();
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
@@ -460,7 +463,9 @@ private:
     QList<TypeReference> m_compositeSingletons;
 
     // map from name index to resolved type
-    QHash<int, TypeReference> m_resolvedTypes;
+    // While this could be a hash, a map is chosen here to provide a stable
+    // order, which is used to calculating a check-sum on dependent meta-objects.
+    QMap<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compiledData;

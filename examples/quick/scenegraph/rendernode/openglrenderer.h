@@ -45,6 +45,8 @@
 
 #ifndef QT_NO_OPENGL
 
+QT_BEGIN_NAMESPACE
+
 class QQuickItem;
 class QOpenGLShaderProgram;
 class QOpenGLBuffer;
@@ -58,6 +60,8 @@ public:
     void render(const RenderState *state) override;
     void releaseResources() override;
     StateFlags changedStates() const override;
+    RenderingFlags flags() const override;
+    QRectF rect() const override;
 
 private:
     void init();
@@ -68,6 +72,8 @@ private:
     int m_opacityUniform;
     QOpenGLBuffer *m_vbo = nullptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // QT_NO_OPENGL
 

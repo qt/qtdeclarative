@@ -185,7 +185,7 @@ struct MemoryManager::Data
     ~Data()
     {
         for (std::vector<PageAllocation>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i) {
-            Q_V4_PROFILE_DEALLOC(engine, 0, i->size(), Profiling::HeapPage);
+            Q_V4_PROFILE_DEALLOC(engine, i->size(), Profiling::HeapPage);
             i->deallocate();
         }
     }
@@ -239,7 +239,7 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 #ifdef V4_USE_HEAPTRACK
                 heaptrack_report_free(m);
 #endif
-                Q_V4_PROFILE_DEALLOC(engine, m, header->itemSize, Profiling::SmallItem);
+                Q_V4_PROFILE_DEALLOC(engine, header->itemSize, Profiling::SmallItem);
                 ++(*itemsInUse);
             }
             // Relink all free blocks to rewrite references to any released chunk.
@@ -302,10 +302,11 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
             runGC();
 
         // we use malloc for this
-        MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(
-                malloc(Q_V4_PROFILE_ALLOC(engine, size + sizeof(MemoryManager::Data::LargeItem),
-                                          Profiling::LargeItem)));
-        memset(item, 0, size + sizeof(MemoryManager::Data::LargeItem));
+        const size_t totalSize = size + sizeof(MemoryManager::Data::LargeItem);
+        Q_V4_PROFILE_ALLOC(engine, totalSize, Profiling::LargeItem);
+        MemoryManager::Data::LargeItem *item =
+                static_cast<MemoryManager::Data::LargeItem *>(malloc(totalSize));
+        memset(item, 0, totalSize);
         item->next = m_d->largeItems;
         item->size = size;
         m_d->largeItems = item;
@@ -338,9 +339,8 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
             shift = m_d->maxShift;
         std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(m_d->pageSize, allocSize);
-        PageAllocation allocation = PageAllocation::allocate(
-                    Q_V4_PROFILE_ALLOC(engine, allocSize, Profiling::HeapPage),
-                    OSAllocator::JSGCHeapPages);
+        Q_V4_PROFILE_ALLOC(engine, allocSize, Profiling::HeapPage);
+        PageAllocation allocation = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
         m_d->heapChunks.push_back(allocation);
 
         header = reinterpret_cast<Data::ChunkHeader *>(allocation.base());
@@ -507,7 +507,7 @@ void MemoryManager::sweep(bool lastSweep)
 
         // Release that chunk if it could have been spared since the last GC run without any difference.
         if (chunkIsEmpty[i] && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
-            Q_V4_PROFILE_DEALLOC(engine, 0, chunkIter->size(), Profiling::HeapPage);
+            Q_V4_PROFILE_DEALLOC(engine, chunkIter->size(), Profiling::HeapPage);
 #ifdef V4_USE_VALGRIND
             VALGRIND_MEMPOOL_FREE(this, header);
 #endif
@@ -542,8 +542,8 @@ void MemoryManager::sweep(bool lastSweep)
             m->vtable()->destroy(m);
 
         *last = i->next;
-        free(Q_V4_PROFILE_DEALLOC(engine, i, i->size + sizeof(Data::LargeItem),
-                                  Profiling::LargeItem));
+        Q_V4_PROFILE_DEALLOC(engine, i->size + sizeof(Data::LargeItem), Profiling::LargeItem);
+        free(i);
         i = *last;
     }
 

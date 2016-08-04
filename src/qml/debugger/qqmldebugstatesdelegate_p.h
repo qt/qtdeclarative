@@ -57,6 +57,11 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_NO_QML_DEBUGGER
+
+class QQmlDebugStatesDelegate {};
+
+#else
 
 class QQmlContext;
 class QQmlProperty;
@@ -89,6 +94,8 @@ public:
 private:
     Q_DISABLE_COPY(QQmlDebugStatesDelegate)
 };
+
+#endif
 
 QT_END_NAMESPACE
 

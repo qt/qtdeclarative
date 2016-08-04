@@ -149,15 +149,6 @@ public:
 
     static void cleanup();
 
-private slots:
-    void wakeEngine(QJSEngine *engine);
-    void sendMessage(const QString &name, const QByteArray &message);
-    void sendMessages(const QString &name, const QList<QByteArray> &messages);
-    void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
-    void removeThread();
-    void receiveMessage();
-    void invalidPacket();
-
 private:
     friend class QQmlDebugServerThread;
     friend class QQmlDebugServerFactory;
@@ -179,6 +170,13 @@ private:
 
     bool canSendMessage(const QString &name);
     void doSendMessage(const QString &name, const QByteArray &message);
+    void wakeEngine(QJSEngine *engine);
+    void sendMessage(const QString &name, const QByteArray &message);
+    void sendMessages(const QString &name, const QList<QByteArray> &messages);
+    void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
+    void removeThread();
+    void receiveMessage();
+    void invalidPacket();
 
     QQmlDebugServerConnection *m_connection;
     QHash<QString, QQmlDebugService *> m_plugins;
@@ -203,18 +201,22 @@ void QQmlDebugServerImpl::cleanup()
     if (!server)
         return;
 
-    for (QHash<QString, QQmlDebugService *>::ConstIterator i = server->m_plugins.constBegin();
-         i != server->m_plugins.constEnd(); ++i) {
-        server->m_changeServiceStateCalls.ref();
-        QMetaObject::invokeMethod(server, "changeServiceState", Qt::QueuedConnection,
-                                  Q_ARG(QString, i.key()),
-                                  Q_ARG(QQmlDebugService::State,
-                                        QQmlDebugService::NotConnected));
+    {
+        QObject signalSource;
+        for (QHash<QString, QQmlDebugService *>::ConstIterator i = server->m_plugins.constBegin();
+             i != server->m_plugins.constEnd(); ++i) {
+            server->m_changeServiceStateCalls.ref();
+            QString key = i.key();
+            // Process this in the server's thread.
+            connect(&signalSource, &QObject::destroyed, server, [key, server](){
+                server->changeServiceState(key, QQmlDebugService::NotConnected);
+            }, Qt::QueuedConnection);
+        }
     }
 
     // Wait for changeServiceState calls to finish
     // (while running an event loop because some services
-    // might again use slots to execute stuff in the GUI thread)
+    // might again defer execution of stuff in the GUI thread)
     QEventLoop loop;
     while (!server->m_changeServiceStateCalls.testAndSetOrdered(0, 0))
         loop.processEvents();
@@ -293,7 +295,7 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
 
     // Remove the thread immmediately when it finishes, so that we don't have to wait for the
     // event loop to signal that.
-    QObject::connect(&m_thread, SIGNAL(finished()), this, SLOT(removeThread()),
+    QObject::connect(&m_thread, &QThread::finished, this, &QQmlDebugServerImpl::removeThread,
                      Qt::DirectConnection);
     m_thread.setObjectName(QStringLiteral("QQmlDebugServerThread"));
     parseArguments();
@@ -631,15 +633,15 @@ bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *serv
     if (!service || m_plugins.contains(name))
         return false;
 
-    connect(service, SIGNAL(messageToClient(QString,QByteArray)),
-            this, SLOT(sendMessage(QString,QByteArray)));
-    connect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
-            this, SLOT(sendMessages(QString,QList<QByteArray>)));
+    connect(service, &QQmlDebugService::messageToClient,
+            this, &QQmlDebugServerImpl::sendMessage);
+    connect(service, &QQmlDebugService::messagesToClient,
+            this, &QQmlDebugServerImpl::sendMessages);
 
-    connect(service, SIGNAL(attachedToEngine(QJSEngine*)),
-            this, SLOT(wakeEngine(QJSEngine*)), Qt::QueuedConnection);
-    connect(service, SIGNAL(detachedFromEngine(QJSEngine*)),
-            this, SLOT(wakeEngine(QJSEngine*)), Qt::QueuedConnection);
+    connect(service, &QQmlDebugService::attachedToEngine,
+            this, &QQmlDebugServerImpl::wakeEngine, Qt::QueuedConnection);
+    connect(service, &QQmlDebugService::detachedFromEngine,
+            this, &QQmlDebugServerImpl::wakeEngine, Qt::QueuedConnection);
 
     service->setState(QQmlDebugService::Unavailable);
     m_plugins.insert(name, service);
@@ -659,15 +661,15 @@ bool QQmlDebugServerImpl::removeService(const QString &name)
     m_plugins.remove(name);
     service->setState(QQmlDebugService::NotConnected);
 
-    disconnect(service, SIGNAL(detachedFromEngine(QJSEngine*)),
-               this, SLOT(wakeEngine(QJSEngine*)));
-    disconnect(service, SIGNAL(attachedToEngine(QJSEngine*)),
-               this, SLOT(wakeEngine(QJSEngine*)));
+    disconnect(service, &QQmlDebugService::detachedFromEngine,
+               this, &QQmlDebugServerImpl::wakeEngine);
+    disconnect(service, &QQmlDebugService::attachedToEngine,
+               this, &QQmlDebugServerImpl::wakeEngine);
 
-    disconnect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
-               this, SLOT(sendMessages(QString,QList<QByteArray>)));
-    disconnect(service, SIGNAL(messageToClient(QString,QByteArray)),
-               this, SLOT(sendMessage(QString,QByteArray)));
+    disconnect(service, &QQmlDebugService::messagesToClient,
+               this, &QQmlDebugServerImpl::sendMessages);
+    disconnect(service, &QQmlDebugService::messageToClient,
+               this, &QQmlDebugServerImpl::sendMessage);
 
     return true;
 }
@@ -738,8 +740,10 @@ void QQmlDebugServerImpl::EngineCondition::wake()
 void QQmlDebugServerImpl::setDevice(QIODevice *socket)
 {
     m_protocol = new QPacketProtocol(socket, this);
-    QObject::connect(m_protocol, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
-    QObject::connect(m_protocol, SIGNAL(invalidPacket()), this, SLOT(invalidPacket()));
+    QObject::connect(m_protocol, &QPacketProtocol::readyRead,
+                     this, &QQmlDebugServerImpl::receiveMessage);
+    QObject::connect(m_protocol, &QPacketProtocol::invalidPacket,
+                     this, &QQmlDebugServerImpl::invalidPacket);
 
     if (blockingMode())
         m_protocol->waitForReadyRead(-1);

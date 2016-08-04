@@ -46,27 +46,26 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     m_functionCallPos(0), m_memoryPos(0)
 {
     setService(service);
-    engine->enableProfiler();
-    connect(this, SIGNAL(profilingEnabled(quint64)),
-            this, SLOT(forwardEnabled(quint64)));
-    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
-            this, SLOT(forwardEnabledWhileWaiting(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(v4ProfilingEnabled(quint64)),
-            engine->profiler, SLOT(startProfiling(quint64)));
-    connect(this, SIGNAL(v4ProfilingEnabledWhileWaiting(quint64)),
-            engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
-    connect(this, SIGNAL(profilingDisabledWhileWaiting()), engine->profiler, SLOT(stopProfiling()),
+    engine->setProfiler(new QV4::Profiling::Profiler(engine));
+    connect(this, &QQmlAbstractProfilerAdapter::profilingEnabled,
+            this, &QV4ProfilerAdapter::forwardEnabled);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,
+            this, &QV4ProfilerAdapter::forwardEnabledWhileWaiting, Qt::DirectConnection);
+    connect(this, &QV4ProfilerAdapter::v4ProfilingEnabled,
+            engine->profiler(), &QV4::Profiling::Profiler::startProfiling);
+    connect(this, &QV4ProfilerAdapter::v4ProfilingEnabledWhileWaiting,
+            engine->profiler(), &QV4::Profiling::Profiler::startProfiling, Qt::DirectConnection);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabled,
+            engine->profiler(), &QV4::Profiling::Profiler::stopProfiling);
+    connect(this, &QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting,
+            engine->profiler(), &QV4::Profiling::Profiler::stopProfiling,
             Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested(bool)), engine->profiler, SLOT(reportData(bool)));
-    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
-            engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QV4::Profiling::FunctionLocationHash,
-                                               QVector<QV4::Profiling::FunctionCallProperties>,
-                                               QVector<QV4::Profiling::MemoryAllocationProperties>)),
-            this, SLOT(receiveData(QV4::Profiling::FunctionLocationHash,
-                                   QVector<QV4::Profiling::FunctionCallProperties>,
-                                   QVector<QV4::Profiling::MemoryAllocationProperties>)));
+    connect(this, &QQmlAbstractProfilerAdapter::dataRequested,
+            engine->profiler(), &QV4::Profiling::Profiler::reportData);
+    connect(this, &QQmlAbstractProfilerAdapter::referenceTimeKnown,
+            engine->profiler(), &QV4::Profiling::Profiler::setTimer);
+    connect(engine->profiler(), &QV4::Profiling::Profiler::dataReady,
+            this, &QV4ProfilerAdapter::receiveData);
 }
 
 qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages,

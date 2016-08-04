@@ -597,7 +597,7 @@ void QQuickPropertyChanges::changeValue(const QString &name, const QVariant &val
         state()->addEntryToRevertList(action);
         QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(action.property);
         if (oldBinding)
-            oldBinding->setEnabled(false, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+            oldBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
         d->property(name).write(value);
     }
 }
@@ -631,7 +631,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
                             &QQmlPropertyPrivate::get(prop)->core, expression, object(),
                             qmlContext(this));
                 newBinding->setTarget(prop);
-                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
             }
             return;
         }
@@ -644,7 +644,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
         if (hadValue) {
             QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(d->property(name));
             if (oldBinding) {
-                oldBinding->setEnabled(false, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                oldBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
                 state()->changeBindingInRevertList(object(), name, oldBinding);
             }
 
@@ -653,7 +653,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
                         &QQmlPropertyPrivate::get(prop)->core, expression, object(),
                         qmlContext(this));
             newBinding->setTarget(prop);
-            QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+            QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
         } else {
             QQuickStateAction action;
             action.restore = restoreEntryValues();
@@ -679,9 +679,9 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
                 state()->addEntryToRevertList(action);
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(action.property);
                 if (oldBinding)
-                    oldBinding->setEnabled(false, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                    oldBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
-                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
             }
         }
     }

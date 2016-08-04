@@ -42,7 +42,7 @@
 #include <QPainter>
 
 PieSlice::PieSlice(QQuickItem *parent)
-    : QQuickPaintedItem(parent)
+    : QQuickPaintedItem(parent), m_fromAngle(0), m_angleSpan(0)
 {
 }
 

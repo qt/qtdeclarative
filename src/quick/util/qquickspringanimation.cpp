@@ -301,8 +301,8 @@ void QSpringAnimation::updateCurrentTime(int time)
     qreal old_to = to;
 
     QQmlPropertyPrivate::write(target, currentValue,
-                                       QQmlPropertyPrivate::BypassInterceptor |
-                                       QQmlPropertyPrivate::DontRemoveBinding);
+                                       QQmlPropertyData::BypassInterceptor |
+                                       QQmlPropertyData::DontRemoveBinding);
 
     if (stopped && old_to == to) { // do not stop if we got restarted
         if (animationTemplate)

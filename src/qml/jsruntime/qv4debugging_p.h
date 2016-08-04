@@ -59,6 +59,19 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Debugging {
 
+#ifdef QT_NO_QML_DEBUGGER
+
+struct Debugger
+{
+    bool pauseAtNextOpportunity() const { return false; }
+    void maybeBreakAtInstruction() {}
+    void enteringFunction() {}
+    void leavingFunction(const ReturnedValue &) {}
+    void aboutToThrow() {}
+};
+
+#else
+
 class Q_QML_EXPORT Debugger : public QObject
 {
     Q_OBJECT
@@ -71,6 +84,8 @@ public:
     virtual void leavingFunction(const ReturnedValue &retVal) = 0;
     virtual void aboutToThrow() = 0;
 };
+
+#endif // QT_NO_QML_DEBUGGING
 
 } // namespace Debugging
 } // namespace QV4

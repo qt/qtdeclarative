@@ -187,6 +187,12 @@ void QSGSoftwareRenderableNode::update()
         boundingRect = m_handle.spriteNode->rect().toRect();
         break;
     case QSGSoftwareRenderableNode::RenderNode:
+        if (m_handle.renderNode->flags().testFlag(QSGRenderNode::OpaqueRendering) && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.renderNode->rect().toRect();
         break;
     default:
         break;
@@ -244,14 +250,20 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
             rd->m_opacity = m_opacity;
             RenderNodeState rs;
             rs.cr = m_clipRegion;
+
+            const QRect br = m_handle.renderNode->flags().testFlag(QSGRenderNode::BoundedRectRendering)
+                ? m_boundingRect :
+                QRect(0, 0, painter->device()->width(), painter->device()->height());
+
             painter->save();
+            painter->setClipRegion(br, Qt::ReplaceClip);
             m_handle.renderNode->render(&rs);
             painter->restore();
-            const QRect fullRect = QRect(0, 0, painter->device()->width(), painter->device()->height());
-            m_previousDirtyRegion = fullRect;
+
+            m_previousDirtyRegion = QRegion(br);
             m_isDirty = false;
             m_dirtyRegion = QRegion();
-            return fullRect;
+            return br;
         }
     }
 

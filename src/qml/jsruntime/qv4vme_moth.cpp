@@ -142,6 +142,7 @@ Q_QML_EXPORT int qt_v4DebuggerHook(const char *json);
 
 } // extern "C"
 
+#ifndef QT_NO_QML_DEBUGGER
 static int qt_v4BreakpointCount = 0;
 static bool qt_v4IsDebugging = true;
 static bool qt_v4IsStepping = false;
@@ -285,6 +286,7 @@ static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scop
     }
 }
 
+#endif // QT_NO_QML_DEBUGGER
 // End of debugger interface
 
 using namespace QV4;
@@ -400,7 +402,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     QV4::Value **scopes = static_cast<QV4::Value **>(alloca(sizeof(QV4::Value *)*(2 + 2*scopeDepth)));
     {
-        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->data->constants());
+        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->constants);
         // stack gets setup in push instruction
         scopes[1] = 0;
         QV4::Heap::ExecutionContext *scope = context->d();
@@ -904,9 +906,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
 
+#ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
         engine->current->lineNumber = instr.lineNumber;
-        QV4::Debugging::Debugger *debugger = context->engine()->debugger;
+        QV4::Debugging::Debugger *debugger = context->engine()->debugger();
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
@@ -918,6 +921,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         if (qt_v4IsDebugging)
             qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Line)
+#endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadThis)
         VALUE(instr.result) = context->thisObject();
@@ -970,7 +974,7 @@ void **VME::instructionJumpTable()
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
     VME vme;
-    QV4::Debugging::Debugger *debugger = engine->debugger;
+    QV4::Debugging::Debugger *debugger = engine->debugger();
     if (debugger)
         debugger->enteringFunction();
     QV4::ReturnedValue retVal = vme.run(engine, code);

@@ -531,7 +531,7 @@ public:
         Q_ASSERT(d()->object);
         Q_ASSERT(d()->isReference);
         int status = -1;
-        QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding;
+        QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding;
         void *a[] = { &d()->container, 0, &status, &flags };
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }

@@ -148,10 +148,6 @@ public:
         m_component.setData(qml, filename);
     }
 
-signals:
-    void result(int requestId, bool success);
-
-public slots:
     void tryCreateObject(QQmlComponent::Status status)
     {
         switch (status) {
@@ -171,13 +167,16 @@ public slots:
                 else
                     emit result(m_requestId, false);
             }
-            delete this;
+            deleteLater(); // The component might send more signals
             return;
         }
         default:
             break;
         }
     }
+
+signals:
+    void result(int requestId, bool success);
 
 private:
     QQmlComponent m_component;
