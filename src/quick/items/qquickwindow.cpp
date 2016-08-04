@@ -682,10 +682,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *eve
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
                         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << mouseGrabberItem;
-                        auto pointerEventPoint = device->pointerEvent()->pointById(p.id());
-                        pointerEventPoint->setGrabber(q->mouseGrabberItem()); // N.B. the mouseGrabberItem may be different after returning from sendEvent()
-                        return true;
                     }
+                    return event->isAccepted();
                 } else {
                     // no grabber, check if we care about mouse hover
                     // FIXME: this should only happen once, not recursively... I'll ignore it just ignore hover now.
