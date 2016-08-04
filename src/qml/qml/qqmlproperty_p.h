@@ -83,7 +83,7 @@ public:
     QQmlPropertyIndex encodedIndex() const
     { return encodedIndex(core, valueTypeData); }
     static QQmlPropertyIndex encodedIndex(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData)
-    { return QQmlPropertyIndex(core.coreIndex, valueTypeData.coreIndex); }
+    { return QQmlPropertyIndex(core.coreIndex(), valueTypeData.coreIndex()); }
 
     inline QQmlContextData *effectiveContext() const;
 

@@ -252,11 +252,11 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item,
         const UniformData &d = uniformData[shaderType].at(i);
         QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr);
         if (pd && !pd->isFunction()) {
-            if (pd->notifyIndex == -1) {
+            if (pd->notifyIndex() == -1) {
                 qWarning("QQuickOpenGLShaderEffect: property '%s' does not have notification method!", d.name.constData());
             } else {
                 auto *mapper = signalMappers[shaderType].at(i);
-                mapper->setSignalIndex(pd->notifyIndex);
+                mapper->setSignalIndex(pd->notifyIndex());
                 Q_ASSERT(item->metaObject() == itemMetaObject);
                 QObjectPrivate::connectImpl(item, mapper->signalIndex(), item, nullptr, mapper,
                                             Qt::AutoConnection, nullptr, itemMetaObject);
@@ -347,7 +347,7 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
             } else {
                 if (QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr)) {
                     if (!pd->isFunction())
-                        d.propertyIndex = pd->coreIndex;
+                        d.propertyIndex = pd->coreIndex();
                 }
                 const int mappedId = uniformData[shaderType].size() | (shaderType << 16);
                 mapper = new QtPrivate::MappedSlotObject([this, mappedId](){

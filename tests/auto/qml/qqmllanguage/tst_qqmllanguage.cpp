@@ -4128,7 +4128,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
     QVERIFY(subCache);
     QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/0, /*context*/0);
     QVERIFY(pd);
-    QCOMPARE(pd->propType, qMetaTypeId<int>());
+    QCOMPARE(pd->propType(), qMetaTypeId<int>());
 }
 
 void tst_qqmllanguage::propertyCacheInSync()

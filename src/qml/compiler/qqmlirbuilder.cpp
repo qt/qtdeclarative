@@ -1845,20 +1845,20 @@ static QV4::IR::DiscoveredType resolveMetaObjectProperty(
             if (property->isEnum())
                 return QV4::IR::VarType;
 
-            switch (property->propType) {
+            switch (property->propType()) {
             case QMetaType::Bool: result = QV4::IR::BoolType; break;
             case QMetaType::Int: result = QV4::IR::SInt32Type; break;
             case QMetaType::Double: result = QV4::IR::DoubleType; break;
             case QMetaType::QString: result = QV4::IR::StringType; break;
             default:
                 if (property->isQObject()) {
-                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
+                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType())) {
                         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                         newResolver->owner = resolver->owner;
                         initMetaObjectResolver(newResolver, cache);
                         return QV4::IR::DiscoveredType(newResolver);
                     }
-                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType)) {
+                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType())) {
                     if (QQmlPropertyCache *cache = qmlEngine->cache(valueTypeMetaObject)) {
                         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                         newResolver->owner = resolver->owner;
@@ -2053,7 +2053,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
 
         d = property(propName, notInRevision);
         if (d)
-            return cache->signal(d->notifyIndex);
+            return cache->signal(d->notifyIndex());
     }
 
     return 0;

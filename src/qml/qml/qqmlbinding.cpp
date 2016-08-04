@@ -275,7 +275,7 @@ protected:
 
         int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
         if (propertyType == QMetaType::UnknownType)
-            propertyType = pd->propType;
+            propertyType = pd->propType();
 
         if (Q_LIKELY(!isUndefined && !vpd.isValid())) {
             switch (propertyType) {
@@ -304,8 +304,8 @@ protected:
                 break;
             default:
                 if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                    if (vtw->d()->valueType->typeId == pd->propType) {
-                        return vtw->write(m_target.data(), pd->coreIndex);
+                    if (vtw->d()->valueType->typeId == pd->propType()) {
+                        return vtw->write(m_target.data(), pd->coreIndex());
                     }
                 }
                 break;
@@ -331,7 +331,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     QQmlEngine *engine = context()->engine;
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
 
-    int type = valueTypeData.isValid() ? valueTypeData.propType : core.propType;
+    int type = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
@@ -343,7 +343,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         value = QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
-    } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
+    } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
         value = QQmlPropertyPrivate::resolvedUrlSequence(QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
         value = QV8Engine::getV4(v8engine)->toVariant(result, type);
@@ -362,10 +362,10 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(core.coreIndex, result);
+        vmemo->setVMEProperty(core.coreIndex(), result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
-        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex, args);
+        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
@@ -507,8 +507,8 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
         return;
     }
 
-    int coreIndex = core.coreIndex;
-    int valueTypeIndex = valueType ? valueType->coreIndex : -1;
+    int coreIndex = core.coreIndex();
+    int valueTypeIndex = valueType ? valueType->coreIndex() : -1;
     for (bool isAlias = core.isAlias(); isAlias; ) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
@@ -532,7 +532,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         m_target = object;
         isAlias = propertyData->isAlias();
-        coreIndex = propertyData->coreIndex;
+        coreIndex = propertyData->coreIndex();
     }
     m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
 
@@ -554,12 +554,12 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     Q_ASSERT(*propertyData);
 
     if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
-        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType);
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType());
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
         valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
-        valueTypeData->propType = vtProp.userType();
-        valueTypeData->coreIndex = m_targetIndex.valueTypeIndex();
+        valueTypeData->setPropType(vtProp.userType());
+        valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
     }
 }
 
@@ -625,9 +625,9 @@ protected:
 QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property)
 {
     if (property && property->isQObject())
-        return new QObjectPointerBinding(engine, property->propType);
+        return new QObjectPointerBinding(engine, property->propType());
 
-    const int type = (property && property->isFullyResolved()) ? property->propType : QMetaType::UnknownType;
+    const int type = (property && property->isFullyResolved()) ? property->propType() : QMetaType::UnknownType;
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;
