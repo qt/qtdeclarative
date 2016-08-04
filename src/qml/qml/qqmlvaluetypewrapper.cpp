@@ -448,11 +448,10 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             QQmlContextData *context = v4->callingQmlContext();
 
             QQmlPropertyData cacheData;
-            cacheData.setFlags(QQmlPropertyData::IsWritable |
-                               QQmlPropertyData::IsValueTypeVirtual);
+            cacheData.setWritable(true);
+            cacheData.setAsValueTypeVirtual();
             cacheData.propType = writeBackPropertyType;
             cacheData.coreIndex = reference->d()->property;
-            cacheData.valueTypeFlags = 0;
             cacheData.valueTypeCoreIndex = pd->coreIndex;
             cacheData.valueTypePropType = property.userType();
 

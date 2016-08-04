@@ -301,13 +301,12 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
             QMetaProperty vtProp = valueTypeMetaObject->property(idx);
 
-            Q_ASSERT(QQmlPropertyData::flagsForProperty(vtProp) <= QQmlPropertyData::ValueTypeFlagMask);
             Q_ASSERT(vtProp.userType() <= 0x0000FFFF);
             Q_ASSERT(idx <= 0x0000FFFF);
 
             object = currentObject;
             core = *property;
-            core.setFlags(core.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+            core.setAsValueTypeVirtual();
             core.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
             core.valueTypePropType = vtProp.userType();
             core.valueTypeCoreIndex = idx;
@@ -1169,7 +1168,7 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
         writeBack->read(object, core.coreIndex);
 
         QQmlPropertyData data = core;
-        data.setFlags(QQmlPropertyData::Flag(core.valueTypeFlags));
+        data.setFlags(core.valueTypeFlags);
         data.coreIndex = core.valueTypeCoreIndex;
         data.propType = core.valueTypePropType;
 
@@ -1634,7 +1633,7 @@ QQmlPropertyPrivate::saveValueType(const QQmlPropertyData &base,
     QMetaProperty subProp = subObject->property(subIndex);
 
     QQmlPropertyData core = base;
-    core.setFlags(core.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+    core.setAsValueTypeVirtual();
     core.valueTypeFlags = QQmlPropertyData::flagsForProperty(subProp);
     core.valueTypeCoreIndex = subIndex;
     core.valueTypePropType = subProp.userType();

@@ -525,7 +525,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
             const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(pd.propType);
             Q_ASSERT(valueTypeMetaObject);
             QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
-            pd.setFlags(pd.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+            pd.setAsValueTypeVirtual();
             pd.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
             pd.valueTypePropType = vtProp.userType();
             pd.valueTypeCoreIndex = valueTypeIndex;
@@ -553,7 +553,7 @@ QQmlPropertyData QQmlBinding::getPropertyData() const
         const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d.propType);
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
-        d.setFlags(d.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+        d.setAsValueTypeVirtual();
         d.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
         d.valueTypePropType = vtProp.userType();
         d.valueTypeCoreIndex = m_targetIndex.valueTypeIndex();

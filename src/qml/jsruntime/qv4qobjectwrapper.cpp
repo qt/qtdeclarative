@@ -1344,7 +1344,7 @@ static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
         QByteArray methodName = method.name();
         for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
             if (methodName == mo->method(ii).name()) {
-                dummy.setFlags(dummy.getFlags() | QQmlPropertyData::IsOverload);
+                dummy.setOverload(true);
                 dummy.overrideIndexIsProperty = 0;
                 dummy.overrideIndex = ii;
                 return &dummy;
@@ -1865,7 +1865,7 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
         const int methodOffset = mo->methodOffset();
         for (int ii = d()->index - 1; ii >= methodOffset; --ii) {
             if (methodName == mo->method(ii).name()) {
-                method.setFlags(method.getFlags() | QQmlPropertyData::IsOverload);
+                method.setOverload(true);
                 method.overrideIndexIsProperty = 0;
                 method.overrideIndex = ii;
                 break;
