@@ -644,8 +644,6 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
             if (!item->contains(pos))
                 break;
 
-            auto pointerEventPoint = pointerEvent->pointById(p.id());
-            pointerEventPoint->setGrabber(item);
             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << item;
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
 
@@ -657,7 +655,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 touchMouseId = p.id();
                 if (!q->mouseGrabberItem())
                     item->grabMouse();
-                item->grabTouchPoints(QVector<int>() << touchMouseId);
+                auto pointerEventPoint = pointerEvent->pointById(p.id());
+                pointerEventPoint->setGrabber(item);
 
                 if (checkIfDoubleClicked(event->timestamp())) {
                     QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
