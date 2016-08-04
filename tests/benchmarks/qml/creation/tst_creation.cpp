@@ -64,9 +64,6 @@ private slots:
     void itemtree_qml();
     void itemtree_scene_cpp();
 
-    void elements_data();
-    void elements();
-
     void itemtests_qml_data();
     void itemtests_qml();
 
@@ -297,28 +294,6 @@ void tst_creation::itemtree_scene_cpp()
         delete item;
     }
     delete root;
-}
-
-void tst_creation::elements_data()
-{
-    QTest::addColumn<QString>("type");
-
-    QList<QString> types = QQmlMetaType::qmlTypeNames();
-    foreach (QString type, types)
-        QTest::newRow(type.toLatin1()) << type;
-}
-
-void tst_creation::elements()
-{
-    QFETCH(QString, type);
-    QQmlType *t = QQmlMetaType::qmlType(type, 2, 0);
-    if (!t || !t->isCreatable())
-        QSKIP("Non-creatable type");
-
-    QBENCHMARK {
-        QObject *obj = t->create();
-        delete obj;
-    }
 }
 
 void tst_creation::itemtests_qml_data()
