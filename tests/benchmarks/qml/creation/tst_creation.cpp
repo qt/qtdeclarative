@@ -36,8 +36,6 @@
 #include <QQmlComponent>
 #include <private/qqmlmetatype_p.h>
 #include <QDebug>
-#include <QGraphicsScene>
-#include <QGraphicsItem>
 #include <QQuickItem>
 #include <QQmlContext>
 #include <private/qobject_p.h>
