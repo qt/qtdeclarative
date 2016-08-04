@@ -670,9 +670,6 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
 
                 return true;
             }
-            // The event was not accepted but touchMouseId was set.
-            if (touchMouseId != -1)
-                return false;
             // try the next point
 
         // Touch point was there before and moved
