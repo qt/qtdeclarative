@@ -7,7 +7,6 @@ SUBDIRS += \
            holistic \
            qqmlchangeset \
            qqmlcomponent \
-           qqmlimage \
            qqmlmetaproperty \
            librarymetrics_performance \
 #            script \ ### FIXME: doesn't build
