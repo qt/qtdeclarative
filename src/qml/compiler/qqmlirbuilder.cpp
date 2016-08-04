@@ -44,6 +44,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlglobal_p.h>
