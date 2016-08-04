@@ -622,10 +622,14 @@ bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
     return doubleClicked;
 }
 
-bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *event)
+bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent)
 {
     Q_Q(QQuickWindow);
-    auto device = QQuickPointerDevice::touchDevice(event->device());
+    auto device = pointerEvent->device();
+
+    // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
+    Q_ASSERT(pointerEvent->asPointerTouchEvent());
+    QTouchEvent *event = pointerEvent->asPointerTouchEvent()->touchEventForItem(item);
 
     // For each point, check if it is accepted, if not, try the next point.
     // Any of the fingers can become the mouse one.
@@ -640,8 +644,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *eve
             if (!item->contains(pos))
                 break;
 
-            // FIXME: this is a bit backwards, should just have the pointer event passed into the function
-            auto pointerEventPoint = device->pointerEvent()->pointById(p.id());
+            auto pointerEventPoint = pointerEvent->pointById(p.id());
             pointerEventPoint->setGrabber(item);
             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << item;
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
@@ -2285,7 +2288,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
-        if (deliverTouchAsMouse(item, touchEvent.data()))
+        if (deliverTouchAsMouse(item, event))
             eventAccepted = true;
     }
 
