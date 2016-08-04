@@ -121,19 +121,17 @@ namespace {
         ~LockHolder() { lock.unlock(); }
     };
 
-    struct DeferredCall
+    struct Defer
     {
         std::function<void()> callback;
-        ~DeferredCall() { callback(); }
+        template <typename Callback>
+        Defer(Callback &&cb)
+            : callback(cb)
+        {}
+        ~Defer() { callback(); }
+        Defer(const Defer &) = delete;
+        Defer &operator=(const Defer &) = delete;
     };
-
-    template <typename Callback>
-    DeferredCall defer(Callback &&cb)
-    {
-        DeferredCall c;
-        c.callback = std::move(cb);
-        return c;
-    }
 }
 
 #ifndef QT_NO_NETWORK
@@ -2168,7 +2166,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
 
 void QQmlTypeData::done()
 {
-    auto cleanup = defer([this]{
+    Defer cleanup([this]{
         m_document.reset();
         m_typeReferences.clear();
         if (isError())
