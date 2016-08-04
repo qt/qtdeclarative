@@ -50,7 +50,6 @@ private slots:
     void qobject_cpp();
     void qobject_qml();
     void qobject_qmltype();
-    void qobject_alloc();
 
     void qobject_10flat_qml();
     void qobject_10flat_cpp();
@@ -202,35 +201,6 @@ void tst_creation::qobject_qmltype()
 
     QBENCHMARK {
         QObject *obj = t->create();
-        delete obj;
-    }
-}
-
-struct QObjectFakeData {
-    char data[sizeof(QObjectPrivate)];
-};
-
-struct QObjectFake {
-    QObjectFake();
-    virtual ~QObjectFake();
-private:
-    QObjectFakeData *d;
-};
-
-QObjectFake::QObjectFake()
-{
-    d = new QObjectFakeData;
-}
-
-QObjectFake::~QObjectFake()
-{
-    delete d;
-}
-
-void tst_creation::qobject_alloc()
-{
-    QBENCHMARK {
-        QObjectFake *obj = new QObjectFake;
         delete obj;
     }
 }
