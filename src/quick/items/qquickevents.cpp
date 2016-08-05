@@ -624,7 +624,13 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
     for (int i = 0; i < newPointCount; ++i) {
         auto point = m_touchPoints.at(i);
         point->reset(tps.at(i), ev->timestamp());
-        point->setGrabber(grabbers.at(i));
+        if (point->state() == QQuickEventPoint::Pressed) {
+            if (grabbers.at(i))
+                qWarning() << "TouchPointPressed without previous release event" << point;
+            point->setGrabber(nullptr);
+        } else {
+            point->setGrabber(grabbers.at(i));
+        }
     }
     m_pointCount = newPointCount;
     return this;
