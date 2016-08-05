@@ -563,10 +563,14 @@ void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong times
 QQuickPointerEvent::~QQuickPointerEvent()
 {}
 
-QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event) {
+QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
+{
     auto ev = static_cast<QMouseEvent*>(event);
-    m_device = QQuickPointerDevice::genericMouseDevice();
     m_event = ev;
+    if (!event)
+        return this;
+
+    m_device = QQuickPointerDevice::genericMouseDevice();
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
     Qt::TouchPointState state = Qt::TouchPointStationary;
@@ -588,10 +592,14 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event) {
     return this;
 }
 
-QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event) {
+QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
+{
     auto ev = static_cast<QTouchEvent*>(event);
-    m_device = QQuickPointerDevice::touchDevice(ev->device());
     m_event = ev;
+    if (!event)
+        return this;
+
+    m_device = QQuickPointerDevice::touchDevice(ev->device());
     m_button = Qt::NoButton;
     m_pressedButtons = Qt::NoButton;
 

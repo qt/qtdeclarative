@@ -2109,6 +2109,8 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
         Q_ASSERT(false);
     }
 
+    event->reset(nullptr);
+
     --pointerEventRecursionGuard;
 }
 
