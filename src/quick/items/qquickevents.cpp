@@ -707,16 +707,6 @@ bool QQuickPointerTouchEvent::isPressEvent() const
     return static_cast<QTouchEvent*>(m_event)->touchPointStates() & Qt::TouchPointPressed;
 }
 
-QVector<QPointF> QQuickPointerEvent::unacceptedPointScenePositions() const
-{
-    QVector<QPointF> points;
-    for (int i = 0; i < pointCount(); ++i) {
-        if (!point(i)->isAccepted())
-            points << point(i)->scenePos();
-    }
-    return points;
-}
-
 QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() const
 {
     QVector<QPointF> points;
