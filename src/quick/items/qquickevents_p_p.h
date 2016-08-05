@@ -327,7 +327,7 @@ public:
       , m_event(nullptr)
       , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
-      , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier) { }
+    { }
 
     virtual ~QQuickPointerEvent();
 
@@ -368,7 +368,6 @@ protected:
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
     Qt::MouseButtons m_pressedButtons;
-    mutable QMouseEvent m_synthMouseEvent;
 
     Q_DISABLE_COPY(QQuickPointerEvent)
 };
@@ -404,7 +403,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
     Q_OBJECT
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent), m_pointCount(0) { }
+        : QQuickPointerEvent(parent)
+        , m_pointCount(0)
+        , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
+    { }
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -426,6 +428,7 @@ public:
 private:
     int m_pointCount;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
+    mutable QMouseEvent m_synthMouseEvent;
 
     Q_DISABLE_COPY(QQuickPointerTouchEvent)
 };
