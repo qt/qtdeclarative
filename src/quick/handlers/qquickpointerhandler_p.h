@@ -87,6 +87,7 @@ protected:
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setGrab(QQuickEventPoint *point, bool grab);
+    QPointF eventPos(const QQuickEventPoint *point) const;
 
 private:
     QQuickPointerEvent *m_currentEvent;

@@ -71,6 +71,11 @@ void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
         point->setGrabber(nullptr);
 }
 
+QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
+{
+    return (m_target ? m_target->mapFromScene(point->scenePos()) : point->scenePos());
+}
+
 /*!
      \qmlproperty QQuickPointerHandler::enabled
 
