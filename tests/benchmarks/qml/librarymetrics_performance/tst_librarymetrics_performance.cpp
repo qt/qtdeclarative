@@ -41,9 +41,6 @@
 // for the standard set of elements, properties and expressions which
 // are provided in the QtDeclarative library (QtQml and QtQuick).
 
-#define AVERAGE_OVER_N 10
-#define IGNORE_N_OUTLIERS 2
-
 class ModuleApi : public QObject
 {
     Q_OBJECT
@@ -219,123 +216,37 @@ void tst_librarymetrics_performance::compilation()
         }
     }
 
-    QList<qint64> nResults;
-
-    // generate AVERAGE_OVER_N results
-    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
+    QBENCHMARK {
         cleanState(&e);
-        {
-            QElapsedTimer et;
-            et.start();
-            QQmlComponent c(e, this);
-            c.loadUrl(qmlfile); // just compile.
-            qint64 etime = et.nsecsElapsed();
-            nResults.append(etime);
-        }
+        QQmlComponent c(e, this);
+        c.loadUrl(qmlfile); // just compile.
     }
-
-    // sort the list
-    qSort(nResults);
-
-    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
-    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
-        if (!nResults.isEmpty()) nResults.removeLast();
-        if (!nResults.isEmpty()) nResults.removeLast();
-    }
-
-    // now generate an average
-    qint64 totaltime = 0;
-    if (nResults.size() == 0) nResults.append(9999);
-    for (int i = 0; i < nResults.size(); ++i)
-        totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
-
-    // and return it as the result
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 void tst_librarymetrics_performance::instantiation_cached()
 {
     QFETCH(QUrl, qmlfile);
-
     cleanState(&e);
-    QList<qint64> nResults;
 
-    // generate AVERAGE_OVER_N results
-    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
-        QElapsedTimer et;
-        et.start();
+    QBENCHMARK {
         QQmlComponent c(e, this);
         c.loadUrl(qmlfile); // just compile.
         QObject *o = c.create();
-        qint64 etime = et.nsecsElapsed();
-        nResults.append(etime);
         delete o;
     }
-
-    // sort the list
-    qSort(nResults);
-
-    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
-    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
-        if (!nResults.isEmpty()) nResults.removeLast();
-        if (!nResults.isEmpty()) nResults.removeLast();
-    }
-
-    // now generate an average
-    qint64 totaltime = 0;
-    if (nResults.size() == 0) nResults.append(9999);
-    for (int i = 0; i < nResults.size(); ++i)
-        totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
-
-    // and return it as the result
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 void tst_librarymetrics_performance::instantiation()
 {
     QFETCH(QUrl, qmlfile);
 
-    cleanState(&e);
-    QList<qint64> nResults;
-
-    // generate AVERAGE_OVER_N results
-    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
+    QBENCHMARK {
         cleanState(&e);
-        {
-            QElapsedTimer et;
-            et.start();
-            QQmlComponent c(e, this);
-            c.loadUrl(qmlfile); // just compile.
-            QObject *o = c.create();
-            qint64 etime = et.nsecsElapsed();
-            nResults.append(etime);
-            delete o;
-        }
+        QQmlComponent c(e, this);
+        c.loadUrl(qmlfile); // just compile.
+        QObject *o = c.create();
+        delete o;
     }
-
-    // sort the list
-    qSort(nResults);
-
-    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
-    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
-        if (!nResults.isEmpty()) nResults.removeLast();
-        if (!nResults.isEmpty()) nResults.removeLast();
-    }
-
-    // now generate an average
-    qint64 totaltime = 0;
-    if (nResults.size() == 0) nResults.append(9999);
-    for (int i = 0; i < nResults.size(); ++i)
-        totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
-
-    // and return it as the result
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 void tst_librarymetrics_performance::positioners_data()
@@ -356,43 +267,13 @@ void tst_librarymetrics_performance::positioners()
 {
     QFETCH(QUrl, qmlfile);
 
-    cleanState(&e);
-    QList<qint64> nResults;
-
-    // generate AVERAGE_OVER_N results
-    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
+    QBENCHMARK {
         cleanState(&e);
-        {
-            QElapsedTimer et;
-            et.start();
-            QQmlComponent c(e, this);
-            c.loadUrl(qmlfile); // just compile.
-            QObject *o = c.create();
-            qint64 etime = et.nsecsElapsed();
-            nResults.append(etime);
-            delete o;
-        }
+        QQmlComponent c(e, this);
+        c.loadUrl(qmlfile); // just compile.
+        QObject *o = c.create();
+        delete o;
     }
-
-    // sort the list
-    qSort(nResults);
-
-    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
-    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
-        if (!nResults.isEmpty()) nResults.removeLast();
-        if (!nResults.isEmpty()) nResults.removeLast();
-    }
-
-    // now generate an average
-    qint64 totaltime = 0;
-    if (nResults.size() == 0) nResults.append(9999);
-    for (int i = 0; i < nResults.size(); ++i)
-        totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
-
-    // and return it as the result
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
-    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 QTEST_MAIN(tst_librarymetrics_performance)
