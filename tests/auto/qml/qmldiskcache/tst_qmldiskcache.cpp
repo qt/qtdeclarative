@@ -51,6 +51,7 @@ private slots:
     void basicVersionChecks();
     void recompileAfterChange();
     void fileSelectors();
+    void localAliases();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -482,6 +483,49 @@ void tst_qmldiskcache::fileSelectors()
 
         QFile cacheFile(selectedTestFilePath + "c");
         QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
+    }
+}
+
+void tst_qmldiskcache::localAliases()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral("import QtQml 2.0\n"
+                                                  "QtObject {\n"
+                                                  "    id: root\n"
+                                                  "    property int prop: 100\n"
+                                                  "    property alias dummy1: root.prop\n"
+                                                  "    property alias dummy2: root.prop\n"
+                                                  "    property alias dummy3: root.prop\n"
+                                                  "    property alias dummy4: root.prop\n"
+                                                  "    property alias dummy5: root.prop\n"
+                                                  "    property alias foo: root.prop\n"
+                                                  "    property alias bar: root.foo\n"
+                                                   "}");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("bar").toInt(), 100);
+    }
+
+    engine.clearComponentCache();
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("bar").toInt(), 100);
     }
 }
 

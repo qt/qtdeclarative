@@ -567,6 +567,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             const int targetObjectIndex = objectForId(component, alias->targetObjectId);
             Q_ASSERT(targetObjectIndex >= 0);
 
+            if (alias->aliasToLocalAlias)
+                continue;
+
             if (alias->encodedMetaPropertyIndex == -1)
                 continue;
 
