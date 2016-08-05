@@ -2179,7 +2179,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
     int pointCount = event->pointCount();
     for (int i = 0; i < pointCount; ++i) {
         QQuickEventPoint *point = event->point(i);
-        if (point->state() == Qt::TouchPointReleased) {
+        if (point->state() == QQuickEventPoint::Released) {
             int id = point->pointId();
             qCDebug(DBG_TOUCH_TARGET) << "TP" << id << "released";
             point->setGrabber(nullptr);

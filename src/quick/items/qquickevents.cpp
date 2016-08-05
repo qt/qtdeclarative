@@ -509,7 +509,7 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint6
     m_pointId = pointId;
     m_valid = true;
     m_accept = false;
-    m_state = state;
+    m_state = static_cast<QQuickEventPoint::State>(state);
     m_timestamp = timestamp;
     if (state == Qt::TouchPointPressed)
         m_pressTimestamp = timestamp;
@@ -636,7 +636,7 @@ QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
   : QObject(parent), m_pointId(0), m_grabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
-    m_state(Qt::TouchPointReleased), m_valid(false), m_accept(false)
+    m_state(QQuickEventPoint::Released), m_valid(false), m_accept(false)
 {
     Q_UNUSED(m_reserved);
 }
@@ -711,7 +711,7 @@ QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() cons
 {
     QVector<QPointF> points;
     for (int i = 0; i < pointCount(); ++i) {
-        if (!point(i)->isAccepted() && point(i)->state() == Qt::TouchPointPressed)
+        if (!point(i)->isAccepted() && point(i)->state() == QQuickEventPoint::Pressed)
             points << point(i)->scenePos();
     }
     return points;
@@ -823,7 +823,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         if (p->isAccepted())
             continue;
         bool isGrabber = p->grabber() == item;
-        bool isPressInside = p->state() == Qt::TouchPointPressed && item->contains(item->mapFromScene(p->scenePos()));
+        bool isPressInside = p->state() == QQuickEventPoint::Pressed && item->contains(item->mapFromScene(p->scenePos()));
         if (!(isGrabber || isPressInside || isFiltering))
             continue;
 

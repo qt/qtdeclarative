@@ -250,13 +250,22 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QPointF scenePos READ scenePos)
-    Q_PROPERTY(Qt::TouchPointState state READ state)
+    Q_PROPERTY(State state READ state)
     Q_PROPERTY(quint64 pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     Q_PROPERTY(QQuickItem *grabber READ grabber WRITE setGrabber)
 
 public:
+    enum State {
+        Pressed     = Qt::TouchPointPressed,
+        Updated     = Qt::TouchPointMoved,
+        Stationary  = Qt::TouchPointStationary,
+        Released    = Qt::TouchPointReleased
+        // Canceled    = Qt::TouchPointReleased << 1 // 0x10 // TODO maybe
+    };
+    Q_ENUM(State)
+
     QQuickEventPoint(QQuickPointerEvent *parent);
 
     void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp);
@@ -265,7 +274,7 @@ public:
 
     QQuickPointerEvent *pointerEvent() const;
     QPointF scenePos() const { return m_scenePos; }
-    Qt::TouchPointState state() const { return m_state; }
+    State state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
     bool isValid() const { return m_valid; }
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
@@ -280,7 +289,7 @@ private:
     QPointer<QQuickItem> m_grabber;
     ulong m_timestamp;
     ulong m_pressTimestamp;
-    Qt::TouchPointState m_state;
+    State m_state;
     bool m_valid : 1;
     bool m_accept : 1;
     int m_reserved : 30;
