@@ -771,9 +771,6 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
 
     \fn QQuickPointerEvent::pointById(quint64 pointId) const
 */
-
-
-
 QQuickEventPoint *QQuickPointerMouseEvent::pointById(quint64 pointId) const {
     if (m_mousePoint && pointId == m_mousePoint->pointId())
         return m_mousePoint;

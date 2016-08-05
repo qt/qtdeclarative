@@ -362,7 +362,6 @@ public: // helpers for C++ only (during event delivery)
     ulong timestamp() const { return m_event->timestamp(); }
 
 protected:
-
     QQuickPointerDevice *m_device;
     QInputEvent *m_event; // original event as received by QQuickWindow
     Qt::MouseButton m_button;
