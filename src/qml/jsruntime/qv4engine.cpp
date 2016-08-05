@@ -1130,7 +1130,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (value.isUndefined())
         return QVariant();
     if (value.isNull())
-        return QVariant(QMetaType::VoidStar, (void *)0);
+        return QVariant::fromValue(nullptr);
     if (value.isBoolean())
         return value.booleanValue();
     if (value.isInteger())
@@ -1255,6 +1255,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::UnknownType:
             case QMetaType::Void:
                 return QV4::Encode::undefined();
+            case QMetaType::Nullptr:
             case QMetaType::VoidStar:
                 return QV4::Encode::null();
             case QMetaType::Bool:
@@ -1426,6 +1427,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     case QMetaType::UnknownType:
     case QMetaType::Void:
         return QV4::Encode::undefined();
+    case QMetaType::Nullptr:
     case QMetaType::VoidStar:
         return QV4::Encode::null();
     case QMetaType::Bool:

@@ -88,6 +88,7 @@ bool QQmlValueTypeFactoryImpl::isValueType(int idx)
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
             && idx != QMetaType::VoidStar
+            && idx != QMetaType::Nullptr
             && idx != QMetaType::QVariant
             && idx != QMetaType::QLocale) {
         return true;

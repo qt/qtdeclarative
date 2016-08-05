@@ -178,7 +178,7 @@ QJSValue::QJSValue(SpecialValue value)
     : d(0)
 {
     if (value == NullValue)
-        QJSValuePrivate::setVariant(this, QVariant(QMetaType::VoidStar, (void *)0));
+        QJSValuePrivate::setVariant(this, QVariant::fromValue(nullptr));
 }
 
 /*!
@@ -293,7 +293,10 @@ bool QJSValue::isNull() const
     if (val)
         return val->isNull();
     QVariant *variant = QJSValuePrivate::getVariant(this);
-    return variant && variant->userType() == QMetaType::VoidStar;
+    if (!variant)
+        return false;
+    const int type = variant->userType();
+    return type == QMetaType::Nullptr || type == QMetaType::VoidStar;
 }
 
 /*!
@@ -582,7 +585,7 @@ quint32 QJSValue::toUInt() const
     \table
     \header \li Input Type \li Result
     \row    \li Undefined  \li An invalid QVariant.
-    \row    \li Null       \li A QVariant containing a null pointer (QMetaType::VoidStar).
+    \row    \li Null       \li A QVariant containing a null pointer (QMetaType::Nullptr).
     \row    \li Boolean    \li A QVariant containing the value of the boolean.
     \row    \li Number     \li A QVariant containing the value of the number.
     \row    \li String     \li A QVariant containing the value of the string.
@@ -619,7 +622,7 @@ QVariant QJSValue::toVariant() const
         return QVariant(val->asDouble());
     }
     if (val->isNull())
-        return QVariant(QMetaType::VoidStar, 0);
+        return QVariant(QMetaType::Nullptr, 0);
     Q_ASSERT(val->isUndefined());
     return QVariant();
 }

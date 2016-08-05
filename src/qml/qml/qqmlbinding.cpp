@@ -386,7 +386,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const Q
         const char *valueType = 0;
         const char *propertyType = 0;
 
-        if (value.userType() == QMetaType::QObjectStar) {
+        const int userType = value.userType();
+        if (userType == QMetaType::QObjectStar) {
             if (QObject *o = *(QObject *const *)value.constData()) {
                 valueType = o->metaObject()->className();
 
@@ -394,11 +395,11 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core, const Q
                 if (!propertyMetaObject.isNull())
                     propertyType = propertyMetaObject.className();
             }
-        } else if (value.userType() != QVariant::Invalid) {
-            if (value.userType() == QMetaType::VoidStar)
+        } else if (userType != QVariant::Invalid) {
+            if (userType == QMetaType::Nullptr || userType == QMetaType::VoidStar)
                 valueType = "null";
             else
-                valueType = QMetaType::typeName(value.userType());
+                valueType = QMetaType::typeName(userType);
         }
 
         if (!valueType)

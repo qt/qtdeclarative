@@ -1247,6 +1247,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         }
     } else if (actual.isNull()) {
         switch (conversionType) {
+        case QMetaType::Nullptr:
         case QMetaType::VoidStar:
         case QMetaType::QObjectStar:
         case QMetaType::QJsonValue:

@@ -5814,7 +5814,7 @@ void tst_qqmlecmascript::variants()
     QVERIFY(object != 0);
 
     QCOMPARE(object->property("undefinedVariant").type(), QVariant::Invalid);
-    QCOMPARE(int(object->property("nullVariant").type()), int(QMetaType::VoidStar));
+    QCOMPARE(int(object->property("nullVariant").type()), int(QMetaType::Nullptr));
     QCOMPARE(object->property("intVariant").type(), QVariant::Int);
     QCOMPARE(object->property("doubleVariant").type(), QVariant::Double);
 
