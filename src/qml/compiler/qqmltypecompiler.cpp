@@ -1414,7 +1414,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             continue;
 
         QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType);
-        const QMetaObject *mo = pc->firstCppMetaObject();
+        const QMetaObject *mo = pc ? pc->firstCppMetaObject() : 0;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
                 break;
