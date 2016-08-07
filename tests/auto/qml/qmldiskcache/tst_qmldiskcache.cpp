@@ -38,6 +38,9 @@
 #include <QQmlEngine>
 #include <QQmlFileSelector>
 #include <QThread>
+#include <QCryptographicHash>
+#include <QStandardPaths>
+#include <QDirIterator>
 
 class tst_qmldiskcache: public QObject
 {
@@ -52,6 +55,7 @@ private slots:
     void recompileAfterChange();
     void fileSelectors();
     void localAliases();
+    void cacheResources();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -527,6 +531,30 @@ void tst_qmldiskcache::localAliases()
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("bar").toInt(), 100);
     }
+}
+
+void tst_qmldiskcache::cacheResources()
+{
+    const QString cacheDirectory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    QVERIFY(QDir::root().mkpath(cacheDirectory));
+
+    const QString qmlCacheDirectory = cacheDirectory + QLatin1String("/qmlcache/");
+    QVERIFY(QDir(qmlCacheDirectory).removeRecursively());
+    QVERIFY(QDir::root().mkpath(qmlCacheDirectory));
+    QVERIFY(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot).isEmpty());
+
+
+    QQmlEngine engine;
+
+    {
+        CleanlyLoadingComponent component(&engine, QUrl("qrc:/test.qml"));
+        qDebug() << component.errorString();
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 20);
+    }
+
+    QCOMPARE(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files).count(), 1);
 }
 
 QTEST_MAIN(tst_qmldiskcache)

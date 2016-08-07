@@ -56,6 +56,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QScopedValueRollback>
+#include <QStandardPaths>
+#include <QDir>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -321,6 +323,19 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
+static QString cacheFilePath(const QUrl &url)
+{
+    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString localCachePath = localSourcePath + QLatin1Char('c');
+    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
+        return localCachePath;
+    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
+    fileNameHash.addData(localSourcePath.toUtf8());
+    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QDir::root().mkpath(directory);
+    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
+}
+
 bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 {
     errorString->clear();
@@ -330,13 +345,13 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
         return false;
     }
 
-    if (!unitUrl.isLocalFile()) {
+    if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
 
     // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(unitUrl.toLocalFile() + QLatin1Char('c'));
+    QSaveFile cacheFile(cacheFilePath(unitUrl));
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = cacheFile.errorString();
         return false;
@@ -371,7 +386,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
 bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
 {
-    if (!url.isLocalFile()) {
+    if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
@@ -379,10 +394,9 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const QString sourcePath = url.toLocalFile();
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(sourcePath, errorString);
-    if (!mappedUnit) {
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    if (!mappedUnit)
         return false;
-    }
 
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);

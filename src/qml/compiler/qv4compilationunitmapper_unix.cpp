@@ -50,13 +50,11 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QString *errorString)
+CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, const QString &sourcePath, QString *errorString)
 {
     close();
 
-    QByteArray cacheFileName = QFile::encodeName(sourcePath);
-    cacheFileName.append('c');
-    int fd = qt_safe_open(cacheFileName.constData(), O_RDONLY);
+    int fd = qt_safe_open(QFile::encodeName(cacheFileName).constData(), O_RDONLY);
     if (fd == -1) {
         *errorString = qt_error_string(errno);
         return nullptr;

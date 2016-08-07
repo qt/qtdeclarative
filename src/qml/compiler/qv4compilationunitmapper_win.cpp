@@ -49,13 +49,12 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QString *errorString)
+CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, const QString &sourcePath, QString *errorString)
 {
     close();
 
     // ### TODO: fix up file encoding/normalization/unc handling once QFileSystemEntry
     // is exported from QtCore.
-    const QString cacheFileName = sourcePath + QLatin1Char('c');
     HANDLE handle =
 #if defined(Q_OS_WINRT)
         CreateFile2(reinterpret_cast<const wchar_t*>(cacheFileName.constData()),

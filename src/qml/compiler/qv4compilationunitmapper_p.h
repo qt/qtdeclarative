@@ -68,7 +68,7 @@ public:
     CompilationUnitMapper();
     ~CompilationUnitMapper();
 
-    CompiledData::Unit *open(const QString &sourcePath, QString *errorString);
+    CompiledData::Unit *open(const QString &cacheFilePath, const QString &sourcePath, QString *errorString);
     void close();
 
 private:
