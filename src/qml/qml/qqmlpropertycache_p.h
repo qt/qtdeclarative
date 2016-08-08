@@ -177,9 +177,6 @@ public:
     int propType() const { Q_ASSERT(isFullyResolved()); return _propType; }
     void setPropType(int pt) { _propType = pt; }
 
-    const char *propTypeName() const { Q_ASSERT(!isFullyResolved()); return _propTypeName; }
-    void setPropTypeName(const char *ptn) { _propTypeName = ptn; }
-
     int notifyIndex() const { return _notifyIndex; }
     void setNotifyIndex(int idx) { _notifyIndex = idx; }
 
@@ -220,10 +217,7 @@ public:
     void setCoreIndex(int idx) { _coreIndex = idx; }
 
 private:
-    union {
-        int _propType;             // When !NotFullyResolved
-        const char *_propTypeName; // When NotFullyResolved
-    };
+    int _propType;             // When !NotFullyResolved
     union {
         // The notify index is in the range returned by QObjectPrivate::signalIndex().
         // This is different from QMetaMethod::methodIndex().
