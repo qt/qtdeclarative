@@ -1725,7 +1725,11 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
             member->kind = QV4::IR::Member::MemberOfSingletonObject;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
-    } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
+    }
+#if 0
+    else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
+        // Right now the attached property IDs are not stable and cannot be embedded in the
+        // code that is cached on disk.
         QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
         newResolver->owner = resolver->owner;
@@ -1733,6 +1737,7 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         member->setAttachedPropertiesId(type->attachedPropertiesId(qmlEngine));
         return newResolver->resolveMember(qmlEngine, newResolver, member);
     }
+#endif
 
     return result;
 }
