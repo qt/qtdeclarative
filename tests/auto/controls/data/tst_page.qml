@@ -112,6 +112,18 @@ TestCase {
         compare(control.contentItem.width, control.availableWidth)
         compare(control.contentItem.height, control.availableHeight - control.header.height - control.footer.height)
 
+        control.header.visible = false
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight - control.footer.height)
+
+        control.footer.visible = false
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight)
+
         control.destroy()
     }
 }

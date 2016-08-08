@@ -112,8 +112,8 @@ void QQuickPagePrivate::relayout()
 {
     Q_Q(QQuickPage);
     QQuickItem *content = q->contentItem();
-    const qreal hh = header ? header->height() : 0;
-    const qreal fh = footer ? footer->height() : 0;
+    const qreal hh = header && header->isVisible() ? header->height() : 0;
+    const qreal fh = footer && footer->isVisible() ? footer->height() : 0;
 
     content->setY(hh + q->topPadding());
     content->setX(q->leftPadding());
