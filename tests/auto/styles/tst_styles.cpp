@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication app(argc, argv);
 
+#ifndef QT_NO_PROCESS
     int failures = 0;
     int count = sizeof(styles) / sizeof(styles[0]);
 
@@ -67,4 +68,7 @@ int main(int argc, char *argv[])
     }
 
     return failures;
+#else // QT_NO_PROCESS
+    return 0;
+#endif // QT_NO_PROCESS
 }
