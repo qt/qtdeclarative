@@ -125,8 +125,9 @@ public:
 
         // Internal QQmlPropertyCache flags
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
+        unsigned overrideIndexIsProperty: 1;
 
-        unsigned _padding         : 10; // align to 32 bits
+        unsigned _padding         : 9; // align to 32 bits
 
         inline Flags();
         inline bool operator==(const Flags &other) const;
@@ -201,8 +202,8 @@ public:
         _metaObjectOffset = qint16(off);
     }
 
-    bool overrideIndexIsProperty() const { return _overrideIndexIsProperty; }
-    void setOverrideIndexIsProperty(bool onoff) { _overrideIndexIsProperty = onoff; }
+    bool overrideIndexIsProperty() const { return _flags.overrideIndexIsProperty; }
+    void setOverrideIndexIsProperty(bool onoff) { _flags.overrideIndexIsProperty = onoff; }
 
     int overrideIndex() const { return _overrideIndex; }
     void setOverrideIndex(int idx)
@@ -235,10 +236,7 @@ private:
             qint16 _revision;
             qint16 _metaObjectOffset;
 
-            struct { // When !IsValueTypeVirtual
-                uint _overrideIndexIsProperty : 1;
-                signed int _overrideIndex : 31;
-            };
+            signed int _overrideIndex; // When !IsValueTypeVirtual
         };
         struct { // When HasAccessors
             QQmlAccessors *_accessors;
@@ -584,6 +582,7 @@ QQmlPropertyRawData::Flags::Flags()
     , isCloned(false)
     , isConstructor(false)
     , notFullyResolved(false)
+    , overrideIndexIsProperty(false)
     , _padding(0)
 {}
 
@@ -606,7 +605,8 @@ bool QQmlPropertyRawData::Flags::operator==(const QQmlPropertyRawData::Flags &ot
             isOverload == other.isOverload &&
             isCloned == other.isCloned &&
             isConstructor == other.isConstructor &&
-            notFullyResolved == other.notFullyResolved;
+            notFullyResolved == other.notFullyResolved &&
+            overrideIndexIsProperty == other.overrideIndexIsProperty;
 }
 
 void QQmlPropertyRawData::Flags::copyPropertyTypeFlags(QQmlPropertyRawData::Flags from)
@@ -627,7 +627,6 @@ QQmlPropertyData::QQmlPropertyData()
 {
     setPropType(0);
     setNotifyIndex(-1);
-    setOverrideIndexIsProperty(false);
     setOverrideIndex(-1);
     setRevision(0);
     setMetaObjectOffset(-1);
