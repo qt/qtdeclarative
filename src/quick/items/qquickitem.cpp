@@ -66,7 +66,6 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qquickitem_p.h>
-#include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <private/qv4engine_p.h>
@@ -106,37 +105,6 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
                     item->isFocusScope() || !scope ? depth + 1 : depth);
         }
     }
-}
-
-static void QQuickItem_parentNotifier(QObject *o, QQmlNotifier **n)
-{
-    QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
-    *n = &d->parentNotifier;
-}
-
-QML_PRIVATE_ACCESSOR(QQuickItem, QQuickItem *, parent, parentItem, setParentItem)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, x, x, setX)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y, setY)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width, setWidth)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height, setHeight)
-
-static QQmlAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentWrite, QQuickItem_parentNotifier };
-static QQmlAccessors QQuickItem_x = { QQuickItem_xRead, QQuickItem_xWrite, 0 };
-static QQmlAccessors QQuickItem_y = { QQuickItem_yRead, QQuickItem_yWrite, 0 };
-static QQmlAccessors QQuickItem_width = { QQuickItem_widthRead, QQuickItem_widthWrite, 0 };
-static QQmlAccessors QQuickItem_height = { QQuickItem_heightRead, QQuickItem_heightWrite, 0 };
-
-QML_DECLARE_PROPERTIES(QQuickItem) {
-    { QML_PROPERTY_NAME(parent), 0, &QQuickItem_parent },
-    { QML_PROPERTY_NAME(x), 0, &QQuickItem_x },
-    { QML_PROPERTY_NAME(y), 0, &QQuickItem_y },
-    { QML_PROPERTY_NAME(width), 0, &QQuickItem_width },
-    { QML_PROPERTY_NAME(height), 0, &QQuickItem_height }
-};
-
-void QQuickItemPrivate::registerAccessorProperties()
-{
-    QML_DEFINE_PROPERTIES(QQuickItem);
 }
 
 /*!
@@ -3164,8 +3132,6 @@ QQuickItemPrivate::~QQuickItemPrivate()
 void QQuickItemPrivate::init(QQuickItem *parent)
 {
     Q_Q(QQuickItem);
-
-    registerAccessorProperties();
 
     baselineOffset = 0.0;
 

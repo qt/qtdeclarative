@@ -60,8 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlAccessors;
-
 #undef QV4_COUNT_RUNTIME_FUNCTIONS
 
 namespace QV4 {

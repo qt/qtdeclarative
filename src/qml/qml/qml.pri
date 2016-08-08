@@ -20,7 +20,6 @@ SOURCES += \
     $$PWD/qqmlinfo.cpp \
     $$PWD/qqmlerror.cpp \
     $$PWD/qqmlvaluetype.cpp \
-    $$PWD/qqmlaccessors.cpp \
     $$PWD/qqmlxmlhttprequest.cpp \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
@@ -87,7 +86,6 @@ HEADERS += \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlerror.h \
     $$PWD/qqmlvaluetype_p.h \
-    $$PWD/qqmlaccessors_p.h \
     $$PWD/qqmlxmlhttprequest_p.h \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \

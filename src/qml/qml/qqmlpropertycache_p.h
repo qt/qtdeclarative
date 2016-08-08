@@ -62,7 +62,6 @@
 #include <QtCore/qvector.h>
 
 #include <private/qv4value_p.h>
-#include <private/qqmlaccessors_p.h>
 
 #include <limits>
 
@@ -73,7 +72,6 @@ class QMetaProperty;
 class QQmlEngine;
 class QJSEngine;
 class QQmlPropertyData;
-class QQmlAccessors;
 class QMetaObjectBuilder;
 class QQmlPropertyCacheMethodArguments;
 class QQmlVMEMetaObject;
@@ -159,7 +157,6 @@ public:
     bool isFinal() const { return _flags.isFinal; }
     bool isOverridden() const { return _flags.isOverridden; }
     bool isDirect() const { return _flags.isDirect; }
-    bool hasAccessors() const { return accessors() != nullptr; }
     bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return _flags.type == Flags::FunctionType; }
     bool isQObject() const { return _flags.type == Flags::QObjectDerivedType; }
@@ -239,8 +236,6 @@ public:
         Q_ASSERT(off <= std::numeric_limits<qint16>::max());
         _metaObjectOffset = qint16(off);
     }
-
-    QQmlAccessors *accessors() const { return nullptr; } // TODO: remove in subsequent patch
 
     StaticMetaCallFunction staticMetaCallFunction() const { return _staticMetaCallFunction; }
     void trySetStaticMetaCallFunction(StaticMetaCallFunction f, unsigned relativePropertyIndex)
