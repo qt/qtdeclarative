@@ -259,7 +259,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
             result->append(QString(decpt - result->length(), zero));
         }
 
-        if (sign)
+        if (sign && num)
             result->prepend(QLatin1Char('-'));
 
         return;
