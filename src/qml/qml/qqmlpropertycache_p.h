@@ -108,7 +108,6 @@ public:
         unsigned isFinal          : 1; // Has FINAL flag
         unsigned isOverridden     : 1; // Is overridden by a extension property
         unsigned isDirect         : 1; // Exists on a C++ QMetaObject
-        unsigned hasAccessors     : 1; // Has property accessors
 
         unsigned type             : 4; // stores an entry of Types
 
@@ -127,7 +126,7 @@ public:
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
         unsigned overrideIndexIsProperty: 1;
 
-        unsigned _padding         : 9; // align to 32 bits
+        unsigned _padding         : 10; // align to 32 bits
 
         inline Flags();
         inline bool operator==(const Flags &other) const;
@@ -147,7 +146,7 @@ public:
     bool isFinal() const { return _flags.isFinal; }
     bool isOverridden() const { return _flags.isOverridden; }
     bool isDirect() const { return _flags.isDirect; }
-    bool hasAccessors() const { return _flags.hasAccessors; }
+    bool hasAccessors() const { return accessors() != nullptr; }
     bool isFunction() const { return _flags.type == Flags::FunctionType; }
     bool isQObject() const { return _flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return _flags.type == Flags::EnumType; }
@@ -576,7 +575,6 @@ QQmlPropertyRawData::Flags::Flags()
     , isFinal(false)
     , isOverridden(false)
     , isDirect(false)
-    , hasAccessors(false)
     , type(OtherType)
     , isVMEFunction(false)
     , hasArguments(false)
@@ -600,7 +598,6 @@ bool QQmlPropertyRawData::Flags::operator==(const QQmlPropertyRawData::Flags &ot
             isAlias == other.isAlias &&
             isFinal == other.isFinal &&
             isOverridden == other.isOverridden &&
-            hasAccessors == other.hasAccessors &&
             type == other.type &&
             isVMEFunction == other.isVMEFunction &&
             hasArguments == other.hasArguments &&
