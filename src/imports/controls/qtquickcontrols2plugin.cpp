@@ -152,16 +152,16 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/images")));
 
     const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterType<QQuickBusyIndicatorRing>(import, 2, 1, "BusyRing");
-    qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 2, 1, "BusyRingAnimator");
-    qmlRegisterType<QQuickProgressStrip>(import, 2, 1, "ProgressStrip");
-    qmlRegisterType<QQuickProgressAnimator>(import, 2, 1, "ProgressStripAnimator");
-    qmlRegisterType<QQuickDialRing>(import, 2, 1, "DialRing");
+    qmlRegisterType<QQuickBusyIndicatorRing>(import, 2, 0, "BusyRing");
+    qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 2, 0, "BusyRingAnimator");
+    qmlRegisterType<QQuickProgressStrip>(import, 2, 0, "ProgressStrip");
+    qmlRegisterType<QQuickProgressAnimator>(import, 2, 0, "ProgressStripAnimator");
+    qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 1, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 1, "RadioIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 1, "SwitchIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QT_END_NAMESPACE

@@ -28,6 +28,7 @@
 /tests/auto/qquickstyle/tst_qquickstyle
 /tests/auto/qquickstyleselector/tst_qquickstyleselector
 /tests/auto/qquickuniversalstyle/tst_qquickuniversalstyle
+/tests/auto/revisions/tst_revisions
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
 /tests/auto/styles/tst_styles

@@ -78,7 +78,7 @@ QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
-    qmlRegisterUncreatableType<QQuickMaterialStyle, 1>(uri, 2, 1, "Material", tr("Material is an attached property"));
+    qmlRegisterRevision<QQuickMaterialStyle, 1>(uri, 2, 1);
 }
 
 void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -86,18 +86,19 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 1, "PaddedRectangle");
-    qmlRegisterType<QQuickMaterialProgressRing>(import, 2, 1, "ProgressRing");
-    qmlRegisterType<QQuickMaterialProgressStrip>(import, 2, 1, "ProgressStrip");
-    qmlRegisterType<QQuickMaterialRingAnimator>(import, 2, 1, "RingAnimator");
-    qmlRegisterType<QQuickMaterialRipple>(import, 2, 1, "Ripple");
-    qmlRegisterType<QQuickMaterialStripAnimator>(import, 2, 1, "StripAnimator");
-    qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 1, "BoxShadow");
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 1, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 1, "ElevationEffect");
-    qmlRegisterType(typeUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 1, "RectangularGlow");
-    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 1, "SliderHandle");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 1, "SwitchIndicator");
+    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
+    qmlRegisterRevision<QQuickPaddedRectangle, 1>(import, 2, 1);
+    qmlRegisterType<QQuickMaterialProgressRing>(import, 2, 0, "ProgressRing");
+    qmlRegisterType<QQuickMaterialProgressStrip>(import, 2, 0, "ProgressStrip");
+    qmlRegisterType<QQuickMaterialRingAnimator>(import, 2, 0, "RingAnimator");
+    qmlRegisterType<QQuickMaterialRipple>(import, 2, 0, "Ripple");
+    qmlRegisterType<QQuickMaterialStripAnimator>(import, 2, 0, "StripAnimator");
+    qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 0, "ElevationEffect");
+    qmlRegisterType(typeUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 0, "RectangularGlow");
+    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");
+    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QString QtQuickControls2MaterialStylePlugin::name() const
