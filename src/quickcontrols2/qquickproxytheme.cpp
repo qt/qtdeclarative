@@ -137,11 +137,11 @@ QPixmap QQuickProxyTheme::standardPixmap(QPlatformTheme::StandardPixmap sp, cons
     return QPlatformTheme::standardPixmap(sp, size);
 }
 
-QPixmap QQuickProxyTheme::fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size, QPlatformTheme::IconOptions iconOptions) const
+QIcon QQuickProxyTheme::fileIcon(const QFileInfo &fileInfo, QPlatformTheme::IconOptions iconOptions) const
 {
     if (m_theme)
-        return m_theme->fileIconPixmap(fileInfo, size, iconOptions);
-    return QPlatformTheme::fileIconPixmap(fileInfo, size, iconOptions);
+        return m_theme->fileIcon(fileInfo, iconOptions);
+    return QPlatformTheme::fileIcon(fileInfo, iconOptions);
 }
 
 QIconEngine *QQuickProxyTheme::createIconEngine(const QString &iconName) const

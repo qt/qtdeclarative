@@ -80,8 +80,7 @@ public:
     QVariant themeHint(ThemeHint hint) const override;
 
     QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
-    QPixmap fileIconPixmap(const QFileInfo &fileInfo, const QSizeF &size,
-                                   QPlatformTheme::IconOptions iconOptions = 0) const override;
+    QIcon fileIcon(const QFileInfo &fileInfo, QPlatformTheme::IconOptions iconOptions = 0) const override;
 
     QIconEngine *createIconEngine(const QString &iconName) const override;
 
