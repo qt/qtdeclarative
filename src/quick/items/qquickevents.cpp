@@ -40,12 +40,14 @@
 #include "qquickevents_p_p.h"
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <private/qdebug_p.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
+Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
 
 /*!
     \qmltype KeyEvent
@@ -525,14 +527,40 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint6
     m_velocity = velocity;
 }
 
-QQuickItem *QQuickEventPoint::grabber() const
+QObject *QQuickEventPoint::grabber() const
 {
     return m_grabber.data();
 }
 
-void QQuickEventPoint::setGrabber(QQuickItem *grabber)
+void QQuickEventPoint::setGrabber(QObject *grabber)
 {
-    m_grabber = QPointer<QQuickItem>(grabber);
+    qCDebug(lcPointerHandlerDispatch) << this << grabber;
+    m_grabber = QPointer<QObject>(grabber);
+    m_grabberIsHandler = (qmlobject_cast<QQuickPointerHandler *>(grabber) != nullptr);
+}
+
+QQuickItem *QQuickEventPoint::itemGrabber() const
+{
+    return (m_grabberIsHandler ? nullptr : static_cast<QQuickItem *>(m_grabber.data()));
+}
+
+void QQuickEventPoint::setItemGrabber(QQuickItem *grabber)
+{
+    qCDebug(lcPointerHandlerDispatch) << this << grabber;
+    m_grabber = QPointer<QObject>(grabber);
+    m_grabberIsHandler = false;
+}
+
+QQuickPointerHandler *QQuickEventPoint::pointerHandlerGrabber() const
+{
+    return (m_grabberIsHandler ? static_cast<QQuickPointerHandler *>(m_grabber.data()) : nullptr);
+}
+
+void QQuickEventPoint::setPointerHandlerGrabber(QQuickPointerHandler *grabber)
+{
+    qCDebug(lcPointerHandlerDispatch) << this << grabber;
+    m_grabber = QPointer<QObject>(grabber);
+    m_grabberIsHandler = true;
 }
 
 void QQuickEventPoint::setAccepted(bool accepted)
@@ -620,11 +648,11 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         m_touchPoints.insert(i, new QQuickEventTouchPoint(this));
 
     // Make sure the grabbers are right from one event to the next
-    QVector<QQuickItem*> grabbers;
+    QVector<QObject*> grabbers;
     // Copy all grabbers, because the order of points might have changed in the event.
     // The ID is all that we can rely on (release might remove the first point etc).
     for (int i = 0; i < newPointCount; ++i) {
-        QQuickItem *grabber = nullptr;
+        QObject *grabber = nullptr;
         if (auto point = pointById(tps.at(i).id()))
             grabber = point->grabber();
         grabbers.append(grabber);
@@ -636,7 +664,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         if (point->state() == QQuickEventPoint::Pressed) {
             if (grabbers.at(i))
                 qWarning() << "TouchPointPressed without previous release event" << point;
-            point->setGrabber(nullptr);
+            point->setItemGrabber(nullptr);
         } else {
             point->setGrabber(grabbers.at(i));
         }
@@ -659,7 +687,7 @@ QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
   : QObject(parent), m_pointId(0), m_grabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
-    m_state(QQuickEventPoint::Released), m_valid(false), m_accept(false)
+    m_state(QQuickEventPoint::Released), m_valid(false), m_accept(false), m_grabberIsHandler(false)
 {
     Q_UNUSED(m_reserved);
 }
@@ -680,16 +708,16 @@ QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) cons
     return event;
 }
 
-QVector<QQuickItem *> QQuickPointerMouseEvent::grabbers() const
+QVector<QObject *> QQuickPointerMouseEvent::grabbers() const
 {
-    QVector<QQuickItem *> result;
-    if (QQuickItem *grabber = m_mousePoint->grabber())
+    QVector<QObject *> result;
+    if (QObject *grabber = m_mousePoint->grabber())
         result << grabber;
     return result;
 }
 
 void QQuickPointerMouseEvent::clearGrabbers() const {
-    m_mousePoint->setGrabber(nullptr);
+    m_mousePoint->setItemGrabber(nullptr);
 }
 
 bool QQuickPointerMouseEvent::isPressEvent() const
@@ -707,12 +735,12 @@ bool QQuickPointerTouchEvent::allPointsAccepted() const {
     return true;
 }
 
-QVector<QQuickItem *> QQuickPointerTouchEvent::grabbers() const
+QVector<QObject *> QQuickPointerTouchEvent::grabbers() const
 {
-    QVector<QQuickItem *> result;
+    QVector<QObject *> result;
     for (int i = 0; i < m_pointCount; ++i) {
         auto point = m_touchPoints.at(i);
-        if (QQuickItem *grabber = point->grabber()) {
+        if (QObject *grabber = point->grabber()) {
             if (!result.contains(grabber))
                 result << grabber;
         }

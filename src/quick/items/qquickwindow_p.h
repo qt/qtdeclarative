@@ -141,7 +141,7 @@ public:
     bool deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void setMouseGrabber(QQuickItem *grabber);
-    void grabTouchPoints(QQuickItem *grabber, const QVector<int> &ids);
+    void grabTouchPoints(QObject *grabber, const QVector<int> &ids);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
