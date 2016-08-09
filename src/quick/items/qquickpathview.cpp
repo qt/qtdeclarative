@@ -191,7 +191,8 @@ void QQuickPathView::initItem(int index, QObject *object)
             att->m_view = this;
             qreal percent = d->positionOfIndex(index);
             if (percent < 1.0 && d->path) {
-                foreach (const QString &attr, d->path->attributes())
+                const auto attributes = d->path->attributes();
+                for (const QString &attr : attributes)
                     att->setValue(attr.toUtf8(), d->path->attributeAt(attr, percent));
                 item->setZ(d->requestedZ);
             }
@@ -230,7 +231,8 @@ QQmlOpenMetaObjectType *QQuickPathViewPrivate::attachedType()
         // pre-create one metatype to share with all attached objects
         attType = new QQmlOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject, qmlEngine(q));
         if (path) {
-            foreach (const QString &attr, path->attributes())
+            const auto attributes = path->attributes();
+            for (const QString &attr : attributes)
                 attType->createProperty(attr.toUtf8());
         }
     }
@@ -431,7 +433,8 @@ void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
         if (qFuzzyCompare(att->m_percent, percent))
             return;
         att->m_percent = percent;
-        foreach (const QString &attr, path->attributes())
+        const auto attributes = path->attributes();
+        for (const QString &attr : attributes)
             att->setValue(attr.toUtf8(), path->attributeAt(attr, percent));
         att->setOnPath(percent < 1.0);
     }
@@ -2182,7 +2185,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     int moveOffset = 0;
     bool currentChanged = false;
     bool changedOffset = false;
-    foreach (const QQmlChangeSet::Change &r, changeSet.removes()) {
+    for (const QQmlChangeSet::Change &r : changeSet.removes()) {
         if (moveId == -1 && d->currentIndex >= r.index + r.count) {
             d->currentIndex -= r.count;
             currentChanged = true;
@@ -2208,7 +2211,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         }
         d->modelCount -= r.count;
     }
-    foreach (const QQmlChangeSet::Change &i, changeSet.inserts()) {
+    for (const QQmlChangeSet::Change &i : changeSet.inserts()) {
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;

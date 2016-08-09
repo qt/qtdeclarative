@@ -145,10 +145,10 @@ void QQuickDesignerCustomObjectData::keepBindingFromGettingDeleted(QObject *obje
 
 void QQuickDesignerCustomObjectData::populateResetHashes()
 {
-    QQuickDesignerSupport::PropertyNameList propertyNameList =
+    const QQuickDesignerSupport::PropertyNameList propertyNameList =
             QQuickDesignerSupportProperties::propertyNameListForWritableProperties(object());
 
-    Q_FOREACH (const QQuickDesignerSupport::PropertyName &propertyName, propertyNameList) {
+    for (const QQuickDesignerSupport::PropertyName &propertyName : propertyNameList) {
         QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
         QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));

@@ -266,7 +266,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
 public:
     explicit QQuickSpriteEngine(QObject *parent = 0);
-    QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent=0);
+    QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = 0);
     ~QQuickSpriteEngine();
     QQmlListProperty<QQuickSprite> sprites()
     {

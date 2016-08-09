@@ -181,7 +181,7 @@ void QQuickItemViewChangeSet::applyChanges(const QQmlChangeSet &changeSet)
     int moveId = -1;
     int moveOffset = 0;
 
-    foreach (const QQmlChangeSet::Change &r, changeSet.removes()) {
+    for (const QQmlChangeSet::Change &r : changeSet.removes()) {
         itemCount -= r.count;
         if (moveId == -1 && newCurrentIndex >= r.index + r.count) {
             newCurrentIndex -= r.count;
@@ -200,7 +200,7 @@ void QQuickItemViewChangeSet::applyChanges(const QQmlChangeSet &changeSet)
             currentChanged = true;
         }
     }
-    foreach (const QQmlChangeSet::Change &i, changeSet.inserts()) {
+    for (const QQmlChangeSet::Change &i : changeSet.inserts()) {
         if (moveId == -1) {
             if (itemCount && newCurrentIndex >= i.index) {
                 newCurrentIndex += i.count;

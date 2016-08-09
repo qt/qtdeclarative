@@ -160,9 +160,9 @@ int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
 
 static void unignoredChildren(QQuickItem *item, QList<QQuickItem *> *items, bool paintOrder)
 {
-    QList<QQuickItem*> childItems = paintOrder ? QQuickItemPrivate::get(item)->paintOrderChildItems()
+    const QList<QQuickItem*> childItems = paintOrder ? QQuickItemPrivate::get(item)->paintOrderChildItems()
                                                : item->childItems();
-    Q_FOREACH (QQuickItem *child, childItems) {
+    for (QQuickItem *child : childItems) {
         if (QQuickItemPrivate::get(child)->isAccessible) {
             items->append(child);
         } else {

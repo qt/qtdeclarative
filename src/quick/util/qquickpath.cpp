@@ -358,7 +358,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
 
     bool usesPercent = false;
     int index = 0;
-    foreach (QQuickPathElement *pathElement, d->_pathElements) {
+    for (QQuickPathElement *pathElement : qAsConst(d->_pathElements)) {
         if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement)) {
             QQuickPathData data;
             data.index = index;
@@ -432,17 +432,17 @@ void QQuickPath::classBegin()
 
 void QQuickPath::disconnectPathElements()
 {
-    Q_D(QQuickPath);
+    Q_D(const QQuickPath);
 
-    foreach (QQuickPathElement *pathElement, d->_pathElements)
+    for (QQuickPathElement *pathElement : d->_pathElements)
         disconnect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
 }
 
 void QQuickPath::connectPathElements()
 {
-    Q_D(QQuickPath);
+    Q_D(const QQuickPath);
 
-    foreach (QQuickPathElement *pathElement, d->_pathElements)
+    for (QQuickPathElement *pathElement : d->_pathElements)
         connect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
 }
 
@@ -453,7 +453,7 @@ void QQuickPath::gatherAttributes()
     QSet<QString> attributes;
 
     // First gather up all the attributes
-    foreach (QQuickPathElement *pathElement, d->_pathElements) {
+    for (QQuickPathElement *pathElement : qAsConst(d->_pathElements)) {
         if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement))
             d->_pathCurves.append(curve);
         else if (QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement))
@@ -488,7 +488,7 @@ QStringList QQuickPath::attributes() const
         QSet<QString> attrs;
 
         // First gather up all the attributes
-        foreach (QQuickPathElement *pathElement, d->_pathElements) {
+        for (QQuickPathElement *pathElement : d->_pathElements) {
             if (QQuickPathAttribute *attribute =
                 qobject_cast<QQuickPathAttribute *>(pathElement))
                 attrs.insert(attribute->name());

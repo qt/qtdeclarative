@@ -236,7 +236,8 @@ bool QQuickDesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toIte
 
 bool QQuickDesignerSupport::areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
-    Q_FOREACH (QQuickItem *childItem, fromItem->childItems()) {
+    const auto childItems = fromItem->childItems();
+    for (QQuickItem *childItem : childItems) {
         if (childItem) {
             if (isAnchoredTo(childItem, toItem))
                 return true;
@@ -392,10 +393,10 @@ void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuic
 QList<QObject*> QQuickDesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
-    QList<QQuickState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
+    const QList<QQuickState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
 
     objectList.reserve(stateList.size());
-    Q_FOREACH (QQuickState* state, stateList)
+    for (QQuickState* state : stateList)
         objectList.append(state);
 
     return objectList;

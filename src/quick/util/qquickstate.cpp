@@ -334,7 +334,7 @@ QQuickStatePrivate::generateActionList() const
             }
     }
 
-    foreach(QQuickStateOperation *op, operations)
+    for (QQuickStateOperation *op : operations)
         applyList << op->actions();
 
     inState = false;
@@ -676,7 +676,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
 #ifndef QT_NO_DEBUG_STREAM
     // Output for debugging
     if (stateChangeDebug()) {
-        foreach(const QQuickStateAction &action, applyList) {
+        for (const QQuickStateAction &action : qAsConst(applyList)) {
             if (action.event)
                 qWarning() << "    QQuickStateAction event:" << action.event->type();
             else

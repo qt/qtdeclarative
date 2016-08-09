@@ -4106,7 +4106,8 @@ bool QQuickItem::childMouseEventFilter(QQuickItem *item, QEvent *event)
   */
 void QQuickItem::windowDeactivateEvent()
 {
-    foreach (QQuickItem* item, childItems()) {
+    const auto children = childItems();
+    for (QQuickItem* item : children) {
         item->windowDeactivateEvent();
     }
 }
