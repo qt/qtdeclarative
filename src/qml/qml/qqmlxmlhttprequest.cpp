@@ -1016,8 +1016,8 @@ public:
     ReturnedValue abort(Object *thisObject, QQmlContextData *context);
 
     void addHeader(const QString &, const QString &);
-    QString header(const QString &name);
-    QString headers();
+    QString header(const QString &name) const;
+    QString headers() const;
 
     QString responseBody();
     const QByteArray & rawResponseBody() const;
@@ -1144,7 +1144,7 @@ void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
     }
 }
 
-QString QQmlXMLHttpRequest::header(const QString &name)
+QString QQmlXMLHttpRequest::header(const QString &name) const
 {
     QByteArray utfname = name.toLower().toUtf8();
 
@@ -1155,7 +1155,7 @@ QString QQmlXMLHttpRequest::header(const QString &name)
     return QString();
 }
 
-QString QQmlXMLHttpRequest::headers()
+QString QQmlXMLHttpRequest::headers() const
 {
     QString ret;
 
