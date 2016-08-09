@@ -49,6 +49,7 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
+#include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
 #include <QSaveFile>
@@ -376,56 +377,15 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     }
 
     const QString sourcePath = url.toLocalFile();
-    QScopedPointer<QFile> cacheFile(new QFile(sourcePath + QLatin1Char('c')));
+    QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    if (!cacheFile->open(QIODevice::ReadOnly)) {
-        *errorString = cacheFile->errorString();
-        return false;
-    }
-
-    {
-        CompiledData::Unit header;
-        qint64 bytesRead = cacheFile->read(reinterpret_cast<char *>(&header), sizeof(header));
-
-        if (bytesRead != sizeof(header)) {
-            *errorString = QStringLiteral("File too small for the header fields");
-            return false;
-        }
-
-        if (strncmp(header.magic, CompiledData::magic_str, sizeof(header.magic))) {
-            *errorString = QStringLiteral("Magic bytes in the header do not match");
-            return false;
-        }
-
-        if (header.version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
-            *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(header.version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
-            return false;
-        }
-
-        if (header.qtVersion != quint32(QT_VERSION)) {
-            *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(header.qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
-            return false;
-        }
-
-        {
-            QFileInfo sourceCode(sourcePath);
-            if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != header.sourceTimeStamp) {
-                *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
-                return false;
-            }
-        }
-
-    }
-    // Data structure and qt version matched, so now we can access the rest of the file safely.
-
-    uchar *cacheData = cacheFile->map(/*offset*/0, cacheFile->size());
-    if (!cacheData) {
-        *errorString = cacheFile->errorString();
+    CompiledData::Unit *mappedUnit = cacheFile->open(sourcePath, errorString);
+    if (!mappedUnit) {
         return false;
     }
 
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
-    QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
+    QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
     {
         const QString foundArchitecture = stringAt(data->architectureIndex);

@@ -92,6 +92,7 @@ struct Function;
 
 struct Function;
 class EvalISelFactory;
+class CompilationUnitMapper;
 
 namespace CompiledData {
 
@@ -874,7 +875,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
-    QScopedPointer<QIODevice> backingFile;
+    QScopedPointer<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
