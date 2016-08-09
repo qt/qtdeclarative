@@ -265,7 +265,7 @@ void QQuickAnimatorController::animationFinished(QAbstractAnimationJob *job)
      * needed in any case.
      */
     if (!m_deleting.contains(job)) {
-        QQuickAnimatorProxyJob *proxy = m_animatorRoots[job];
+        QQuickAnimatorProxyJob *proxy = m_animatorRoots.value(job);
         if (proxy) {
             m_window->update();
             m_proxiesToStop << proxy;

@@ -264,7 +264,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
                 updateFontInfo(QString(), Error);
             }
         } else {
-            updateFontInfo(QFontDatabase::applicationFontFamilies(fontLoaderFonts()->map[d->url]->id).at(0), Ready);
+            updateFontInfo(QFontDatabase::applicationFontFamilies(fontLoaderFonts()->map.value(d->url)->id).at(0), Ready);
         }
     } else {
         if (!fontLoaderFonts()->map.contains(d->url)) {
@@ -280,7 +280,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
 // Silently fail if compiled with no_network
 #endif
         } else {
-            QQuickFontObject *fo = fontLoaderFonts()->map[d->url];
+            QQuickFontObject *fo = fontLoaderFonts()->map.value(d->url);
             if (fo->id == -1) {
 #ifndef QT_NO_NETWORK
                 d->status = Loading;

@@ -189,7 +189,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
     Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states)
 public:
     explicit QQuickStochasticEngine(QObject *parent = 0);
-    QQuickStochasticEngine(QList<QQuickStochasticState*> states, QObject *parent=0);
+    QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = 0);
     ~QQuickStochasticEngine();
 
     QQmlListProperty<QQuickStochasticState> states()
@@ -210,11 +210,11 @@ public:
     virtual void restart(int index=0);
     virtual void advance(int index=0);//Sends state to the next chosen state, unlike goal.
     void stop(int index=0);
-    int curState(int index=0) {return m_things[index];}
+    int curState(int index=0) const {return m_things[index];}
 
-    QQuickStochasticState* state(int idx){return m_states[idx];}
-    int stateIndex(QQuickStochasticState* s){return m_states.indexOf(s);}
-    int stateIndex(const QString& s) {
+    QQuickStochasticState* state(int idx) const {return m_states[idx];}
+    int stateIndex(QQuickStochasticState* s) const {return m_states.indexOf(s);}
+    int stateIndex(const QString& s) const {
         for (int i=0; i<m_states.count(); i++)
             if (m_states[i]->name() == s)
                 return i;
@@ -273,17 +273,17 @@ public:
         return QQmlListProperty<QQuickSprite>(this, m_sprites);
     }
 
-    QQuickSprite* sprite(int sprite=0);
-    int spriteState(int sprite=0);
-    int spriteStart(int sprite=0);
-    int spriteFrames(int sprite=0);
-    int spriteDuration(int sprite=0);
-    int spriteX(int sprite=0);
-    int spriteY(int sprite=0);
-    int spriteWidth(int sprite=0);
-    int spriteHeight(int sprite=0);
-    int spriteCount();//Like state count
-    int maxFrames();
+    QQuickSprite* sprite(int sprite = 0) const;
+    int spriteState(int sprite = 0) const;
+    int spriteStart(int sprite = 0) const;
+    int spriteFrames(int sprite = 0) const;
+    int spriteDuration(int sprite = 0) const;
+    int spriteX(int sprite = 0) const;
+    int spriteY(int sprite = 0) const;
+    int spriteWidth(int sprite = 0) const;
+    int spriteHeight(int sprite = 0) const;
+    int spriteCount() const;//Like state count
+    int maxFrames() const;
 
     void restart(int index=0) Q_DECL_OVERRIDE;
     void advance(int index=0) Q_DECL_OVERRIDE;
@@ -298,7 +298,7 @@ public:
     QImage assembledImage(int maxSize = 2048);
 
 private:
-    int pseudospriteProgress(int,int,int*rd=0);
+    int pseudospriteProgress(int, int, int *rd = 0) const;
     QList<QQuickSprite*> m_sprites;
     bool m_startedImageAssembly;
     bool m_loaded;

@@ -549,13 +549,13 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 addTouchPoint(&p);
                 started = true;
             } else if (touchPointState & Qt::TouchPointMoved) {
-                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints[id]);
+                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 _movedTouchPoints.append(dtp);
                 updateTouchPoint(dtp,&p);
                 moved = true;
             } else {
-                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints[id]);
+                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 updateTouchPoint(dtp,&p);
             }

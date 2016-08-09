@@ -1691,7 +1691,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     if (itemPrivate->hoverEnabled) {
         QPointF p = item->mapFromScene(scenePos);
         if (item->contains(p)) {
-            if (!hoverItems.isEmpty() && hoverItems[0] == item) {
+            if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
             } else {
@@ -1702,24 +1702,24 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                     itemsToHover << parent;
 
                 // Leaving from previous hovered items until we reach the item or one of its ancestors.
-                while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
+                while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems.at(0))) {
                     QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
                     sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
                 }
 
-                if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
+                if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {//Not entering a new Item
                     // ### Shouldn't we send moves for the parent items as well?
                     accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
                 } else {
                     // Enter items that are not entered yet.
                     int startIdx = -1;
                     if (!hoverItems.isEmpty())
-                        startIdx = itemsToHover.indexOf(hoverItems[0]) - 1;
+                        startIdx = itemsToHover.indexOf(hoverItems.at(0)) - 1;
                     if (startIdx == -1)
                         startIdx = itemsToHover.count() - 1;
 
                     for (int i = startIdx; i >= 0; i--) {
-                        QQuickItem *itemToHover = itemsToHover[i];
+                        QQuickItem *itemToHover = itemsToHover.at(i);
                         QQuickItemPrivate *itemToHoverPrivate = QQuickItemPrivate::get(itemToHover);
                         // The item may be about to be deleted or reparented to another window
                         // due to another hover event delivered in this function. If that is the
@@ -3104,7 +3104,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
           << itemPriv->paintNode;
     nodes.removeAll(0);
 
-    Q_ASSERT(nodes.first() == itemPriv->itemNodeInstance);
+    Q_ASSERT(nodes.constFirst() == itemPriv->itemNodeInstance);
     for (int i=1; i<nodes.size(); ++i) {
         QSGNode *n = nodes.at(i);
         // Failing this means we messed up reparenting

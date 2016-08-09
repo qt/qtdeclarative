@@ -409,7 +409,7 @@ QAbstractAnimationJob* QQuickSmoothedAnimation::transition(QQuickStateActions &a
     Q_UNUSED(direction);
     Q_D(QQuickSmoothedAnimation);
 
-    QQuickStateActions dataActions = QQuickPropertyAnimation::createTransitionActions(actions, modified, defaultTarget);
+    const QQuickStateActions dataActions = QQuickPropertyAnimation::createTransitionActions(actions, modified, defaultTarget);
 
     QContinuingAnimationGroupJob *wrapperGroup = new QContinuingAnimationGroupJob();
 

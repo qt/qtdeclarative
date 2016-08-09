@@ -245,7 +245,7 @@ void QQuickPathViewPrivate::clear()
         currentItem = 0;
     }
     for (int i=0; i<items.count(); i++){
-        QQuickItem *p = items[i];
+        QQuickItem *p = items.at(i);
         releaseItem(p);
     }
     if (requestedIndex >= 0) {
@@ -1993,8 +1993,8 @@ void QQuickPathView::refill()
                 endPos = -1.0;
                 startPos = 2.0;
 
-                for (int i = 0; i < d->items.count(); i++) {
-                    int idx = d->model->indexOf(d->items[i], 0);
+                for (QQuickItem * item : qAsConst(d->items)) {
+                    int idx = d->model->indexOf(item, 0);
                     qreal curPos = d->positionOfIndex(idx);
                     if (curPos > endPos) {
                         endPos = curPos;
@@ -2084,7 +2084,7 @@ void QQuickPathView::refill()
             if (!waiting && d->items.count() < count+d->cacheSize) {
                 qCDebug(lcItemViewDelegateLifecycle) << "Checking for pathview middle inserts, items count was" << d->items.count();
                 idx = startIdx;
-                QQuickItem *lastItem = d->items[0];
+                QQuickItem *lastItem = d->items.at(0);
                 while (idx != endIdx) {
                     //This gets the reference from the delegate model, and will not re-create
                     QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
@@ -2300,8 +2300,8 @@ void QQuickPathViewPrivate::createCurrentItem()
         return;
 
     bool inItems = false;
-    for (int i = 0; i < items.count(); i++) {
-        if (model->indexOf(items[i], 0) == currentIndex) {
+    for (QQuickItem *item : qAsConst(items)) {
+        if (model->indexOf(item, 0) == currentIndex) {
             inItems = true;
             break;
         }

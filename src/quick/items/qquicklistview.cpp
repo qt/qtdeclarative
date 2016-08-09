@@ -400,7 +400,7 @@ FxViewItem *QQuickListViewPrivate::itemBefore(int modelIndex) const
         ++idx;
     }
     if (lastIndex == modelIndex-1)
-        return visibleItems.last();
+        return visibleItems.constLast();
     return 0;
 }
 
@@ -752,7 +752,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
         }
     }
 
-    while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
+    while (visibleItems.count() > 1 && (item = visibleItems.constLast()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position() << (QObject *)(item->item);
@@ -839,7 +839,7 @@ void QQuickListViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
 
 void QQuickListViewPrivate::resetFirstItemPosition(qreal pos)
 {
-    FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.first());
+    FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.constFirst());
     item->setPosition(pos);
 }
 
@@ -848,12 +848,12 @@ void QQuickListViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
     if (!visibleItems.count())
         return;
     qreal diff = forwards - backwards;
-    static_cast<FxListItemSG*>(visibleItems.first())->setPosition(visibleItems.first()->position() + diff);
+    static_cast<FxListItemSG*>(visibleItems.constFirst())->setPosition(visibleItems.constFirst()->position() + diff);
 }
 
 void QQuickListViewPrivate::updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult)
 {
-    if (item != visibleItems.first())
+    if (item != visibleItems.constFirst())
         QQuickItemViewPrivate::updateSizeChangesBeforeVisiblePos(item, removeResult);
 }
 
@@ -1270,7 +1270,7 @@ void QQuickListViewPrivate::initializeCurrentItem()
         if (!actualItem) {
             if (currentIndex == visibleIndex - 1 && visibleItems.count()) {
                 // We can calculate exact postion in this case
-                listItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
+                listItem->setPosition(visibleItems.constFirst()->position() - currentItem->size() - spacing);
             } else {
                 // Create current item now and position as best we can.
                 // Its position will be corrected when it becomes visible.
@@ -1424,8 +1424,8 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
 
             // if visibleItems.first() has resized, adjust its pos since it is used to
             // position all subsequent items
-            if (visibleItems.count() && item == visibleItems.first()->item) {
-                FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
+            if (visibleItems.count() && item == visibleItems.constFirst()->item) {
+                FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.constFirst());
                 const QRectF oldGeometry(item->x() - diff.x(),
                                          item->y() - diff.y(),
                                          item->width() - diff.width(),
@@ -3111,7 +3111,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         int i = visibleItems.count() - 1;
         while (i > 0 && visibleItems.at(i)->index == -1)
             --i;
-        if (i == 0 && visibleItems.first()->index == -1) {
+        if (i == 0 && visibleItems.constFirst()->index == -1) {
             // there are no visible items except items marked for removal
             index = visibleItems.count();
         } else if (visibleItems.at(i)->index + 1 == modelIndex
@@ -3136,7 +3136,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     qreal pos = 0;
     if (visibleItems.count()) {
         pos = index < visibleItems.count() ? visibleItems.at(index)->position()
-                                                : visibleItems.last()->endPosition()+spacing;
+                                                : visibleItems.constLast()->endPosition() + spacing;
     }
 
     // Update the indexes of the following visible items.
@@ -3271,7 +3271,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 
     int markerItemIndex = -1;
     for (int i=0; i<visibleItems.count(); i++) {
-        if (visibleItems[i]->index == afterModelIndex) {
+        if (visibleItems.at(i)->index == afterModelIndex) {
             markerItemIndex = i;
             break;
         }
@@ -3284,7 +3284,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
             - (removalResult.countChangeAfterVisibleItems * (averageSize + spacing));
 
     for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
-        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems[i]);
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);

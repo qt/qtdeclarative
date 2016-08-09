@@ -382,7 +382,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
     }
 
     // Fixup end points
-    const AttributePoint &last = attributePoints.last();
+    const AttributePoint &last = attributePoints.constLast();
     for (int ii = 0; ii < attributes.count(); ++ii) {
         if (!last.values.contains(attributes.at(ii)))
             endpoint(attributePoints, attributes.at(ii));
@@ -407,11 +407,11 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
             }
             attributePoints[ii].origpercent /= length;
             attributePoints[ii].percent = point.values.value(percentString);
-            prevorigpercent = attributePoints[ii].origpercent;
-            prevpercent = attributePoints[ii].percent;
+            prevorigpercent = attributePoints.at(ii).origpercent;
+            prevpercent = attributePoints.at(ii).percent;
         } else {
             attributePoints[ii].origpercent /= length;
-            attributePoints[ii].percent = attributePoints[ii].origpercent;
+            attributePoints[ii].percent = attributePoints.at(ii).origpercent;
         }
     }
 
