@@ -140,8 +140,8 @@ void QQuickPageLayout::update()
 {
     QQuickItem *content = m_control->contentItem();
 
-    const qreal hh = m_header ? m_header->height() : 0;
-    const qreal fh = m_footer ? m_footer->height() : 0;
+    const qreal hh = m_header && m_header->isVisible() ? m_header->height() : 0;
+    const qreal fh = m_footer && m_footer->isVisible() ? m_footer->height() : 0;
 
     content->setY(hh + m_control->topPadding());
     content->setX(m_control->leftPadding());
