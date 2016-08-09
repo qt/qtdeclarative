@@ -548,8 +548,11 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     if (f->function()->compiledFunction->hasQmlDependencies())
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
-    if (!scope.result.isManaged() || !scope.result.managed())
+    if (v4->hasException) {
+        scope.result = Encode::undefined();
+    } else if (!scope.result.isObject()) {
         scope.result = callData->thisObject;
+    }
 }
 
 void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
