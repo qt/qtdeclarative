@@ -338,17 +338,31 @@ class YarrGenerator : private MacroAssembler {
         jump(Address(stackPointerRegister, frameLocation * sizeof(void*)));
     }
 
+    unsigned alignCallFrameSizeInBytes(unsigned callFrameSize)
+    {
+        callFrameSize *= sizeof(void*);
+        if (callFrameSize / sizeof(void*) != m_pattern.m_body->m_callFrameSize)
+            CRASH();
+        // Originally, the code was:
+//        callFrameSize = (callFrameSize + 0x3f) & ~0x3f;
+        // However, 64 bytes is a bit surprising. The biggest "alignment" requirement is on Aarch64, where:
+        // "SP mod 16 = 0. The stack must be quad-word aligned." (IHI0055B_aapcs64.pdf)
+        callFrameSize = (callFrameSize + 0xf) & ~0xf;
+        if (!callFrameSize)
+            CRASH();
+        return callFrameSize;
+    }
     void initCallFrame()
     {
         unsigned callFrameSize = m_pattern.m_body->m_callFrameSize;
         if (callFrameSize)
-            subPtr(Imm32(callFrameSize * sizeof(void*)), stackPointerRegister);
+            subPtr(Imm32(alignCallFrameSizeInBytes(callFrameSize)), stackPointerRegister);
     }
     void removeCallFrame()
     {
         unsigned callFrameSize = m_pattern.m_body->m_callFrameSize;
         if (callFrameSize)
-            addPtr(Imm32(callFrameSize * sizeof(void*)), stackPointerRegister);
+            addPtr(Imm32(alignCallFrameSizeInBytes(callFrameSize)), stackPointerRegister);
     }
 
     // Used to record subpatters, should only be called if compileMode is IncludeSubpatterns.
@@ -2565,6 +2579,10 @@ class YarrGenerator : private MacroAssembler {
         if (compileMode == IncludeSubpatterns)
             loadPtr(Address(X86Registers::ebp, 2 * sizeof(void*)), output);
     #endif
+#elif CPU(ARM64)
+        // The ABI doesn't guarantee the upper bits are zero on unsigned arguments, so clear them ourselves.
+        zeroExtend32ToPtr(index, index);
+        zeroExtend32ToPtr(length, length);
 #elif CPU(ARM)
         push(ARMRegisters::r4);
         push(ARMRegisters::r5);
