@@ -322,7 +322,7 @@ static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
 
 static qreal snapPosition(const QQuickRangeSlider *slider, qreal position)
 {
-    const qreal range = slider->from() + (slider->to() - slider->from());
+    const qreal range = slider->to() - slider->from();
     if (qFuzzyIsNull(range))
         return position;
 

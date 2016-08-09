@@ -621,18 +621,24 @@ TestCase {
 
     function test_snapMode_data() {
         return [
-            { tag: "NoSnap", snapMode: Slider.NoSnap, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
-            { tag: "SnapAlways", snapMode: Slider.SnapAlways, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] },
-            { tag: "SnapOnRelease", snapMode: Slider.SnapOnRelease, values: [0, 0, 0.2], positions: [0, 0.1, 0.1] }
+            { tag: "NoSnap", snapMode: RangeSlider.NoSnap, from: 0, to: 2, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
+            { tag: "SnapAlways (0..2)", snapMode: RangeSlider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapAlways (1..3)", snapMode: RangeSlider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapAlways (-1..1)", snapMode: RangeSlider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (1..-1)", snapMode: RangeSlider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (0..2)", snapMode: RangeSlider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..3)", snapMode: RangeSlider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
+            { tag: "SnapOnRelease (-1..1)", snapMode: RangeSlider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: RangeSlider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] }
         ]
     }
 
     function test_snapMode(data) {
-        var control = sliderComponent.createObject(testCase, {snapMode: data.snapMode, from: 0, to: 2, stepSize: 0.2})
+        var control = sliderComponent.createObject(testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
         control.first.value = 0
-        control.second.value = 2
+        control.second.value = data.to
 
         function sliderCompare(left, right) {
             return Math.abs(left - right) < 0.05
