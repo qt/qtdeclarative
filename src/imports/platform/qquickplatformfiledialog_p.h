@@ -118,6 +118,9 @@ protected:
     void applyOptions() override;
 
 private:
+    QUrl addDefaultSuffix(const QUrl &file) const;
+    QList<QUrl> addDefaultSuffixes(const QList<QUrl> &files) const;
+
     FileMode m_fileMode;
     mutable QUrl m_current;
     QSharedPointer<QFileDialogOptions> m_options;

@@ -122,8 +122,12 @@ QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
         dialog = new QWidgetPlatformFileDialog(this);
 #endif
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, this, &QQuickPlatformFileDialog::fileSelected);
-        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, this, &QQuickPlatformFileDialog::filesSelected);
+        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, [this](const QUrl &file) {
+            emit fileSelected(addDefaultSuffix(file));
+        });
+        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, [this](const QList<QUrl> &files) {
+            emit filesSelected(addDefaultSuffixes(files));
+        });
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
             if (m_current == url)
                 return;
@@ -189,7 +193,7 @@ QUrl QQuickPlatformFileDialog::currentFile() const
         if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
             m_current = fileDialog->selectedFiles().value(0);
     }
-    return m_current;
+    return addDefaultSuffix(m_current);
 }
 
 void QQuickPlatformFileDialog::setCurrentFile(const QUrl &file)
@@ -360,6 +364,25 @@ void QQuickPlatformFileDialog::resetRejectLabel()
 void QQuickPlatformFileDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
+}
+
+QUrl QQuickPlatformFileDialog::addDefaultSuffix(const QUrl &file) const
+{
+    QUrl url = file;
+    const QString path = url.path();
+    const QString suffix = m_options->defaultSuffix();
+    if (!suffix.isEmpty() && !path.endsWith(QLatin1Char('/')) && path.lastIndexOf(QLatin1Char('.')) == -1)
+        url.setPath(path + QLatin1Char('.') + suffix);
+    return url;
+}
+
+QList<QUrl> QQuickPlatformFileDialog::addDefaultSuffixes(const QList<QUrl> &files) const
+{
+    QList<QUrl> urls;
+    urls.reserve(files.size());
+    for (const QUrl &file : files)
+        urls += addDefaultSuffix(file);
+    return urls;
 }
 
 QT_END_NAMESPACE
