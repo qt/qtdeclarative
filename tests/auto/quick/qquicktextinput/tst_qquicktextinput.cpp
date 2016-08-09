@@ -200,6 +200,8 @@ private slots:
     void implicitSize();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
+    void implicitResize_data();
+    void implicitResize();
 
     void negativeDimensions();
 
@@ -5967,6 +5969,39 @@ void tst_qquicktextinput::implicitSizeBinding()
     QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
+void tst_qquicktextinput::implicitResize_data()
+{
+    QTest::addColumn<int>("alignment");
+    QTest::newRow("left") << int(Qt::AlignLeft);
+    QTest::newRow("center") << int(Qt::AlignHCenter);
+    QTest::newRow("right") << int(Qt::AlignRight);
+}
+
+void tst_qquicktextinput::implicitResize()
+{
+    QFETCH(int, alignment);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nTextInput { }", QUrl::fromLocalFile(""));
+
+    QScopedPointer<QQuickTextInput> textInput(qobject_cast<QQuickTextInput *>(component.create()));
+    QVERIFY(!textInput.isNull());
+
+    QScopedPointer<QQuickTextInput> textField(qobject_cast<QQuickTextInput *>(component.create()));
+    QVERIFY(!textField.isNull());
+    QQuickTextInputPrivate::get(textField.data())->setImplicitResizeEnabled(false);
+
+    textInput->setWidth(200);
+    textField->setImplicitWidth(200);
+
+    textInput->setHAlign(QQuickTextInput::HAlignment(alignment));
+    textField->setHAlign(QQuickTextInput::HAlignment(alignment));
+
+    textInput->setText("Qt");
+    textField->setText("Qt");
+
+    QCOMPARE(textField->positionToRectangle(0), textInput->positionToRectangle(0));
+}
 
 void tst_qquicktextinput::negativeDimensions()
 {
