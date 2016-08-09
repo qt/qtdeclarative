@@ -58,6 +58,9 @@ T.ComboBox {
 
     hoverEnabled: Qt.styleHints.useHoverEffects
 
+    // Don't use toolTextColor, as that is often white when we have a white background.
+    Material.foreground: Material.foreground === Material.toolTextColor ? undefined : Material.foreground
+
     delegate: MenuItem {
         width: control.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
