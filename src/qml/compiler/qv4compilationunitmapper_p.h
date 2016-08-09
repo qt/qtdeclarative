@@ -66,13 +66,20 @@ class CompilationUnitMapper
 {
 public:
     CompilationUnitMapper();
+    ~CompilationUnitMapper();
 
     CompiledData::Unit *open(const QString &sourcePath, QString *errorString);
     void close();
 
 private:
+    static bool verifyHeader(const QV4::CompiledData::Unit *header, const QString &sourcePath, QString *errorString);
+
+#if defined(Q_OS_UNIX)
+    size_t length;
+#else
     QFile f;
-    uchar *dataPtr;
+#endif
+    void *dataPtr;
 };
 
 }

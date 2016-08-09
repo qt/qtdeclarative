@@ -39,66 +39,48 @@
 
 #include "qv4compilationunitmapper_p.h"
 
+#include <sys/mman.h>
+#include <functional>
+#include <private/qcore_unix_p.h>
+
 #include "qv4compileddata_p.h"
-#include <QFileInfo>
-#include <QDateTime>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-CompilationUnitMapper::CompilationUnitMapper()
-    : dataPtr(nullptr)
-{
-
-}
-
-CompilationUnitMapper::~CompilationUnitMapper()
-{
-    close();
-}
-
-bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const QString &sourcePath, QString *errorString)
-{
-    if (strncmp(header->magic, CompiledData::magic_str, sizeof(header->magic))) {
-        *errorString = QStringLiteral("Magic bytes in the header do not match");
-        return false;
-    }
-
-    if (header->version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
-        *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(header->version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
-        return false;
-    }
-
-    if (header->qtVersion != quint32(QT_VERSION)) {
-        *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(header->qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
-        return false;
-    }
-
+namespace {
+    struct Defer
     {
-        QFileInfo sourceCode(sourcePath);
-        if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != header->sourceTimeStamp) {
-            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
-            return false;
-        }
-    }
-
-    return true;
+        std::function<void()> callback;
+        template <typename Callback>
+        Defer(Callback &&cb)
+            : callback(cb)
+        {}
+        ~Defer() { callback(); }
+        Defer(const Defer &) = delete;
+        Defer &operator=(const Defer &) = delete;
+    };
 }
 
-#if  !defined(Q_OS_UNIX)
 CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QString *errorString)
 {
     close();
 
-    f.setFileName(sourcePath + QLatin1Char('c'));
-    if (!f.open(QIODevice::ReadOnly)) {
-        *errorString = f.errorString();
+    QByteArray cacheFileName = QFile::encodeName(sourcePath);
+    cacheFileName.append('c');
+    int fd = qt_safe_open(cacheFileName.constData(), O_RDONLY);
+    if (fd == -1) {
+        *errorString = qt_error_string(errno);
         return nullptr;
     }
 
+    Defer cleanup([fd]{
+       qt_safe_close(fd) ;
+    });
+
     CompiledData::Unit header;
-    qint64 bytesRead = f.read(reinterpret_cast<char *>(&header), sizeof(header));
+    qint64 bytesRead = qt_safe_read(fd, reinterpret_cast<char *>(&header), sizeof(header));
 
     if (bytesRead != sizeof(header)) {
         *errorString = QStringLiteral("File too small for the header fields");
@@ -110,20 +92,23 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QStri
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.
 
-    dataPtr = f.map(/*offset*/0, f.size());
-    if (!dataPtr) {
-        *errorString = f.errorString();
+    length = static_cast<size_t>(lseek(fd, 0, SEEK_END));
+
+    void *ptr = mmap(nullptr, length, PROT_READ, MAP_SHARED, fd, /*offset*/0);
+    if (ptr == MAP_FAILED) {
+        *errorString = qt_error_string(errno);
         return nullptr;
     }
+    dataPtr = ptr;
 
     return reinterpret_cast<CompiledData::Unit*>(dataPtr);
 }
 
 void CompilationUnitMapper::close()
 {
-    f.close();
+    if (dataPtr != nullptr)
+        munmap(dataPtr, length);
     dataPtr = nullptr;
 }
-#endif // !defined(Q_OS_UNIX)
 
 QT_END_NAMESPACE
