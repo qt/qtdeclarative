@@ -41,5 +41,6 @@ SOURCES += \
     $$PWD/qv4compilationunitmapper.cpp
 
 unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
+else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
 }

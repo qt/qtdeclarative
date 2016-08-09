@@ -86,44 +86,4 @@ bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const
     return true;
 }
 
-#if  !defined(Q_OS_UNIX)
-CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QString *errorString)
-{
-    close();
-
-    f.setFileName(sourcePath + QLatin1Char('c'));
-    if (!f.open(QIODevice::ReadOnly)) {
-        *errorString = f.errorString();
-        return nullptr;
-    }
-
-    CompiledData::Unit header;
-    qint64 bytesRead = f.read(reinterpret_cast<char *>(&header), sizeof(header));
-
-    if (bytesRead != sizeof(header)) {
-        *errorString = QStringLiteral("File too small for the header fields");
-        return nullptr;
-    }
-
-    if (!verifyHeader(&header, sourcePath, errorString))
-        return nullptr;
-
-    // Data structure and qt version matched, so now we can access the rest of the file safely.
-
-    dataPtr = f.map(/*offset*/0, f.size());
-    if (!dataPtr) {
-        *errorString = f.errorString();
-        return nullptr;
-    }
-
-    return reinterpret_cast<CompiledData::Unit*>(dataPtr);
-}
-
-void CompilationUnitMapper::close()
-{
-    f.close();
-    dataPtr = nullptr;
-}
-#endif // !defined(Q_OS_UNIX)
-
 QT_END_NAMESPACE

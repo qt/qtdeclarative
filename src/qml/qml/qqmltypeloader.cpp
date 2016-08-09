@@ -104,21 +104,11 @@
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
-DEFINE_BOOL_CONFIG_OPTION(_disableDiskCache, QML_DISABLE_DISK_CACHE);
+DEFINE_BOOL_CONFIG_OPTION(disableDiskCache, QML_DISABLE_DISK_CACHE);
 DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
-
-static bool disableDiskCache()
-{
-    return _disableDiskCache()
-           // ### FIXME: Fix crashes on Windows with mmap'ed code.
-#if defined(Q_OS_WIN)
-           || true
-#endif
-           ;
-}
 
 QT_BEGIN_NAMESPACE
 

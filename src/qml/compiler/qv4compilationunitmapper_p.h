@@ -76,8 +76,6 @@ private:
 
 #if defined(Q_OS_UNIX)
     size_t length;
-#else
-    QFile f;
 #endif
     void *dataPtr;
 };
