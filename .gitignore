@@ -121,3 +121,4 @@ android-*.so-deployment-settings.json
 qt.conf
 *.version
 *.version.in
+*.qmlc
