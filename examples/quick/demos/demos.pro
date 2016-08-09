@@ -5,8 +5,7 @@ SUBDIRS = samegame \
             tweetsearch \
             maroon \
             photosurface \
-            photoviewer \
             stocqt
 
-qtHaveModule(xmlpatterns): SUBDIRS += rssnews
+qtHaveModule(xmlpatterns): SUBDIRS += rssnews photoviewer
 
