@@ -1148,7 +1148,7 @@ QString QQmlXMLHttpRequest::header(const QString &name) const
 {
     QByteArray utfname = name.toLower().toUtf8();
 
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : m_headersList) {
         if (header.first == utfname)
             return QString::fromUtf8(header.second);
     }
@@ -1159,7 +1159,7 @@ QString QQmlXMLHttpRequest::headers() const
 {
     QString ret;
 
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : m_headersList) {
         if (ret.length())
             ret.append(QLatin1String("\r\n"));
         ret += QString::fromUtf8(header.first) + QLatin1String(": ")
