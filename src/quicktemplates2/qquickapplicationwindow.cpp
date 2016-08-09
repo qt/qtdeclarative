@@ -151,8 +151,8 @@ void QQuickApplicationWindowPrivate::relayout()
 {
     Q_Q(QQuickApplicationWindow);
     QQuickItem *content = q->contentItem();
-    qreal hh = header ? header->height() : 0;
-    qreal fh = footer ? footer->height() : 0;
+    qreal hh = header && header->isVisible() ? header->height() : 0;
+    qreal fh = footer && footer->isVisible() ? footer->height() : 0;
 
     content->setY(hh);
     content->setWidth(q->width());

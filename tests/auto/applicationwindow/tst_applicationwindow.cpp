@@ -72,6 +72,7 @@ private slots:
     void activeFocusControl_data();
     void activeFocusControl();
     void focusAfterPopupClosed();
+    void layout();
 };
 
 void tst_applicationwindow::qmlCreation()
@@ -682,6 +683,53 @@ void tst_applicationwindow::focusAfterPopupClosed()
 
     QTest::keyClick(window.data(), Qt::Key_Space);
     QCOMPARE(spy.count(), 2);
+}
+
+void tst_applicationwindow::layout()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("layout.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickApplicationWindow* window = qobject_cast<QQuickApplicationWindow*>(object.data());
+    QVERIFY(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QQuickItem *header = window->header();
+    QVERIFY(header);
+    QQuickItem *footer = window->footer();
+    QVERIFY(footer);
+
+    QCOMPARE(header->x(), 0.0);
+    QCOMPARE(header->y(), -header->height());
+    QCOMPARE(header->width(), qreal(window->width()));
+    QVERIFY(header->height() > 0);
+
+    QCOMPARE(footer->x(), 0.0);
+    QCOMPARE(footer->y(), content->height());
+    QCOMPARE(footer->width(), qreal(window->width()));
+    QVERIFY(footer->height() > 0.0);
+
+    QCOMPARE(content->x(), 0.0);
+    QCOMPARE(content->y(), header->height());
+    QCOMPARE(content->width(), qreal(window->width()));
+    QCOMPARE(content->height(), window->height() - header->height() - footer->height());
+
+    header->setVisible(false);
+    QCOMPARE(content->x(), 0.0);
+    QCOMPARE(content->y(), 0.0);
+    QCOMPARE(content->width(), qreal(window->width()));
+    QCOMPARE(content->height(), window->height() - footer->height());
+
+    footer->setVisible(false);
+    QCOMPARE(content->x(), 0.0);
+    QCOMPARE(content->y(), 0.0);
+    QCOMPARE(content->width(), qreal(window->width()));
+    QCOMPARE(content->height(), qreal(window->height()));
 }
 
 QTEST_MAIN(tst_applicationwindow)

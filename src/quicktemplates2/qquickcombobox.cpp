@@ -40,6 +40,7 @@
 #include "qquickpopup_p_p.h"
 
 #include <QtCore/qregexp.h>
+#include <QtCore/qabstractitemmodel.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
@@ -409,6 +410,11 @@ void QQuickComboBox::setModel(const QVariant& m)
 
     if (d->model == model)
         return;
+
+    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model))
+        QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged, d, &QQuickComboBoxPrivate::updateCurrentText);
+    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(model))
+        QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged, d, &QQuickComboBoxPrivate::updateCurrentText);
 
     d->model = model;
     d->createDelegateModel();

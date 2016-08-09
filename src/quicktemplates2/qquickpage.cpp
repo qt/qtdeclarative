@@ -91,7 +91,6 @@ public:
     QScopedPointer<QQuickPageLayout> layout;
 };
 
-
 QQuickPage::QQuickPage(QQuickItem *parent) :
     QQuickControl(*(new QQuickPagePrivate), parent)
 {

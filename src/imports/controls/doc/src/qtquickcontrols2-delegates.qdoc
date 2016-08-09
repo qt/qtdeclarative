@@ -57,6 +57,13 @@
 
     \b {See also} \l {RadioButton Control}.
 
+    \section1 SwipeDelegate Control
+
+    \image qtquickcontrols2-swipedelegate.gif
+
+    \l SwipeDelegate presents a view item that can be swiped left or right to
+    expose more options or information.
+
     \section1 SwitchDelegate Control
 
     \image qtquickcontrols2-switchdelegate.gif

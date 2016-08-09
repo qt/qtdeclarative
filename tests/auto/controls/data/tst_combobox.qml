@@ -840,4 +840,24 @@ TestCase {
 
         control.destroy()
     }
+
+    // QTBUG-55118
+    function test_currentText() {
+        var control = comboBox.createObject(testCase, {model: listmodel})
+        verify(control)
+
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "First")
+
+        listmodel.setProperty(0, "text", "1st")
+        compare(control.currentText, "1st")
+
+        control.currentIndex = 1
+        compare(control.currentText, "Second")
+
+        listmodel.setProperty(0, "text", "First")
+        compare(control.currentText, "Second")
+
+        control.destroy()
+    }
 }
