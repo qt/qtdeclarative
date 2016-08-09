@@ -75,7 +75,7 @@ DECLARE_DEBUG_VAR(buffer)
 DECLARE_DEBUG_VAR(texture)
 
 // Except for system info on startup.
-Q_LOGGING_CATEGORY(QSG_LOG_INFO, "qt.scenegraph.general")
+Q_LOGGING_CATEGORY(QSG_LOG_INFO_GENERAL, "qt.scenegraph.general")
 
 
 // Any changes to the defaults below must be reflected in adaptations.qdoc as
@@ -197,7 +197,7 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
         DXGI_ADAPTER_DESC1 desc;
         adapter->GetDesc1(&desc);
         const QString name = QString::fromUtf16((char16_t *) desc.Description);
-        qCDebug(QSG_LOG_INFO, "Adapter %d: '%s' (flags 0x%x)", adapterIndex, qPrintable(name), desc.Flags);
+        qCDebug(QSG_LOG_INFO_GENERAL, "Adapter %d: '%s' (flags 0x%x)", adapterIndex, qPrintable(name), desc.Flags);
     }
 
     if (qEnvironmentVariableIsSet("QT_D3D_ADAPTER_INDEX")) {
@@ -207,7 +207,7 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
             const QString name = QString::fromUtf16((char16_t *) desc.Description);
             HRESULT hr = D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr);
             if (SUCCEEDED(hr)) {
-                qCDebug(QSG_LOG_INFO, "Using requested adapter '%s'", qPrintable(name));
+                qCDebug(QSG_LOG_INFO_GENERAL, "Using requested adapter '%s'", qPrintable(name));
                 *outAdapter = adapter.Detach();
                 return;
             } else {
@@ -223,7 +223,7 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
 
         if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), fl, _uuidof(ID3D12Device), nullptr))) {
             const QString name = QString::fromUtf16((char16_t *) desc.Description);
-            qCDebug(QSG_LOG_INFO, "Using adapter '%s'", qPrintable(name));
+            qCDebug(QSG_LOG_INFO_GENERAL, "Using adapter '%s'", qPrintable(name));
             break;
         }
     }
@@ -287,7 +287,7 @@ void QSGD3D12DeviceManager::ensureCreated()
     }
 
     if (warp) {
-        qCDebug(QSG_LOG_INFO, "Using WARP");
+        qCDebug(QSG_LOG_INFO_GENERAL, "Using WARP");
         m_factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
         HRESULT hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
         if (FAILED(hr)) {
@@ -300,12 +300,12 @@ void QSGD3D12DeviceManager::ensureCreated()
     if (SUCCEEDED(adapter.As(&adapter3))) {
         DXGI_QUERY_VIDEO_MEMORY_INFO vidMemInfo;
         if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vidMemInfo))) {
-            qCDebug(QSG_LOG_INFO, "Video memory info: LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
+            qCDebug(QSG_LOG_INFO_GENERAL, "Video memory info: LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
                     vidMemInfo.Budget / 1024, vidMemInfo.CurrentUsage / 1024,
                     vidMemInfo.AvailableForReservation / 1024, vidMemInfo.CurrentReservation / 1024);
         }
         if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &vidMemInfo))) {
-            qCDebug(QSG_LOG_INFO, "Video memory info: NON-LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
+            qCDebug(QSG_LOG_INFO_GENERAL, "Video memory info: NON-LOCAL: Budget %llu KB CurrentUsage %llu KB AvailableForReservation %llu KB CurrentReservation %llu KB",
                     vidMemInfo.Budget / 1024, vidMemInfo.CurrentUsage / 1024,
                     vidMemInfo.AvailableForReservation / 1024, vidMemInfo.CurrentReservation / 1024);
         }
@@ -726,16 +726,16 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         waitableSwapChainMaxLatency = qBound(0, qEnvironmentVariableIntValue(latReqEnvVar), 16);
 
     if (qEnvironmentVariableIsSet("QSG_INFO"))
-        const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_INFO_GENERAL()).setEnabled(QtDebugMsg, true);
 
-    qCDebug(QSG_LOG_INFO, "d3d12 engine init. swap chain buffer count %d, max frames prepared without blocking %d",
+    qCDebug(QSG_LOG_INFO_GENERAL, "d3d12 engine init. swap chain buffer count %d, max frames prepared without blocking %d",
             swapChainBufferCount, frameInFlightCount);
     if (waitableSwapChainMaxLatency)
-        qCDebug(QSG_LOG_INFO, "Swap chain frame latency waitable object enabled. Frame latency is %d", waitableSwapChainMaxLatency);
+        qCDebug(QSG_LOG_INFO_GENERAL, "Swap chain frame latency waitable object enabled. Frame latency is %d", waitableSwapChainMaxLatency);
 
     const bool debugLayer = qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0;
     if (debugLayer) {
-        qCDebug(QSG_LOG_INFO, "Enabling debug layer");
+        qCDebug(QSG_LOG_INFO_GENERAL, "Enabling debug layer");
         ComPtr<ID3D12Debug> debugController;
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
             debugController->EnableDebugLayer();
