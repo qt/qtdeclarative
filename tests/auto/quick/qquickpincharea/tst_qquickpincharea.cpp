@@ -511,6 +511,7 @@ void tst_QQuickPinchArea::cancel()
         QCOMPARE(blackRect->scale(), 1.5);
 
         QTouchEvent cancelEvent(QEvent::TouchCancel);
+        cancelEvent.setDevice(device);
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 
