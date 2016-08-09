@@ -1146,11 +1146,12 @@ void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
 
 QString QQmlXMLHttpRequest::header(const QString &name) const
 {
-    QByteArray utfname = name.toLower().toUtf8();
-
-    for (const HeaderPair &header : m_headersList) {
-        if (header.first == utfname)
-            return QString::fromUtf8(header.second);
+    if (!m_headersList.isEmpty()) {
+        const QByteArray utfname = name.toLower().toUtf8();
+        for (const HeaderPair &header : m_headersList) {
+            if (header.first == utfname)
+                return QString::fromUtf8(header.second);
+        }
     }
     return QString();
 }
