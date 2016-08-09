@@ -61,6 +61,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
+#include <QDir>
 #include <QStack>
 #include <QStringList>
 #include <QThreadStorage>
@@ -549,7 +550,8 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)), mode);
+    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : d->engine->baseUrl().resolved(QUrl(fileName));
+    d->loadUrl(url, mode);
 }
 
 /*!

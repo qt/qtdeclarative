@@ -7470,8 +7470,11 @@ void tst_qqmlecmascript::negativeYear()
 
     QVariant q;
     QMetaObject::invokeMethod(object, "check_negative_tostring", Q_RETURN_ARG(QVariant, q));
-    // Strip the timezone. It should be irrelevant as the date was created with the same one.
-    QCOMPARE(q.toString().left(32), QStringLiteral("result: Sat Jan 1 00:00:00 -2001"));
+
+    // Only check for the year. We hope that every language writes the year in arabic numerals and
+    // in relation to a specific dude's date of birth. We also hope that no language adds a "-2001"
+    // junk string somewhere in the middle.
+    QVERIFY(q.toString().indexOf(QStringLiteral("-2001")) != -1);
 
     QMetaObject::invokeMethod(object, "check_negative_toisostring", Q_RETURN_ARG(QVariant, q));
     QCOMPARE(q.toString().left(16), QStringLiteral("result: -002000-"));
