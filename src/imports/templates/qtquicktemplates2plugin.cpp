@@ -178,6 +178,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
+    qmlRegisterType<QQuickComboBox, 1>(uri, 2, 1, "ComboBox");
     qmlRegisterType<QQuickContainer, 1>(uri, 2, 1, "Container");
     qmlRegisterType<QQuickDialog>(uri, 2, 1, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 1, "DialogButtonBox");

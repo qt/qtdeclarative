@@ -92,6 +92,7 @@ TestCase {
 
         compare(control.count, 0)
         compare(control.model, undefined)
+        compare(control.flat, false)
         compare(control.pressed, false)
         compare(control.currentIndex, -1)
         compare(control.highlightedIndex, -1)

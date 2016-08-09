@@ -99,6 +99,7 @@ T.ComboBox {
             (control.pressed || popup.visible ? "#d0d0d0" : "#e0e0e0")
         border.color: "#0066ff"
         border.width: control.visualFocus ? 2 : 0
+        visible: !control.flat || control.pressed
     }
     //! [background]
 

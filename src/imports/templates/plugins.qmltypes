@@ -126,11 +126,15 @@ Module {
         name: "QQuickComboBox"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/ComboBox 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/ComboBox 2.0",
+            "QtQuick.Templates/ComboBox 2.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegateModel"; type: "QQmlInstanceModel"; isReadonly: true; isPointer: true }
+        Property { name: "flat"; revision: 1; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "highlightedIndex"; type: "int"; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }

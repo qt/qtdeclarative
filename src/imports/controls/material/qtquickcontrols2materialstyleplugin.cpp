@@ -44,6 +44,7 @@
 
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
+#include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 
 static inline void initResources()
 {
@@ -84,6 +85,8 @@ void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     QQuickStylePlugin::initializeEngine(engine, uri);
+
+    engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/Material/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");

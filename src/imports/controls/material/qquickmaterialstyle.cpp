@@ -948,7 +948,9 @@ QColor QQuickMaterialStyle::drawerBackgroundColor() const
 
 QColor QQuickMaterialStyle::dialogColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
+    if (!m_hasBackground)
+        return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
+    return backgroundColor();
 }
 
 QColor QQuickMaterialStyle::backgroundDimColor() const

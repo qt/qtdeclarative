@@ -62,6 +62,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
     Q_PROPERTY(QQmlInstanceModel *delegateModel READ delegateModel NOTIFY delegateModelChanged FINAL)
+    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION 1)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(int highlightedIndex READ highlightedIndex NOTIFY highlightedIndexChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
@@ -81,6 +82,9 @@ public:
     QVariant model() const;
     void setModel(const QVariant &model);
     QQmlInstanceModel *delegateModel() const;
+
+    bool isFlat() const;
+    void setFlat(bool flat);
 
     bool isPressed() const;
     void setPressed(bool pressed);
@@ -119,6 +123,7 @@ Q_SIGNALS:
     void countChanged();
     void modelChanged();
     void delegateModelChanged();
+    Q_REVISION(1) void flatChanged();
     void pressedChanged();
     void highlightedIndexChanged();
     void currentIndexChanged();

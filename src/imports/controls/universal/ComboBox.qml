@@ -91,12 +91,14 @@ T.ComboBox {
         implicitWidth: 120
         implicitHeight: 32
 
-        border.width: 2 // ComboBoxBorderThemeThickness
+        border.width: control.flat ? 0 : 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
                        control.pressed || popup.visible ? control.Universal.baseMediumLowColor :
                        control.hovered ? control.Universal.baseMediumColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.pressed || popup.visible ? control.Universal.listMediumColor :
+                control.flat && control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
+        visible: !control.flat || control.pressed || control.hovered || control.visualFocus
 
         Rectangle {
             x: 2

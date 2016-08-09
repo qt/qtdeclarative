@@ -154,7 +154,7 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
 public:
-    QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false), hasCurrentIndex(false),
+    QQuickComboBoxPrivate() : flat(false), pressed(false), ownModel(false), hasDisplayText(false), hasCurrentIndex(false),
         highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
         delegate(nullptr), indicator(nullptr), popup(nullptr) { }
 
@@ -174,6 +174,7 @@ public:
 
     void createDelegateModel();
 
+    bool flat;
     bool pressed;
     bool ownModel;
     bool hasDisplayText;
@@ -435,6 +436,36 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
 {
     Q_D(const QQuickComboBox);
     return d->delegateModel;
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty bool QtQuick.Controls::ComboBox::flat
+
+    This property holds whether the combo box button is flat.
+
+    A flat combo box button does not draw a background unless it is interacted
+    with. In comparison to normal combo boxes, flat combo boxes provide looks
+    that make them stand out less from the rest of the UI. For instance, when
+    placing a combo box into a tool bar, it may be desirable to make the combo
+    box flat so it matches better with the flat looks of tool buttons.
+
+    The default value is \c false.
+*/
+bool QQuickComboBox::isFlat() const
+{
+    Q_D(const QQuickComboBox);
+    return d->flat;
+}
+
+void QQuickComboBox::setFlat(bool flat)
+{
+    Q_D(QQuickComboBox);
+    if (d->flat == flat)
+        return;
+
+    d->flat = flat;
+    emit flatChanged();
 }
 
 /*!
