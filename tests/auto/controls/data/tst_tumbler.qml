@@ -396,6 +396,7 @@ TestCase {
             var dragDirection = distanceToReachContentY > 0 ? -1 : 1;
             for (var i = 0; i < distance && Math.floor(listView.contentY) !== Math.floor(data.contentY); ++i) {
                 mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i * dragDirection);
+                wait(1); // because Flickable pays attention to velocity, we need some time between movements (qtdeclarative ebf07c3)
             }
         }
 
