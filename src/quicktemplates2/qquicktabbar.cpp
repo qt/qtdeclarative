@@ -187,6 +187,7 @@ void QQuickTabBar::itemAdded(int index, QQuickItem *item)
 {
     Q_D(QQuickTabBar);
     Q_UNUSED(index);
+    QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-55129
     if (QQuickTabButton *button = qobject_cast<QQuickTabButton *>(item))
         QObjectPrivate::connect(button, &QQuickTabButton::checkedChanged, d, &QQuickTabBarPrivate::updateCurrentIndex);
     if (isComponentComplete())
