@@ -192,7 +192,7 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
     QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
     if (!applicationWindow) {
         window->installEventFilter(q);
-        popupItem->setZ(10001); // DefaultWindowDecoration+1
+        popupItem->setZ(1000001); // DefaultWindowDecoration+1
         popupItem->setParentItem(window->contentItem());
     } else {
         popupItem->setParentItem(applicationWindow->overlay());
