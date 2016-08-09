@@ -51,6 +51,7 @@
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qdeferredcleanup_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -129,18 +130,6 @@ namespace {
         LockType& lock;
         LockHolder(LockType *l) : lock(*l) { lock.lock(); }
         ~LockHolder() { lock.unlock(); }
-    };
-
-    struct Defer
-    {
-        std::function<void()> callback;
-        template <typename Callback>
-        Defer(Callback &&cb)
-            : callback(cb)
-        {}
-        ~Defer() { callback(); }
-        Defer(const Defer &) = delete;
-        Defer &operator=(const Defer &) = delete;
     };
 }
 
@@ -2172,7 +2161,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
 
 void QQmlTypeData::done()
 {
-    Defer cleanup([this]{
+    QDeferredCleanup cleanup([this]{
         m_document.reset();
         m_typeReferences.clear();
         if (isError())

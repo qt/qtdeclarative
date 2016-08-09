@@ -37,65 +37,38 @@
 **
 ****************************************************************************/
 
-#include "qv4compilationunitmapper_p.h"
+#ifndef QDEFERREDCLEANUP_P_H
+#define QDEFERREDCLEANUP_P_H
 
-#include <sys/mman.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qglobal.h>
+
 #include <functional>
-#include <private/qcore_unix_p.h>
-#include <private/qdeferredcleanup_p.h>
-
-#include "qv4compileddata_p.h"
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
-
-CompiledData::Unit *CompilationUnitMapper::open(const QString &sourcePath, QString *errorString)
+struct QDeferredCleanup
 {
-    close();
-
-    QByteArray cacheFileName = QFile::encodeName(sourcePath);
-    cacheFileName.append('c');
-    int fd = qt_safe_open(cacheFileName.constData(), O_RDONLY);
-    if (fd == -1) {
-        *errorString = qt_error_string(errno);
-        return nullptr;
-    }
-
-    QDeferredCleanup cleanup([fd]{
-       qt_safe_close(fd) ;
-    });
-
-    CompiledData::Unit header;
-    qint64 bytesRead = qt_safe_read(fd, reinterpret_cast<char *>(&header), sizeof(header));
-
-    if (bytesRead != sizeof(header)) {
-        *errorString = QStringLiteral("File too small for the header fields");
-        return nullptr;
-    }
-
-    if (!verifyHeader(&header, sourcePath, errorString))
-        return nullptr;
-
-    // Data structure and qt version matched, so now we can access the rest of the file safely.
-
-    length = static_cast<size_t>(lseek(fd, 0, SEEK_END));
-
-    void *ptr = mmap(nullptr, length, PROT_READ, MAP_SHARED, fd, /*offset*/0);
-    if (ptr == MAP_FAILED) {
-        *errorString = qt_error_string(errno);
-        return nullptr;
-    }
-    dataPtr = ptr;
-
-    return reinterpret_cast<CompiledData::Unit*>(dataPtr);
-}
-
-void CompilationUnitMapper::close()
-{
-    if (dataPtr != nullptr)
-        munmap(dataPtr, length);
-    dataPtr = nullptr;
-}
+    std::function<void()> callback;
+    template <typename Callback>
+    QDeferredCleanup(Callback &&cb)
+        : callback(cb)
+    {}
+    ~QDeferredCleanup() { callback(); }
+    QDeferredCleanup(const QDeferredCleanup &) = delete;
+    QDeferredCleanup &operator=(const QDeferredCleanup &) = delete;
+};
 
 QT_END_NAMESPACE
+
+#endif // QDEFERREDCLEANUP_P_H
