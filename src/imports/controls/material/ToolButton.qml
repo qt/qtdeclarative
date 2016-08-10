@@ -55,7 +55,8 @@ T.ToolButton {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: !control.enabled ? control.Material.hintTextColor :
+                control.checked || control.highlighted ? control.Material.accent : control.Material.primaryTextColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -76,6 +77,6 @@ T.ToolButton {
         pressed: control.pressed
         anchor: control
         active: control.enabled && (control.down || control.visualFocus || control.hovered)
-        color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
+        color: control.Material.rippleColor
     }
 }
