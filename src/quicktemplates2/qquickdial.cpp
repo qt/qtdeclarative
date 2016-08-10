@@ -126,9 +126,15 @@ qreal QQuickDialPrivate::valueAt(qreal position) const
 
 qreal QQuickDialPrivate::snapPosition(qreal position) const
 {
-    if (qFuzzyIsNull(stepSize))
+    const qreal range = to - from;
+    if (qFuzzyIsNull(range))
         return position;
-    return qRound(position / stepSize) * stepSize;
+
+    const qreal effectiveStep = stepSize / range;
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
 }
 
 qreal QQuickDialPrivate::positionAt(const QPoint &point) const
