@@ -244,7 +244,7 @@ private:
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
     #define generateRuntimeCall(t, function, ...) \
-        _as->generateFunctionCallImp(t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+        _as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
 
     int prepareVariableArguments(IR::ExprList* args);
     int prepareCallData(IR::ExprList* args, IR::Expr *thisObject);
@@ -260,7 +260,7 @@ private:
         // address.
         Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
-         _as->generateFunctionCallImp(retval, "lookup getter/setter",
+         _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
                                       LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
                                       arg1, arg2, arg3);
     }

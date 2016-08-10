@@ -108,36 +108,6 @@ struct RuntimeCall {
     bool isValid() const { return addr.offset >= 0; }
 };
 
-template <typename T>
-struct ExceptionCheck {
-    enum { NeedsCheck = 1 };
-};
-// push_catch and pop context methods shouldn't check for exceptions
-template <>
-struct ExceptionCheck<void (*)(QV4::ExecutionEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
-    enum { NeedsCheck = 0 };
-};
-template <>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A, B)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B, typename C>
-struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
-    enum { NeedsCheck = 0 };
-};
-
 class Assembler : public JSC::MacroAssembler, public TargetPlatform
 {
     Q_DISABLE_COPY(Assembler)
@@ -809,7 +779,7 @@ public:
     };
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
         int stackSpaceNeeded =   SizeOnStack<0, Arg1>::Size
                                + SizeOnStack<1, Arg2>::Size
@@ -852,7 +822,7 @@ public:
         if (stackSpaceNeeded)
             addPtr(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
 
-        if (ExceptionCheck<Callable>::NeedsCheck) {
+        if (needsExceptionCheck) {
             checkException();
         }
 
@@ -861,33 +831,33 @@ public:
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, arg4, VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)

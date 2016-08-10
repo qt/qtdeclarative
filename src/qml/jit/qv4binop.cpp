@@ -45,17 +45,17 @@ using namespace QV4;
 using namespace JIT;
 
 #define OP(op) \
-    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, 0, 0 }
+    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 #define OPCONTEXT(op) \
-    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), 0, 0 }
+    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 
 #define INLINE_OP(op, memOp, immOp) \
-    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, memOp, immOp }
+    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 #define INLINE_OPCONTEXT(op, memOp, immOp) \
-    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), memOp, immOp }
+    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 
 #define NULL_OP \
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0, 0, false }
 
 const Binop::OpInfo Binop::operations[IR::LastAluOp + 1] = {
     NULL_OP, // OpInvalid
@@ -128,11 +128,11 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
     RuntimeCall fallBack(info.fallbackImplementation);
     RuntimeCall context(info.contextImplementation);
     if (fallBack.isValid()) {
-        as->generateFunctionCallImp(target, info.name, fallBack,
+        as->generateFunctionCallImp(info.needsExceptionCheck, target, info.name, fallBack,
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));
     } else if (context.isValid()) {
-        as->generateFunctionCallImp(target, info.name, context,
+        as->generateFunctionCallImp(info.needsExceptionCheck, target, info.name, context,
                                      Assembler::EngineRegister,
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));

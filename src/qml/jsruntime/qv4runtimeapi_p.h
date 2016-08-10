@@ -58,8 +58,41 @@ namespace QV4 {
 
 struct NoThrowEngine;
 
+namespace {
+template <typename T>
+struct ExceptionCheck {
+    enum { NeedsCheck = 1 };
+};
+// push_catch and pop context methods shouldn't check for exceptions
+template <>
+struct ExceptionCheck<void (*)(QV4::ExecutionEngine *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
+    enum { NeedsCheck = 0 };
+};
+template <>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A, B)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B, typename C>
+struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
+    enum { NeedsCheck = 0 };
+};
+} // anonymous namespace
+
 #define RUNTIME_METHOD(returnvalue, name, args) \
     typedef returnvalue (*Method_##name)args; \
+    enum { Method_##name##_NeedsExceptionCheck = ExceptionCheck<Method_##name>::NeedsCheck }; \
     static returnvalue method_##name args; \
     const Method_##name name
 
