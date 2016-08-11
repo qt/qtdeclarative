@@ -572,7 +572,7 @@ bool QmlProfilerData::save(const QString &filename)
     stream.writeEndElement(); // eventData
 
     stream.writeStartElement(QStringLiteral("profilerDataModel"));
-    foreach (const QmlRangeEventStartInstance &event, d->startInstanceList) {
+    for (const QmlRangeEventStartInstance &event : qAsConst(d->startInstanceList)) {
         stream.writeStartElement(QStringLiteral("range"));
         stream.writeAttribute(QStringLiteral("startTime"), QString::number(event.startTime));
         if (event.duration >= 0)

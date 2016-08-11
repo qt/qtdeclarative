@@ -171,7 +171,7 @@ QString resolveImportPath(const QString &uri, const QString &version)
 
     QString ver = version;
     while (true) {
-        foreach (const QString &qmlImportPath, g_qmlImportPaths) {
+        for (const QString &qmlImportPath : qAsConst(g_qmlImportPaths)) {
             // Search for the most specific version first, and search
             // also for the version in parent modules. For example:
             // - qml/QtQml/Models.2.0
@@ -230,8 +230,8 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             if (!classnames.isEmpty())
                 import.insert(QStringLiteral("classname"), classnames);
             if (plugininfo.contains(dependenciesLiteral())) {
-                QStringList dependencies = plugininfo.value(dependenciesLiteral()).toStringList();
-                foreach (const QString &line, dependencies) {
+                const QStringList dependencies = plugininfo.value(dependenciesLiteral()).toStringList();
+                for (const QString &line : dependencies) {
                     const auto dep = line.splitRef(QLatin1Char(' '));
                     QVariantMap depImport;
                     depImport[typeLiteral()] = QStringLiteral("module");
@@ -362,7 +362,7 @@ QVariantList findQmlImportsInFile(const QString &filePath)
 QVariantList mergeImports(const QVariantList &a, const QVariantList &b)
 {
     QVariantList merged = a;
-    foreach (const QVariant &variant, b) {
+    for (const QVariant &variant : b) {
         if (!merged.contains(variant))
             merged.append(variant);
     }
@@ -421,16 +421,16 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
             continue;
         }
 
-        foreach (const QFileInfo &x, entries)
+        for (const QFileInfo &x : entries)
             if (x.isFile())
                 ret = mergeImports(ret, findQmlImportsInFile(x.absoluteFilePath()));
      }
      return ret;
 }
 
-QSet<QString> importModulePaths(QVariantList imports) {
+QSet<QString> importModulePaths(const QVariantList &imports) {
     QSet<QString> ret;
-    foreach (const QVariant &importVariant, imports) {
+    for (const QVariant &importVariant : imports) {
         QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
         QString path = import.value(pathLiteral()).toString();
         QString type = import.value(typeLiteral()).toString();
@@ -448,13 +448,13 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QString
     QVariantList ret;
 
     // scan all app root qml directories for imports
-    foreach (const QString &qmlDir, qmlDirs) {
+    for (const QString &qmlDir : qmlDirs) {
         QVariantList imports = findQmlImportsInDirectory(qmlDir);
         ret = mergeImports(ret, imports);
     }
 
     // scan app qml files for imports
-    foreach (const QString &file, scanFiles) {
+    for (const QString &file : scanFiles) {
         QVariantList imports = findQmlImportsInFile(file);
         ret = mergeImports(ret, imports);
     }
