@@ -162,7 +162,7 @@ ApplicationWindow {
     FileDialog {
         id: openDialog
         fileMode: FileDialog.OpenFile
-        nameFilters: ["Text files (*.txt)", "HTML files (*.html, *.htm)"]
+        nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
         onFileSelected: document.fileUrl = file
     }
 
