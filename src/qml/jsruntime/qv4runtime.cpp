@@ -1204,19 +1204,19 @@ ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
 void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
 {
     engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
-    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
+    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
 }
 
 void Runtime::pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
     ExecutionContext *c = engine->currentContext;
     engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
-    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
+    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
 }
 
 void Runtime::popScope(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
+    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
     engine->popContext();
     engine->jsStackTop -= 2;
 }
