@@ -88,7 +88,7 @@ public:
     explicit DocumentHandler(QObject *parent = nullptr);
 
     QQuickTextDocument *document() const;
-    void setDocument(QQuickTextDocument *quickDoc);
+    void setDocument(QQuickTextDocument *document);
 
     int cursorPosition() const;
     void setCursorPosition(int position);
@@ -157,10 +157,10 @@ Q_SIGNALS:
 private:
     void reset();
     QTextCursor textCursor() const;
+    QTextDocument *textDocument() const;
     void mergeFormatOnWordOrSelection(const QTextCharFormat &format);
 
-    QQuickTextDocument *m_quickDoc;
-    QTextDocument *m_doc;
+    QQuickTextDocument *m_document;
 
     int m_cursorPosition;
     int m_selectionStart;

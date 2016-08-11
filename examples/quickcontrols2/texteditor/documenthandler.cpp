@@ -61,7 +61,7 @@
 
 DocumentHandler::DocumentHandler(QObject *parent)
     : QObject(parent)
-    , m_doc(nullptr)
+    , m_document(nullptr)
     , m_cursorPosition(-1)
     , m_selectionStart(0)
     , m_selectionEnd(0)
@@ -70,20 +70,15 @@ DocumentHandler::DocumentHandler(QObject *parent)
 
 QQuickTextDocument *DocumentHandler::document() const
 {
-    return m_quickDoc;
+    return m_document;
 }
 
-void DocumentHandler::setDocument(QQuickTextDocument *quickDoc)
+void DocumentHandler::setDocument(QQuickTextDocument *document)
 {
-    if (quickDoc == m_quickDoc)
+    if (document == m_document)
         return;
 
-    m_quickDoc = quickDoc;
-    m_doc = nullptr;
-
-    if (quickDoc)
-        m_doc = quickDoc->textDocument();
-
+    m_document = document;
     emit documentChanged();
 }
 
@@ -179,7 +174,7 @@ Qt::Alignment DocumentHandler::alignment() const
 
 void DocumentHandler::setAlignment(Qt::Alignment alignment)
 {
-    if (!m_doc)
+    if (!m_document)
         return;
 
     QTextBlockFormat format;
@@ -313,8 +308,8 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
             QByteArray data = file.readAll();
             QTextCodec *codec = QTextCodec::codecForHtml(data);
             setText(codec->toUnicode(data));
-            if (m_doc)
-                m_doc->setModified(false);
+            if (QTextDocument *doc = textDocument())
+                doc->setModified(false);
             if (fileName.isEmpty())
                 m_documentTitle = QStringLiteral("untitled.txt");
             else
@@ -331,7 +326,8 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
 
 void DocumentHandler::saveAs(const QUrl &fileUrl)
 {
-    if (!m_doc)
+    QTextDocument *doc = textDocument();
+    if (!doc)
         return;
 
     const QString filePath = fileUrl.toLocalFile();
@@ -341,7 +337,7 @@ void DocumentHandler::saveAs(const QUrl &fileUrl)
         emit error(tr("Cannot save: ") + file.errorString());
         return;
     }
-    file.write((isHtml ? m_doc->toHtml() : m_doc->toPlainText()).toUtf8());
+    file.write((isHtml ? doc->toHtml() : doc->toPlainText()).toUtf8());
     file.close();
     setFileUrl(fileUrl);
 }
@@ -359,10 +355,11 @@ void DocumentHandler::reset()
 
 QTextCursor DocumentHandler::textCursor() const
 {
-    if (!m_doc)
+    QTextDocument *doc = textDocument();
+    if (!doc)
         return QTextCursor();
 
-    QTextCursor cursor = QTextCursor(m_doc);
+    QTextCursor cursor = QTextCursor(doc);
     if (m_selectionStart != m_selectionEnd) {
         cursor.setPosition(m_selectionStart);
         cursor.setPosition(m_selectionEnd, QTextCursor::KeepAnchor);
@@ -370,6 +367,14 @@ QTextCursor DocumentHandler::textCursor() const
         cursor.setPosition(m_cursorPosition);
     }
     return cursor;
+}
+
+QTextDocument *DocumentHandler::textDocument() const
+{
+    if (!m_document)
+        return nullptr;
+
+    return m_document->textDocument();
 }
 
 void DocumentHandler::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
