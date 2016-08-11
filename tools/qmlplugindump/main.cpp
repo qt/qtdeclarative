@@ -205,7 +205,8 @@ QByteArray convertToId(const QMetaObject *mo)
 
 // Collect all metaobjects for types registered with qmlRegisterType() without parameters
 void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<const QMetaObject *>& metas ) {
-    foreach (const QQmlType *ty, QQmlMetaType::qmlAllTypes()) {
+    const auto qmlAllTypes = QQmlMetaType::qmlAllTypes();
+    for (const QQmlType *ty : qmlAllTypes) {
         if ( ! metas.contains(ty->metaObject()) ) {
             if (!ty->isComposite()) {
                 collectReachableMetaObjects(engine, ty, &metas);
@@ -225,7 +226,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
     metas.insert(FriendlyQObject::qtMeta());
 
     QHash<QByteArray, QSet<QByteArray> > extensions;
-    foreach (const QQmlType *ty, QQmlMetaType::qmlTypes()) {
+    const auto qmlTypes = QQmlMetaType::qmlTypes();
+    for (const QQmlType *ty : qmlTypes) {
         if (!ty->isCreatable())
             noncreatables.insert(ty->metaObject());
         if (ty->isSingleton())
@@ -275,7 +277,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
     if (creatable) {
         // find even more QMetaObjects by instantiating QML types and running
         // over the instances
-        foreach (QQmlType *ty, QQmlMetaType::qmlTypes()) {
+        for (QQmlType *ty : qmlTypes) {
             if (skip.contains(ty))
                 continue;
             if (ty->isExtendedType())
@@ -766,7 +768,8 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
         const QStringList requiredKeys = QStringList() << QStringLiteral("name")
                                                        << QStringLiteral("type")
                                                        << QStringLiteral("version");
-        foreach (const QJsonValue &dep, doc.array()) {
+        const auto deps = doc.array();
+        for (const QJsonValue &dep : deps) {
             if (dep.isObject()) {
                 QJsonObject obj = dep.toObject();
                 for (const QString &requiredKey : requiredKeys)
@@ -833,7 +836,8 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     QStringList commandArgs = QStringList()
             << QLatin1String("-qmlFiles")
             << QLatin1String("-");
-    foreach (const QString &path, engine.importPathList())
+    const auto importPathList = engine.importPathList();
+    for (const QString &path : importPathList)
         commandArgs << QLatin1String("-importPath") << path;
 
     QProcess importScanner;
@@ -1132,8 +1136,9 @@ int main(int argc, char *argv[])
         QQmlComponent c(&engine);
         c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loaddependencies.qml"));
         c.create();
-        if (!c.errors().isEmpty()) {
-            foreach (const QQmlError &error, c.errors())
+        const auto errors = c.errors();
+        if (!errors.isEmpty()) {
+            for (const QQmlError &error : errors)
                 std::cerr << qPrintable( error.toString() ) << std::endl;
             return EXIT_IMPORTERROR;
         }
@@ -1218,8 +1223,9 @@ int main(int argc, char *argv[])
 
             c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/typelist.qml"));
             c.create();
-            if (!c.errors().isEmpty()) {
-                foreach (const QQmlError &error, c.errors())
+            const auto errors = c.errors();
+            if (!errors.isEmpty()) {
+                for (const QQmlError &error : errors)
                     std::cerr << qPrintable( error.toString() ) << std::endl;
                 return EXIT_IMPORTERROR;
             }

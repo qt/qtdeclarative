@@ -256,7 +256,8 @@ static QVariantList findQmlImportsInQmlCode(const QString &filePath, const QStri
 
     if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
         // Extract errors from the parser
-        foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+        const auto diagnosticMessages = parser.diagnosticMessages();
+        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
                       << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
         }
@@ -334,7 +335,8 @@ QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
     QQmlJS::Parser parser(&ee);
     parser.parseProgram();
 
-    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages())
+    const auto diagnosticMessages = parser.diagnosticMessages();
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
         if (m.isError())
             return QVariantList();
 
