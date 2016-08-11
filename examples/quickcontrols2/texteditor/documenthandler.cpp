@@ -267,18 +267,18 @@ void DocumentHandler::setText(const QString &text)
     emit textChanged();
 }
 
-QString DocumentHandler::documentTitle() const
+QString DocumentHandler::fileName() const
 {
-    return m_documentTitle;
+    const QString filePath = QQmlFile::urlToLocalFileOrQrc(m_fileUrl);
+    const QString fileName = QFileInfo(filePath).fileName();
+    if (fileName.isEmpty())
+        return QStringLiteral("untitled.txt");
+    return fileName;
 }
 
-void DocumentHandler::setDocumentTitle(const QString &title)
+QString DocumentHandler::fileType() const
 {
-    if (title == m_documentTitle)
-        return;
-
-    m_documentTitle = title;
-    emit documentTitleChanged();
+    return QFileInfo(fileName()).suffix();
 }
 
 QUrl DocumentHandler::fileUrl() const
@@ -291,7 +291,6 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
     if (fileUrl == m_fileUrl)
         return;
 
-    m_fileUrl = fileUrl;
     QString fileName = QQmlFile::urlToLocalFileOrQrc(fileUrl);
     if (QFile::exists(fileName)) {
         QFile file(fileName);
@@ -301,17 +300,14 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
             setText(codec->toUnicode(data));
             if (QTextDocument *doc = textDocument())
                 doc->setModified(false);
-            if (fileName.isEmpty())
-                m_documentTitle = QStringLiteral("untitled.txt");
-            else
-                m_documentTitle = QFileInfo(fileName).fileName();
 
             emit textChanged();
-            emit documentTitleChanged();
 
             reset();
         }
     }
+
+    m_fileUrl = fileUrl;
     emit fileUrlChanged();
 }
 
@@ -330,7 +326,12 @@ void DocumentHandler::saveAs(const QUrl &fileUrl)
     }
     file.write((isHtml ? doc->toHtml() : doc->toPlainText()).toUtf8());
     file.close();
-    setFileUrl(fileUrl);
+
+    if (fileUrl == m_fileUrl)
+        return;
+
+    m_fileUrl = fileUrl;
+    emit fileUrlChanged();
 }
 
 void DocumentHandler::reset()

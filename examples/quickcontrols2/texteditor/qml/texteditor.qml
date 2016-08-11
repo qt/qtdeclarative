@@ -53,7 +53,7 @@ ApplicationWindow {
     width: 1024
     height: 600
     visible: true
-    title: document.documentTitle + " - Text Editor Example"
+    title: document.fileName + " - Text Editor Example"
 
     Component.onCompleted: {
         x = Screen.width / 2 - width / 2
@@ -169,7 +169,7 @@ ApplicationWindow {
     FileDialog {
         id: saveDialog
         fileMode: FileDialog.SaveFile
-        defaultSuffix: "html"
+        defaultSuffix: document.fileType
         nameFilters: openDialog.nameFilters
         onFileSelected: document.saveAs(file)
     }
