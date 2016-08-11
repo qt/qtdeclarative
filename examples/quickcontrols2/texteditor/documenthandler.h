@@ -173,4 +173,4 @@ private:
     QUrl m_fileUrl;
 };
 
-#endif
+#endif // DOCUMENTHANDLER_H

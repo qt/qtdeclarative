@@ -50,13 +50,12 @@
 
 #include "documenthandler.h"
 
+#include <QFile>
 #include <QFileInfo>
-#include <QFontDatabase>
 #include <QQmlFile>
 #include <QQuickTextDocument>
 #include <QTextCharFormat>
 #include <QTextCodec>
-#include <QTextCursor>
 #include <QTextDocument>
 
 DocumentHandler::DocumentHandler(QObject *parent)
