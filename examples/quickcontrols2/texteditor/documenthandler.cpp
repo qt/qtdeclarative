@@ -94,6 +94,7 @@ void DocumentHandler::setCursorPosition(int position)
 
     m_cursorPosition = position;
     reset();
+    emit cursorPositionChanged();
 }
 
 int DocumentHandler::selectionStart() const
@@ -135,9 +136,6 @@ QString DocumentHandler::fontFamily() const
 
 void DocumentHandler::setFontFamily(const QString &family)
 {
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
     QTextCharFormat format;
     format.setFontFamily(family);
     mergeFormatOnWordOrSelection(format);
@@ -155,9 +153,6 @@ QColor DocumentHandler::textColor() const
 
 void DocumentHandler::setTextColor(const QColor &color)
 {
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
     QTextCharFormat format;
     format.setForeground(QBrush(color));
     mergeFormatOnWordOrSelection(format);
@@ -174,9 +169,6 @@ Qt::Alignment DocumentHandler::alignment() const
 
 void DocumentHandler::setAlignment(Qt::Alignment alignment)
 {
-    if (!m_document)
-        return;
-
     QTextBlockFormat format;
     format.setAlignment(alignment);
     QTextCursor cursor = textCursor();
