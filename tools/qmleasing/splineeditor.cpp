@@ -34,6 +34,7 @@
 #include <QContextMenuEvent>
 #include <QDebug>
 #include <QApplication>
+#include <QVector>
 
 const int canvasWidth = 640;
 const int canvasHeight = 320;
@@ -677,7 +678,7 @@ void SplineEditor::setEasingCurve(const QString &code)
         cleanCode.chop(1);
         const QStringList stringList = cleanCode.split(QLatin1Char(','), QString::SkipEmptyParts);
         if (stringList.count() >= 6 && (stringList.count() % 6 == 0)) {
-            QList<qreal> realList;
+            QVector<qreal> realList;
             realList.reserve(stringList.count());
             foreach (const QString &string, stringList) {
                 bool ok;
@@ -685,12 +686,12 @@ void SplineEditor::setEasingCurve(const QString &code)
                 if (!ok)
                     return;
             }
-            QList<QPointF> points;
+            QVector<QPointF> points;
             const int count = realList.count() / 2;
             points.reserve(count);
             for (int i = 0; i < count; ++i)
                 points.append(QPointF(realList.at(i * 2), realList.at(i * 2 + 1)));
-            if (points.last() == QPointF(1.0, 1.0)) {
+            if (points.constLast() == QPointF(1.0, 1.0)) {
                 QEasingCurve easingCurve(QEasingCurve::BezierSpline);
 
                 for (int i = 0; i < points.count() / 3; ++i) {
