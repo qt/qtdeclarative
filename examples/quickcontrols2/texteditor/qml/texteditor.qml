@@ -163,7 +163,7 @@ ApplicationWindow {
         id: openDialog
         fileMode: FileDialog.OpenFile
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
-        onFileSelected: document.fileUrl = file
+        onFileSelected: document.load(file)
     }
 
     FileDialog {
@@ -361,7 +361,10 @@ ApplicationWindow {
         textColor: colorDialog.currentColor
         // TODO: if we don't do this, e.g. the bold button won't be checked
         // when it should be (the title is bold)
-        Component.onCompleted: document.fileUrl = "qrc:/texteditor.html"
+        Component.onCompleted: document.load("qrc:/texteditor.html")
+        onLoaded: {
+            textArea.text = text
+        }
         onError: {
             errorDialog.text = message
             errorDialog.visible = true
@@ -375,7 +378,6 @@ ApplicationWindow {
 
         TextArea.flickable: TextArea {
             id: textArea
-            text: document.text
             textFormat: Qt.RichText
             wrapMode: TextArea.Wrap
             focus: true

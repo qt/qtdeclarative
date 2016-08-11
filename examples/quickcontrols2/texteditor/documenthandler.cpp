@@ -253,20 +253,6 @@ void DocumentHandler::setFontSize(int size)
     emit fontSizeChanged();
 }
 
-QString DocumentHandler::text() const
-{
-    return m_text;
-}
-
-void DocumentHandler::setText(const QString &text)
-{
-    if (text == m_text)
-        return;
-
-    m_text = text;
-    emit textChanged();
-}
-
 QString DocumentHandler::fileName() const
 {
     const QString filePath = QQmlFile::urlToLocalFileOrQrc(m_fileUrl);
@@ -286,7 +272,7 @@ QUrl DocumentHandler::fileUrl() const
     return m_fileUrl;
 }
 
-void DocumentHandler::setFileUrl(const QUrl &fileUrl)
+void DocumentHandler::load(const QUrl &fileUrl)
 {
     if (fileUrl == m_fileUrl)
         return;
@@ -297,12 +283,10 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
         if (file.open(QFile::ReadOnly)) {
             QByteArray data = file.readAll();
             QTextCodec *codec = QTextCodec::codecForHtml(data);
-            setText(codec->toUnicode(data));
             if (QTextDocument *doc = textDocument())
                 doc->setModified(false);
 
-            emit textChanged();
-
+            emit loaded(codec->toUnicode(data));
             reset();
         }
     }
