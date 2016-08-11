@@ -54,7 +54,27 @@
 #include <QtQuickTest/quicktestglobal.h>
 #include <QtCore/qobject.h>
 #include <QtGui/QWindow>
+#include <QtTest/qtesttouch.h>
+
 QT_BEGIN_NAMESPACE
+
+class QuickTestEvent;
+class Q_QUICK_TEST_EXPORT QQuickTouchEventSequence : public QObject
+{
+    Q_OBJECT
+public:
+    explicit QQuickTouchEventSequence(QuickTestEvent *testEvent, QObject *item = nullptr);
+public slots:
+    QObject* press(int touchId, QObject *item, qreal x, qreal y);
+    QObject* move(int touchId, QObject *item, qreal x, qreal y);
+    QObject* release(int touchId, QObject *item, qreal x, qreal y);
+    QObject* stationary(int touchId);
+    QObject* commit();
+
+private:
+    QTest::QTouchEventSequence m_sequence;
+    QuickTestEvent * const m_testEvent;
+};
 
 class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
 {
@@ -91,9 +111,13 @@ public Q_SLOTS:
                int modifiers, int xDelta, int yDelta, int delay);
 #endif
 
+    QQuickTouchEventSequence *touchEvent(QObject *item = nullptr);
 private:
     QWindow *eventWindow(QObject *item = 0);
     QWindow *activeWindow();
+    QTouchDevice *touchDevice();
+
+    friend class QQuickTouchEventSequence;
 };
 
 QT_END_NAMESPACE

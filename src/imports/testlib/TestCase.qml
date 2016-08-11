@@ -1317,6 +1317,109 @@ Item {
             qtest_fail("window not shown", 2)
    }
 
+    /*!
+        \qmlmethod TouchEventSequence TestCase::touchEvent(object item)
+
+        \since 5.9
+
+        Begins a sequence of touch events through a simulated QTouchDevice::TouchScreen.
+        Events are delivered to the window containing \a item.
+
+        The returned object is used to enumerate events to be delivered through a single
+        QTouchEvent. Touches are delivered to the window containing the TestCase unless
+        otherwise specified.
+
+        \code
+        Rectangle {
+            width: 640; height: 480
+
+            MultiPointTouchArea {
+                id: area
+                anchors.fill: parent
+
+                property bool touched: false
+
+                onPressed: touched = true
+            }
+
+            TestCase {
+                name: "ItemTests"
+                when: area.pressed
+                id: test1
+
+                function test_touch() {
+                    var touch = touchEvent(area);
+                    touch.press(0, area, 10, 10);
+                    touch.commit();
+                    verify(area.touched);
+                }
+            }
+        }
+        \endcode
+
+        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QTouchDevice::TouchScreen
+    */
+
+    function touchEvent(item) {
+        if (!item)
+            qtest_fail("No item given to touchEvent", 1)
+
+        return {
+            _defaultItem: item,
+            _sequence: qtest_events.touchEvent(item),
+
+            press: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::press", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.press(id, target, x, y);
+                return this;
+            },
+
+            move: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::move", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.move(id, target, x, y);
+                return this;
+            },
+
+            stationary: function (id) {
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::stationary", 1);
+                this._sequence.stationary(id);
+                return this;
+            },
+
+            release: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::release", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.release(id, target, x, y);
+                return this;
+            },
+
+            commit: function () {
+                 this._sequence.commit();
+                 return this;
+            }
+        };
+    }
 
     // Functions that can be overridden in subclasses for init/cleanup duties.
     /*!
