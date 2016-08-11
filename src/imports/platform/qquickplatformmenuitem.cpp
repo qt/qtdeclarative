@@ -315,6 +315,8 @@ void QQuickPlatformMenuItem::setVisible(bool visible)
 
     This property holds whether the item is a separator line. The default value
     is \c false.
+
+    \sa MenuSeparator
 */
 bool QQuickPlatformMenuItem::isSeparator() const
 {

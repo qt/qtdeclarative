@@ -48,6 +48,7 @@
 #include "qquickplatformmenubar_p.h"
 #include "qquickplatformmenuitem_p.h"
 #include "qquickplatformmenuitemgroup_p.h"
+#include "qquickplatformmenuseparator_p.h"
 
 #include "qquickplatformsystemtrayicon_p.h"
 
@@ -88,6 +89,7 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
     qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
+    qmlRegisterType<QQuickPlatformMenuSeparator>(uri, 1, 0, "MenuSeparator");
 
     qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
 }

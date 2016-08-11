@@ -422,9 +422,7 @@ ApplicationWindow {
             onTriggered: textArea.paste()
         }
 
-        MenuItem {
-            separator: true
-        }
+        MenuSeparator {}
 
         MenuItem {
             text: qsTr("Font...")

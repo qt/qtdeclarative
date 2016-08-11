@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa MenuItem, MenuBar
+    \sa MenuItem, MenuSeparator, MenuBar
 */
 
 /*!
