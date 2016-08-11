@@ -87,6 +87,219 @@ void DocumentHandler::setDocument(QQuickTextDocument *quickDoc)
     emit documentChanged();
 }
 
+int DocumentHandler::cursorPosition() const
+{
+    return m_cursorPosition;
+}
+
+void DocumentHandler::setCursorPosition(int position)
+{
+    if (position == m_cursorPosition)
+        return;
+
+    m_cursorPosition = position;
+    reset();
+}
+
+int DocumentHandler::selectionStart() const
+{
+    return m_selectionStart;
+}
+
+void DocumentHandler::setSelectionStart(int position)
+{
+    if (position == m_selectionStart)
+        return;
+
+    m_selectionStart = position;
+    emit selectionStartChanged();
+}
+
+int DocumentHandler::selectionEnd() const
+{
+    return m_selectionEnd;
+}
+
+void DocumentHandler::setSelectionEnd(int position)
+{
+    if (position == m_selectionEnd)
+        return;
+
+    m_selectionEnd = position;
+    emit selectionEndChanged();
+}
+
+QString DocumentHandler::fontFamily() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return QString();
+    QTextCharFormat format = cursor.charFormat();
+    return format.font().family();
+}
+
+void DocumentHandler::setFontFamily(const QString &family)
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return;
+    QTextCharFormat format;
+    format.setFontFamily(family);
+    mergeFormatOnWordOrSelection(format);
+    emit fontFamilyChanged();
+}
+
+QColor DocumentHandler::textColor() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return QColor(Qt::black);
+    QTextCharFormat format = cursor.charFormat();
+    return format.foreground().color();
+}
+
+void DocumentHandler::setTextColor(const QColor &color)
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return;
+    QTextCharFormat format;
+    format.setForeground(QBrush(color));
+    mergeFormatOnWordOrSelection(format);
+    emit textColorChanged();
+}
+
+Qt::Alignment DocumentHandler::alignment() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return Qt::AlignLeft;
+    return textCursor().blockFormat().alignment();
+}
+
+void DocumentHandler::setAlignment(Qt::Alignment alignment)
+{
+    if (!m_doc)
+        return;
+
+    QTextBlockFormat format;
+    format.setAlignment(alignment);
+    QTextCursor cursor = textCursor();
+    cursor.mergeBlockFormat(format);
+    emit alignmentChanged();
+}
+
+bool DocumentHandler::bold() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return false;
+    return textCursor().charFormat().fontWeight() == QFont::Bold;
+}
+
+void DocumentHandler::setBold(bool bold)
+{
+    QTextCharFormat format;
+    format.setFontWeight(bold ? QFont::Bold : QFont::Normal);
+    mergeFormatOnWordOrSelection(format);
+    emit boldChanged();
+}
+
+bool DocumentHandler::italic() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return false;
+    return textCursor().charFormat().fontItalic();
+}
+
+void DocumentHandler::setItalic(bool italic)
+{
+    QTextCharFormat format;
+    format.setFontItalic(italic);
+    mergeFormatOnWordOrSelection(format);
+    emit italicChanged();
+}
+
+bool DocumentHandler::underline() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return false;
+    return textCursor().charFormat().fontUnderline();
+}
+
+void DocumentHandler::setUnderline(bool underline)
+{
+    QTextCharFormat format;
+    format.setFontUnderline(underline);
+    mergeFormatOnWordOrSelection(format);
+    emit underlineChanged();
+}
+
+int DocumentHandler::fontSize() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return 0;
+    QTextCharFormat format = cursor.charFormat();
+    return format.font().pointSize();
+}
+
+void DocumentHandler::setFontSize(int size)
+{
+    if (size <= 0)
+        return;
+
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return;
+
+    if (!cursor.hasSelection())
+        cursor.select(QTextCursor::WordUnderCursor);
+
+    if (cursor.charFormat().property(QTextFormat::FontPointSize).toInt() == size)
+        return;
+
+    QTextCharFormat format;
+    format.setFontPointSize(size);
+    mergeFormatOnWordOrSelection(format);
+    emit fontSizeChanged();
+}
+
+QString DocumentHandler::text() const
+{
+    return m_text;
+}
+
+void DocumentHandler::setText(const QString &text)
+{
+    if (text == m_text)
+        return;
+
+    m_text = text;
+    emit textChanged();
+}
+
+QString DocumentHandler::documentTitle() const
+{
+    return m_documentTitle;
+}
+
+void DocumentHandler::setDocumentTitle(const QString &title)
+{
+    if (title == m_documentTitle)
+        return;
+
+    m_documentTitle = title;
+    emit documentTitleChanged();
+}
+
+QUrl DocumentHandler::fileUrl() const
+{
+    return m_fileUrl;
+}
+
 void DocumentHandler::setFileUrl(const QUrl &fileUrl)
 {
     if (fileUrl == m_fileUrl)
@@ -116,29 +329,6 @@ void DocumentHandler::setFileUrl(const QUrl &fileUrl)
     emit fileUrlChanged();
 }
 
-QString DocumentHandler::documentTitle() const
-{
-    return m_documentTitle;
-}
-
-void DocumentHandler::setDocumentTitle(const QString &documentTitle)
-{
-    if (documentTitle == m_documentTitle)
-        return;
-
-    m_documentTitle = documentTitle;
-    emit documentTitleChanged();
-}
-
-void DocumentHandler::setText(const QString &text)
-{
-    if (text == m_text)
-        return;
-
-    m_text = text;
-    emit textChanged();
-}
-
 void DocumentHandler::saveAs(const QUrl &fileUrl)
 {
     if (!m_doc)
@@ -154,26 +344,6 @@ void DocumentHandler::saveAs(const QUrl &fileUrl)
     file.write((isHtml ? m_doc->toHtml() : m_doc->toPlainText()).toUtf8());
     file.close();
     setFileUrl(fileUrl);
-}
-
-QUrl DocumentHandler::fileUrl() const
-{
-    return m_fileUrl;
-}
-
-QString DocumentHandler::text() const
-{
-    return m_text;
-}
-
-void DocumentHandler::setCursorPosition(int position)
-{
-    if (position == m_cursorPosition)
-        return;
-
-    m_cursorPosition = position;
-
-    reset();
 }
 
 void DocumentHandler::reset()
@@ -208,160 +378,4 @@ void DocumentHandler::mergeFormatOnWordOrSelection(const QTextCharFormat &format
     if (!cursor.hasSelection())
         cursor.select(QTextCursor::WordUnderCursor);
     cursor.mergeCharFormat(format);
-}
-
-void DocumentHandler::setSelectionStart(int position)
-{
-    if (position == m_selectionStart)
-        return;
-
-    m_selectionStart = position;
-    emit selectionStartChanged();
-}
-
-void DocumentHandler::setSelectionEnd(int position)
-{
-    if (position == m_selectionEnd)
-        return;
-
-    m_selectionEnd = position;
-    emit selectionEndChanged();
-}
-
-void DocumentHandler::setAlignment(Qt::Alignment alignment)
-{
-    if (!m_doc)
-        return;
-
-    QTextBlockFormat format;
-    format.setAlignment(alignment);
-    QTextCursor cursor = textCursor();
-    cursor.mergeBlockFormat(format);
-    emit alignmentChanged();
-}
-
-Qt::Alignment DocumentHandler::alignment() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return Qt::AlignLeft;
-    return textCursor().blockFormat().alignment();
-}
-
-bool DocumentHandler::bold() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontWeight() == QFont::Bold;
-}
-
-bool DocumentHandler::italic() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontItalic();
-}
-
-bool DocumentHandler::underline() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontUnderline();
-}
-
-void DocumentHandler::setBold(bool bold)
-{
-    QTextCharFormat format;
-    format.setFontWeight(bold ? QFont::Bold : QFont::Normal);
-    mergeFormatOnWordOrSelection(format);
-    emit boldChanged();
-}
-
-void DocumentHandler::setItalic(bool italic)
-{
-    QTextCharFormat format;
-    format.setFontItalic(italic);
-    mergeFormatOnWordOrSelection(format);
-    emit italicChanged();
-}
-
-void DocumentHandler::setUnderline(bool underline)
-{
-    QTextCharFormat format;
-    format.setFontUnderline(underline);
-    mergeFormatOnWordOrSelection(format);
-    emit underlineChanged();
-}
-
-int DocumentHandler::fontSize() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return 0;
-    QTextCharFormat format = cursor.charFormat();
-    return format.font().pointSize();
-}
-
-void DocumentHandler::setFontSize(int fontSize)
-{
-    if (fontSize <= 0)
-        return;
-
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
-
-    if (!cursor.hasSelection())
-        cursor.select(QTextCursor::WordUnderCursor);
-
-    if (cursor.charFormat().property(QTextFormat::FontPointSize).toInt() == fontSize)
-        return;
-
-    QTextCharFormat format;
-    format.setFontPointSize(fontSize);
-    mergeFormatOnWordOrSelection(format);
-    emit fontSizeChanged();
-}
-
-QColor DocumentHandler::textColor() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return QColor(Qt::black);
-    QTextCharFormat format = cursor.charFormat();
-    return format.foreground().color();
-}
-
-void DocumentHandler::setTextColor(const QColor &color)
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
-    QTextCharFormat format;
-    format.setForeground(QBrush(color));
-    mergeFormatOnWordOrSelection(format);
-    emit textColorChanged();
-}
-
-QString DocumentHandler::fontFamily() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return QString();
-    QTextCharFormat format = cursor.charFormat();
-    return format.font().family();
-}
-
-void DocumentHandler::setFontFamily(const QString &fontFamily)
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
-    QTextCharFormat format;
-    format.setFontFamily(fontFamily);
-    mergeFormatOnWordOrSelection(format);
-    emit fontFamilyChanged();
 }

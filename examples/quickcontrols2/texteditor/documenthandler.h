@@ -80,9 +80,9 @@ class DocumentHandler : public QObject
 
     Q_PROPERTY(int fontSize READ fontSize WRITE setFontSize NOTIFY fontSizeChanged)
 
-    Q_PROPERTY(QUrl fileUrl READ fileUrl WRITE setFileUrl NOTIFY fileUrlChanged)
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QString documentTitle READ documentTitle WRITE setDocumentTitle NOTIFY documentTitleChanged)
+    Q_PROPERTY(QUrl fileUrl READ fileUrl WRITE setFileUrl NOTIFY fileUrlChanged)
 
 public:
     explicit DocumentHandler(QObject *parent = nullptr);
@@ -90,44 +90,47 @@ public:
     QQuickTextDocument *document() const;
     void setDocument(QQuickTextDocument *quickDoc);
 
+    int cursorPosition() const;
     void setCursorPosition(int position);
+
+    int selectionStart() const;
     void setSelectionStart(int position);
+
+    int selectionEnd() const;
     void setSelectionEnd(int position);
 
-    int cursorPosition() const { return m_cursorPosition; }
-    int selectionStart() const { return m_selectionStart; }
-    int selectionEnd() const { return m_selectionEnd; }
-
     QString fontFamily() const;
+    void setFontFamily(const QString &family);
 
     QColor textColor() const;
+    void setTextColor(const QColor &color);
 
     Qt::Alignment alignment() const;
     void setAlignment(Qt::Alignment alignment);
 
     bool bold() const;
-    bool italic() const;
-    bool underline() const;
-    int fontSize() const;
+    void setBold(bool bold);
 
-    QUrl fileUrl() const;
+    bool italic() const;
+    void setItalic(bool italic);
+
+    bool underline() const;
+    void setUnderline(bool underline);
+
+    int fontSize() const;
+    void setFontSize(int size);
+
     QString text() const;
+    void setText(const QString &text);
 
     QString documentTitle() const;
+    void setDocumentTitle(const QString &title);
+
+    QUrl fileUrl() const;
+    void setFileUrl(const QUrl &fileUrl);
 
 public Q_SLOTS:
-    void setBold(bool bold);
-    void setItalic(bool italic);
-    void setUnderline(bool underline);
-    void setFontSize(int fontSize);
-    void setTextColor(const QColor &color);
-    void setFontFamily(const QString &fontFamily);
-
-    void setFileUrl(const QUrl &fileUrl);
-    void setText(const QString &text);
     void saveAs(const QUrl &fileUrl);
-
-    void setDocumentTitle(const QString &documentTitle);
 
 Q_SIGNALS:
     void documentChanged();
@@ -145,10 +148,10 @@ Q_SIGNALS:
 
     void fontSizeChanged();
 
-    void fileUrlChanged();
-
     void textChanged();
     void documentTitleChanged();
+    void fileUrlChanged();
+
     void error(const QString &message);
 
 private:
@@ -165,9 +168,9 @@ private:
 
     QFont m_font;
     int m_fontSize;
-    QUrl m_fileUrl;
     QString m_text;
     QString m_documentTitle;
+    QUrl m_fileUrl;
 };
 
 #endif
