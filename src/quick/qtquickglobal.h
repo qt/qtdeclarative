@@ -40,7 +40,9 @@
 #ifndef QTQUICKGLOBAL_H
 #define QTQUICKGLOBAL_H
 
-#include <QtCore/qglobal.h>
+#include <QtQml/qtqmlglobal.h>
+#include <QtGui/qtguiglobal.h>
+#include <QtQuick/qtquick-config.h>
 
 QT_BEGIN_NAMESPACE
 

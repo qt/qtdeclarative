@@ -1,0 +1,7 @@
+{
+    "module": "qml",
+    "depends": [
+        "core-private",
+        "network-private"
+    ]
+}

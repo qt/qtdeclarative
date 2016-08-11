@@ -1,0 +1,41 @@
+{
+    "module": "quick",
+    "depends": [
+        "qml-private",
+        "gui-private"
+    ],
+
+    "commandline": {
+        "options": {
+            "d3d12": "boolean"
+        }
+    },
+
+    "tests": {
+        "d3d12": {
+            "label": "Direct3D 12",
+            "type": "compile",
+            "test": "d3d12"
+        }
+    },
+
+    "features": {
+        "d3d12": {
+            "label": "Direct3D 12",
+            "purpose": "Provides a Direct3D 12 backend for the Qt Quick Scenegraph",
+            "condition": "tests.d3d12",
+            "output": [
+                "privateFeature"
+            ]
+        }
+    },
+
+    "summary": [
+        {
+            "section": "Qt Quick",
+            "entries": [
+                "d3d12"
+            ]
+        }
+    ]
+}
