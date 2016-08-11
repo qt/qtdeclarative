@@ -169,9 +169,9 @@ ApplicationWindow {
     FileDialog {
         id: saveDialog
         fileMode: FileDialog.SaveFile
+        defaultSuffix: "html"
         nameFilters: openDialog.nameFilters
-        // TODO: will eventually pass FileDialog's suffix property here
-        onFileSelected: document.saveAs(file, "")
+        onFileSelected: document.saveAs(file)
     }
 
     FontDialog {

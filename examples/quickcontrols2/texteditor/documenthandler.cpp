@@ -139,35 +139,21 @@ void DocumentHandler::setText(const QString &text)
     emit textChanged();
 }
 
-void DocumentHandler::saveAs(const QUrl &fileUrl, const QString &fileType)
+void DocumentHandler::saveAs(const QUrl &fileUrl)
 {
     if (!m_doc)
         return;
 
-    // TODO: remove this when FileDialog gets suffix property
-    QString localPath = fileUrl.toLocalFile();
-    QString extension = fileType;
-    if (extension.isEmpty()) {
-        if (QFile::exists(localPath)) {
-            extension = QFileInfo(localPath).suffix();
-        } else {
-            const int periodIndex = localPath.indexOf(QLatin1Char('.'));
-            if (periodIndex != -1)
-                extension = localPath.mid(periodIndex);
-        }
-    }
-
-    const bool isHtml = extension.contains(QLatin1String("htm"));
-    if (!localPath.endsWith(extension))
-        localPath += extension;
-    QFile f(localPath);
-    if (!f.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
-        emit error(tr("Cannot save: ") + f.errorString());
+    const QString filePath = fileUrl.toLocalFile();
+    const bool isHtml = QFileInfo(filePath).suffix().contains(QLatin1String("htm"));
+    QFile file(filePath);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate | (isHtml ? QFile::NotOpen : QFile::Text))) {
+        emit error(tr("Cannot save: ") + file.errorString());
         return;
     }
-    f.write((isHtml ? m_doc->toHtml() : m_doc->toPlainText()).toLocal8Bit());
-    f.close();
-    setFileUrl(QUrl::fromLocalFile(localPath));
+    file.write((isHtml ? m_doc->toHtml() : m_doc->toPlainText()).toUtf8());
+    file.close();
+    setFileUrl(fileUrl);
 }
 
 QUrl DocumentHandler::fileUrl() const

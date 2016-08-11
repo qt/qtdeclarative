@@ -125,7 +125,7 @@ public Q_SLOTS:
 
     void setFileUrl(const QUrl &fileUrl);
     void setText(const QString &text);
-    void saveAs(const QUrl &fileUrl, const QString &fileType);
+    void saveAs(const QUrl &fileUrl);
 
     void setDocumentTitle(const QString &documentTitle);
 
