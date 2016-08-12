@@ -383,6 +383,7 @@ ApplicationWindow {
             wrapMode: TextArea.Wrap
             focus: true
             selectByMouse: true
+            persistentSelection: true
             // Different styles have different padding and background
             // decorations, but since this editor is almost taking up the
             // entire window, we don't need them.
