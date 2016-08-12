@@ -1461,7 +1461,6 @@ void tst_qquickflickable::flickWithTouch(QQuickWindow *window, QTouchDevice *tou
     for (int i = 1; i <= 8; ++i) {
         QTest::touchEvent(window, touchDevice).move(0, from + i*diff/8, window);
         QQuickTouchUtils::flush(window);
-        QTest::qWait(1); // because Flickable pays attention to velocity, we need some time between movements
     }
     QTest::touchEvent(window, touchDevice).release(0, to, window);
     QQuickTouchUtils::flush(window);
