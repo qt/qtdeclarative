@@ -259,7 +259,8 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int 
     const GLenum format = GL_ALPHA;
 #endif
 
-    m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
+    QByteArray zeroBuf(width * height, 0);
+    m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, zeroBuf.constData());
 
     texInfo->size = QSize(width, height);
 
