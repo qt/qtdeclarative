@@ -271,8 +271,21 @@ ApplicationWindow {
                     onClicked: document.underline = !document.underline
                 }
                 ToolButton {
+                    id: fontFamilyToolButton
+                    text: qsTr("\uE808")
+                    font.family: "fontello"
+                    font.bold: document.bold
+                    font.italic: document.italic
+                    font.underline: document.underline
+                    onClicked: {
+                        fontDialog.currentFont.family = document.fontFamily;
+                        fontDialog.currentFont.pointSize = document.fontSize;
+                        fontDialog.open();
+                    }
+                }
+                ToolButton {
                     id: textColorButton
-                    text: "\uE808"
+                    text: "\uF1FC"
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     onClicked: colorDialog.open()
@@ -284,26 +297,13 @@ ApplicationWindow {
                         parent: textColorButton.contentItem
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.baseline: parent.baseline
-                        anchors.baselineOffset: 4
+                        anchors.baselineOffset: 6
 
                         TextMetrics {
                             id: aFontMetrics
                             font: textColorButton.font
                             text: textColorButton.text
                         }
-                    }
-                }
-                ToolButton {
-                    id: fontFamilyToolButton
-                    text: qsTr("F")
-                    font.family: document.fontFamily
-                    font.bold: document.bold
-                    font.italic: document.italic
-                    font.underline: document.underline
-                    onClicked: {
-                        fontDialog.currentFont.family = document.fontFamily;
-                        fontDialog.currentFont.pointSize = document.fontSize;
-                        fontDialog.open();
                     }
                 }
                 ToolSeparator {
