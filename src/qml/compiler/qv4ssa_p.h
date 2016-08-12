@@ -46,6 +46,7 @@
 //
 
 #include "qv4jsir_p.h"
+#include "qv4isel_util_p.h"
 #include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
@@ -269,6 +270,168 @@ private:
     enum Action { NormalMove, NeedsSwap };
     Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output,
                     QList<Move> &swaps) const;
+};
+
+/*
+ * stack slot allocation:
+ *
+ * foreach bb do
+ *   foreach stmt do
+ *     if the current statement is not a phi-node:
+ *       purge ranges that end before the current statement
+ *       check for life ranges to activate, and if they don't have a stackslot associated then allocate one
+ *       renumber temps to stack
+ *     for phi nodes: check if all temps (src+dst) are assigned stack slots and marked as allocated
+ *     if it's a jump:
+ *       foreach phi node in the successor:
+ *         allocate slots for each temp (both sources and targets) if they don't have one allocated already
+ *         insert moves before the jump
+ */
+class AllocateStackSlots: protected ConvertTemps
+{
+    IR::LifeTimeIntervals::Ptr _intervals;
+    QVector<IR::LifeTimeInterval *> _unhandled;
+    QVector<IR::LifeTimeInterval *> _live;
+    QBitArray _slotIsInUse;
+    IR::Function *_function;
+
+    int defPosition(IR::Stmt *s) const
+    {
+        return usePosition(s) + 1;
+    }
+
+    int usePosition(IR::Stmt *s) const
+    {
+        return _intervals->positionForStatement(s);
+    }
+
+public:
+    AllocateStackSlots(const IR::LifeTimeIntervals::Ptr &intervals)
+        : _intervals(intervals)
+        , _slotIsInUse(intervals->size(), false)
+        , _function(0)
+    {
+        _live.reserve(8);
+        _unhandled = _intervals->intervals();
+    }
+
+    void forFunction(IR::Function *function)
+    {
+        IR::Optimizer::showMeTheCode(function, "Before stack slot allocation");
+        _function = function;
+        toStackSlots(function);
+    }
+
+protected:
+    virtual int allocateFreeSlot()
+    {
+        for (int i = 0, ei = _slotIsInUse.size(); i != ei; ++i) {
+            if (!_slotIsInUse[i]) {
+                if (_nextUnusedStackSlot <= i) {
+                    Q_ASSERT(_nextUnusedStackSlot == i);
+                    _nextUnusedStackSlot = i + 1;
+                }
+                _slotIsInUse[i] = true;
+                return i;
+            }
+        }
+
+        Q_UNREACHABLE();
+        return -1;
+    }
+
+    virtual void process(IR::Stmt *s)
+    {
+//        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
+
+        if (IR::Phi *phi = s->asPhi()) {
+            visitPhi(phi);
+        } else {
+            // purge ranges no longer alive:
+            for (int i = 0; i < _live.size(); ) {
+                const IR::LifeTimeInterval *lti = _live.at(i);
+                if (lti->end() < usePosition(s)) {
+//                    qDebug() << "\t - moving temp" << lti->temp().index << "to handled, freeing slot" << _stackSlotForTemp[lti->temp().index];
+                    _live.remove(i);
+                    Q_ASSERT(_slotIsInUse[_stackSlotForTemp[lti->temp().index]]);
+                    _slotIsInUse[_stackSlotForTemp[lti->temp().index]] = false;
+                    continue;
+                } else {
+                    ++i;
+                }
+            }
+
+            // active new ranges:
+            while (!_unhandled.isEmpty()) {
+                IR::LifeTimeInterval *lti = _unhandled.last();
+                if (lti->start() > defPosition(s))
+                    break; // we're done
+                Q_ASSERT(!_stackSlotForTemp.contains(lti->temp().index));
+                _stackSlotForTemp[lti->temp().index] = allocateFreeSlot();
+//                qDebug() << "\t - activating temp" << lti->temp().index << "on slot" << _stackSlotForTemp[lti->temp().index];
+                _live.append(lti);
+                _unhandled.removeLast();
+            }
+
+            s->accept(this);
+        }
+
+        if (IR::Jump *jump = s->asJump()) {
+            IR::MoveMapping moves;
+            foreach (IR::Stmt *succStmt, jump->target->statements()) {
+                if (IR::Phi *phi = succStmt->asPhi()) {
+                    forceActivation(*phi->targetTemp);
+                    for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i) {
+                        IR::Expr *e = phi->d->incoming[i];
+                        if (IR::Temp *t = e->asTemp()) {
+                            forceActivation(*t);
+                        }
+                        if (jump->target->in[i] == _currentBasicBlock)
+                            moves.add(phi->d->incoming[i], phi->targetTemp);
+                    }
+                } else {
+                    break;
+                }
+            }
+            moves.order();
+            QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
+            foreach (IR::Move *move, newMoves)
+                move->accept(this);
+        }
+    }
+
+    void forceActivation(const IR::Temp &t)
+    {
+        if (_stackSlotForTemp.contains(t.index))
+            return;
+
+        int i = _unhandled.size() - 1;
+        for (; i >= 0; --i) {
+            IR::LifeTimeInterval *lti = _unhandled[i];
+            if (lti->temp() == t) {
+                _live.append(lti);
+                _unhandled.remove(i);
+                break;
+            }
+        }
+        Q_ASSERT(i >= 0); // check that we always found the entry
+
+        _stackSlotForTemp[t.index] = allocateFreeSlot();
+//        qDebug() << "\t - force activating temp" << t.index << "on slot" << _stackSlotForTemp[t.index];
+    }
+
+    virtual void visitPhi(IR::Phi *phi)
+    {
+        Q_UNUSED(phi);
+#if !defined(QT_NO_DEBUG)
+        Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
+        Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
+        foreach (IR::Expr *e, phi->d->incoming) {
+            if (IR::Temp *t = e->asTemp())
+                Q_ASSERT(_stackSlotForTemp.contains(t->index));
+        }
+#endif // defined(QT_NO_DEBUG)
+    }
 };
 
 } // IR namespace
