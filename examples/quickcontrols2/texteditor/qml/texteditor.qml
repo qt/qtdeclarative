@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.1
 import QtQuick.Window 2.0
 import QtQuick.Controls.Material 2.1
@@ -194,20 +193,25 @@ ApplicationWindow {
     header: ToolBar {
         leftPadding: 8
 
-        RowLayout {
-            anchors.fill: parent
-            spacing: 0
-
-            ToolButton {
-                id: openButton
-                text: "\uF115"
-                font.family: "fontello"
-                onClicked: openDialog.open()
-            }
-
-            ToolSeparator {}
+        Flow {
+            id: flow
+            width: parent.width
 
             Row {
+                id: fileRow
+                ToolButton {
+                    id: openButton
+                    text: "\uF115"
+                    font.family: "fontello"
+                    onClicked: openDialog.open()
+                }
+                ToolSeparator {
+                    contentItem.visible: fileRow.y === editRow.y
+                }
+            }
+
+            Row {
+                id: editRow
                 ToolButton {
                     id: copyButton
                     text: "\uF0C5"
@@ -232,11 +236,13 @@ ApplicationWindow {
                     enabled: textArea.canPaste
                     onClicked: textArea.paste()
                 }
+                ToolSeparator {
+                    contentItem.visible: editRow.y === formatRow.y
+                }
             }
 
-            ToolSeparator {}
-
             Row {
+                id: formatRow
                 ToolButton {
                     id: boldButton
                     text: "\uE800"
@@ -287,11 +293,26 @@ ApplicationWindow {
                         }
                     }
                 }
+                ToolButton {
+                    id: fontFamilyToolButton
+                    text: qsTr("F")
+                    font.family: document.fontFamily
+                    font.bold: document.bold
+                    font.italic: document.italic
+                    font.underline: document.underline
+                    onClicked: {
+                        fontDialog.currentFont.family = document.fontFamily;
+                        fontDialog.currentFont.pointSize = document.fontSize;
+                        fontDialog.open();
+                    }
+                }
+                ToolSeparator {
+                    contentItem.visible: formatRow.y === alignRow.y
+                }
             }
 
-            ToolSeparator {}
-
             Row {
+                id: alignRow
                 ToolButton {
                     id: alignLeftButton
                     text: "\uE803"
@@ -328,26 +349,6 @@ ApplicationWindow {
                     checked: document.alignment == Qt.AlignJustify
                     onClicked: document.alignment = Qt.AlignJustify
                 }
-            }
-
-            ToolSeparator {}
-
-            ToolButton {
-                id: fontFamilyToolButton
-                text: qsTr("F")
-                font.family: document.fontFamily
-                font.bold: document.bold
-                font.italic: document.italic
-                font.underline: document.underline
-                onClicked: {
-                    fontDialog.currentFont.family = document.fontFamily;
-                    fontDialog.currentFont.pointSize = document.fontSize;
-                    fontDialog.open();
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
             }
         }
     }
