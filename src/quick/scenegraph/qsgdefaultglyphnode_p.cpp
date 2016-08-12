@@ -35,6 +35,7 @@
 #include <private/qsgmaterialshader_p.h>
 
 #include <qopenglshaderprogram.h>
+#include <qopenglframebufferobject.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -203,6 +204,7 @@ public:
     void activate();
     void deactivate();
 
+    bool useSRGB() const;
     uint m_useSRGB : 1;
 };
 
@@ -222,11 +224,26 @@ void QSG24BitTextMaskShader::initialize()
     }
 }
 
+bool QSG24BitTextMaskShader::useSRGB() const
+{
+#ifdef Q_OS_MACOS
+    if (!m_useSRGB)
+        return false;
+
+    // m_useSRGB is true, but if some QOGLFBO was bound check it's texture format:
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLFramebufferObject *qfbo = QOpenGLContextPrivate::get(ctx)->qgl_current_fbo;
+    return !qfbo || qfbo->format().internalTextureFormat() == GL_SRGB8_ALPHA8_EXT;
+#else
+    return m_useSRGB;
+#endif
+}
+
 void QSG24BitTextMaskShader::activate()
 {
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     funcs->glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
-    if (m_useSRGB)
+    if (useSRGB())
         funcs->glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
@@ -234,7 +251,7 @@ void QSG24BitTextMaskShader::deactivate()
 {
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     funcs->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    if (m_useSRGB)
+    if (useSRGB())
         funcs->glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
@@ -259,7 +276,7 @@ void QSG24BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *
 
     if (oldMaterial == 0 || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
         QVector4D color = material->color();
-        if (m_useSRGB)
+        if (useSRGB())
             color = qt_sRGB_to_linear_RGB(color);
         QOpenGLContext::currentContext()->functions()->glBlendColor(color.x(), color.y(), color.z(), color.w());
         color = qsg_premultiply(color, state.opacity());
