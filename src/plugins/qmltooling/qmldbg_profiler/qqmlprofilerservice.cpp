@@ -51,6 +51,8 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qcoreapplication.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlAbstractProfilerAdapter)
@@ -93,8 +95,10 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
     if (dataComplete) {
         QList<QJSEngine *> enginesToRelease;
         for (QJSEngine *engine : qAsConst(m_stoppingEngines)) {
-            foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers.values(engine)) {
-                if (m_startTimes.values().contains(engineProfiler)) {
+            const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+            const auto startTimesEnd = m_startTimes.cend();
+            for (auto it = range.first; it != range.second; ++it) {
+                if (std::find(m_startTimes.cbegin(), startTimesEnd, *it) != startTimesEnd) {
                     enginesToRelease.append(engine);
                     break;
                 }
@@ -130,8 +134,9 @@ void QQmlProfilerServiceImpl::engineAdded(QJSEngine *engine)
                "QML profilers have to be added from the engine thread");
 
     QMutexLocker lock(&m_configMutex);
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine))
-        profiler->stopWaiting();
+    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    for (auto it = range.first; it != range.second; ++it)
+        (*it)->stopWaiting();
 }
 
 void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
@@ -141,7 +146,9 @@ void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 
     QMutexLocker lock(&m_configMutex);
     bool isRunning = false;
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    for (auto it = range.first; it != range.second; ++it) {
+        QQmlAbstractProfilerAdapter *profiler = *it;
         if (profiler->isRunning())
             isRunning = true;
         profiler->startWaiting();
@@ -160,7 +167,9 @@ void QQmlProfilerServiceImpl::engineRemoved(QJSEngine *engine)
                "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(&m_configMutex);
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    for (auto it = range.first; it != range.second; ++it) {
+        QQmlAbstractProfilerAdapter *profiler = *it;
         removeProfilerFromStartTimes(profiler);
         delete profiler;
     }
@@ -231,7 +240,9 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
     d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;
     bool startedAny = false;
     if (engine != 0) {
-        foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
+        const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+        for (auto it = range.first; it != range.second; ++it) {
+            QQmlAbstractProfilerAdapter *profiler = *it;
             if (!profiler->isRunning()) {
                 profiler->startProfiling(features);
                 startedAny = true;
