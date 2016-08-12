@@ -265,6 +265,7 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
     , qmlEngine(qmlEngine)
 {
     compilationUnit->codeRefs.resize(module->functions.size());
+    module->unitFlags |= QV4::CompiledData::Unit::ContainsMachineCode;
 }
 
 InstructionSelection::~InstructionSelection()

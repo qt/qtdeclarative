@@ -302,7 +302,6 @@ Document::Document(bool debugMode)
     , program(0)
     , indexOfRootObject(0)
     , jsGenerator(&jsModule)
-    , unitFlags(0)
 {
 }
 
@@ -1393,7 +1392,6 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
 
     QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
     qmlUnit->unitSize = totalSize;
-    qmlUnit->flags |= output.unitFlags;
     qmlUnit->flags |= QV4::CompiledData::Unit::IsQml;
     qmlUnit->offsetToImports = unitSize;
     qmlUnit->nImports = output.imports.count();

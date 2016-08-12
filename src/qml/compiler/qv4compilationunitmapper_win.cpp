@@ -94,9 +94,14 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     if (!verifyHeader(&header, sourcePath, errorString))
         return nullptr;
 
+    const uint mappingFlags = header.flags & QV4::CompiledData::Unit::ContainsMachineCode
+                              ? PAGE_EXECUTE_READ : PAGE_READONLY;
+    const uint viewFlags = header.flags & QV4::CompiledData::Unit::ContainsMachineCode
+                           ? (FILE_MAP_READ | FILE_MAP_EXECUTE) : FILE_MAP_READ;
+
     // Data structure and qt version matched, so now we can access the rest of the file safely.
 
-    HANDLE fileMappingHandle = CreateFileMapping(handle, 0, PAGE_EXECUTE_READ, 0, 0, 0);
+    HANDLE fileMappingHandle = CreateFileMapping(handle, 0, mappingFlags, 0, 0, 0);
     if (!fileMappingHandle) {
         *errorString = qt_error_string(GetLastError());
         return false;
@@ -106,7 +111,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         CloseHandle(fileMappingHandle);
     });
 
-    dataPtr = MapViewOfFile(fileMappingHandle, FILE_MAP_READ | FILE_MAP_EXECUTE, 0, 0, 0);
+    dataPtr = MapViewOfFile(fileMappingHandle, viewFlags, 0, 0, 0);
     if (!dataPtr) {
         *errorString = qt_error_string(GetLastError());
         return nullptr;
