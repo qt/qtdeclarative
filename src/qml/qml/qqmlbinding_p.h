@@ -102,7 +102,7 @@ public:
     void expressionChanged() Q_DECL_OVERRIDE;
 
 protected:
-    virtual void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
+    virtual void doUpdate(const DeleteWatcher &watcher,
                           QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                           const QV4::ScopedFunctionObject &f) = 0;
 
