@@ -235,7 +235,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
         g->connect(n);
     }
 
-    if (duration == OnlyOnce)
+    if (duration == Permanently)
         expression->permanentGuards.prepend(g);
     else
         expression->activeGuards.prepend(g);
