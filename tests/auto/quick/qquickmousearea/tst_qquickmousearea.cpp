@@ -1032,17 +1032,17 @@ void tst_QQuickMouseArea::clickThrough()
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
 
+    // to avoid generating a double click.
+    const int doubleClickInterval = qApp->styleHints()->mouseDoubleClickInterval() + 10;
+
     QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
     QTRY_COMPARE(window->rootObject()->property("presses").toInt(), 0);
     QTRY_COMPARE(window->rootObject()->property("clicks").toInt(), 1);
 
-    // to avoid generating a double click.
-    int doubleClickInterval = qApp->styleHints()->mouseDoubleClickInterval() + 10;
-    QTest::qWait(doubleClickInterval);
-
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QCOMPARE(window->rootObject()->property("doubleClicks").toInt(), 0);
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::qWait(1000);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
@@ -1072,9 +1072,7 @@ void tst_QQuickMouseArea::clickThrough()
     QCOMPARE(window->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(window->rootObject()->property("clicks").toInt(), 0);
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::qWait(1000);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(100);
@@ -1093,15 +1091,13 @@ void tst_QQuickMouseArea::clickThrough()
 
     window->rootObject()->setProperty("letThrough", QVariant(true));
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(window->rootObject()->property("presses").toInt(), 0);
     QTRY_COMPARE(window->rootObject()->property("clicks").toInt(), 1);
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::qWait(1000);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(100);
@@ -1120,12 +1116,10 @@ void tst_QQuickMouseArea::clickThrough()
 
     window->rootObject()->setProperty("noPropagation", QVariant(true));
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::qWait(1000);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(100);
@@ -1146,7 +1140,7 @@ void tst_QQuickMouseArea::clickThrough()
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
 
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(window->rootObject()->property("clicksEnabled").toInt(), 1);
@@ -1154,8 +1148,7 @@ void tst_QQuickMouseArea::clickThrough()
 
     window->rootObject()->setProperty("disableLower", QVariant(true));
 
-    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100), doubleClickInterval);
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(window->rootObject()->property("clicksEnabled").toInt(), 2);
