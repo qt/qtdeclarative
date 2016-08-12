@@ -208,7 +208,7 @@ QT_BEGIN_NAMESPACE
     instance, even if they are referring to the same setting in the same category.
 
     The information is stored in the system registry on Windows, and in XML
-    preferences files on OS X. On other Unix systems, in the absence of a
+    preferences files on \macos. On other Unix systems, in the absence of a
     standard, INI text files are used. See \l QSettings documentation for
     more details.
 

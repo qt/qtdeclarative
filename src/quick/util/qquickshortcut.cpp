@@ -138,7 +138,7 @@ void QQuickShortcut::setSequence(const QVariant &sequence)
     \since 5.6
 
     This property provides the shortcut's key sequence as a platform specific
-    string. This means that it will be shown translated, and on OS X it will
+    string. This means that it will be shown translated, and on \macos it will
     resemble a key sequence from the menu bar. It is best to display this text
     to the user (for example, on a tooltip).
 

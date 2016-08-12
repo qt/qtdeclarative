@@ -239,7 +239,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \since 5.5
 
     This signal is emitted when the pinch area detects the smart zoom gesture.
-    This gesture occurs only on certain operating systems such as OS X.
+    This gesture occurs only on certain operating systems such as \macos.
 
     The \l {PinchEvent}{pinch} parameter provides information about the pinch
     gesture, including the location where the gesture occurred.  \c pinch.scale
