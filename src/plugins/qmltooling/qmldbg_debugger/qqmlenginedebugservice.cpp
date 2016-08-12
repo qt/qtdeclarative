@@ -520,12 +520,12 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         ds >> file >> lineNumber >> columnNumber >> recurse >> dumpProperties;
 
-        QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
+        const QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
            << objects.count();
 
-        foreach (QObject *object, objects) {
+        for (QObject *object : objects) {
             if (recurse)
                 prepareDeferredObjects(object);
             buildObjectDump(rs, object, recurse, dumpProperties);

@@ -558,7 +558,7 @@ public:
         debugger->runInEngine(&job);
 
         QJsonArray body;
-        foreach (const QString &source, job.result()) {
+        for (const QString &source : job.result()) {
             QJsonObject src;
             src[QLatin1String("name")] = source;
             src[QLatin1String("scriptType")] = 4;
@@ -718,7 +718,8 @@ void QV4DebugServiceImpl::stateAboutToBeChanged(State state)
 {
     QMutexLocker lock(&m_configMutex);
     if (state == Enabled) {
-        foreach (QV4Debugger *debugger, debuggerAgent.debuggers()) {
+        const auto debuggers = debuggerAgent.debuggers();
+        for (QV4Debugger *debugger : debuggers) {
             QV4::ExecutionEngine *ee = debugger->engine();
             if (!ee->debugger())
                 ee->setDebugger(debugger);
@@ -737,7 +738,7 @@ void QV4DebugServiceImpl::signalEmitted(const QString &signal)
     //Normalize to Lower case.
     QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
-    foreach (const QString &signal, breakOnSignals) {
+    for (const QString &signal : qAsConst(breakOnSignals)) {
         if (signal == signalName) {
             // TODO: pause debugger
             break;

@@ -287,7 +287,7 @@ void NativeDebugger::signalEmitted(const QString &signal)
     //Normalize to Lower case.
     QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
-    foreach (const QString &signal, breakOnSignals) {
+    for (const QString &signal : qAsConst(breakOnSignals)) {
         if (signal == signalName) {
             // TODO: pause debugger
             break;
@@ -475,8 +475,8 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     TRACE_PROTOCOL("Engine: " << engine);
 
     Collector collector(engine);
-    QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
-    foreach (const QJsonValue &ex, expanded)
+    const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
+    for (const QJsonValue &ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
@@ -527,16 +527,16 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
     TRACE_PROTOCOL("Engines: " << engine << m_engine);
 
     Collector collector(engine);
-    QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
-    foreach (const QJsonValue &ex, expanded)
+    const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
+    for (const QJsonValue &ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    QJsonArray expressions = arguments.value(QLatin1String("expressions")).toArray();
-    foreach (const QJsonValue &expr, expressions) {
+    const QJsonArray expressions = arguments.value(QLatin1String("expressions")).toArray();
+    for (const QJsonValue &expr : expressions) {
         QString expression = expr.toObject().value(QLatin1String("expression")).toString();
         QString name = expr.toObject().value(QLatin1String("name")).toString();
         TRACE_PROTOCOL("Evaluate expression: " << expression);
@@ -748,7 +748,8 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
     TRACE_PROTOCOL("Removing engine" << engine);
     if (engine) {
         QV4::ExecutionEngine *executionEngine = QV8Engine::getV4(engine->handle());
-        foreach (NativeDebugger *debugger, m_debuggers) {
+        const auto debuggersCopy = m_debuggers;
+        for (NativeDebugger *debugger : debuggersCopy) {
             if (debugger->engine() == executionEngine)
                 m_debuggers.removeAll(debugger);
         }
@@ -759,7 +760,7 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 void QQmlNativeDebugServiceImpl::stateAboutToBeChanged(QQmlDebugService::State state)
 {
     if (state == Enabled) {
-        foreach (NativeDebugger *debugger, m_debuggers) {
+        for (NativeDebugger *debugger : qAsConst(m_debuggers)) {
             QV4::ExecutionEngine *engine = debugger->engine();
             if (!engine->debugger())
                 engine->setDebugger(debugger);
@@ -783,7 +784,7 @@ void QQmlNativeDebugServiceImpl::messageReceived(const QByteArray &message)
     } else if (cmd == QLatin1String("echo")) {
         response.insert(QStringLiteral("result"), arguments);
     } else {
-        foreach (NativeDebugger *debugger, m_debuggers)
+        for (NativeDebugger *debugger : qAsConst(m_debuggers))
             if (debugger)
                 debugger->handleCommand(&response, cmd, arguments);
     }

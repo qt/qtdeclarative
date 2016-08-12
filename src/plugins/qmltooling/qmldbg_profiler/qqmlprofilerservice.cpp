@@ -92,7 +92,7 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
     m_startTimes.insert(0, profiler);
     if (dataComplete) {
         QList<QJSEngine *> enginesToRelease;
-        foreach (QJSEngine *engine, m_stoppingEngines) {
+        for (QJSEngine *engine : qAsConst(m_stoppingEngines)) {
             foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers.values(engine)) {
                 if (m_startTimes.values().contains(engineProfiler)) {
                     enginesToRelease.append(engine);
@@ -101,7 +101,7 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
             }
         }
         sendMessages();
-        foreach (QJSEngine *engine, enginesToRelease) {
+        for (QJSEngine *engine : qAsConst(enginesToRelease)) {
             m_stoppingEngines.removeOne(engine);
             emit detachedFromEngine(engine);
         }
@@ -183,7 +183,7 @@ void QQmlProfilerServiceImpl::addGlobalProfiler(QQmlAbstractProfilerAdapter *pro
     // Global profilers are started whenever any engine profiler is started and stopped when
     // all engine profilers are stopped.
     quint64 features = 0;
-    foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers)
+    for (QQmlAbstractProfilerAdapter *engineProfiler : qAsConst(m_engineProfilers))
         features |= engineProfiler->features();
 
     if (features != 0)
@@ -249,12 +249,12 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
                 startedAny = true;
             }
         }
-        foreach (QJSEngine *profiledEngine, engines)
+        for (QJSEngine *profiledEngine : qAsConst(engines))
             d << idForObject(profiledEngine);
     }
 
     if (startedAny) {
-        foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
+        for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
             if (!profiler->isRunning())
                 profiler->startProfiling(features);
         }
@@ -294,7 +294,7 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     if (stopping.isEmpty())
         return;
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
         if (!profiler->isRunning())
             continue;
         m_startTimes.insert(-1, profiler);
@@ -308,10 +308,10 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     emit stopFlushTimer();
     m_waitingForStop = true;
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
         profiler->reportData(m_useMessageTypes);
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, stopping)
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(stopping))
         profiler->stopProfiling();
 }
 
@@ -327,7 +327,7 @@ void QQmlProfilerServiceImpl::sendMessages()
         traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
 
         QSet<QJSEngine *> seen;
-        foreach (QQmlAbstractProfilerAdapter *profiler, m_startTimes) {
+        for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_startTimes)) {
             for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
                     i != m_engineProfilers.end(); ++i) {
                 if (i.value() == profiler && !seen.contains(i.key())) {
@@ -367,7 +367,7 @@ void QQmlProfilerServiceImpl::sendMessages()
     emit messagesToClient(name(), messages);
 
     // Restart flushing if any profilers are still running
-    foreach (const QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
+    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
         if (profiler->isRunning()) {
             emit startFlushTimer();
             break;
@@ -438,21 +438,21 @@ void QQmlProfilerServiceImpl::flush()
     QMutexLocker lock(&m_configMutex);
     QList<QQmlAbstractProfilerAdapter *> reporting;
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
             reporting.append(profiler);
         }
     }
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
             reporting.append(profiler);
         }
     }
 
-    foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
+    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
         profiler->reportData(m_useMessageTypes);
 }
 

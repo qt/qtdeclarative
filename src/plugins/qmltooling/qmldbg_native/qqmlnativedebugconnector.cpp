@@ -205,7 +205,7 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
 
 QQmlNativeDebugConnector::~QQmlNativeDebugConnector()
 {
-    foreach (QQmlDebugService *service, m_services) {
+    for (QQmlDebugService *service : qAsConst(m_services)) {
         service->stateAboutToBeChanged(QQmlDebugService::NotConnected);
         service->setState(QQmlDebugService::NotConnected);
         service->stateChanged(QQmlDebugService::NotConnected);
@@ -232,12 +232,12 @@ void QQmlNativeDebugConnector::addEngine(QJSEngine *engine)
     Q_ASSERT(!m_engines.contains(engine));
 
     TRACE_PROTOCOL("Add engine to connector:" << engine);
-    foreach (QQmlDebugService *service, m_services)
+    for (QQmlDebugService *service : qAsConst(m_services))
         service->engineAboutToBeAdded(engine);
 
     announceObjectAvailability(QLatin1String("qmlengine"), engine, true);
 
-    foreach (QQmlDebugService *service, m_services)
+    for (QQmlDebugService *service : qAsConst(m_services))
         service->engineAdded(engine);
 
     m_engines.append(engine);
@@ -248,12 +248,12 @@ void QQmlNativeDebugConnector::removeEngine(QJSEngine *engine)
     Q_ASSERT(m_engines.contains(engine));
 
     TRACE_PROTOCOL("Remove engine from connector:" << engine);
-    foreach (QQmlDebugService *service, m_services)
+    for (QQmlDebugService *service : qAsConst(m_services))
         service->engineAboutToBeRemoved(engine);
 
     announceObjectAvailability(QLatin1String("qmlengine"), engine, false);
 
-    foreach (QQmlDebugService *service, m_services)
+    for (QQmlDebugService *service : qAsConst(m_services))
         service->engineRemoved(engine);
 
     m_engines.removeOne(engine);
