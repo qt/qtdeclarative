@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPlatformFolderDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
+    Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
@@ -66,8 +67,11 @@ class QQuickPlatformFolderDialog : public QQuickPlatformDialog
 public:
     explicit QQuickPlatformFolderDialog(QObject *parent = nullptr);
 
+    QUrl folder() const;
+    void setFolder(const QUrl &folder);
+
     QUrl currentFolder() const;
-    void setCurrentFolder(const QUrl &url);
+    void setCurrentFolder(const QUrl &folder);
 
     QFileDialogOptions::FileDialogOptions options() const;
     void setOptions(QFileDialogOptions::FileDialogOptions options);
@@ -82,20 +86,19 @@ public:
     void resetRejectLabel();
 
 Q_SIGNALS:
+    void folderChanged();
     void currentFolderChanged();
     void optionsChanged();
     void acceptLabelChanged();
     void rejectLabelChanged();
 
-    void folderSelected(const QUrl &folder);
-    void foldersSelected(const QList<QUrl> &folders);
-
 protected:
     QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
+    void accept() override;
 
 private:
-    mutable QUrl m_current;
+    QUrl m_folder;
     QSharedPointer<QFileDialogOptions> m_options;
 };
 

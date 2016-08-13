@@ -59,9 +59,10 @@ QT_BEGIN_NAMESPACE
     \image qtlabsplatform-folderdialog-gtk.png
 
     To show a folder dialog, construct an instance of FolderDialog, set the
-    desired properties, and call \l {Dialog::}{open()}. FolderDialog emits
-    the \l folderSelected() and \l foldersSelected() signals when the user
-    has selected folder(s).
+    desired properties, and call \l {Dialog::}{open()}. The \l currentFolder
+    property can be used to determine the currently selected folder in the
+    dialog. The \l folder property is updated only after the final selection
+    has been made by accepting the dialog.
 
     \code
     MenuItem {
@@ -72,7 +73,11 @@ QT_BEGIN_NAMESPACE
     FolderDialog {
         id: folderDialog
         currentFolder: viewer.folder
-        onFolderSelected: viewer.folder = folder
+    }
+
+    MyViewer {
+        id: viewer
+        folder: folderDialog.folder
     }
     \endcode
 
@@ -95,22 +100,6 @@ QT_BEGIN_NAMESPACE
     \sa FileDialog
 */
 
-/*!
-    \qmlsignal void Qt.labs.platform::FolderDialog::folderSelected(url folder)
-
-    This signal is emitted when a \a folder has been selected.
-
-    \sa foldersSelected(), currentFolder
-*/
-
-/*!
-    \qmlsignal void Qt.labs.platform::FolderDialog::foldersSelected(list<url> folders)
-
-    This signal is emitted when multiple \a folders have been selected.
-
-    \sa folderSelected(), currentFolder
-*/
-
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
@@ -121,19 +110,49 @@ QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
 }
 
 /*!
+    \qmlproperty url Qt.labs.platform::FolderDialog::folder
+
+    This property holds the final accepted folder.
+
+    Unlike the \l currentFolder property, the \c folder property is not updated
+    while the user is selecting folders in the dialog, but only after the final
+    selection has been made. That is, when the user has clicked \uicontrol OK
+    to accept a folder. Alternatively, the \l {Dialog::}{accepted()} signal
+    can be handled to get the final selection.
+
+    \sa currentFolder, {Dialog::}{accepted()}
+*/
+QUrl QQuickPlatformFolderDialog::folder() const
+{
+    return m_folder;
+}
+
+void QQuickPlatformFolderDialog::setFolder(const QUrl &folder)
+{
+    if (m_folder == folder)
+        return;
+
+    m_folder = folder;
+    setCurrentFolder(folder);
+    emit folderChanged();
+}
+
+/*!
     \qmlproperty url Qt.labs.platform::FolderDialog::currentFolder
 
     This property holds the currently selected folder in the dialog.
 
-    \sa folderSelected(), foldersSelected()
+    Unlike the \l folder property, the \c currentFolder property is updated
+    while the user is selecting folders in the dialog, even before the final
+    selection has been made.
+
+    \sa folder
 */
 QUrl QQuickPlatformFolderDialog::currentFolder() const
 {
-    if (m_current.isEmpty()) {
-        if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-            m_current = fileDialog->directory();
-    }
-    return m_current;
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+        return fileDialog->directory();
+    return QUrl();
 }
 
 void QQuickPlatformFolderDialog::setCurrentFolder(const QUrl &folder)
@@ -249,14 +268,7 @@ QPlatformDialogHelper *QQuickPlatformFolderDialog::createHelper()
     qCDebug(qtLabsPlatformDialogs) << "FolderDialog:" << dialog;
 
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, this, &QQuickPlatformFolderDialog::folderSelected);
-        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, this, &QQuickPlatformFolderDialog::foldersSelected);
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
-            if (m_current == url)
-                return;
-            m_current = url;
-            emit currentFolderChanged();
-        });
+        connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFolderDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
     }
     return dialog;
@@ -265,6 +277,12 @@ QPlatformDialogHelper *QQuickPlatformFolderDialog::createHelper()
 void QQuickPlatformFolderDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
+}
+
+void QQuickPlatformFolderDialog::accept()
+{
+    setFolder(currentFolder());
+    QQuickPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

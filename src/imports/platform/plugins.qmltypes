@@ -132,18 +132,11 @@ Module {
         prototype: "QQuickPlatformDialog"
         exports: ["Qt.labs.platform/FolderDialog 1.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "folder"; type: "QUrl" }
         Property { name: "currentFolder"; type: "QUrl" }
         Property { name: "options"; type: "QFileDialogOptions::FileDialogOptions" }
         Property { name: "acceptLabel"; type: "string" }
         Property { name: "rejectLabel"; type: "string" }
-        Signal {
-            name: "folderSelected"
-            Parameter { name: "folder"; type: "QUrl" }
-        }
-        Signal {
-            name: "foldersSelected"
-            Parameter { name: "folders"; type: "QList<QUrl>" }
-        }
     }
     Component {
         name: "QQuickPlatformFontDialog"
