@@ -33,6 +33,7 @@ Module {
         Property { name: "title"; type: "string" }
         Property { name: "flags"; type: "Qt::WindowFlags" }
         Property { name: "modality"; type: "Qt::WindowModality" }
+        Property { name: "visible"; type: "bool" }
         Signal { name: "accepted" }
         Signal { name: "rejected" }
         Method { name: "open" }

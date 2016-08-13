@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickPlatformDialog::QQuickPlatformDialog(QObject *parent)
     : QObject(parent),
+      m_visible(false),
       m_complete(false),
       m_parentWindow(nullptr),
       m_flags(Qt::Dialog),
@@ -216,19 +217,41 @@ void QQuickPlatformDialog::setModality(Qt::WindowModality modality)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.platform::Dialog::visible
+
+    This property holds the visibility of the dialog. The default value is \c false.
+
+    \sa open(), close()
+*/
+bool QQuickPlatformDialog::isVisible() const
+{
+    return m_handle && m_visible;
+}
+
+void QQuickPlatformDialog::setVisible(bool visible)
+{
+    if (visible)
+        open();
+    else
+        close();
+}
+
+/*!
     \qmlmethod void Qt.labs.platform::Dialog::open()
 
     Opens the dialog.
 
-    \sa close()
+    \sa visible, close()
 */
 void QQuickPlatformDialog::open()
 {
-    if (!m_handle)
+    if (!m_handle || m_visible)
         return;
 
     applyOptions();
-    m_handle->show(m_flags, m_modality, m_parentWindow);
+    m_visible = m_handle->show(m_flags, m_modality, m_parentWindow);
+    if (m_visible)
+        emit visibleChanged();
 }
 
 /*!
@@ -236,14 +259,16 @@ void QQuickPlatformDialog::open()
 
     Closes the dialog.
 
-    \sa open()
+    \sa visible, open()
 */
 void QQuickPlatformDialog::close()
 {
-    if (!m_handle)
+    if (!m_handle || !m_visible)
         return;
 
     m_handle->hide();
+    m_visible = false;
+    emit visibleChanged();
 }
 
 /*!

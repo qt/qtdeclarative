@@ -68,6 +68,7 @@ class QQuickPlatformDialog : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(Qt::WindowFlags flags READ flags WRITE setFlags NOTIFY flagsChanged FINAL)
     Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged FINAL)
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -91,6 +92,9 @@ public:
     Qt::WindowModality modality() const;
     void setModality(Qt::WindowModality modality);
 
+    bool isVisible() const;
+    void setVisible(bool visible);
+
 public Q_SLOTS:
     void open();
     void close();
@@ -104,6 +108,7 @@ Q_SIGNALS:
     void titleChanged();
     void flagsChanged();
     void modalityChanged();
+    void visibleChanged();
 
 protected:
     void classBegin() override;
@@ -114,6 +119,7 @@ protected:
     QWindow *findParentWindow() const;
 
 private:
+    bool m_visible;
     bool m_complete;
     QWindow *m_parentWindow;
     QString m_title;
