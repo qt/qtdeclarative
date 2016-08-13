@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal void QtQuick.Controls::Dialog::rejected()
+    \qmlsignal void Qt.labs.platform::Dialog::rejected()
 
     This signal is emitted when the dialog has been rejected either
     interactively or by calling \l reject().
@@ -285,7 +285,7 @@ void QQuickPlatformDialog::accept()
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Dialog::reject()
+    \qmlmethod void Qt.labs.platform::Dialog::reject()
 
     Closes the dialog and emits the \l rejected() signal.
 
