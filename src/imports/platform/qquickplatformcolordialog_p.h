@@ -57,12 +57,16 @@ QT_BEGIN_NAMESPACE
 class QQuickPlatformColorDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
     Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged FINAL)
     Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
     Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
 
 public:
     explicit QQuickPlatformColorDialog(QObject *parent = nullptr);
+
+    QColor color() const;
+    void setColor(const QColor &color);
 
     QColor currentColor() const;
     void setCurrentColor(const QColor &color);
@@ -71,15 +75,17 @@ public:
     void setOptions(QColorDialogOptions::ColorDialogOptions options);
 
 Q_SIGNALS:
-    void optionsChanged();
+    void colorChanged();
     void currentColorChanged();
-    void colorSelected(const QColor &color);
+    void optionsChanged();
 
 protected:
     QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
+    void accept() override;
 
 private:
+    QColor m_color;
     QSharedPointer<QColorDialogOptions> m_options;
 };
 

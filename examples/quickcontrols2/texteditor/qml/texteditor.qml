@@ -359,7 +359,7 @@ ApplicationWindow {
         cursorPosition: textArea.cursorPosition
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
-        textColor: colorDialog.currentColor
+        textColor: colorDialog.color
         // TODO: if we don't do this, e.g. the bold button won't be checked
         // when it should be (the title is bold)
         Component.onCompleted: document.load("qrc:/texteditor.html")

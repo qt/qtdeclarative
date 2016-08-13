@@ -51,7 +51,6 @@ QWidgetPlatformColorDialog::QWidgetPlatformColorDialog(QObject *parent)
         m_dialog.reset(new QColorDialog);
         connect(m_dialog.data(), &QColorDialog::accepted, this, &QPlatformDialogHelper::accept);
         connect(m_dialog.data(), &QColorDialog::rejected, this, &QPlatformDialogHelper::reject);
-        connect(m_dialog.data(), &QColorDialog::colorSelected, this, &QPlatformColorDialogHelper::colorSelected);
         connect(m_dialog.data(), &QColorDialog::currentColorChanged, this, &QPlatformColorDialogHelper::currentColorChanged);
     }
 }

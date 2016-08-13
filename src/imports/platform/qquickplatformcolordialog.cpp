@@ -59,8 +59,10 @@ QT_BEGIN_NAMESPACE
     \image qtlabsplatform-colordialog-gtk.png
 
     To show a color dialog, construct an instance of ColorDialog, set the
-    desired properties, and call \l {Dialog::}{open()}. ColorDialog emits
-    the \l colorSelected() signal when the user has selected a color.
+    desired properties, and call \l {Dialog::}{open()}. The \l currentColor
+    property can be used to determine the currently selected color in the
+    dialog. The \l color property is updated only after the final selection
+    has been made by accepting the dialog.
 
     \code
     MenuItem {
@@ -70,8 +72,12 @@ QT_BEGIN_NAMESPACE
 
     ColorDialog {
         id: colorDialog
-        currentColor: "black"
-        onColorSelected: document.brush = color
+        currentColor: document.color
+    }
+
+    MyDocument {
+        id: document
+        color: colorDialog.color
     }
     \endcode
 
@@ -89,14 +95,6 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
-/*!
-    \qmlsignal void Qt.labs.platform::ColorDialog::colorSelected(color color)
-
-    This signal is emitted just after the user has clicked \uicontrol OK to select a \a color.
-
-    \sa currentColor
-*/
-
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
@@ -105,11 +103,43 @@ QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
 }
 
 /*!
+    \qmlproperty color Qt.labs.platform::ColorDialog::color
+
+    This property holds the final accepted color.
+
+    Unlike the \l currentColor property, the \c color property is not updated
+    while the user is selecting colors in the dialog, but only after the final
+    selection has been made. That is, when the user has clicked \uicontrol OK
+    to accept a color. Alternatively, the \l {Dialog::}{accepted()} signal
+    can be handled to get the final selection.
+
+    \sa currentColor, {Dialog::}{accepted()}
+*/
+QColor QQuickPlatformColorDialog::color() const
+{
+    return m_color;
+}
+
+void QQuickPlatformColorDialog::setColor(const QColor &color)
+{
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    setCurrentColor(color);
+    emit colorChanged();
+}
+
+/*!
     \qmlproperty color Qt.labs.platform::ColorDialog::currentColor
 
     This property holds the currently selected color in the dialog.
 
-    \sa colorSelected()
+    Unlike the \l color property, the \c currentColor property is updated
+    while the user is selecting colors in the dialog, even before the final
+    selection has been made.
+
+    \sa color
 */
 QColor QQuickPlatformColorDialog::currentColor() const
 {
@@ -164,7 +194,6 @@ QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
 
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
         connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
-        connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);
         colorDialog->setOptions(m_options);
     }
     return dialog;
@@ -173,6 +202,12 @@ QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
 void QQuickPlatformColorDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
+}
+
+void QQuickPlatformColorDialog::accept()
+{
+    setColor(currentColor());
+    QQuickPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

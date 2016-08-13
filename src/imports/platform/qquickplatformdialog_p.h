@@ -97,8 +97,8 @@ public:
 public Q_SLOTS:
     void open();
     void close();
-    void accept();
-    void reject();
+    virtual void accept();
+    virtual void reject();
 
 Q_SIGNALS:
     void accepted();

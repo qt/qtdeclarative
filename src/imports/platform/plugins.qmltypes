@@ -72,12 +72,9 @@ Module {
         prototype: "QQuickPlatformDialog"
         exports: ["Qt.labs.platform/ColorDialog 1.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "color"; type: "QColor" }
         Property { name: "currentColor"; type: "QColor" }
         Property { name: "options"; type: "QColorDialogOptions::ColorDialogOptions" }
-        Signal {
-            name: "colorSelected"
-            Parameter { name: "color"; type: "QColor" }
-        }
     }
     Component {
         name: "QQuickPlatformDialog"
