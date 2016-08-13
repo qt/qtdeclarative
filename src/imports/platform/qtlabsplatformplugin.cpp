@@ -36,6 +36,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include <QtCore/qloggingcategory.h>
 
 #include "qquickplatformdialog_p.h"
 #include "qquickplatformcolordialog_p.h"
@@ -60,6 +61,10 @@ static inline void initResources()
 }
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
+Q_LOGGING_CATEGORY(qtLabsPlatformMenus, "qt.labs.platform.menus")
+Q_LOGGING_CATEGORY(qtLabsPlatformTray, "qt.labs.platform.tray")
 
 class QtLabsPlatformPlugin: public QQmlExtensionPlugin
 {

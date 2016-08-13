@@ -40,6 +40,7 @@
 #include "qquickplatformiconloader_p.h"
 #include "qquickplatformsystemtrayicon_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qicon.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -127,6 +128,8 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the menu is about to be hidden from the user.
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
+
 QQuickPlatformMenu::QQuickPlatformMenu(QObject *parent)
     : QObject(parent),
       m_complete(false),
@@ -181,6 +184,8 @@ QPlatformMenu * QQuickPlatformMenu::create()
         // - QCocoaSystemTrayIcon::createMenu()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenu();
+
+        qCDebug(qtLabsPlatformMenus) << "Menu:" << m_handle;
 
 #ifdef QT_WIDGETS_LIB
         if (!m_handle)

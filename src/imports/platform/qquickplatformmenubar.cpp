@@ -37,6 +37,7 @@
 #include "qquickplatformmenubar_p.h"
 #include "qquickplatformmenu_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformmenu.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -102,6 +103,8 @@ QT_BEGIN_NAMESPACE
     \sa Menu
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
+
 QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
     : QObject(parent),
       m_complete(false),
@@ -109,6 +112,7 @@ QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
       m_handle(nullptr)
 {
     m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar();
+    qCDebug(qtLabsPlatformMenus) << "MenuBar:" << m_handle;
 }
 
 QQuickPlatformMenuBar::~QQuickPlatformMenuBar()

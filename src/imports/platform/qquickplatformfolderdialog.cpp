@@ -36,6 +36,7 @@
 
 #include "qquickplatformfolderdialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -110,6 +111,8 @@ QT_BEGIN_NAMESPACE
     \sa folderSelected(), currentFolder
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
+
 QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QFileDialogOptions::create())
 {
@@ -121,6 +124,8 @@ QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
     if (!dialog)
         dialog = new QWidgetPlatformFileDialog(this);
 #endif
+    qCDebug(qtLabsPlatformDialogs) << "FolderDialog:" << dialog;
+
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, this, &QQuickPlatformFolderDialog::folderSelected);
         connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, this, &QQuickPlatformFolderDialog::foldersSelected);

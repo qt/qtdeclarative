@@ -38,6 +38,7 @@
 #include "qquickplatformmenu_p.h"
 #include "qquickplatformiconloader_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -164,6 +165,8 @@ QT_BEGIN_NAMESPACE
     \sa showMessage()
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformTray)
+
 QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
     : QObject(parent),
       m_complete(false),
@@ -177,6 +180,8 @@ QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
     if (!m_handle)
         m_handle = new QWidgetPlatformSystemTrayIcon(this);
 #endif
+    qCDebug(qtLabsPlatformTray) << "SystemTrayIcon:" << m_handle;
+
     if (m_handle) {
         connect(m_handle, &QPlatformSystemTrayIcon::activated, this, &QQuickPlatformSystemTrayIcon::activated);
         connect(m_handle, &QPlatformSystemTrayIcon::messageClicked, this, &QQuickPlatformSystemTrayIcon::messageClicked);

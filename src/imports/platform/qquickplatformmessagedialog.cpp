@@ -36,6 +36,7 @@
 
 #include "qquickplatformmessagedialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -120,6 +121,8 @@ QT_BEGIN_NAMESPACE
     \sa buttons
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
+
 QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QMessageDialogOptions::create())
 {
@@ -128,6 +131,8 @@ QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
     if (!dialog)
         dialog = new QWidgetPlatformMessageDialog(this);
 #endif
+    qCDebug(qtLabsPlatformDialogs) << "MessageDialog:" << dialog;
+
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
         connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
         messageDialog->setOptions(m_options);

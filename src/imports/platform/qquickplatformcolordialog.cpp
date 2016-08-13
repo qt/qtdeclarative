@@ -36,6 +36,7 @@
 
 #include "qquickplatformcolordialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -96,6 +97,8 @@ QT_BEGIN_NAMESPACE
     \sa currentColor
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
+
 QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QColorDialogOptions::create())
 {
@@ -104,6 +107,8 @@ QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
     if (!dialog)
         dialog = new QWidgetPlatformColorDialog(this);
 #endif
+    qCDebug(qtLabsPlatformDialogs) << "ColorDialog:" << dialog;
+
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
         connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
         connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);
