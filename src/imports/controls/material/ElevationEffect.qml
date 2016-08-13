@@ -38,23 +38,23 @@ import QtQuick 2.6
 import QtQuick.Controls.Material 2.1
 import QtQuick.Controls.Material.impl 2.1
 
-/*!
+/*
    An effect for standard Material Design elevation shadows. Useful for using as \c layer.effect.
  */
 Item {
     id: effect
 
-    /*!
+    /*
        The source the effect is applied to.
      */
     property var source
 
-    /*!
+    /*
        The elevation of the \l source Item.
      */
     property int elevation: 0
 
-    /*!
+    /*
        Set to \c true if the \l source Item is the same width as its parent and the shadow
        should be full width instead of rounding around the corner of the Item.
 
@@ -62,7 +62,7 @@ Item {
      */
     property bool fullWidth: false
 
-    /*!
+    /*
        Set to \c true if the \l source Item is the same height as its parent and the shadow
        should be full height instead of rounding around the corner of the Item.
 
@@ -70,7 +70,7 @@ Item {
      */
     property bool fullHeight: false
 
-    /*!
+    /*
        \internal
 
        The actual source Item the effect is applied to.
@@ -102,7 +102,7 @@ Item {
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
      * SOFTWARE.
      */
-    /*!
+    /*
        \internal
 
        The shadows to use for each possible elevation. There are three shadows that when combined
@@ -210,7 +210,7 @@ Item {
          {offset: 9, blur: 46, spread: 8}]
     ]
 
-    /*!
+    /*
        \internal
 
        The current shadow based on the elevation.

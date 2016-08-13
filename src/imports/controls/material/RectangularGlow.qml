@@ -36,13 +36,13 @@
 
 import QtQuick 2.0
 
-/*!
+/*
    A cross-graphics API implementation of QtGraphicalEffects' RectangularGlow.
  */
 Item {
     id: rootItem
 
-    /*!
+    /*
         This property defines how many pixels outside the item area are reached
         by the glow.
 
@@ -79,7 +79,7 @@ Item {
     */
     property real glowRadius: 0.0
 
-    /*!
+    /*
         This property defines how large part of the glow color is strenghtened
         near the source edges.
 
@@ -115,7 +115,7 @@ Item {
     */
     property real spread: 0.0
 
-    /*!
+    /*
         This property defines the RGBA color value which is used for the glow.
 
         By default, the property is set to \c "white".
@@ -149,7 +149,7 @@ Item {
     */
     property color color: "white"
 
-    /*!
+    /*
         This property defines the corner radius that is used to draw a glow with
         rounded corners.
 
@@ -190,7 +190,7 @@ Item {
     */
     property real cornerRadius: glowRadius
 
-    /*!
+    /*
         This property allows the effect output pixels to be cached in order to
         improve the rendering performance.
 
