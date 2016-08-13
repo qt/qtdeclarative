@@ -60,6 +60,7 @@ class QQuickPlatformMessageDialog : public QQuickPlatformDialog
     Q_PROPERTY(QString informativeText READ informativeText WRITE setInformativeText NOTIFY informativeTextChanged FINAL)
     Q_PROPERTY(QString detailedText READ detailedText WRITE setDetailedText NOTIFY detailedTextChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons buttons READ buttons WRITE setButtons NOTIFY buttonsChanged FINAL)
+    Q_PROPERTY(QPlatformDialogHelper::StandardButton clickedButton READ clickedButton NOTIFY clickedButtonChanged FINAL)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
 public:
@@ -77,11 +78,14 @@ public:
     QPlatformDialogHelper::StandardButtons buttons() const;
     void setButtons(QPlatformDialogHelper::StandardButtons buttons);
 
+    QPlatformDialogHelper::StandardButton clickedButton() const;
+
 Q_SIGNALS:
     void textChanged();
     void informativeTextChanged();
     void detailedTextChanged();
     void buttonsChanged();
+    void clickedButtonChanged();
     void clicked(QPlatformDialogHelper::StandardButton button);
 
     void okClicked();
@@ -111,6 +115,7 @@ private Q_SLOTS:
 
 private:
     QSharedPointer<QMessageDialogOptions> m_options;
+    QPlatformDialogHelper::StandardButton m_clickedButton;
 };
 
 QT_END_NAMESPACE
