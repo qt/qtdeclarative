@@ -87,6 +87,9 @@ Q_SIGNALS:
 protected:
     void applyOptions() override;
 
+private Q_SLOTS:
+    void handleClick(QPlatformDialogHelper::StandardButton button);
+
 private:
     QSharedPointer<QMessageDialogOptions> m_options;
 };

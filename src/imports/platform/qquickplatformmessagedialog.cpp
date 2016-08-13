@@ -129,8 +129,7 @@ QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
         dialog = new QWidgetPlatformMessageDialog(this);
 #endif
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
-        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformDialog::close);
-        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::clicked);
+        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
         messageDialog->setOptions(m_options);
     }
     setHandle(dialog);
@@ -247,6 +246,19 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
 void QQuickPlatformMessageDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
+}
+
+void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button)
+{
+    QPlatformDialogHelper::ButtonRole role = QPlatformDialogHelper::buttonRole(button);
+    if (role == QPlatformDialogHelper::AcceptRole)
+        accept();
+    else if (role == QPlatformDialogHelper::RejectRole)
+        reject();
+    else
+        close();
+
+    emit clicked(button);
 }
 
 QT_END_NAMESPACE
