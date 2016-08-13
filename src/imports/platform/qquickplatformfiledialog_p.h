@@ -62,6 +62,7 @@ class QQuickPlatformFileDialog : public QQuickPlatformDialog
     Q_PROPERTY(QList<QUrl> files READ files WRITE setFiles NOTIFY filesChanged FINAL)
     Q_PROPERTY(QUrl currentFile READ currentFile WRITE setCurrentFile NOTIFY currentFileChanged FINAL)
     Q_PROPERTY(QList<QUrl> currentFiles READ currentFiles WRITE setCurrentFiles NOTIFY currentFilesChanged FINAL)
+    Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
@@ -94,6 +95,9 @@ public:
     QList<QUrl> currentFiles() const;
     void setCurrentFiles(const QList<QUrl> &files);
 
+    QUrl folder() const;
+    void setFolder(const QUrl &folder);
+
     QFileDialogOptions::FileDialogOptions options() const;
     void setOptions(QFileDialogOptions::FileDialogOptions options);
     void resetOptions();
@@ -120,6 +124,7 @@ Q_SIGNALS:
     void filesChanged();
     void currentFileChanged();
     void currentFilesChanged();
+    void folderChanged();
     void optionsChanged();
     void nameFiltersChanged();
     void defaultSuffixChanged();

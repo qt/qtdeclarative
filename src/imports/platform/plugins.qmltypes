@@ -115,6 +115,7 @@ Module {
         Property { name: "files"; type: "QList<QUrl>" }
         Property { name: "currentFile"; type: "QUrl" }
         Property { name: "currentFiles"; type: "QList<QUrl>" }
+        Property { name: "folder"; type: "QUrl" }
         Property { name: "options"; type: "QFileDialogOptions::FileDialogOptions" }
         Property { name: "nameFilters"; type: "QStringList" }
         Property { name: "defaultSuffix"; type: "string" }

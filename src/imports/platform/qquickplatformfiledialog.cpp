@@ -255,6 +255,28 @@ void QQuickPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
 }
 
 /*!
+    \qmlproperty url Qt.labs.platform::FileDialog::folder
+
+    This property holds the folder where files are selected.
+    For selecting a folder, use FolderDialog instead.
+
+    \sa FolderDialog
+*/
+QUrl QQuickPlatformFileDialog::folder() const
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+        return fileDialog->directory();
+    return QUrl();
+}
+
+void QQuickPlatformFileDialog::setFolder(const QUrl &folder)
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+        fileDialog->setDirectory(folder);
+    m_options->setInitialDirectory(folder);
+}
+
+/*!
     \qmlproperty flags Qt.labs.platform::FileDialog::options
 
     This property holds the various options that affect the look and feel of the dialog.
@@ -426,6 +448,7 @@ QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
         // TODO: emit currentFileChanged only when the first entry in currentFiles changes
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFileChanged);
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFilesChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFileDialog::folderChanged);
         fileDialog->setOptions(m_options);
     }
     return dialog;
