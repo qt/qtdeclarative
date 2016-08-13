@@ -89,6 +89,7 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPlatformFolderDialog>(uri, 1, 0, "FolderDialog");
     qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 0, "FontDialog");
     qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
+    qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickPlatformDialog::tr("Cannot create an instance of StandardButton"));
 
     qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
