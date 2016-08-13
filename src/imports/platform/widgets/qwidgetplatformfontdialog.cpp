@@ -51,7 +51,6 @@ QWidgetPlatformFontDialog::QWidgetPlatformFontDialog(QObject *parent)
         m_dialog.reset(new QFontDialog);
         connect(m_dialog.data(), &QFontDialog::accepted, this, &QPlatformDialogHelper::accept);
         connect(m_dialog.data(), &QFontDialog::rejected, this, &QPlatformDialogHelper::reject);
-        connect(m_dialog.data(), &QFontDialog::fontSelected, this, &QPlatformFontDialogHelper::fontSelected);
         connect(m_dialog.data(), &QFontDialog::currentFontChanged, this, &QPlatformFontDialogHelper::currentFontChanged);
     }
 }

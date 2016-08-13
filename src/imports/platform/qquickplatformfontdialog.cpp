@@ -59,8 +59,10 @@ QT_BEGIN_NAMESPACE
     \image qtlabsplatform-fontdialog-gtk.png
 
     To show a font dialog, construct an instance of FontDialog, set the
-    desired properties, and call \l {Dialog::}{open()}. FontDialog emits
-    the \l fontSelected() signal when the user has selected a font.
+    desired properties, and call \l {Dialog::}{open()}. The \l currentFont
+    property can be used to determine the currently selected font in the
+    dialog. The \l font property is updated only after the final selection
+    has been made by accepting the dialog.
 
     \code
     MenuItem {
@@ -70,8 +72,12 @@ QT_BEGIN_NAMESPACE
 
     FontDialog {
         id: fontDialog
-        currentFont.family: "Sans"
-        onFontSelected: document.font = font
+        currentFont.family: document.font
+    }
+
+    MyDocument {
+        id: document
+        font: fontDialog.font
     }
     \endcode
 
@@ -89,14 +95,6 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
-/*!
-    \qmlsignal void Qt.labs.platform::FontDialog::fontSelected(font font)
-
-    This signal is emitted just after the user has clicked \uicontrol OK to select a \a font.
-
-    \sa currentFont
-*/
-
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
@@ -105,11 +103,43 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
 }
 
 /*!
+    \qmlproperty font Qt.labs.platform::FontDialog::font
+
+    This property holds the final accepted font.
+
+    Unlike the \l currentFont property, the \c font property is not updated
+    while the user is selecting fonts in the dialog, but only after the final
+    selection has been made. That is, when the user has clicked \uicontrol OK
+    to accept a font. Alternatively, the \l {Dialog::}{accepted()} signal
+    can be handled to get the final selection.
+
+    \sa currentFont, {Dialog::}{accepted()}
+*/
+QFont QQuickPlatformFontDialog::font() const
+{
+    return m_font;
+}
+
+void QQuickPlatformFontDialog::setFont(const QFont &font)
+{
+    if (m_font == font)
+        return;
+
+    m_font = font;
+    setCurrentFont(font);
+    emit fontChanged();
+}
+
+/*!
     \qmlproperty font Qt.labs.platform::FontDialog::currentFont
 
     This property holds the currently selected font in the dialog.
 
-    \sa fontSelected()
+    Unlike the \l font property, the \c currentFont property is updated
+    while the user is selecting fonts in the dialog, even before the final
+    selection has been made.
+
+    \sa font
 */
 QFont QQuickPlatformFontDialog::currentFont() const
 {
@@ -167,7 +197,6 @@ QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
 
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
-        connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
         fontDialog->setOptions(m_options);
     }
     return dialog;
@@ -176,6 +205,12 @@ QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
 void QQuickPlatformFontDialog::applyOptions()
 {
     m_options->setWindowTitle(title());
+}
+
+void QQuickPlatformFontDialog::accept()
+{
+    setFont(currentFont());
+    QQuickPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

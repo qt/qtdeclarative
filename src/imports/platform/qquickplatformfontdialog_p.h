@@ -57,12 +57,16 @@ QT_BEGIN_NAMESPACE
 class QQuickPlatformFontDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged FINAL)
     Q_PROPERTY(QFontDialogOptions::FontDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
     Q_FLAGS(QFontDialogOptions::FontDialogOptions)
 
 public:
     explicit QQuickPlatformFontDialog(QObject *parent = nullptr);
+
+    QFont font() const;
+    void setFont(const QFont &font);
 
     QFont currentFont() const;
     void setCurrentFont(const QFont &font);
@@ -71,15 +75,17 @@ public:
     void setOptions(QFontDialogOptions::FontDialogOptions options);
 
 Q_SIGNALS:
-    void optionsChanged();
+    void fontChanged();
     void currentFontChanged();
-    void fontSelected(const QFont &font);
+    void optionsChanged();
 
 protected:
     QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
+    void accept() override;
 
 private:
+    QFont m_font;
     QSharedPointer<QFontDialogOptions> m_options;
 };
 

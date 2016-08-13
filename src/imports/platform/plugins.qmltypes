@@ -151,12 +151,9 @@ Module {
         prototype: "QQuickPlatformDialog"
         exports: ["Qt.labs.platform/FontDialog 1.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "font"; type: "QFont" }
         Property { name: "currentFont"; type: "QFont" }
         Property { name: "options"; type: "QFontDialogOptions::FontDialogOptions" }
-        Signal {
-            name: "fontSelected"
-            Parameter { name: "font"; type: "QFont" }
-        }
     }
     Component {
         name: "QQuickPlatformMenu"

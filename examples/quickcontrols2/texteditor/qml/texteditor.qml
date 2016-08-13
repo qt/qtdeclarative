@@ -175,7 +175,7 @@ ApplicationWindow {
 
     FontDialog {
         id: fontDialog
-        onFontSelected: {
+        onAccepted: {
             document.fontFamily = font.family;
             document.fontSize = font.pointSize;
         }
