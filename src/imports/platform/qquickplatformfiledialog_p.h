@@ -58,7 +58,10 @@ class QQuickPlatformFileDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
+    Q_PROPERTY(QUrl file READ file WRITE setFile NOTIFY fileChanged FINAL)
+    Q_PROPERTY(QList<QUrl> files READ files WRITE setFiles NOTIFY filesChanged FINAL)
     Q_PROPERTY(QUrl currentFile READ currentFile WRITE setCurrentFile NOTIFY currentFileChanged FINAL)
+    Q_PROPERTY(QList<QUrl> currentFiles READ currentFiles WRITE setCurrentFiles NOTIFY currentFilesChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
@@ -79,8 +82,17 @@ public:
     FileMode fileMode() const;
     void setFileMode(FileMode fileMode);
 
+    QUrl file() const;
+    void setFile(const QUrl &file);
+
+    QList<QUrl> files() const;
+    void setFiles(const QList<QUrl> &files);
+
     QUrl currentFile() const;
     void setCurrentFile(const QUrl &file);
+
+    QList<QUrl> currentFiles() const;
+    void setCurrentFiles(const QList<QUrl> &files);
 
     QFileDialogOptions::FileDialogOptions options() const;
     void setOptions(QFileDialogOptions::FileDialogOptions options);
@@ -104,26 +116,27 @@ public:
 
 Q_SIGNALS:
     void fileModeChanged();
+    void fileChanged();
+    void filesChanged();
     void currentFileChanged();
+    void currentFilesChanged();
     void optionsChanged();
     void nameFiltersChanged();
     void defaultSuffixChanged();
     void acceptLabelChanged();
     void rejectLabelChanged();
 
-    void fileSelected(const QUrl &file);
-    void filesSelected(const QList<QUrl> &files);
-
 protected:
     QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
+    void accept() override;
 
 private:
     QUrl addDefaultSuffix(const QUrl &file) const;
     QList<QUrl> addDefaultSuffixes(const QList<QUrl> &files) const;
 
     FileMode m_fileMode;
-    mutable QUrl m_current;
+    QList<QUrl> m_files;
     QSharedPointer<QFileDialogOptions> m_options;
 };
 

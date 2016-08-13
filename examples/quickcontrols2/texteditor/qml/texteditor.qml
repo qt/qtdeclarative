@@ -162,7 +162,7 @@ ApplicationWindow {
         id: openDialog
         fileMode: FileDialog.OpenFile
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
-        onFileSelected: document.load(file)
+        onAccepted: document.load(file)
     }
 
     FileDialog {
@@ -170,7 +170,7 @@ ApplicationWindow {
         fileMode: FileDialog.SaveFile
         defaultSuffix: document.fileType
         nameFilters: openDialog.nameFilters
-        onFileSelected: document.saveAs(file)
+        onAccepted: document.saveAs(file)
     }
 
     FontDialog {

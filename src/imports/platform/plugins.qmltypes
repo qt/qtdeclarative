@@ -111,20 +111,15 @@ Module {
             }
         }
         Property { name: "fileMode"; type: "FileMode" }
+        Property { name: "file"; type: "QUrl" }
+        Property { name: "files"; type: "QList<QUrl>" }
         Property { name: "currentFile"; type: "QUrl" }
+        Property { name: "currentFiles"; type: "QList<QUrl>" }
         Property { name: "options"; type: "QFileDialogOptions::FileDialogOptions" }
         Property { name: "nameFilters"; type: "QStringList" }
         Property { name: "defaultSuffix"; type: "string" }
         Property { name: "acceptLabel"; type: "string" }
         Property { name: "rejectLabel"; type: "string" }
-        Signal {
-            name: "fileSelected"
-            Parameter { name: "file"; type: "QUrl" }
-        }
-        Signal {
-            name: "filesSelected"
-            Parameter { name: "files"; type: "QList<QUrl>" }
-        }
     }
     Component {
         name: "QQuickPlatformFolderDialog"
