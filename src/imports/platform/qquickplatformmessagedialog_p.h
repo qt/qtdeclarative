@@ -84,6 +84,25 @@ Q_SIGNALS:
     void buttonsChanged();
     void clicked(QPlatformDialogHelper::StandardButton button);
 
+    void okClicked();
+    void saveClicked();
+    void saveAllClicked();
+    void openClicked();
+    void yesClicked();
+    void yesToAllClicked();
+    void noClicked();
+    void noToAllClicked();
+    void abortClicked();
+    void retryClicked();
+    void ignoreClicked();
+    void closeClicked();
+    void cancelClicked();
+    void discardClicked();
+    void helpClicked();
+    void applyClicked();
+    void resetClicked();
+    void restoreDefaultsClicked();
+
 protected:
     void applyOptions() override;
 

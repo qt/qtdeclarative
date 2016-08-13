@@ -39,6 +39,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQml/qqmlinfo.h>
 
 #ifdef QT_WIDGETS_LIB
 #include "widgets/qwidgetplatformmessagedialog_p.h"
@@ -119,6 +120,114 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when a dialog \a button is clicked.
 
     \sa buttons
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::okClicked()
+
+    This signal is emitted when \uicontrol Ok is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::saveClicked()
+
+    This signal is emitted when \uicontrol Save is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::saveAllClicked()
+
+    This signal is emitted when \uicontrol {Save All} is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::openClicked()
+
+    This signal is emitted when \uicontrol Open is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::yesClicked()
+
+    This signal is emitted when \uicontrol Yes is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::yesToAllClicked()
+
+    This signal is emitted when \uicontrol {Yes To All} is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::noClicked()
+
+    This signal is emitted when \uicontrol No is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::noToAllClicked()
+
+    This signal is emitted when \uicontrol {No To All} is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::abortClicked()
+
+    This signal is emitted when \uicontrol Abort is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::retryClicked()
+
+    This signal is emitted when \uicontrol Retry is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::ignoreClicked()
+
+    This signal is emitted when \uicontrol Ignore is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::closeClicked()
+
+    This signal is emitted when \uicontrol Close is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::cancelClicked()
+
+    This signal is emitted when \uicontrol Cancel is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::discardClicked()
+
+    This signal is emitted when \uicontrol Discard is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::helpClicked()
+
+    This signal is emitted when \uicontrol Help is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::applyClicked()
+
+    This signal is emitted when \uicontrol Apply is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::resetClicked()
+
+    This signal is emitted when \uicontrol Reset is clicked.
+*/
+
+/*!
+    \qmlsignal Qt.labs.platform::MessageDialog::restoreDefaultsClicked()
+
+    This signal is emitted when \uicontrol {Restore Defaults} is clicked.
 */
 
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
@@ -264,6 +373,28 @@ void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardBut
         close();
 
     emit clicked(button);
+
+    switch (button) {
+    case QPlatformDialogHelper::Ok: emit okClicked(); break;
+    case QPlatformDialogHelper::Save: emit saveClicked(); break;
+    case QPlatformDialogHelper::SaveAll: emit saveAllClicked(); break;
+    case QPlatformDialogHelper::Open: emit openClicked(); break;
+    case QPlatformDialogHelper::Yes: emit yesClicked(); break;
+    case QPlatformDialogHelper::YesToAll: emit yesToAllClicked(); break;
+    case QPlatformDialogHelper::No: emit noClicked(); break;
+    case QPlatformDialogHelper::NoToAll: emit noToAllClicked(); break;
+    case QPlatformDialogHelper::Abort: emit abortClicked(); break;
+    case QPlatformDialogHelper::Retry: emit retryClicked(); break;
+    case QPlatformDialogHelper::Ignore: emit ignoreClicked(); break;
+    case QPlatformDialogHelper::Close: emit closeClicked(); break;
+    case QPlatformDialogHelper::Cancel: emit cancelClicked(); break;
+    case QPlatformDialogHelper::Discard: emit discardClicked(); break;
+    case QPlatformDialogHelper::Help: emit helpClicked(); break;
+    case QPlatformDialogHelper::Apply: emit applyClicked(); break;
+    case QPlatformDialogHelper::Reset: emit resetClicked(); break;
+    case QPlatformDialogHelper::RestoreDefaults: emit restoreDefaultsClicked(); break;
+    default: qmlInfo(this) << "unknown button" << button; break;
+    }
 }
 
 QT_END_NAMESPACE
