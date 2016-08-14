@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
     FileDialog {
         id: fileDialog
         currentFile: document.source
+        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
     }
 
     MyDocument {
@@ -90,7 +91,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa FolderDialog
+    \sa FolderDialog, StandardPaths
 */
 
 QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)

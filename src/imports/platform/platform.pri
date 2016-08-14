@@ -11,6 +11,7 @@ HEADERS += \
     $$PWD/qquickplatformmenuitemgroup_p.h \
     $$PWD/qquickplatformmenuseparator_p.h \
     $$PWD/qquickplatformmessagedialog_p.h \
+    $$PWD/qquickplatformstandardpaths_p.h \
     $$PWD/qquickplatformsystemtrayicon_p.h
 
 SOURCES += \
@@ -26,4 +27,5 @@ SOURCES += \
     $$PWD/qquickplatformmenuitemgroup.cpp \
     $$PWD/qquickplatformmenuseparator.cpp \
     $$PWD/qquickplatformmessagedialog.cpp \
+    $$PWD/qquickplatformstandardpaths.cpp \
     $$PWD/qquickplatformsystemtrayicon.cpp
