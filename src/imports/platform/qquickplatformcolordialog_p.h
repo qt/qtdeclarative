@@ -76,6 +76,7 @@ Q_SIGNALS:
     void colorSelected(const QColor &color);
 
 protected:
+    QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
 
 private:

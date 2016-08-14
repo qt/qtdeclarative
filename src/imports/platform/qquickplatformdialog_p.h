@@ -76,7 +76,6 @@ public:
     ~QQuickPlatformDialog();
 
     QPlatformDialogHelper *handle() const;
-    void setHandle(QPlatformDialogHelper *handle);
 
     QQmlListProperty<QObject> data();
 
@@ -114,6 +113,10 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
+    bool create();
+    void destroy();
+
+    virtual QPlatformDialogHelper *createHelper() = 0;
     virtual void applyOptions();
 
     QWindow *findParentWindow() const;

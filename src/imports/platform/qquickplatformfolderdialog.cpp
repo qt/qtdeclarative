@@ -118,26 +118,6 @@ QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
 {
     m_options->setFileMode(QFileDialogOptions::Directory);
     m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
-
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFileDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FolderDialog:" << dialog;
-
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, this, &QQuickPlatformFolderDialog::folderSelected);
-        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, this, &QQuickPlatformFolderDialog::foldersSelected);
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
-            if (m_current == url)
-                return;
-            m_current = url;
-            emit currentFolderChanged();
-        });
-        fileDialog->setOptions(m_options);
-    }
-    setHandle(dialog);
 }
 
 /*!
@@ -257,6 +237,29 @@ void QQuickPlatformFolderDialog::setRejectLabel(const QString &label)
 void QQuickPlatformFolderDialog::resetRejectLabel()
 {
     setRejectLabel(QString());
+}
+
+QPlatformDialogHelper *QQuickPlatformFolderDialog::createHelper()
+{
+    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformFileDialog(this);
+#endif
+    qCDebug(qtLabsPlatformDialogs) << "FolderDialog:" << dialog;
+
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
+        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, this, &QQuickPlatformFolderDialog::folderSelected);
+        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, this, &QQuickPlatformFolderDialog::foldersSelected);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
+            if (m_current == url)
+                return;
+            m_current = url;
+            emit currentFolderChanged();
+        });
+        fileDialog->setOptions(m_options);
+    }
+    return dialog;
 }
 
 void QQuickPlatformFolderDialog::applyOptions()

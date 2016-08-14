@@ -76,6 +76,7 @@ Q_SIGNALS:
     void fontSelected(const QFont &font);
 
 protected:
+    QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
 
 private:

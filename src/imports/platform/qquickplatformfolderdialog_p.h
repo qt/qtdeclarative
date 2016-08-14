@@ -91,6 +91,7 @@ Q_SIGNALS:
     void foldersSelected(const QList<QUrl> &folders);
 
 protected:
+    QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
 
 private:

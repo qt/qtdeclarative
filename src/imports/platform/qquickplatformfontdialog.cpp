@@ -102,19 +102,6 @@ Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QFontDialogOptions::create())
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFontDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FontDialog:" << dialog;
-
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
-        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
-        connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
-        fontDialog->setOptions(m_options);
-    }
-    setHandle(dialog);
 }
 
 /*!
@@ -167,6 +154,23 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
 
     m_options->setOptions(options);
     emit optionsChanged();
+}
+
+QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
+{
+    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformFontDialog(this);
+#endif
+    qCDebug(qtLabsPlatformDialogs) << "FontDialog:" << dialog;
+
+    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
+        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
+        connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
+        fontDialog->setOptions(m_options);
+    }
+    return dialog;
 }
 
 void QQuickPlatformFontDialog::applyOptions()

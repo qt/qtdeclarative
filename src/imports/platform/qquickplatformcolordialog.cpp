@@ -102,19 +102,6 @@ Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QColorDialogOptions::create())
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformColorDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "ColorDialog:" << dialog;
-
-    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
-        connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
-        connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);
-        colorDialog->setOptions(m_options);
-    }
-    setHandle(dialog);
 }
 
 /*!
@@ -164,6 +151,23 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
 
     m_options->setOptions(options);
     emit optionsChanged();
+}
+
+QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
+{
+    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformColorDialog(this);
+#endif
+    qCDebug(qtLabsPlatformDialogs) << "ColorDialog:" << dialog;
+
+    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
+        connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
+        connect(colorDialog, &QPlatformColorDialogHelper::colorSelected, this, &QQuickPlatformColorDialog::colorSelected);
+        colorDialog->setOptions(m_options);
+    }
+    return dialog;
 }
 
 void QQuickPlatformColorDialog::applyOptions()

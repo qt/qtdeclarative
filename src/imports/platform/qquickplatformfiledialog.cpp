@@ -118,30 +118,6 @@ QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
 {
     m_options->setFileMode(QFileDialogOptions::ExistingFile);
     m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
-
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFileDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FileDialog:" << dialog;
-
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, [this](const QUrl &file) {
-            emit fileSelected(addDefaultSuffix(file));
-        });
-        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, [this](const QList<QUrl> &files) {
-            emit filesSelected(addDefaultSuffixes(files));
-        });
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
-            if (m_current == url)
-                return;
-            m_current = url;
-            emit currentFileChanged();
-        });
-        fileDialog->setOptions(m_options);
-    }
-    setHandle(dialog);
 }
 
 /*!
@@ -364,6 +340,33 @@ void QQuickPlatformFileDialog::setRejectLabel(const QString &label)
 void QQuickPlatformFileDialog::resetRejectLabel()
 {
     setRejectLabel(QString());
+}
+
+QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
+{
+    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformFileDialog(this);
+#endif
+    qCDebug(qtLabsPlatformDialogs) << "FileDialog:" << dialog;
+
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
+        connect(fileDialog, &QPlatformFileDialogHelper::fileSelected, [this](const QUrl &file) {
+            emit fileSelected(addDefaultSuffix(file));
+        });
+        connect(fileDialog, &QPlatformFileDialogHelper::filesSelected, [this](const QList<QUrl> &files) {
+            emit filesSelected(addDefaultSuffixes(files));
+        });
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, [this](const QUrl &url) {
+            if (m_current == url)
+                return;
+            m_current = url;
+            emit currentFileChanged();
+        });
+        fileDialog->setOptions(m_options);
+    }
+    return dialog;
 }
 
 void QQuickPlatformFileDialog::applyOptions()

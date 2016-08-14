@@ -237,18 +237,6 @@ QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
       m_options(QMessageDialogOptions::create()),
       m_clickedButton(QPlatformDialogHelper::NoButton)
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformMessageDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "MessageDialog:" << dialog;
-
-    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
-        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
-        messageDialog->setOptions(m_options);
-    }
-    setHandle(dialog);
 }
 
 /*!
@@ -369,6 +357,22 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
 QPlatformDialogHelper::StandardButton QQuickPlatformMessageDialog::clickedButton() const
 {
     return m_clickedButton;
+}
+
+QPlatformDialogHelper *QQuickPlatformMessageDialog::createHelper()
+{
+    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
+#ifdef QT_WIDGETS_LIB
+    if (!dialog)
+        dialog = new QWidgetPlatformMessageDialog(this);
+#endif
+    qCDebug(qtLabsPlatformDialogs) << "MessageDialog:" << dialog;
+
+    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
+        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
+        messageDialog->setOptions(m_options);
+    }
+    return dialog;
 }
 
 void QQuickPlatformMessageDialog::applyOptions()

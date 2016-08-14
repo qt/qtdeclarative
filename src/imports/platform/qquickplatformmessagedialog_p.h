@@ -108,6 +108,7 @@ Q_SIGNALS:
     void restoreDefaultsClicked();
 
 protected:
+    QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
 
 private Q_SLOTS:

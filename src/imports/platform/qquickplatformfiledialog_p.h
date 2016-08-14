@@ -115,6 +115,7 @@ Q_SIGNALS:
     void filesSelected(const QList<QUrl> &files);
 
 protected:
+    QPlatformDialogHelper *createHelper() override;
     void applyOptions() override;
 
 private:

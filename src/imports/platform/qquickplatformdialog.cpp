@@ -94,29 +94,14 @@ QQuickPlatformDialog::QQuickPlatformDialog(QObject *parent)
 
 QQuickPlatformDialog::~QQuickPlatformDialog()
 {
-    delete m_handle;
-    m_handle = nullptr;
+    destroy();
 }
 
 QPlatformDialogHelper *QQuickPlatformDialog::handle() const
 {
+    if (!m_handle)
+        const_cast<QQuickPlatformDialog *>(this)->create();
     return m_handle;
-}
-
-void QQuickPlatformDialog::setHandle(QPlatformDialogHelper *handle)
-{
-    if (m_handle == handle)
-        return;
-
-    if (m_handle) {
-        disconnect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
-        disconnect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
-    }
-    m_handle = handle;
-    if (handle) {
-        connect(handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
-        connect(handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
-    }
 }
 
 /*!
@@ -245,7 +230,7 @@ void QQuickPlatformDialog::setVisible(bool visible)
 */
 void QQuickPlatformDialog::open()
 {
-    if (!m_handle || m_visible)
+    if (m_visible || !create())
         return;
 
     applyOptions();
@@ -306,6 +291,24 @@ void QQuickPlatformDialog::componentComplete()
     m_complete = true;
     if (!m_parentWindow)
         setParentWindow(findParentWindow());
+}
+
+bool QQuickPlatformDialog::create()
+{
+    if (!m_handle) {
+        m_handle = createHelper();
+        if (m_handle) {
+            connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
+            connect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
+        }
+    }
+    return m_handle;
+}
+
+void QQuickPlatformDialog::destroy()
+{
+    delete m_handle;
+    m_handle = nullptr;
 }
 
 void QQuickPlatformDialog::applyOptions()
