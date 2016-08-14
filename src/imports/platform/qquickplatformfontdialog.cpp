@@ -36,6 +36,7 @@
 
 #include "qquickplatformfontdialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -96,6 +97,8 @@ QT_BEGIN_NAMESPACE
     \sa currentFont
 */
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
+
 QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     : QQuickPlatformDialog(parent), m_options(QFontDialogOptions::create())
 {
@@ -104,6 +107,8 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     if (!dialog)
         dialog = new QWidgetPlatformFontDialog(this);
 #endif
+    qCDebug(qtLabsPlatformDialogs) << "FontDialog:" << dialog;
+
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
         connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
