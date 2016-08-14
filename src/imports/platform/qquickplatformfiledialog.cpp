@@ -324,6 +324,8 @@ void QQuickPlatformFileDialog::resetOptions()
     example, \c Makefile). In a native Windows file dialog, \b{*.*} will match
     such files, while in other types of file dialogs it may not. So it is better
     to use \b{*} if you mean to select any file.
+
+    \sa selectedNameFilter
 */
 QStringList QQuickPlatformFileDialog::nameFilters() const
 {
@@ -342,6 +344,27 @@ void QQuickPlatformFileDialog::setNameFilters(const QStringList &filters)
 void QQuickPlatformFileDialog::resetNameFilters()
 {
     setNameFilters(QStringList());
+}
+
+/*!
+    \qmlproperty string Qt.labs.platform::FileDialog::selectedNameFilter
+
+    This property holds the currently selected name filter.
+
+    \sa nameFilters
+*/
+QString QQuickPlatformFileDialog::selectedNameFilter() const
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+        return fileDialog->selectedNameFilter();
+    return m_options->initiallySelectedNameFilter();
+}
+
+void QQuickPlatformFileDialog::setSelectedNameFilter(const QString &filter)
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+        fileDialog->selectNameFilter(filter);
+    m_options->setInitiallySelectedNameFilter(filter);
 }
 
 /*!
@@ -449,6 +472,7 @@ QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFileChanged);
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFilesChanged);
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFileDialog::folderChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, this, &QQuickPlatformFileDialog::selectedNameFilterChanged);
         fileDialog->setOptions(m_options);
     }
     return dialog;

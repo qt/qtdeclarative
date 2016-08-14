@@ -65,6 +65,7 @@ class QQuickPlatformFileDialog : public QQuickPlatformDialog
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
+    Q_PROPERTY(QString selectedNameFilter READ selectedNameFilter WRITE setSelectedNameFilter NOTIFY selectedNameFilterChanged FINAL)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
@@ -106,6 +107,9 @@ public:
     void setNameFilters(const QStringList &filters);
     void resetNameFilters();
 
+    QString selectedNameFilter() const;
+    void setSelectedNameFilter(const QString &filter);
+
     QString defaultSuffix() const;
     void setDefaultSuffix(const QString &suffix);
     void resetDefaultSuffix();
@@ -127,6 +131,7 @@ Q_SIGNALS:
     void folderChanged();
     void optionsChanged();
     void nameFiltersChanged();
+    void selectedNameFilterChanged();
     void defaultSuffixChanged();
     void acceptLabelChanged();
     void rejectLabelChanged();

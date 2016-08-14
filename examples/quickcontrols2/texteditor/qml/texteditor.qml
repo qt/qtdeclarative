@@ -161,6 +161,7 @@ ApplicationWindow {
     FileDialog {
         id: openDialog
         fileMode: FileDialog.OpenFile
+        selectedNameFilter: nameFilters[1]
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
         onAccepted: document.load(file)
     }
@@ -170,6 +171,7 @@ ApplicationWindow {
         fileMode: FileDialog.SaveFile
         defaultSuffix: document.fileType
         nameFilters: openDialog.nameFilters
+        selectedNameFilter: document.fileType === "txt" ? nameFilters[0] : nameFilters[1]
         onAccepted: document.saveAs(file)
     }
 
