@@ -152,13 +152,14 @@ QUrl QQuickPlatformFolderDialog::currentFolder() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         return fileDialog->directory();
-    return QUrl();
+    return m_options->initialDirectory();
 }
 
 void QQuickPlatformFolderDialog::setCurrentFolder(const QUrl &folder)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         fileDialog->setDirectory(folder);
+    m_options->setInitialDirectory(folder);
 }
 
 /*!

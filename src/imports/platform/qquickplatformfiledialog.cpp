@@ -217,15 +217,12 @@ void QQuickPlatformFileDialog::setFiles(const QList<QUrl> &files)
 */
 QUrl QQuickPlatformFileDialog::currentFile() const
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-        return fileDialog->selectedFiles().value(0);
-    return QUrl();
+    return currentFiles().value(0);
 }
 
 void QQuickPlatformFileDialog::setCurrentFile(const QUrl &file)
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-        fileDialog->selectFile(file);
+    setCurrentFiles(QList<QUrl>() << file);
 }
 
 /*!
@@ -243,7 +240,7 @@ QList<QUrl> QQuickPlatformFileDialog::currentFiles() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         return fileDialog->selectedFiles();
-    return QList<QUrl>();
+    return m_options->initiallySelectedFiles();
 }
 
 void QQuickPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
@@ -252,6 +249,7 @@ void QQuickPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
         for (const QUrl &file : files)
             fileDialog->selectFile(file);
     }
+    m_options->setInitiallySelectedFiles(files);
 }
 
 /*!
@@ -266,7 +264,7 @@ QUrl QQuickPlatformFileDialog::folder() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         return fileDialog->directory();
-    return QUrl();
+    return m_options->initialDirectory();
 }
 
 void QQuickPlatformFileDialog::setFolder(const QUrl &folder)
