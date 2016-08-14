@@ -145,13 +145,14 @@ QColor QQuickPlatformColorDialog::currentColor() const
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
         return colorDialog->currentColor();
-    return QColor();
+    return m_currentColor;
 }
 
 void QQuickPlatformColorDialog::setCurrentColor(const QColor &color)
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
         colorDialog->setCurrentColor(color);
+    m_currentColor = color;
 }
 
 /*!

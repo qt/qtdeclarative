@@ -145,13 +145,14 @@ QFont QQuickPlatformFontDialog::currentFont() const
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
         return fontDialog->currentFont();
-    return QFont();
+    return m_currentFont;
 }
 
 void QQuickPlatformFontDialog::setCurrentFont(const QFont &font)
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
         fontDialog->setCurrentFont(font);
+    m_currentFont = font;
 }
 
 /*!

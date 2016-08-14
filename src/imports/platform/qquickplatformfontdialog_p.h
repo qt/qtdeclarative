@@ -86,6 +86,7 @@ protected:
 
 private:
     QFont m_font;
+    QFont m_currentFont; // TODO: QFontDialogOptions::initialFont
     QSharedPointer<QFontDialogOptions> m_options;
 };
 

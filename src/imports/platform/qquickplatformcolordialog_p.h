@@ -86,6 +86,7 @@ protected:
 
 private:
     QColor m_color;
+    QColor m_currentColor; // TODO: QColorDialogOptions::initialColor
     QSharedPointer<QColorDialogOptions> m_options;
 };
 
