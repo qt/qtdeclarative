@@ -99,8 +99,6 @@ QQuickPlatformDialog::~QQuickPlatformDialog()
 
 QPlatformDialogHelper *QQuickPlatformDialog::handle() const
 {
-    if (!m_handle)
-        const_cast<QQuickPlatformDialog *>(this)->create();
     return m_handle;
 }
 
