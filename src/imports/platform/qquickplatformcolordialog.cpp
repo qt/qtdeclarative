@@ -202,9 +202,11 @@ QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformColorDialog::applyOptions()
+void QQuickPlatformColorDialog::applyOptions(QPlatformDialogHelper *handle)
 {
     m_options->setWindowTitle(title());
+    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle))
+        colorDialog->setOptions(m_options);
 }
 
 void QQuickPlatformColorDialog::accept()

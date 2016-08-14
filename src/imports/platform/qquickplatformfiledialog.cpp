@@ -478,9 +478,11 @@ QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformFileDialog::applyOptions()
+void QQuickPlatformFileDialog::applyOptions(QPlatformDialogHelper *handle)
 {
     m_options->setWindowTitle(title());
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle))
+        fileDialog->setOptions(m_options);
 }
 
 void QQuickPlatformFileDialog::accept()

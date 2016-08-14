@@ -138,7 +138,7 @@ Q_SIGNALS:
 
 protected:
     QPlatformDialogHelper *createHelper() override;
-    void applyOptions() override;
+    void applyOptions(QPlatformDialogHelper *handle) override;
     void accept() override;
 
 private:

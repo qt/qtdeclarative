@@ -231,7 +231,7 @@ void QQuickPlatformDialog::open()
     if (m_visible || !create())
         return;
 
-    applyOptions();
+    applyOptions(m_handle);
     m_visible = m_handle->show(m_flags, m_modality, m_parentWindow);
     if (m_visible)
         emit visibleChanged();
@@ -309,8 +309,9 @@ void QQuickPlatformDialog::destroy()
     m_handle = nullptr;
 }
 
-void QQuickPlatformDialog::applyOptions()
+void QQuickPlatformDialog::applyOptions(QPlatformDialogHelper *handle)
 {
+    Q_UNUSED(handle);
 }
 
 QWindow *QQuickPlatformDialog::findParentWindow() const

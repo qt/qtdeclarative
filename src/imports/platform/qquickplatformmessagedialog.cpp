@@ -375,9 +375,11 @@ QPlatformDialogHelper *QQuickPlatformMessageDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformMessageDialog::applyOptions()
+void QQuickPlatformMessageDialog::applyOptions(QPlatformDialogHelper *handle)
 {
     m_options->setWindowTitle(title());
+    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(handle))
+        messageDialog->setOptions(m_options);
 }
 
 void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button)

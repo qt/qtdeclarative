@@ -205,9 +205,11 @@ QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformFontDialog::applyOptions()
+void QQuickPlatformFontDialog::applyOptions(QPlatformDialogHelper *handle)
 {
     m_options->setWindowTitle(title());
+    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle))
+        fontDialog->setOptions(m_options);
 }
 
 void QQuickPlatformFontDialog::accept()
