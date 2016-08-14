@@ -83,18 +83,30 @@ Module {
         exports: ["Qt.labs.platform/Dialog 1.0"]
         isCreatable: false
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "StandardCode"
+            values: {
+                "Rejected": 0,
+                "Accepted": 1
+            }
+        }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "parentWindow"; type: "QWindow"; isPointer: true }
         Property { name: "title"; type: "string" }
         Property { name: "flags"; type: "Qt::WindowFlags" }
         Property { name: "modality"; type: "Qt::WindowModality" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "result"; type: "int" }
         Signal { name: "accepted" }
         Signal { name: "rejected" }
         Method { name: "open" }
         Method { name: "close" }
         Method { name: "accept" }
         Method { name: "reject" }
+        Method {
+            name: "done"
+            Parameter { name: "result"; type: "int" }
+        }
     }
     Component {
         name: "QQuickPlatformFileDialog"
@@ -296,11 +308,6 @@ Module {
         Property { name: "informativeText"; type: "string" }
         Property { name: "detailedText"; type: "string" }
         Property { name: "buttons"; type: "QPlatformDialogHelper::StandardButtons" }
-        Property {
-            name: "clickedButton"
-            type: "QPlatformDialogHelper::StandardButton"
-            isReadonly: true
-        }
         Signal {
             name: "clicked"
             Parameter { name: "button"; type: "QPlatformDialogHelper::StandardButton" }

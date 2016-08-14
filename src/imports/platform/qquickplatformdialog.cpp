@@ -85,6 +85,7 @@ QQuickPlatformDialog::QQuickPlatformDialog(QObject *parent)
     : QObject(parent),
       m_visible(false),
       m_complete(false),
+      m_result(0),
       m_parentWindow(nullptr),
       m_flags(Qt::Dialog),
       m_modality(Qt::WindowModal),
@@ -220,6 +221,32 @@ void QQuickPlatformDialog::setVisible(bool visible)
 }
 
 /*!
+    \qmlproperty int Qt.labs.platform::Dialog::result
+
+    This property holds the result code.
+
+    Standard result codes:
+    \value Dialog.Accepted
+    \value Dialog.Rejected
+
+    \note MessageDialog sets the result to the value of the clicked standard
+          button instead of using the standard result codes.
+*/
+int QQuickPlatformDialog::result() const
+{
+    return m_result;
+}
+
+void QQuickPlatformDialog::setResult(int result)
+{
+    if (m_result == result)
+        return;
+
+    m_result = result;
+    emit resultChanged();
+}
+
+/*!
     \qmlmethod void Qt.labs.platform::Dialog::open()
 
     Opens the dialog.
@@ -263,8 +290,7 @@ void QQuickPlatformDialog::close()
 */
 void QQuickPlatformDialog::accept()
 {
-    close();
-    emit accepted();
+    done(Accepted);
 }
 
 /*!
@@ -276,8 +302,25 @@ void QQuickPlatformDialog::accept()
 */
 void QQuickPlatformDialog::reject()
 {
+    done(Rejected);
+}
+
+/*!
+    \qmlmethod void Qt.labs.platform::Dialog::done(int result)
+
+    Closes the dialog and sets the \a result.
+
+    \sa accept(), reject(), result
+*/
+void QQuickPlatformDialog::done(int result)
+{
     close();
-    emit rejected();
+    setResult(result);
+
+    if (result == Accepted)
+        emit accepted();
+    else if (result == Rejected)
+        emit rejected();
 }
 
 void QQuickPlatformDialog::classBegin()

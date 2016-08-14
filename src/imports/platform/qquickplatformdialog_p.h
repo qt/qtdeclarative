@@ -69,7 +69,9 @@ class QQuickPlatformDialog : public QObject, public QQmlParserStatus
     Q_PROPERTY(Qt::WindowFlags flags READ flags WRITE setFlags NOTIFY flagsChanged FINAL)
     Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
+    Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
+    Q_ENUMS(StandardCode)
 
 public:
     explicit QQuickPlatformDialog(QObject *parent = nullptr);
@@ -94,11 +96,17 @@ public:
     bool isVisible() const;
     void setVisible(bool visible);
 
+    enum StandardCode { Rejected, Accepted };
+
+    int result() const;
+    void setResult(int result);
+
 public Q_SLOTS:
     void open();
     void close();
     virtual void accept();
     virtual void reject();
+    virtual void done(int result);
 
 Q_SIGNALS:
     void accepted();
@@ -108,6 +116,7 @@ Q_SIGNALS:
     void flagsChanged();
     void modalityChanged();
     void visibleChanged();
+    void resultChanged();
 
 protected:
     void classBegin() override;
@@ -124,6 +133,7 @@ protected:
 private:
     bool m_visible;
     bool m_complete;
+    int m_result;
     QWindow *m_parentWindow;
     QString m_title;
     Qt::WindowFlags m_flags;

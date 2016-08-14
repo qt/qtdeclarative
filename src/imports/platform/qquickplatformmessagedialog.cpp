@@ -119,7 +119,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when a dialog \a button is clicked.
 
-    \sa buttons, clickedButton
+    \sa buttons
 */
 
 /*!
@@ -233,9 +233,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
-    : QQuickPlatformDialog(parent),
-      m_options(QMessageDialogOptions::create()),
-      m_clickedButton(QPlatformDialogHelper::NoButton)
+    : QQuickPlatformDialog(parent), m_options(QMessageDialogOptions::create())
 {
 }
 
@@ -331,7 +329,7 @@ void QQuickPlatformMessageDialog::setDetailedText(const QString &text)
     \value MessageDialog.Ignore An "Ignore" button defined with the \c AcceptRole.
     \value MessageDialog.NoButton The dialog has no buttons.
 
-    \sa clicked(), clickedButton
+    \sa clicked()
 */
 QPlatformDialogHelper::StandardButtons QQuickPlatformMessageDialog::buttons() const
 {
@@ -345,18 +343,6 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
 
     m_options->setStandardButtons(buttons);
     emit buttonsChanged();
-}
-
-/*!
-    \qmlproperty enumeration Qt.labs.platform::MessageDialog::clickedButton
-
-    This property holds the button that was clicked. The default value is \c MessageDialog.NoButton.
-
-    \sa buttons
-*/
-QPlatformDialogHelper::StandardButton QQuickPlatformMessageDialog::clickedButton() const
-{
-    return m_clickedButton;
 }
 
 QPlatformDialogHelper *QQuickPlatformMessageDialog::createHelper()
@@ -384,20 +370,8 @@ void QQuickPlatformMessageDialog::applyOptions(QPlatformDialogHelper *handle)
 
 void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button)
 {
-    bool changed = m_clickedButton != button;
-    m_clickedButton = button;
-
-    QPlatformDialogHelper::ButtonRole role = QPlatformDialogHelper::buttonRole(button);
-    if (role == QPlatformDialogHelper::AcceptRole)
-        accept();
-    else if (role == QPlatformDialogHelper::RejectRole)
-        reject();
-    else
-        close();
-
+    done(button);
     emit clicked(button);
-    if (changed)
-        emit clickedButtonChanged();
 
     switch (button) {
     case QPlatformDialogHelper::Ok: emit okClicked(); break;
