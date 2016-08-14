@@ -189,7 +189,9 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
 
 QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
+    QPlatformDialogHelper *dialog = nullptr;
+    if (!m_options->testOption(QFontDialogOptions::DontUseNativeDialog))
+        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)
         dialog = new QWidgetPlatformFontDialog(this);

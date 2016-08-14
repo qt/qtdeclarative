@@ -186,7 +186,9 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
 
 QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
+    QPlatformDialogHelper *dialog = nullptr;
+    if (!m_options->testOption(QColorDialogOptions::DontUseNativeDialog))
+        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)
         dialog = new QWidgetPlatformColorDialog(this);

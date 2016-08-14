@@ -261,7 +261,9 @@ void QQuickPlatformFolderDialog::resetRejectLabel()
 
 QPlatformDialogHelper *QQuickPlatformFolderDialog::createHelper()
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
+    QPlatformDialogHelper *dialog = nullptr;
+    if (!m_options->testOption(QFileDialogOptions::DontUseNativeDialog))
+        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)
         dialog = new QWidgetPlatformFileDialog(this);
