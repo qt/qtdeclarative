@@ -132,7 +132,7 @@ bool QWidgetPlatformFileDialog::show(Qt::WindowFlags flags, Qt::WindowModality m
     m_dialog->setWindowTitle(options->windowTitle());
     m_dialog->setAcceptMode(static_cast<QFileDialog::AcceptMode>(options->acceptMode()));
     m_dialog->setFileMode(static_cast<QFileDialog::FileMode>(options->fileMode()));
-    m_dialog->setOptions(static_cast<QFileDialog::Options>(int(options->options())));
+    m_dialog->setOptions(static_cast<QFileDialog::Options>(int(options->options())) | QFileDialog::DontUseNativeDialog);
     m_dialog->setNameFilters(options->nameFilters());
     m_dialog->setDefaultSuffix(options->defaultSuffix());
     if (options->isLabelExplicitlySet(QFileDialogOptions::Accept))

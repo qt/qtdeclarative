@@ -83,7 +83,7 @@ bool QWidgetPlatformFontDialog::show(Qt::WindowFlags flags, Qt::WindowModality m
 
     QSharedPointer<QFontDialogOptions> options = QPlatformFontDialogHelper::options();
     m_dialog->setWindowTitle(options->windowTitle());
-    m_dialog->setOptions(static_cast<QFontDialog::FontDialogOptions>(int(options->options())));
+    m_dialog->setOptions(static_cast<QFontDialog::FontDialogOptions>(int(options->options())) | QFontDialog::DontUseNativeDialog);
 
     return QWidgetPlatformDialog::show(m_dialog.data(), flags, modality, parent);
 }

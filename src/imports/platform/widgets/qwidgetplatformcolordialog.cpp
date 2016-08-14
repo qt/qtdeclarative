@@ -83,7 +83,7 @@ bool QWidgetPlatformColorDialog::show(Qt::WindowFlags flags, Qt::WindowModality 
 
     QSharedPointer<QColorDialogOptions> options = QPlatformColorDialogHelper::options();
     m_dialog->setWindowTitle(options->windowTitle());
-    m_dialog->setOptions(static_cast<QColorDialog::ColorDialogOptions>(int(options->options())));
+    m_dialog->setOptions(static_cast<QColorDialog::ColorDialogOptions>(int(options->options())) | QColorDialog::DontUseNativeDialog);
 
     return QWidgetPlatformDialog::show(m_dialog.data(), flags, modality, parent);
 }
