@@ -886,7 +886,7 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
     \li Flickable.AutoFlickIfNeeded - allows flicking vertically if the
     \e contentHeight is greater than the \e height of the Flickable.
     Allows flicking horizontally if the \e contentWidth is greater than
-    to the \e width of the Flickable.
+    to the \e width of the Flickable. (since \c{QtQuick 2.7})
     \li Flickable.HorizontalFlick - allows flicking horizontally.
     \li Flickable.VerticalFlick - allows flicking vertically.
     \li Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
