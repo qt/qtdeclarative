@@ -881,20 +881,20 @@ bool compactDependencies(QStringList *dependencies)
     if (dependencies->isEmpty())
         return false;
     dependencies->sort();
-    QStringList oldDep = dependencies->first().split(QLatin1Char(' '));
+    QStringList oldDep = dependencies->constFirst().split(QLatin1Char(' '));
     Q_ASSERT(oldDep.size() == 2);
     int oldPos = 0;
     for (int idep = 1; idep < dependencies->size(); ++idep) {
         QString depStr = dependencies->at(idep);
         const QStringList newDep = depStr.split(QLatin1Char(' '));
         Q_ASSERT(newDep.size() == 2);
-        if (newDep.first() != oldDep.first()) {
+        if (newDep.constFirst() != oldDep.constFirst()) {
             if (++oldPos != idep)
                 dependencies->replace(oldPos, depStr);
             oldDep = newDep;
         } else {
-            QStringList v1 = oldDep.last().split(QLatin1Char('.'));
-            QStringList v2 = newDep.last().split(QLatin1Char('.'));
+            const QStringList v1 = oldDep.constLast().split(QLatin1Char('.'));
+            const QStringList v2 = newDep.constLast().split(QLatin1Char('.'));
             Q_ASSERT(v1.size() == 2);
             Q_ASSERT(v2.size() == 2);
             bool ok;
@@ -903,9 +903,9 @@ bool compactDependencies(QStringList *dependencies)
             int major2 = v2.first().toInt(&ok);
             Q_ASSERT(ok);
             if (major1 != major2) {
-                std::cerr << "Found a dependency on " << qPrintable(oldDep.first())
-                          << " with two major versions:" << qPrintable(oldDep.last())
-                          << " and " << qPrintable(newDep.last())
+                std::cerr << "Found a dependency on " << qPrintable(oldDep.constFirst())
+                          << " with two major versions:" << qPrintable(oldDep.constLast())
+                          << " and " << qPrintable(newDep.constLast())
                           << " which is unsupported, discarding smaller version" << std::endl;
                 if (major1 < major2)
                     dependencies->replace(oldPos, depStr);
@@ -1061,18 +1061,18 @@ int main(int argc, char *argv[])
                 std::cerr << "Incorrect number of positional arguments" << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
-            pluginImportUri = positionalArgs[1];
+            pluginImportUri = positionalArgs.at(1);
             pluginImportVersion = positionalArgs[2];
             if (positionalArgs.size() >= 4)
-                pluginImportPath = positionalArgs[3];
+                pluginImportPath = positionalArgs.at(3);
         } else if (action == Path) {
             if (positionalArgs.size() != 2 && positionalArgs.size() != 3) {
                 std::cerr << "Incorrect number of positional arguments" << std::endl;
                 return EXIT_INVALIDARGUMENTS;
             }
-            pluginImportPath = QDir::fromNativeSeparators(positionalArgs[1]);
+            pluginImportPath = QDir::fromNativeSeparators(positionalArgs.at(1));
             if (positionalArgs.size() == 3)
-                pluginImportVersion = positionalArgs[2];
+                pluginImportVersion = positionalArgs.at(2);
         } else if (action == Builtins) {
             if (positionalArgs.size() != 1) {
                 std::cerr << "Incorrect number of positional arguments" << std::endl;
@@ -1094,7 +1094,7 @@ int main(int argc, char *argv[])
     QStringList mergeDependencies;
     QString mergeComponents;
     if (!mergeFile.isEmpty()) {
-        QStringList merge = readQmlTypes(mergeFile);
+        const QStringList merge = readQmlTypes(mergeFile);
         if (!merge.isEmpty()) {
             QRegularExpression re("(\\w+\\.*\\w*\\s*\\d+\\.\\d+)");
             QRegularExpressionMatchIterator i = re.globalMatch(merge[1]);
@@ -1167,7 +1167,7 @@ int main(int argc, char *argv[])
         }
     } else if (pluginImportUri == QLatin1String("QtQml")) {
         bool ok = false;
-        const uint major = pluginImportVersion.split('.')[0].toUInt(&ok, 10);
+        const uint major = pluginImportVersion.splitRef('.').at(0).toUInt(&ok, 10);
         if (!ok) {
             std::cerr << "Malformed version string \""<< qPrintable(pluginImportVersion) << "\"."
                       << std::endl;

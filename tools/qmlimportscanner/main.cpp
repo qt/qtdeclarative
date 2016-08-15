@@ -145,7 +145,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
             classnames += QString::fromUtf8(line.split(' ').at(1));
             classnames += QLatin1Char(' ');
         } else if (line.startsWith("depends")) {
-            QList<QByteArray> dep = line.split(' ');
+            const QList<QByteArray> dep = line.split(' ');
             if (dep.length() != 3)
                 std::cerr << "depends: expected 2 arguments: module identifier and version" << std::endl;
             else
@@ -217,8 +217,8 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
     QVariantList importsCopy(imports);
 
     for (int i = 0; i < importsCopy.length(); ++i) {
-        QVariantMap import = qvariant_cast<QVariantMap>(importsCopy[i]);
-        if (import[typeLiteral()] == QLatin1String("module")) {
+        QVariantMap import = qvariant_cast<QVariantMap>(importsCopy.at(i));
+        if (import.value(typeLiteral()) == QLatin1String("module")) {
             QString path = resolveImportPath(import.value(nameLiteral()).toString(), import.value(versionLiteral()).toString());
             if (!path.isEmpty())
                 import[pathLiteral()] = path;

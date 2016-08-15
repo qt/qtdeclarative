@@ -145,22 +145,22 @@ int main(int argc, char *argv[])
     bool runAsQml = false;
 
     if (!args.isEmpty()) {
-        if (args.first() == QLatin1String("--jit")) {
+        if (args.constFirst() == QLatin1String("--jit")) {
             mode = use_masm;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--interpret")) {
+        if (args.constFirst() == QLatin1String("--interpret")) {
             mode = use_moth;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--qml")) {
+        if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--help")) {
+        if (args.constFirst() == QLatin1String("--help")) {
             std::cerr << "Usage: qmljs [|--jit|--interpret|--qml] file..." << std::endl;
             return EXIT_SUCCESS;
         }
