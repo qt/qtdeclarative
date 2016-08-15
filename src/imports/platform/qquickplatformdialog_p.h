@@ -125,8 +125,8 @@ protected:
     bool create();
     void destroy();
 
-    virtual QPlatformDialogHelper *createHelper() = 0;
-    virtual void applyOptions(QPlatformDialogHelper *handle);
+    virtual QPlatformDialogHelper *onCreate() = 0;
+    virtual void onShow(QPlatformDialogHelper *dialog);
 
     QWindow *findParentWindow() const;
 

@@ -184,7 +184,7 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
     emit optionsChanged();
 }
 
-QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
+QPlatformDialogHelper *QQuickPlatformColorDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
     if (!m_options->testOption(QColorDialogOptions::DontUseNativeDialog))
@@ -202,10 +202,10 @@ QPlatformDialogHelper *QQuickPlatformColorDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformColorDialog::applyOptions(QPlatformDialogHelper *handle)
+void QQuickPlatformColorDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle))
+    if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog))
         colorDialog->setOptions(m_options);
 }
 

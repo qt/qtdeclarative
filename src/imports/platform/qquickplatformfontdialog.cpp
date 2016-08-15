@@ -187,7 +187,7 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
     emit optionsChanged();
 }
 
-QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
+QPlatformDialogHelper *QQuickPlatformFontDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
     if (!m_options->testOption(QFontDialogOptions::DontUseNativeDialog))
@@ -205,10 +205,10 @@ QPlatformDialogHelper *QQuickPlatformFontDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformFontDialog::applyOptions(QPlatformDialogHelper *handle)
+void QQuickPlatformFontDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle))
+    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog))
         fontDialog->setOptions(m_options);
 }
 

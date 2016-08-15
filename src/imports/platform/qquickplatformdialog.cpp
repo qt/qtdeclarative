@@ -258,7 +258,7 @@ void QQuickPlatformDialog::open()
     if (m_visible || !create())
         return;
 
-    applyOptions(m_handle);
+    onShow(m_handle);
     m_visible = m_handle->show(m_flags, m_modality, m_parentWindow);
     if (m_visible)
         emit visibleChanged();
@@ -337,7 +337,7 @@ void QQuickPlatformDialog::componentComplete()
 bool QQuickPlatformDialog::create()
 {
     if (!m_handle) {
-        m_handle = createHelper();
+        m_handle = onCreate();
         if (m_handle) {
             connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
             connect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
@@ -352,9 +352,9 @@ void QQuickPlatformDialog::destroy()
     m_handle = nullptr;
 }
 
-void QQuickPlatformDialog::applyOptions(QPlatformDialogHelper *handle)
+void QQuickPlatformDialog::onShow(QPlatformDialogHelper *dialog)
 {
-    Q_UNUSED(handle);
+    Q_UNUSED(dialog);
 }
 
 QWindow *QQuickPlatformDialog::findParentWindow() const

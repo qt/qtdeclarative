@@ -137,8 +137,8 @@ Q_SIGNALS:
     void rejectLabelChanged();
 
 protected:
-    QPlatformDialogHelper *createHelper() override;
-    void applyOptions(QPlatformDialogHelper *handle) override;
+    QPlatformDialogHelper *onCreate() override;
+    void onShow(QPlatformDialogHelper *dialog) override;
     void accept() override;
 
 private:

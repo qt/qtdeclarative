@@ -104,8 +104,8 @@ Q_SIGNALS:
     void restoreDefaultsClicked();
 
 protected:
-    QPlatformDialogHelper *createHelper() override;
-    void applyOptions(QPlatformDialogHelper *handle) override;
+    QPlatformDialogHelper *onCreate() override;
+    void onShow(QPlatformDialogHelper *dialog) override;
 
 private Q_SLOTS:
     void handleClick(QPlatformDialogHelper::StandardButton button);

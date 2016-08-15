@@ -80,8 +80,8 @@ Q_SIGNALS:
     void optionsChanged();
 
 protected:
-    QPlatformDialogHelper *createHelper() override;
-    void applyOptions(QPlatformDialogHelper *handle) override;
+    QPlatformDialogHelper *onCreate() override;
+    void onShow(QPlatformDialogHelper *dialog) override;
     void accept() override;
 
 private:

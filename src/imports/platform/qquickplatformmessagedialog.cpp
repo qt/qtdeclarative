@@ -345,7 +345,7 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
     emit buttonsChanged();
 }
 
-QPlatformDialogHelper *QQuickPlatformMessageDialog::createHelper()
+QPlatformDialogHelper *QQuickPlatformMessageDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
 #ifdef QT_WIDGETS_LIB
@@ -361,10 +361,10 @@ QPlatformDialogHelper *QQuickPlatformMessageDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformMessageDialog::applyOptions(QPlatformDialogHelper *handle)
+void QQuickPlatformMessageDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(handle))
+    if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog))
         messageDialog->setOptions(m_options);
 }
 

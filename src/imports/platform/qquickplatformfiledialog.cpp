@@ -456,7 +456,7 @@ void QQuickPlatformFileDialog::resetRejectLabel()
     setRejectLabel(QString());
 }
 
-QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
+QPlatformDialogHelper *QQuickPlatformFileDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
     if (!m_options->testOption(QFileDialogOptions::DontUseNativeDialog))
@@ -478,10 +478,10 @@ QPlatformDialogHelper *QQuickPlatformFileDialog::createHelper()
     return dialog;
 }
 
-void QQuickPlatformFileDialog::applyOptions(QPlatformDialogHelper *handle)
+void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle))
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog))
         fileDialog->setOptions(m_options);
 }
 
