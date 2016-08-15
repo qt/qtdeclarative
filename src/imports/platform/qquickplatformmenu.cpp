@@ -185,12 +185,11 @@ QPlatformMenu * QQuickPlatformMenu::create()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenu();
 
-        qCDebug(qtLabsPlatformMenus) << "Menu:" << m_handle;
-
 #ifdef QT_WIDGETS_LIB
         if (!m_handle)
             m_handle = new QWidgetPlatformMenu;
 #endif
+        qCDebug(qtLabsPlatformMenus) << "Menu:" << m_handle;
 
         if (m_handle) {
             connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickPlatformMenu::aboutToShow);
