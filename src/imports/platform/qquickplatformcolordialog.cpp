@@ -177,7 +177,8 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
 
 bool QQuickPlatformColorDialog::useNativeDialog() const
 {
-    return !m_options->testOption(QColorDialogOptions::DontUseNativeDialog);
+    return QQuickPlatformDialog::useNativeDialog()
+            && !m_options->testOption(QColorDialogOptions::DontUseNativeDialog);
 }
 
 void QQuickPlatformColorDialog::onCreate(QPlatformDialogHelper *dialog)

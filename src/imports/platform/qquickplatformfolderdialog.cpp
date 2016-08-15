@@ -252,7 +252,8 @@ void QQuickPlatformFolderDialog::resetRejectLabel()
 
 bool QQuickPlatformFolderDialog::useNativeDialog() const
 {
-    return !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
+    return QQuickPlatformDialog::useNativeDialog()
+            && !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
 }
 
 void QQuickPlatformFolderDialog::onCreate(QPlatformDialogHelper *dialog)

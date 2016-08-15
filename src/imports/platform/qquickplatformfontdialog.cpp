@@ -180,7 +180,8 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
 
 bool QQuickPlatformFontDialog::useNativeDialog() const
 {
-    return !m_options->testOption(QFontDialogOptions::DontUseNativeDialog);
+    return QQuickPlatformDialog::useNativeDialog()
+            && !m_options->testOption(QFontDialogOptions::DontUseNativeDialog);
 }
 
 void QQuickPlatformFontDialog::onCreate(QPlatformDialogHelper *dialog)
