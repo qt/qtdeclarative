@@ -55,6 +55,14 @@ QT_USE_NAMESPACE
 
 QStringList g_qmlImportPaths;
 
+static inline QString typeLiteral()         { return QStringLiteral("type"); }
+static inline QString versionLiteral()      { return QStringLiteral("version"); }
+static inline QString nameLiteral()         { return QStringLiteral("name"); }
+static inline QString pluginsLiteral()      { return QStringLiteral("plugins"); }
+static inline QString pathLiteral()         { return QStringLiteral("path"); }
+static inline QString classnamesLiteral()   { return QStringLiteral("classnames"); }
+static inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
+
 static void printUsage(const QString &appNameIn)
 {
     const std::wstring appName = appNameIn.toStdWString();
@@ -84,14 +92,14 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
         // handle directory imports
         if (!importNode->fileName.isEmpty()) {
             QString name = importNode->fileName.toString();
-            import[QStringLiteral("name")] = name;
+            import[nameLiteral()] = name;
             if (name.endsWith(QLatin1String(".js"))) {
-                import[QStringLiteral("type")] = QStringLiteral("javascript");
+                import[typeLiteral()] = QStringLiteral("javascript");
             } else {
-                import[QStringLiteral("type")] = QStringLiteral("directory");
+                import[typeLiteral()] = QStringLiteral("directory");
             }
 
-            import[QStringLiteral("path")] = QDir::cleanPath(path + QLatin1Char('/') + name);
+            import[pathLiteral()] = QDir::cleanPath(path + QLatin1Char('/') + name);
         } else {
             // Walk the id chain ("Foo" -> "Bar" -> etc)
             QString  name;
@@ -103,9 +111,9 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
             }
             name.chop(1); // remove trailing "."
             if (!name.isEmpty())
-                import[QStringLiteral("name")] = name;
-            import[QStringLiteral("type")] = QStringLiteral("module");
-            import[QStringLiteral("version")] = code.mid(importNode->versionToken.offset, importNode->versionToken.length);
+                import[nameLiteral()] = name;
+            import[typeLiteral()] = QStringLiteral("module");
+            import[versionLiteral()] = code.mid(importNode->versionToken.offset, importNode->versionToken.length);
         }
 
         imports.append(import);
@@ -147,10 +155,10 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     } while (line.length() > 0);
 
     QVariantMap pluginInfo;
-    pluginInfo[QStringLiteral("plugins")] = plugins.simplified();
-    pluginInfo[QStringLiteral("classnames")] = classnames.simplified();
+    pluginInfo[pluginsLiteral()] = plugins.simplified();
+    pluginInfo[classnamesLiteral()] = classnames.simplified();
     if (dependencies.length())
-        pluginInfo[QStringLiteral("dependencies")] = dependencies;
+        pluginInfo[dependenciesLiteral()] = dependencies;
     return pluginInfo;
 }
 
@@ -210,25 +218,25 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
 
     for (int i = 0; i < importsCopy.length(); ++i) {
         QVariantMap import = qvariant_cast<QVariantMap>(importsCopy[i]);
-        if (import[QStringLiteral("type")] == QLatin1String("module")) {
-            QString path = resolveImportPath(import.value(QStringLiteral("name")).toString(), import.value(QStringLiteral("version")).toString());
+        if (import[typeLiteral()] == QLatin1String("module")) {
+            QString path = resolveImportPath(import.value(nameLiteral()).toString(), import.value(versionLiteral()).toString());
             if (!path.isEmpty())
-                import[QStringLiteral("path")] = path;
-            QVariantMap plugininfo = pluginsForModulePath(import.value(QStringLiteral("path")).toString());
-            QString plugins = plugininfo.value(QStringLiteral("plugins")).toString();
-            QString classnames = plugininfo.value(QStringLiteral("classnames")).toString();
+                import[pathLiteral()] = path;
+            QVariantMap plugininfo = pluginsForModulePath(import.value(pathLiteral()).toString());
+            QString plugins = plugininfo.value(pluginsLiteral()).toString();
+            QString classnames = plugininfo.value(classnamesLiteral()).toString();
             if (!plugins.isEmpty())
-                import[QStringLiteral("plugin")] = plugins;
+                import.insert(QStringLiteral("plugin"), plugins);
             if (!classnames.isEmpty())
-                import[QStringLiteral("classname")] = classnames;
-            if (plugininfo.contains(QStringLiteral("dependencies"))) {
-                QStringList dependencies = plugininfo.value(QStringLiteral("dependencies")).toStringList();
+                import.insert(QStringLiteral("classname"), classnames);
+            if (plugininfo.contains(dependenciesLiteral())) {
+                QStringList dependencies = plugininfo.value(dependenciesLiteral()).toStringList();
                 foreach (const QString &line, dependencies) {
                     const auto dep = line.splitRef(QLatin1Char(' '));
                     QVariantMap depImport;
-                    depImport[QStringLiteral("type")] = QStringLiteral("module");
-                    depImport[QStringLiteral("name")] = dep[0].toString();
-                    depImport[QStringLiteral("version")] = dep[1].toString();
+                    depImport[typeLiteral()] = QStringLiteral("module");
+                    depImport[nameLiteral()] = dep[0].toString();
+                    depImport[versionLiteral()] = dep[1].toString();
                     importsCopy.append(depImport);
                 }
             }
@@ -277,8 +285,8 @@ struct ImportCollector : public QQmlJS::Directives
     virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
     {
         QVariantMap entry;
-        entry[QLatin1String("type")] = QStringLiteral("javascript");
-        entry[QLatin1String("path")] = jsfile;
+        entry[typeLiteral()] = QStringLiteral("javascript");
+        entry[pathLiteral()] = jsfile;
         imports << entry;
 
         Q_UNUSED(module);
@@ -290,12 +298,12 @@ struct ImportCollector : public QQmlJS::Directives
     {
         QVariantMap entry;
         if (uri.contains(QLatin1Char('/'))) {
-            entry[QLatin1String("type")] = QStringLiteral("directory");
-            entry[QLatin1String("name")] = uri;
+            entry[typeLiteral()] = QStringLiteral("directory");
+            entry[nameLiteral()] = uri;
         } else {
-            entry[QLatin1String("type")] = QStringLiteral("module");
-            entry[QLatin1String("name")] = uri;
-            entry[QLatin1String("version")] = version;
+            entry[typeLiteral()] = QStringLiteral("module");
+            entry[nameLiteral()] = uri;
+            entry[versionLiteral()] = version;
         }
         imports << entry;
 
@@ -424,8 +432,8 @@ QSet<QString> importModulePaths(QVariantList imports) {
     QSet<QString> ret;
     foreach (const QVariant &importVariant, imports) {
         QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
-        QString path = import.value(QStringLiteral("path")).toString();
-        QString type = import.value(QStringLiteral("type")).toString();
+        QString path = import.value(pathLiteral()).toString();
+        QString type = import.value(typeLiteral()).toString();
         if (type == QLatin1String("module") && !path.isEmpty())
             ret.insert(QDir(path).canonicalPath());
     }
