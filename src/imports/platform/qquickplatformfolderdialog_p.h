@@ -94,7 +94,7 @@ Q_SIGNALS:
 
 protected:
     bool useNativeDialog() const override;
-    QPlatformDialogHelper *onCreate() override;
+    void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
     void accept() override;
 

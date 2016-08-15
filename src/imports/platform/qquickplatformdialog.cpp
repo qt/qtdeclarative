@@ -36,8 +36,17 @@
 
 #include "qquickplatformdialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+
+#ifdef QT_WIDGETS_LIB
+#include "widgets/qwidgetplatformcolordialog_p.h"
+#include "widgets/qwidgetplatformfiledialog_p.h"
+#include "widgets/qwidgetplatformfontdialog_p.h"
+#include "widgets/qwidgetplatformmessagedialog_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -80,6 +89,8 @@ QT_BEGIN_NAMESPACE
 
     \sa accepted()
 */
+
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformDialog::QQuickPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
     : QObject(parent),
@@ -335,11 +346,41 @@ void QQuickPlatformDialog::componentComplete()
         setParentWindow(findParentWindow());
 }
 
+static QPlatformDialogHelper *createWidgetDialog(QPlatformTheme::DialogType type, QObject *parent)
+{
+    QPlatformDialogHelper *dialog = nullptr;
+#ifdef QT_WIDGETS_LIB
+    switch (type) {
+    case QPlatformTheme::ColorDialog:
+        dialog = new QWidgetPlatformColorDialog(parent);
+        break;
+    case QPlatformTheme::FileDialog:
+        dialog = new QWidgetPlatformFileDialog(parent);
+        break;
+    case QPlatformTheme::FontDialog:
+        dialog = new QWidgetPlatformFontDialog(parent);
+        break;
+    case QPlatformTheme::MessageDialog:
+        dialog = new QWidgetPlatformMessageDialog(parent);
+        break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+#endif
+    return dialog;
+}
+
 bool QQuickPlatformDialog::create()
 {
     if (!m_handle) {
-        m_handle = onCreate();
+        if (useNativeDialog())
+            m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(m_type);
+        if (!m_handle)
+            m_handle = createWidgetDialog(m_type, this);
+        qCDebug(qtLabsPlatformDialogs) << this << "created" << m_handle;
         if (m_handle) {
+            onCreate(m_handle);
             connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
             connect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
         }
@@ -356,6 +397,11 @@ void QQuickPlatformDialog::destroy()
 bool QQuickPlatformDialog::useNativeDialog() const
 {
     return true;
+}
+
+void QQuickPlatformDialog::onCreate(QPlatformDialogHelper *dialog)
+{
+    Q_UNUSED(dialog);
 }
 
 void QQuickPlatformDialog::onShow(QPlatformDialogHelper *dialog)

@@ -36,14 +36,6 @@
 
 #include "qquickplatformfolderdialog_p.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtGui/private/qguiapplication_p.h>
-
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformfiledialog_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -99,8 +91,6 @@ QT_BEGIN_NAMESPACE
 
     \sa FileDialog
 */
-
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
     : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
@@ -265,22 +255,12 @@ bool QQuickPlatformFolderDialog::useNativeDialog() const
     return !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
 }
 
-QPlatformDialogHelper *QQuickPlatformFolderDialog::onCreate()
+void QQuickPlatformFolderDialog::onCreate(QPlatformDialogHelper *dialog)
 {
-    QPlatformDialogHelper *dialog = nullptr;
-    if (useNativeDialog())
-        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFileDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FolderDialog:" << dialog;
-
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFolderDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
     }
-    return dialog;
 }
 
 void QQuickPlatformFolderDialog::onShow(QPlatformDialogHelper *dialog)

@@ -36,14 +36,7 @@
 
 #include "qquickplatformmessagedialog_p.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlinfo.h>
-
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformmessagedialog_p.h"
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -230,8 +223,6 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when \uicontrol {Restore Defaults} is clicked.
 */
 
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
-
 QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
     : QQuickPlatformDialog(QPlatformTheme::MessageDialog, parent),
       m_options(QMessageDialogOptions::create())
@@ -346,22 +337,12 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
     emit buttonsChanged();
 }
 
-QPlatformDialogHelper *QQuickPlatformMessageDialog::onCreate()
+void QQuickPlatformMessageDialog::onCreate(QPlatformDialogHelper *dialog)
 {
-    QPlatformDialogHelper *dialog = nullptr;
-    if (useNativeDialog())
-        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformMessageDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "MessageDialog:" << dialog;
-
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
         connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
         messageDialog->setOptions(m_options);
     }
-    return dialog;
 }
 
 void QQuickPlatformMessageDialog::onShow(QPlatformDialogHelper *dialog)

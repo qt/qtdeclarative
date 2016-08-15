@@ -36,14 +36,6 @@
 
 #include "qquickplatformfontdialog_p.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtGui/private/qguiapplication_p.h>
-
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformfontdialog_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -94,8 +86,6 @@ QT_BEGIN_NAMESPACE
 
     \labs
 */
-
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
     : QQuickPlatformDialog(QPlatformTheme::FontDialog, parent),
@@ -193,22 +183,12 @@ bool QQuickPlatformFontDialog::useNativeDialog() const
     return !m_options->testOption(QFontDialogOptions::DontUseNativeDialog);
 }
 
-QPlatformDialogHelper *QQuickPlatformFontDialog::onCreate()
+void QQuickPlatformFontDialog::onCreate(QPlatformDialogHelper *dialog)
 {
-    QPlatformDialogHelper *dialog = nullptr;
-    if (useNativeDialog())
-        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFontDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FontDialog:" << dialog;
-
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
         fontDialog->setOptions(m_options);
     }
-    return dialog;
 }
 
 void QQuickPlatformFontDialog::onShow(QPlatformDialogHelper *dialog)

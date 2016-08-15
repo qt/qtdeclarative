@@ -36,14 +36,6 @@
 
 #include "qquickplatformfiledialog_p.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtGui/private/qguiapplication_p.h>
-
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformfiledialog_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -100,8 +92,6 @@ QT_BEGIN_NAMESPACE
 
     \sa FolderDialog
 */
-
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
     : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
@@ -463,17 +453,8 @@ bool QQuickPlatformFileDialog::useNativeDialog() const
     return !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
 }
 
-QPlatformDialogHelper *QQuickPlatformFileDialog::onCreate()
+void QQuickPlatformFileDialog::onCreate(QPlatformDialogHelper *dialog)
 {
-    QPlatformDialogHelper *dialog = nullptr;
-    if (useNativeDialog())
-        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
-#ifdef QT_WIDGETS_LIB
-    if (!dialog)
-        dialog = new QWidgetPlatformFileDialog(this);
-#endif
-    qCDebug(qtLabsPlatformDialogs) << "FileDialog:" << dialog;
-
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         // TODO: emit currentFileChanged only when the first entry in currentFiles changes
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFileChanged);
@@ -482,7 +463,6 @@ QPlatformDialogHelper *QQuickPlatformFileDialog::onCreate()
         connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, this, &QQuickPlatformFileDialog::selectedNameFilterChanged);
         fileDialog->setOptions(m_options);
     }
-    return dialog;
 }
 
 void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
