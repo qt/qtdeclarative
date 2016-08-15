@@ -180,7 +180,7 @@ QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
     if (!m_handle)
         m_handle = new QWidgetPlatformSystemTrayIcon(this);
 #endif
-    qCDebug(qtLabsPlatformTray) << "SystemTrayIcon:" << m_handle;
+    qCDebug(qtLabsPlatformTray) << "SystemTrayIcon ->" << m_handle;
 
     if (m_handle) {
         connect(m_handle, &QPlatformSystemTrayIcon::activated, this, &QQuickPlatformSystemTrayIcon::activated);

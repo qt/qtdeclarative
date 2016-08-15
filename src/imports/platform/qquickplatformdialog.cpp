@@ -371,6 +371,11 @@ static QPlatformDialogHelper *createWidgetDialog(QPlatformTheme::DialogType type
     return dialog;
 }
 
+static const char *qmlTypeName(const QObject *object)
+{
+    return object->metaObject()->className() + qstrlen("QQuickPlatform");
+}
+
 bool QQuickPlatformDialog::create()
 {
     if (!m_handle) {
@@ -378,7 +383,7 @@ bool QQuickPlatformDialog::create()
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(m_type);
         if (!m_handle)
             m_handle = createWidgetDialog(m_type, this);
-        qCDebug(qtLabsPlatformDialogs) << this << "created" << m_handle;
+        qCDebug(qtLabsPlatformDialogs) << qmlTypeName(this) << "->" << m_handle;
         if (m_handle) {
             onCreate(m_handle);
             connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);

@@ -112,7 +112,7 @@ QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
       m_handle(nullptr)
 {
     m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar();
-    qCDebug(qtLabsPlatformMenus) << "MenuBar:" << m_handle;
+    qCDebug(qtLabsPlatformMenus) << "MenuBar ->" << m_handle;
 }
 
 QQuickPlatformMenuBar::~QQuickPlatformMenuBar()

@@ -189,7 +189,7 @@ QPlatformMenu * QQuickPlatformMenu::create()
         if (!m_handle)
             m_handle = new QWidgetPlatformMenu;
 #endif
-        qCDebug(qtLabsPlatformMenus) << "Menu:" << m_handle;
+        qCDebug(qtLabsPlatformMenus) << "Menu ->" << m_handle;
 
         if (m_handle) {
             connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickPlatformMenu::aboutToShow);
