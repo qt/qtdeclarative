@@ -80,6 +80,7 @@ Q_SIGNALS:
     void optionsChanged();
 
 protected:
+    bool useNativeDialog() const override;
     QPlatformDialogHelper *onCreate() override;
     void onShow(QPlatformDialogHelper *dialog) override;
     void accept() override;

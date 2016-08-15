@@ -126,6 +126,7 @@ protected:
     bool create();
     void destroy();
 
+    virtual bool useNativeDialog() const;
     virtual QPlatformDialogHelper *onCreate() = 0;
     virtual void onShow(QPlatformDialogHelper *dialog);
 

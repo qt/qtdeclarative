@@ -260,10 +260,15 @@ void QQuickPlatformFolderDialog::resetRejectLabel()
     setRejectLabel(QString());
 }
 
+bool QQuickPlatformFolderDialog::useNativeDialog() const
+{
+    return !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
+}
+
 QPlatformDialogHelper *QQuickPlatformFolderDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
-    if (!m_options->testOption(QFileDialogOptions::DontUseNativeDialog))
+    if (useNativeDialog())
         dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)

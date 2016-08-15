@@ -353,6 +353,11 @@ void QQuickPlatformDialog::destroy()
     m_handle = nullptr;
 }
 
+bool QQuickPlatformDialog::useNativeDialog() const
+{
+    return true;
+}
+
 void QQuickPlatformDialog::onShow(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);

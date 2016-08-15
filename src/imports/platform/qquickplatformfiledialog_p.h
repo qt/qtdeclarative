@@ -137,6 +137,7 @@ Q_SIGNALS:
     void rejectLabelChanged();
 
 protected:
+    bool useNativeDialog() const override;
     QPlatformDialogHelper *onCreate() override;
     void onShow(QPlatformDialogHelper *dialog) override;
     void accept() override;

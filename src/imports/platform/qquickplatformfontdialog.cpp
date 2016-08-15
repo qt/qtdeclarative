@@ -188,10 +188,15 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
     emit optionsChanged();
 }
 
+bool QQuickPlatformFontDialog::useNativeDialog() const
+{
+    return !m_options->testOption(QFontDialogOptions::DontUseNativeDialog);
+}
+
 QPlatformDialogHelper *QQuickPlatformFontDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
-    if (!m_options->testOption(QFontDialogOptions::DontUseNativeDialog))
+    if (useNativeDialog())
         dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FontDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)

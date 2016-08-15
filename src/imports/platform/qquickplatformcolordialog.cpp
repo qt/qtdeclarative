@@ -185,10 +185,15 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
     emit optionsChanged();
 }
 
+bool QQuickPlatformColorDialog::useNativeDialog() const
+{
+    return !m_options->testOption(QColorDialogOptions::DontUseNativeDialog);
+}
+
 QPlatformDialogHelper *QQuickPlatformColorDialog::onCreate()
 {
     QPlatformDialogHelper *dialog = nullptr;
-    if (!m_options->testOption(QColorDialogOptions::DontUseNativeDialog))
+    if (useNativeDialog())
         dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::ColorDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)

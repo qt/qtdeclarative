@@ -348,7 +348,9 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
 
 QPlatformDialogHelper *QQuickPlatformMessageDialog::onCreate()
 {
-    QPlatformDialogHelper *dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
+    QPlatformDialogHelper *dialog = nullptr;
+    if (useNativeDialog())
+        dialog = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::MessageDialog);
 #ifdef QT_WIDGETS_LIB
     if (!dialog)
         dialog = new QWidgetPlatformMessageDialog(this);
