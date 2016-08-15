@@ -122,10 +122,20 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
     emit targetChanged();
 }
 
+void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
+{
+    if (wantsPointerEvent(event))
+        handlePointerEventImpl(event);
+}
+
+bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
+{
+    Q_UNUSED(event)
+    return m_enabled;
+}
+
 void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
-    if (!m_enabled)
-        return;
     m_currentEvent = event;
 }
 

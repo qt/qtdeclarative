@@ -77,7 +77,7 @@ public:
     QQuickItem *target() const { return m_target; }
     void setTarget(QQuickItem *target);
 
-    void handlePointerEvent(QQuickPointerEvent *event) { handlePointerEventImpl(event); }
+    void handlePointerEvent(QQuickPointerEvent *event);
 
 Q_SIGNALS:
     void enabledChanged();
@@ -85,6 +85,7 @@ Q_SIGNALS:
 
 protected:
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
+    virtual bool wantsPointerEvent(QQuickPointerEvent *event);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setGrab(QQuickEventPoint *point, bool grab);
     QPointF eventPos(const QQuickEventPoint *point) const;
