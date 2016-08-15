@@ -98,7 +98,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
-    : QQuickPlatformDialog(parent), m_options(QFontDialogOptions::create())
+    : QQuickPlatformDialog(QPlatformTheme::FontDialog, parent),
+      m_options(QFontDialogOptions::create())
 {
 }
 

@@ -98,7 +98,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
-    : QQuickPlatformDialog(parent), m_options(QColorDialogOptions::create())
+    : QQuickPlatformDialog(QPlatformTheme::ColorDialog, parent),
+      m_options(QColorDialogOptions::create())
 {
 }
 

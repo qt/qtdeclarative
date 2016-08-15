@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
-QQuickPlatformDialog::QQuickPlatformDialog(QObject *parent)
+QQuickPlatformDialog::QQuickPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
     : QObject(parent),
       m_visible(false),
       m_complete(false),
@@ -89,6 +89,7 @@ QQuickPlatformDialog::QQuickPlatformDialog(QObject *parent)
       m_parentWindow(nullptr),
       m_flags(Qt::Dialog),
       m_modality(Qt::WindowModal),
+      m_type(type),
       m_handle(nullptr)
 {
 }

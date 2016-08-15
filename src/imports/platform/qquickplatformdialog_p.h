@@ -49,6 +49,7 @@
 //
 
 #include <QtCore/qobject.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqmllist.h>
@@ -74,7 +75,7 @@ class QQuickPlatformDialog : public QObject, public QQmlParserStatus
     Q_ENUMS(StandardCode)
 
 public:
-    explicit QQuickPlatformDialog(QObject *parent = nullptr);
+    explicit QQuickPlatformDialog(QPlatformTheme::DialogType type, QObject *parent = nullptr);
     ~QQuickPlatformDialog();
 
     QPlatformDialogHelper *handle() const;
@@ -138,6 +139,7 @@ private:
     QString m_title;
     Qt::WindowFlags m_flags;
     Qt::WindowModality m_modality;
+    QPlatformTheme::DialogType m_type;
     QList<QObject *> m_data;
     QPlatformDialogHelper *m_handle;
 };

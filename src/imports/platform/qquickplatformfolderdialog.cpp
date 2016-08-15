@@ -103,7 +103,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
 QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
-    : QQuickPlatformDialog(parent), m_options(QFileDialogOptions::create())
+    : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
+      m_options(QFileDialogOptions::create())
 {
     m_options->setFileMode(QFileDialogOptions::Directory);
     m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
