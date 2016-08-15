@@ -76,6 +76,13 @@ QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
     return (m_target ? m_target->mapFromScene(point->scenePos()) : point->scenePos());
 }
 
+bool QQuickPointerHandler::targetContains(const QQuickEventPoint *point) const
+{
+    if (!m_target || !point)
+        return false;
+    return m_target->contains(m_target->mapFromScene(point->scenePos()));
+}
+
 /*!
      \qmlproperty QQuickPointerHandler::enabled
 
