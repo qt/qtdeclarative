@@ -511,7 +511,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     return nullptr;
 }
 
-void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp)
+void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp, QVector2D velocity)
 {
     m_scenePos = scenePos;
     m_pointId = pointId;
@@ -521,7 +521,8 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint6
     m_timestamp = timestamp;
     if (state == Qt::TouchPointPressed)
         m_pressTimestamp = timestamp;
-    // TODO calculate velocity
+    // TODO if Q_LIKELY(velocity.isNull) calculate velocity
+    m_velocity = velocity;
 }
 
 QQuickItem *QQuickEventPoint::grabber() const
@@ -548,7 +549,7 @@ QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
 
 void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
 {
-    QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
+    QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp, tp.velocity());
     m_rotation = tp.rotation();
     m_pressure = tp.pressure();
     m_uniqueId = tp.uniqueId();

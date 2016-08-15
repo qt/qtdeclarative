@@ -250,6 +250,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QPointF scenePos READ scenePos)
+    Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(State state READ state)
     Q_PROPERTY(quint64 pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
@@ -268,12 +269,13 @@ public:
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp);
+    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp, QVector2D velocity = QVector2D());
 
     void invalidate() { m_valid = false; }
 
     QQuickPointerEvent *pointerEvent() const;
     QPointF scenePos() const { return m_scenePos; }
+    QVector2D velocity() const { return m_velocity; }
     State state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
     bool isValid() const { return m_valid; }
@@ -285,6 +287,7 @@ public:
 
 private:
     QPointF m_scenePos;
+    QVector2D m_velocity;
     quint64 m_pointId;
     QPointer<QQuickItem> m_grabber;
     ulong m_timestamp;
