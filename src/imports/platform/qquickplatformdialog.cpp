@@ -396,7 +396,8 @@ void QQuickPlatformDialog::destroy()
 
 bool QQuickPlatformDialog::useNativeDialog() const
 {
-    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs)
+            && QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(m_type);
 }
 
 void QQuickPlatformDialog::onCreate(QPlatformDialogHelper *dialog)
