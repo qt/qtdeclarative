@@ -117,7 +117,7 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
 // Read the qmldir file, extract a list of plugins by
 // parsing the "plugin"  and "classname" lines.
 QVariantMap pluginsForModulePath(const QString &modulePath) {
-    QFile qmldirFile(modulePath + QStringLiteral("/qmldir"));
+    QFile qmldirFile(modulePath + QLatin1String("/qmldir"));
     if (!qmldirFile.exists())
         return QVariantMap();
 
@@ -141,7 +141,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
             if (dep.length() != 3)
                 std::cerr << "depends: expected 2 arguments: module identifier and version" << std::endl;
             else
-                dependencies << QString::fromUtf8(dep[1]) + QStringLiteral(" ") + QString::fromUtf8(dep[2]).simplified();
+                dependencies << QString::fromUtf8(dep[1]) + QLatin1Char(' ') + QString::fromUtf8(dep[2]).simplified();
         }
 
     } while (line.length() > 0);
