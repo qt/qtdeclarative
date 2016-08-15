@@ -41,12 +41,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformcolordialog_p.h"
-#include "widgets/qwidgetplatformfiledialog_p.h"
-#include "widgets/qwidgetplatformfontdialog_p.h"
-#include "widgets/qwidgetplatformmessagedialog_p.h"
-#endif
+#include "widgets/qwidgetplatform_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -346,31 +341,6 @@ void QQuickPlatformDialog::componentComplete()
         setParentWindow(findParentWindow());
 }
 
-static QPlatformDialogHelper *createWidgetDialog(QPlatformTheme::DialogType type, QObject *parent)
-{
-    QPlatformDialogHelper *dialog = nullptr;
-#ifdef QT_WIDGETS_LIB
-    switch (type) {
-    case QPlatformTheme::ColorDialog:
-        dialog = new QWidgetPlatformColorDialog(parent);
-        break;
-    case QPlatformTheme::FileDialog:
-        dialog = new QWidgetPlatformFileDialog(parent);
-        break;
-    case QPlatformTheme::FontDialog:
-        dialog = new QWidgetPlatformFontDialog(parent);
-        break;
-    case QPlatformTheme::MessageDialog:
-        dialog = new QWidgetPlatformMessageDialog(parent);
-        break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-#endif
-    return dialog;
-}
-
 static const char *qmlTypeName(const QObject *object)
 {
     return object->metaObject()->className() + qstrlen("QQuickPlatform");
@@ -382,7 +352,7 @@ bool QQuickPlatformDialog::create()
         if (useNativeDialog())
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(m_type);
         if (!m_handle)
-            m_handle = createWidgetDialog(m_type, this);
+            m_handle = QWidgetPlatform::createDialog(m_type, this);
         qCDebug(qtLabsPlatformDialogs) << qmlTypeName(this) << "->" << m_handle;
         if (m_handle) {
             onCreate(m_handle);

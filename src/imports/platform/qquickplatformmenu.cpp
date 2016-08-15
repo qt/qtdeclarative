@@ -52,9 +52,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickitem.h>
 
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformmenu_p.h"
-#endif
+#include "widgets/qwidgetplatform_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -185,10 +183,9 @@ QPlatformMenu * QQuickPlatformMenu::create()
         if (!m_handle)
             m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformMenu();
 
-#ifdef QT_WIDGETS_LIB
         if (!m_handle)
-            m_handle = new QWidgetPlatformMenu;
-#endif
+            m_handle = QWidgetPlatform::createMenu();
+
         qCDebug(qtLabsPlatformMenus) << "Menu ->" << m_handle;
 
         if (m_handle) {

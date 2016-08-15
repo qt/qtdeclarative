@@ -42,9 +42,7 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
-#ifdef QT_WIDGETS_LIB
-#include "widgets/qwidgetplatformsystemtrayicon_p.h"
-#endif
+#include "widgets/qwidgetplatform_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -176,10 +174,8 @@ QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
       m_handle(nullptr)
 {
     m_handle = QGuiApplicationPrivate::platformTheme()->createPlatformSystemTrayIcon();
-#ifdef QT_WIDGETS_LIB
     if (!m_handle)
-        m_handle = new QWidgetPlatformSystemTrayIcon(this);
-#endif
+        m_handle = QWidgetPlatform::createSystemTrayIcon(this);
     qCDebug(qtLabsPlatformTray) << "SystemTrayIcon ->" << m_handle;
 
     if (m_handle) {
