@@ -188,7 +188,7 @@ public:
 
     void freezeObject(const QV4::Value &value);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).

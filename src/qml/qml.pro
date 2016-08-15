@@ -1,11 +1,8 @@
 TARGET     = QtQml
 QT = core-private
 
-no_network {
-    DEFINES += QT_NO_NETWORK
-} else {
+qtConfig(qml-network): \
     QT += network
-}
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 

@@ -67,7 +67,7 @@
 #include <QQmlFile>
 #include <QMetaMethod>
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <qqmlnetworkaccessmanagerfactory.h>
 #include <QNetworkReply>
 #include <QSslError>
@@ -206,7 +206,7 @@ private:
     friend class QQuickPixmapReaderThreadObject;
     void processJobs();
     void processJob(QQuickPixmapReply *, const QUrl &, const QString &, AutoTransform, QQuickImageProvider::ImageType, QQuickImageProvider *);
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     void networkRequestDone(QNetworkReply *);
 #endif
     void asyncResponseFinished(QQuickImageResponse *);
@@ -220,7 +220,7 @@ private:
     QQuickPixmapReaderThreadObject *threadObject;
     QWaitCondition waitCondition;
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkAccessManager *networkAccessManager();
     QNetworkAccessManager *accessManager;
     QHash<QNetworkReply*,QQuickPixmapReply*> networkJobs;
@@ -349,7 +349,7 @@ QQuickPixmapReply::Event::~Event()
     delete textureFactory;
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
 {
     if (!accessManager) {
@@ -430,7 +430,7 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
 
 QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 : QThread(eng), engine(eng), threadObject(0)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 , accessManager(0)
 #endif
 {
@@ -454,7 +454,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
         delete reply;
     }
     jobs.clear();
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 
     const auto cancelJob = [this](QQuickPixmapReply *reply) {
         if (reply->loading) {
@@ -476,7 +476,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     wait();
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
 {
     QQuickPixmapReply *job = networkJobs.take(reply);
@@ -526,7 +526,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
     // kick off event loop again incase we have dropped below max request count
     threadObject->processJobs();
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
 {
@@ -577,7 +577,7 @@ bool QQuickPixmapReaderThreadObject::event(QEvent *e)
 
 void QQuickPixmapReaderThreadObject::networkRequestDone()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     reader->networkRequestDone(reply);
 #endif
@@ -599,7 +599,7 @@ void QQuickPixmapReader::processJobs()
 
         // Clean cancelled jobs
         if (!cancelled.isEmpty()) {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
             for (int i = 0; i < cancelled.count(); ++i) {
                 QQuickPixmapReply *job = cancelled.at(i);
                 QNetworkReply *reply = networkJobs.key(job, 0);
@@ -644,7 +644,7 @@ void QQuickPixmapReader::processJobs()
                 } else {
                     localFile = QQmlFile::urlToLocalFileOrQrc(url);
                     usableJob = !localFile.isEmpty()
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
                             || networkJobs.count() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT
 #endif
                             ;
@@ -772,7 +772,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 runningJob->postReply(errorCode, errorStr, readSize, QQuickTextureFactory::textureFactoryForImage(image));
             mutex.unlock();
         } else {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
             // Network resource
             QNetworkRequest req(url);
             req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
@@ -841,7 +841,7 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 void QQuickPixmapReader::run()
 {
     if (replyDownloadProgress == -1) {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         replyDownloadProgress = QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
         replyFinished = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
         const QMetaObject *ir = &QQuickPixmapReaderThreadObject::staticMetaObject;

@@ -52,7 +52,7 @@
 #include <qqmlinfo.h>
 #include <qqmlfile.h>
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #endif
@@ -70,7 +70,7 @@ Q_OBJECT
 public:
     explicit QQuickFontObject(int _id = -1);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     void download(const QUrl &url, QNetworkAccessManager *manager);
 
 Q_SIGNALS:
@@ -82,7 +82,7 @@ private:
 
 private Q_SLOTS:
     void replyFinished();
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 public:
     int id;
@@ -92,7 +92,7 @@ public:
 
 QQuickFontObject::QQuickFontObject(int _id)
     : QObject(0)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     ,redirectCount(0), reply(0)
 #endif
     ,id(_id)
@@ -100,7 +100,7 @@ QQuickFontObject::QQuickFontObject(int _id)
 
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 void QQuickFontObject::download(const QUrl &url, QNetworkAccessManager *manager)
 {
     QNetworkRequest req(url);
@@ -141,7 +141,7 @@ void QQuickFontObject::replyFinished()
         reply = 0;
     }
 }
-#endif  // QT_NO_NETWORK
+#endif // qml_network
 
 class QQuickFontLoaderPrivate : public QObjectPrivate
 {
@@ -268,7 +268,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
         }
     } else {
         if (!fontLoaderFonts()->map.contains(d->url)) {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
             QQuickFontObject *fo = new QQuickFontObject;
             fontLoaderFonts()->map[d->url] = fo;
             fo->download(d->url, qmlEngine(this)->networkAccessManager());
@@ -282,7 +282,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
         } else {
             QQuickFontObject *fo = fontLoaderFonts()->map.value(d->url);
             if (fo->id == -1) {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
                 d->status = Loading;
                 emit statusChanged();
                 QObject::connect(fo, SIGNAL(fontDownloaded(QString,QQuickFontLoader::Status)),

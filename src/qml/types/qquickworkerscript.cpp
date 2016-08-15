@@ -54,7 +54,7 @@
 #include <QtCore/qdatetime.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include "qqmlnetworkaccessmanagerfactory.h"
 #endif
@@ -144,7 +144,7 @@ public:
 
         void init();
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         virtual QNetworkAccessManager *networkAccessManager();
 #endif
 
@@ -155,7 +155,7 @@ public:
         QV4::PersistentValue onmessage;
     private:
         QV4::PersistentValue createsend;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         QNetworkAccessManager *accessManager;
 #endif
     };
@@ -202,7 +202,7 @@ private:
 
 QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
 : QV8Engine(0), p(parent)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 , accessManager(0)
 #endif
 {
@@ -211,7 +211,7 @@ QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEn
 
 QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     delete accessManager;
 #endif
 }
@@ -274,7 +274,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     return scope.result.asReturnedValue();
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager()
 {
     if (!accessManager) {

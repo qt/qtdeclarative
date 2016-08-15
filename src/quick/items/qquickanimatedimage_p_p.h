@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 class QMovie;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QNetworkReply;
 #endif
 
@@ -69,7 +69,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 public:
     QQuickAnimatedImagePrivate()
       : playing(true), paused(false), preset_currentframe(0), _movie(0), oldPlaying(false)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         , reply(0), redirectCount(0)
 #endif
         , currentSourceSize(0, 0)
@@ -83,7 +83,7 @@ public:
     int preset_currentframe;
     QMovie *_movie;
     bool oldPlaying;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkReply *reply;
     int redirectCount;
 #endif
