@@ -42,6 +42,7 @@
 #include "qv4compileddata_p.h"
 #include <QFileInfo>
 #include <QDateTime>
+#include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,7 +78,16 @@ bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const
 
     {
         QFileInfo sourceCode(sourcePath);
-        if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != header->sourceTimeStamp) {
+        QDateTime sourceTimeStamp;
+        if (sourceCode.exists())
+            sourceTimeStamp = sourceCode.lastModified();
+
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!sourceTimeStamp.isValid())
+            sourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+
+        if (sourceTimeStamp.isValid() && sourceTimeStamp.toMSecsSinceEpoch() != header->sourceTimeStamp) {
             *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
             return false;
         }
