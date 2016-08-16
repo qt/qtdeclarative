@@ -170,7 +170,8 @@ public:
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, QSGD3D12Engine::TextureCreateFlags flags);
     void queueTextureResize(uint id, const QSize &size);
-    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos,
+                            QSGD3D12Engine::TextureUploadFlags flags);
     void releaseTexture(uint id);
     void useTexture(uint id);
 

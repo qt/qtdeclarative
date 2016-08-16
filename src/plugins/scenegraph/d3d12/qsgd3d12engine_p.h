@@ -349,16 +349,22 @@ public:
     static QSize mipMapAdjustedSourceSize(const QSize &size);
 
     enum TextureCreateFlag {
-        TextureWithAlpha = 0x1,
-        TextureWithMipMaps = 0x2
+        TextureWithAlpha = 0x01,
+        TextureWithMipMaps = 0x02,
+        TextureAlways32Bit = 0x04
     };
     Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
+
+    enum TextureUploadFlag {
+        TextureUploadAlways32Bit = 0x01
+    };
+    Q_DECLARE_FLAGS(TextureUploadFlags, TextureUploadFlag)
 
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, TextureCreateFlags flags);
     void queueTextureResize(uint id, const QSize &size);
-    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint());
-    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
+    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint(), TextureUploadFlags flags = 0);
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos, TextureUploadFlags flags = 0);
     void releaseTexture(uint id);
     void useTexture(uint id);
 
@@ -381,6 +387,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::ClearFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureCreateFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureUploadFlags)
 
 QT_END_NAMESPACE
 

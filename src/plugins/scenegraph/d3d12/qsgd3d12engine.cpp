@@ -497,14 +497,15 @@ void QSGD3D12Engine::queueTextureResize(uint id, const QSize &size)
     d->queueTextureResize(id, size);
 }
 
-void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos)
+void QSGD3D12Engine::queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos, TextureUploadFlags flags)
 {
-    d->queueTextureUpload(id, QVector<QImage>() << image, QVector<QPoint>() << dstPos);
+    d->queueTextureUpload(id, QVector<QImage>() << image, QVector<QPoint>() << dstPos, flags);
 }
 
-void QSGD3D12Engine::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos)
+void QSGD3D12Engine::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos,
+                                        TextureUploadFlags flags)
 {
-    d->queueTextureUpload(id, images, dstPos);
+    d->queueTextureUpload(id, images, dstPos, flags);
 }
 
 void QSGD3D12Engine::releaseTexture(uint id)
@@ -2321,7 +2322,7 @@ uint QSGD3D12EnginePrivate::genTexture()
     return id;
 }
 
-static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, bool mipmap,
+static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, bool mipmap, bool force32bit,
                                         QImage::Format *imageFormat, int *bytesPerPixel)
 {
     DXGI_FORMAT f = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -2333,8 +2334,12 @@ static inline DXGI_FORMAT textureFormat(QImage::Format format, bool wantsAlpha, 
         case QImage::Format_Grayscale8:
         case QImage::Format_Indexed8:
         case QImage::Format_Alpha8:
-            f = DXGI_FORMAT_R8_UNORM;
-            bpp = 1;
+            if (!force32bit) {
+                f = DXGI_FORMAT_R8_UNORM;
+                bpp = 1;
+            } else {
+                convFormat = QImage::Format_RGBA8888;
+            }
             break;
         case QImage::Format_RGB32:
             f = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -2410,7 +2415,9 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
     textureDesc.Height = adjustedSize.height();
     textureDesc.DepthOrArraySize = 1;
     textureDesc.MipLevels = !t.mipmap() ? 1 : QSGD3D12Engine::mipMapLevels(adjustedSize);
-    textureDesc.Format = textureFormat(format, t.alpha(), t.mipmap(), nullptr, nullptr);
+    textureDesc.Format = textureFormat(format, t.alpha(), t.mipmap(),
+                                       createFlags.testFlag(QSGD3D12Engine::TextureAlways32Bit),
+                                       nullptr, nullptr);
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     if (t.mipmap())
@@ -2524,7 +2531,8 @@ void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
         qDebug("submitted old content copy for texture %u on the copy queue, fence %llu", id, t.fenceValue);
 }
 
-void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos)
+void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos,
+                                               QSGD3D12Engine::TextureUploadFlags flags)
 {
     Q_ASSERT(id);
     Q_ASSERT(images.count() == dstPos.count());
@@ -2561,7 +2569,9 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
     int totalSize = 0;
     for (const QImage &image : images) {
         int bytesPerPixel;
-        textureFormat(image.format(), t.alpha(), t.mipmap(), nullptr, &bytesPerPixel);
+        textureFormat(image.format(), t.alpha(), t.mipmap(),
+                      flags.testFlag(QSGD3D12Engine::TextureUploadAlways32Bit),
+                      nullptr, &bytesPerPixel);
         const int w = !t.mipmap() ? image.width() : adjustedTextureSize.width();
         const int h = !t.mipmap() ? image.height() : adjustedTextureSize.height();
         const int stride = alignedSize(w * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
@@ -2593,7 +2603,9 @@ void QSGD3D12EnginePrivate::queueTextureUpload(uint id, const QVector<QImage> &i
     for (int i = 0; i < images.count(); ++i) {
         QImage::Format convFormat;
         int bytesPerPixel;
-        textureFormat(images[i].format(), t.alpha(), t.mipmap(), &convFormat, &bytesPerPixel);
+        textureFormat(images[i].format(), t.alpha(), t.mipmap(),
+                      flags.testFlag(QSGD3D12Engine::TextureUploadAlways32Bit),
+                      &convFormat, &bytesPerPixel);
         if (Q_UNLIKELY(debug_texture() && i == 0))
             qDebug("source image format %d, target format %d, bpp %d", images[i].format(), convFormat, bytesPerPixel);
 
