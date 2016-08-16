@@ -1543,8 +1543,9 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
 
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
 {
-    qreal samples = qMin(path->path().length()/5, qreal(500.0));
-    qreal res = path->path().length()/samples;
+    const auto pathLength = path->path().length();
+    qreal samples = qMin(pathLength / 5, qreal(500.0));
+    qreal res = pathLength / samples;
 
     qreal mindist = 1e10; // big number
     QPointF nearPoint = path->pointAt(0);
@@ -1741,12 +1742,13 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
 
     qreal velocity = calcVelocity();
     qreal count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
-    qreal pixelVelocity = (path->path().length()/count) * velocity;
+    const auto averageItemLength = path->path().length() / count;
+    qreal pixelVelocity = averageItemLength * velocity;
     if (qAbs(pixelVelocity) > MinimumFlickVelocity) {
         if (qAbs(pixelVelocity) > maximumFlickVelocity || snapMode == QQuickPathView::SnapOneItem) {
             // limit velocity
             qreal maxVel = velocity < 0 ? -maximumFlickVelocity : maximumFlickVelocity;
-            velocity = maxVel / (path->path().length()/count);
+            velocity = maxVel / averageItemLength;
         }
         // Calculate the distance to be travelled
         qreal v2 = velocity*velocity;
