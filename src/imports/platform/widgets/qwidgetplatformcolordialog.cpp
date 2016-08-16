@@ -36,23 +36,19 @@
 
 #include "qwidgetplatformcolordialog_p.h"
 #include "qwidgetplatformdialog_p.h"
-#include "qwidgetplatform_p.h"
 
 #include <QtWidgets/qcolordialog.h>
 
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformColorDialog::QWidgetPlatformColorDialog(QObject *parent)
+    : m_dialog(new QColorDialog)
 {
     setParent(parent);
 
-    static bool available = QWidgetPlatform::isAvailable("color dialog");
-    if (available) {
-        m_dialog.reset(new QColorDialog);
-        connect(m_dialog.data(), &QColorDialog::accepted, this, &QPlatformDialogHelper::accept);
-        connect(m_dialog.data(), &QColorDialog::rejected, this, &QPlatformDialogHelper::reject);
-        connect(m_dialog.data(), &QColorDialog::currentColorChanged, this, &QPlatformColorDialogHelper::currentColorChanged);
-    }
+    connect(m_dialog.data(), &QColorDialog::accepted, this, &QPlatformDialogHelper::accept);
+    connect(m_dialog.data(), &QColorDialog::rejected, this, &QPlatformDialogHelper::reject);
+    connect(m_dialog.data(), &QColorDialog::currentColorChanged, this, &QPlatformColorDialogHelper::currentColorChanged);
 }
 
 QWidgetPlatformColorDialog::~QWidgetPlatformColorDialog()
@@ -61,26 +57,21 @@ QWidgetPlatformColorDialog::~QWidgetPlatformColorDialog()
 
 QColor QWidgetPlatformColorDialog::currentColor() const
 {
-    return m_dialog ? m_dialog->currentColor() : QColor();
+    return m_dialog->currentColor();
 }
 
 void QWidgetPlatformColorDialog::setCurrentColor(const QColor &color)
 {
-    if (m_dialog)
-        m_dialog->setCurrentColor(color);
+    m_dialog->setCurrentColor(color);
 }
 
 void QWidgetPlatformColorDialog::exec()
 {
-    if (m_dialog)
-        m_dialog->exec();
+    m_dialog->exec();
 }
 
 bool QWidgetPlatformColorDialog::show(Qt::WindowFlags flags, Qt::WindowModality modality, QWindow *parent)
 {
-    if (!m_dialog)
-        return false;
-
     QSharedPointer<QColorDialogOptions> options = QPlatformColorDialogHelper::options();
     m_dialog->setWindowTitle(options->windowTitle());
     m_dialog->setOptions(static_cast<QColorDialog::ColorDialogOptions>(int(options->options())) | QColorDialog::DontUseNativeDialog);
@@ -90,8 +81,7 @@ bool QWidgetPlatformColorDialog::show(Qt::WindowFlags flags, Qt::WindowModality 
 
 void QWidgetPlatformColorDialog::hide()
 {
-    if (m_dialog)
-        m_dialog->hide();
+    m_dialog->hide();
 }
 
 QT_END_NAMESPACE

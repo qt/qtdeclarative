@@ -36,7 +36,6 @@
 
 #include "qwidgetplatformmenu_p.h"
 #include "qwidgetplatformmenuitem_p.h"
-#include "qwidgetplatform_p.h"
 
 #include <QtGui/qwindow.h>
 #include <QtWidgets/qmenu.h>
@@ -45,15 +44,12 @@
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformMenu::QWidgetPlatformMenu(QObject *parent)
+    : m_menu(new QMenu)
 {
     setParent(parent);
 
-    static bool available = QWidgetPlatform::isAvailable("menu");
-    if (available) {
-        m_menu.reset(new QMenu);
-        connect(m_menu.data(), &QMenu::aboutToShow, this, &QPlatformMenu::aboutToShow);
-        connect(m_menu.data(), &QMenu::aboutToHide, this, &QPlatformMenu::aboutToHide);
-    }
+    connect(m_menu.data(), &QMenu::aboutToShow, this, &QPlatformMenu::aboutToShow);
+    connect(m_menu.data(), &QMenu::aboutToHide, this, &QPlatformMenu::aboutToHide);
 }
 
 QWidgetPlatformMenu::~QWidgetPlatformMenu()
@@ -68,7 +64,7 @@ QMenu *QWidgetPlatformMenu::menu() const
 void QWidgetPlatformMenu::insertMenuItem(QPlatformMenuItem *item, QPlatformMenuItem *before)
 {
     QWidgetPlatformMenuItem *widgetItem = qobject_cast<QWidgetPlatformMenuItem *>(item);
-    if (!widgetItem || !m_menu)
+    if (!widgetItem)
         return;
 
     QWidgetPlatformMenuItem *widgetBefore = qobject_cast<QWidgetPlatformMenuItem *>(before);
@@ -78,7 +74,7 @@ void QWidgetPlatformMenu::insertMenuItem(QPlatformMenuItem *item, QPlatformMenuI
 void QWidgetPlatformMenu::removeMenuItem(QPlatformMenuItem *item)
 {
     QWidgetPlatformMenuItem *widgetItem = qobject_cast<QWidgetPlatformMenuItem *>(item);
-    if (!widgetItem || !m_menu)
+    if (!widgetItem)
         return;
 
     m_menu->removeAction(widgetItem->action());
@@ -106,43 +102,38 @@ void QWidgetPlatformMenu::setTag(quintptr tag)
 
 void QWidgetPlatformMenu::setText(const QString &text)
 {
-    if (m_menu)
-        m_menu->setTitle(text);
+    m_menu->setTitle(text);
 }
 
 void QWidgetPlatformMenu::setIcon(const QIcon &icon)
 {
-    if (m_menu)
-        m_menu->setIcon(icon);
+    m_menu->setIcon(icon);
 }
 
 void QWidgetPlatformMenu::setEnabled(bool enabled)
 {
-    if (m_menu)
-        m_menu->menuAction()->setEnabled(enabled);
+    m_menu->menuAction()->setEnabled(enabled);
 }
 
 bool QWidgetPlatformMenu::isEnabled() const
 {
-    return m_menu && m_menu->menuAction()->isEnabled();
+    return m_menu->menuAction()->isEnabled();
 }
 
 void QWidgetPlatformMenu::setVisible(bool visible)
 {
-    if (m_menu)
-        m_menu->menuAction()->setVisible(visible);
+    m_menu->menuAction()->setVisible(visible);
 }
 
 void QWidgetPlatformMenu::setMinimumWidth(int width)
 {
-    if (m_menu && width > 0)
+    if (width > 0)
         m_menu->setMinimumWidth(width);
 }
 
 void QWidgetPlatformMenu::setFont(const QFont &font)
 {
-    if (m_menu)
-        m_menu->setFont(font);
+    m_menu->setFont(font);
 }
 
 void QWidgetPlatformMenu::setMenuType(MenuType type)
@@ -152,9 +143,6 @@ void QWidgetPlatformMenu::setMenuType(MenuType type)
 
 void QWidgetPlatformMenu::showPopup(const QWindow *window, const QRect &targetRect, const QPlatformMenuItem *item)
 {
-    if (!m_menu)
-        return;
-
     m_menu->createWinId();
     QWindow *handle = m_menu->windowHandle();
     Q_ASSERT(handle);
@@ -170,8 +158,7 @@ void QWidgetPlatformMenu::showPopup(const QWindow *window, const QRect &targetRe
 
 void QWidgetPlatformMenu::dismiss()
 {
-    if (m_menu)
-        m_menu->close();
+    m_menu->close();
 }
 
 QPlatformMenuItem *QWidgetPlatformMenu::menuItemAt(int position) const

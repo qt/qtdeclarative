@@ -36,24 +36,20 @@
 
 #include "qwidgetplatformsystemtrayicon_p.h"
 #include "qwidgetplatformmenu_p.h"
-#include "qwidgetplatform_p.h"
 
 #include <QtWidgets/qsystemtrayicon.h>
 
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformSystemTrayIcon::QWidgetPlatformSystemTrayIcon(QObject *parent)
+    : m_systray(new QSystemTrayIcon)
 {
     setParent(parent);
 
-    static bool available = QWidgetPlatform::isAvailable("system tray");
-    if (available) {
-        m_systray.reset(new QSystemTrayIcon);
-        connect(m_systray.data(), &QSystemTrayIcon::messageClicked, this, &QPlatformSystemTrayIcon::messageClicked);
-        connect(m_systray.data(), &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
-            emit activated(static_cast<ActivationReason>(reason));
-        });
-    }
+    connect(m_systray.data(), &QSystemTrayIcon::messageClicked, this, &QPlatformSystemTrayIcon::messageClicked);
+    connect(m_systray.data(), &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
+        emit activated(static_cast<ActivationReason>(reason));
+    });
 }
 
 QWidgetPlatformSystemTrayIcon::~QWidgetPlatformSystemTrayIcon()
@@ -62,32 +58,28 @@ QWidgetPlatformSystemTrayIcon::~QWidgetPlatformSystemTrayIcon()
 
 void QWidgetPlatformSystemTrayIcon::init()
 {
-    if (m_systray)
-        m_systray->show();
+    m_systray->show();
 }
 
 void QWidgetPlatformSystemTrayIcon::cleanup()
 {
-    if (m_systray)
-        m_systray->hide();
+    m_systray->hide();
 }
 
 void QWidgetPlatformSystemTrayIcon::updateIcon(const QIcon &icon)
 {
-    if (m_systray)
-        m_systray->setIcon(icon);
+    m_systray->setIcon(icon);
 }
 
 void QWidgetPlatformSystemTrayIcon::updateToolTip(const QString &tooltip)
 {
-    if (m_systray)
-        m_systray->setToolTip(tooltip);
+    m_systray->setToolTip(tooltip);
 }
 
 void QWidgetPlatformSystemTrayIcon::updateMenu(QPlatformMenu *menu)
 {
     QWidgetPlatformMenu *widgetMenu = qobject_cast<QWidgetPlatformMenu *>(menu);
-    if (!widgetMenu || !m_systray)
+    if (!widgetMenu)
         return;
 
     m_systray->setContextMenu(widgetMenu->menu());
@@ -95,24 +87,23 @@ void QWidgetPlatformSystemTrayIcon::updateMenu(QPlatformMenu *menu)
 
 QRect QWidgetPlatformSystemTrayIcon::geometry() const
 {
-    return m_systray ? m_systray->geometry() : QRect();
+    return m_systray->geometry();
 }
 
 void QWidgetPlatformSystemTrayIcon::showMessage(const QString &title, const QString &msg, const QIcon &icon, MessageIcon iconType, int msecs)
 {
     Q_UNUSED(icon);
-    if (m_systray)
-        m_systray->showMessage(title, msg, static_cast<QSystemTrayIcon::MessageIcon>(iconType), msecs);
+    m_systray->showMessage(title, msg, static_cast<QSystemTrayIcon::MessageIcon>(iconType), msecs);
 }
 
 bool QWidgetPlatformSystemTrayIcon::isSystemTrayAvailable() const
 {
-    return m_systray && QSystemTrayIcon::isSystemTrayAvailable();
+    return QSystemTrayIcon::isSystemTrayAvailable();
 }
 
 bool QWidgetPlatformSystemTrayIcon::supportsMessages() const
 {
-    return m_systray && QSystemTrayIcon::supportsMessages();
+    return QSystemTrayIcon::supportsMessages();
 }
 
 QPlatformMenu *QWidgetPlatformSystemTrayIcon::createMenu() const

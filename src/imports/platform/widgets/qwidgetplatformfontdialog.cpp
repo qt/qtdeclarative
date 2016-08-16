@@ -36,23 +36,19 @@
 
 #include "qwidgetplatformfontdialog_p.h"
 #include "qwidgetplatformdialog_p.h"
-#include "qwidgetplatform_p.h"
 
 #include <QtWidgets/qfontdialog.h>
 
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformFontDialog::QWidgetPlatformFontDialog(QObject *parent)
+    : m_dialog(new QFontDialog)
 {
     setParent(parent);
 
-    static bool available = QWidgetPlatform::isAvailable("font dialog");
-    if (available) {
-        m_dialog.reset(new QFontDialog);
-        connect(m_dialog.data(), &QFontDialog::accepted, this, &QPlatformDialogHelper::accept);
-        connect(m_dialog.data(), &QFontDialog::rejected, this, &QPlatformDialogHelper::reject);
-        connect(m_dialog.data(), &QFontDialog::currentFontChanged, this, &QPlatformFontDialogHelper::currentFontChanged);
-    }
+    connect(m_dialog.data(), &QFontDialog::accepted, this, &QPlatformDialogHelper::accept);
+    connect(m_dialog.data(), &QFontDialog::rejected, this, &QPlatformDialogHelper::reject);
+    connect(m_dialog.data(), &QFontDialog::currentFontChanged, this, &QPlatformFontDialogHelper::currentFontChanged);
 }
 
 QWidgetPlatformFontDialog::~QWidgetPlatformFontDialog()
@@ -61,26 +57,21 @@ QWidgetPlatformFontDialog::~QWidgetPlatformFontDialog()
 
 QFont QWidgetPlatformFontDialog::currentFont() const
 {
-    return m_dialog ? m_dialog->currentFont() : QFont();
+    return m_dialog->currentFont();
 }
 
 void QWidgetPlatformFontDialog::setCurrentFont(const QFont &font)
 {
-    if (m_dialog)
-        m_dialog->setCurrentFont(font);
+    m_dialog->setCurrentFont(font);
 }
 
 void QWidgetPlatformFontDialog::exec()
 {
-    if (m_dialog)
-        m_dialog->exec();
+    m_dialog->exec();
 }
 
 bool QWidgetPlatformFontDialog::show(Qt::WindowFlags flags, Qt::WindowModality modality, QWindow *parent)
 {
-    if (!m_dialog)
-        return false;
-
     QSharedPointer<QFontDialogOptions> options = QPlatformFontDialogHelper::options();
     m_dialog->setWindowTitle(options->windowTitle());
     m_dialog->setOptions(static_cast<QFontDialog::FontDialogOptions>(int(options->options())) | QFontDialog::DontUseNativeDialog);
@@ -90,8 +81,7 @@ bool QWidgetPlatformFontDialog::show(Qt::WindowFlags flags, Qt::WindowModality m
 
 void QWidgetPlatformFontDialog::hide()
 {
-    if (m_dialog)
-        m_dialog->hide();
+    m_dialog->hide();
 }
 
 QT_END_NAMESPACE
