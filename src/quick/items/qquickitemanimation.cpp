@@ -42,7 +42,9 @@
 #include "qquickstateoperations_p.h"
 
 #include <private/qqmlproperty_p.h>
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
+#endif
 #include "private/qparallelanimationgroupjob_p.h"
 #include "private/qsequentialanimationgroupjob_p.h"
 
@@ -554,6 +556,8 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     return initInstance(animator);
 }
 
+
+#if QT_CONFIG(quick_path)
 /*!
     \qmltype PathAnimation
     \instantiates QQuickPathAnimation
@@ -1043,5 +1047,7 @@ QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
             animationTemplate->activeAnimations.erase(it);
     }
 }
+
+#endif // quick_path
 
 QT_END_NAMESPACE

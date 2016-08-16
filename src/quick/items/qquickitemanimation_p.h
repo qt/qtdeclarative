@@ -124,6 +124,8 @@ protected:
                             QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
 };
 
+#if QT_CONFIG(quick_path)
+
 class QQuickItem;
 class QQuickPath;
 class QQuickPathAnimationPrivate;
@@ -199,10 +201,14 @@ Q_SIGNALS:
     void endRotationChanged(qreal);
 };
 
+#endif
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickParentAnimation)
 QML_DECLARE_TYPE(QQuickAnchorAnimation)
+#if QT_CONFIG(quick_path)
 QML_DECLARE_TYPE(QQuickPathAnimation)
+#endif
 
 #endif // QQUICKITEMANIMATION_H

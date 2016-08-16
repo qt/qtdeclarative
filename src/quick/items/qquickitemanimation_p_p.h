@@ -53,7 +53,9 @@
 
 #include "qquickitemanimation_p.h"
 
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
+#endif
 #include <private/qquickanimation_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -83,6 +85,8 @@ public:
     QEasingCurve easing;
     QList<QQuickItem*> targets;
 };
+
+#if QT_CONFIG(quick_path)
 
 class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
 {
@@ -153,6 +157,7 @@ public:
     QHash<QQuickItem*, QQuickPathAnimationAnimator* > activeAnimations;
 };
 
+#endif
 
 QT_END_NAMESPACE
 

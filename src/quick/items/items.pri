@@ -45,8 +45,6 @@ HEADERS += \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
     $$PWD/qquickgridview_p.h \
-    $$PWD/qquickpathview_p.h \
-    $$PWD/qquickpathview_p_p.h \
     $$PWD/qquickpositioners_p.h \
     $$PWD/qquickpositioners_p_p.h \
     $$PWD/qquickloader_p.h \
@@ -114,7 +112,6 @@ SOURCES += \
     $$PWD/qquicklistview.cpp \
     $$PWD/qquickrepeater.cpp \
     $$PWD/qquickgridview.cpp \
-    $$PWD/qquickpathview.cpp \
     $$PWD/qquickpositioners.cpp \
     $$PWD/qquickloader.cpp \
     $$PWD/qquickanimatedimage.cpp \
@@ -145,6 +142,14 @@ SOURCES += \
     $$PWD/qquicksprite.cpp \
     $$PWD/qquickspritesequence.cpp \
     $$PWD/qquickanimatedsprite.cpp
+
+qtConfig(quick-pathview) {
+    HEADERS += \
+        $$PWD/qquickpathview_p.h \
+        $$PWD/qquickpathview_p_p.h
+    SOURCES += \
+        $$PWD/qquickpathview.cpp
+}
 
 # Items that depend on OpenGL Renderer
 qtConfig(opengl(es1|es2)?) {

@@ -57,10 +57,14 @@
 #include "qquickflickable_p_p.h"
 #include "qquicklistview_p.h"
 #include "qquickgridview_p.h"
+#if QT_CONFIG(quick_pathview)
 #include "qquickpathview_p.h"
+#endif
 #include "qquickitemviewtransition_p.h"
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
 #include <private/qquickpathinterpolator_p.h>
+#endif
 #include "qquickpositioners_p.h"
 #include "qquickrepeater_p.h"
 #include "qquickloader_p.h"
@@ -157,6 +161,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickListView>(uri,major,minor,"ListView");
     qmlRegisterType<QQuickLoader>(uri,major,minor,"Loader");
     qmlRegisterType<QQuickMouseArea>(uri,major,minor,"MouseArea");
+#if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPath>(uri,major,minor,"Path");
     qmlRegisterType<QQuickPathAttribute>(uri,major,minor,"PathAttribute");
     qmlRegisterType<QQuickPathCubic>(uri,major,minor,"PathCubic");
@@ -166,7 +171,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
     qmlRegisterType<QQuickPathArc>("QtQuick",2,0,"PathArc");
     qmlRegisterType<QQuickPathSvg>("QtQuick",2,0,"PathSvg");
+#endif
+#if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
+#endif
     qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
@@ -191,8 +199,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickWheelEvent>();
     qmlRegisterType<QQuickCloseEvent>();
     qmlRegisterType<QQuickTransform>();
+#if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPathElement>();
     qmlRegisterType<QQuickCurve>();
+#endif
     qmlRegisterType<QQuickScaleGrid>();
     qmlRegisterType<QQuickTextLine>();
     qmlRegisterType<QQuickPen>();
@@ -231,8 +241,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnchorSet>();
     qmlRegisterType<QQuickAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QQuickParentAnimation>(uri, major, minor,"ParentAnimation");
+#if QT_CONFIG(quick_canvas)
     qmlRegisterType<QQuickPathAnimation>("QtQuick",2,0,"PathAnimation");
     qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
+#endif
 
 #ifndef QT_NO_DRAGANDDROP
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
@@ -293,7 +305,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
+#if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView, 7>(uri, 2, 7, "PathView");
+#endif
 
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 

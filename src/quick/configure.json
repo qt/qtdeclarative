@@ -8,7 +8,9 @@
     "commandline": {
         "options": {
             "d3d12": "boolean",
-            "quick-canvas": "boolean"
+            "quick-canvas": "boolean",
+            "quick-path": "boolean",
+            "quick-pathview": "boolean"
         }
     },
 
@@ -35,6 +37,21 @@
             "output": [
                 "privateFeature"
             ]
+        },
+        "quick-path": {
+            "label": "Path support",
+            "purpose": "Provides Path elements in Qt Quick",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-pathview": {
+            "label": "PathView item",
+            "purpose": "Provides the Qt Quick PathView item",
+            "condition": "features.quick-path",
+            "output": [
+                "privateFeature"
+            ]
         }
     },
 
@@ -43,7 +60,9 @@
             "section": "Qt Quick",
             "entries": [
                 "d3d12",
-                "quick-canvas"
+                "quick-canvas",
+                "quick-path",
+                "quick-pathview"
             ]
         }
     ]
