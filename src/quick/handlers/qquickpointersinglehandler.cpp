@@ -91,8 +91,9 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
 {
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
     handleEventPoint(m_currentPoint);
-    // If the point is released or was rejected, this handler is done handling that point.
-    if (m_currentPoint->state() == QQuickEventPoint::Released || !m_currentPoint->grabber())
+    bool grab = m_currentPoint->isAccepted() && m_currentPoint->state() != QQuickEventPoint::Released;
+    setGrab(m_currentPoint, grab);
+    if (!grab)
         setCurrentPoint(nullptr);
 }
 
