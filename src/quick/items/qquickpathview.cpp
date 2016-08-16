@@ -244,10 +244,9 @@ void QQuickPathViewPrivate::clear()
         releaseItem(currentItem);
         currentItem = 0;
     }
-    for (int i=0; i<items.count(); i++){
-        QQuickItem *p = items.at(i);
+    for (QQuickItem *p : qAsConst(items))
         releaseItem(p);
-    }
+
     if (requestedIndex >= 0) {
         if (model)
             model->cancel(requestedIndex);
@@ -417,12 +416,9 @@ void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
 void QQuickPathView::pathUpdated()
 {
     Q_D(QQuickPathView);
-    QList<QQuickItem*>::iterator it = d->items.begin();
-    while (it != d->items.end()) {
-        QQuickItem *item = *it;
+    for (QQuickItem *item : qAsConst(d->items)) {
         if (QQuickPathViewAttached *att = d->attached(item))
             att->m_percent = -1;
-        ++it;
     }
     refill();
 }
@@ -1521,8 +1517,7 @@ int QQuickPathView::indexAt(qreal x, qreal y) const
     if (!d->isValid())
         return -1;
 
-    for (int idx = 0; idx < d->items.count(); ++idx) {
-        QQuickItem *item = d->items.at(idx);
+    for (QQuickItem *item : d->items) {
         QPointF p = item->mapFromItem(this, QPointF(x, y));
         if (item->contains(p))
             return d->model->indexOf(item, 0);
@@ -1545,8 +1540,7 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
     if (!d->isValid())
         return 0;
 
-    for (int idx = 0; idx < d->items.count(); ++idx) {
-        QQuickItem *item = d->items.at(idx);
+    for (QQuickItem *item : d->items) {
         QPointF p = item->mapFromItem(this, QPointF(x, y));
         if (item->contains(p))
             return item;
