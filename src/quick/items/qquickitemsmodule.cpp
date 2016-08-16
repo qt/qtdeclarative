@@ -69,7 +69,9 @@
 #include "qquickrepeater_p.h"
 #include "qquickloader_p.h"
 #include "qquickanimatedimage_p.h"
+#if QT_CONFIG(quick_flipable)
 #include "qquickflipable_p.h"
+#endif
 #include "qquicktranslate_p.h"
 #include "qquickstateoperations_p.h"
 #include "qquickitemanimation_p.h"
@@ -148,7 +150,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickBorderImage>(uri,major,minor,"BorderImage");
     qmlRegisterType<QQuickColumn>(uri,major,minor,"Column");
     qmlRegisterType<QQuickFlickable>(uri,major,minor,"Flickable");
+#if QT_CONFIG(quick_flipable)
     qmlRegisterType<QQuickFlipable>(uri,major,minor,"Flipable");
+#endif
     qmlRegisterType<QQuickFlow>(uri,major,minor,"Flow");
 //    qmlRegisterType<QQuickFocusPanel>(uri,major,minor,"FocusPanel");
     qmlRegisterType<QQuickFocusScope>(uri,major,minor,"FocusScope");

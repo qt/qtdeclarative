@@ -51,7 +51,6 @@ HEADERS += \
     $$PWD/qquickloader_p_p.h \
     $$PWD/qquickanimatedimage_p.h \
     $$PWD/qquickanimatedimage_p_p.h \
-    $$PWD/qquickflipable_p.h \
     $$PWD/qquicktranslate_p.h \
     $$PWD/qquickclipnode_p.h \
     $$PWD/qquickview.h \
@@ -115,7 +114,6 @@ SOURCES += \
     $$PWD/qquickpositioners.cpp \
     $$PWD/qquickloader.cpp \
     $$PWD/qquickanimatedimage.cpp \
-    $$PWD/qquickflipable.cpp \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
     $$PWD/qquickview.cpp \
@@ -149,6 +147,13 @@ qtConfig(quick-pathview) {
         $$PWD/qquickpathview_p_p.h
     SOURCES += \
         $$PWD/qquickpathview.cpp
+}
+
+qtConfig(quick-flipable) {
+    HEADERS += \
+        $$PWD/qquickflipable_p.h
+    SOURCES += \
+        $$PWD/qquickflipable.cpp
 }
 
 # Items that depend on OpenGL Renderer
