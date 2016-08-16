@@ -51,6 +51,8 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4value_p.h"
 
+#include <QtCore/qtypetraits.h>
+
 QT_BEGIN_NAMESPACE
 
 
@@ -125,7 +127,7 @@ struct ObjectVTable
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.vTable), \
+    DEFINE_MANAGED_VTABLE_INT(classname, (QT_PREPEND_NAMESPACE(QtPrivate)::is_same<classname::SuperClass, Object>::value) ? Q_NULLPTR : &classname::SuperClass::static_vtbl.vTable), \
     call,                                       \
     construct,                                  \
     get,                                        \
