@@ -1199,9 +1199,9 @@ void QQuickItemViewPrivate::showVisibleItems() const
 {
     qDebug() << "Visible items:";
     for (int i = 0; i < visibleItems.count(); ++i) {
-        qDebug() << "\t" << visibleItems[i]->index
-                 << visibleItems[i]->item->objectName()
-                 << visibleItems[i]->position();
+        qDebug() << "\t" << visibleItems.at(i)->index
+                 << visibleItems.at(i)->item->objectName()
+                 << visibleItems.at(i)->position();
     }
 }
 
@@ -1998,7 +1998,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         prevViewPos = prevFirstVisible->position();
         prevFirstVisibleIndex = prevFirstVisible->index;
     }
-    qreal prevVisibleItemsFirstPos = visibleItems.count() ? visibleItems.first()->position() : 0.0;
+    qreal prevVisibleItemsFirstPos = visibleItems.count() ? visibleItems.constFirst()->position() : 0.0;
 
     totalInsertionResult->visiblePos = prevViewPos;
     totalRemovalResult->visiblePos = prevViewPos;
@@ -2077,13 +2077,13 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     // can transition it from this "original" position to its new position in the view
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true)) {
         for (int i=0; i<movingIntoView.count(); i++) {
-            int fromIndex = findMoveKeyIndex(movingIntoView[i].moveKey, removals);
+            int fromIndex = findMoveKeyIndex(movingIntoView.at(i).moveKey, removals);
             if (fromIndex >= 0) {
                 if (prevFirstVisibleIndex >= 0 && fromIndex < prevFirstVisibleIndex)
-                    repositionItemAt(movingIntoView[i].item, fromIndex, -totalInsertionResult->sizeChangesAfterVisiblePos);
+                    repositionItemAt(movingIntoView.at(i).item, fromIndex, -totalInsertionResult->sizeChangesAfterVisiblePos);
                 else
-                    repositionItemAt(movingIntoView[i].item, fromIndex, totalInsertionResult->sizeChangesAfterVisiblePos);
-                movingIntoView[i].item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
+                    repositionItemAt(movingIntoView.at(i).item, fromIndex, totalInsertionResult->sizeChangesAfterVisiblePos);
+                movingIntoView.at(i).item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
             }
         }
     }
@@ -2129,11 +2129,11 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Change &remo
     Q_Q(QQuickItemView);
     bool visibleAffected = false;
 
-    if (visibleItems.count() && removal.index + removal.count > visibleItems.last()->index) {
-        if (removal.index > visibleItems.last()->index)
+    if (visibleItems.count() && removal.index + removal.count > visibleItems.constLast()->index) {
+        if (removal.index > visibleItems.constLast()->index)
             removeResult->countChangeAfterVisibleItems += removal.count;
         else
-            removeResult->countChangeAfterVisibleItems += ((removal.index + removal.count - 1) - visibleItems.last()->index);
+            removeResult->countChangeAfterVisibleItems += ((removal.index + removal.count - 1) - visibleItems.constLast()->index);
     }
 
     QList<FxViewItem*>::Iterator it = visibleItems.begin();
@@ -2223,10 +2223,11 @@ void QQuickItemViewPrivate::repositionFirstItem(FxViewItem *prevVisibleItemsFirs
             qreal moveBackwardsBy = 0;
 
             // shift visibleItems.first() relative to the number of added/removed items
-            if (visibleItems.first()->position() > prevViewPos) {
+            const auto pos = visibleItems.constFirst()->position();
+            if (pos > prevViewPos) {
                 moveForwardsBy = insertionResult->sizeChangesAfterVisiblePos;
                 moveBackwardsBy = removalResult->sizeChangesAfterVisiblePos;
-            } else if (visibleItems.first()->position() < prevViewPos) {
+            } else if (pos < prevViewPos) {
                 moveForwardsBy = removalResult->sizeChangesBeforeVisiblePos;
                 moveBackwardsBy = insertionResult->sizeChangesBeforeVisiblePos;
             }
@@ -2304,7 +2305,7 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
 void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitionableItem *item)
 {
     for (int i=0; i<releasePendingTransition.count(); i++) {
-        if (releasePendingTransition[i]->transitionableItem == item) {
+        if (releasePendingTransition.at(i)->transitionableItem == item) {
             releaseItem(releasePendingTransition.takeAt(i));
             return;
         }
@@ -2324,8 +2325,8 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
         return 0;
 
     for (int i=0; i<releasePendingTransition.count(); i++) {
-        if (releasePendingTransition[i]->index == modelIndex
-                && !releasePendingTransition[i]->isPendingRemoval()) {
+        if (releasePendingTransition.at(i)->index == modelIndex
+                && !releasePendingTransition.at(i)->isPendingRemoval()) {
             releasePendingTransition[i]->releaseAfterTransition = false;
             return releasePendingTransition.takeAt(i);
         }

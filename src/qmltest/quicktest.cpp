@@ -144,7 +144,7 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     QTextStream str(&message);
     str << "\n  " << QDir::toNativeSeparators(fi.absoluteFilePath()) << " produced "
         << errors.size() << " error(s):\n";
-    foreach (const QQmlError &e, errors) {
+    for (const QQmlError &e : errors) {
         str << "    ";
         if (e.url().isLocalFile()) {
             str << QDir::toNativeSeparators(e.url().toLocalFile());
@@ -158,11 +158,12 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     str << "  Working directory: " << QDir::toNativeSeparators(QDir::current().absolutePath()) << '\n';
     if (QQmlEngine *engine = view->engine()) {
         str << "  View: " << view->metaObject()->className() << ", import paths:\n";
-        foreach (const QString &i, engine->importPathList())
+        const auto importPaths = engine->importPathList();
+        for (const QString &i : importPaths)
             str << "    '" << QDir::toNativeSeparators(i) << "'\n";
         const QStringList pluginPaths = engine->pluginPathList();
         str << "  Plugin paths:\n";
-        foreach (const QString &p, pluginPaths)
+        for (const QString &p : pluginPaths)
             str << "    '" << QDir::toNativeSeparators(p) << "'\n";
     }
     qWarning("%s", qPrintable(message));
@@ -338,11 +339,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                      &eventLoop, SLOT(quit()));
     view->rootContext()->setContextProperty
         (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
-    foreach (const QString &path, imports)
+    for (const QString &path : qAsConst(imports))
         view->engine()->addImportPath(path);
-    foreach (const QString &path, pluginPaths)
+    for (const QString &path : qAsConst(pluginPaths))
         view->engine()->addPluginPath(path);
-    foreach (const QString &file, files) {
+    for (const QString &file : qAsConst(files)) {
         const QFileInfo fi(file);
         if (!fi.exists())
             continue;

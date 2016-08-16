@@ -383,7 +383,7 @@ QVariant QQmlContext::contextProperty(const QString &name) const
             QQmlPropertyData *property =
                 QQmlPropertyCache::property(data->engine, obj, name, data, local);
 
-            if (property) value = obj->metaObject()->property(property->coreIndex).read(obj);
+            if (property) value = obj->metaObject()->property(property->coreIndex()).read(obj);
         }
         if (!value.isValid() && parentContext())
             value = parentContext()->contextProperty(name);

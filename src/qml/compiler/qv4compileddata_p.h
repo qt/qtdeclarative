@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x01
+#define QV4_DATA_STRUCTURE_VERSION 0x02
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -92,6 +92,7 @@ struct Function;
 
 struct Function;
 class EvalISelFactory;
+class CompilationUnitMapper;
 
 namespace CompiledData {
 
@@ -874,7 +875,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
-    QScopedPointer<QIODevice> backingFile;
+    QScopedPointer<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;

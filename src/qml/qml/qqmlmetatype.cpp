@@ -634,7 +634,7 @@ void QQmlTypePrivate::init() const
                     QMetaObject *mmo = builder.toMetaObject();
                     mmo->d.superdata = baseMetaObject;
                     if (!metaObjects.isEmpty())
-                        metaObjects.last().metaObject->d.superdata = mmo;
+                        metaObjects.constLast().metaObject->d.superdata = mmo;
                     QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
                     metaObjects << data;
                 }
@@ -656,7 +656,7 @@ void QQmlTypePrivate::init() const
         if (metaObjects.isEmpty())
             mo = baseMetaObject;
         else
-            mo = metaObjects.first().metaObject;
+            mo = metaObjects.constFirst().metaObject;
 
         for (int ii = 0; !containsRevisionedAttributes && ii < mo->propertyCount(); ++ii) {
             if (isPropertyRevisioned(mo, ii))
@@ -851,7 +851,7 @@ const QMetaObject *QQmlType::metaObject() const
     if (d->metaObjects.isEmpty())
         return d->baseMetaObject;
     else
-        return d->metaObjects.first().metaObject;
+        return d->metaObjects.constFirst().metaObject;
 
 }
 
@@ -1861,7 +1861,7 @@ QQmlType *QQmlMetaType::qmlTypeFromIndex(int idx)
 
     if (idx < 0 || idx >= data->types.count())
             return 0;
-    return data->types[idx];
+    return data->types.at(idx);
 }
 
 /*!

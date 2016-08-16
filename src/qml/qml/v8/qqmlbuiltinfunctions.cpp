@@ -140,6 +140,7 @@ Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
         o->defineDefaultProperty(QStringLiteral("darker"), QV4::QtObject::method_darker);
         o->defineDefaultProperty(QStringLiteral("tint"), QV4::QtObject::method_tint);
         o->defineDefaultProperty(QStringLiteral("quit"), QV4::QtObject::method_quit);
+        o->defineDefaultProperty(QStringLiteral("exit"), QV4::QtObject::method_exit);
         o->defineDefaultProperty(QStringLiteral("createQmlObject"), QV4::QtObject::method_createQmlObject);
         o->defineDefaultProperty(QStringLiteral("createComponent"), QV4::QtObject::method_createComponent);
     }
@@ -995,10 +996,34 @@ This function causes the QQmlEngine::quit() signal to be emitted.
 Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit;
 to quit a C++ application when this method is called, connect the
 QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
+
+\sa exit()
 */
 ReturnedValue QtObject::method_quit(CallContext *ctx)
 {
     QQmlEnginePrivate::get(ctx->engine()->qmlEngine())->sendQuit();
+    return QV4::Encode::undefined();
+}
+
+/*!
+    \qmlmethod Qt::exit(int retCode)
+
+    This function causes the QQmlEngine::exit(int) signal to be emitted.
+    Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit
+    the specified return code. To exit from the event loop with a specified return code when this
+    method is called, a C++ application can connect the QQmlEngine::exit(int) signal
+    to the QCoreApplication::exit(int) slot.
+
+    \sa quit()
+*/
+ReturnedValue QtObject::method_exit(CallContext *ctx)
+{
+    if (ctx->argc() != 1)
+        V4THROW_ERROR("Qt.exit(): Invalid arguments");
+
+    int retCode = ctx->args()[0].toNumber();
+
+    QQmlEnginePrivate::get(ctx->engine()->qmlEngine())->sendExit(retCode);
     return QV4::Encode::undefined();
 }
 
@@ -1035,7 +1060,9 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     struct Error {
         static ReturnedValue create(QV4::ExecutionEngine *v4, const QList<QQmlError> &errors) {
             Scope scope(v4);
-            QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
+            QString errorstr;
+            // '+=' reserves extra capacity. Follow-up appending will be probably free.
+            errorstr += QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
             QV4::ScopedArrayObject qmlerrors(scope, v4->newArrayObject());
             QV4::ScopedObject qmlerror(scope);
@@ -1490,15 +1517,13 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
-            result.append(QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']'));
+            result += QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']');
         else
             result.append(ctx->args()[i].toQStringNoThrow());
     }
 
-    if (printStack) {
-        result.append(QLatin1Char('\n'));
-        result.append(jsStack(v4));
-    }
+    if (printStack)
+        result += QLatin1Char('\n') + jsStack(v4);
 
     static QLoggingCategory qmlLoggingCategory("qml");
     static QLoggingCategory jsLoggingCategory("js");

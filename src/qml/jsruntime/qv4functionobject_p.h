@@ -147,8 +147,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     using Object::construct;
     using Object::call;
-    static ReturnedValue construct(const Managed *that, CallData *);
-    static ReturnedValue call(const Managed *that, CallData *d);
+    static void construct(const Managed *that, Scope &scope, CallData *);
+    static void call(const Managed *that, Scope &scope, CallData *d);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
     static Heap::FunctionObject *createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,

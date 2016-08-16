@@ -405,8 +405,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 /*!
     \qmlsignal QtQuick::MouseArea::canceled()
 
-    This signal is emitted when mouse events have been canceled, either because an event was not accepted, or
-    because another item stole the mouse event handling.
+    This signal is emitted when mouse events have been canceled, because another item stole the mouse event handling.
 
     This signal is for advanced use: it is useful when there is more than one MouseArea
     that is handling input, or when there is a MouseArea inside a \l Flickable. In the latter
@@ -1198,6 +1197,11 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
             emit mouseXChanged(&me);
             me.setPosition(d->lastPos);
             emit mouseYChanged(&me);
+
+            if (!me.isAccepted()) {
+                d->pressed = Qt::NoButton;
+            }
+
             if (!oldPressed) {
                 emit pressedChanged();
                 emit containsPressChanged();

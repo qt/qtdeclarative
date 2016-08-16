@@ -143,16 +143,16 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
 
     QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):0;
 
-    int listType = p?p->listType(data->propType):QQmlMetaType::listType(data->propType);
+    int listType = p?p->listType(data->propType()):QQmlMetaType::listType(data->propType());
     if (listType == -1) return;
 
     d = new QQmlListReferencePrivate;
     d->object = object;
     d->elementType = p?p->rawMetaObjectForType(listType):QQmlMetaType::qmlType(listType)->baseMetaObject();
-    d->propertyType = data->propType;
+    d->propertyType = data->propType();
 
     void *args[] = { &d->property, 0 };
-    QMetaObject::metacall(object, QMetaObject::ReadProperty, data->coreIndex, args);
+    QMetaObject::metacall(object, QMetaObject::ReadProperty, data->coreIndex(), args);
 }
 
 /*! \internal */

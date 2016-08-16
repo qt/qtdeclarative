@@ -218,11 +218,11 @@ void QSGSoftwareRenderableNode::update()
 struct RenderNodeState : public QSGRenderNode::RenderState
 {
     const QMatrix4x4 *projectionMatrix() const override { return &ident; }
-    QRect scissorRect() const { return QRect(); }
-    bool scissorEnabled() const { return false; }
-    int stencilValue() const { return 0; }
-    bool stencilEnabled() const { return false; }
-    const QRegion *clipRegion() const { return &cr; }
+    QRect scissorRect() const override { return QRect(); }
+    bool scissorEnabled() const override { return false; }
+    int stencilValue() const override { return 0; }
+    bool stencilEnabled() const override { return false; }
+    const QRegion *clipRegion() const override { return &cr; }
     QMatrix4x4 ident;
     QRegion cr;
 };

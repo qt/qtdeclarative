@@ -51,6 +51,7 @@
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qdeferredcleanup_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -103,21 +104,11 @@
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
-DEFINE_BOOL_CONFIG_OPTION(_disableDiskCache, QML_DISABLE_DISK_CACHE);
+DEFINE_BOOL_CONFIG_OPTION(disableDiskCache, QML_DISABLE_DISK_CACHE);
 DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 Q_LOGGING_CATEGORY(DBG_DISK_CACHE, "qt.qml.diskcache")
-
-static bool disableDiskCache()
-{
-    return _disableDiskCache()
-           // ### FIXME: Fix crashes on Windows with mmap'ed code.
-#if defined(Q_OS_WIN)
-           || true
-#endif
-           ;
-}
 
 QT_BEGIN_NAMESPACE
 
@@ -129,18 +120,6 @@ namespace {
         LockType& lock;
         LockHolder(LockType *l) : lock(*l) { lock.lock(); }
         ~LockHolder() { lock.unlock(); }
-    };
-
-    struct Defer
-    {
-        std::function<void()> callback;
-        template <typename Callback>
-        Defer(Callback &&cb)
-            : callback(cb)
-        {}
-        ~Defer() { callback(); }
-        Defer(const Defer &) = delete;
-        Defer &operator=(const Defer &) = delete;
     };
 }
 
@@ -1473,13 +1452,10 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
         bool incomplete = false;
 
-        QUrl qmldirUrl;
-        if (importQualifier.isEmpty()) {
-            qmldirUrl = finalUrl().resolved(QUrl(importUri + QLatin1String("/qmldir")));
-            if (!QQmlImports::isLocal(qmldirUrl)) {
-                // This is a remote file; the import is currently incomplete
-                incomplete = true;
-            }
+        QUrl qmldirUrl = finalUrl().resolved(QUrl(importUri + QLatin1String("/qmldir")));
+        if (!QQmlImports::isLocal(qmldirUrl)) {
+            // This is a remote file; the import is currently incomplete
+            incomplete = true;
         }
 
         if (!m_importCache.addFileImport(importDatabase, importUri, importQualifier, import->majorVersion,
@@ -2002,8 +1978,7 @@ void QQmlTypeLoader::trimCache()
             break;
 
         while (!unneededTypes.isEmpty()) {
-            TypeCache::Iterator iter = unneededTypes.last();
-            unneededTypes.removeLast();
+            TypeCache::Iterator iter = unneededTypes.takeLast();
 
             iter.value()->release();
             m_typeCache.erase(iter);
@@ -2173,7 +2148,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
 
 void QQmlTypeData::done()
 {
-    Defer cleanup([this]{
+    QDeferredCleanup cleanup([this]{
         m_document.reset();
         m_typeReferences.clear();
         if (isError())
@@ -2546,13 +2521,13 @@ void QQmlTypeData::resolveTypes()
 
         ScriptReference ref;
         //ref.location = ...
-        ref.qualifier = script.nameSpace;
         if (!script.qualifier.isEmpty())
         {
-            ref.qualifier.prepend(script.qualifier + QLatin1Char('.'));
-
+            ref.qualifier = script.qualifier + QLatin1Char('.') + script.nameSpace;
             // Add a reference to the enclosing namespace
             m_namespaces.insert(script.qualifier);
+        } else {
+            ref.qualifier = script.nameSpace;
         }
 
         ref.script = blob;
@@ -2562,12 +2537,13 @@ void QQmlTypeData::resolveTypes()
     // Lets handle resolved composite singleton types
     foreach (const QQmlImports::CompositeSingletonReference &csRef, m_importCache.resolvedCompositeSingletons()) {
         TypeReference ref;
-        QString typeName = csRef.typeName;
-
+        QString typeName;
         if (!csRef.prefix.isEmpty()) {
-            typeName.prepend(csRef.prefix + QLatin1Char('.'));
+            typeName = csRef.prefix + QLatin1Char('.') + csRef.typeName;
             // Add a reference to the enclosing namespace
             m_namespaces.insert(csRef.prefix);
+        } else {
+            typeName = csRef.typeName;
         }
 
         int majorVersion = csRef.majorVersion > -1 ? csRef.majorVersion : -1;

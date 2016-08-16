@@ -339,9 +339,9 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
                     qreal w = target->width();
                     qreal h = target->height();
                     if (pc->widthIsSet() && i < actions.size() - 1)
-                        w = actions[++i].toValue.toReal();
+                        w = actions.at(++i).toValue.toReal();
                     if (pc->heightIsSet() && i < actions.size() - 1)
-                        h = actions[++i].toValue.toReal();
+                        h = actions.at(++i).toValue.toReal();
                     const QPointF &transformOrigin
                             = d->computeTransformOrigin(target->transformOrigin(), w,h);
                     qreal tempxt = transformOrigin.x();

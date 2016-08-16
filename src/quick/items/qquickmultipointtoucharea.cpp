@@ -448,20 +448,12 @@ void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
             }
         }
         updateTouchData(event);
-        if (event->type() == QEvent::TouchEnd) {
-            //TODO: move to window
-            _stealMouse = false;
-            setKeepMouseGrab(false);
-            setKeepTouchGrab(false);
-            ungrabTouchPoints();
-        }
+        if (event->type() == QEvent::TouchEnd)
+            ungrab();
         break;
     }
     case QEvent::TouchCancel:
-        _stealMouse = false;
-        setKeepMouseGrab(false);
-        setKeepTouchGrab(false);
-        ungrabTouchPoints();
+        ungrab();
         break;
     default:
         QQuickItem::touchEvent(event);
@@ -557,13 +549,13 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 addTouchPoint(&p);
                 started = true;
             } else if (touchPointState & Qt::TouchPointMoved) {
-                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints[id]);
+                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 _movedTouchPoints.append(dtp);
                 updateTouchPoint(dtp,&p);
                 moved = true;
             } else {
-                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints[id]);
+                QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 updateTouchPoint(dtp,&p);
             }
@@ -784,13 +776,12 @@ void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
 
 void QQuickMultiPointTouchArea::ungrab()
 {
+    _stealMouse = false;
+    setKeepMouseGrab(false);
+    setKeepTouchGrab(false);
+    ungrabTouchPoints();
+
     if (_touchPoints.count()) {
-        QQuickWindow *c = window();
-        if (c && c->mouseGrabberItem() == this) {
-            _stealMouse = false;
-            setKeepMouseGrab(false);
-        }
-        setKeepTouchGrab(false);
         foreach (QObject *obj, _touchPoints)
             static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
         emit canceled(_touchPoints.values());
@@ -881,11 +872,7 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *eve
             if (!shouldFilter(event))
                 return false;
             updateTouchData(event);
-            //TODO: verify this behavior
-            _stealMouse = false;
-            setKeepMouseGrab(false);
-            setKeepTouchGrab(false);
-            ungrabTouchPoints();
+            ungrab();
         }
         break;
     default:

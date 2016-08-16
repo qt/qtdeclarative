@@ -629,7 +629,7 @@ void QQuickPixmapReader::processJobs()
             // Find a job we can use
             bool usableJob = false;
             for (int i = jobs.count() - 1; !usableJob && i >= 0; i--) {
-                QQuickPixmapReply *job = jobs[i];
+                QQuickPixmapReply *job = jobs.at(i);
                 const QUrl url = job->url;
                 QString localFile;
                 QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;

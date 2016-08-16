@@ -49,12 +49,15 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
+#include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
 #include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
 #include <QScopedValueRollback>
+#include <QStandardPaths>
+#include <QDir>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -320,6 +323,19 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
+static QString cacheFilePath(const QUrl &url)
+{
+    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString localCachePath = localSourcePath + QLatin1Char('c');
+    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
+        return localCachePath;
+    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
+    fileNameHash.addData(localSourcePath.toUtf8());
+    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QDir::root().mkpath(directory);
+    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
+}
+
 bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 {
     errorString->clear();
@@ -329,13 +345,13 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
         return false;
     }
 
-    if (!unitUrl.isLocalFile()) {
+    if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
 
     // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(unitUrl.toLocalFile() + QLatin1Char('c'));
+    QSaveFile cacheFile(cacheFilePath(unitUrl));
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = cacheFile.errorString();
         return false;
@@ -370,62 +386,20 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
 bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
 {
-    if (!url.isLocalFile()) {
+    if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
 
     const QString sourcePath = url.toLocalFile();
-    QScopedPointer<QFile> cacheFile(new QFile(sourcePath + QLatin1Char('c')));
+    QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    if (!cacheFile->open(QIODevice::ReadOnly)) {
-        *errorString = cacheFile->errorString();
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    if (!mappedUnit)
         return false;
-    }
-
-    {
-        CompiledData::Unit header;
-        qint64 bytesRead = cacheFile->read(reinterpret_cast<char *>(&header), sizeof(header));
-
-        if (bytesRead != sizeof(header)) {
-            *errorString = QStringLiteral("File too small for the header fields");
-            return false;
-        }
-
-        if (strncmp(header.magic, CompiledData::magic_str, sizeof(header.magic))) {
-            *errorString = QStringLiteral("Magic bytes in the header do not match");
-            return false;
-        }
-
-        if (header.version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
-            *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(header.version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
-            return false;
-        }
-
-        if (header.qtVersion != quint32(QT_VERSION)) {
-            *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(header.qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
-            return false;
-        }
-
-        {
-            QFileInfo sourceCode(sourcePath);
-            if (sourceCode.exists() && sourceCode.lastModified().toMSecsSinceEpoch() != header.sourceTimeStamp) {
-                *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
-                return false;
-            }
-        }
-
-    }
-    // Data structure and qt version matched, so now we can access the rest of the file safely.
-
-    uchar *cacheData = cacheFile->map(/*offset*/0, cacheFile->size());
-    if (!cacheData) {
-        *errorString = cacheFile->errorString();
-        return false;
-    }
 
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
-    QScopedValueRollback<const Unit *> dataPtrChange(data, reinterpret_cast<const Unit *>(cacheData));
+    QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
     {
         const QString foundArchitecture = stringAt(data->architectureIndex);

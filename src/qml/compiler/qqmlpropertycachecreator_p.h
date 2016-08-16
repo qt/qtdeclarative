@@ -124,7 +124,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
-                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
+                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType())) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
@@ -180,8 +180,8 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
 {
     if (context.instantiatingProperty) {
         if (context.instantiatingProperty->isQObject()) {
-            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType);
-        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType)) {
+            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType());
+        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType())) {
             return enginePrivate->cache(vtmo);
         }
     } else if (obj->inheritedTypeNameIndex != 0) {
@@ -664,7 +664,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
         QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
-        *type = targetProperty->propType;
+        *type = targetProperty->propType();
 
         writable = targetProperty->isWritable();
         resettable = targetProperty->isResettable();
@@ -680,7 +680,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
                 *type = QVariant::Int;
             } else {
                 // Copy type flags
-                propertyFlags->copyPropertyTypeFlags(targetProperty->getFlags());
+                propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
 
                 if (targetProperty->isVarProperty())
                     propertyFlags->type = QQmlPropertyData::Flags::QVariantType;

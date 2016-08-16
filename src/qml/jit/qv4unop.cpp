@@ -47,10 +47,14 @@ using namespace JIT;
 #define stringIfyx(s) #s
 #define stringIfy(s) stringIfyx(s)
 #define setOp(operation) \
-    do { call = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); } while (0)
+    do { \
+        call = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
+        needsExceptionCheck = Runtime::Method_##operation##_NeedsExceptionCheck; \
+    } while (0)
 
 void Unop::generate(IR::Expr *source, IR::Expr *target)
 {
+    bool needsExceptionCheck;
     RuntimeCall call;
     const char *name = 0;
     switch (op) {
@@ -71,7 +75,7 @@ void Unop::generate(IR::Expr *source, IR::Expr *target)
     } // switch
 
     Q_ASSERT(call.isValid());
-    _as->generateFunctionCallImp(target, name, call, Assembler::PointerToValue(source));
+    _as->generateFunctionCallImp(needsExceptionCheck, target, name, call, Assembler::PointerToValue(source));
 }
 
 void Unop::generateUMinus(IR::Expr *source, IR::Expr *target)

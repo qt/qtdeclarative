@@ -1268,7 +1268,7 @@ QSGRootNode::QSGRootNode()
 QSGRootNode::~QSGRootNode()
 {
     while (!m_renderers.isEmpty())
-        m_renderers.last()->setRootNode(0);
+        m_renderers.constLast()->setRootNode(0);
     destroy(); // Must call destroy() here because markDirty() casts this to QSGRootNode.
 }
 

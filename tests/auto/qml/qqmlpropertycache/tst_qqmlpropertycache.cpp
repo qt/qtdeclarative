@@ -111,16 +111,16 @@ void tst_qqmlpropertycache::properties()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyA"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyA"));
 
     QVERIFY((data = cacheProperty(cache, "propertyB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyB"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyB"));
 
     QVERIFY((data = cacheProperty(cache, "propertyC")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyC"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyC"));
 
     QVERIFY((data = cacheProperty(cache, "propertyD")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyD"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyD"));
 }
 
 void tst_qqmlpropertycache::propertiesDerived()
@@ -135,16 +135,16 @@ void tst_qqmlpropertycache::propertiesDerived()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyA"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyA"));
 
     QVERIFY((data = cacheProperty(cache, "propertyB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyB"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyB"));
 
     QVERIFY((data = cacheProperty(cache, "propertyC")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyC"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyC"));
 
     QVERIFY((data = cacheProperty(cache, "propertyD")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfProperty("propertyD"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyD"));
 }
 
 void tst_qqmlpropertycache::methods()
@@ -158,28 +158,28 @@ void tst_qqmlpropertycache::methods()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("slotA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotA()"));
 
     QVERIFY((data = cacheProperty(cache, "slotB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("slotB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotB()"));
 
     QVERIFY((data = cacheProperty(cache, "signalA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));
 
     QVERIFY((data = cacheProperty(cache, "signalB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalB()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyAChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyAChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyAChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyBChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyBChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyBChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyCChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyCChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyCChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyDChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyDChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
 }
 
 void tst_qqmlpropertycache::methodsDerived()
@@ -194,28 +194,28 @@ void tst_qqmlpropertycache::methodsDerived()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("slotA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotA()"));
 
     QVERIFY((data = cacheProperty(cache, "slotB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("slotB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotB()"));
 
     QVERIFY((data = cacheProperty(cache, "signalA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));
 
     QVERIFY((data = cacheProperty(cache, "signalB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalB()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyAChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyAChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyAChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyBChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyBChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyBChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyCChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyCChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyCChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "propertyDChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyDChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
 }
 
 void tst_qqmlpropertycache::signalHandlers()
@@ -229,22 +229,22 @@ void tst_qqmlpropertycache::signalHandlers()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));
 
     QVERIFY((data = cacheProperty(cache, "onSignalB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalB()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyAChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyAChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyAChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyBChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyBChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyBChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyCChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyCChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyCChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyDChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyDChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
 }
 
 void tst_qqmlpropertycache::signalHandlersDerived()
@@ -259,22 +259,22 @@ void tst_qqmlpropertycache::signalHandlersDerived()
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalA()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));
 
     QVERIFY((data = cacheProperty(cache, "onSignalB")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("signalB()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalB()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyAChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyAChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyAChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyBChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyBChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyBChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyCChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyCChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyCChanged()"));
 
     QVERIFY((data = cacheProperty(cache, "onPropertyDChanged")));
-    QCOMPARE(data->coreIndex, metaObject->indexOfMethod("propertyDChanged()"));
+    QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
 }
 
 class TestClass : public QObject

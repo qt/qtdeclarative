@@ -249,9 +249,9 @@ QString QQmlError::toString() const
     int l(line());
 
     if (u.isEmpty() || (u.isLocalFile() && u.path().isEmpty()))
-        rv = QLatin1String("<Unknown File>");
+        rv += QLatin1String("<Unknown File>");
     else
-        rv = u.toString();
+        rv += u.toString();
 
     if (l != -1) {
         rv += QLatin1Char(':') + QString::number(l);

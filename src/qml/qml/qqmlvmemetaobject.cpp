@@ -164,8 +164,8 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (!pd)
                 return;
 
-            if (pd->notifyIndex != -1)
-                connect(target, pd->notifyIndex, ctxt->engine);
+            if (pd->notifyIndex() != -1)
+                connect(target, pd->notifyIndex(), ctxt->engine);
         }
 
         metaObject.setFlag();
@@ -225,7 +225,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                 continue;
 
             const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
-            int type = QQmlData::get(object)->propertyCache->property(id)->propType;
+            int type = QQmlData::get(object)->propertyCache->property(id)->propType();
 
             if (type != QVariant::Invalid) {
                 if (valueIndex != -1) {
@@ -883,7 +883,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         return -1;
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType);
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType());
                     Q_ASSERT(valueType);
 
                     valueType->read(target, coreIndex);
@@ -932,10 +932,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     // are not rewritten correctly but this bug is deemed out-of-scope to fix for
                     // performance reasons; see QTBUG-24064) and thus compilation will have failed.
                     QQmlError e;
-                    e.setDescription(QString::fromLatin1("Exception occurred during compilation of "
-                                                         "function: %1")
-                                     .arg(QString::fromUtf8(QMetaObject::method(_id)
-                                                            .methodSignature())));
+                    e.setDescription(QLatin1String("Exception occurred during compilation of "
+                                                         "function: ")
+                                     + QString::fromUtf8(QMetaObject::method(_id)
+                                                         .methodSignature()));
                     ep->warning(e);
                     return -1; // The dynamic method with that id is not available.
                 }
