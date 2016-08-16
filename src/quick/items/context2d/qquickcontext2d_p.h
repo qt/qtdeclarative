@@ -51,7 +51,10 @@
 // We mean it.
 //
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlcomponent.h>
 #include <private/qquickcanvascontext_p.h>

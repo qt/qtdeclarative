@@ -51,9 +51,12 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include <QtQuick/qquickitem.h>
 #include <private/qv8engine_p.h>
-
 
 QT_BEGIN_NAMESPACE
 

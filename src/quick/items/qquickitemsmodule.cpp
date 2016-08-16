@@ -71,8 +71,10 @@
 #include "qquickitemanimation_p.h"
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 //#include <private/qquickpincharea_p.h>
+#if QT_CONFIG(quick_canvas)
 #include <QtQuick/private/qquickcanvasitem_p.h>
 #include <QtQuick/private/qquickcontext2d_p.h>
+#endif
 #include "qquickitemgrabresult.h"
 #include "qquicksprite_p.h"
 #include "qquickspritesequence_p.h"
@@ -216,7 +218,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
+#if QT_CONFIG(quick_canvas)
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
+#endif
 
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");

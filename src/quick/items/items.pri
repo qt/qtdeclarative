@@ -174,4 +174,5 @@ qtConfig(opengl(es1|es2)?) {
 RESOURCES += \
     $$PWD/items.qrc
 
-include(context2d/context2d.pri)
+qtConfig(quick-canvas): \
+    include(context2d/context2d.pri)
