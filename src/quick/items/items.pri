@@ -41,7 +41,6 @@ HEADERS += \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
     $$PWD/qquickflickablebehavior_p.h \
-    $$PWD/qquicklistview_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
     $$PWD/qquickgridview_p.h \
@@ -108,7 +107,6 @@ SOURCES += \
     $$PWD/qquickmousearea.cpp \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
-    $$PWD/qquicklistview.cpp \
     $$PWD/qquickrepeater.cpp \
     $$PWD/qquickgridview.cpp \
     $$PWD/qquickpositioners.cpp \
@@ -140,6 +138,13 @@ SOURCES += \
     $$PWD/qquicksprite.cpp \
     $$PWD/qquickspritesequence.cpp \
     $$PWD/qquickanimatedsprite.cpp
+
+qtConfig(quick-listview) {
+    HEADERS += \
+        $$PWD/qquicklistview_p.h
+    SOURCES += \
+        $$PWD/qquicklistview.cpp
+}
 
 qtConfig(quick-pathview) {
     HEADERS += \

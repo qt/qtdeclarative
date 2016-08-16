@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_listview);
+
 #include "qquickitemview_p.h"
 
 #include <private/qtquickglobal_p.h>

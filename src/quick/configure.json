@@ -10,6 +10,7 @@
             "d3d12": "boolean",
             "quick-canvas": "boolean",
             "quick-flipable": "boolean",
+            "quick-listview": "boolean",
             "quick-path": "boolean",
             "quick-pathview": "boolean"
         }
@@ -46,6 +47,13 @@
                 "privateFeature"
             ]
         },
+        "quick-listview": {
+            "label": "ListView item",
+            "purpose": "Provides the Qt Quick ListView item",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-path": {
             "label": "Path support",
             "purpose": "Provides Path elements in Qt Quick",
@@ -70,6 +78,7 @@
                 "d3d12",
                 "quick-canvas",
                 "quick-flipable",
+                "quick-listview",
                 "quick-path",
                 "quick-pathview"
             ]

@@ -55,7 +55,9 @@
 #include "qquickpincharea_p.h"
 #include "qquickflickable_p.h"
 #include "qquickflickable_p_p.h"
+#if QT_CONFIG(quick_listview)
 #include "qquicklistview_p.h"
+#endif
 #include "qquickgridview_p.h"
 #if QT_CONFIG(quick_pathview)
 #include "qquickpathview_p.h"
@@ -162,7 +164,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGridView>(uri,major,minor,"GridView");
     qmlRegisterType<QQuickImage>(uri,major,minor,"Image");
     qmlRegisterType<QQuickItem>(uri,major,minor,"Item");
+#if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView>(uri,major,minor,"ListView");
+    qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
+#endif
     qmlRegisterType<QQuickLoader>(uri,major,minor,"Loader");
     qmlRegisterType<QQuickMouseArea>(uri,major,minor,"MouseArea");
 #if QT_CONFIG(quick_path)
@@ -194,7 +199,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickTextInput,3>(uri,2,4,"TextInput");
-    qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
     qmlRegisterType<QQuickItemGrabResult>();
     qmlRegisterType<QQuickItemLayer>();
     qmlRegisterType<QQuickAnchors>();
@@ -269,7 +273,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
     qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
     qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
+#if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
+#endif
     qmlRegisterType<QQuickGridView, 1>(uri, 2, 1, "GridView");
     qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
 
@@ -281,7 +287,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickImage, 1>(uri, 2, 3,"Image");
 
     qmlRegisterType<QQuickItem, 2>(uri, 2, 4, "Item");
+#if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 2>(uri, 2, 4, "ListView");
+#endif
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
     qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
 
@@ -305,7 +313,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
                                                            QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
     qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
 
+#if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
+#endif
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
