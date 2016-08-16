@@ -1514,16 +1514,8 @@ void QQuickPathView::positionViewAtIndex(int index, int mode)
 int QQuickPathView::indexAt(qreal x, qreal y) const
 {
     Q_D(const QQuickPathView);
-    if (!d->isValid())
-        return -1;
-
-    for (QQuickItem *item : d->items) {
-        QPointF p = item->mapFromItem(this, QPointF(x, y));
-        if (item->contains(p))
-            return d->model->indexOf(item, 0);
-    }
-
-    return -1;
+    QQuickItem *item = itemAt(x, y);
+    return item ? d->model->indexOf(item, 0) : -1;
 }
 
 /*!
