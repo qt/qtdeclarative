@@ -2152,8 +2152,9 @@ void QQuickPathView::refill()
         if (QQuickPathViewAttached *att = d->attached(d->highlightItem))
             att->setOnPath(currentVisible);
     }
-    while (d->itemCache.count())
-        d->releaseItem(d->itemCache.takeLast());
+    for (QQuickItem *item : qAsConst(d->itemCache))
+        d->releaseItem(item);
+    d->itemCache.clear();
 
     d->inRefill = false;
     if (currentChanged)
@@ -2237,8 +2238,9 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     d->items.clear();
 
     if (!d->modelCount) {
-        while (d->itemCache.count())
-            d->releaseItem(d->itemCache.takeLast());
+        for (QQuickItem * item : qAsConst(d->itemCache))
+            d->releaseItem(item);
+        d->itemCache.clear();
         d->offset = 0;
         changedOffset = true;
         d->tl.reset(d->moveOffset);
