@@ -10,6 +10,7 @@
             "d3d12": "boolean",
             "quick-animatedimage": "boolean",
             "quick-canvas": "boolean",
+            "quick-designer": "boolean",
             "quick-flipable": "boolean",
             "quick-gridview": "boolean",
             "quick-listview": "boolean",
@@ -49,6 +50,13 @@
         "quick-canvas": {
             "label": "Canvas item",
             "purpose": "Provides the Qt Quick Canvas Item",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-designer": {
+            "label": "Support for Quick Designer",
+            "purpose": "Provides support for the Qt Quick Designer in Qt Creator",
             "output": [
                 "privateFeature"
             ]
@@ -133,6 +141,7 @@
                 "d3d12",
                 "quick-animatedimage",
                 "quick-canvas",
+                "quick-designer",
                 "quick-flipable",
                 "quick-gridview",
                 "quick-listview",

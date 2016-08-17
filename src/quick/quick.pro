@@ -28,7 +28,8 @@ ANDROID_BUNDLED_FILES += \
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
-include(designer/designer.pri)
+qtConfig(quick-designer): \
+    include(designer/designer.pri)
 qtConfig(accessibility) {
     include(accessible/accessible.pri)
 }
