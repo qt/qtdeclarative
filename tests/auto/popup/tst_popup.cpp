@@ -61,6 +61,7 @@ private slots:
     void activeFocusOnClose2();
     void hover_data();
     void hover();
+    void parentDestroyed();
 };
 
 void tst_popup::visible()
@@ -424,6 +425,14 @@ void tst_popup::hover()
     // hover the parent button after closing the popup
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
     QVERIFY(parentButton->isHovered());
+}
+
+void tst_popup::parentDestroyed()
+{
+    QQuickPopup popup;
+    popup.setParentItem(new QQuickItem);
+    delete popup.parentItem();
+    QVERIFY(!popup.parentItem());
 }
 
 QTEST_MAIN(tst_popup)

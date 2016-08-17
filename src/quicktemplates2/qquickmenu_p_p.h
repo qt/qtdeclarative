@@ -50,7 +50,6 @@
 
 #include <QtCore/qvector.h>
 #include <QtCore/qpointer.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
@@ -58,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlObjectModel;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMenu)
 

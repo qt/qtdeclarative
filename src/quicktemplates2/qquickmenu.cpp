@@ -196,6 +196,7 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
 
 void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
 {
+    QQuickPopupPrivate::itemDestroyed(item);
     int index = contentModel->indexOf(item, nullptr);
     if (index != -1)
         removeItem(index, item);
