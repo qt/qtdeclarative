@@ -43,7 +43,6 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -115,7 +114,7 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
-class QQuickDrawerPrivate : public QQuickPopupPrivate, public QQuickItemChangeListener
+class QQuickDrawerPrivate : public QQuickPopupPrivate
 {
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
