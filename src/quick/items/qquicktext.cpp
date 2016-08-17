@@ -2062,6 +2062,7 @@ void QQuickText::setTextFormat(TextFormat format)
     }
     d->updateLayout();
     setAcceptHoverEvents(d->richText || d->styledText);
+    setAcceptedMouseButtons(d->richText || d->styledText ? Qt::LeftButton : Qt::NoButton);
 
     emit textFormatChanged(d->format);
 }

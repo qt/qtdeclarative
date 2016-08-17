@@ -456,11 +456,22 @@ void MemoryManager::sweep(bool lastSweep)
         Managed *m = (*it).managed();
         if (m->markBit())
             continue;
-        // we need to call detroyObject on qobjectwrappers now, so that they can emit the destroyed
+        // we need to call destroyObject on qobjectwrappers now, so that they can emit the destroyed
         // signal before we start sweeping the heap
         if (QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>())
             qobjectWrapper->destroyObject(lastSweep);
 
+        (*it) = Primitive::undefinedValue();
+    }
+
+    // onDestruction handlers may have accessed other QObject wrappers and reset their value, so ensure
+    // that they are all set to undefined.
+    for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
+        if (!(*it).isManaged())
+            continue;
+        Managed *m = (*it).as<Managed>();
+        if (m->markBit())
+            continue;
         (*it) = Primitive::undefinedValue();
     }
 
