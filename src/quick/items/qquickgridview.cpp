@@ -2586,7 +2586,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod int QtQuick::GridView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::GridView::indexAt(real x, real y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -2599,7 +2599,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod Item QtQuick::GridView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::GridView::itemAt(real x, real y)
 
     Returns the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
