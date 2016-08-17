@@ -66,10 +66,6 @@ HEADERS += \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
-    $$PWD/qquickshadereffectsource_p.h \
-    $$PWD/qquickshadereffectmesh_p.h \
-    $$PWD/qquickshadereffect_p.h \
-    $$PWD/qquickgenericshadereffect_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickgraphicsinfo_p.h \
@@ -118,10 +114,6 @@ SOURCES += \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowattached.cpp \
-    $$PWD/qquickshadereffectsource.cpp \
-    $$PWD/qquickshadereffectmesh.cpp \
-    $$PWD/qquickshadereffect.cpp \
-    $$PWD/qquickgenericshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
     $$PWD/qquickitemgrabresult.cpp
@@ -156,6 +148,38 @@ qtConfig(quick-flipable) {
         $$PWD/qquickflipable.cpp
 }
 
+qtConfig(quick-shadereffect) {
+    HEADERS += \
+        $$PWD/qquickshadereffectsource_p.h \
+        $$PWD/qquickshadereffectmesh_p.h \
+        $$PWD/qquickshadereffect_p.h \
+        $$PWD/qquickgenericshadereffect_p.h
+    SOURCES += \
+        $$PWD/qquickshadereffectsource.cpp \
+        $$PWD/qquickshadereffectmesh.cpp \
+        $$PWD/qquickshadereffect.cpp \
+        $$PWD/qquickgenericshadereffect.cpp
+
+    qtConfig(opengl) {
+        SOURCES += \
+            $$PWD/qquickopenglshadereffect.cpp \
+            $$PWD/qquickopenglshadereffectnode.cpp
+        HEADERS += \
+            $$PWD/qquickopenglshadereffect_p.h \
+            $$PWD/qquickopenglshadereffectnode_p.h
+
+        OTHER_FILES += \
+            $$PWD/shaders/shadereffect.vert \
+            $$PWD/shaders/shadereffect.frag \
+            $$PWD/shaders/shadereffectfallback.vert \
+            $$PWD/shaders/shadereffectfallback.frag \
+            $$PWD/shaders/shadereffect_core.vert \
+            $$PWD/shaders/shadereffect_core.frag \
+            $$PWD/shaders/shadereffectfallback_core.vert \
+            $$PWD/shaders/shadereffectfallback_core.frag
+    }
+}
+
 qtConfig(quick-sprite) {
     HEADERS += \
         $$PWD/qquickspriteengine_p.h \
@@ -175,25 +199,11 @@ qtConfig(quick-sprite) {
 qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qquickopenglinfo.cpp \
-        $$PWD/qquickopenglshadereffect.cpp \
-        $$PWD/qquickopenglshadereffectnode.cpp \
         $$PWD/qquickframebufferobject.cpp
 
     HEADERS += \
         $$PWD/qquickopenglinfo_p.h \
-        $$PWD/qquickopenglshadereffect_p.h \
-        $$PWD/qquickopenglshadereffectnode_p.h \
         $$PWD/qquickframebufferobject.h
-
-    OTHER_FILES += \
-        $$PWD/shaders/shadereffect.vert \
-        $$PWD/shaders/shadereffect.frag \
-        $$PWD/shaders/shadereffectfallback.vert \
-        $$PWD/shaders/shadereffectfallback.frag \
-        $$PWD/shaders/shadereffect_core.vert \
-        $$PWD/shaders/shadereffect_core.frag \
-        $$PWD/shaders/shadereffectfallback_core.vert \
-        $$PWD/shaders/shadereffectfallback_core.frag
 }
 
 RESOURCES += \

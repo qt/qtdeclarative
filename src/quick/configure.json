@@ -14,6 +14,7 @@
             "quick-listview": "boolean",
             "quick-path": "boolean",
             "quick-pathview": "boolean",
+            "quick-shadereffect": "boolean",
             "quick-sprite": "boolean"
         }
     },
@@ -79,6 +80,13 @@
                 "privateFeature"
             ]
         },
+        "quick-shadereffect": {
+            "label": "ShaderEffect item",
+            "purpose": "Provides Shader effects in Qt Quick",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-sprite": {
             "label": "Sprite item",
             "purpose": "Provides the Qt Quick Sprite Item",
@@ -99,6 +107,7 @@
                 "quick-listview",
                 "quick-path",
                 "quick-pathview",
+                "quick-shadereffect",
                 "quick-sprite"
             ]
         }

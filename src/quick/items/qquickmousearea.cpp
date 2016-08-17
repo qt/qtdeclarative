@@ -43,6 +43,7 @@
 #include "qquickdrag_p.h"
 
 #include <private/qqmldata_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qevent.h>

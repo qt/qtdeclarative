@@ -79,7 +79,6 @@
 #include "qquicktranslate_p.h"
 #include "qquickstateoperations_p.h"
 #include "qquickitemanimation_p.h"
-#include <QtQuick/private/qquickshadereffectsource_p.h>
 //#include <private/qquickpincharea_p.h>
 #if QT_CONFIG(quick_canvas)
 #include <QtQuick/private/qquickcanvasitem_p.h>
@@ -95,8 +94,11 @@
 # include "qquickopenglinfo_p.h"
 #endif
 #include "qquickgraphicsinfo_p.h"
+#if QT_CONFIG(quick_shadereffect)
+#include <QtQuick/private/qquickshadereffectsource_p.h>
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
+#endif
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
@@ -204,7 +206,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickTextInput,3>(uri,2,4,"TextInput");
     qmlRegisterType<QQuickItemGrabResult>();
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickItemLayer>();
+#endif
     qmlRegisterType<QQuickAnchors>();
     qmlRegisterType<QQuickKeyEvent>();
     qmlRegisterType<QQuickMouseEvent>();
@@ -233,10 +237,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
     qmlRegisterType<QQuickPinchEvent>();
 
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
     qmlRegisterType<QQuickGridMesh>("QtQuick", 2, 0, "GridMesh");
     qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
+#endif
 
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
@@ -297,7 +303,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickListView, 2>(uri, 2, 4, "ListView");
 #endif
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
+#endif
 
 #ifndef QT_NO_OPENGL
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
@@ -317,7 +325,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
     qmlRegisterUncreatableType<QQuickEnterKeyAttached, 6>(uri, 2, 6, "EnterKey",
                                                            QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
+#endif
 
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
@@ -332,7 +342,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 
     qmlRegisterUncreatableType<QQuickGraphicsInfo>(uri, 2, 8,"GraphicsInfo", QQuickGraphicsInfo::tr("GraphicsInfo is only available via attached properties"));
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
+#endif
 }
 
 static void initResources()

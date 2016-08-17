@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_shadereffect);
+
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgmaterial.h>
 #include <QtQuick/qsgtextureprovider.h>

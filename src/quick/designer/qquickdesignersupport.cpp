@@ -40,7 +40,9 @@
 #include "qquickdesignersupport_p.h"
 #include <private/qquickitem_p.h>
 
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQml/private/qabstractanimationjob_p.h>
 #include <private/qqmlengine_p.h>
@@ -51,6 +53,7 @@
 #include <private/qqmlvme_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qqmldata_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 #include "qquickdesignerwindowmanager_p.h"
 

@@ -37,6 +37,10 @@
 **
 ****************************************************************************/
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_shadereffect);
+
 #include "qqmlparserstatus.h"
 
 #include <QtQuick/qtquickglobal.h>

@@ -51,6 +51,7 @@
 #include <QtGui/qguiapplication.h>
 
 #include <private/qqmlglobal_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
