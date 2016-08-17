@@ -310,6 +310,9 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
     setAcceptedMouseButtons(Qt::AllButtons);
     d->setImplicitResizeEnabled(false);
     d->pressHandler.control = this;
+#ifndef QT_NO_CURSOR
+    setCursor(Qt::IBeamCursor);
+#endif
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::_q_readOnlyChanged);
 }

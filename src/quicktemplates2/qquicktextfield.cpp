@@ -179,6 +179,9 @@ QQuickTextField::QQuickTextField(QQuickItem *parent) :
     d->setImplicitResizeEnabled(false);
     setAcceptedMouseButtons(Qt::AllButtons);
     setActiveFocusOnTab(true);
+#ifndef QT_NO_CURSOR
+    setCursor(Qt::IBeamCursor);
+#endif
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
                             d, &QQuickTextFieldPrivate::_q_readOnlyChanged);
     QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged,

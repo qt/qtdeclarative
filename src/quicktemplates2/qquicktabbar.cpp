@@ -60,6 +60,18 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tabbar.qml 1
 
+    \section2 Flickable Tabs
+
+    By default, TabBar resizes its buttons to fit the width of the control.
+    The available space is distributed equally to each button. The default
+    resizing behavior can be overridden by setting an explicit width for the
+    buttons. If the total width of the buttons exceeds the available width
+    of the tab bar, it automatically becomes flickable.
+
+    \image qtquickcontrols2-tabbar-flickable.png
+
+    \snippet qtquickcontrols2-tabbar-flickable.qml 1
+
     \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls}
 */
 
@@ -187,6 +199,7 @@ void QQuickTabBar::itemAdded(int index, QQuickItem *item)
 {
     Q_D(QQuickTabBar);
     Q_UNUSED(index);
+    QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-55129
     if (QQuickTabButton *button = qobject_cast<QQuickTabButton *>(item))
         QObjectPrivate::connect(button, &QQuickTabButton::checkedChanged, d, &QQuickTabBarPrivate::updateCurrentIndex);
     if (isComponentComplete())

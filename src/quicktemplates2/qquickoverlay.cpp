@@ -176,6 +176,7 @@ QQuickOverlayPrivate::QQuickOverlayPrivate() :
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
+    setZ(1000001); // DefaultWindowDecoration+1
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
     setVisible(false);

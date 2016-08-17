@@ -74,6 +74,8 @@ public:
     void afterNodeSync() override;
 
 private:
+    int m_lastStartAngle;
+    int m_lastEndAngle;
     qreal m_devicePixelRatio;
     QSGNode *m_containerNode;
     QQuickWindow *m_window;
@@ -155,6 +157,8 @@ QQuickAnimatorJob *QQuickMaterialRingAnimator::createJob() const
 }
 
 QQuickMaterialRingAnimatorJob::QQuickMaterialRingAnimatorJob() :
+    m_lastStartAngle(0),
+    m_lastEndAngle(0),
     m_devicePixelRatio(1.0),
     m_containerNode(nullptr),
     m_window(nullptr)
@@ -203,27 +207,25 @@ void QQuickMaterialRingAnimatorJob::updateCurrentTime(int time)
     const int iteration = time / spanAnimationDuration;
     int startAngle = 0;
     int endAngle = 0;
-    static int lastStartAngle = 0;
-    static int lastEndAngle = 0;
 
     if (iteration % 2 == 0) {
-        if (lastStartAngle > 360 * oneDegree) {
-            lastStartAngle -= 360 * oneDegree;
+        if (m_lastStartAngle > 360 * oneDegree) {
+            m_lastStartAngle -= 360 * oneDegree;
         }
 
         // The start angle is only affected by the rotation animation for the "grow" phase.
-        startAngle = lastStartAngle;
+        startAngle = m_lastStartAngle;
         QEasingCurve angleCurve(QEasingCurve::OutQuad);
         const qreal percentage = angleCurve.valueForProgress(spanPercentageComplete);
-        endAngle = lastStartAngle + minSweepSpan + percentage * (maxSweepSpan - minSweepSpan);
-        lastEndAngle = endAngle;
+        endAngle = m_lastStartAngle + minSweepSpan + percentage * (maxSweepSpan - minSweepSpan);
+        m_lastEndAngle = endAngle;
     } else {
         // Both the start angle *and* the span are affected by the "shrink" phase.
         QEasingCurve angleCurve(QEasingCurve::InQuad);
         const qreal percentage = angleCurve.valueForProgress(spanPercentageComplete);
-        startAngle = lastEndAngle - maxSweepSpan + percentage * (maxSweepSpan - minSweepSpan);
-        endAngle = lastEndAngle;
-        lastStartAngle = startAngle;
+        startAngle = m_lastEndAngle - maxSweepSpan + percentage * (maxSweepSpan - minSweepSpan);
+        endAngle = m_lastEndAngle;
+        m_lastStartAngle = startAngle;
     }
 
     const int halfPen = pen.width() / 2;

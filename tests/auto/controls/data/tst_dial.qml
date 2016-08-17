@@ -321,4 +321,39 @@ TestCase {
 
         focusScope.destroy();
     }
+
+    function test_snapMode_data() {
+        return [
+            { tag: "NoSnap", snapMode: Slider.NoSnap, from: 0, to: 2, values: [0, 0, 1], positions: [0, 0.5, 0.5] },
+            { tag: "SnapAlways (0..2)", snapMode: Slider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapAlways (1..3)", snapMode: Slider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapAlways (-1..1)", snapMode: Slider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [0.5, 0.5, 0.5] },
+            { tag: "SnapAlways (1..-1)", snapMode: Slider.SnapAlways, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (0..2)", snapMode: Slider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (1..3)", snapMode: Slider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [0.5, 0.5, 0.5] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] }
+        ]
+    }
+
+    function test_snapMode(data) {
+        dial.snapMode = data.snapMode;
+        dial.from = data.from;
+        dial.to = data.to;
+        dial.stepSize = 0.2;
+
+        var fuzz = 0.05;
+
+        mousePress(dial, dial.width * 0.25, dial.height * 0.75);
+        compare(dial.value, data.values[0]);
+        compare(dial.position, data.positions[0]);
+
+        mouseMove(dial, dial.width * 0.5, dial.height * 0.25);
+        fuzzyCompare(dial.value, data.values[1], fuzz);
+        fuzzyCompare(dial.position, data.positions[1], fuzz);
+
+        mouseRelease(dial, dial.width * 0.5, dial.height * 0.25);
+        fuzzyCompare(dial.value, data.values[2], fuzz);
+        fuzzyCompare(dial.position, data.positions[2], fuzz);
+    }
 }
