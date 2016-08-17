@@ -886,7 +886,7 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
     \li Flickable.AutoFlickIfNeeded - allows flicking vertically if the
     \e contentHeight is greater than the \e height of the Flickable.
     Allows flicking horizontally if the \e contentWidth is greater than
-    to the \e width of the Flickable.
+    to the \e width of the Flickable. (since \c{QtQuick 2.7})
     \li Flickable.HorizontalFlick - allows flicking horizontally.
     \li Flickable.VerticalFlick - allows flicking vertically.
     \li Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
@@ -1234,13 +1234,17 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
-    qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;
     QVector2D deltas = QVector2D(event->localPos() - pressPos);
     bool overThreshold = false;
     QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
     // TODO guarantee that events always have velocity so that it never needs to be computed here
-    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity))
+    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)) {
+        qint64 lastTimestamp = (lastPos.isNull() ? lastPressTime : lastPosTime);
+        if (currentTimestamp == lastTimestamp)
+            return; // events are too close together: velocity would be infinite
+        qreal elapsed = qreal(currentTimestamp - lastTimestamp) / 1000.;
         velocity = QVector2D(event->localPos() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
+    }
 
     if (q->yflick())
         overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, event);
