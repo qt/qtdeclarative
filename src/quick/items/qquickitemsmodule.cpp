@@ -70,7 +70,9 @@
 #include "qquickpositioners_p.h"
 #include "qquickrepeater_p.h"
 #include "qquickloader_p.h"
+#if QT_CONFIG(quick_animatedimage)
 #include "qquickanimatedimage_p.h"
+#endif
 #if QT_CONFIG(quick_flipable)
 #include "qquickflipable_p.h"
 #endif
@@ -144,7 +146,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
-#ifdef QT_NO_MOVIE
+#if !QT_CONFIG(quick_animatedimage)
     qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
 #else
     qmlRegisterType<QQuickAnimatedImage>(uri,major,minor,"AnimatedImage");

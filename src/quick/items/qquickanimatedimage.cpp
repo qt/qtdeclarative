@@ -40,8 +40,6 @@
 #include "qquickanimatedimage_p.h"
 #include "qquickanimatedimage_p_p.h"
 
-#ifndef QT_NO_MOVIE
-
 #include <QtGui/qguiapplication.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
@@ -493,5 +491,3 @@ void QQuickAnimatedImage::componentComplete()
 }
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_MOVIE

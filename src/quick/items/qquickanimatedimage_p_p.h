@@ -51,9 +51,11 @@
 // We mean it.
 //
 
-#include "qquickimage_p_p.h"
+#include <QtQuick/qtquickglobal.h>
 
-#ifndef QT_NO_MOVIE
+QT_REQUIRE_CONFIG(quick_animatedimage);
+
+#include "qquickimage_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -92,7 +94,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_MOVIE
 
 #endif // QQUICKANIMATEDIMAGE_P_P_H

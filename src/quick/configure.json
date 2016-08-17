@@ -8,6 +8,7 @@
     "commandline": {
         "options": {
             "d3d12": "boolean",
+            "quick-animatedimage": "boolean",
             "quick-canvas": "boolean",
             "quick-flipable": "boolean",
             "quick-listview": "boolean",
@@ -29,6 +30,14 @@
             "label": "Direct3D 12",
             "purpose": "Provides a Direct3D 12 backend for the Qt Quick Scenegraph",
             "condition": "tests.d3d12",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-animatedimage": {
+            "label": "AnimatedImage item",
+            "purpose": "Provides the Qt Quick AnimatedImage Item",
+            "condition": "features.movie",
             "output": [
                 "privateFeature"
             ]
@@ -76,6 +85,7 @@
             "section": "Qt Quick",
             "entries": [
                 "d3d12",
+                "quick-animatedimage",
                 "quick-canvas",
                 "quick-flipable",
                 "quick-listview",

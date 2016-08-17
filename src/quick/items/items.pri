@@ -48,8 +48,6 @@ HEADERS += \
     $$PWD/qquickpositioners_p_p.h \
     $$PWD/qquickloader_p.h \
     $$PWD/qquickloader_p_p.h \
-    $$PWD/qquickanimatedimage_p.h \
-    $$PWD/qquickanimatedimage_p_p.h \
     $$PWD/qquicktranslate_p.h \
     $$PWD/qquickclipnode_p.h \
     $$PWD/qquickview.h \
@@ -111,7 +109,6 @@ SOURCES += \
     $$PWD/qquickgridview.cpp \
     $$PWD/qquickpositioners.cpp \
     $$PWD/qquickloader.cpp \
-    $$PWD/qquickanimatedimage.cpp \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
     $$PWD/qquickview.cpp \
@@ -138,6 +135,14 @@ SOURCES += \
     $$PWD/qquicksprite.cpp \
     $$PWD/qquickspritesequence.cpp \
     $$PWD/qquickanimatedsprite.cpp
+
+qtConfig(quick-animatedimage) {
+    HEADERS += \
+        $$PWD/qquickanimatedimage_p.h \
+        $$PWD/qquickanimatedimage_p_p.h
+    SOURCES += \
+        $$PWD/qquickanimatedimage.cpp
+}
 
 qtConfig(quick-listview) {
     HEADERS += \
