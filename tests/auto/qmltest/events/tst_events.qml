@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.0
 import QtTest 1.1
 
 Rectangle {
@@ -54,6 +55,16 @@ Rectangle {
         id: doubleClickSpy
         target: top
         signalName: "doubleClickSignalHelper"
+    }
+
+    Window {
+        id: sub
+        visible: true
+        property bool clicked: false
+        MouseArea {
+            anchors.fill: parent
+            onClicked: sub.clicked = true
+        }
     }
 
     MouseArea {
@@ -87,6 +98,11 @@ Rectangle {
         function test_mouse_click() {
             mouseClick(top, 25, 30)
             tryCompare(top, "mouseHasBeenClicked", true, 10000)
+        }
+
+        function test_mouse_click_subwindow() {
+            mouseClick(sub)
+            tryCompare(sub, "clicked", true, 10000)
         }
 
         function test_mouse_doubleclick() {

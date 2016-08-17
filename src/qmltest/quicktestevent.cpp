@@ -317,6 +317,10 @@ bool QuickTestEvent::mouseMove
 
 QWindow *QuickTestEvent::eventWindow(QObject *item)
 {
+    QWindow * window = qobject_cast<QWindow *>(item);
+    if (window)
+        return window;
+
     QQuickItem *quickItem = qobject_cast<QQuickItem *>(item);
     if (quickItem)
         return quickItem->window();
