@@ -129,8 +129,7 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 bool CompilationUnit::memoryMapCode(QString *errorString)
 {
     Q_UNUSED(errorString);
-    Q_ASSERT(codeRefs.isEmpty());
-    codeRefs.reserve(data->functionTableSize);
+    codeRefs.resize(data->functionTableSize);
 
     const char *basePtr = reinterpret_cast<const char *>(data);
 
@@ -139,7 +138,7 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
         void *codePtr = const_cast<void *>(reinterpret_cast<const void *>(basePtr + compiledFunction->codeOffset));
         JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
         JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
-        codeRefs.append(codeRef);
+        codeRefs[i] = codeRef;
     }
 
     return true;

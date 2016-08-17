@@ -231,7 +231,7 @@ public:
 
     static QQuickTouchPoint* touchPoint_at(QQmlListProperty<QQuickTouchPoint> *list, int index) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
-        return q->_touchPrototypes[index];
+        return q->_touchPrototypes.value(index);
     }
 
 Q_SIGNALS:

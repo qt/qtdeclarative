@@ -435,7 +435,6 @@ struct Q_QML_PRIVATE_EXPORT Document
     int indexOfRootObject;
     QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
-    quint32 unitFlags;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
 

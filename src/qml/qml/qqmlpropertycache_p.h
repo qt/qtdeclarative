@@ -55,6 +55,7 @@
 #include <private/qflagpointer_p.h>
 #include "qqmlcleanup_p.h"
 #include "qqmlnotifier_p.h"
+#include <private/qqmlpropertyindex_p.h>
 
 #include <private/qhashedstring_p.h>
 #include <QtCore/qvarlengtharray.h>
@@ -62,6 +63,8 @@
 
 #include <private/qv4value_p.h>
 #include <private/qqmlaccessors_p.h>
+
+#include <limits>
 
 QT_BEGIN_NAMESPACE
 
@@ -83,149 +86,163 @@ template <typename T> class QQmlPropertyCacheAliasCreator;
 class QQmlPropertyRawData
 {
 public:
-    enum Flag {
-        NoFlags           = 0x00000000,
-        ValueTypeFlagMask = 0x0000FFFF, // Flags in valueTypeFlags must fit in this mask
+    struct Flags {
+        enum Types {
+            OtherType            = 0,
+            FunctionType         = 1, // Is an invokable
+            QObjectDerivedType   = 2, // Property type is a QObject* derived type
+            EnumType             = 3, // Property type is an enum
+            QListType            = 4, // Property type is a QML list
+            QmlBindingType       = 5, // Property type is a QQmlBinding*
+            QJSValueType         = 6, // Property type is a QScriptValue
+            V4HandleType         = 7, // Property type is a QQmlV4Handle
+            VarPropertyType      = 8, // Property type is a "var" property of VMEMO
+            QVariantType         = 9  // Property is a QVariant
+        };
 
         // Can apply to all properties, except IsFunction
-        IsConstant         = 0x00000001, // Has CONST flag
-        IsWritable         = 0x00000002, // Has WRITE function
-        IsResettable       = 0x00000004, // Has RESET function
-        IsAlias            = 0x00000008, // Is a QML alias to another property
-        IsFinal            = 0x00000010, // Has FINAL flag
-        IsOverridden       = 0x00000020, // Is overridden by a extension property
-        IsDirect           = 0x00000040, // Exists on a C++ QMetaObject
-        HasAccessors       = 0x00000080, // Has property accessors
+        unsigned isConstant       : 1; // Has CONST flag
+        unsigned isWritable       : 1; // Has WRITE function
+        unsigned isResettable     : 1; // Has RESET function
+        unsigned isAlias          : 1; // Is a QML alias to another property
+        unsigned isFinal          : 1; // Has FINAL flag
+        unsigned isOverridden     : 1; // Is overridden by a extension property
+        unsigned isDirect         : 1; // Exists on a C++ QMetaObject
+        unsigned hasAccessors     : 1; // Has property accessors
 
-        // These are mutualy exclusive
-        IsFunction         = 0x00000100, // Is an invokable
-        IsQObjectDerived   = 0x00000200, // Property type is a QObject* derived type
-        IsEnumType         = 0x00000400, // Property type is an enum
-        IsQList            = 0x00000800, // Property type is a QML list
-        IsQmlBinding       = 0x00001000, // Property type is a QQmlBinding*
-        IsQJSValue         = 0x00002000, // Property type is a QScriptValue
-        IsV4Handle         = 0x00004000, // Property type is a QQmlV4Handle
-        IsVarProperty      = 0x00008000, // Property type is a "var" property of VMEMO
-        IsValueTypeVirtual = 0x00010000, // Property is a value type "virtual" property
-        IsQVariant         = 0x00020000, // Property is a QVariant
+        unsigned type             : 4; // stores an entry of Types
 
         // Apply only to IsFunctions
-        IsVMEFunction      = 0x00040000, // Function was added by QML
-        HasArguments       = 0x00080000, // Function takes arguments
-        IsSignal           = 0x00100000, // Function is a signal
-        IsVMESignal        = 0x00200000, // Signal was added by QML
-        IsV4Function       = 0x00400000, // Function takes QQmlV4Function* args
-        IsSignalHandler    = 0x00800000, // Function is a signal handler
-        IsOverload         = 0x01000000, // Function is an overload of another function
-        IsCloned           = 0x02000000, // The function was marked as cloned
-        IsConstructor      = 0x04000000, // The function was marked is a constructor
+        unsigned isVMEFunction    : 1; // Function was added by QML
+        unsigned hasArguments     : 1; // Function takes arguments
+        unsigned isSignal         : 1; // Function is a signal
+        unsigned isVMESignal      : 1; // Signal was added by QML
+        unsigned isV4Function     : 1; // Function takes QQmlV4Function* args
+        unsigned isSignalHandler  : 1; // Function is a signal handler
+        unsigned isOverload       : 1; // Function is an overload of another function
+        unsigned isCloned         : 1; // The function was marked as cloned
+        unsigned isConstructor    : 1; // The function was marked is a constructor
 
         // Internal QQmlPropertyCache flags
-        NotFullyResolved   = 0x08000000, // True if the type data is to be lazily resolved
+        unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
+        unsigned overrideIndexIsProperty: 1;
 
-        // Flags that are set based on the propType field
-        PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
-                           IsV4Handle | IsQVariant,
+        unsigned _padding         : 9; // align to 32 bits
+
+        inline Flags();
+        inline bool operator==(const Flags &other) const;
+        inline void copyPropertyTypeFlags(Flags from);
     };
-    Q_DECLARE_FLAGS(Flags, Flag)
 
-    Flags getFlags() const { return Flag(flags); }
-    void setFlags(Flags f) { flags = f; }
+    Flags flags() const { return _flags; }
+    void setFlags(Flags f) { _flags = f; }
 
-    bool isValid() const { return coreIndex != -1; }
+    bool isValid() const { return coreIndex() != -1; }
 
-    bool isConstant() const { return flags & IsConstant; }
-    bool isWritable() const { return flags & IsWritable; }
-    bool isResettable() const { return flags & IsResettable; }
-    bool isAlias() const { return flags & IsAlias; }
-    bool isFinal() const { return flags & IsFinal; }
-    bool isOverridden() const { return flags & IsOverridden; }
-    bool isDirect() const { return flags & IsDirect; }
-    bool hasAccessors() const { return flags & HasAccessors; }
-    bool isFunction() const { return flags & IsFunction; }
-    bool isQObject() const { return flags & IsQObjectDerived; }
-    bool isEnum() const { return flags & IsEnumType; }
-    bool isQList() const { return flags & IsQList; }
-    bool isQmlBinding() const { return flags & IsQmlBinding; }
-    bool isQJSValue() const { return flags & IsQJSValue; }
-    bool isV4Handle() const { return flags & IsV4Handle; }
-    bool isVarProperty() const { return flags & IsVarProperty; }
-    bool isValueTypeVirtual() const { return flags & IsValueTypeVirtual; }
-    bool isQVariant() const { return flags & IsQVariant; }
-    bool isVMEFunction() const { return flags & IsVMEFunction; }
-    bool hasArguments() const { return flags & HasArguments; }
-    bool isSignal() const { return flags & IsSignal; }
-    bool isVMESignal() const { return flags & IsVMESignal; }
-    bool isV4Function() const { return flags & IsV4Function; }
-    bool isSignalHandler() const { return flags & IsSignalHandler; }
-    bool isOverload() const { return flags & IsOverload; }
-    bool isCloned() const { return flags & IsCloned; }
-    bool isConstructor() const { return flags & IsConstructor; }
+    bool isConstant() const { return _flags.isConstant; }
+    bool isWritable() const { return _flags.isWritable; }
+    void setWritable(bool onoff) { _flags.isWritable = onoff; }
+    bool isResettable() const { return _flags.isResettable; }
+    bool isAlias() const { return _flags.isAlias; }
+    bool isFinal() const { return _flags.isFinal; }
+    bool isOverridden() const { return _flags.isOverridden; }
+    bool isDirect() const { return _flags.isDirect; }
+    bool hasAccessors() const { return _flags.hasAccessors; }
+    bool isFunction() const { return _flags.type == Flags::FunctionType; }
+    bool isQObject() const { return _flags.type == Flags::QObjectDerivedType; }
+    bool isEnum() const { return _flags.type == Flags::EnumType; }
+    bool isQList() const { return _flags.type == Flags::QListType; }
+    bool isQmlBinding() const { return _flags.type == Flags::QmlBindingType; }
+    bool isQJSValue() const { return _flags.type == Flags::QJSValueType; }
+    bool isV4Handle() const { return _flags.type == Flags::V4HandleType; }
+    bool isVarProperty() const { return _flags.type == Flags::VarPropertyType; }
+    bool isQVariant() const { return _flags.type == Flags::QVariantType; }
+    bool isVMEFunction() const { return _flags.isVMEFunction; }
+    bool hasArguments() const { return _flags.hasArguments; }
+    bool isSignal() const { return _flags.isSignal; }
+    bool isVMESignal() const { return _flags.isVMESignal; }
+    bool isV4Function() const { return _flags.isV4Function; }
+    bool isSignalHandler() const { return _flags.isSignalHandler; }
+    bool isOverload() const { return _flags.isOverload; }
+    void setOverload(bool onoff) { _flags.isOverload = onoff; }
+    bool isCloned() const { return _flags.isCloned; }
+    bool isConstructor() const { return _flags.isConstructor; }
 
-    bool hasOverride() const { return !(flags & IsValueTypeVirtual) &&
-                                      !(flags & HasAccessors) &&
-                                      overrideIndex >= 0; }
-    bool hasRevision() const { return !(flags & HasAccessors) && revision != 0; }
+    bool hasOverride() const { return !(_flags.hasAccessors) &&
+                                      overrideIndex() >= 0; }
+    bool hasRevision() const { return !(_flags.hasAccessors) && revision() != 0; }
 
-    bool isFullyResolved() const { return !(flags & NotFullyResolved); }
+    bool isFullyResolved() const { return !_flags.notFullyResolved; }
 
-    // Returns -1 if not a value type virtual property
-    inline int getValueTypeCoreIndex() const;
+    int propType() const { Q_ASSERT(isFullyResolved()); return _propType; }
+    void setPropType(int pt) { _propType = pt; }
 
-    // Returns the "encoded" index for use with bindings.  Encoding is:
-    //     coreIndex | ((valueTypeCoreIndex + 1) << 16)
-    inline int encodedIndex() const;
-    static int encodeValueTypePropertyIndex(int coreIndex, int valueTypeCoreIndex)
-    { return coreIndex | ((valueTypeCoreIndex + 1) << 16); }
-    static int decodeValueTypePropertyIndex(int index, int *coreIndex = 0) {
-        if (coreIndex) *coreIndex = index & 0xffff;
-        return (index >> 16) - 1;
+    int notifyIndex() const { return _notifyIndex; }
+    void setNotifyIndex(int idx) { _notifyIndex = idx; }
+
+    QQmlPropertyCacheMethodArguments *arguments() const { return _arguments; }
+    void setArguments(QQmlPropertyCacheMethodArguments *args) { _arguments = args; }
+
+    int revision() const { return _revision; }
+    void setRevision(int rev)
+    {
+        Q_ASSERT(rev >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(rev <= std::numeric_limits<qint16>::max());
+        _revision = qint16(rev);
     }
 
-    union {
-        int propType;             // When !NotFullyResolved
-        const char *propTypeName; // When NotFullyResolved
-    };
+    int metaObjectOffset() const { return _metaObjectOffset; }
+    void setMetaObjectOffset(int off)
+    {
+        Q_ASSERT(off >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(off <= std::numeric_limits<qint16>::max());
+        _metaObjectOffset = qint16(off);
+    }
+
+    bool overrideIndexIsProperty() const { return _flags.overrideIndexIsProperty; }
+    void setOverrideIndexIsProperty(bool onoff) { _flags.overrideIndexIsProperty = onoff; }
+
+    int overrideIndex() const { return _overrideIndex; }
+    void setOverrideIndex(int idx)
+    {
+        Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
+        _overrideIndex = idx;
+    }
+
+    QQmlAccessors *accessors() const { return _accessors; }
+    void setAccessors(QQmlAccessors *acc) { _accessors = acc; }
+
+    int coreIndex() const { return _coreIndex; }
+    void setCoreIndex(int idx) { _coreIndex = idx; }
+
+private:
+    int _propType;             // When !NotFullyResolved
     union {
         // The notify index is in the range returned by QObjectPrivate::signalIndex().
         // This is different from QMetaMethod::methodIndex().
-        int notifyIndex;  // When !IsFunction
-        void *arguments;  // When IsFunction && HasArguments
+        int _notifyIndex;  // When !IsFunction
+        QQmlPropertyCacheMethodArguments *_arguments;  // When IsFunction && HasArguments
     };
 
     union {
         struct { // When !HasAccessors
-            qint16 revision;
-            qint16 metaObjectOffset;
+            qint16 _revision;
+            qint16 _metaObjectOffset;
 
-            union {
-                struct { // When IsValueTypeVirtual
-                    quint16 valueTypeFlags; // flags of the access property on the value type proxy
-                                            // object
-                    quint16 valueTypePropType; // The QVariant::Type of access property on the value
-                                               // type proxy object
-                    quint16 valueTypeCoreIndex; // The prop index of the access property on the value
-                                                // type proxy object
-                };
-
-                struct { // When !IsValueTypeVirtual
-                    uint overrideIndexIsProperty : 1;
-                    signed int overrideIndex : 31;
-                };
-            };
+            signed int _overrideIndex; // When !IsValueTypeVirtual
         };
         struct { // When HasAccessors
-            QQmlAccessors *accessors;
+            QQmlAccessors *_accessors;
         };
     };
-    int coreIndex;
 
-private:
+    int _coreIndex;
+    Flags _flags;
+
     friend class QQmlPropertyData;
     friend class QQmlPropertyCache;
-    quint32 flags;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyRawData::Flags)
 
 class QQmlPropertyData : public QQmlPropertyRawData
 {
@@ -259,29 +276,46 @@ public:
     inline void readPropertyWithArgs(QObject *target, void *args[]) const
     {
         if (hasAccessors()) {
-            accessors->read(target, args[0]);
+            accessors()->read(target, args[0]);
         } else {
-            QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, args);
+            QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex(), args);
         }
     }
 
     bool writeProperty(QObject *target, void *value, WriteFlags flags) const
     {
-        if (flags.testFlag(BypassInterceptor) && hasAccessors() && accessors->write) {
-            accessors->write(target, value);
+        if (flags.testFlag(BypassInterceptor) && hasAccessors() && accessors()->write) {
+            accessors()->write(target, value);
         } else {
             int status = -1;
             void *argv[] = { value, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, coreIndex, argv);
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, coreIndex(), argv);
         }
         return true;
+    }
+
+    static Flags defaultSignalFlags()
+    {
+        Flags f;
+        f.isSignal = true;
+        f.type = Flags::FunctionType;
+        f.isVMESignal = true;
+        return f;
+    }
+
+    static Flags defaultSlotFlags()
+    {
+        Flags f;
+        f.type = Flags::FunctionType;
+        f.isVMEFunction = true;
+        return f;
     }
 
 private:
     friend class QQmlPropertyCache;
     void lazyLoad(const QMetaProperty &);
     void lazyLoad(const QMetaMethod &);
-    bool notFullyResolved() const { return flags & NotFullyResolved; }
+    bool notFullyResolved() const { return _flags.notFullyResolved; }
 };
 
 class QQmlPropertyCacheMethodArguments;
@@ -300,21 +334,21 @@ public:
     QQmlPropertyCache *copy();
 
     QQmlPropertyCache *copyAndAppend(const QMetaObject *,
-                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
+                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
     QQmlPropertyCache *copyAndAppend(const QMetaObject *, int revision,
-                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
+                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
 
     QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount);
-    void appendProperty(const QString &,
-                        quint32 flags, int coreIndex, int propType, int notifyIndex);
-    void appendSignal(const QString &, quint32, int coreIndex, const int *types = 0,
-                      const QList<QByteArray> &names = QList<QByteArray>());
-    void appendMethod(const QString &, quint32 flags, int coreIndex,
+    void appendProperty(const QString &, QQmlPropertyRawData::Flags flags, int coreIndex,
+                        int propType, int notifyIndex);
+    void appendSignal(const QString &, QQmlPropertyRawData::Flags, int coreIndex,
+                      const int *types = 0, const QList<QByteArray> &names = QList<QByteArray>());
+    void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                       const QList<QByteArray> &names = QList<QByteArray>());
 
     const QMetaObject *metaObject() const;
@@ -331,7 +365,6 @@ public:
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int index) const;
     int methodIndexToSignalIndex(int) const;
-    QStringList propertyNames() const;
 
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
@@ -387,9 +420,9 @@ private:
     inline QQmlPropertyCache *copy(int reserve);
 
     void append(const QMetaObject *, int revision,
-                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
+                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyRawData::Flags(),
+                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count, const QList<QByteArray> &names);
 
@@ -523,16 +556,75 @@ public:
     int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
 };
 
+QQmlPropertyRawData::Flags::Flags()
+    : isConstant(false)
+    , isWritable(false)
+    , isResettable(false)
+    , isAlias(false)
+    , isFinal(false)
+    , isOverridden(false)
+    , isDirect(false)
+    , hasAccessors(false)
+    , type(OtherType)
+    , isVMEFunction(false)
+    , hasArguments(false)
+    , isSignal(false)
+    , isVMESignal(false)
+    , isV4Function(false)
+    , isSignalHandler(false)
+    , isOverload(false)
+    , isCloned(false)
+    , isConstructor(false)
+    , notFullyResolved(false)
+    , overrideIndexIsProperty(false)
+    , _padding(0)
+{}
+
+bool QQmlPropertyRawData::Flags::operator==(const QQmlPropertyRawData::Flags &other) const
+{
+    return isConstant == other.isConstant &&
+            isWritable == other.isWritable &&
+            isResettable == other.isResettable &&
+            isAlias == other.isAlias &&
+            isFinal == other.isFinal &&
+            isOverridden == other.isOverridden &&
+            hasAccessors == other.hasAccessors &&
+            type == other.type &&
+            isVMEFunction == other.isVMEFunction &&
+            hasArguments == other.hasArguments &&
+            isSignal == other.isSignal &&
+            isVMESignal == other.isVMESignal &&
+            isV4Function == other.isV4Function &&
+            isSignalHandler == other.isSignalHandler &&
+            isOverload == other.isOverload &&
+            isCloned == other.isCloned &&
+            isConstructor == other.isConstructor &&
+            notFullyResolved == other.notFullyResolved &&
+            overrideIndexIsProperty == other.overrideIndexIsProperty;
+}
+
+void QQmlPropertyRawData::Flags::copyPropertyTypeFlags(QQmlPropertyRawData::Flags from)
+{
+    switch (from.type) {
+    case QObjectDerivedType:
+    case EnumType:
+    case QListType:
+    case QmlBindingType:
+    case QJSValueType:
+    case V4HandleType:
+    case QVariantType:
+        type = from.type;
+    }
+}
+
 QQmlPropertyData::QQmlPropertyData()
 {
-    propType = 0;
-    coreIndex = -1;
-    notifyIndex = -1;
-    overrideIndexIsProperty = false;
-    overrideIndex = -1;
-    revision = 0;
-    metaObjectOffset = -1;
-    flags = 0;
+    setPropType(0);
+    setNotifyIndex(-1);
+    setOverrideIndex(-1);
+    setRevision(0);
+    setMetaObjectOffset(-1);
+    setCoreIndex(-1);
 }
 
 QQmlPropertyData::QQmlPropertyData(const QQmlPropertyRawData &d)
@@ -542,24 +634,11 @@ QQmlPropertyData::QQmlPropertyData(const QQmlPropertyRawData &d)
 
 bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
 {
-    return flags == other.flags &&
-           propType == other.propType &&
-           coreIndex == other.coreIndex &&
-           notifyIndex == other.notifyIndex &&
-           revision == other.revision &&
-           (!isValueTypeVirtual() ||
-            (valueTypeCoreIndex == other.valueTypeCoreIndex &&
-             valueTypePropType == other.valueTypePropType));
-}
-
-int QQmlPropertyRawData::getValueTypeCoreIndex() const
-{
-    return isValueTypeVirtual()?valueTypeCoreIndex:-1;
-}
-
-int QQmlPropertyRawData::encodedIndex() const
-{
-    return isValueTypeVirtual()?QQmlPropertyData::encodeValueTypePropertyIndex(coreIndex, valueTypeCoreIndex):coreIndex;
+    return _flags == other._flags &&
+           propType() == other.propType() &&
+           coreIndex() == other.coreIndex() &&
+           notifyIndex() == other.notifyIndex() &&
+           revision() == other.revision();
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
@@ -622,7 +701,7 @@ inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
         return _parent->signal(index);
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
-    Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
+    Q_ASSERT(rv->isSignal() || rv->coreIndex() == -1);
     return ensureResolved(rv);
 }
 
@@ -654,16 +733,16 @@ QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
     if (!data->hasOverride())
         return 0;
 
-    if (data->overrideIndexIsProperty)
-        return property(data->overrideIndex);
+    if (data->overrideIndexIsProperty())
+        return property(data->overrideIndex());
     else
-        return method(data->overrideIndex);
+        return method(data->overrideIndex());
 }
 
 bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 {
-    return (data->hasAccessors() || (data->metaObjectOffset == -1 && data->revision == 0)) ||
-           (allowedRevisionCache[data->metaObjectOffset] >= data->revision);
+    return (data->hasAccessors() || (data->metaObjectOffset() == -1 && data->revision() == 0)) ||
+           (allowedRevisionCache[data->metaObjectOffset()] >= data->revision());
 }
 
 int QQmlPropertyCache::propertyCount() const

@@ -564,6 +564,7 @@ int main(int argc, char ** argv)
                 loadDummyDataFiles(engine, fi.path());
             }
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
+            QObject::connect(&engine, &QQmlEngine::exit, QCoreApplication::instance(), &QCoreApplication::exit);
             component->loadUrl(options.url);
             while (component->isLoading())
                 QCoreApplication::processEvents();

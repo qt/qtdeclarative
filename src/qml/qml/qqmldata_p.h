@@ -53,7 +53,7 @@
 
 #include <private/qtqmlglobal_p.h>
 #include <private/qobject_p.h>
-
+#include <private/qqmlpropertyindex_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 #include <qjsengine.h>
@@ -129,14 +129,16 @@ public:
     quint32 parentFrozen:1;
     quint32 dummy:21;
 
-    // When bindingBitsSize < 32, we store the binding bit flags inside
-    // bindingBitsValue. When we need more than 32 bits, we allocated
+    // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
+    // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated
     // sufficient space and use bindingBits to point to it.
     int bindingBitsSize;
+    typedef quintptr BindingBitsType;
     union {
-        quint32 *bindingBits;
-        quint32 bindingBitsValue;
+        BindingBitsType *bindingBits;
+        BindingBitsType bindingBitsValue;
     };
+    enum { MaxInlineBits = sizeof(BindingBitsType) * 8 };
 
     struct NotifyList {
         quint64 connectionMask;
@@ -174,7 +176,7 @@ public:
     void clearBindingBit(int);
     void setBindingBit(QObject *obj, int);
 
-    inline bool hasPendingBindingBit(int) const;
+    inline bool hasPendingBindingBit(int index) const;
     void setPendingBindingBit(QObject *obj, int);
     void clearPendingBindingBit(int);
 
@@ -227,7 +229,7 @@ public:
     static void markAsDeleted(QObject *);
     static void setQueuedForDeletion(QObject *);
 
-    static inline void flushPendingBinding(QObject *, int coreIndex);
+    static inline void flushPendingBinding(QObject *, QQmlPropertyIndex propertyIndex);
 
     static QQmlPropertyCache *ensurePropertyCache(QJSEngine *engine, QObject *object);
 
@@ -235,7 +237,18 @@ private:
     // For attachedProperties
     mutable QQmlDataExtended *extendedData;
 
-    void flushPendingBindingImpl(int coreIndex);
+    void flushPendingBindingImpl(QQmlPropertyIndex index);
+
+    Q_ALWAYS_INLINE bool hasBitSet(int bit) const
+    {
+        if (bindingBitsSize <= bit)
+            return false;
+
+        if (bindingBitsSize == MaxInlineBits)
+            return bindingBitsValue & (BindingBitsType(1) << bit);
+        else
+            return bindingBits[bit / MaxInlineBits] & (BindingBitsType(1) << (bit % MaxInlineBits));
+    }
 };
 
 bool QQmlData::wasDeleted(QObject *object)
@@ -281,27 +294,25 @@ inline bool QQmlData::signalHasEndpoint(int index) const
 
 bool QQmlData::hasBindingBit(int coreIndex) const
 {
-    int bit = coreIndex * 2;
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
 
-    return bindingBitsSize > bit &&
-           ((bindingBitsSize == 32) ? (bindingBitsValue & (1 << bit)) :
-                                      (bindingBits[bit / 32] & (1 << (bit % 32))));
+    return hasBitSet(coreIndex * 2);
 }
 
 bool QQmlData::hasPendingBindingBit(int coreIndex) const
 {
-    int bit = coreIndex * 2 + 1;
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
 
-    return bindingBitsSize > bit &&
-           ((bindingBitsSize == 32) ? (bindingBitsValue & (1 << bit)) :
-                                      (bindingBits[bit / 32] & (1 << (bit % 32))));
+    return hasBitSet(coreIndex * 2 + 1);
 }
 
-void QQmlData::flushPendingBinding(QObject *o, int coreIndex)
+void QQmlData::flushPendingBinding(QObject *o, QQmlPropertyIndex propertyIndex)
 {
     QQmlData *data = QQmlData::get(o, false);
-    if (data && data->hasPendingBindingBit(coreIndex))
-        data->flushPendingBindingImpl(coreIndex);
+    if (data && data->hasPendingBindingBit(propertyIndex.coreIndex()))
+        data->flushPendingBindingImpl(propertyIndex);
 }
 
 QT_END_NAMESPACE

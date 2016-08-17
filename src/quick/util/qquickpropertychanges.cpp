@@ -287,7 +287,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
         handler->property = prop;
         handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                               QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]));
+                                                               QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
         signalReplacements << handler;
         return;
     }
@@ -455,7 +455,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             QQmlBinding *newBinding = 0;
             if (e.id != QQmlBinding::Invalid) {
                 QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-                QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->compilationUnit->runtimeFunctions[e.id]));
+                QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->compilationUnit->runtimeFunctions.at(e.id)));
                 newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
                                                  function, object(), context);
             }

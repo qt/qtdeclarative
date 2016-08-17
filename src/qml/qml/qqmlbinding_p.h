@@ -81,7 +81,7 @@ public:
     ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);
-    void setTarget(QObject *, const QQmlPropertyData &);
+    void setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
 
     void setNotifyOnValueChanged(bool);
 
@@ -106,12 +106,11 @@ protected:
                           QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                           const QV4::ScopedFunctionObject &f) = 0;
 
-    QQmlPropertyData getPropertyData() const;
-    int getPropertyCoreIndex() const;
+    void getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
     int getPropertyType() const;
 
-    bool slowWrite(const QQmlPropertyData &core, const QV4::Value &result, bool isUndefined,
-                   QQmlPropertyData::WriteFlags flags);
+    bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
+                   const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags);
 
 private:
     inline bool updatingFlag() const;

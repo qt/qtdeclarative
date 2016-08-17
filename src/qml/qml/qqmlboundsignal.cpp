@@ -80,8 +80,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
     // Add some leading whitespace to account for the binding's column offset.
     // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
-    function.fill(QChar(QChar::Space), qMax(column, (quint16)2) - 2);
-    function += QLatin1String("(function ") + handlerName + QLatin1Char('(');
+    function += QString(qMax(column, (quint16)2) - 2, QChar(QChar::Space))
+              + QLatin1String("(function ") + handlerName + QLatin1Char('(');
 
     if (parameterString.isEmpty()) {
         QString error;

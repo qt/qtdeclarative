@@ -124,7 +124,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
-                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType)) {
+                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType())) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
@@ -180,8 +180,8 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
 {
     if (context.instantiatingProperty) {
         if (context.instantiatingProperty->isQObject()) {
-            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType);
-        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType)) {
+            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType());
+        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType())) {
             return enginePrivate->cache(vtmo);
         }
     } else if (obj->inheritedTypeNameIndex != 0) {
@@ -341,8 +341,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
     // Set up notify signals for properties - first normal, then alias
     for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p) {
-        quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
-                QQmlPropertyData::IsVMESignal;
+        auto flags = QQmlPropertyData::defaultSignalFlags();
 
         QString changedSigName = stringAt(p->nameIndex) + QLatin1String("Changed");
         seenSignals.insert(changedSigName);
@@ -351,8 +350,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     }
 
     for (auto a = obj->aliasesBegin(), end = obj->aliasesEnd(); a != end; ++a) {
-        quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
-                QQmlPropertyData::IsVMESignal;
+        auto flags = QQmlPropertyData::defaultSignalFlags();
 
         QString changedSigName = stringAt(a->nameIndex) + QLatin1String("Changed");
         seenSignals.insert(changedSigName);
@@ -402,10 +400,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
             }
         }
 
-        quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
-                QQmlPropertyData::IsVMESignal;
+        auto flags = QQmlPropertyData::defaultSignalFlags();
         if (paramCount)
-            flags |= QQmlPropertyData::HasArguments;
+            flags.hasArguments = true;
 
         QString signalName = stringAt(s->nameIndex);
         if (seenSignals.contains(signalName))
@@ -419,7 +416,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
     // Dynamic slots
     for (auto function = objectContainer->objectFunctionsBegin(obj), end = objectContainer->objectFunctionsEnd(obj); function != end; ++function) {
-        quint32 flags = QQmlPropertyData::IsFunction | QQmlPropertyData::IsVMEFunction;
+        auto flags = QQmlPropertyData::defaultSlotFlags();
 
         const QString slotName = stringAt(function->nameIndex);
         if (seenSignals.contains(slotName))
@@ -429,7 +426,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
         QList<QByteArray> parameterNames;
         for (auto formal = function->formalsBegin(), end = function->formalsEnd(); formal != end; ++formal) {
-            flags |= QQmlPropertyData::HasArguments;
+            flags.hasArguments = true;
             parameterNames << stringAt(*formal).toUtf8();
         }
 
@@ -442,16 +439,16 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     int propertyIdx = 0;
     for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p, ++propertyIdx) {
         int propertyType = 0;
-        quint32 propertyFlags = 0;
+        QQmlPropertyData::Flags propertyFlags;
 
         if (p->type == QV4::CompiledData::Property::Var) {
             propertyType = QMetaType::QVariant;
-            propertyFlags = QQmlPropertyData::IsVarProperty;
+            propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
         } else if (p->type < builtinTypeCount) {
             propertyType = builtinTypes[p->type].metaType;
 
             if (p->type == QV4::CompiledData::Property::Variant)
-                propertyFlags |= QQmlPropertyData::IsQVariant;
+                propertyFlags.type = QQmlPropertyData::Flags::QVariantType;
         } else {
             Q_ASSERT(p->type == QV4::CompiledData::Property::CustomList ||
                      p->type == QV4::CompiledData::Property::Custom);
@@ -485,13 +482,13 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
             }
 
             if (p->type == QV4::CompiledData::Property::Custom)
-                propertyFlags |= QQmlPropertyData::IsQObjectDerived;
+                propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
             else
-                propertyFlags |= QQmlPropertyData::IsQList;
+                propertyFlags.type = QQmlPropertyData::Flags::QListType;
         }
 
         if (!(p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
-            propertyFlags |= QQmlPropertyData::IsWritable;
+            propertyFlags.isWritable = true;
 
 
         QString propertyName = stringAt(p->nameIndex);
@@ -521,7 +518,7 @@ public:
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex);
-    void propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, quint32 *propertyFlags);
+    void propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, QQmlPropertyRawData::Flags *propertyFlags);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -570,14 +567,16 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             const int targetObjectIndex = objectForId(component, alias->targetObjectId);
             Q_ASSERT(targetObjectIndex >= 0);
 
+            if (alias->aliasToLocalAlias)
+                continue;
+
             if (alias->encodedMetaPropertyIndex == -1)
                 continue;
 
             const QQmlPropertyCache *targetCache = propertyCaches->at(targetObjectIndex);
             Q_ASSERT(targetCache);
 
-            int coreIndex;
-            QQmlPropertyData::decodeValueTypePropertyIndex(alias->encodedMetaPropertyIndex, &coreIndex);
+            int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
             QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
             if (!targetProperty)
                 return false;
@@ -624,7 +623,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, quint32 *propertyFlags)
+inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
+        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type,
+        QQmlPropertyData::Flags *propertyFlags)
 {
     const int targetObjectIndex = objectForId(component, alias.targetObjectId);
     Q_ASSERT(targetObjectIndex >= 0);
@@ -635,7 +636,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
     bool writable = false;
     bool resettable = false;
 
-    *propertyFlags = QQmlPropertyData::IsAlias;
+    propertyFlags->isAlias = true;
 
     if (alias.aliasToLocalAlias) {
         auto targetAlias = targetObject.aliasesBegin();
@@ -653,17 +654,17 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
         else
             *type = typeRef->compilationUnit->metaTypeId;
 
-        *propertyFlags |= QQmlPropertyData::IsQObjectDerived;
+        propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else {
-        int coreIndex;
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(alias.encodedMetaPropertyIndex, &coreIndex);
+        int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
+        int valueTypeIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).valueTypeIndex();
 
         QQmlPropertyCache *targetCache = propertyCaches->at(targetObjectIndex);
         Q_ASSERT(targetCache);
         QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
-        *type = targetProperty->propType;
+        *type = targetProperty->propType();
 
         writable = targetProperty->isWritable();
         resettable = targetProperty->isResettable();
@@ -679,27 +680,21 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
                 *type = QVariant::Int;
             } else {
                 // Copy type flags
-                *propertyFlags |= targetProperty->getFlags() & QQmlPropertyData::PropTypeFlagMask;
+                propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
 
                 if (targetProperty->isVarProperty())
-                    *propertyFlags |= QQmlPropertyData::IsQVariant;
+                    propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
             }
         }
     }
 
-    if (!(alias.flags & QV4::CompiledData::Property::IsReadOnly) && writable)
-        *propertyFlags |= QQmlPropertyData::IsWritable;
-    else
-        *propertyFlags &= ~QQmlPropertyData::IsWritable;
-
-    if (resettable)
-        *propertyFlags |= QQmlPropertyData::IsResettable;
-    else
-        *propertyFlags &= ~QQmlPropertyData::IsResettable;
+    propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Property::IsReadOnly) && writable;
+    propertyFlags->isResettable = resettable;
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex)
+inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
+        const CompiledObject &component, int objectIndex)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
     if (!object.aliasCount())
@@ -716,7 +711,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
         Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
 
         int type = 0;
-        quint32 propertyFlags = 0;
+        QQmlPropertyData::Flags propertyFlags;
         propertyDataForAlias(component, *alias, &type, &propertyFlags);
 
         const QString propertyName = objectContainer->stringAt(alias->nameIndex);

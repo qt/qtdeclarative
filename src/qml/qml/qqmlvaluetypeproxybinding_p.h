@@ -58,9 +58,9 @@ QT_BEGIN_NAMESPACE
 class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 {
 public:
-    QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
+    QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex coreIndex);
 
-    QQmlAbstractBinding *binding(int targetPropertyIndex);
+    QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex);
     void removeBindings(quint32 mask);
 
     virtual void setEnabled(bool, QQmlPropertyData::WriteFlags);

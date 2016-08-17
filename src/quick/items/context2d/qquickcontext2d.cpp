@@ -794,7 +794,7 @@ static QPainter::CompositionMode qt_composite_mode_from_string(const QString &co
     } else if (compositeOperator == QLatin1String("destination-over")) {
         return QPainter::CompositionMode_DestinationOver;
     } else if (compositeOperator == QLatin1String("lighter")) {
-        return QPainter::CompositionMode_Lighten;
+        return QPainter::CompositionMode_Plus;
     } else if (compositeOperator == QLatin1String("copy")) {
         return QPainter::CompositionMode_Source;
     } else if (compositeOperator == QLatin1String("xor")) {
@@ -857,7 +857,7 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
     case QPainter::CompositionMode_Xor:
         return QStringLiteral("xor");
     case QPainter::CompositionMode_Plus:
-        return QStringLiteral("plus");
+        return QStringLiteral("lighter");
     case QPainter::CompositionMode_Multiply:
         return QStringLiteral("qt-multiply");
     case QPainter::CompositionMode_Screen:

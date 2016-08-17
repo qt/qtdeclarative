@@ -28,7 +28,8 @@ HEADERS += \
     $$PWD/qv4isel_moth_p.h \
     $$PWD/qv4instr_moth_p.h \
     $$PWD/qqmlpropertycachecreator_p.h \
-    $$PWD/qqmlpropertyvalidator_p.h
+    $$PWD/qqmlpropertyvalidator_p.h \
+    $$PWD/qv4compilationunitmapper_p.h
 
 
 SOURCES += \
@@ -36,6 +37,10 @@ SOURCES += \
     $$PWD/qv4instr_moth.cpp \
     $$PWD/qv4isel_moth.cpp \
     $$PWD/qqmlpropertycachecreator.cpp \
-    $$PWD/qqmlpropertyvalidator.cpp
+    $$PWD/qqmlpropertyvalidator.cpp \
+    $$PWD/qv4compilationunitmapper.cpp
+
+unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
+else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
 }

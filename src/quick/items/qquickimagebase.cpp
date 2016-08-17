@@ -355,7 +355,7 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
     if (disable2xImageLoading)
         return;
 
-    QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     // Non-local file path: @2x loading is not supported.
     if (localFile.isEmpty())

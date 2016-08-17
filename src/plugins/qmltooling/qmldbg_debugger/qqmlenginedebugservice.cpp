@@ -753,7 +753,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     if (!prop || !prop->isVMEFunction())
         return false;
 
-    QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex);
+    QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex());
     QList<QByteArray> paramNames = metaMethod.parameterNames();
 
     QString paramStr;
@@ -772,12 +772,12 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QV4::Scope scope(v4);
 
     int lineNumber = 0;
-    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex));
+    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex()));
     if (oldMethod && oldMethod->d()->function) {
         lineNumber = oldMethod->d()->function->compiledFunction->location.line;
     }
     QV4::ScopedValue v(scope, QQmlJavaScriptExpression::evalFunction(contextData, object, jsfunction, contextData->urlString(), lineNumber));
-    vmeMetaObject->setVmeMethod(prop->coreIndex, v);
+    vmeMetaObject->setVmeMethod(prop->coreIndex(), v);
     return true;
 }
 

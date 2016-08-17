@@ -54,7 +54,7 @@ QSGSoftwareAdaptation::QSGSoftwareAdaptation(QObject *parent)
 
 QStringList QSGSoftwareAdaptation::keys() const
 {
-    return QStringList() << QLatin1String("software");
+    return QStringList() << QLatin1String("software") << QLatin1String("softwarecontext");
 }
 
 QSGContext *QSGSoftwareAdaptation::create(const QString &) const

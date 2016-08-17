@@ -155,6 +155,7 @@ protected:
 
 Q_SIGNALS:
     void quit();
+    void exit(int retCode);
     void warnings(const QList<QQmlError> &warnings);
 
 private:

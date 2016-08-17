@@ -265,6 +265,7 @@ InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::Ex
     , qmlEngine(qmlEngine)
 {
     compilationUnit->codeRefs.resize(module->functions.size());
+    module->unitFlags |= QV4::CompiledData::Unit::ContainsMachineCode;
 }
 
 InstructionSelection::~InstructionSelection()
@@ -970,9 +971,15 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 }
 
 #define setOp(op, opName, operation) \
-    do { op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
+    do { \
+        op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
+    } while (0)
 #define setOpContext(op, opName, operation) \
-    do { opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
+    do { \
+        opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
+    } while (0)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
@@ -1446,18 +1453,19 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         RuntimeCall op;
         RuntimeCall opContext;
         const char *opName = 0;
+        bool needsExceptionCheck;
         switch (b->op) {
         default: Q_UNREACHABLE(); Q_ASSERT(!"todo"); break;
-        case IR::OpGt: setOp(op, opName, Runtime::compareGreaterThan); break;
-        case IR::OpLt: setOp(op, opName, Runtime::compareLessThan); break;
-        case IR::OpGe: setOp(op, opName, Runtime::compareGreaterEqual); break;
-        case IR::OpLe: setOp(op, opName, Runtime::compareLessEqual); break;
-        case IR::OpEqual: setOp(op, opName, Runtime::compareEqual); break;
-        case IR::OpNotEqual: setOp(op, opName, Runtime::compareNotEqual); break;
-        case IR::OpStrictEqual: setOp(op, opName, Runtime::compareStrictEqual); break;
-        case IR::OpStrictNotEqual: setOp(op, opName, Runtime::compareStrictNotEqual); break;
-        case IR::OpInstanceof: setOpContext(op, opName, Runtime::compareInstanceof); break;
-        case IR::OpIn: setOpContext(op, opName, Runtime::compareIn); break;
+        case IR::OpGt: setOp(op, opName, compareGreaterThan); break;
+        case IR::OpLt: setOp(op, opName, compareLessThan); break;
+        case IR::OpGe: setOp(op, opName, compareGreaterEqual); break;
+        case IR::OpLe: setOp(op, opName, compareLessEqual); break;
+        case IR::OpEqual: setOp(op, opName, compareEqual); break;
+        case IR::OpNotEqual: setOp(op, opName, compareNotEqual); break;
+        case IR::OpStrictEqual: setOp(op, opName, compareStrictEqual); break;
+        case IR::OpStrictNotEqual: setOp(op, opName, compareStrictNotEqual); break;
+        case IR::OpInstanceof: setOpContext(op, opName, compareInstanceof); break;
+        case IR::OpIn: setOpContext(op, opName, compareIn); break;
         } // switch
 
         // TODO: in SSA optimization, do constant expression evaluation.
@@ -1466,12 +1474,14 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         // Of course, after folding the CJUMP to a JUMP, dead-code (dead-basic-block)
         // elimination (which isn't there either) would remove the whole else block.
         if (opContext.isValid())
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, opContext,
+            _as->generateFunctionCallImp(needsExceptionCheck,
+                                         Assembler::ReturnValueRegister, opName, opContext,
                                          Assembler::EngineRegister,
                                          Assembler::PointerToValue(b->left),
                                          Assembler::PointerToValue(b->right));
         else
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op,
+            _as->generateFunctionCallImp(needsExceptionCheck,
+                                         Assembler::ReturnValueRegister, opName, op,
                                          Assembler::PointerToValue(b->left),
                                          Assembler::PointerToValue(b->right));
 

@@ -110,7 +110,7 @@ console.log("Result: " + a);
 \endcode
 
 Any attempt to modify the global object - either implicitly or explicitly - will
-cause an exception.  If uncaught, this will result in an warning being printed,
+cause an exception.  If uncaught, this will result in a warning being printed,
 that includes the file and line number of the offending code.
 
 \li Global code is run in a reduced scope.
@@ -120,7 +120,7 @@ code, it is executed in a scope that contains only the external file itself and
 the global object.  That is, it will not have access to the QML objects and
 properties it \l {Scope and Naming Resolution}{normally would}.
 
-Global code that only accesses script local variable is permitted.  This is an
+Global code that only accesses script local variables is permitted.  This is an
 example of valid global code.
 
 \code

@@ -166,14 +166,14 @@ ReturnedValue FunctionObject::name() const
     return get(scope()->engine->id_name());
 }
 
-ReturnedValue FunctionObject::construct(const Managed *that, CallData *)
+void FunctionObject::construct(const Managed *that, Scope &scope, CallData *)
 {
-    return static_cast<const FunctionObject *>(that)->engine()->throwTypeError();
+    scope.result = static_cast<const FunctionObject *>(that)->engine()->throwTypeError();
 }
 
-ReturnedValue FunctionObject::call(const Managed *, CallData *)
+void FunctionObject::call(const Managed *, Scope &scope, CallData *)
 {
-    return Encode::undefined();
+    scope.result = Encode::undefined();
 }
 
 void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
@@ -548,8 +548,11 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     if (f->function()->compiledFunction->hasQmlDependencies())
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
-    if (!scope.result.isManaged() || !scope.result.managed())
+    if (v4->hasException) {
+        scope.result = Encode::undefined();
+    } else if (!scope.result.isObject()) {
         scope.result = callData->thisObject;
+    }
 }
 
 void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)

@@ -227,6 +227,7 @@ public:
     bool isScriptLoaded(const QUrl &url) const;
 
     void sendQuit();
+    void sendExit(int retCode = 0);
     void warning(const QQmlError &);
     void warning(const QList<QQmlError> &);
     void warning(QQmlDelayedError *);

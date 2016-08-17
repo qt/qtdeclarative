@@ -502,7 +502,7 @@ ReturnedValue NodePrototype::method_get_firstChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.first());
+        return Node::create(scope.engine, r->d()->d->children.constFirst());
 }
 
 ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
@@ -515,7 +515,7 @@ ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.last());
+        return Node::create(scope.engine, r->d()->d->children.constLast());
 }
 
 ReturnedValue NodePrototype::method_get_previousSibling(CallContext *ctx)
@@ -1016,8 +1016,8 @@ public:
     ReturnedValue abort(Object *thisObject, QQmlContextData *context);
 
     void addHeader(const QString &, const QString &);
-    QString header(const QString &name);
-    QString headers();
+    QString header(const QString &name) const;
+    QString headers() const;
 
     QString responseBody();
     const QByteArray & rawResponseBody() const;
@@ -1144,26 +1144,27 @@ void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
     }
 }
 
-QString QQmlXMLHttpRequest::header(const QString &name)
+QString QQmlXMLHttpRequest::header(const QString &name) const
 {
-    QByteArray utfname = name.toLower().toUtf8();
-
-    foreach (const HeaderPair &header, m_headersList) {
-        if (header.first == utfname)
-            return QString::fromUtf8(header.second);
+    if (!m_headersList.isEmpty()) {
+        const QByteArray utfname = name.toLower().toUtf8();
+        for (const HeaderPair &header : m_headersList) {
+            if (header.first == utfname)
+                return QString::fromUtf8(header.second);
+        }
     }
     return QString();
 }
 
-QString QQmlXMLHttpRequest::headers()
+QString QQmlXMLHttpRequest::headers() const
 {
     QString ret;
 
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : m_headersList) {
         if (ret.length())
             ret.append(QLatin1String("\r\n"));
-        ret = ret % QString::fromUtf8(header.first) % QLatin1String(": ")
-                % QString::fromUtf8(header.second);
+        ret += QString::fromUtf8(header.first) + QLatin1String(": ")
+             + QString::fromUtf8(header.second);
     }
     return ret;
 }

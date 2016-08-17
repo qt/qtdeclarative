@@ -259,7 +259,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
             result->append(QString(decpt - result->length(), zero));
         }
 
-        if (sign)
+        if (sign && num)
             result->prepend(QLatin1Char('-'));
 
         return;
@@ -1716,6 +1716,8 @@ ReturnedValue Runtime::method_ushr(const Value &left, const Value &right)
     return Encode(res);
 }
 
+#endif // V4_BOOTSTRAP
+
 ReturnedValue Runtime::method_greaterThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
@@ -1823,8 +1825,6 @@ Bool Runtime::method_toBoolean(const Value &value)
 {
     return value.toBoolean();
 }
-
-#endif // V4_BOOTSTRAP
 
 } // namespace QV4
 

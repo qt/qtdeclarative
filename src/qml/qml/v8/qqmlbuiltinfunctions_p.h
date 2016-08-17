@@ -122,6 +122,7 @@ struct QtObject : Object
     static ReturnedValue method_btoa(CallContext *ctx);
     static ReturnedValue method_atob(CallContext *ctx);
     static ReturnedValue method_quit(CallContext *ctx);
+    static ReturnedValue method_exit(CallContext *ctx);
     static ReturnedValue method_resolvedUrl(CallContext *ctx);
     static ReturnedValue method_createQmlObject(CallContext *ctx);
     static ReturnedValue method_createComponent(CallContext *ctx);

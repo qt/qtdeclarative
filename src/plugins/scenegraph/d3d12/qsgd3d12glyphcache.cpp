@@ -42,6 +42,11 @@
 
 QT_BEGIN_NAMESPACE
 
+// Convert A8 glyphs to 32-bit in the engine. This is here to work around
+// QTBUG-55330 for AMD cards.
+// If removing, textmask.hlsl must be adjusted! (.a -> .r)
+#define ALWAYS_32BIT
+
 // NOTE: Avoid categorized logging. It is slow.
 
 #define DECLARE_DEBUG_VAR(variable) \
@@ -77,7 +82,11 @@ void QSGD3D12GlyphCache::createTextureData(int width, int height)
 
     const QImage::Format imageFormat =
             m_format == QFontEngine::Format_A8 ? QImage::Format_Alpha8 : QImage::Format_ARGB32_Premultiplied;
-    m_engine->createTexture(m_id, m_size, imageFormat, QSGD3D12Engine::TextureWithAlpha);
+    m_engine->createTexture(m_id, m_size, imageFormat, QSGD3D12Engine::TextureWithAlpha
+#ifdef ALWAYS_32BIT
+                            | QSGD3D12Engine::TextureAlways32Bit
+#endif
+                            );
 }
 
 void QSGD3D12GlyphCache::resizeTextureData(int width, int height)
@@ -146,7 +155,11 @@ void QSGD3D12GlyphCache::endFillTexture()
 
     Q_ASSERT(m_id);
 
-    m_engine->queueTextureUpload(m_id, m_glyphImages, m_glyphPos);
+    m_engine->queueTextureUpload(m_id, m_glyphImages, m_glyphPos
+#ifdef ALWAYS_32BIT
+                                 , QSGD3D12Engine::TextureUploadAlways32Bit
+#endif
+                                 );
 
     // Nothing else left to do, it is up to the text material to call
     // useTexture() which will then add the texture dependency to the frame.

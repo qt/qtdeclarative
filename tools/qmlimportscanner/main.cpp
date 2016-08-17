@@ -224,11 +224,11 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             if (plugininfo.contains(QStringLiteral("dependencies"))) {
                 QStringList dependencies = plugininfo.value(QStringLiteral("dependencies")).toStringList();
                 foreach (const QString &line, dependencies) {
-                    QList<QString> dep = line.split(QLatin1Char(' '));
+                    const auto dep = line.splitRef(QLatin1Char(' '));
                     QVariantMap depImport;
                     depImport[QStringLiteral("type")] = QStringLiteral("module");
-                    depImport[QStringLiteral("name")] = dep[0];
-                    depImport[QStringLiteral("version")] = dep[1];
+                    depImport[QStringLiteral("name")] = dep[0].toString();
+                    depImport[QStringLiteral("version")] = dep[1].toString();
                     importsCopy.append(depImport);
                 }
             }

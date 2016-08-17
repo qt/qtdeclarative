@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, int index)
+QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex index)
     : QQmlAbstractBinding(),
       m_bindings(0)
 {
@@ -72,7 +72,7 @@ bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
     return true;
 }
 
-QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(int propertyIndex)
+QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(QQmlPropertyIndex propertyIndex)
 {
     QQmlAbstractBinding *binding = m_bindings.data();
 
@@ -91,7 +91,7 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
     QQmlAbstractBinding *lastBinding = 0;
 
     while (binding) {
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(binding->targetPropertyIndex());
+        const int valueTypeIndex = binding->targetPropertyIndex().valueTypeIndex();
         if (valueTypeIndex != -1 && (mask & (1 << valueTypeIndex))) {
             QQmlAbstractBinding *remove = binding;
             remove->setAddedToObject(false);

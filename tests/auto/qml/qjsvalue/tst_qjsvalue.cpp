@@ -978,8 +978,8 @@ void tst_QJSValue::toVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(undefined), QVariant());
 
     QJSValue null = eng.evaluate("null");
-    QCOMPARE(null.toVariant(), QVariant(QMetaType::VoidStar, 0));
-    QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant(QMetaType::VoidStar, 0));
+    QCOMPARE(null.toVariant(), QVariant::fromValue(nullptr));
+    QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant::fromValue(nullptr));
 
     {
         QJSValue number = eng.toScriptValue(123.0);
@@ -1055,8 +1055,8 @@ void tst_QJSValue::toVariant()
         QCOMPARE(qjsvalue_cast<QVariant>(undef), QVariant());
 
         QJSValue nil = QJSValue(QJSValue::NullValue);
-        QCOMPARE(nil.toVariant(), QVariant(QMetaType::VoidStar, 0));
-        QCOMPARE(qjsvalue_cast<QVariant>(nil), QVariant(QMetaType::VoidStar, 0));
+        QCOMPARE(nil.toVariant(), QVariant::fromValue(nullptr));
+        QCOMPARE(qjsvalue_cast<QVariant>(nil), QVariant::fromValue(nullptr));
     }
 
     // array

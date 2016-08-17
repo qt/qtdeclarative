@@ -1373,8 +1373,8 @@ void tst_TouchMouse::hoverEnabled()
     // ------------------------- Touch click on mouseArea1
     QTest::touchEvent(window, device).press(0, p1, window);
 
-    QVERIFY(enterSpy1.count() == 1);
-    QVERIFY(enterSpy2.count() == 0);
+    QCOMPARE(enterSpy1.count(), 1);
+    QCOMPARE(enterSpy2.count(), 0);
     QVERIFY(mouseArea1->pressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
@@ -1385,33 +1385,36 @@ void tst_TouchMouse::hoverEnabled()
     QVERIFY(!mouseArea2->hovered());
 
     // ------------------------- Touch click on mouseArea2
+    if (QGuiApplication::platformName().compare(QLatin1String("xcb"), Qt::CaseInsensitive) == 0)
+        QSKIP("hover can be momentarily inconsistent on X11, depending on timing of flushFrameSynchronousEvents with touch and mouse movements (QTBUG-55350)");
+
     QTest::touchEvent(window, device).press(0, p2, window);
 
     QVERIFY(mouseArea1->hovered());
     QVERIFY(mouseArea2->hovered());
     QVERIFY(mouseArea2->pressed());
-    QVERIFY(enterSpy1.count() == 1);
-    QVERIFY(enterSpy2.count() == 1);
+    QCOMPARE(enterSpy1.count(), 1);
+    QCOMPARE(enterSpy2.count(), 1);
 
     QTest::touchEvent(window, device).release(0, p2, window);
 
     QVERIFY(clickSpy2.count() == 1);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
-    QVERIFY(exitSpy1.count() == 0);
-    QVERIFY(exitSpy2.count() == 1);
+    QCOMPARE(exitSpy1.count(), 0);
+    QCOMPARE(exitSpy2.count(), 1);
 
     // ------------------------- Another touch click on mouseArea1
     QTest::touchEvent(window, device).press(0, p1, window);
 
-    QVERIFY(enterSpy1.count() == 1);
-    QVERIFY(enterSpy2.count() == 1);
+    QCOMPARE(enterSpy1.count(), 1);
+    QCOMPARE(enterSpy2.count(), 1);
     QVERIFY(mouseArea1->pressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(window, device).release(0, p1, window);
-    QVERIFY(clickSpy1.count() == 2);
+    QCOMPARE(clickSpy1.count(), 2);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea1->pressed());
     QVERIFY(!mouseArea2->hovered());

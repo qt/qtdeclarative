@@ -2118,8 +2118,13 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlTypeData *td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        const QV4::CompiledData::Unit *qmlUnit = td->compilationUnit()->data;
-        Q_ASSERT(qmlUnit);
+        const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->data;
+        Q_ASSERT(readOnlyQmlUnit);
+        QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
+        memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
+        qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
+        td->compilationUnit()->data = qmlUnit;
+
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
         QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
@@ -2596,7 +2601,7 @@ void tst_qqmllanguage::basicRemote_data()
 
     QTest::newRow("no need for qmldir") << QUrl(serverdir+"Test.qml") << "" << "";
     QTest::newRow("absent qmldir") << QUrl(serverdir+"/noqmldir/Test.qml") << "" << "";
-    QTest::newRow("need qmldir") << QUrl(serverdir+"TestLocal.qml") << "" << "";
+    QTest::newRow("need qmldir") << QUrl(serverdir+"TestNamed.qml") << "" << "";
 }
 
 void tst_qqmllanguage::basicRemote()
@@ -2635,6 +2640,8 @@ void tst_qqmllanguage::importsRemote_data()
     QTest::newRow("remote import with subdir") << "import \""+serverdir+"\"\nTestSubDir {}" << "QQuickText"
         << "";
     QTest::newRow("remote import with local") << "import \""+serverdir+"\"\nTestLocal {}" << "QQuickImage"
+        << "";
+    QTest::newRow("remote import with qualifier") << "import \""+serverdir+"\" as NS\nNS.NamedLocal {}" << "QQuickImage"
         << "";
     QTest::newRow("wrong remote import with undeclared local") << "import \""+serverdir+"\"\nWrongTestLocal {}" << ""
         << "WrongTestLocal is not a type";
@@ -4121,7 +4128,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
     QVERIFY(subCache);
     QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/0, /*context*/0);
     QVERIFY(pd);
-    QCOMPARE(pd->propType, qMetaTypeId<int>());
+    QCOMPARE(pd->propType(), qMetaTypeId<int>());
 }
 
 void tst_qqmllanguage::propertyCacheInSync()

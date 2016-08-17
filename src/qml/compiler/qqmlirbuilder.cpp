@@ -44,6 +44,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlglobal_p.h>
@@ -301,7 +302,6 @@ Document::Document(bool debugMode)
     , program(0)
     , indexOfRootObject(0)
     , jsGenerator(&jsModule)
-    , unitFlags(0)
 {
 }
 
@@ -1392,7 +1392,6 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
 
     QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
     qmlUnit->unitSize = totalSize;
-    qmlUnit->flags |= output.unitFlags;
     qmlUnit->flags |= QV4::CompiledData::Unit::IsQml;
     qmlUnit->offsetToImports = unitSize;
     qmlUnit->nImports = output.imports.count();
@@ -1724,7 +1723,11 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
             member->kind = QV4::IR::Member::MemberOfSingletonObject;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
-    } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
+    }
+#if 0
+    else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
+        // Right now the attached property IDs are not stable and cannot be embedded in the
+        // code that is cached on disk.
         QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
         newResolver->owner = resolver->owner;
@@ -1732,6 +1735,7 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         member->setAttachedPropertiesId(type->attachedPropertiesId(qmlEngine));
         return newResolver->resolveMember(qmlEngine, newResolver, member);
     }
+#endif
 
     return result;
 }
@@ -1839,20 +1843,20 @@ static QV4::IR::DiscoveredType resolveMetaObjectProperty(
             if (property->isEnum())
                 return QV4::IR::VarType;
 
-            switch (property->propType) {
+            switch (property->propType()) {
             case QMetaType::Bool: result = QV4::IR::BoolType; break;
             case QMetaType::Int: result = QV4::IR::SInt32Type; break;
             case QMetaType::Double: result = QV4::IR::DoubleType; break;
             case QMetaType::QString: result = QV4::IR::StringType; break;
             default:
                 if (property->isQObject()) {
-                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
+                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType())) {
                         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                         newResolver->owner = resolver->owner;
                         initMetaObjectResolver(newResolver, cache);
                         return QV4::IR::DiscoveredType(newResolver);
                     }
-                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType)) {
+                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType())) {
                     if (QQmlPropertyCache *cache = qmlEngine->cache(valueTypeMetaObject)) {
                         auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                         newResolver->owner = resolver->owner;
@@ -2047,7 +2051,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
 
         d = property(propName, notInRevision);
         if (d)
-            return cache->signal(d->notifyIndex);
+            return cache->signal(d->notifyIndex());
     }
 
     return 0;

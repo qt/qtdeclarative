@@ -248,6 +248,8 @@ public:
     protected:
         virtual QString stringAt(int) const { return QString(); }
 
+        bool isDebugging() const;
+
         QQmlImports m_importCache;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
@@ -442,18 +444,24 @@ protected:
 
 private:
     bool tryLoadFromDiskCache();
+    bool loadFromSource();
     void continueLoadFromIR();
     void resolveTypes();
     QQmlCompileError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *importCache,
             QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
-    void compile();
-    void rebuildTypeAndPropertyCaches();
+    void compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
+                 const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+    void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
+                                      const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
 
+
+    qint64 m_sourceTimeStamp = 0;
+    QByteArray m_backupSourceCode; // used when cache verification fails.
     QScopedPointer<QmlIR::Document> m_document;
     QV4::CompiledData::TypeReferenceMap m_typeReferences;
 

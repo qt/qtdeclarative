@@ -132,6 +132,7 @@ public:
         case QMetaType::Void:
             *v = QV4::Encode::undefined();
             break;
+        case QMetaType::Nullptr:
         case QMetaType::VoidStar:
             *v = QV4::Encode::null();
             break;

@@ -390,7 +390,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         bool notInRevision = false;
         QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
         if (signal) {
-            int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
+            int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
             sigIndex = propertyCache->originalClone(sigIndex);
 
             bool unnamedParameter = false;
@@ -547,7 +547,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
             if (!pd)
                 continue;
 
-            if (!pd->isEnum() && pd->propType != QMetaType::Int)
+            if (!pd->isEnum() && pd->propType() != QMetaType::Int)
                 continue;
 
             if (!tryQualifiedEnumAssignment(obj, propertyCache, pd, binding))
@@ -577,7 +577,7 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QS
 
 bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache, const QQmlPropertyData *prop, QmlIR::Binding *binding)
 {
-    bool isIntProp = (prop->propType == QMetaType::Int) && !prop->isEnum();
+    bool isIntProp = (prop->propType() == QMetaType::Int) && !prop->isEnum();
     if (!prop->isEnum() && !isIntProp)
         return true;
 
@@ -621,7 +621,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
 
     auto *tr = resolvedTypes->value(obj->inheritedTypeNameIndex);
     if (type && tr && tr->type == type) {
-        QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex);
+        QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
 
         // When these two match, we can short cut the search
         if (mprop.isFlagType()) {
@@ -758,7 +758,7 @@ void QQmlScriptStringScanner::scan()
                 continue;
             bool notInRevision = false;
             QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
-            if (!pd || pd->propType != scriptStringMetaType)
+            if (!pd || pd->propType() != scriptStringMetaType)
                 continue;
 
             QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
@@ -815,7 +815,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!pd || !pd->isQObject())
             continue;
 
-        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType);
+        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType());
         const QMetaObject *mo = pc->firstCppMetaObject();
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
@@ -1078,7 +1078,7 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
         } else
             property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
 
-        int propIdx = -1;
+        QQmlPropertyIndex propIdx;
 
         if (property.isEmpty()) {
             alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
@@ -1116,15 +1116,15 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                 }
             }
 
-            if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
+            if (!targetProperty || targetProperty->coreIndex() > 0x0000FFFF) {
                 *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
                 break;
             }
 
-            propIdx = targetProperty->coreIndex;
+            propIdx = QQmlPropertyIndex(targetProperty->coreIndex());
 
             if (!subProperty.isEmpty()) {
-                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType);
+                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType());
                 if (!valueTypeMetaObject) {
                     *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
                     break;
@@ -1138,14 +1138,14 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                 }
                 Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
-                propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
+                propIdx = QQmlPropertyIndex(propIdx.coreIndex(), valueTypeIndex);
             } else {
                 if (targetProperty->isQObject())
                     alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
             }
         }
 
-        alias->encodedMetaPropertyIndex = propIdx;
+        alias->encodedMetaPropertyIndex = propIdx.toEncoded();
         alias->flags |= QV4::CompiledData::Alias::Resolved;
         numResolvedAliases++;
     }

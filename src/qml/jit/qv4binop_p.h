@@ -81,6 +81,7 @@ struct Binop {
         int contextImplementation; // offsetOf(Runtime,...)
         MemRegOp inlineMemRegOp;
         ImmRegOp inlineImmRegOp;
+        bool needsExceptionCheck;
     };
 
     static const OpInfo operations[IR::LastAluOp + 1];

@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x01
+#define QV4_DATA_STRUCTURE_VERSION 0x03
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -92,6 +92,7 @@ struct Function;
 
 struct Function;
 class EvalISelFactory;
+class CompilationUnitMapper;
 
 namespace CompiledData {
 
@@ -618,7 +619,8 @@ struct Unit
         IsQml = 0x2,
         StaticData = 0x4, // Unit data persistent in memory?
         IsSingleton = 0x8,
-        IsSharedLibrary = 0x10 // .pragma shared?
+        IsSharedLibrary = 0x10, // .pragma shared?
+        ContainsMachineCode = 0x20 // used to determine if we need to mmap with execute permissions
     };
     LEUInt32 flags;
     LEUInt32 stringTableSize;
@@ -666,8 +668,10 @@ struct Unit
             return QString();
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         const QChar *characters = reinterpret_cast<const QChar *>(str + 1);
-        if (flags & StaticData)
-            return QString::fromRawData(characters, str->size);
+        // Too risky to do this while we unmap disk backed compilation but keep pointers to string
+        // data in the identifier tables.
+        //        if (flags & StaticData)
+        //            return QString::fromRawData(characters, str->size);
         return QString(characters, str->size);
 #else
         const LEUInt16 *characters = reinterpret_cast<const LEUInt16 *>(str + 1);
@@ -865,11 +869,14 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QVector<QQmlScriptData *> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
+    bool verifyChecksum(QQmlEngine *engine,
+                        const ResolvedTypeReferenceMap &dependentTypes) const;
+
     int metaTypeId;
     int listMetaTypeId;
     bool isRegisteredWithEngine;
 
-    QScopedPointer<QIODevice> backingFile;
+    QScopedPointer<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
@@ -901,7 +908,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     void destroy() Q_DECL_OVERRIDE;
 
-    bool saveToDisk(QString *errorString);
+    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
     bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:

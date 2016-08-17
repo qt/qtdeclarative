@@ -977,7 +977,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!requireWindowManager)
+    if (!requireWindowManager && qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
         qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
     else
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);

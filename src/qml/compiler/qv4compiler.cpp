@@ -364,6 +364,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     CompiledData::Unit unit;
     memcpy(unit.magic, CompiledData::magic_str, sizeof(unit.magic));
     unit.flags = QV4::CompiledData::Unit::IsJavascript;
+    unit.flags |= irModule->unitFlags;
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
     unit.architectureIndex = registerString(QSysInfo::buildAbi());

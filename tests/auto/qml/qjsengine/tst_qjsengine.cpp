@@ -1444,6 +1444,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
 
     QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, 0)).isNull());
+    QVERIFY(eng.toScriptValue(QVariant::fromValue(nullptr)).isNull());
 
     {
         QVariantMap map;
