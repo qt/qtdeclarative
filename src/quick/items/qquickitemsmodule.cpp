@@ -64,7 +64,9 @@
 #if QT_CONFIG(quick_pathview)
 #include "qquickpathview_p.h"
 #endif
+#if QT_CONFIG(quick_viewtransitions)
 #include "qquickitemviewtransition_p.h"
+#endif
 #if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
 #include <private/qquickpathinterpolator_p.h>
@@ -239,7 +241,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
     qmlRegisterUncreatableType<QQuickKeysAttached>(uri,major,minor,"Keys",QQuickKeysAttached::tr("Keys is only available via attached properties"));
     qmlRegisterUncreatableType<QQuickLayoutMirroringAttached>(uri,major,minor,"LayoutMirroring", QQuickLayoutMirroringAttached::tr("LayoutMirroring is only available via attached properties"));
+#if QT_CONFIG(quick_viewtransitions)
     qmlRegisterUncreatableType<QQuickViewTransitionAttached>(uri,major,minor,"ViewTransition",QQuickViewTransitionAttached::tr("ViewTransition is only available via attached properties"));
+#endif
 
     qmlRegisterType<QQuickPinchArea>(uri,major,minor,"PinchArea");
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");

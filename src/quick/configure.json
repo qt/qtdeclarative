@@ -74,6 +74,13 @@
                 "privateFeature"
             ]
         },
+        "quick-viewtransitions": {
+            "label": "Transitions required for ItemViews and Positioners",
+            "condition": "features.quick-itemview || features.quick-positioners",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-listview": {
             "label": "ListView item",
             "purpose": "Provides the Qt Quick ListView item",

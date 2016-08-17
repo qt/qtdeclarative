@@ -57,7 +57,6 @@ HEADERS += \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
-    $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
@@ -102,7 +101,6 @@ SOURCES += \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
-    $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowattached.cpp \
@@ -131,6 +129,13 @@ qtConfig(quick-itemview) {
         $$PWD/qquickitemview_p_p.h
     SOURCES += \
         $$PWD/qquickitemview.cpp
+}
+
+qtConfig(quick-viewtransitions) {
+    HEADERS += \
+        $$PWD/qquickitemviewtransition_p.h
+    SOURCES += \
+        $$PWD/qquickitemviewtransition.cpp
 }
 
 qtConfig(quick-listview) {
