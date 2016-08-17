@@ -57,7 +57,7 @@ T.ComboBox {
     bottomPadding: padding - 5
 
     delegate: ItemDelegate {
-        width: control.width
+        width: control.popup.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
     }
