@@ -379,8 +379,8 @@ void QQuickToolTipAttached::setText(const QString &text)
     d->text = text;
     emit textChanged();
 
-    if (QQuickToolTip *tip = d->instance(true))
-        tip->setText(text);
+    if (isVisible())
+        d->instance(true)->setText(text);
 }
 
 /*!
@@ -405,6 +405,9 @@ void QQuickToolTipAttached::setDelay(int delay)
 
     d->delay = delay;
     emit delayChanged();
+
+    if (isVisible())
+        d->instance(true)->setDelay(delay);
 }
 
 /*!
@@ -429,6 +432,9 @@ void QQuickToolTipAttached::setTimeout(int timeout)
 
     d->timeout = timeout;
     emit timeoutChanged();
+
+    if (isVisible())
+        d->instance(true)->setTimeout(timeout);
 }
 
 /*!
