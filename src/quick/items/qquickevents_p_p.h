@@ -495,20 +495,7 @@ public:
     Q_ENUM(CapabilityFlag)
     Q_FLAG(Capabilities)
 
-    QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
-      : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
-      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name), m_uniqueId(uniqueId), m_event(nullptr)
-    {
-        if (m_deviceType == Mouse) {
-            m_event = new QQuickPointerMouseEvent;
-        } else if (m_deviceType == TouchScreen || m_deviceType == TouchPad) {
-            m_event = new QQuickPointerTouchEvent;
-        } else {
-            Q_ASSERT(false);
-        }
-    }
 
-    ~QQuickPointerDevice() { delete m_event; }
     DeviceType type() const { return m_deviceType; }
     PointerType pointerType() const { return m_pointerType; }
     Capabilities capabilities() const { return m_capabilities; }
@@ -525,6 +512,21 @@ public:
     static QQuickPointerDevice *tabletDevice(qint64);
 
 private:
+    QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
+      : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
+      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name), m_uniqueId(uniqueId), m_event(nullptr)
+    {
+        if (m_deviceType == Mouse) {
+            m_event = new QQuickPointerMouseEvent;
+        } else if (m_deviceType == TouchScreen || m_deviceType == TouchPad) {
+            m_event = new QQuickPointerTouchEvent;
+        } else {
+            Q_ASSERT(false);
+        }
+    }
+    ~QQuickPointerDevice() { delete m_event; }
+
+private:
     DeviceType m_deviceType;
     PointerType m_pointerType;
     Capabilities m_capabilities;
@@ -536,6 +538,7 @@ private:
     QQuickPointerEvent *m_event;
 
     Q_DISABLE_COPY(QQuickPointerDevice)
+    friend struct ConstructableQQuickPointerDevice;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::DeviceTypes)

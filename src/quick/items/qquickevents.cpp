@@ -446,7 +446,15 @@ Item {
 typedef QHash<QTouchDevice *, QQuickPointerDevice *> PointerDeviceForTouchDeviceHash;
 Q_GLOBAL_STATIC(PointerDeviceForTouchDeviceHash, g_touchDevices)
 
-Q_GLOBAL_STATIC_WITH_ARGS(QQuickPointerDevice, g_genericMouseDevice,
+struct ConstructableQQuickPointerDevice : public QQuickPointerDevice
+{
+    ConstructableQQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps,
+                              int maxPoints, int buttonCount, const QString &name,
+                              qint64 uniqueId = 0)
+        : QQuickPointerDevice(devType, pType, caps, maxPoints, buttonCount, name, uniqueId) {}
+
+};
+Q_GLOBAL_STATIC_WITH_ARGS(ConstructableQQuickPointerDevice, g_genericMouseDevice,
                             (QQuickPointerDevice::Mouse,
                              QQuickPointerDevice::GenericPointer,
                              QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
