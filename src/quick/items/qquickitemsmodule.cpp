@@ -58,7 +58,9 @@
 #if QT_CONFIG(quick_listview)
 #include "qquicklistview_p.h"
 #endif
+#if QT_CONFIG(quick_gridview)
 #include "qquickgridview_p.h"
+#endif
 #if QT_CONFIG(quick_pathview)
 #include "qquickpathview_p.h"
 #endif
@@ -67,7 +69,9 @@
 #include <private/qquickpath_p.h>
 #include <private/qquickpathinterpolator_p.h>
 #endif
+#if QT_CONFIG(quick_positioners)
 #include "qquickpositioners_p.h"
+#endif
 #include "qquickrepeater_p.h"
 #include "qquickloader_p.h"
 #if QT_CONFIG(quick_animatedimage)
@@ -156,18 +160,25 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnimatedImage>(uri,major,minor,"AnimatedImage");
 #endif
     qmlRegisterType<QQuickBorderImage>(uri,major,minor,"BorderImage");
-    qmlRegisterType<QQuickColumn>(uri,major,minor,"Column");
     qmlRegisterType<QQuickFlickable>(uri,major,minor,"Flickable");
 #if QT_CONFIG(quick_flipable)
     qmlRegisterType<QQuickFlipable>(uri,major,minor,"Flipable");
 #endif
-    qmlRegisterType<QQuickFlow>(uri,major,minor,"Flow");
 //    qmlRegisterType<QQuickFocusPanel>(uri,major,minor,"FocusPanel");
     qmlRegisterType<QQuickFocusScope>(uri,major,minor,"FocusScope");
     qmlRegisterType<QQuickGradient>(uri,major,minor,"Gradient");
     qmlRegisterType<QQuickGradientStop>(uri,major,minor,"GradientStop");
+#if QT_CONFIG(quick_positioners)
+    qmlRegisterType<QQuickColumn>(uri,major,minor,"Column");
+    qmlRegisterType<QQuickFlow>(uri,major,minor,"Flow");
     qmlRegisterType<QQuickGrid>(uri,major,minor,"Grid");
+    qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
+    qmlRegisterType<QQuickRow>(uri,major,minor,"Row");
+#endif
+#if QT_CONFIG(quick_gridview)
     qmlRegisterType<QQuickGridView>(uri,major,minor,"GridView");
+#endif
     qmlRegisterType<QQuickImage>(uri,major,minor,"Image");
     qmlRegisterType<QQuickItem>(uri,major,minor,"Item");
 #if QT_CONFIG(quick_listview)
@@ -190,11 +201,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
 #endif
-    qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
-                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
     qmlRegisterType<QQuickRepeater>(uri,major,minor,"Repeater");
-    qmlRegisterType<QQuickRow>(uri,major,minor,"Row");
     qmlRegisterType<QQuickTranslate>(uri,major,minor,"Translate");
     qmlRegisterType<QQuickRotation>(uri,major,minor,"Rotation");
     qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");
@@ -282,13 +290,19 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #endif
 
     qmlRegisterType<QQuickItem, 1>(uri, 2, 1,"Item");
+#if QT_CONFIG(quick_positioners)
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
+#endif
+#if QT_CONFIG(quick_itemview)
     qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
     qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
+#endif
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
 #endif
+#if QT_CONFIG(quick_gridview)
     qmlRegisterType<QQuickGridView, 1>(uri, 2, 1, "GridView");
+#endif
     qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
 
     qmlRegisterType<QQuickText, 2>(uri, 2, 2, "Text");
@@ -317,12 +331,14 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickText, 6>(uri, 2, 6, "Text");
     qmlRegisterType<QQuickTextEdit, 6>(uri, 2, 6, "TextEdit");
     qmlRegisterType<QQuickTextInput, 6>(uri, 2, 6, "TextInput");
+#if QT_CONFIG(quick_positioners)
     qmlRegisterUncreatableType<QQuickBasePositioner, 6>(uri, 2, 6, "Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
     qmlRegisterType<QQuickColumn, 6>(uri, 2, 6, "Column");
     qmlRegisterType<QQuickRow, 6>(uri, 2, 6, "Row");
     qmlRegisterType<QQuickGrid, 6>(uri, 2, 6, "Grid");
     qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
+#endif
     qmlRegisterUncreatableType<QQuickEnterKeyAttached, 6>(uri, 2, 6, "EnterKey",
                                                            QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
 #if QT_CONFIG(quick_shadereffect)
@@ -332,7 +348,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
 #endif
+#if QT_CONFIG(quick_gridview)
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
+#endif
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
 #if QT_CONFIG(quick_pathview)

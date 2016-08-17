@@ -51,8 +51,11 @@
 // We mean it.
 //
 
-#include "qquickitemview_p.h"
+#include <QtQuick/private/qtquickglobal_p.h>
 
+QT_REQUIRE_CONFIG(quick_gridview);
+
+#include "qquickitemview_p.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -11,9 +11,11 @@
             "quick-animatedimage": "boolean",
             "quick-canvas": "boolean",
             "quick-flipable": "boolean",
+            "quick-gridview": "boolean",
             "quick-listview": "boolean",
             "quick-path": "boolean",
             "quick-pathview": "boolean",
+            "quick-positioners": "boolean",
             "quick-shadereffect": "boolean",
             "quick-sprite": "boolean"
         }
@@ -58,6 +60,20 @@
                 "privateFeature"
             ]
         },
+        "quick-gridview": {
+            "label": "GridView item",
+            "purpose": "Provides the Qt Quick GridView item",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-itemview": {
+            "label": "ItemView item",
+            "condition": "features.quick-gridview || features.quick-listview",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-listview": {
             "label": "ListView item",
             "purpose": "Provides the Qt Quick ListView item",
@@ -76,6 +92,13 @@
             "label": "PathView item",
             "purpose": "Provides the Qt Quick PathView item",
             "condition": "features.quick-path",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-positioners": {
+            "label": "Positioner items",
+            "purpose": "Provides Positioner items in Qt Quick",
             "output": [
                 "privateFeature"
             ]
@@ -104,9 +127,11 @@
                 "quick-animatedimage",
                 "quick-canvas",
                 "quick-flipable",
+                "quick-gridview",
                 "quick-listview",
                 "quick-path",
                 "quick-pathview",
+                "quick-positioners",
                 "quick-shadereffect",
                 "quick-sprite"
             ]

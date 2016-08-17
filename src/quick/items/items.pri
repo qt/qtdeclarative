@@ -43,9 +43,6 @@ HEADERS += \
     $$PWD/qquickflickablebehavior_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
-    $$PWD/qquickgridview_p.h \
-    $$PWD/qquickpositioners_p.h \
-    $$PWD/qquickpositioners_p_p.h \
     $$PWD/qquickloader_p.h \
     $$PWD/qquickloader_p_p.h \
     $$PWD/qquicktranslate_p.h \
@@ -60,8 +57,6 @@ HEADERS += \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
-    $$PWD/qquickitemview_p.h \
-    $$PWD/qquickitemview_p_p.h \
     $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
@@ -96,8 +91,6 @@ SOURCES += \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
     $$PWD/qquickrepeater.cpp \
-    $$PWD/qquickgridview.cpp \
-    $$PWD/qquickpositioners.cpp \
     $$PWD/qquickloader.cpp \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
@@ -109,7 +102,6 @@ SOURCES += \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
-    $$PWD/qquickitemview.cpp \
     $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
@@ -126,6 +118,21 @@ qtConfig(quick-animatedimage) {
         $$PWD/qquickanimatedimage.cpp
 }
 
+qtConfig(quick-gridview) {
+    HEADERS += \
+        $$PWD/qquickgridview_p.h
+    SOURCES += \
+        $$PWD/qquickgridview.cpp
+}
+
+qtConfig(quick-itemview) {
+    HEADERS += \
+        $$PWD/qquickitemview_p.h \
+        $$PWD/qquickitemview_p_p.h
+    SOURCES += \
+        $$PWD/qquickitemview.cpp
+}
+
 qtConfig(quick-listview) {
     HEADERS += \
         $$PWD/qquicklistview_p.h
@@ -139,6 +146,14 @@ qtConfig(quick-pathview) {
         $$PWD/qquickpathview_p_p.h
     SOURCES += \
         $$PWD/qquickpathview.cpp
+}
+
+qtConfig(quick-positioners) {
+    HEADERS += \
+        $$PWD/qquickpositioners_p.h \
+        $$PWD/qquickpositioners_p_p.h
+    SOURCES += \
+        $$PWD/qquickpositioners.cpp
 }
 
 qtConfig(quick-flipable) {
