@@ -42,8 +42,7 @@
 #define SOFTWARERENDERER_H
 
 #include <qsgrendernode.h>
-
-class QQuickItem;
+#include <QQuickItem>
 
 class SoftwareRenderNode : public QSGRenderNode
 {
