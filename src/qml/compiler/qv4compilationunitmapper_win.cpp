@@ -80,7 +80,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     DWORD bytesRead;
     if (!ReadFile(handle, reinterpret_cast<char *>(&header), sizeof(header), &bytesRead, nullptr)) {
         *errorString = qt_error_string(GetLastError());
-        return false;
+        return nullptr;
     }
 
     if (bytesRead != sizeof(header)) {
@@ -101,7 +101,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     HANDLE fileMappingHandle = CreateFileMapping(handle, 0, mappingFlags, 0, 0, 0);
     if (!fileMappingHandle) {
         *errorString = qt_error_string(GetLastError());
-        return false;
+        return nullptr;
     }
 
     QDeferredCleanup mappingCleanup([fileMappingHandle]{
