@@ -141,6 +141,7 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGRootNode *)
 {
 }
 
+#if QT_CONFIG(quick_sprite)
 bool QSGSoftwareRenderListBuilder::visit(QSGSpriteNode *node)
 {
     return addRenderableNode(node);
@@ -150,6 +151,7 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGSpriteNode *)
 {
 
 }
+#endif
 
 bool QSGSoftwareRenderListBuilder::visit(QSGRenderNode *node)
 {

@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/qtquickglobal.h>
+
+QT_REQUIRE_CONFIG(quick_sprite);
+
 #include "qquickitem_p.h"
 #include "qquicksprite_p.h"
 

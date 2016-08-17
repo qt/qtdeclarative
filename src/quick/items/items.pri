@@ -73,13 +73,7 @@ HEADERS += \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickgraphicsinfo_p.h \
-    $$PWD/qquickitemgrabresult.h \
-    $$PWD/qquickspriteengine_p.h \
-    $$PWD/qquicksprite_p.h \
-    $$PWD/qquickspritesequence_p.h \
-    $$PWD/qquickanimatedsprite_p.h \
-    $$PWD/qquickanimatedsprite_p_p.h \
-    $$PWD/qquickspritesequence_p_p.h
+    $$PWD/qquickitemgrabresult.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -130,11 +124,7 @@ SOURCES += \
     $$PWD/qquickgenericshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
-    $$PWD/qquickitemgrabresult.cpp \
-    $$PWD/qquickspriteengine.cpp \
-    $$PWD/qquicksprite.cpp \
-    $$PWD/qquickspritesequence.cpp \
-    $$PWD/qquickanimatedsprite.cpp
+    $$PWD/qquickitemgrabresult.cpp
 
 qtConfig(quick-animatedimage) {
     HEADERS += \
@@ -164,6 +154,21 @@ qtConfig(quick-flipable) {
         $$PWD/qquickflipable_p.h
     SOURCES += \
         $$PWD/qquickflipable.cpp
+}
+
+qtConfig(quick-sprite) {
+    HEADERS += \
+        $$PWD/qquickspriteengine_p.h \
+        $$PWD/qquicksprite_p.h \
+        $$PWD/qquickspritesequence_p.h \
+        $$PWD/qquickanimatedsprite_p.h \
+        $$PWD/qquickanimatedsprite_p_p.h \
+        $$PWD/qquickspritesequence_p_p.h
+    SOURCES += \
+        $$PWD/qquickspriteengine.cpp \
+        $$PWD/qquicksprite.cpp \
+        $$PWD/qquickspritesequence.cpp \
+        $$PWD/qquickanimatedsprite.cpp
 }
 
 # Items that depend on OpenGL Renderer

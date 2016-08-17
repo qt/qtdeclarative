@@ -47,7 +47,9 @@
 #include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarerenderer_p.h"
+#if QT_CONFIG(quick_sprite)
 #include "qsgsoftwarespritenode_p.h"
+#endif
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
@@ -184,10 +186,12 @@ QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
     return new QSGSoftwareNinePatchNode;
 }
 
+#if QT_CONFIG(quick_sprite)
 QSGSpriteNode *QSGSoftwareContext::createSpriteNode()
 {
     return new QSGSoftwareSpriteNode;
 }
+#endif
 
 QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const
 {

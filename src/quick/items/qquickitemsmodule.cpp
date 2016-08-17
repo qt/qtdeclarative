@@ -86,9 +86,11 @@
 #include <QtQuick/private/qquickcontext2d_p.h>
 #endif
 #include "qquickitemgrabresult.h"
+#if QT_CONFIG(quick_sprite)
 #include "qquicksprite_p.h"
 #include "qquickspritesequence_p.h"
 #include "qquickanimatedsprite_p.h"
+#endif
 #ifndef QT_NO_OPENGL
 # include "qquickopenglinfo_p.h"
 #endif
@@ -242,9 +244,11 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
 #endif
 
+#if QT_CONFIG(quick_sprite)
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
     qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
+#endif
 
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");

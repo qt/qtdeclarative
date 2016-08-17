@@ -13,7 +13,8 @@
             "quick-flipable": "boolean",
             "quick-listview": "boolean",
             "quick-path": "boolean",
-            "quick-pathview": "boolean"
+            "quick-pathview": "boolean",
+            "quick-sprite": "boolean"
         }
     },
 
@@ -77,6 +78,13 @@
             "output": [
                 "privateFeature"
             ]
+        },
+        "quick-sprite": {
+            "label": "Sprite item",
+            "purpose": "Provides the Qt Quick Sprite Item",
+            "output": [
+                "privateFeature"
+            ]
         }
     },
 
@@ -90,7 +98,8 @@
                 "quick-flipable",
                 "quick-listview",
                 "quick-path",
-                "quick-pathview"
+                "quick-pathview",
+                "quick-sprite"
             ]
         }
     ]

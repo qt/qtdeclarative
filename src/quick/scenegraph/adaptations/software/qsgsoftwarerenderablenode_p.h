@@ -51,6 +51,8 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
 #include <QtGui/QRegion>
 #include <QtCore/QRect>
 #include <QtGui/QTransform>
@@ -84,7 +86,9 @@ public:
         NinePatch,
         SimpleRectangle,
         SimpleImage,
+#if QT_CONFIG(quick_sprite)
         SpriteNode,
+#endif
         RenderNode
     };
 
