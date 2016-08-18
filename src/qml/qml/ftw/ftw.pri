@@ -8,7 +8,6 @@ HEADERS +=  \
     $$PWD/qqmlthread_p.h \
     $$PWD/qfinitestack_p.h \
     $$PWD/qrecursionwatcher_p.h \
-    $$PWD/qdeletewatcher_p.h \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
     $$PWD/qlazilyallocated_p.h \
