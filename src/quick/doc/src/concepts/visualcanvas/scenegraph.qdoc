@@ -263,7 +263,7 @@ animations, process events, etc.
 \endlist
 
 The threaded renderer is currently used by default on Windows with
-opengl32.dll, Linux with non-Mesa based drivers, OS X, mobile
+opengl32.dll, Linux with non-Mesa based drivers, \macos, mobile
 platforms, and Embedded Linux with EGLFS but this is subject to
 change. It is possible to force use of the threaded renderer by
 setting \c {QSG_RENDER_LOOP=threaded} in the environment.
