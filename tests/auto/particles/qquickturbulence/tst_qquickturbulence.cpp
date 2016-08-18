@@ -59,7 +59,7 @@ void tst_qquickturbulence::test_basic()
     //Note that the noise image built-in provides the 'randomness', so this test should be stable so long as it and the size
     //of the Turbulence item remain the same
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
