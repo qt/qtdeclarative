@@ -190,7 +190,7 @@ print the name of the current list item.
 
 \image declarative-qmlfocus5.png
 
-While the example is simple, there are a lot going on behind the scenes. Whenever
+While the example is simple, there is a lot going on behind the scenes. Whenever
 the current item changes, the \l ListView sets the delegate's \c {Item::focus}
 property. As the \l ListView is a focus scope, this doesn't affect the
 rest of the application. However, if the \l ListView itself has
