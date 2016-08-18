@@ -724,7 +724,10 @@ void QQuickPopupTransitionManager::transitionEnter()
 
     state = Enter;
     popup->prepareEnterTransition();
-    transition(popup->enterActions, popup->enter, popup->q_func());
+    if (popup->window)
+        transition(popup->enterActions, popup->enter, popup->q_func());
+    else
+        finished();
 }
 
 void QQuickPopupTransitionManager::transitionExit()
@@ -734,7 +737,10 @@ void QQuickPopupTransitionManager::transitionExit()
 
     state = Exit;
     popup->prepareExitTransition();
-    transition(popup->exitActions, popup->exit, popup->q_func());
+    if (popup->window)
+        transition(popup->exitActions, popup->exit, popup->q_func());
+    else
+        finished();
 }
 
 void QQuickPopupTransitionManager::finished()
