@@ -325,7 +325,13 @@ public:
 
 QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
 {
-    static QPointer<QQuickToolTip> tip;
+    QQmlEngine *engine = qmlEngine(parent);
+    if (!engine)
+        return nullptr;
+
+    static const char *name = "_q_QQuickToolTip";
+
+    QQuickToolTip *tip = engine->property(name).value<QQuickToolTip *>();
     if (!tip && create) {
         // TODO: a cleaner way to create the instance? QQml(Meta)Type?
         QQmlContext *context = qmlContext(parent);
@@ -334,9 +340,14 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
             component.setData("import QtQuick.Controls 2.0; ToolTip { }", QUrl());
 
             QObject *object = component.create(context);
+            if (object)
+                object->setParent(engine);
+
             tip = qobject_cast<QQuickToolTip *>(object);
             if (!tip)
                 delete object;
+            else
+                engine->setProperty(name, QVariant::fromValue(object));
         }
     }
     return tip;
