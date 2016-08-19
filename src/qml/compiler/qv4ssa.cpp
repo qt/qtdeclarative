@@ -5119,7 +5119,7 @@ void LifeTimeInterval::setFrom(int from) {
     Q_ASSERT(from > 0);
 
     if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
-        _ranges.push_front(Range(from, from));
+        _ranges.prepend(Range(from, from));
         if (_end == InvalidPosition)
             _end = from;
     } else {
@@ -5133,7 +5133,7 @@ void LifeTimeInterval::addRange(int from, int to) {
     Q_ASSERT(to >= from);
 
     if (_ranges.isEmpty()) {
-        _ranges.push_front(Range(from, to));
+        _ranges.prepend(Range(from, to));
         _end = to;
         return;
     }
@@ -5148,12 +5148,12 @@ void LifeTimeInterval::addRange(int from, int to) {
                 break;
             p1->start = qMin(p->start, p1->start);
             p1->end = qMax(p->end, p1->end);
-            _ranges.pop_front();
+            _ranges.remove(0);
             p = &_ranges.first();
         }
     } else {
         if (to < p->start) {
-            _ranges.push_front(Range(from, to));
+            _ranges.prepend(Range(from, to));
         } else {
             Q_ASSERT(from > _ranges.last().end);
             _ranges.push_back(Range(from, to));
@@ -5194,7 +5194,7 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
     }
 
     if (newInterval._ranges.first().end == atPosition)
-        newInterval._ranges.removeFirst();
+        newInterval._ranges.remove(0);
 
     if (newStart == InvalidPosition) {
         // the temp stays inactive for the rest of its lifetime
@@ -5214,7 +5214,7 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
                 break;
             } else {
                 // the temp stays inactive for this interval, so remove it.
-                newInterval._ranges.removeFirst();
+                newInterval._ranges.remove(0);
             }
         }
         Q_ASSERT(!newInterval._ranges.isEmpty());

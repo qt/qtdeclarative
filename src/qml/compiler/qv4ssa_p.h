@@ -75,7 +75,7 @@ public:
 
         bool covers(int position) const { return start <= position && position <= end; }
     };
-    typedef QVector<Range> Ranges;
+    typedef QVarLengthArray<Range, 4> Ranges;
 
 private:
     Temp _temp;
@@ -89,7 +89,7 @@ public:
     enum { InvalidPosition = -1 };
     enum { InvalidRegister = -1 };
 
-    explicit LifeTimeInterval(int rangeCapacity = 2)
+    explicit LifeTimeInterval(int rangeCapacity = 4)
         : _end(InvalidPosition)
         , _reg(InvalidRegister)
         , _isFixedInterval(0)
