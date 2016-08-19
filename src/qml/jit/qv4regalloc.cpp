@@ -817,7 +817,7 @@ class ResolutionPhase
     QVector<LifeTimeInterval *> _unprocessedReverseOrder;
     IR::Function *_function;
     const std::vector<int> &_assignedSpillSlots;
-    QHash<IR::Temp, const LifeTimeInterval *> _intervalForTemp;
+    std::vector<const LifeTimeInterval *> _liveIntervals;
     const QVector<const RegisterInfo *> &_intRegs;
     const QVector<const RegisterInfo *> &_fpRegs;
 
@@ -825,8 +825,8 @@ class ResolutionPhase
     std::vector<Move *> _loads;
     std::vector<Move *> _stores;
 
-    QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtStart;
-    QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
+    QHash<BasicBlock *, std::vector<const LifeTimeInterval *> > _liveAtStart;
+    QHash<BasicBlock *, std::vector<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
     ResolutionPhase(QVector<LifeTimeInterval *> &&unprocessedReversedOrder,
@@ -883,7 +883,7 @@ private:
 
             cleanOldIntervals(_intervals->startPosition(bb));
             addNewIntervals(_intervals->startPosition(bb));
-            _liveAtStart[bb] = _intervalForTemp.values();
+            _liveAtStart[bb] = _liveIntervals;
 
             for (int i = 0, ei = statements.size(); i != ei; ++i) {
                 _currentStmt = statements.at(i);
@@ -905,14 +905,14 @@ private:
             }
 
             cleanOldIntervals(_intervals->endPosition(bb));
-            _liveAtEnd[bb] = _intervalForTemp.values();
+            _liveAtEnd[bb] = _liveIntervals;
 
             if (DebugRegAlloc) {
                 QBuffer buf;
                 buf.open(QIODevice::WriteOnly);
                 QTextStream os(&buf);
                 os << "Intervals live at the start of L" << bb->index() << ":" << endl;
-                if (_liveAtStart[bb].isEmpty())
+                if (_liveAtStart[bb].empty())
                     os << "\t(none)" << endl;
                 for (const LifeTimeInterval *i : _liveAtStart.value(bb)) {
                     os << "\t";
@@ -920,7 +920,7 @@ private:
                     os << endl;
                 }
                 os << "Intervals live at the end of L" << bb->index() << ":" << endl;
-                if (_liveAtEnd[bb].isEmpty())
+                if (_liveAtEnd[bb].empty())
                     os << "\t(none)" << endl;
                 for (const LifeTimeInterval *i : _liveAtEnd.value(bb)) {
                     os << "\t";
@@ -935,9 +935,19 @@ private:
 
     }
 
+    const LifeTimeInterval *findLiveInterval(Temp *t) const
+    {
+        for (const LifeTimeInterval *lti : _liveIntervals) {
+            if (lti->temp() == *t)
+                return lti;
+        }
+
+        return nullptr;
+    }
+
     void maybeGenerateSpill(Temp *t)
     {
-        const LifeTimeInterval *i = _intervalForTemp[*t];
+        const LifeTimeInterval *i = findLiveInterval(t);
         if (i->reg() == LifeTimeInterval::InvalidRegister)
             return;
 
@@ -959,7 +969,7 @@ private:
                 break;
 
             Q_ASSERT(!i->isFixedInterval());
-            _intervalForTemp[i->temp()] = i;
+            _liveIntervals.push_back(i);
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
             _unprocessedReverseOrder.removeLast();
@@ -968,11 +978,12 @@ private:
 
     void cleanOldIntervals(int position)
     {
-        QMutableHashIterator<Temp, const LifeTimeInterval *> it(_intervalForTemp);
-        while (it.hasNext()) {
-            const LifeTimeInterval *i = it.next().value();
-            if (i->end() < position || i->isFixedInterval())
-                it.remove();
+        for (size_t it = 0; it != _liveIntervals.size(); ) {
+            const LifeTimeInterval *lti = _liveIntervals.at(it);
+            if (lti->end() < position || lti->isFixedInterval())
+                _liveIntervals.erase(_liveIntervals.begin() + it);
+            else
+                ++it;
         }
     }
 
@@ -1198,7 +1209,7 @@ private:
         if (t->kind != Temp::VirtualRegister)
             return;
 
-        const LifeTimeInterval *i = _intervalForTemp[*t];
+        const LifeTimeInterval *i = findLiveInterval(t);
         Q_ASSERT(i->isValid());
 
         if (_currentStmt != 0 && i->start() == usePosition(_currentStmt)) {
