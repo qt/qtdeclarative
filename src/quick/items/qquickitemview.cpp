@@ -1027,28 +1027,27 @@ void QQuickItemView::positionViewAtEnd()
     d->positionViewAtIndex(d->model->count(), End);
 }
 
+static FxViewItem * fxViewItemAtPosition(const QList<FxViewItem *> &items, qreal x, qreal y)
+{
+    for (FxViewItem *item : items) {
+        if (item->contains(x, y))
+            return item;
+    }
+    return nullptr;
+}
+
 int QQuickItemView::indexAt(qreal x, qreal y) const
 {
     Q_D(const QQuickItemView);
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        const FxViewItem *item = d->visibleItems.at(i);
-        if (item->contains(x, y))
-            return item->index;
-    }
-
-    return -1;
+    const FxViewItem *item = fxViewItemAtPosition(d->visibleItems, x, y);
+    return item ? item->index : -1;
 }
 
 QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
 {
     Q_D(const QQuickItemView);
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        const FxViewItem *item = d->visibleItems.at(i);
-        if (item->contains(x, y))
-            return item->item;
-    }
-
-    return 0;
+    const FxViewItem *item = fxViewItemAtPosition(d->visibleItems, x, y);
+    return item ? item->item : nullptr;
 }
 
 void QQuickItemView::forceLayout()
