@@ -39,6 +39,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QTest {
+    extern int Q_TESTLIB_EXPORT defaultMouseDelay();
+}
+
 QuickTestEvent::QuickTestEvent(QObject *parent)
     : QObject(parent)
 {
@@ -46,6 +50,11 @@ QuickTestEvent::QuickTestEvent(QObject *parent)
 
 QuickTestEvent::~QuickTestEvent()
 {
+}
+
+int QuickTestEvent::defaultMouseDelay() const
+{
+    return QTest::defaultMouseDelay();
 }
 
 bool QuickTestEvent::keyPress(int key, int modifiers, int delay)
@@ -104,10 +113,6 @@ bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int d
     QTest::keyClick(window, character[0].toLatin1(), Qt::KeyboardModifiers(modifiers), delay);
     return true;
 }
-
-namespace QTest {
-    extern int Q_TESTLIB_EXPORT defaultMouseDelay();
-};
 
 namespace QtQuickTest
 {

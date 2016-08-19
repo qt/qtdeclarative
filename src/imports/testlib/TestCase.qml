@@ -1047,6 +1047,7 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        var moveDelay = Math.max(1, delay === -1 ? qtest_events.defaultMouseDelay : delay)
 
         // Divide dx and dy to have intermediate mouseMove while dragging
         // Fractions of dx/dy need be superior to the dragThreshold
@@ -1060,12 +1061,12 @@ Item {
 
         mousePress(item, x, y, button, modifiers, delay)
         //trigger dragging
-        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
+        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
         if (ddx > 0 || ddy > 0) {
-            mouseMove(item, x + ddx, y + ddy, delay, button)
-            mouseMove(item, x + 2*ddx, y + 2*ddy, delay, button)
+            mouseMove(item, x + ddx, y + ddy, moveDelay, button)
+            mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)
         }
-        mouseMove(item, x + dx, y + dy, delay, button)
+        mouseMove(item, x + dx, y + dy, moveDelay, button)
         mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
     }
 

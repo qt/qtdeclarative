@@ -53,9 +53,11 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)
 public:
     QuickTestEvent(QObject *parent = 0);
     ~QuickTestEvent();
+    int defaultMouseDelay() const;
 
 public Q_SLOTS:
     bool keyPress(int key, int modifiers, int delay);
