@@ -369,6 +369,9 @@ static const QRgb colors[][14] = {
     }
 };
 
+// If no value was inherited from a parent or explicitly set, the "global" values are used.
+// The initial, default values of the globals are hard-coded here, but the environment
+// variables and .conf file override them if specified.
 static QQuickMaterialStyle::Theme globalTheme = QQuickMaterialStyle::Light;
 static uint globalPrimary = QQuickMaterialStyle::Indigo;
 static uint globalAccent = QQuickMaterialStyle::Pink;
@@ -378,6 +381,8 @@ static uint globalBackground = 0xFFFAFAFA; // backgroundColorLight
 // Each style's m_hasForeground/m_hasBackground are initialized to these values.
 static bool hasGlobalForeground = false;
 static bool hasGlobalBackground = false;
+// These represent whether or not the global color value was specified as one of the
+// values that QColor accepts, as opposed to one of the pre-defined colors like Red.
 static bool globalPrimaryCustom = false;
 static bool globalAccentCustom = false;
 static bool globalForegroundCustom = true;
