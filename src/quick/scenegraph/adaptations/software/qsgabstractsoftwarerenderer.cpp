@@ -67,9 +67,7 @@ QSGAbstractSoftwareRenderer::~QSGAbstractSoftwareRenderer()
     // Cleanup RenderableNodes
     delete m_background;
 
-    for (QSGSoftwareRenderableNode *node : m_nodes.values()) {
-        delete node;
-    }
+    qDeleteAll(m_nodes);
 
     delete m_nodeUpdater;
 }

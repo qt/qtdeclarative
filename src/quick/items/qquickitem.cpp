@@ -98,7 +98,8 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
                 << item->hasActiveFocus()
                 << item->isFocusScope()
                 << item;
-        for (QQuickItem *child : item->childItems()) {
+        const auto childItems = item->childItems();
+        for (QQuickItem *child : childItems) {
             debugFocusTree(
                     child,
                     item->isFocusScope() || !scope ? item : scope,
