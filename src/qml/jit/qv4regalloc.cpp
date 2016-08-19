@@ -825,8 +825,8 @@ class ResolutionPhase
     std::vector<Move *> _loads;
     std::vector<Move *> _stores;
 
-    QHash<BasicBlock *, std::vector<const LifeTimeInterval *> > _liveAtStart;
-    QHash<BasicBlock *, std::vector<const LifeTimeInterval *> > _liveAtEnd;
+    std::vector<std::vector<const LifeTimeInterval *> > _liveAtStart;
+    std::vector<std::vector<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
     ResolutionPhase(QVector<LifeTimeInterval *> &&unprocessedReversedOrder,
@@ -843,8 +843,8 @@ public:
         , _fpRegs(fpRegs)
         , _currentStmt(0)
     {
-        _liveAtStart.reserve(function->basicBlockCount());
-        _liveAtEnd.reserve(function->basicBlockCount());
+        _liveAtStart.resize(function->basicBlockCount());
+        _liveAtEnd.resize(function->basicBlockCount());
     }
 
     void run() {
@@ -883,7 +883,7 @@ private:
 
             cleanOldIntervals(_intervals->startPosition(bb));
             addNewIntervals(_intervals->startPosition(bb));
-            _liveAtStart[bb] = _liveIntervals;
+            _liveAtStart[bb->index()] = _liveIntervals;
 
             for (int i = 0, ei = statements.size(); i != ei; ++i) {
                 _currentStmt = statements.at(i);
@@ -905,24 +905,24 @@ private:
             }
 
             cleanOldIntervals(_intervals->endPosition(bb));
-            _liveAtEnd[bb] = _liveIntervals;
+            _liveAtEnd[bb->index()] = _liveIntervals;
 
             if (DebugRegAlloc) {
                 QBuffer buf;
                 buf.open(QIODevice::WriteOnly);
                 QTextStream os(&buf);
                 os << "Intervals live at the start of L" << bb->index() << ":" << endl;
-                if (_liveAtStart[bb].empty())
+                if (_liveAtStart[bb->index()].empty())
                     os << "\t(none)" << endl;
-                for (const LifeTimeInterval *i : _liveAtStart.value(bb)) {
+                for (const LifeTimeInterval *i : _liveAtStart.at(bb->index())) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
                 }
                 os << "Intervals live at the end of L" << bb->index() << ":" << endl;
-                if (_liveAtEnd[bb].empty())
+                if (_liveAtEnd[bb->index()].empty())
                     os << "\t(none)" << endl;
-                for (const LifeTimeInterval *i : _liveAtEnd.value(bb)) {
+                for (const LifeTimeInterval *i : _liveAtEnd.at(bb->index())) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
@@ -1030,7 +1030,7 @@ private:
         int successorStart = _intervals->startPosition(successor);
         Q_ASSERT(successorStart > 0);
 
-        for (const LifeTimeInterval *it : _liveAtStart.value(successor)) {
+        for (const LifeTimeInterval *it : _liveAtStart.at(successor->index())) {
             bool isPhiTarget = false;
             Expr *moveFrom = 0;
 
@@ -1044,7 +1044,7 @@ private:
                         Temp *t = opd->asTemp();
                         Q_ASSERT(t);
 
-                        for (const LifeTimeInterval *it2 : _liveAtEnd.value(predecessor)) {
+                        for (const LifeTimeInterval *it2 : _liveAtEnd.at(predecessor->index())) {
                             if (it2->temp() == *t
                                     && it2->reg() != LifeTimeInterval::InvalidRegister
                                     && it2->covers(predecessorEnd)) {
@@ -1059,7 +1059,7 @@ private:
                     }
                 }
             } else {
-                for (const LifeTimeInterval *predIt : _liveAtEnd.value(predecessor)) {
+                for (const LifeTimeInterval *predIt : _liveAtEnd.at(predecessor->index())) {
                     if (predIt->temp() == it->temp()) {
                         if (predIt->reg() != LifeTimeInterval::InvalidRegister
                                 && predIt->covers(predecessorEnd)) {
