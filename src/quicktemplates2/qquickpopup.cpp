@@ -1415,6 +1415,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
         p->resolveFont();
         if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
             p->updateLocale(window->locale(), false); // explicit=false
+    } else {
+        close();
     }
     d->setWindow(parent ? parent->window() : nullptr);
     emit parentChanged();
