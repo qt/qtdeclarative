@@ -935,9 +935,11 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         return;
 
     applyPendingChanges();
-    int idx = qMax(qMin(index, model->count()-1), 0);
+    const int modelCount = model->count();
+    int idx = qMax(qMin(index, modelCount - 1), 0);
 
-    qreal pos = isContentFlowReversed() ? -position() - size() : position();
+    const auto viewSize = size();
+    qreal pos = isContentFlowReversed() ? -position() - viewSize : position();
     FxViewItem *item = visibleItem(idx);
     qreal maxExtent = calculatedMaxExtent();
     if (!item) {
@@ -961,22 +963,22 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
                 pos -= headerSize();
             break;
         case QQuickItemView::Center:
-            pos = itemPos - (size() - item->size())/2;
+            pos = itemPos - (viewSize - item->size())/2;
             break;
         case QQuickItemView::End:
-            pos = itemPos - size() + item->size();
-            if (footer && (index >= model->count() || hasStickyFooter()))
+            pos = itemPos - viewSize + item->size();
+            if (footer && (index >= modelCount || hasStickyFooter()))
                 pos += footerSize();
             break;
         case QQuickItemView::Visible:
-            if (itemPos > pos + size())
-                pos = itemPos - size() + item->size();
+            if (itemPos > pos + viewSize)
+                pos = itemPos - viewSize + item->size();
             else if (item->endPosition() <= pos)
                 pos = itemPos;
             break;
         case QQuickItemView::Contain:
-            if (item->endPosition() >= pos + size())
-                pos = itemPos - size() + item->size();
+            if (item->endPosition() >= pos + viewSize)
+                pos = itemPos - viewSize + item->size();
             if (itemPos < pos)
                 pos = itemPos;
             break;
@@ -1787,10 +1789,11 @@ void QQuickItemViewPrivate::animationFinished(QAbstractAnimationJob *)
 void QQuickItemViewPrivate::refill()
 {
     qreal s = qMax(size(), qreal(0.));
+    const auto pos = position();
     if (isContentFlowReversed())
-        refill(-position()-displayMarginBeginning-s, -position()+displayMarginEnd);
+        refill(-pos - displayMarginBeginning-s, -pos + displayMarginEnd);
     else
-        refill(position()-displayMarginBeginning, position()+displayMarginEnd+s);
+        refill(pos - displayMarginBeginning, pos + displayMarginEnd+s);
 }
 
 void QQuickItemViewPrivate::refill(qreal from, qreal to)
