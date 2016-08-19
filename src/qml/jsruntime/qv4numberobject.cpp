@@ -63,7 +63,9 @@ NumberLocale::NumberLocale() : QLocale(QLocale::C),
     // -128 means shortest string that can accurately represent the number.
     defaultDoublePrecision(0xffffff80)
 {
-    setNumberOptions(QLocale::OmitGroupSeparator | QLocale::OmitLeadingZeroInExponent);
+    setNumberOptions(QLocale::OmitGroupSeparator |
+                     QLocale::OmitLeadingZeroInExponent |
+                     QLocale::IncludeTrailingZeroesAfterDot);
 }
 
 const NumberLocale *NumberLocale::instance()
@@ -291,24 +293,6 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
         return ctx->engine()->throwRangeError(error);
     }
 
-    // TODO: Once we get a NumberOption to retain trailing zeroes, replace the code below with:
-    // QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
-    QByteArray format = "%#." + QByteArray::number(precision) + "g";
-    QString result = QString::asprintf(format.constData(), v->asDouble());
-    if (result.endsWith(QLatin1Char('.'))) {
-        // This is 'f' notation, not 'e'.
-        result.chop(1);
-    } else {
-        int ePos = result.indexOf(QLatin1Char('e'));
-        if (ePos != -1) {
-            Q_ASSERT(ePos + 2 < result.length()); // always '+' or '-', and number, after 'e'
-            Q_ASSERT(ePos > 0);                   // 'e' is not the first character
-
-            if (result.at(ePos + 2) == QLatin1Char('0')) // Drop leading zeroes in exponent
-                result = result.remove(ePos + 2, 1);
-            if (result.at(ePos - 1) == QLatin1Char('.')) // Drop trailing dots before 'e'
-                result = result.remove(ePos - 1, 1);
-        }
-    }
+    QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
     return scope.engine->newString(result)->asReturnedValue();
 }

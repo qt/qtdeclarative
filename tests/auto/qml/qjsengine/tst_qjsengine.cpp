@@ -2142,12 +2142,27 @@ void tst_QJSEngine::jsNumberClass()
         QJSValue ret = eng.evaluate("new Number(123).toExponential()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.2e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(3)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.230e+2"));
     }
     QVERIFY(proto.property("toFixed").isCallable());
     {
         QJSValue ret = eng.evaluate("new Number(123).toFixed()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("123"));
+        ret = eng.evaluate("new Number(123).toFixed(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.0"));
+        ret = eng.evaluate("new Number(123).toFixed(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.00"));
     }
     QVERIFY(proto.property("toPrecision").isCallable());
     {
