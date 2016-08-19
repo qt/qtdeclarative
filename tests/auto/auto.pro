@@ -13,6 +13,7 @@ SUBDIRS += \
     qquickstyle \
     qquickstyleselector \
     qquickuniversalstyle \
+    qquickuniversalstyleconf \
     sanity \
     snippets
 

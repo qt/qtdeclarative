@@ -136,10 +136,14 @@ static QQuickUniversalStyle::Theme GlobalTheme = QQuickUniversalStyle::Light;
 static QRgb GlobalAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 static QRgb GlobalForeground = qquickuniversal_light_color(QQuickUniversalStyle::BaseHigh);
 static QRgb GlobalBackground = qquickuniversal_light_color(QQuickUniversalStyle::AltHigh);
+// These represent whether a global foreground/background was set.
+// Each style's m_hasForeground/m_hasBackground are initialized to these values.
+static bool HasGlobalForeground = false;
+static bool HasGlobalBackground = false;
 
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyleAttached(parent),
     m_explicitTheme(false), m_explicitAccent(false), m_explicitForeground(false), m_explicitBackground(false),
-    m_hasForeground(false), m_hasBackground(false), m_theme(GlobalTheme),
+    m_hasForeground(HasGlobalForeground), m_hasBackground(HasGlobalBackground), m_theme(GlobalTheme),
     m_accent(GlobalAccent), m_foreground(GlobalForeground), m_background(GlobalBackground)
 {
     init();
@@ -549,24 +553,30 @@ void QQuickUniversalStyle::init()
         Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
         if (ok) {
             GlobalForeground = m_foreground = qquickuniversal_accent_color(foregroundEnum);
+            HasGlobalForeground = m_hasForeground = true;
         } else if (!foregroundValue.isEmpty()) {
             QColor color(foregroundValue.constData());
-            if (color.isValid())
+            if (color.isValid()) {
                 GlobalForeground = m_foreground = color.rgba();
-            else
+                HasGlobalForeground = m_hasForeground = true;
+            } else {
                 qWarning().nospace().noquote() << "Universal: unknown foreground value: " << foregroundValue;
+            }
         }
 
         QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
         Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
         if (ok) {
             GlobalBackground = m_background = qquickuniversal_accent_color(backgroundEnum);
+            HasGlobalBackground = m_hasBackground = true;
         } else if (!backgroundValue.isEmpty()) {
             QColor color(backgroundValue.constData());
-            if (color.isValid())
+            if (color.isValid()) {
                 GlobalBackground = m_background = color.rgba();
-            else
+                HasGlobalBackground = m_hasBackground = true;
+            } else {
                 qWarning().nospace().noquote() << "Universal: unknown background value: " << backgroundValue;
+            }
         }
 
         globalsInitialized = true;
