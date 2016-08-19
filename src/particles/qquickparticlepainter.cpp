@@ -103,7 +103,8 @@ void QQuickParticlePainter::recalculateGroupIds() const
     m_groupIdsNeedRecalculation = false;
     m_groupIds.clear();
 
-    for (const QString &str : groups()) {
+    const auto groupList = groups();
+    for (const QString &str : groupList) {
         QQuickParticleGroupData::ID groupId = m_system->groupIds.value(str, QQuickParticleGroupData::InvalidID);
         if (groupId == QQuickParticleGroupData::InvalidID) {
             // invalid data, not finished setting up, or whatever. Fallback: do not cache.
