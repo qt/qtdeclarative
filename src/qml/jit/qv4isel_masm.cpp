@@ -145,13 +145,10 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     Label endOfCode = label();
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _patches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            for (Jump jump : qAsConst(it.value()))
+            for (Jump jump : qAsConst(_patches.at(i)))
                 jump.linkTo(target, this);
         }
     }
@@ -167,13 +164,10 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<DataLabelPtr> > it(_labelPatches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _labelPatches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            for (DataLabelPtr label : qAsConst(it.value()))
+            for (DataLabelPtr label : _labelPatches.at(i))
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
     }
