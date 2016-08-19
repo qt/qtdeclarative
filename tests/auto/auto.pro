@@ -9,6 +9,7 @@ SUBDIRS += \
     popup \
     pressandhold \
     qquickmaterialstyle \
+    qquickmaterialstyleconf \
     qquickstyle \
     qquickstyleselector \
     qquickuniversalstyle \

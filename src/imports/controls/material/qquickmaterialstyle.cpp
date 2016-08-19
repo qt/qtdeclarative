@@ -374,6 +374,10 @@ static uint globalPrimary = QQuickMaterialStyle::Indigo;
 static uint globalAccent = QQuickMaterialStyle::Pink;
 static uint globalForeground = 0xDD000000; // primaryTextColorLight
 static uint globalBackground = 0xFFFAFAFA; // backgroundColorLight
+// These represent whether a global foreground/background was set.
+// Each style's m_hasForeground/m_hasBackground are initialized to these values.
+static bool hasGlobalForeground = false;
+static bool hasGlobalBackground = false;
 static bool globalPrimaryCustom = false;
 static bool globalAccentCustom = false;
 static bool globalForegroundCustom = true;
@@ -438,8 +442,8 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyleAttached(
     m_customAccent(globalAccentCustom),
     m_customForeground(globalForegroundCustom),
     m_customBackground(globalBackgroundCustom),
-    m_hasForeground(false),
-    m_hasBackground(false),
+    m_hasForeground(hasGlobalForeground),
+    m_hasBackground(hasGlobalBackground),
     m_theme(globalTheme),
     m_primary(globalPrimary),
     m_accent(globalAccent),
@@ -1247,11 +1251,13 @@ void QQuickMaterialStyle::init()
         if (ok) {
             globalForegroundCustom = m_customForeground = false;
             globalForeground = m_foreground = foregroundEnum;
+            hasGlobalForeground = m_hasForeground = true;
         } else if (!foregroundValue.isEmpty()) {
             QColor color(foregroundValue.constData());
             if (color.isValid()) {
                 globalForegroundCustom = m_customForeground = true;
                 globalForeground = m_foreground = color.rgba();
+                hasGlobalForeground = m_hasForeground = true;
             } else {
                 qWarning().nospace().noquote() << "Material: unknown foreground value: " << foregroundValue;
             }
@@ -1262,11 +1268,13 @@ void QQuickMaterialStyle::init()
         if (ok) {
             globalBackgroundCustom = m_customBackground = false;
             globalBackground = m_background = backgroundEnum;
+            hasGlobalBackground = m_hasBackground = true;
         } else if (!backgroundValue.isEmpty()) {
             QColor color(backgroundValue.constData());
             if (color.isValid()) {
                 globalBackgroundCustom = m_customBackground = true;
                 globalBackground = m_background = color.rgba();
+                hasGlobalBackground = m_hasBackground = true;
             } else {
                 qWarning().nospace().noquote() << "Material: unknown background value: " << backgroundValue;
             }
