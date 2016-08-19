@@ -1622,12 +1622,10 @@ qreal QQuickItemViewPrivate::contentStartOffset() const
 
 int QQuickItemViewPrivate::findLastVisibleIndex(int defaultValue) const
 {
-    if (visibleItems.count()) {
-        int i = visibleItems.count() - 1;
-        while (i > 0 && visibleItems.at(i)->index == -1)
-            --i;
-        if (visibleItems.at(i)->index != -1)
-            return visibleItems.at(i)->index;
+    for (auto it = visibleItems.rbegin(), end = visibleItems.rend(); it != end; ++it) {
+        auto item = *it;
+        if (item->index != -1)
+            return item->index;
     }
     return defaultValue;
 }
@@ -1658,9 +1656,10 @@ FxViewItem *QQuickItemViewPrivate::firstVisibleItem() const {
 int QQuickItemViewPrivate::findLastIndexInView() const
 {
     const qreal viewEndPos = isContentFlowReversed() ? -position() : position() + size();
-    for (int i=visibleItems.count() - 1; i>=0; i--) {
-        if (visibleItems.at(i)->position() <= viewEndPos && visibleItems.at(i)->index != -1)
-            return visibleItems.at(i)->index;
+    for (auto it = visibleItems.rbegin(), end = visibleItems.rend(); it != end; ++it) {
+        auto item = *it;
+        if (item->index != -1 && item->position() <= viewEndPos)
+            return item->index;
     }
     return -1;
 }
