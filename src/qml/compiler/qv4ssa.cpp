@@ -5463,14 +5463,30 @@ LifeTimeIntervals::Ptr Optimizer::lifeTimeIntervals() const
     return lifeRanges.intervals();
 }
 
-QSet<Jump *> Optimizer::calculateOptionalJumps()
+static int countPhis(BasicBlock *bb)
 {
-    QSet<Jump *> optional;
-    QSet<BasicBlock *> reachableWithoutJump;
+    int count = 0;
+    for (Stmt *s : bb->statements()) {
+        if (s->isa<Phi>())
+            ++count;
+        else
+            break;
+    }
 
+    return count;
+}
+
+// Basic blocks can have only 1 terminator. This function returns a bit vector, where a 1 on a
+// certain index indicates that the terminator (jump) at the end of the basic block with that index
+// can be omitted.
+BitVector Optimizer::calculateOptionalJumps()
+{
     const int maxSize = function->basicBlockCount();
-    optional.reserve(maxSize);
-    reachableWithoutJump.reserve(maxSize);
+    BitVector optional(maxSize, false);
+    if (maxSize < 2)
+        return optional;
+
+    BitVector reachableWithoutJump(maxSize, false);
 
     for (int i = maxSize - 1; i >= 0; --i) {
         BasicBlock *bb = function->basicBlock(i);
@@ -5478,17 +5494,17 @@ QSet<Jump *> Optimizer::calculateOptionalJumps()
             continue;
 
         if (Jump *jump = bb->statements().last()->asJump()) {
-            if (reachableWithoutJump.contains(jump->target)) {
-                if (bb->statements().size() > 1)
+            if (reachableWithoutJump.at(jump->target->index())) {
+                if (bb->statements().size() - countPhis(bb)> 1)
                     reachableWithoutJump.clear();
-                optional.insert(jump);
-                reachableWithoutJump.insert(bb);
+                optional.setBit(bb->index());
+                reachableWithoutJump.setBit(bb->index());
                 continue;
             }
         }
 
         reachableWithoutJump.clear();
-        reachableWithoutJump.insert(bb);
+        reachableWithoutJump.setBit(bb->index());
     }
 
     return optional;

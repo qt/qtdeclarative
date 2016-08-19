@@ -54,6 +54,7 @@
 #include <private/qv4global_p.h>
 #include <private/qv4isel_p.h>
 #include <private/qv4isel_util_p.h>
+#include <private/qv4util_p.h>
 #include <private/qv4jsir_p.h>
 #include <private/qv4value_p.h>
 #include "qv4instr_moth_p.h"
@@ -197,7 +198,7 @@ private:
     uchar *_codeNext;
     uchar *_codeEnd;
 
-    QSet<IR::Jump *> _removableJumps;
+    BitVector _removableJumps;
     IR::Stmt *_currentStatement;
 
     QScopedPointer<CompilationUnit> compilationUnit;

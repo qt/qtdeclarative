@@ -209,7 +209,7 @@ void InstructionSelection::run(int functionIndex)
         ConvertTemps().toStackSlots(_function);
     }
 
-    QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     IR::Stmt *cs = 0;
@@ -948,7 +948,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 {
     if (s->target == _nextBlock)
         return;
-    if (_removableJumps.contains(s))
+    if (_removableJumps.at(_block->index()))
         return;
 
     addDebugInstruction();

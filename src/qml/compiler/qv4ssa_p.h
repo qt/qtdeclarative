@@ -53,6 +53,7 @@
 
 #include "qv4jsir_p.h"
 #include "qv4isel_util_p.h"
+#include "qv4util_p.h"
 #include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
@@ -235,7 +236,7 @@ public:
 
     LifeTimeIntervals::Ptr lifeTimeIntervals() const;
 
-    QSet<IR::Jump *> calculateOptionalJumps();
+    BitVector calculateOptionalJumps();
 
     static void showMeTheCode(Function *function, const char *marker);
 

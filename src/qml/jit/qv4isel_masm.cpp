@@ -294,7 +294,7 @@ void InstructionSelection::run(int functionIndex)
         IR::Optimizer::showMeTheCode(_function, "After stack slot allocation");
         calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
-    QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
@@ -1390,7 +1390,7 @@ void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, I
 
 void InstructionSelection::visitJump(IR::Jump *s)
 {
-    if (!_removableJumps.contains(s))
+    if (!_removableJumps.at(_block->index()))
         _as->jumpToBlock(_block, s->target);
 }
 

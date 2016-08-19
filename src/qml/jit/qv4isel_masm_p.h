@@ -54,6 +54,7 @@
 #include "private/qv4jsir_p.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4isel_util_p.h"
+#include "private/qv4util_p.h"
 #include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
 
@@ -272,7 +273,7 @@ private:
     }
 
     IR::BasicBlock *_block;
-    QSet<IR::Jump *> _removableJumps;
+    BitVector _removableJumps;
     Assembler* _as;
 
     QScopedPointer<CompilationUnit> compilationUnit;
