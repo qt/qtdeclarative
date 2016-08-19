@@ -334,21 +334,18 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
     QQuickToolTip *tip = engine->property(name).value<QQuickToolTip *>();
     if (!tip && create) {
         // TODO: a cleaner way to create the instance? QQml(Meta)Type?
-        QQmlContext *context = qmlContext(parent);
-        if (context) {
-            QQmlComponent component(context->engine());
-            component.setData("import QtQuick.Controls 2.0; ToolTip { }", QUrl());
+        QQmlComponent component(engine);
+        component.setData("import QtQuick.Controls 2.0; ToolTip { }", QUrl());
 
-            QObject *object = component.create(context);
-            if (object)
-                object->setParent(engine);
+        QObject *object = component.create();
+        if (object)
+            object->setParent(engine);
 
-            tip = qobject_cast<QQuickToolTip *>(object);
-            if (!tip)
-                delete object;
-            else
-                engine->setProperty(name, QVariant::fromValue(object));
-        }
+        tip = qobject_cast<QQuickToolTip *>(object);
+        if (!tip)
+            delete object;
+        else
+            engine->setProperty(name, QVariant::fromValue(object));
     }
     return tip;
 }
