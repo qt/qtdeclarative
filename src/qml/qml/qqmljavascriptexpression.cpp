@@ -303,7 +303,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::ExecutionEngine *engine, 
     if (!ep)
         return;
     QQmlPropertyCapture *capture = ep->propertyCapture;
-    if (!capture)
+    if (!capture || capture->watcher->wasDeleted())
         return;
 
     QV4::Scope scope(engine);
