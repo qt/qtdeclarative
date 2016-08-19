@@ -4343,7 +4343,59 @@ private:
  * See LifeTimeIntervals::renumber for details on the numbering.
  */
 class LifeRanges {
-    typedef QSet<Temp> LiveRegs;
+    class LiveRegs
+    {
+        typedef std::vector<int> Storage;
+        Storage regs;
+
+    public:
+        void insert(int r)
+        {
+            if (find(r) == end())
+                regs.push_back(r);
+        }
+
+        void unite(const LiveRegs &other)
+        {
+            if (other.empty())
+                return;
+            if (empty()) {
+                regs = other.regs;
+                return;
+            }
+            for (int r : other.regs)
+                insert(r);
+        }
+
+        typedef Storage::iterator iterator;
+        iterator find(int r)
+        { return std::find(regs.begin(), regs.end(), r); }
+
+        iterator begin()
+        { return regs.begin(); }
+
+        iterator end()
+        { return regs.end(); }
+
+        void erase(iterator it)
+        { regs.erase(it); }
+
+        void remove(int r)
+        {
+            iterator it = find(r);
+            if (it != end())
+                erase(it);
+        }
+
+        bool empty() const
+        { return regs.empty(); }
+
+        int size() const
+        { return int(regs.size()); }
+
+        int at(int idx) const
+        { return regs.at(idx); }
+    };
 
     std::vector<LiveRegs> _liveIn;
     std::vector<LifeTimeInterval *> _intervals;
@@ -4351,12 +4403,19 @@ class LifeRanges {
 
     LifeTimeInterval &interval(const Temp *temp)
     {
-        LifeTimeInterval *&lti = _intervals[temp->index];
-        if (Q_UNLIKELY(!lti)) {
-            lti = new LifeTimeInterval;
-            lti->setTemp(*temp);
-        }
+        LifeTimeInterval *lti = _intervals[temp->index];
+        Q_ASSERT(lti);
         return *lti;
+    }
+
+    void ensureInterval(const IR::Temp &temp)
+    {
+        Q_ASSERT(!temp.isInvalid());
+        LifeTimeInterval *&lti = _intervals[temp.index];
+        if (lti)
+            return;
+        lti = new LifeTimeInterval;
+        lti->setTemp(temp);
     }
 
     int defPosition(IR::Stmt *s) const
@@ -4412,13 +4471,13 @@ public:
         IRPrinter printer(&qout);
         for (size_t i = 0, ei = _liveIn.size(); i != ei; ++i) {
             qout << "L" << i <<" live-in: ";
-            QList<Temp> live = QList<Temp>::fromSet(_liveIn.at(i));
-            if (live.isEmpty())
+            auto live = _liveIn.at(i);
+            if (live.empty())
                 qout << "(none)";
             std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
-                printer.print(&live[i]);
+                qout << '%' << live.at(i);
             }
             qout << endl;
         }
@@ -4437,8 +4496,10 @@ private:
 
             for (Stmt *s : successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    if (Temp *t = phi->incoming.at(bbIndex)->asTemp())
-                        live.insert(*t);
+                    if (Temp *t = phi->incoming.at(bbIndex)->asTemp()) {
+                        ensureInterval(*t);
+                        live.insert(t->index);
+                    }
                 } else {
                     break;
                 }
@@ -4447,14 +4508,15 @@ private:
 
         const QVector<Stmt *> &statements = bb->statements();
 
-        foreach (const Temp &opd, live)
-            interval(&opd).addRange(start(bb), end(bb));
+        for (int reg : live)
+            _intervals[reg]->addRange(start(bb), end(bb));
 
         InputOutputCollector collector;
         for (int i = statements.size() - 1; i >= 0; --i) {
             Stmt *s = statements.at(i);
             if (Phi *phi = s->asPhi()) {
-                LiveRegs::iterator it = live.find(*phi->targetTemp);
+                ensureInterval(*phi->targetTemp);
+                LiveRegs::iterator it = live.find(phi->targetTemp->index);
                 if (it == live.end()) {
                     // a phi node target that is only defined, but never used
                     interval(phi->targetTemp).setFrom(start(bb));
@@ -4467,25 +4529,27 @@ private:
             collector.collect(s);
             //### TODO: use DefUses from the optimizer, because it already has all this information
             if (Temp *opd = collector.output) {
+                ensureInterval(*opd);
                 LifeTimeInterval &lti = interval(opd);
                 lti.setFrom(defPosition(s));
-                live.remove(lti.temp());
+                live.remove(lti.temp().index);
                 _sortedIntervals->add(&lti);
             }
             //### TODO: use DefUses from the optimizer, because it already has all this information
             for (size_t i = 0, ei = collector.inputs.size(); i != ei; ++i) {
                 Temp *opd = collector.inputs[i];
+                ensureInterval(*opd);
                 interval(opd).addRange(start(bb), usePosition(s));
-                live.insert(*opd);
+                live.insert(opd->index);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
-            foreach (const Temp &opd, live)
-                interval(&opd).addRange(start(bb), usePosition(loopEnd->terminator()));
+            for (int reg : live)
+                _intervals[reg]->addRange(start(bb), usePosition(loopEnd->terminator()));
         }
 
-        _liveIn[bb->index()] = live;
+        _liveIn[bb->index()] = std::move(live);
     }
 };
 
