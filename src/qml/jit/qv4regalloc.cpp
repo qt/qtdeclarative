@@ -814,7 +814,7 @@ class ResolutionPhase
     Q_DISABLE_COPY(ResolutionPhase)
 
     LifeTimeIntervals::Ptr _intervals;
-    QVector<LifeTimeInterval *> _unprocessed;
+    QVector<LifeTimeInterval *> _unprocessedReverseOrder;
     IR::Function *_function;
     const std::vector<int> &_assignedSpillSlots;
     QHash<IR::Temp, const LifeTimeInterval *> _intervalForTemp;
@@ -829,20 +829,20 @@ class ResolutionPhase
     QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QVector<LifeTimeInterval *> &unprocessed,
+    ResolutionPhase(QVector<LifeTimeInterval *> &&unprocessedReversedOrder,
                     const LifeTimeIntervals::Ptr &intervals,
                     IR::Function *function,
                     const std::vector<int> &assignedSpillSlots,
                     const QVector<const RegisterInfo *> &intRegs,
                     const QVector<const RegisterInfo *> &fpRegs)
         : _intervals(intervals)
+        , _unprocessedReverseOrder(unprocessedReversedOrder)
         , _function(function)
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
         , _currentStmt(0)
     {
-        _unprocessed = unprocessed;
         _liveAtStart.reserve(function->basicBlockCount());
         _liveAtEnd.reserve(function->basicBlockCount());
     }
@@ -953,8 +953,8 @@ private:
         if (position == Stmt::InvalidId)
             return;
 
-        while (!_unprocessed.isEmpty()) {
-            const LifeTimeInterval *i = _unprocessed.constFirst();
+        while (!_unprocessedReverseOrder.isEmpty()) {
+            const LifeTimeInterval *i = _unprocessedReverseOrder.constLast();
             if (i->start() > position)
                 break;
 
@@ -962,7 +962,7 @@ private:
             _intervalForTemp[i->temp()] = i;
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
-            _unprocessed.removeFirst();
+            _unprocessedReverseOrder.removeLast();
         }
     }
 
@@ -1314,8 +1314,13 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc)
         dump(function);
 
-    std::sort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
-    ResolutionPhase(_handled, _lifeTimeIntervals, function, _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
+    // sort the ranges in reverse order, so the ResolutionPhase can take from the end (and thereby
+    // prevent the copy overhead that taking from the beginning would give).
+    std::sort(_handled.begin(), _handled.end(),
+              [](const LifeTimeInterval *r1, const LifeTimeInterval *r2) -> bool {
+        return LifeTimeInterval::lessThan(r2, r1);
+    });
+    ResolutionPhase(std::move(_handled), _lifeTimeIntervals, function, _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
 
     function->tempCount = *std::max_element(_assignedSpillSlots.begin(), _assignedSpillSlots.end()) + 1;
 

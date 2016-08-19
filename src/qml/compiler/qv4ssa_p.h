@@ -146,6 +146,17 @@ public:
     }
 };
 
+inline bool LifeTimeInterval::lessThan(const LifeTimeInterval *r1, const LifeTimeInterval *r2)
+{
+    if (r1->_ranges.first().start == r2->_ranges.first().start) {
+        if (r1->isSplitFromInterval() == r2->isSplitFromInterval())
+            return r1->_ranges.last().end < r2->_ranges.last().end;
+        else
+            return r1->isSplitFromInterval();
+    } else
+        return r1->_ranges.first().start < r2->_ranges.first().start;
+}
+
 class LifeTimeIntervals
 {
     Q_DISABLE_COPY(LifeTimeIntervals)
