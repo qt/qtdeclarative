@@ -4,12 +4,17 @@
 config.tests/*/*/*
 !config.tests/*/*/*[.]*
 config.tests/*/*/*[.]app
+config.log
 
 callgrind.out.*
 pcviewer.cfg
 *~
 *.a
 *.la
+*_wrapper.sh
+*_wrapper.bat
+wrapper.sh
+wrapper.bat
 *.core
 *.moc
 *.o

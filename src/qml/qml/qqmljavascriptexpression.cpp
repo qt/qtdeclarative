@@ -301,7 +301,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     if (!ep)
         return;
     QQmlPropertyCapture *capture = ep->propertyCapture;
-    if (!capture)
+    if (!capture || capture->watcher->wasDeleted())
         return;
 
     if (capture->expression->m_permanentDependenciesRegistered)
