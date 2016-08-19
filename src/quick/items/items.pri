@@ -147,7 +147,7 @@ SOURCES += \
     $$PWD/qquickanimatedsprite.cpp
 
 # Items that depend on OpenGL Renderer
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qquickopenglinfo.cpp \
         $$PWD/qquickopenglshadereffect.cpp \

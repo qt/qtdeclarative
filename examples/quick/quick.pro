@@ -27,7 +27,7 @@ SUBDIRS =   quick-accessibility \
             demos
 
 #OpenGL Support Required
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \
     textureprovider \
     rendercontrol

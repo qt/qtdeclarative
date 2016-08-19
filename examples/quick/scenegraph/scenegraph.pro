@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \
             graph \
             simplematerial \

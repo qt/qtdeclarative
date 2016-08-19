@@ -8,7 +8,7 @@ SUBDIRS=\
     installed_cmake \
     toolsupport
 
-qtHaveModule(gui):contains(QT_CONFIG, opengl(es1|es2)?) {
+qtHaveModule(gui):qtConfig(opengl(es1|es2)?) {
     SUBDIRS += particles
     qtHaveModule(widgets): SUBDIRS += quickwidgets
 

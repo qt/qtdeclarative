@@ -79,9 +79,8 @@ SUBDIRS += $$METATYPETESTS
     SUBDIRS += qmllint
 }
 
-contains(QT_CONFIG, private_tests) {
+qtConfig(private_tests): \
     SUBDIRS += $$PRIVATETESTS
-}
 
 qtNomakeTools( \
     qmlplugindump \
