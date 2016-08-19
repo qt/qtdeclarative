@@ -134,7 +134,8 @@
 
     In addition to specifying the attributes in QML, it is also possible to
     specify them via environment variables or in a \l {qtquickcontrols2-conf}
-    {configuration file}.
+    {configuration file}. Attributes specified in QML take precedence over all
+    other methods.
 
     \section3 Environment Variables
 
