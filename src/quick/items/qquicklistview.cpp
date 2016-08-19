@@ -3352,7 +3352,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod int QtQuick::ListView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::ListView::indexAt(real x, real y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -3365,7 +3365,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod Item QtQuick::ListView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::ListView::itemAt(real x, real y)
 
     Returns the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is

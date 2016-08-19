@@ -1507,7 +1507,7 @@ void QQuickPathView::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod int QtQuick::PathView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::PathView::indexAt(real x, real y)
 
     Returns the index of the item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, -1 is returned.
@@ -1522,7 +1522,7 @@ int QQuickPathView::indexAt(qreal x, qreal y) const
 }
 
 /*!
-    \qmlmethod Item QtQuick::PathView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::PathView::itemAt(real x, real y)
 
     Returns the item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, null is returned.
