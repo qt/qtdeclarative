@@ -132,6 +132,9 @@ static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Color accent)
     return colors[accent];
 }
 
+// If no value was inherited from a parent or explicitly set, the "global" values are used.
+// The initial, default values of the globals are hard-coded here, but the environment
+// variables and .conf file override them if specified.
 static QQuickUniversalStyle::Theme GlobalTheme = QQuickUniversalStyle::Light;
 static QRgb GlobalAccent = qquickuniversal_accent_color(QQuickUniversalStyle::Cobalt);
 static QRgb GlobalForeground = qquickuniversal_light_color(QQuickUniversalStyle::BaseHigh);
