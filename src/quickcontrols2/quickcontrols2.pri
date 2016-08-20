@@ -2,6 +2,7 @@ HEADERS += \
     $$PWD/qquickcolorimageprovider_p.h \
     $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickstyle.h \
+    $$PWD/qquickstyle_p.h \
     $$PWD/qquickstyleattached_p.h \
     $$PWD/qquickstyleplugin_p.h \
     $$PWD/qquickstyleselector_p.h \
