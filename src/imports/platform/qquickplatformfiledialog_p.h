@@ -54,6 +54,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickPlatformFileNameFilter;
+
 class QQuickPlatformFileDialog : public QQuickPlatformDialog
 {
     Q_OBJECT
@@ -65,7 +67,7 @@ class QQuickPlatformFileDialog : public QQuickPlatformDialog
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
-    Q_PROPERTY(QString selectedNameFilter READ selectedNameFilter WRITE setSelectedNameFilter NOTIFY selectedNameFilterChanged FINAL)
+    Q_PROPERTY(QQuickPlatformFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
@@ -107,8 +109,7 @@ public:
     void setNameFilters(const QStringList &filters);
     void resetNameFilters();
 
-    QString selectedNameFilter() const;
-    void setSelectedNameFilter(const QString &filter);
+    QQuickPlatformFileNameFilter *selectedNameFilter() const;
 
     QString defaultSuffix() const;
     void setDefaultSuffix(const QString &suffix);
@@ -131,7 +132,6 @@ Q_SIGNALS:
     void folderChanged();
     void optionsChanged();
     void nameFiltersChanged();
-    void selectedNameFilterChanged();
     void defaultSuffixChanged();
     void acceptLabelChanged();
     void rejectLabelChanged();
@@ -140,6 +140,7 @@ protected:
     bool useNativeDialog() const override;
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
+    void onHide(QPlatformDialogHelper *dialog) override;
     void accept() override;
 
 private:
@@ -148,6 +149,43 @@ private:
 
     FileMode m_fileMode;
     QList<QUrl> m_files;
+    QSharedPointer<QFileDialogOptions> m_options;
+    mutable QQuickPlatformFileNameFilter *m_selectedNameFilter;
+};
+
+class QQuickPlatformFileNameFilter : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int index READ index WRITE setIndex NOTIFY indexChanged FINAL)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
+    Q_PROPERTY(QStringList extensions READ extensions NOTIFY extensionsChanged FINAL)
+
+public:
+    explicit QQuickPlatformFileNameFilter(QObject *parent = nullptr);
+
+    int index() const;
+    void setIndex(int index);
+
+    QString name() const;
+    QStringList extensions() const;
+
+    QSharedPointer<QFileDialogOptions> options() const;
+    void setOptions(const QSharedPointer<QFileDialogOptions> &options);
+
+    void update(const QString &filter);
+
+Q_SIGNALS:
+    void indexChanged(int index);
+    void nameChanged(const QString &name);
+    void extensionsChanged(const QStringList &extensions);
+
+private:
+    QStringList nameFilters() const;
+    QString nameFilter(int index) const;
+
+    int m_index;
+    QString m_name;
+    QStringList m_extensions;
     QSharedPointer<QFileDialogOptions> m_options;
 };
 

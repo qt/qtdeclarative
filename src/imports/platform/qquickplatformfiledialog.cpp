@@ -36,6 +36,8 @@
 
 #include "qquickplatformfiledialog_p.h"
 
+#include <QtCore/qvector.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -97,7 +99,8 @@ QT_BEGIN_NAMESPACE
 QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
     : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
       m_fileMode(OpenFile),
-      m_options(QFileDialogOptions::create())
+      m_options(QFileDialogOptions::create()),
+      m_selectedNameFilter(nullptr)
 {
     m_options->setFileMode(QFileDialogOptions::ExistingFile);
     m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
@@ -335,6 +338,12 @@ void QQuickPlatformFileDialog::setNameFilters(const QStringList &filters)
         return;
 
     m_options->setNameFilters(filters);
+    if (m_selectedNameFilter) {
+        int index = m_selectedNameFilter->index();
+        if (index < 0 || index >= filters.count())
+            index = 0;
+        m_selectedNameFilter->update(filters.value(index));
+    }
     emit nameFiltersChanged();
 }
 
@@ -344,24 +353,57 @@ void QQuickPlatformFileDialog::resetNameFilters()
 }
 
 /*!
-    \qmlproperty string Qt.labs.platform::FileDialog::selectedNameFilter
+    \qmlpropertygroup Qt.labs.platform::FileDialog::selectedNameFilter
+    \qmlproperty int Qt.labs.platform::FileDialog::selectedNameFilter.index
+    \qmlproperty string Qt.labs.platform::FileDialog::selectedNameFilter.name
+    \qmlproperty list<string> Qt.labs.platform::FileDialog::selectedNameFilter.extensions
 
-    This property holds the currently selected name filter.
+    These properties hold the currently selected name filter.
+
+    \table
+    \header
+        \li Name
+        \li Description
+    \row
+        \li \b index : int
+        \li This property determines which \l {nameFilters}{name filter} is selected.
+            The specified filter is selected when the dialog is opened. The value is
+            updated when the user selects another filter.
+    \row
+        \li [read-only] \b name : string
+        \li This property holds the name of the selected filter. In the
+            example below, the name of the first filter is \c {"Text files"}
+            and the second is \c {"HTML files"}.
+    \row
+        \li [read-only] \b extensions : list<string>
+        \li This property holds the list of extensions of the selected filter.
+            In the example below, the list of extensions of the first filter is
+            \c {["txt"]} and the second is \c {["html", "htm"]}.
+    \endtable
+
+    \code
+    FileDialog {
+        id: fileDialog
+        selectedNameFilter.index: 1
+        nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
+    }
+
+    MyDocument {
+        id: document
+        fileType: fileDialog.selectedNameFilter.extensions[0]
+    }
+    \endcode
 
     \sa nameFilters
 */
-QString QQuickPlatformFileDialog::selectedNameFilter() const
+QQuickPlatformFileNameFilter *QQuickPlatformFileDialog::selectedNameFilter() const
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-        return fileDialog->selectedNameFilter();
-    return m_options->initiallySelectedNameFilter();
-}
-
-void QQuickPlatformFileDialog::setSelectedNameFilter(const QString &filter)
-{
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-        fileDialog->selectNameFilter(filter);
-    m_options->setInitiallySelectedNameFilter(filter);
+    if (!m_selectedNameFilter) {
+        QQuickPlatformFileDialog *that = const_cast<QQuickPlatformFileDialog *>(this);
+        m_selectedNameFilter = new QQuickPlatformFileNameFilter(that);
+        m_selectedNameFilter->setOptions(m_options);
+    }
+    return m_selectedNameFilter;
 }
 
 /*!
@@ -468,7 +510,6 @@ void QQuickPlatformFileDialog::onCreate(QPlatformDialogHelper *dialog)
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFileChanged);
         connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFilesChanged);
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFileDialog::folderChanged);
-        connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, this, &QQuickPlatformFileDialog::selectedNameFilterChanged);
         fileDialog->setOptions(m_options);
     }
 }
@@ -476,8 +517,24 @@ void QQuickPlatformFileDialog::onCreate(QPlatformDialogHelper *dialog)
 void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog))
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         fileDialog->setOptions(m_options);
+        if (m_selectedNameFilter) {
+            const int index = m_selectedNameFilter->index();
+            const QString filter = m_options->nameFilters().value(index);
+            m_options->setInitiallySelectedNameFilter(filter);
+            fileDialog->selectNameFilter(filter);
+            connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickPlatformFileNameFilter::update);
+        }
+    }
+}
+
+void QQuickPlatformFileDialog::onHide(QPlatformDialogHelper *dialog)
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
+        if (m_selectedNameFilter)
+            disconnect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickPlatformFileNameFilter::update);
+    }
 }
 
 void QQuickPlatformFileDialog::accept()
@@ -504,6 +561,100 @@ QList<QUrl> QQuickPlatformFileDialog::addDefaultSuffixes(const QList<QUrl> &file
     for (const QUrl &file : files)
         urls += addDefaultSuffix(file);
     return urls;
+}
+
+QQuickPlatformFileNameFilter::QQuickPlatformFileNameFilter(QObject *parent)
+    : QObject(parent), m_index(-1)
+{
+}
+
+int QQuickPlatformFileNameFilter::index() const
+{
+    return m_index;
+}
+
+void QQuickPlatformFileNameFilter::setIndex(int index)
+{
+    if (m_index == index)
+        return;
+
+    m_index = index;
+    emit indexChanged(index);
+}
+
+QString QQuickPlatformFileNameFilter::name() const
+{
+    return m_name;
+}
+
+QStringList QQuickPlatformFileNameFilter::extensions() const
+{
+    return m_extensions;
+}
+
+QSharedPointer<QFileDialogOptions> QQuickPlatformFileNameFilter::options() const
+{
+    return m_options;
+}
+
+void QQuickPlatformFileNameFilter::setOptions(const QSharedPointer<QFileDialogOptions> &options)
+{
+    m_options = options;
+}
+
+static QString extractName(const QString &filter)
+{
+    return filter.left(filter.indexOf(QLatin1Char('(')) - 1);
+}
+
+static QString extractExtension(const QString &filter)
+{
+    return filter.mid(filter.indexOf(QLatin1Char('.')) + 1);
+}
+
+static QStringList extractExtensions(const QString &filter)
+{
+    QStringList extensions;
+    const int from = filter.indexOf(QLatin1Char('('));
+    const int to = filter.lastIndexOf(QLatin1Char(')')) - 1;
+    if (from >= 0 && from < to) {
+        const QStringRef ref = filter.midRef(from + 1, to - from);
+        const QVector<QStringRef> exts = ref.split(QLatin1Char(' '), QString::SkipEmptyParts);
+        for (const QStringRef &ref : exts)
+            extensions += extractExtension(ref.toString());
+    }
+
+    return extensions;
+}
+
+void QQuickPlatformFileNameFilter::update(const QString &filter)
+{
+    const QStringList filters = nameFilters();
+
+    const int oldIndex = m_index;
+    const QString oldName = m_name;
+    const QStringList oldExtensions = m_extensions;
+
+    m_index = filters.indexOf(filter);
+    m_name = extractName(filter);
+    m_extensions = extractExtensions(filter);
+
+    if (oldIndex != m_index)
+        emit indexChanged(m_index);
+    if (oldName != m_name)
+        emit nameChanged(m_name);
+    if (oldExtensions != m_extensions)
+        emit extensionsChanged(m_extensions);
+}
+
+QStringList QQuickPlatformFileNameFilter::nameFilters() const
+{
+    return m_options ? m_options->nameFilters() : QStringList();
+}
+
+QString QQuickPlatformFileNameFilter::nameFilter(int index) const
+{
+    return m_options ? m_options->nameFilters().value(index) : QString();
 }
 
 QT_END_NAMESPACE
