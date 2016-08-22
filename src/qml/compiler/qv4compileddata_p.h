@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x02
+#define QV4_DATA_STRUCTURE_VERSION 0x03
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -619,7 +619,8 @@ struct Unit
         IsQml = 0x2,
         StaticData = 0x4, // Unit data persistent in memory?
         IsSingleton = 0x8,
-        IsSharedLibrary = 0x10 // .pragma shared?
+        IsSharedLibrary = 0x10, // .pragma shared?
+        ContainsMachineCode = 0x20 // used to determine if we need to mmap with execute permissions
     };
     LEUInt32 flags;
     LEUInt32 stringTableSize;

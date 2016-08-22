@@ -98,7 +98,8 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
                 << item->hasActiveFocus()
                 << item->isFocusScope()
                 << item;
-        for (QQuickItem *child : item->childItems()) {
+        const auto childItems = item->childItems();
+        for (QQuickItem *child : childItems) {
             debugFocusTree(
                     child,
                     item->isFocusScope() || !scope ? item : scope,
@@ -4106,7 +4107,8 @@ bool QQuickItem::childMouseEventFilter(QQuickItem *item, QEvent *event)
   */
 void QQuickItem::windowDeactivateEvent()
 {
-    foreach (QQuickItem* item, childItems()) {
+    const auto children = childItems();
+    for (QQuickItem* item : children) {
         item->windowDeactivateEvent();
     }
 }

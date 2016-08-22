@@ -91,6 +91,7 @@ private slots:
     void cleanup();
     void contentSize();
     void ratios_smallContent();
+    void contentXYNotTruncatedToInt();
 
 private:
     void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
@@ -1841,6 +1842,26 @@ void tst_qquickflickable::ratios_smallContent()
     QCOMPARE(obj->property("widthRatioIs").toDouble(), 1.);
 }
 
+// QTBUG-48018
+void tst_qquickflickable::contentXYNotTruncatedToInt()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("contentXY.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    flickable->setContentX(1e10);
+    flick(window.data(), QPoint(200, 100), QPoint(100, 100), 50);
+
+    // make sure we are not clipped at 2^31
+    QVERIFY(flickable->contentX() > qreal(1e10));
+}
 
 QTEST_MAIN(tst_qquickflickable)
 

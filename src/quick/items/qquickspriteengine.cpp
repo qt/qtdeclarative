@@ -110,10 +110,10 @@ QQuickSpriteEngine::QQuickSpriteEngine(QObject *parent)
 {
 }
 
-QQuickSpriteEngine::QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent)
+QQuickSpriteEngine::QQuickSpriteEngine(const QList<QQuickSprite *> &sprites, QObject *parent)
     : QQuickSpriteEngine(parent)
 {
-    foreach (QQuickSprite* sprite, sprites)
+    for (QQuickSprite* sprite : sprites)
         m_states << (QQuickStochasticState*)sprite;
 }
 
@@ -329,7 +329,7 @@ QQuickPixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprite
         return QQuickPixmap::Null;
     int null, loading, ready;
     null = loading = ready = 0;
-    foreach (QQuickSprite* s, m_sprites) {
+    for (QQuickSprite* s : qAsConst(m_sprites)) {
         switch (s->m_pix.status()) {
             // ### Maybe add an error message here, because this null shouldn't be reached but when it does, the image fails without an error message.
             case QQuickPixmap::Null : null++; break;
@@ -358,7 +358,7 @@ void QQuickSpriteEngine::startAssemblingImage()
 
     QList<QQuickStochasticState*> removals;
 
-    foreach (QQuickStochasticState* s, m_states){
+    for (QQuickStochasticState* s : qAsConst(m_states)) {
         QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
         if (sprite) {
             m_sprites << sprite;
@@ -367,7 +367,7 @@ void QQuickSpriteEngine::startAssemblingImage()
             qDebug() << "Error: Non-sprite in QQuickSpriteEngine";
         }
     }
-    foreach (QQuickStochasticState* s, removals)
+    for (QQuickStochasticState* s : qAsConst(removals))
         m_states.removeAll(s);
     m_startedImageAssembly = true;
 }
@@ -376,7 +376,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
 {
     QQuickPixmap::Status stat = status();
     if (!m_errorsPrinted && stat == QQuickPixmap::Error) {
-        foreach (QQuickSprite* s, m_sprites)
+        for (QQuickSprite* s : qAsConst(m_sprites))
             if (s->m_pix.isError())
                 qmlInfo(s) << s->m_pix.error();
         m_errorsPrinted = true;
@@ -390,7 +390,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     m_maxFrames = 0;
     m_imageStateCount = 0;
 
-    foreach (QQuickSprite* state, m_sprites){
+    for (QQuickSprite* state : qAsConst(m_sprites)) {
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
 
@@ -441,7 +441,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     image.fill(0);
     QPainter p(&image);
     int y = 0;
-    foreach (QQuickSprite* state, m_sprites){
+    for (QQuickSprite* state : qAsConst(m_sprites)) {
         QImage img(state->m_pix.image());
         int frameWidth = state->m_frameWidth;
         int frameHeight = state->m_frameHeight;
@@ -665,7 +665,8 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     m_timeOffset = time;
     m_addAdvance = false;
     while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.constFirst().first){
-        foreach (int idx, m_stateUpdates.constFirst().second)
+        const auto copy = m_stateUpdates.constFirst().second;
+        for (int idx : copy)
             advance(idx);
         m_stateUpdates.pop_front();
     }

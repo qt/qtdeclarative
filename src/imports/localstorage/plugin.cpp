@@ -149,12 +149,7 @@ public:
 
 using namespace QV4;
 
-QT_WARNING_PUSH
-#if (Q_CC_GNU >= 600)
-QT_WARNING_DISABLE_GCC("-Wtautological-compare")
-#endif
 DEFINE_OBJECT_VTABLE(QV4::QQmlSqlDatabaseWrapper);
-QT_WARNING_POP
 
 
 

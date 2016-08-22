@@ -934,6 +934,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QString fileName;
     qint64 sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
+    uint unitFlags; // flags merged into CompiledData::Unit::flags
 #ifdef QT_NO_QML_DEBUGGER
     static const bool debugMode = false;
 #else
@@ -946,6 +947,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
         : rootFunction(0)
         , sourceTimeStamp(0)
         , isQmlModule(false)
+        , unitFlags(0)
 #ifndef QT_NO_QML_DEBUGGER
         , debugMode(debugMode)
     {}

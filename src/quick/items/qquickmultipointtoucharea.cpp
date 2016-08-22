@@ -362,7 +362,7 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
 QQuickMultiPointTouchArea::~QQuickMultiPointTouchArea()
 {
     clearTouchLists();
-    foreach (QObject *obj, _touchPoints) {
+    for (QObject *obj : qAsConst(_touchPoints)) {
         QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
         if (!dtp->isQmlDefined())
             delete dtp;
@@ -524,7 +524,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     }
     int numTouchPoints = touchPoints.count();
     //always remove released touches, and make sure we handle all releases before adds.
-    foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
+    for (const QTouchEvent::TouchPoint &p : qAsConst(touchPoints)) {
         Qt::TouchPointState touchPointState = p.state();
         int id = p.id();
         if (touchPointState & Qt::TouchPointReleased) {
@@ -539,7 +539,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         }
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
-        foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
+        for (const QTouchEvent::TouchPoint &p : qAsConst(touchPoints)) {
             Qt::TouchPointState touchPointState = p.state();
             int id = p.id();
             if (touchPointState & Qt::TouchPointReleased) {
@@ -565,7 +565,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         if (!_stealMouse /* !ignoring gesture*/) {
             bool offerGrab = false;
             const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
-            foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
+            for (const QTouchEvent::TouchPoint &p : qAsConst(touchPoints)) {
                 if (p.state() == Qt::TouchPointReleased)
                     continue;
                 const QPointF &currentPos = p.scenePos();
@@ -599,7 +599,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
 
 void QQuickMultiPointTouchArea::clearTouchLists()
 {
-    foreach (QObject *obj, _releasedTouchPoints) {
+    for (QObject *obj : qAsConst(_releasedTouchPoints)) {
         QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
         if (!dtp->isQmlDefined()) {
             _touchPoints.remove(dtp->pointId());
@@ -616,7 +616,7 @@ void QQuickMultiPointTouchArea::clearTouchLists()
 void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
 {
     QQuickTouchPoint *dtp = 0;
-    foreach (QQuickTouchPoint* tp, _touchPrototypes) {
+    for (QQuickTouchPoint* tp : qAsConst(_touchPrototypes)) {
         if (!tp->inUse()) {
             tp->setInUse(true);
             dtp = tp;
@@ -636,7 +636,7 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
 void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
 {
     QQuickTouchPoint *dtp = 0;
-    foreach (QQuickTouchPoint *tp, _touchPrototypes)
+    for (QQuickTouchPoint *tp : qAsConst(_touchPrototypes))
         if (!tp->inUse()) {
             tp->setInUse(true);
             dtp = tp;
@@ -782,11 +782,11 @@ void QQuickMultiPointTouchArea::ungrab()
     ungrabTouchPoints();
 
     if (_touchPoints.count()) {
-        foreach (QObject *obj, _touchPoints)
+        for (QObject *obj : qAsConst(_touchPoints))
             static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
         emit canceled(_touchPoints.values());
         clearTouchLists();
-        foreach (QObject *obj, _touchPoints) {
+        for (QObject *obj : qAsConst(_touchPoints)) {
             QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
             if (!dtp->isQmlDefined())
                 delete dtp;
@@ -901,7 +901,7 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
         case QEvent::TouchUpdate:
         case QEvent::TouchEnd: {
                 QTouchEvent *te = static_cast<QTouchEvent*>(event);
-                foreach (const QTouchEvent::TouchPoint &point, te->touchPoints()) {
+                for (const QTouchEvent::TouchPoint &point : te->touchPoints()) {
                     if (contains(mapFromScene(point.scenePos()))) {
                         containsPoint = true;
                         break;

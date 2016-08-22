@@ -192,7 +192,7 @@ public Q_SLOTS:
             checkForWindow(o);
             haveOne = true;
             if (conf && qae)
-                foreach (PartialScene *ps, conf->completers)
+                for (PartialScene *ps : qAsConst(conf->completers))
                     if (o->inherits(ps->itemType().toUtf8().constData()))
                         contain(o, ps->container());
         }
@@ -413,8 +413,8 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         QObject *dummyData = comp.create();
 
         if (comp.isError()) {
-            QList<QQmlError> errors = comp.errors();
-            foreach (const QQmlError &error, errors)
+            const QList<QQmlError> errors = comp.errors();
+            for (const QQmlError &error : errors)
                 qWarning() << error;
         }
 
@@ -566,7 +566,7 @@ int main(int argc, char *argv[])
     if (!dummyDir.isEmpty() && QFileInfo (dummyDir).isDir())
         loadDummyDataFiles(e, dummyDir);
 
-    foreach (const QString &path, files) {
+    for (const QString &path : qAsConst(files)) {
         //QUrl::fromUserInput doesn't treat no scheme as relative file paths
 #ifndef QT_NO_REGULAREXPRESSION
         QRegularExpression urlRe("[[:word:]]+://.*");

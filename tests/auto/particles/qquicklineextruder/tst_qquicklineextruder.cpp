@@ -57,7 +57,7 @@ void tst_qquicklineextruder::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -73,7 +73,7 @@ void tst_qquicklineextruder::test_basic()
     }
 
     QCOMPARE(system->groupData[1]->size(), 500);
-    foreach (QQuickParticleData *d, system->groupData[1]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[1]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

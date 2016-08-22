@@ -69,14 +69,14 @@ QQuickAnimatorController::~QQuickAnimatorController()
 {
     // The proxy job might already have been deleted, in which case we
     // need to avoid calling functions on them. Then delete the job.
-    foreach (QAbstractAnimationJob *job, m_deleting) {
+    for (QAbstractAnimationJob *job : qAsConst(m_deleting)) {
         m_starting.take(job);
         m_stopping.take(job);
         m_animatorRoots.take(job);
         delete job;
     }
 
-    foreach (QQuickAnimatorProxyJob *proxy, m_animatorRoots)
+    for (QQuickAnimatorProxyJob *proxy : qAsConst(m_animatorRoots))
         proxy->controllerWasDeleted();
     for (auto it = m_animatorRoots.keyBegin(), end = m_animatorRoots.keyEnd(); it != end; ++it)
         delete *it;
@@ -171,7 +171,7 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
 
 void QQuickAnimatorController::beforeNodeSync()
 {
-    foreach (QAbstractAnimationJob *job, m_deleting) {
+    for (QAbstractAnimationJob *job : qAsConst(m_deleting)) {
         m_starting.take(job);
         m_stopping.take(job);
         m_animatorRoots.take(job);
@@ -182,7 +182,7 @@ void QQuickAnimatorController::beforeNodeSync()
 
     if (m_starting.size())
         m_window->update();
-    foreach (QQuickAnimatorProxyJob *proxy, m_starting) {
+    for (QQuickAnimatorProxyJob *proxy : qAsConst(m_starting)) {
         QAbstractAnimationJob *job = proxy->job();
         job->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
         qquick_initialize_helper(job, this, true);
@@ -192,7 +192,7 @@ void QQuickAnimatorController::beforeNodeSync()
     }
     m_starting.clear();
 
-    foreach (QQuickAnimatorProxyJob *proxy, m_stopping) {
+    for (QQuickAnimatorProxyJob *proxy : qAsConst(m_stopping)) {
         QAbstractAnimationJob *job = proxy->job();
         job->stop();
     }
@@ -208,7 +208,7 @@ void QQuickAnimatorController::beforeNodeSync()
         m_nodesAreInvalid = false;
     }
 
-    foreach (QQuickAnimatorJob *job, m_activeLeafAnimations) {
+    for (QQuickAnimatorJob *job : qAsConst(m_activeLeafAnimations)) {
         if (!job->target())
             continue;
         else if (m_deletedSinceLastFrame.contains(job->target()))
@@ -218,7 +218,7 @@ void QQuickAnimatorController::beforeNodeSync()
             xform->transformHelper()->sync();
         }
     }
-    foreach (QQuickItem *wiped, m_deletedSinceLastFrame) {
+    for (QQuickItem *wiped : qAsConst(m_deletedSinceLastFrame)) {
         QQuickTransformAnimatorJob::Helper *helper = m_transforms.take(wiped);
         // Helper will now already have been reset in all animators referencing it.
         delete helper;
@@ -229,7 +229,7 @@ void QQuickAnimatorController::beforeNodeSync()
 
 void QQuickAnimatorController::afterNodeSync()
 {
-    foreach (QQuickAnimatorJob *job, m_activeLeafAnimations) {
+    for (QQuickAnimatorJob *job : qAsConst(m_activeLeafAnimations)) {
         if (job->target())
             job->afterNodeSync();
     }
@@ -249,10 +249,10 @@ void QQuickAnimatorController::stopProxyJobs()
     // to be outside the lock. It is also safe because deletion of
     // proxies happens on the GUI thread, where this code is also executing.
     lock();
-    QSet<QQuickAnimatorProxyJob *> jobs = m_proxiesToStop;
+    const QSet<QQuickAnimatorProxyJob *> jobs = m_proxiesToStop;
     m_proxiesToStop.clear();
     unlock();
-    foreach (QQuickAnimatorProxyJob *p, jobs)
+    for (QQuickAnimatorProxyJob *p : jobs)
         p->stop();
 }
 

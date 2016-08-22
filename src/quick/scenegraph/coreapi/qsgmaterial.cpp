@@ -67,9 +67,9 @@ void qsg_set_material_failure()
 #ifndef QT_NO_OPENGL
 const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType type) const
 {
-    QStringList files = m_sourceFiles[type];
+    const QStringList files = m_sourceFiles[type];
     QSGShaderSourceBuilder builder;
-    Q_FOREACH (const QString &file, files)
+    for (const QString &file : files)
         builder.appendSourceFile(file);
     m_sources[type] = builder.source();
     return m_sources[type].constData();

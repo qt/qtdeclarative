@@ -2065,7 +2065,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 // Having nodes spanning across frame boundaries will break the current bookkeeping mechanism. We need to prevent that.
                 QList<int> frameBoundaries;
                 frameBoundaries.reserve(frames.size());
-                Q_FOREACH (QTextFrame *frame, frames)
+                for (QTextFrame *frame : qAsConst(frames))
                     frameBoundaries.append(frame->firstPosition());
                 std::sort(frameBoundaries.begin(), frameBoundaries.end());
 
@@ -2499,7 +2499,7 @@ void QQuickTextEdit::updateWholeDocument()
 {
     Q_D(QQuickTextEdit);
     if (!d->textNodeMap.isEmpty()) {
-        Q_FOREACH (TextNode* node, d->textNodeMap)
+        for (TextNode* node : qAsConst(d->textNodeMap))
             node->setDirty();
     }
 

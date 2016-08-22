@@ -33,7 +33,7 @@ include(util/util.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
 include(designer/designer.pri)
-contains(QT_CONFIG, accessibility) {
+qtConfig(accessibility) {
     include(accessible/accessible.pri)
 }
 

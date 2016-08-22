@@ -8,7 +8,6 @@ HEADERS +=  \
     $$PWD/qqmlthread_p.h \
     $$PWD/qfinitestack_p.h \
     $$PWD/qrecursionwatcher_p.h \
-    $$PWD/qdeletewatcher_p.h \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
     $$PWD/qlazilyallocated_p.h \
@@ -22,4 +21,4 @@ SOURCES += \
 
 # mirrors logic in $$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri
 # clock_gettime() is implemented in librt on these systems
-contains(QT_CONFIG, clock-gettime):linux-*|hpux-*|solaris-*:LIBS_PRIVATE *= -lrt
+qtConfig(clock-gettime):linux-*|hpux-*|solaris-*:LIBS_PRIVATE *= -lrt

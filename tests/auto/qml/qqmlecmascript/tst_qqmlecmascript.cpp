@@ -44,6 +44,8 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qv4runtime_p.h>
+#include <private/qv4object_p.h>
+#include <private/qqmlcomponentattached_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -283,6 +285,7 @@ private slots:
     void replaceBinding();
     void deleteRootObjectInCreation();
     void onDestruction();
+    void onDestructionViaGC();
     void bindingSuppression();
     void signalEmitted();
     void threadSignal();
@@ -7198,6 +7201,105 @@ void tst_qqmlecmascript::onDestruction()
         QVERIFY(obj != 0);
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
+}
+
+class WeakReferenceMutator : public QObject
+{
+    Q_OBJECT
+public:
+    WeakReferenceMutator()
+        : resultPtr(Q_NULLPTR)
+        , weakRef(Q_NULLPTR)
+    {}
+
+    void init(QV4::ExecutionEngine *v4, QV4::WeakValue *weakRef, bool *resultPtr)
+    {
+        QV4::QObjectWrapper::wrap(v4, this);
+        QQmlEngine::setObjectOwnership(this, QQmlEngine::JavaScriptOwnership);
+
+        this->resultPtr = resultPtr;
+        this->weakRef = weakRef;
+
+        QObject::connect(QQmlComponent::qmlAttachedProperties(this), &QQmlComponentAttached::destruction, this, &WeakReferenceMutator::reviveFirstWeakReference);
+    }
+
+private slots:
+    void reviveFirstWeakReference() {
+        *resultPtr = weakRef->valueRef() && weakRef->isNullOrUndefined();
+        if (!*resultPtr)
+            return;
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine(this));
+        weakRef->set(v4, v4->newObject());
+        *resultPtr = weakRef->valueRef() && !weakRef->isNullOrUndefined();
+    }
+
+public:
+    bool *resultPtr;
+
+    QV4::WeakValue *weakRef;
+};
+
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+
+namespace Heap {
+struct WeakReferenceSentinel : public Object {
+    WeakReferenceSentinel(WeakValue *weakRef, bool *resultPtr)
+        : weakRef(weakRef)
+        , resultPtr(resultPtr) {
+
+    }
+
+    ~WeakReferenceSentinel() {
+        *resultPtr = weakRef->isNullOrUndefined();
+    }
+
+    WeakValue *weakRef;
+    bool *resultPtr;
+};
+} // namespace Heap
+
+struct WeakReferenceSentinel : public Object {
+    V4_OBJECT2(WeakReferenceSentinel, Object)
+    V4_NEEDS_DESTROY
+};
+
+} // namespace QV4
+
+QT_END_NAMESPACE
+
+DEFINE_OBJECT_VTABLE(QV4::WeakReferenceSentinel);
+
+void tst_qqmlecmascript::onDestructionViaGC()
+{
+    qmlRegisterType<WeakReferenceMutator>("Test", 1, 0, "WeakReferenceMutator");
+
+    QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
+
+    QQmlComponent component(&engine, testFileUrl("DestructionHelper.qml"));
+
+    QScopedPointer<QV4::WeakValue> weakRef;
+
+    bool mutatorResult = false;
+    bool sentinelResult = false;
+
+    {
+        weakRef.reset(new QV4::WeakValue);
+        weakRef->set(v4, v4->newObject());
+        QVERIFY(!weakRef->isNullOrUndefined());
+
+        QPointer<WeakReferenceMutator> weakReferenceMutator = qobject_cast<WeakReferenceMutator *>(component.create());
+        QVERIFY2(!weakReferenceMutator.isNull(), qPrintable(component.errorString()));
+        weakReferenceMutator->init(v4, weakRef.data(), &mutatorResult);
+
+        v4->memoryManager->allocObject<QV4::WeakReferenceSentinel>(weakRef.data(), &sentinelResult);
+    }
+    gc(engine);
+
+    QVERIFY2(mutatorResult, "We failed to re-assign the weak reference a new value during GC");
+    QVERIFY2(sentinelResult, "The weak reference was not cleared properly");
 }
 
 struct EventProcessor : public QObject

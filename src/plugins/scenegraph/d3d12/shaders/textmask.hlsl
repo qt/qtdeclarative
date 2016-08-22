@@ -45,7 +45,7 @@ float4 PS_TextMask32(PSInput input) : SV_TARGET
 
 float4 PS_TextMask8(PSInput input) : SV_TARGET
 {
-    return colorVec * tex.Sample(samp, input.coord).r;
+    return colorVec * tex.Sample(samp, input.coord).a;
 }
 
 struct StyledPSInput
@@ -66,8 +66,8 @@ StyledPSInput VS_StyledText(VSInput input)
 
 float4 PS_StyledText(StyledPSInput input) : SV_TARGET
 {
-    float glyph = tex.Sample(samp, input.coord).r;
-    float style = clamp(tex.Sample(samp, input.shiftedCoord).r - glyph, 0.0, 1.0);
+    float glyph = tex.Sample(samp, input.coord).a;
+    float style = clamp(tex.Sample(samp, input.shiftedCoord).a - glyph, 0.0, 1.0);
     return style * styleColor + glyph * colorVec;
 }
 
@@ -95,10 +95,10 @@ OutlinedPSInput VS_OutlinedText(VSInput input)
 
 float4 PS_OutlinedText(OutlinedPSInput input) : SV_TARGET
 {
-    float glyph = tex.Sample(samp, input.coord).r;
-    float outline = clamp(clamp(tex.Sample(samp, input.coordUp).r
-        + tex.Sample(samp, input.coordDown).r
-        + tex.Sample(samp, input.coordLeft).r
-        + tex.Sample(samp, input.coordRight).r, 0.0, 1.0) - glyph, 0.0, 1.0);
+    float glyph = tex.Sample(samp, input.coord).a;
+    float outline = clamp(clamp(tex.Sample(samp, input.coordUp).a
+        + tex.Sample(samp, input.coordDown).a
+        + tex.Sample(samp, input.coordLeft).a
+        + tex.Sample(samp, input.coordRight).a, 0.0, 1.0) - glyph, 0.0, 1.0);
     return outline * styleColor + glyph * colorVec;
 }

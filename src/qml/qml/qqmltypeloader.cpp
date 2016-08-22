@@ -2929,7 +2929,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     irUnit.javaScriptCompilationUnit = unit;
     irUnit.imports = collector.imports;
     if (collector.hasPragmaLibrary)
-        irUnit.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
+        irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::ResolvedTypeReferenceMap emptyDependencies;

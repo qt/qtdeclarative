@@ -161,7 +161,6 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
         _flags.type = Flags::QVariantType;
     } else if (type == QVariant::UserType || type == -1) {
         _flags.notFullyResolved = true;
-        setPropTypeName(p.typeName());
     } else {
         setPropType(type);
     }
@@ -224,7 +223,6 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     if (!returnType)
         returnType = "\0";
     if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
-        setPropTypeName(returnType);
         _flags.notFullyResolved = true;
     }
 
@@ -680,7 +678,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         Q_ASSERT(accessorProperty == 0 || (old == 0 && data->revision() == 0));
 
         if (accessorProperty) {
-            data->_flags.hasAccessors = true;
             data->setAccessors(accessorProperty->accessors);
         } else if (old) {
             data->markAsOverrideOf(old);
@@ -691,13 +688,22 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
 void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
 {
     Q_ASSERT(data->notFullyResolved());
-
-    data->setPropType(QMetaType::type(data->propTypeName()));
     data->_flags.notFullyResolved = false;
+
+    const QMetaObject *mo = firstCppMetaObject();
+    if (data->isFunction()) {
+        auto metaMethod = mo->method(data->coreIndex());
+        const char *retTy = metaMethod.typeName();
+        if (!retTy)
+            retTy = "\0";
+        data->setPropType(QMetaType::type(retTy));
+    } else {
+        auto metaProperty = mo->property(data->coreIndex());
+        data->setPropType(QMetaType::type(metaProperty.typeName()));
+    }
 
     if (!data->isFunction()) {
         if (data->propType() == QMetaType::UnknownType) {
-            const QMetaObject *mo = _metaObject;
             QQmlPropertyCache *p = _parent;
             while (p && (!mo || _ownMetaObject)) {
                 mo = p->_metaObject;

@@ -256,7 +256,7 @@ void QQuickPropertyChangesPrivate::decode()
     if (decoded)
         return;
 
-    foreach (const QV4::CompiledData::Binding *binding, bindings)
+    for (const QV4::CompiledData::Binding *binding : qAsConst(bindings))
         decodeBinding(QString(), compilationUnit->data, binding);
 
     bindings.clear();

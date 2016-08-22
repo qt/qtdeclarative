@@ -1,5 +1,3 @@
-!contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
-
 # DEFINES += QSG_SEPARATE_INDEX_BUFFER
 # DEFINES += QSG_DISTANCEFIELD_CACHE_DEBUG
 
@@ -29,7 +27,7 @@ SOURCES += \
     $$PWD/coreapi/qsgrendernode.cpp \
     $$PWD/coreapi/qsgrendererinterface.cpp
 
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     HEADERS += \
         $$PWD/coreapi/qsgbatchrenderer_p.h
     SOURCES += \
@@ -73,7 +71,7 @@ SOURCES += \
     $$PWD/util/qsgimagenode.cpp \
     $$PWD/util/qsgninepatchnode.cpp
 
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     HEADERS += \
         $$PWD/util/qsgdepthstencilbuffer_p.h \
         $$PWD/util/qsgshadersourcebuilder_p.h \
@@ -104,7 +102,7 @@ SOURCES += \
     $$PWD/qsgbasicglyphnode.cpp \
     $$PWD/qsgrenderloop.cpp
 
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qsgdefaultglyphnode.cpp \
         $$PWD/qsgdefaultglyphnode_p.cpp \
@@ -150,7 +148,7 @@ RESOURCES += \
     $$PWD/scenegraph.qrc
 
 # OpenGL Shaders
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     OTHER_FILES += \
         $$PWD/shaders/24bittextmask.frag \
         $$PWD/shaders/8bittextmask.frag \
