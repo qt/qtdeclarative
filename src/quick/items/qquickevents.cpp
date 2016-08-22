@@ -521,8 +521,10 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
     m_accept = false;
     m_state = static_cast<QQuickEventPoint::State>(state);
     m_timestamp = timestamp;
-    if (state == Qt::TouchPointPressed)
+    if (state == Qt::TouchPointPressed) {
         m_pressTimestamp = timestamp;
+        m_scenePressPos = scenePos;
+    }
     // TODO if Q_LIKELY(velocity.isNull) calculate velocity
     m_velocity = velocity;
 }

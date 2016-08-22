@@ -251,6 +251,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QPointF scenePos READ scenePos)
+    Q_PROPERTY(QPointF scenePressPos READ scenePressPos)
     Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(State state READ state)
     Q_PROPERTY(quint64 pointId READ pointId)
@@ -276,6 +277,7 @@ public:
 
     QQuickPointerEvent *pointerEvent() const;
     QPointF scenePos() const { return m_scenePos; }
+    QPointF scenePressPos() const { return m_scenePressPos; }
     QVector2D velocity() const { return m_velocity; }
     State state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
@@ -294,6 +296,7 @@ public:
 
 private:
     QPointF m_scenePos;
+    QPointF m_scenePressPos;
     QVector2D m_velocity;
     quint64 m_pointId;
     QPointer<QObject> m_grabber;
