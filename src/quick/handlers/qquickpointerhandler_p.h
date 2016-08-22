@@ -64,6 +64,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
 
 public:
@@ -74,6 +75,8 @@ public:
     bool enabled() const { return m_enabled; }
     void setEnabled(bool enabled);
 
+    bool active() const { return m_active; }
+
     QQuickItem *target() const { return m_target; }
     void setTarget(QQuickItem *target);
 
@@ -81,11 +84,13 @@ public:
 
 Q_SIGNALS:
     void enabledChanged();
+    void activeChanged();
     void targetChanged();
 
 protected:
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
+    virtual void setActive(bool active);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setGrab(QQuickEventPoint *point, bool grab);
     QPointF eventPos(const QQuickEventPoint *point) const;
@@ -94,7 +99,8 @@ protected:
 private:
     QQuickPointerEvent *m_currentEvent;
     QQuickItem *m_target;
-    bool m_enabled;
+    bool m_enabled : 1;
+    bool m_active : 1;
 };
 
 QT_END_NAMESPACE

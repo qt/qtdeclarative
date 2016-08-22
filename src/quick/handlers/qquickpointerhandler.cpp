@@ -59,6 +59,7 @@ QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
   , m_currentEvent(nullptr)
   , m_target(nullptr)
   , m_enabled(true)
+  , m_active(false)
 {
 }
 
@@ -123,7 +124,9 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 {
-    if (wantsPointerEvent(event))
+    const bool wants = wantsPointerEvent(event);
+    setActive(wants);
+    if (wants)
         handlePointerEventImpl(event);
 }
 
@@ -131,6 +134,14 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     Q_UNUSED(event)
     return m_enabled;
+}
+
+void QQuickPointerHandler::setActive(bool active)
+{
+    if (m_active != active) {
+        m_active = active;
+        emit activeChanged();
+    }
 }
 
 void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
