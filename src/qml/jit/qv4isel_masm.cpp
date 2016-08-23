@@ -113,8 +113,7 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
 {
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
          it != end; ++it) {
-        QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
-        ptrString.prepend("0x");
+        const QByteArray ptrString = "0x" + QByteArray::number(quintptr(it.key()), 16);
         int idx = processedOutput.indexOf(ptrString);
         if (idx < 0)
             continue;
@@ -197,11 +196,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
         name = _function->name->toUtf8();
-        if (name.isEmpty()) {
-            name = QByteArray::number(quintptr(_function), 16);
-            name.prepend("IR::Function(0x");
-            name.append(')');
-        }
+        if (name.isEmpty())
+            name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
@@ -238,11 +234,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         // this may have been pre-populated, if QV4_SHOW_ASM was on
         if (name.isEmpty()) {
             name = _function->name->toUtf8();
-            if (name.isEmpty()) {
-                name = QByteArray::number(quintptr(_function), 16);
-                name.prepend("IR::Function(0x");
-                name.append(')');
-            }
+            if (name.isEmpty())
+                name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
         }
 
         fprintf(pmap, "%llx %x %.*s\n",
