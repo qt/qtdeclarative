@@ -100,7 +100,7 @@ static void printItems(const QList<QQuickItem *> &items)
     std::cout << "     QQuickItems: " << items.count() << " (total of QObjects: " << qt_qobjects->count() << ")" << std::endl;
 
     if (qt_verbose) {
-        foreach (QObject *object, *qt_qobjects)
+        for (QObject *object : qAsConst(*qt_qobjects))
             qInfo() << "\t" << object;
     }
 }
@@ -118,11 +118,12 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
-    foreach (const QFileInfo &entry, entries) {
+    const QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    for (const QFileInfo &entry : entries) {
         QString name = entry.baseName();
         if (!skiplist.contains(name)) {
-            foreach (const QString &importPath, engine->importPathList()) {
+            const auto importPathList = engine->importPathList();
+            for (const QString &importPath : importPathList) {
                 QString name = entry.dir().dirName() + "/" + entry.fileName();
                 QString filePath = importPath + "/" + targetPath + "/" + entry.fileName();
                 if (QFile::exists(filePath)) {
@@ -148,7 +149,7 @@ static void doBenchmark(QQmlEngine *engine, const QUrl &url)
     QVERIFY2(object.data(), qPrintable(component.errorString()));
 
     QList<QQuickItem *> items;
-    foreach (QObject *object, *qt_qobjects()) {
+    for (QObject *object : qAsConst(*qt_qobjects)) {
         QQuickItem *item = qobject_cast<QQuickItem *>(object);
         if (item)
             items += item;
