@@ -600,11 +600,8 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
 
             ModelNodeMetaObject *cache = e->objectCache();
 
-            if (roleIndex != -1 && cache) {
-                QVector<int> roles;
-                roles << roleIndex;
-                cache->updateValues(roles);
-            }
+            if (roleIndex != -1 && cache)
+                cache->updateValues(QVector<int>(1, roleIndex));
         }
     }
 
@@ -1302,11 +1299,8 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QV4::ScopedValue v(scope, scope.engine->fromVariant(value));
 
     int roleIndex = m_model->m_listModel->setExistingProperty(m_elementIndex, propName, v, scope.engine);
-    if (roleIndex != -1) {
-        QVector<int> roles;
-        roles << roleIndex;
-        m_model->emitItemsChanged(m_elementIndex, 1, roles);
-    }
+    if (roleIndex != -1)
+        m_model->emitItemsChanged(m_elementIndex, 1, QVector<int>(1, roleIndex));
 }
 
 namespace QV4 {
@@ -1319,11 +1313,8 @@ void ModelObject::put(Managed *m, String *name, const Value &value)
     const int elementIndex = that->d()->m_elementIndex;
     const QString propName = name->toQString();
     int roleIndex = that->d()->m_model->m_listModel->setExistingProperty(elementIndex, propName, value, eng);
-    if (roleIndex != -1) {
-        QVector<int> roles;
-        roles << roleIndex;
-        that->d()->m_model->emitItemsChanged(elementIndex, 1, roles);
-    }
+    if (roleIndex != -1)
+        that->d()->m_model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
 
     ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
     if (mo->initialized())
@@ -1507,12 +1498,8 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     int elementIndex = parentModel->m_modelObjects.indexOf(m_owner);
     if (elementIndex != -1) {
         int roleIndex = parentModel->m_roles.indexOf(QString::fromLatin1(name(index).constData()));
-        if (roleIndex != -1) {
-            QVector<int> roles;
-            roles << roleIndex;
-
-            parentModel->emitItemsChanged(elementIndex, 1, roles);
-        }
+        if (roleIndex != -1)
+            parentModel->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
     }
 }
 
@@ -1881,14 +1868,14 @@ bool QQmlListModel::setData(const QModelIndex &index, const QVariant &value, int
     if (m_dynamicRoles) {
         const QByteArray property = m_roles.at(role).toUtf8();
         if (m_modelObjects[row]->setValue(property, value)) {
-            emitItemsChanged(row, 1, QVector<int>() << role);
+            emitItemsChanged(row, 1, QVector<int>(1, role));
             return true;
         }
     } else {
         const ListLayout::Role &r = m_listModel->getExistingRole(role);
         const int roleIndex = m_listModel->setOrCreateProperty(row, r.name, value);
         if (roleIndex != -1) {
-            emitItemsChanged(row, 1, QVector<int>() << role);
+            emitItemsChanged(row, 1, QVector<int>(1, role));
             return true;
         }
     }
@@ -2356,20 +2343,12 @@ void QQmlListModel::setProperty(int index, const QString& property, const QVaria
             roleIndex = m_roles.count();
             m_roles.append(property);
         }
-        if (m_modelObjects[index]->setValue(property.toUtf8(), value)) {
-            QVector<int> roles;
-            roles << roleIndex;
-            emitItemsChanged(index, 1, roles);
-        }
+        if (m_modelObjects[index]->setValue(property.toUtf8(), value))
+            emitItemsChanged(index, 1, QVector<int>(1, roleIndex));
     } else {
         int roleIndex = m_listModel->setOrCreateProperty(index, property, value);
-        if (roleIndex != -1) {
-
-            QVector<int> roles;
-            roles << roleIndex;
-
-            emitItemsChanged(index, 1, roles);
-        }
+        if (roleIndex != -1)
+            emitItemsChanged(index, 1, QVector<int>(1, roleIndex));
     }
 }
 
