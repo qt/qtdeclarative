@@ -88,7 +88,7 @@ public:
 
     void updateValues(const QVariantMap &object, QVector<int> &roles);
 
-    QVariant getValue(const QString &name)
+    QVariant getValue(const QString &name) const
     {
         return m_meta->value(name.toUtf8());
     }
