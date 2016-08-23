@@ -987,12 +987,16 @@ TestCase {
         control.destroy()
     }
 
-    // QTBUG-51989
     function test_visible() {
         var control = popupTemplate.createObject(testCase, {visible: true})
         verify(control)
 
+        // QTBUG-51989
         tryCompare(control, "visible", true)
+
+        // QTBUG-55347
+        control.parent = null
+        verify(!control.visible)
 
         control.destroy()
     }

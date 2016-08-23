@@ -214,12 +214,19 @@ private:
     void init();
     bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const;
 
+    // These reflect whether a color value was explicitly set on the specific
+    // item that this attached style object represents.
     bool m_explicitTheme;
     bool m_explicitAccent;
     bool m_explicitForeground;
     bool m_explicitBackground;
+    // These will be true when this item has an explicit or inherited foreground/background
+    // color, or these colors were declared globally via settings (e.g. conf or env vars).
+    // Some color properties of the style will return different values depending on whether
+    // or not these are set.
     bool m_hasForeground;
     bool m_hasBackground;
+    // The actual values for this item, whether explicit, inherited or globally set.
     QQuickUniversalStyle::Theme m_theme;
     QRgb m_accent;
     QRgb m_foreground;

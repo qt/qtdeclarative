@@ -133,10 +133,9 @@ public:
     void setParentItem(QQuickItem *parent);
 
 protected:
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &);
-    void itemParentChanged(QQuickItem *, QQuickItem *parent);
-    void itemChildRemoved(QQuickItem *, QQuickItem *child);
-    void itemDestroyed(QQuickItem *item);
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *child) override;
 
 private:
     void removeAncestorListeners(QQuickItem *item);
@@ -148,7 +147,7 @@ private:
     QQuickPopupPrivate *m_popup;
 };
 
-class QQuickPopupPrivate : public QObjectPrivate
+class QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
 
@@ -177,6 +176,7 @@ public:
     void setBottomMargin(qreal value, bool reset = false);
 
     void setWindow(QQuickWindow *window);
+    void itemDestroyed(QQuickItem *item) override;
 
     bool focus;
     bool modal;

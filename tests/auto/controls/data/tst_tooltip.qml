@@ -118,12 +118,37 @@ TestCase {
         var spy2 = signalSpy.createObject(item2, {target: item2.ToolTip, signalName: data.signalName})
         verify(spy2.valid)
 
+        var sharedTip = ToolTip.toolTip
+        var sharedSpy = signalSpy.createObject(testCase, {target: sharedTip, signalName: data.signalName})
+        verify(sharedSpy.valid)
+
+        // change attached properties while the shared tooltip is not visible
         item1.ToolTip[data.property] = data.setValue
         compare(item1.ToolTip[data.property], data.setValue)
         compare(spy1.count, 1)
 
         compare(spy2.count, 0)
         compare(item2.ToolTip[data.property], data.defaultValue)
+
+        // the shared tooltip is not visible for item1, so the attached
+        // property change should therefore not apply to the shared instance
+        compare(sharedSpy.count, 0)
+        compare(sharedTip[data.property], data.defaultValue)
+
+        // show the shared tooltip for item2
+        item2.ToolTip.visible = true
+        verify(item2.ToolTip.visible)
+        verify(sharedTip.visible)
+
+        // change attached properties while the shared tooltip is visible
+        item2.ToolTip[data.property] = data.setValue
+        compare(item2.ToolTip[data.property], data.setValue)
+        compare(spy2.count, 1)
+
+        // the shared tooltip is visible for item2, so the attached
+        // property change should apply to the shared instance
+        compare(sharedSpy.count, 1)
+        compare(sharedTip[data.property], data.setValue)
 
         item1.destroy()
         item2.destroy()
