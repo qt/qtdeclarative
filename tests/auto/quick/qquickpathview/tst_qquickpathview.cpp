@@ -135,7 +135,9 @@ private slots:
     void nestedinFlickable();
     void flickableDelegate();
     void jsArrayChange();
+    void qtbug37815();
     void qtbug42716();
+    void qtbug53464();
     void addCustomAttribute();
     void movementDirection_data();
     void movementDirection();
@@ -2330,6 +2332,31 @@ void tst_QQuickPathView::jsArrayChange()
     QCOMPARE(spy.count(), 1);
 }
 
+void tst_QQuickPathView::qtbug37815()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("qtbug37815.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    // cache items will be created async. Let's wait...
+    QTest::qWait(1000);
+
+    QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathView != Q_NULLPTR);
+
+    const int pathItemCount = pathView->pathItemCount();
+    const int cacheItemCount = pathView->cacheItemCount();
+    int totalCount = 0;
+    foreach (QQuickItem *item, pathView->childItems()) {
+        if (item->objectName().startsWith(QLatin1String("delegate")))
+            ++totalCount;
+    }
+    QCOMPARE(pathItemCount + cacheItemCount, totalCount);
+}
+
 /* This bug was one where if you jump the list such that the sole missing item needed to be
  * added in the middle of the list, it would instead move an item somewhere else in the list
  * to the middle (messing it up very badly).
@@ -2376,6 +2403,29 @@ void tst_QQuickPathView::qtbug42716()
     }
     itemMiss = findItem<QQuickItem>(pathView, QString("delegate%1").arg(missing2));
     QVERIFY(!itemMiss);
+}
+
+void tst_QQuickPathView::qtbug53464()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("qtbug53464.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathView != Q_NULLPTR);
+    const int currentIndex = pathView->currentIndex();
+    QCOMPARE(currentIndex, 8);
+
+    const int pathItemCount = pathView->pathItemCount();
+    int totalCount = 0;
+    foreach (QQuickItem *item, pathView->childItems()) {
+        if (item->objectName().startsWith(QLatin1String("delegate")))
+            ++totalCount;
+    }
+    QCOMPARE(pathItemCount, totalCount);
 }
 
 void tst_QQuickPathView::addCustomAttribute()

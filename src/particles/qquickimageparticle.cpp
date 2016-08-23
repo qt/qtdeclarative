@@ -49,6 +49,7 @@
 #include <private/qquicksprite_p.h>
 #include <private/qquickspriteengine_p.h>
 #include <QOpenGLFunctions>
+#include <QSGRendererInterface>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qqmlglobal_p.h>
@@ -1469,8 +1470,17 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     update();
 }
 
+static inline bool isOpenGL(QSGRenderContext *rc)
+{
+    QSGRendererInterface *rif = rc->sceneGraphContext()->rendererInterface(rc);
+    return !rif || rif->graphicsApi() == QSGRendererInterface::OpenGL;
+}
+
 QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
+    if (!node && !isOpenGL(QQuickItemPrivate::get(this)->sceneGraphRenderContext()))
+        return 0;
+
     if (m_pleaseReset){
         if (node)
             delete node;

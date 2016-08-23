@@ -2513,6 +2513,13 @@ bool Codegen::visit(ReturnStatement *ast)
         Result expr = expression(ast->expression);
         move(_block->TEMP(_returnAddress), *expr);
     }
+
+    // Since we're leaving, don't let any finally statements we emit as part of the unwinding
+    // jump to exception handlers at run-time if they throw.
+    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
+    _block->JUMP(unwindBlock);
+    _block = unwindBlock;
+
     unwindException(0);
 
     _block->JUMP(_exitBlock);

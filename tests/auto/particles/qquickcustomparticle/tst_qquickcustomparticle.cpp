@@ -60,7 +60,7 @@ void tst_qquickcustomparticle::test_basic()
 
     bool oneNonZero = false;
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

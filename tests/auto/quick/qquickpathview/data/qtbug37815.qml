@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Netris
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,26 +38,40 @@
 **
 ****************************************************************************/
 
-#ifndef SOFTWARERENDERER_H
-#define SOFTWARERENDERER_H
+import QtQuick 2.0
 
-#include <qsgrendernode.h>
-#include <QQuickItem>
+Rectangle {
+    width: 600
+    height: 400
+    PathView {
+        objectName: "pathView"
+        model: 10
+        anchors.fill: parent
+        pathItemCount: 5
+        cacheItemCount: 5
+        highlightRangeMode: PathView.StrictlyEnforceRange
+        preferredHighlightBegin: 0.5
+        preferredHighlightEnd: 0.5
 
-class SoftwareRenderNode : public QSGRenderNode
-{
-public:
-    SoftwareRenderNode(QQuickItem *item);
-    ~SoftwareRenderNode();
+        path: Path {
+            startX: 0
+            startY: 50
+            PathLine {
+                x: 600
+                y: 50
+            }
+        }
 
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
+        delegate: Component {
+            Text {
+                width: 50
+                height: 50
+                text: index
+                objectName: "delegate" + index
+                font.pixelSize: 24
+                color: PathView.isCurrentItem ? "green" : "black"
+            }
+        }
+    }
+}
 
-private:
-    QQuickItem *m_item;
-};
-
-#endif

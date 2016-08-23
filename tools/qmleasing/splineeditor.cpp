@@ -288,7 +288,7 @@ QHash<QString, QEasingCurve> SplineEditor::presets() const
 QString SplineEditor::generateCode()
 {
     QString s = QLatin1String("[");
-    foreach (const QPointF &point, m_controlPoints) {
+    for (const QPointF &point : qAsConst(m_controlPoints)) {
         s += QString::number(point.x(), 'g', 2) + QLatin1Char(',')
              + QString::number(point.y(), 'g', 3) + QLatin1Char(',');
     }

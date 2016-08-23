@@ -235,7 +235,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
         g->connect(n);
     }
 
-    if (duration == OnlyOnce)
+    if (duration == Permanently)
         expression->permanentGuards.prepend(g);
     else
         expression->activeGuards.prepend(g);
@@ -301,7 +301,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     if (!ep)
         return;
     QQmlPropertyCapture *capture = ep->propertyCapture;
-    if (!capture)
+    if (!capture || capture->watcher->wasDeleted())
         return;
 
     if (capture->expression->m_permanentDependenciesRegistered)

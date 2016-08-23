@@ -118,7 +118,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
 
-    foreach (const QV4::StackFrame &frame, trace) {
+    for (const QV4::StackFrame &frame : trace) {
         std::cerr << "    at " << qPrintable(frame.function) << " (" << qPrintable(frame.source);
         if (frame.line >= 0)
             std::cerr << ':' << frame.line;
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         QV4::ScopedObject gc(scope, vm.memoryManager->allocObject<builtins::GC>(ctx));
         vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
-        foreach (const QString &fn, args) {
+        for (const QString &fn : qAsConst(args)) {
             QFile file(fn);
             if (file.open(QFile::ReadOnly)) {
                 const QString code = QString::fromUtf8(file.readAll());

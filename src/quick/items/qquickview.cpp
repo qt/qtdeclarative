@@ -264,8 +264,8 @@ void QQuickView::setContent(const QUrl& url, QQmlComponent *component, QObject* 
     d->component = component;
 
     if (d->component && d->component->isError()) {
-        QList<QQmlError> errorList = d->component->errors();
-        foreach (const QQmlError &error, errorList) {
+        const QList<QQmlError> errorList = d->component->errors();
+        for (const QQmlError &error : errorList) {
             QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
                     << error;
         }
@@ -475,8 +475,8 @@ void QQuickView::continueExecute()
     disconnect(d->component, SIGNAL(statusChanged(QQmlComponent::Status)), this, SLOT(continueExecute()));
 
     if (d->component->isError()) {
-        QList<QQmlError> errorList = d->component->errors();
-        foreach (const QQmlError &error, errorList) {
+        const QList<QQmlError> errorList = d->component->errors();
+        for (const QQmlError &error : errorList) {
             QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
                     << error;
         }
@@ -487,8 +487,8 @@ void QQuickView::continueExecute()
     QObject *obj = d->component->create();
 
     if (d->component->isError()) {
-        QList<QQmlError> errorList = d->component->errors();
-        foreach (const QQmlError &error, errorList) {
+        const QList<QQmlError> errorList = d->component->errors();
+        for (const QQmlError &error : errorList) {
             QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
                     << error;
         }

@@ -89,6 +89,7 @@
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquickworkerscript_p.h>
 #include <private/qqmlinstantiator_p.h>
+#include <private/qqmlloggingcategory_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #  include <qt_windows.h>
@@ -187,6 +188,7 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
     qmlRegisterType<QQmlInstanceModel>();
+    qmlRegisterType<QQmlLoggingCategory>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "LoggingCategory"); //Only available in >=2.8
 }
 
 
@@ -405,10 +407,9 @@ The following functions are also on the Qt object.
         \li \c "ios" - iOS
         \li \c "tvos" - tvOS
         \li \c "linux" - Linux
-        \li \c "osx" - OS X
+        \li \c "osx" - \macos
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
-        \li \c "wince" - Windows CE
         \li \c "winrt" - Windows Runtime
         \li \c "winphone" - Windows Phone
     \endlist

@@ -40,6 +40,7 @@ public:
 
 private slots:
     void logging();
+    void categorized_logging();
     void tracing();
     void profiling();
     void testAssert();
@@ -84,6 +85,41 @@ void tst_qqmlconsole::logging()
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
     QVERIFY(object != 0);
+    delete object;
+}
+
+void tst_qqmlconsole::categorized_logging()
+{
+    QUrl testUrl = testFileUrl("categorized_logging.qml");
+    QQmlTestMessageHandler messageHandler;
+    messageHandler.setIncludeCategoriesEnabled(true);
+
+    QLoggingCategory testCategory("qt.test");
+    testCategory.setEnabled(QtDebugMsg, true);
+    QVERIFY(testCategory.isDebugEnabled());
+    QVERIFY(testCategory.isWarningEnabled());
+    QVERIFY(testCategory.isCriticalEnabled());
+
+    QQmlComponent component(&engine, testUrl);
+    QObject *object = component.create();
+    QVERIFY2(object != 0, component.errorString().toUtf8());
+
+    QVERIFY(messageHandler.messages().contains("qt.test: console.info"));
+    QVERIFY(messageHandler.messages().contains("qt.test: console.warn"));
+    QVERIFY(messageHandler.messages().contains("qt.test: console.error"));
+
+    QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+                            "QML LoggingCategory: Declaring the name of the LoggingCategory is mandatory and cannot be changed later !";
+    QVERIFY(messageHandler.messages().contains(emptyCategory));
+
+    QString changedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+                            "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the Item is created";
+    QVERIFY(messageHandler.messages().contains(changedCategory));
+
+    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(63) +
+                            "Error: A QmlLoggingCatgory was provided without a valid name";
+    QVERIFY(messageHandler.messages().contains(useEmptyCategory));
+
     delete object;
 }
 

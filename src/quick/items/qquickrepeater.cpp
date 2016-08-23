@@ -461,7 +461,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 
     int difference = 0;
     QHash<int, QVector<QPointer<QQuickItem> > > moved;
-    foreach (const QQmlChangeSet::Change &remove, changeSet.removes()) {
+    for (const QQmlChangeSet::Change &remove : changeSet.removes()) {
         int index = qMin(remove.index, d->deletables.count());
         int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
         if (remove.isMove()) {
@@ -483,7 +483,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         difference -= remove.count;
     }
 
-    foreach (const QQmlChangeSet::Change &insert, changeSet.inserts()) {
+    for (const QQmlChangeSet::Change &insert : changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.count());
         if (insert.isMove()) {
             QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);

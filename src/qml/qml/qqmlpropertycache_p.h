@@ -108,7 +108,6 @@ public:
         unsigned isFinal          : 1; // Has FINAL flag
         unsigned isOverridden     : 1; // Is overridden by a extension property
         unsigned isDirect         : 1; // Exists on a C++ QMetaObject
-        unsigned hasAccessors     : 1; // Has property accessors
 
         unsigned type             : 4; // stores an entry of Types
 
@@ -127,7 +126,7 @@ public:
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
         unsigned overrideIndexIsProperty: 1;
 
-        unsigned _padding         : 9; // align to 32 bits
+        unsigned _padding         : 10; // align to 32 bits
 
         inline Flags();
         inline bool operator==(const Flags &other) const;
@@ -147,7 +146,7 @@ public:
     bool isFinal() const { return _flags.isFinal; }
     bool isOverridden() const { return _flags.isOverridden; }
     bool isDirect() const { return _flags.isDirect; }
-    bool hasAccessors() const { return _flags.hasAccessors; }
+    bool hasAccessors() const { return accessors() != nullptr; }
     bool isFunction() const { return _flags.type == Flags::FunctionType; }
     bool isQObject() const { return _flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return _flags.type == Flags::EnumType; }
@@ -168,35 +167,25 @@ public:
     bool isCloned() const { return _flags.isCloned; }
     bool isConstructor() const { return _flags.isConstructor; }
 
-    bool hasOverride() const { return !(_flags.hasAccessors) &&
-                                      overrideIndex() >= 0; }
-    bool hasRevision() const { return !(_flags.hasAccessors) && revision() != 0; }
+    bool hasOverride() const { return overrideIndex() >= 0; }
+    bool hasRevision() const { return revision() != 0; }
 
     bool isFullyResolved() const { return !_flags.notFullyResolved; }
 
     int propType() const { Q_ASSERT(isFullyResolved()); return _propType; }
-    void setPropType(int pt) { _propType = pt; }
-
-    int notifyIndex() const { return _notifyIndex; }
-    void setNotifyIndex(int idx) { _notifyIndex = idx; }
-
-    QQmlPropertyCacheMethodArguments *arguments() const { return _arguments; }
-    void setArguments(QQmlPropertyCacheMethodArguments *args) { _arguments = args; }
-
-    int revision() const { return _revision; }
-    void setRevision(int rev)
+    void setPropType(int pt)
     {
-        Q_ASSERT(rev >= std::numeric_limits<qint16>::min());
-        Q_ASSERT(rev <= std::numeric_limits<qint16>::max());
-        _revision = qint16(rev);
+        Q_ASSERT(pt >= 0);
+        Q_ASSERT(pt <= std::numeric_limits<qint16>::max());
+        _propType = quint16(pt);
     }
 
-    int metaObjectOffset() const { return _metaObjectOffset; }
-    void setMetaObjectOffset(int off)
+    int notifyIndex() const { return _notifyIndex; }
+    void setNotifyIndex(int idx)
     {
-        Q_ASSERT(off >= std::numeric_limits<qint16>::min());
-        Q_ASSERT(off <= std::numeric_limits<qint16>::max());
-        _metaObjectOffset = qint16(off);
+        Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
+        _notifyIndex = qint16(idx);
     }
 
     bool overrideIndexIsProperty() const { return _flags.overrideIndexIsProperty; }
@@ -207,42 +196,64 @@ public:
     {
         Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
         Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
-        _overrideIndex = idx;
+        _overrideIndex = qint16(idx);
+    }
+
+    int coreIndex() const { return _coreIndex; }
+    void setCoreIndex(int idx)
+    {
+        Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
+        _coreIndex = qint16(idx);
+    }
+
+    int revision() const { return _revision; }
+    void setRevision(int rev)
+    {
+        Q_ASSERT(rev >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(rev <= std::numeric_limits<qint16>::max());
+        _revision = qint16(rev);
+    }
+
+    QQmlPropertyCacheMethodArguments *arguments() const { return _arguments; }
+    void setArguments(QQmlPropertyCacheMethodArguments *args) { _arguments = args; }
+
+    int metaObjectOffset() const { return _metaObjectOffset; }
+    void setMetaObjectOffset(int off)
+    {
+        Q_ASSERT(off >= std::numeric_limits<qint16>::min());
+        Q_ASSERT(off <= std::numeric_limits<qint16>::max());
+        _metaObjectOffset = qint16(off);
     }
 
     QQmlAccessors *accessors() const { return _accessors; }
     void setAccessors(QQmlAccessors *acc) { _accessors = acc; }
 
-    int coreIndex() const { return _coreIndex; }
-    void setCoreIndex(int idx) { _coreIndex = idx; }
-
 private:
-    int _propType;             // When !NotFullyResolved
-    union {
-        // The notify index is in the range returned by QObjectPrivate::signalIndex().
-        // This is different from QMetaMethod::methodIndex().
-        int _notifyIndex;  // When !IsFunction
-        QQmlPropertyCacheMethodArguments *_arguments;  // When IsFunction && HasArguments
-    };
-
-    union {
-        struct { // When !HasAccessors
-            qint16 _revision;
-            qint16 _metaObjectOffset;
-
-            signed int _overrideIndex; // When !IsValueTypeVirtual
-        };
-        struct { // When HasAccessors
-            QQmlAccessors *_accessors;
-        };
-    };
-
-    int _coreIndex;
     Flags _flags;
+    qint16 _coreIndex;
+    quint16 _propType;
+
+    // The notify index is in the range returned by QObjectPrivate::signalIndex().
+    // This is different from QMetaMethod::methodIndex().
+    qint16 _notifyIndex;
+    qint16 _overrideIndex;
+
+    qint16 _revision;
+    qint16 _metaObjectOffset;
+
+    QQmlPropertyCacheMethodArguments *_arguments;
+    QQmlAccessors *_accessors;
 
     friend class QQmlPropertyData;
     friend class QQmlPropertyCache;
 };
+
+#if QT_POINTER_SIZE == 4
+Q_STATIC_ASSERT(sizeof(QQmlPropertyRawData) == 24);
+#else // QT_POINTER_SIZE == 8
+Q_STATIC_ASSERT(sizeof(QQmlPropertyRawData) == 32);
+#endif
 
 class QQmlPropertyData : public QQmlPropertyRawData
 {
@@ -564,7 +575,6 @@ QQmlPropertyRawData::Flags::Flags()
     , isFinal(false)
     , isOverridden(false)
     , isDirect(false)
-    , hasAccessors(false)
     , type(OtherType)
     , isVMEFunction(false)
     , hasArguments(false)
@@ -588,7 +598,6 @@ bool QQmlPropertyRawData::Flags::operator==(const QQmlPropertyRawData::Flags &ot
             isAlias == other.isAlias &&
             isFinal == other.isFinal &&
             isOverridden == other.isOverridden &&
-            hasAccessors == other.hasAccessors &&
             type == other.type &&
             isVMEFunction == other.isVMEFunction &&
             hasArguments == other.hasArguments &&
@@ -619,12 +628,14 @@ void QQmlPropertyRawData::Flags::copyPropertyTypeFlags(QQmlPropertyRawData::Flag
 
 QQmlPropertyData::QQmlPropertyData()
 {
+    setCoreIndex(-1);
     setPropType(0);
     setNotifyIndex(-1);
     setOverrideIndex(-1);
     setRevision(0);
     setMetaObjectOffset(-1);
-    setCoreIndex(-1);
+    setArguments(nullptr);
+    setAccessors(nullptr);
 }
 
 QQmlPropertyData::QQmlPropertyData(const QQmlPropertyRawData &d)

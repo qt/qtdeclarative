@@ -150,7 +150,7 @@ develpoment files are present. In practice this currently means Visual Studio
 The adaptation is available both in normal, OpenGL-enabled Qt builds and also
 when Qt was configured with \c{-no-opengl}. However, it is never the default,
 meaning the user or the application has to explicitly request it by setting the
-\c{QT_QUICK_BACKEND} environment variable or by calling
+\c{QT_QUICK_BACKEND} environment variable to \c{d3d12} or by calling
 QQuickWindow::setSceneGraphBackend().
 
 \section2 Motivation
@@ -165,7 +165,7 @@ vendor-supported solution. This means that there are fewer problems anticipated
 with drivers, operations like window resizes, and special events like graphics
 device loss caused by device resets or graphics driver updates.
 
-Peformance-wise the general expectation is a somewhat lower CPU usage compared
+Performance-wise the general expectation is a somewhat lower CPU usage compared
 to OpenGL due to lower driver overhead, and a higher GPU utilization with less
 wasted idle time. The backend does not heavily utilize threads yet, which means
 there are opportunities for further improvements in the future, for example to

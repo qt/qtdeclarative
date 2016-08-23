@@ -274,8 +274,8 @@ quint64 QmlProfilerApplication::parseFeatures(const QStringList &featureList, co
                                               bool exclude)
 {
     quint64 features = exclude ? std::numeric_limits<quint64>::max() : 0;
-    QStringList givenFeatures = values.split(QLatin1Char(','));
-    foreach (const QString &f, givenFeatures) {
+    const QStringList givenFeatures = values.split(QLatin1Char(','));
+    for (const QString &f : givenFeatures) {
         int index =  featureList.indexOf(f);
         if (index < 0) {
             logError(tr("Unknown feature '%1'").arg(f));

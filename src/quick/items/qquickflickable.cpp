@@ -56,6 +56,8 @@
 #include <QtCore/qmath.h>
 #include "qplatformdefs.h"
 
+#include <cmath>
+
 QT_BEGIN_NAMESPACE
 
 // FlickThreshold determines how far the "mouse" must have moved
@@ -69,6 +71,21 @@ static const int RetainGrabVelocity = 100;
 #ifdef Q_OS_OSX
 static const int MovementEndingTimerInterval = 100;
 #endif
+
+// Currently std::round can't be used on Android when using ndk g++, so
+// use C version instead. We could just define two versions of Round, one
+// for float and one for double, but then only one of them would be used
+// and compiler would trigger a warning about unused function.
+//
+// See https://code.google.com/p/android/issues/detail?id=54418
+template<typename T>
+static T Round(T t) {
+    return round(t);
+}
+template<>
+Q_DECL_UNUSED float Round<float>(float f) {
+    return roundf(f);
+}
 
 static qreal EaseOvershoot(qreal t) {
     return qAtan(t);
@@ -352,7 +369,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         qreal dist = v2 / (accel * 2.0);
         if (v > 0)
             dist = -dist;
-        qreal target = -qRound(-(data.move.value() - dist));
+        qreal target = -Round(-(data.move.value() - dist));
         dist = -target + data.move.value();
         accel = v2 / (2.0f * qAbs(dist));
 
@@ -456,18 +473,18 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     } else if (data.move.value() <= maxExtent) {
         resetTimeline(data);
         adjustContentPos(data, maxExtent);
-    } else if (-qRound(-data.move.value()) != data.move.value()) {
+    } else if (-Round(-data.move.value()) != data.move.value()) {
         // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
         resetTimeline(data);
         qreal val = data.move.value();
-        if (qAbs(-qRound(-val) - val) < 0.25) // round small differences
-            val = -qRound(-val);
+        if (std::abs(-Round(-val) - val) < 0.25) // round small differences
+            val = -Round(-val);
         else if (data.smoothVelocity.value() > 0) // continue direction of motion for larger
-            val = -qFloor(-val);
+            val = -std::floor(-val);
         else if (data.smoothVelocity.value() < 0)
-            val = -qCeil(-val);
+            val = -std::ceil(-val);
         else // otherwise round
-            val = -qRound(-val);
+            val = -Round(-val);
         timeline.set(data.move, val);
     }
     data.inOvershoot = false;
@@ -887,7 +904,7 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
     \li Flickable.AutoFlickIfNeeded - allows flicking vertically if the
     \e contentHeight is greater than the \e height of the Flickable.
     Allows flicking horizontally if the \e contentWidth is greater than
-    to the \e width of the Flickable.
+    to the \e width of the Flickable. (since \c{QtQuick 2.7})
     \li Flickable.HorizontalFlick - allows flicking horizontally.
     \li Flickable.VerticalFlick - allows flicking vertically.
     \li Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
@@ -1235,13 +1252,17 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
-    qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;
     QVector2D deltas = QVector2D(event->localPos() - pressPos);
     bool overThreshold = false;
     QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
     // TODO guarantee that events always have velocity so that it never needs to be computed here
-    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity))
+    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)) {
+        qint64 lastTimestamp = (lastPos.isNull() ? lastPressTime : lastPosTime);
+        if (currentTimestamp == lastTimestamp)
+            return; // events are too close together: velocity would be infinite
+        qreal elapsed = qreal(currentTimestamp - lastTimestamp) / 1000.;
         velocity = QVector2D(event->localPos() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
+    }
 
     if (q->yflick())
         overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, event);
@@ -1550,12 +1571,12 @@ void QQuickFlickablePrivate::replayDelayedPress()
 //XXX pixelAligned ignores the global position of the Flickable, i.e. assumes Flickable itself is pixel aligned.
 void QQuickFlickablePrivate::setViewportX(qreal x)
 {
-    contentItem->setX(pixelAligned ? -qRound(-x) : x);
+    contentItem->setX(pixelAligned ? -Round(-x) : x);
 }
 
 void QQuickFlickablePrivate::setViewportY(qreal y)
 {
-    contentItem->setY(pixelAligned ? -qRound(-y) : y);
+    contentItem->setY(pixelAligned ? -Round(-y) : y);
 }
 
 void QQuickFlickable::timerEvent(QTimerEvent *event)

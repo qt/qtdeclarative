@@ -2643,7 +2643,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
         }
 
         if (!successfullyCreatedDefaultProperty) {
-            foreach (const QString &errorMessage, errorMessages)
+            for (const QString &errorMessage : qAsConst(errorMessages))
                 qmlInfo(this) << errorMessage;
         }
     }

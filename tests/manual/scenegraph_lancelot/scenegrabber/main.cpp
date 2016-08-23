@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
     v.setSource(QUrl::fromLocalFile(ifile));
 
     if (noText) {
-        QList<QQuickItem*> items = v.rootObject()->findChildren<QQuickItem*>();
-        foreach (QQuickItem *item, items) {
+        const QList<QQuickItem*> items = v.rootObject()->findChildren<QQuickItem*>();
+        for (QQuickItem *item : items) {
             if (QByteArray(item->metaObject()->className()).contains("Text"))
                 item->setVisible(false);
         }

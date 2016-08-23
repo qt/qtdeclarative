@@ -248,15 +248,15 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
         QSet<const QQmlType *> baseExports = qmlTypesByCppName.value(it.key());
 
         const QSet<QByteArray> extensionCppNames = it.value();
-        foreach (const QByteArray &extensionCppName, extensionCppNames) {
+        for (const QByteArray &extensionCppName : extensionCppNames) {
             const QSet<const QQmlType *> extensionExports = qmlTypesByCppName.value(extensionCppName);
 
             // remove extension exports from base imports
             // unfortunately the QQmlType pointers don't match, so can't use QSet::subtract
             QSet<const QQmlType *> newBaseExports;
-            foreach (const QQmlType *baseExport, baseExports) {
+            for (const QQmlType *baseExport : qAsConst(baseExports)) {
                 bool match = false;
-                foreach (const QQmlType *extensionExport, extensionExports) {
+                for (const QQmlType *extensionExport : extensionExports) {
                     if (baseExport->qmlTypeName() == extensionExport->qmlTypeName()
                             && baseExport->majorVersion() == extensionExport->majorVersion()
                             && baseExport->minorVersion() == extensionExport->minorVersion()) {
@@ -469,7 +469,7 @@ public:
 
     void dumpComposite(QQmlEngine *engine, const QSet<const QQmlType *> &compositeType, QSet<QByteArray> &defaultReachableNames)
     {
-        foreach (const QQmlType *type, compositeType)
+        for (const QQmlType *type : compositeType)
             dumpCompositeItem(engine, type, defaultReachableNames);
     }
 
@@ -518,7 +518,7 @@ public:
             }
         }
 
-        foreach (const QMetaObject *meta, objectsToMerge)
+        for (const QMetaObject *meta : qAsConst(objectsToMerge))
             writeMetaContent(meta, &knownAttributes);
 
         qml->writeEndObject();
@@ -542,11 +542,11 @@ public:
         if (meta->superClass())
             qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
 
-        QSet<const QQmlType *> qmlTypes = qmlTypesByCppName.value(meta->className());
+        const QSet<const QQmlType *> qmlTypes = qmlTypesByCppName.value(meta->className());
         if (!qmlTypes.isEmpty()) {
             QHash<QString, const QQmlType *> exports;
 
-            foreach (const QQmlType *qmlTy, qmlTypes) {
+            for (const QQmlType *qmlTy : qmlTypes) {
                 const QString exportString = getExportString(qmlTy->qmlTypeName(), qmlTy->majorVersion(), qmlTy->minorVersion());
                 exports.insert(exportString, qmlTy);
             }
@@ -564,7 +564,7 @@ public:
 
             // write meta object revisions
             QStringList metaObjectRevisions;
-            foreach (const QString &exportString, exportStrings) {
+            for (const QString &exportString : qAsConst(exportStrings)) {
                 int metaObjectRevision = exports[exportString]->metaObjectRevision();
                 metaObjectRevisions += QString::number(metaObjectRevision);
             }
@@ -749,7 +749,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
     if (verbose) {
         std::cerr << "parsing "
                   << qPrintable( dependenciesFile ) << " skipping";
-        foreach (const QString &uriToSkip, urisToSkip)
+        for (const QString &uriToSkip : urisToSkip)
             std::cerr << ' '  << qPrintable(uriToSkip);
         std::cerr << std::endl;
     }
@@ -763,13 +763,13 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
         return false;
     }
     if (doc.isArray()) {
-        QStringList requiredKeys = QStringList() << QStringLiteral("name")
-                                                 << QStringLiteral("type")
-                                                 << QStringLiteral("version");
+        const QStringList requiredKeys = QStringList() << QStringLiteral("name")
+                                                       << QStringLiteral("type")
+                                                       << QStringLiteral("version");
         foreach (const QJsonValue &dep, doc.array()) {
             if (dep.isObject()) {
                 QJsonObject obj = dep.toObject();
-                foreach (const QString &requiredKey, requiredKeys)
+                for (const QString &requiredKey : requiredKeys)
                     if (!obj.contains(requiredKey) || obj.value(requiredKey).isString())
                         continue;
                 if (obj.value(QStringLiteral("type")).toString() != QLatin1String("module"))
@@ -850,7 +850,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
 
     if (!importScanner.waitForFinished()) {
         std::cerr << "failure to start " << qPrintable(command);
-        foreach (const QString &arg, commandArgs)
+        for (const QString &arg : qAsConst(commandArgs))
             std::cerr << ' ' << qPrintable(arg);
         std::cerr << std::endl;
         return false;
@@ -863,7 +863,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     }
 
     QStringList aux;
-    foreach (const QString &str, *dependencies) {
+    for (const QString &str : qAsConst(*dependencies)) {
         if (!str.startsWith("Qt.test.qtestroot"))
             aux += str;
     }
@@ -1124,7 +1124,7 @@ int main(int argc, char *argv[])
     // load the QtQml builtins and the dependencies
     {
         QByteArray code(qtQmlImportString.toUtf8());
-        foreach (const QString &moduleToImport, dependencies) {
+        for (const QString &moduleToImport : qAsConst(dependencies)) {
             code.append("\nimport ");
             code.append(moduleToImport.toUtf8());
         }
@@ -1154,7 +1154,7 @@ int main(int argc, char *argv[])
     QSet<const QMetaObject *> metas;
 
     if (action == Builtins) {
-        foreach (const QMetaObject *m, defaultReachable) {
+        for (const QMetaObject *m : qAsConst(defaultReachable)) {
             if (m->className() == QLatin1String("Qt")) {
                 metas.insert(m);
                 break;
@@ -1175,7 +1175,7 @@ int main(int argc, char *argv[])
             return EXIT_INVALIDARGUMENTS;
         }
         metas = defaultReachable;
-        foreach (const QMetaObject *m, defaultReachable) {
+        for (const QMetaObject *m : qAsConst(defaultReachable)) {
             if (m->className() == QLatin1String("Qt")) {
                 metas.remove(m);
                 break;
@@ -1196,7 +1196,7 @@ int main(int argc, char *argv[])
                                                         QString::number(qtObjectType->minorVersion())).toUtf8();
         }
         // avoid importing dependencies?
-        foreach (const QString &moduleToImport, dependencies) {
+        for (const QString &moduleToImport : qAsConst(dependencies)) {
             importCode.append("\nimport ");
             importCode.append(moduleToImport.toUtf8());
         }
@@ -1231,9 +1231,9 @@ int main(int argc, char *argv[])
         // Also eliminate meta objects with the same classname.
         // This is required because extended objects seem not to share
         // a single meta object instance.
-        foreach (const QMetaObject *mo, defaultReachable)
+        for (const QMetaObject *mo : qAsConst(defaultReachable))
             defaultReachableNames.insert(QByteArray(mo->className()));
-        foreach (const QMetaObject *mo, candidates) {
+        for (const QMetaObject *mo : qAsConst(candidates)) {
             if (!defaultReachableNames.contains(mo->className()))
                 metas.insert(mo);
         }
@@ -1265,19 +1265,19 @@ int main(int argc, char *argv[])
     compactDependencies(&dependencies);
 
     QStringList quotedDependencies;
-    foreach (const QString &dep, dependencies)
+    for (const QString &dep : qAsConst(dependencies))
         quotedDependencies << enquote(dep);
     qml.writeArrayBinding("dependencies", quotedDependencies);
 
     // put the metaobjects into a map so they are always dumped in the same order
     QMap<QString, const QMetaObject *> nameToMeta;
-    foreach (const QMetaObject *meta, metas)
+    for (const QMetaObject *meta : qAsConst(metas))
         nameToMeta.insert(convertToId(meta), meta);
 
     Dumper dumper(&qml);
     if (relocatable)
         dumper.setRelocatableModuleUri(pluginImportUri);
-    foreach (const QMetaObject *meta, nameToMeta) {
+    for (const QMetaObject *meta : qAsConst(nameToMeta)) {
         dumper.dump(QQmlEnginePrivate::get(&engine), meta, uncreatableMetas.contains(meta), singletonMetas.contains(meta));
     }
 

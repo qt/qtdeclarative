@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Pelagicore AG
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,76 +37,29 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLEXPRESSION_P_H
-#define QQMLEXPRESSION_P_H
+import QtQuick 2.8
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Item {
+    id:root
 
-#include "qqmlexpression.h"
+    LoggingCategory {
+        id: testCategory
+        name: "qt.test"
+    }
 
-#include <private/qqmlengine_p.h>
-#include <private/qfieldlist_p.h>
-#include <private/qflagpointer_p.h>
-#include <private/qqmljavascriptexpression_p.h>
+    LoggingCategory {
+        id: emptyCategory
+    }
 
-QT_BEGIN_NAMESPACE
+    Component.onCompleted: {
+        console.debug(testCategory, "console.debug");
+        console.log(testCategory, "console.log");
+        console.info(testCategory, "console.info");
+        console.warn(testCategory, "console.warn");
+        console.error(testCategory, "console.error");
 
-class QQmlExpression;
-class QString;
-class QQmlExpressionPrivate : public QObjectPrivate,
-                              public QQmlJavaScriptExpression
-{
-    Q_DECLARE_PUBLIC(QQmlExpression)
-public:
-    QQmlExpressionPrivate();
-    ~QQmlExpressionPrivate();
+        testCategory.name = "qt.test2";
 
-    void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, QV4::Function *runtimeFunction, QObject *);
-
-    QVariant value(bool *isUndefined = 0);
-
-    void v4value(bool *isUndefined, QV4::Scope &scope);
-
-    static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
-    static inline QQmlExpression *get(QQmlExpressionPrivate *expr);
-
-    void _q_notify();
-
-    bool expressionFunctionValid:1;
-
-    // Inherited from QQmlJavaScriptExpression
-    virtual QString expressionIdentifier();
-    virtual void expressionChanged();
-
-    QString expression;
-
-    QString url; // This is a QString for a reason.  QUrls are slooooooow...
-    quint16 line;
-    quint16 column;
-    QString name; //function name, hint for the debugger
-};
-
-QQmlExpressionPrivate *QQmlExpressionPrivate::get(QQmlExpression *expr)
-{
-    return static_cast<QQmlExpressionPrivate *>(QObjectPrivate::get(expr));
+        console.error(emptyCategory, "console.error");
+    }
 }
-
-QQmlExpression *QQmlExpressionPrivate::get(QQmlExpressionPrivate *expr)
-{
-    return expr->q_func();
-}
-
-
-QT_END_NAMESPACE
-
-#endif // QQMLEXPRESSION_P_H

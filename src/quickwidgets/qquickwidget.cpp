@@ -1603,7 +1603,8 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             painter.drawImage(rect(), d->softwareImage);
         } else {
             //Paint only the updated areas
-            for (auto targetRect : d->updateRegion.rects()) {
+            const auto rects = d->updateRegion.rects();
+            for (auto targetRect : rects) {
                 auto sourceRect = QRect(targetRect.topLeft() * devicePixelRatio(), targetRect.size() * devicePixelRatio());
                 painter.drawImage(targetRect, d->softwareImage, sourceRect);
             }

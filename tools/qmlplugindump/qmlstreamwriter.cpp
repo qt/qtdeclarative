@@ -179,7 +179,7 @@ void QmlStreamWriter::flushPotentialLinesWithNewlines()
 {
     if (m_maybeOneline)
         m_stream->write("\n");
-    foreach (const QByteArray &line, m_pendingLines) {
+    for (const QByteArray &line : qAsConst(m_pendingLines)) {
         writeIndent();
         m_stream->write(line);
         m_stream->write("\n");

@@ -8,7 +8,6 @@ PUBLICTESTS += \
     qjsvalueiterator \
     qjsonbinding \
     qmlmin \
-    qmlplugindump \
     qqmlcomponent \
     qqmlconsole \
     qqmlengine \
@@ -74,14 +73,13 @@ qtHaveModule(widgets) {
 SUBDIRS += $$PUBLICTESTS \
     qqmlextensionplugin
 SUBDIRS += $$METATYPETESTS
-!winrt { # no QProcess on winrt
+!uikit:!winrt { # no QProcess on uikit/winrt
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
-    SUBDIRS += qmllint
+    SUBDIRS += qmllint qmlplugindump
 }
 
-contains(QT_CONFIG, private_tests) {
+qtConfig(private_tests): \
     SUBDIRS += $$PRIVATETESTS
-}
 
 qtNomakeTools( \
     qmlplugindump \

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Pelagicore AG
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDELETEWATCHER_P_H
-#define QDELETEWATCHER_P_H
+#ifndef QQMLLOGGINGCATEGORY_P_H
+#define QQMLLOGGINGCATEGORY_P_H
 
 //
 //  W A R N I N G
@@ -51,61 +51,39 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qloggingcategory.h>
+
+#include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeleteWatchable
+class QQmlLoggingCategory : public QObject, public QQmlParserStatus
 {
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+
+    Q_PROPERTY(QString name READ name WRITE setName)
+
 public:
-    inline QDeleteWatchable();
-    inline ~QDeleteWatchable();
+    QQmlLoggingCategory(QObject *parent = 0);
+    virtual ~QQmlLoggingCategory();
+
+    QString name() const;
+    void setName(const QString &name);
+
+    QLoggingCategory *category() const;
+
+    void classBegin() override;
+    void componentComplete() override;
+
 private:
-    friend class QDeleteWatcher;
-    bool *_w;
+    QByteArray m_name;
+    QScopedPointer<QLoggingCategory> m_category;
+    bool m_initialized;
 };
-
-class QDeleteWatcher {
-public:
-    inline QDeleteWatcher(QDeleteWatchable *data);
-    inline ~QDeleteWatcher();
-    inline bool wasDeleted() const;
-private:
-    void *operator new(size_t);
-    bool *_w;
-    bool _s;
-    QDeleteWatchable *m_d;
-};
-
-QDeleteWatchable::QDeleteWatchable()
-: _w(0)
-{
-}
-
-QDeleteWatchable::~QDeleteWatchable()
-{
-    if (_w) *_w = true;
-}
-
-QDeleteWatcher::QDeleteWatcher(QDeleteWatchable *data)
-: _s(false), m_d(data)
-{
-    if (!m_d->_w)
-        m_d->_w = &_s;
-    _w = m_d->_w;
-}
-
-QDeleteWatcher::~QDeleteWatcher()
-{
-    if (false == *_w && &_s == m_d->_w)
-        m_d->_w = 0;
-}
-
-bool QDeleteWatcher::wasDeleted() const
-{
-    return *_w;
-}
 
 QT_END_NAMESPACE
 
-#endif // QDELETEWATCHER_P_H
+#endif // QQMLLOGGINGCATEGORY_H

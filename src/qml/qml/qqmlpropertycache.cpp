@@ -678,7 +678,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         Q_ASSERT(accessorProperty == 0 || (old == 0 && data->revision() == 0));
 
         if (accessorProperty) {
-            data->_flags.hasAccessors = true;
             data->setAccessors(accessorProperty->accessors);
         } else if (old) {
             data->markAsOverrideOf(old);

@@ -764,7 +764,8 @@ void QQuickWindowPrivate::grabTouchPoints(QQuickItem *grabber, const QVector<int
     QSet<QQuickItem*> ungrab;
     for (int i = 0; i < ids.count(); ++i) {
         // FIXME: deprecate this function, we need a device
-        for (auto device: QQuickPointerDevice::touchDevices()) {
+        const auto touchDevices = QQuickPointerDevice::touchDevices();
+        for (auto device : touchDevices) {
             auto point = device->pointerEvent()->pointById(ids.at(i));
             if (!point)
                 continue;
@@ -783,7 +784,7 @@ void QQuickWindowPrivate::grabTouchPoints(QQuickItem *grabber, const QVector<int
             setMouseGrabber(nullptr);
         }
     }
-    foreach (QQuickItem *oldGrabber, ungrab)
+    for (QQuickItem *oldGrabber : qAsConst(ungrab))
         oldGrabber->touchUngrabEvent();
 }
 
@@ -791,7 +792,8 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
 {
     Q_Q(QQuickWindow);
     if (Q_LIKELY(touch)) {
-        for (auto device: QQuickPointerDevice::touchDevices()) {
+        const auto touchDevices = QQuickPointerDevice::touchDevices();
+        for (auto device : touchDevices) {
             auto pointerEvent = device->pointerEvent();
             for (int i = 0; i < pointerEvent->pointCount(); ++i) {
                 if (pointerEvent->point(i)->grabber() == grabber) {
@@ -1477,7 +1479,7 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
     QPointF pos = q->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
 
     bool accepted = false;
-    foreach (QQuickItem* item, hoverItems)
+    for (QQuickItem* item : qAsConst(hoverItems))
         accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp, true) || accepted;
     hoverItems.clear();
     return accepted;
@@ -2205,9 +2207,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 // Deliver touch points to existing grabbers
 bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event, QSet<QQuickItem *> *hasFiltered)
 {
-    for (auto grabber: event->grabbers()) {
+    const auto grabbers = event->grabbers();
+    for (auto grabber : grabbers)
         deliverMatchingPointsToItem(grabber, event, hasFiltered);
-    }
 
     return false;
 }

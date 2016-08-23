@@ -42,6 +42,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlloggingcategory_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
@@ -75,6 +76,8 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qloggingcategory.h>
+
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -1491,11 +1494,26 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *ctx,
                                          bool printStack = false)
 {
+    QLoggingCategory *loggingCategory = 0;
     QString result;
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
-    for (int i = 0; i < ctx->argc(); ++i) {
-        if (i != 0)
+    int start = 0;
+    if (ctx->argc() > 0) {
+        if (const QObjectWrapper* wrapper = ctx->args()[0].as<QObjectWrapper>()) {
+            if (QQmlLoggingCategory* category = qobject_cast<QQmlLoggingCategory*>(wrapper->object())) {
+                if (category->category())
+                    loggingCategory = category->category();
+                else
+                    V4THROW_ERROR("A QmlLoggingCatgory was provided without a valid name");
+                start = 1;
+            }
+        }
+    }
+
+
+    for (int i = start; i < ctx->argc(); ++i) {
+        if (i != start)
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
@@ -1510,7 +1528,8 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
     static QLoggingCategory qmlLoggingCategory("qml");
     static QLoggingCategory jsLoggingCategory("js");
 
-    QLoggingCategory *loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
+    if (!loggingCategory)
+        loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();

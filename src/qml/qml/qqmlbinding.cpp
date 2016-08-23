@@ -191,7 +191,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
     QQmlBindingProfiler prof(ep->profiler, this, f);
-    doUpdate(this, watcher, flags, scope, f);
+    doUpdate(watcher, flags, scope, f);
 
     if (!watcher.wasDeleted())
         setUpdatingFlag(false);
@@ -205,14 +205,15 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 class QQmlBindingBinding: public QQmlBinding
 {
 protected:
-    void doUpdate(QQmlBinding *binding, const DeleteWatcher &,
+    void doUpdate(const DeleteWatcher &,
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &,
                   const QV4::ScopedFunctionObject &) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
         QQmlPropertyData *pd = nullptr;
         getPropertyData(&pd, nullptr);
-        pd->writeProperty(*m_target, &binding, flags);
+        QQmlBinding *thisPtr = this;
+        pd->writeProperty(*m_target, &thisPtr, flags);
     }
 };
 
@@ -221,7 +222,7 @@ protected:
 class QQmlNonbindingBinding: public QQmlBinding
 {
 protected:
-    void doUpdate(QQmlBinding *binding, const DeleteWatcher &watcher,
+    void doUpdate(const DeleteWatcher &watcher,
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                   const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
@@ -231,7 +232,7 @@ protected:
         bool isUndefined = false;
 
         QV4::ScopedCallData callData(scope);
-        binding->QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
+        QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
 
         bool error = false;
         if (!watcher.wasDeleted() && isAddedToObject() && !hasError())

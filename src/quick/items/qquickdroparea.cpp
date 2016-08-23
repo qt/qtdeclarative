@@ -235,7 +235,7 @@ bool QQuickDropAreaPrivate::hasMatchingKey(const QStringList &keys) const
         return true;
 
     QRegExp copy = keyRegExp;
-    foreach (const QString &key, keys) {
+    for (const QString &key : keys) {
         if (copy.exactMatch(key))
             return true;
     }
