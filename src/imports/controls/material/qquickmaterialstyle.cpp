@@ -716,6 +716,7 @@ void QQuickMaterialStyle::setBackground(const QVariant &var)
     m_background = background;
     propagateBackground();
     emit backgroundChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
@@ -865,7 +866,7 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool pressed, bool hov
 
     QColor color = Qt::transparent;
 
-    if (m_hasBackground) {
+    if (m_explicitBackground) {
         color = backgroundColor(shade);
     } else if (highlighted) {
         color = accentColor(shade);
