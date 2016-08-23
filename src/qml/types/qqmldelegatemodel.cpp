@@ -1633,7 +1633,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;
 
     // Must be before the new object is inserted into the cache or its indexes will be adjusted too.
-    itemsInserted(QVector<Compositor::Insert>() << Compositor::Insert(before, 1, cacheItem->groups & ~Compositor::CacheFlag));
+    itemsInserted(QVector<Compositor::Insert>(1, Compositor::Insert(before, 1, cacheItem->groups & ~Compositor::CacheFlag)));
 
     before = m_compositor.insert(before, 0, 0, 1, cacheItem->groups);
     m_cache.insert(before.cacheIndex, cacheItem);
@@ -2722,12 +2722,12 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
         from += 1;
 
     model->itemsMoved(
-            QVector<Compositor::Remove>() << Compositor::Remove(fromIt, 1, unresolvedFlags, 0),
-            QVector<Compositor::Insert>() << Compositor::Insert(toIt, 1, unresolvedFlags, 0));
+            QVector<Compositor::Remove>(1, Compositor::Remove(fromIt, 1, unresolvedFlags, 0)),
+            QVector<Compositor::Insert>(1, Compositor::Insert(toIt, 1, unresolvedFlags, 0)));
     model->itemsInserted(
-            QVector<Compositor::Insert>() << Compositor::Insert(toIt, 1, (resolvedFlags & ~unresolvedFlags) | Compositor::CacheFlag));
+            QVector<Compositor::Insert>(1, Compositor::Insert(toIt, 1, (resolvedFlags & ~unresolvedFlags) | Compositor::CacheFlag)));
     toIt.incrementIndexes(1, resolvedFlags | unresolvedFlags);
-    model->itemsRemoved(QVector<Compositor::Remove>() << Compositor::Remove(toIt, 1, resolvedFlags));
+    model->itemsRemoved(QVector<Compositor::Remove>(1, Compositor::Remove(toIt, 1, resolvedFlags)));
 
     model->m_compositor.setFlags(toGroup, to, 1, unresolvedFlags & ~Compositor::UnresolvedFlag);
     model->m_compositor.clearFlags(fromGroup, from, 1, unresolvedFlags);
