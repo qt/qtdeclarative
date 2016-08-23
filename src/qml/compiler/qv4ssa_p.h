@@ -53,7 +53,7 @@
 
 #include "qv4jsir_p.h"
 #include "qv4isel_util_p.h"
-#include "qv4util_p.h"
+#include <private/qv4util_p.h>
 #include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
