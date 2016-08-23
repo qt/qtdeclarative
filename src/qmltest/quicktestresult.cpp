@@ -519,7 +519,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     if (result.isEmpty()) {
         QString tmp = value->toQStringNoThrow();
         if (value->as<QV4::ArrayObject>())
-            result.append(QString::fromLatin1("[%1]").arg(tmp));
+            result += QLatin1Char('[') + tmp + QLatin1Char(']');
         else
             result.append(tmp);
     }

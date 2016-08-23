@@ -1302,9 +1302,8 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
     int returnType = object.methodReturnType(data, &unknownTypeError);
 
     if (returnType == QMetaType::UnknownType) {
-        QString typeName = QString::fromLatin1(unknownTypeError);
-        QString error = QStringLiteral("Unknown method return type: %1").arg(typeName);
-        return engine->throwError(error);
+        return engine->throwError(QLatin1String("Unknown method return type: ")
+                                  + QLatin1String(unknownTypeError));
     }
 
     if (data.hasArguments()) {
@@ -1319,9 +1318,8 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
             args = object.methodParameterTypes(data.coreIndex(), &storage, &unknownTypeError);
 
         if (!args) {
-            QString typeName = QString::fromLatin1(unknownTypeError);
-            QString error = QStringLiteral("Unknown method parameter type: %1").arg(typeName);
-            return engine->throwError(error);
+            return engine->throwError(QLatin1String("Unknown method parameter type: ")
+                                      + QLatin1String(unknownTypeError));
         }
 
         if (args[0] > callArgs->argc) {
