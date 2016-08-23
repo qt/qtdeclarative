@@ -1505,14 +1505,14 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     }
 
     int elementIndex = parentModel->m_modelObjects.indexOf(m_owner);
-    int roleIndex = parentModel->m_roles.indexOf(QString::fromLatin1(name(index).constData()));
+    if (elementIndex != -1) {
+        int roleIndex = parentModel->m_roles.indexOf(QString::fromLatin1(name(index).constData()));
+        if (roleIndex != -1) {
+            QVector<int> roles;
+            roles << roleIndex;
 
-    if (elementIndex != -1 && roleIndex != -1) {
-
-        QVector<int> roles;
-        roles << roleIndex;
-
-        parentModel->emitItemsChanged(elementIndex, 1, roles);
+            parentModel->emitItemsChanged(elementIndex, 1, roles);
+        }
     }
 }
 
