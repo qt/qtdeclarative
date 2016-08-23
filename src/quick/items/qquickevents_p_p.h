@@ -270,7 +270,7 @@ public:
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp, QVector2D velocity = QVector2D());
+    void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
 
     void invalidate() { m_valid = false; }
 

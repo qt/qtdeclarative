@@ -513,7 +513,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     return nullptr;
 }
 
-void QQuickEventPoint::reset(Qt::TouchPointState state, QPointF scenePos, quint64 pointId, ulong timestamp, QVector2D velocity)
+void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity)
 {
     m_scenePos = scenePos;
     m_pointId = pointId;
