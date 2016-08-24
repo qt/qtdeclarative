@@ -1021,7 +1021,7 @@ ReturnedValue ExecutionEngine::throwURIError(const Value &msg)
 ReturnedValue ExecutionEngine::throwUnimplemented(const QString &message)
 {
     Scope scope(this);
-    ScopedValue v(scope, newString(QStringLiteral("Unimplemented ") + message));
+    ScopedValue v(scope, newString(QLatin1String("Unimplemented ") + message));
     v = newErrorObject(v);
     return throwError(v);
 }

@@ -1964,8 +1964,8 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
     ExecutionEngine *v4 = engine();
     const QMetaObject* mo = d()->metaObject;
     if (d()->constructors.isEmpty()) {
-        return v4->throwTypeError(QStringLiteral("%1 has no invokable constructor")
-                                      .arg(QLatin1String(mo->className())));
+        return v4->throwTypeError(QLatin1String(mo->className())
+                                  + QLatin1String(" has no invokable constructor"));
     }
 
     Scope scope(v4);

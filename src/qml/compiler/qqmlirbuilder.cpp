@@ -1018,7 +1018,8 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
 
         CompiledFunctionOrExpression *expr = New<CompiledFunctionOrExpression>();
         expr->node = statement;
-        expr->nameIndex = registerString(QStringLiteral("expression for ") + stringAt(binding->propertyNameIndex));
+        expr->nameIndex = registerString(QLatin1String("expression for ")
+                                         + stringAt(binding->propertyNameIndex));
         expr->disableAcceleratedLookups = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
