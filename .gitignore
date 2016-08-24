@@ -11,6 +11,7 @@
 /examples/quickcontrols2/chattutorial/chapter4-models/chapter4-models
 /examples/quickcontrols2/chattutorial/chapter5-styling/chapter5-styling
 /examples/quickcontrols2/gallery/gallery
+/examples/quickcontrols2/texteditor/texteditor
 
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/applicationwindow/tst_applicationwindow
@@ -25,9 +26,11 @@
 /tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
+/tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf
 /tests/auto/qquickstyle/tst_qquickstyle
 /tests/auto/qquickstyleselector/tst_qquickstyleselector
 /tests/auto/qquickuniversalstyle/tst_qquickuniversalstyle
+/tests/auto/qquickuniversalstyleconf/tst_qquickuniversalstyleconf
 /tests/auto/revisions/tst_revisions
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
@@ -123,3 +126,4 @@ qt.conf
 *.version
 *.version.in
 *.qmlc
+codeattributions.qdoc
