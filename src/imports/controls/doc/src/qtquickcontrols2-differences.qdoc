@@ -115,7 +115,7 @@
     \row
         \li Can be used on Desktop
         \li Yes
-        \li Yes \b *
+        \li Yes
     \row
         \li Can be used on Mobile
         \li Yes
@@ -129,8 +129,6 @@
         \li QML
         \li C++
     \endtable
-
-    \b {* No hover effects}
 
     \section2 Porting Qt Quick Controls Code
 
