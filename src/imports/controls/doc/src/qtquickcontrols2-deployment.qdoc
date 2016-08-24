@@ -30,7 +30,7 @@
     \title Deploying Qt Quick Controls 2 Applications
 
     Deployment of Qt Quick Controls 2 applications is very similar to
-    deploment of other types of Qt applications. However, there are a few
+    deployment of other types of Qt applications. However, there are a few
     factors to consider.
 
     \section1 Deploying an Application with Several Styles
