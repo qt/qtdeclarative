@@ -284,14 +284,14 @@ void QQuickOpenGLShaderEffectCommon::updateParseLog(bool ignoreAttributes)
     parseLog.clear();
     if (!ignoreAttributes) {
         if (!attributes.contains(qtPositionAttributeName())) {
-            parseLog += QLatin1String("Warning: Missing reference to \'");
-            parseLog += QLatin1String(qtPositionAttributeName());
-            parseLog += QLatin1String("\'.\n");
+            parseLog += QLatin1String("Warning: Missing reference to \'")
+                        + QLatin1String(qtPositionAttributeName())
+                        + QLatin1String("\'.\n");
         }
         if (!attributes.contains(qtTexCoordAttributeName())) {
-            parseLog += QLatin1String("Warning: Missing reference to \'");
-            parseLog += QLatin1String(qtTexCoordAttributeName());
-            parseLog += QLatin1String("\'.\n");
+            parseLog += QLatin1String("Warning: Missing reference to \'")
+                        + QLatin1String(qtTexCoordAttributeName())
+                        + QLatin1String("\'.\n");
         }
     }
     bool respectsMatrix = false;
@@ -918,9 +918,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
         if (!mesh->validateAttributes(m_common.attributes, &posIndex)) {
             QString log = mesh->log();
             if (!log.isNull()) {
-                m_log = parseLog();
-                m_log += QLatin1String("*** Mesh ***\n");
-                m_log += log;
+                m_log = parseLog() + QLatin1String("*** Mesh ***\n") + log;
                 m_status = QQuickShaderEffect::Error;
                 emit m_item->logChanged();
                 emit m_item->statusChanged();

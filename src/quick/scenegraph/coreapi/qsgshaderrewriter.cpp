@@ -214,9 +214,9 @@ QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat
         case Tokenizer::Token_CloseBrace:
             braceDepth--;
             if (braceDepth == 0) {
-                result += QByteArray::fromRawData(voidPos, tok.pos - 1 - voidPos);
-                result += QByteArrayLiteral("    gl_Position.z = (gl_Position.z * _qt_zRange + _qt_order) * gl_Position.w;\n");
-                result += QByteArray(tok.pos - 1);
+                result += QByteArray::fromRawData(voidPos, tok.pos - 1 - voidPos)
+                        + "    gl_Position.z = (gl_Position.z * _qt_zRange + _qt_order) * gl_Position.w;\n"
+                        + QByteArray(tok.pos - 1);
                 return result;
             }
             break;
