@@ -308,6 +308,12 @@ void QQuickPlatformFileDialog::resetOptions()
     This property holds the filters that restrict the types of files that
     can be selected.
 
+    \code
+    FileDialog {
+        nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
+    }
+    \endcode
+
     \note \b{*.*} is not a portable filter, because the historical assumption
     that the file extension determines the file type is not consistent on every
     operating system. It is possible to have a file with no dot in its name (for
