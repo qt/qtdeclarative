@@ -18,7 +18,7 @@ exists("qqml_enable_gcov") {
 
 greaterThan(QT_GCC_MAJOR_VERSION, 5) {
     # Our code is bad. Temporary workaround.
-    QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks
+    QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks -fno-lifetime-dse
 }
 
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
