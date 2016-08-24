@@ -66,9 +66,9 @@ QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
 void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
 {
     if (grab)
-        point->setPointerHandlerGrabber(this);
-    else if (point->pointerHandlerGrabber() == this)
-        point->setPointerHandlerGrabber(nullptr);
+        point->setGrabberPointerHandler(this);
+    else if (point->grabberPointerHandler() == this)
+        point->setGrabberPointerHandler(nullptr);
 }
 
 QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const

@@ -214,7 +214,7 @@ qreal QQuickMultiPointerHandler::averageAngleDelta(const QVector<PointData> &old
 void QQuickMultiPointerHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
     for (QQuickEventPoint* point : points)
-        point->setPointerHandlerGrabber(this);
+        point->setGrabberPointerHandler(this);
 }
 
 QT_END_NAMESPACE

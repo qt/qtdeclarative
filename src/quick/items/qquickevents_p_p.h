@@ -294,11 +294,11 @@ public:
     QObject *grabber() const;
     void setGrabber(QObject *grabber);
 
-    QQuickItem *itemGrabber() const;
-    void setItemGrabber(QQuickItem *grabber);
+    QQuickItem *grabberItem() const;
+    void setGrabberItem(QQuickItem *grabber);
 
-    QQuickPointerHandler *pointerHandlerGrabber() const;
-    void setPointerHandlerGrabber(QQuickPointerHandler *grabber);
+    QQuickPointerHandler *grabberPointerHandler() const;
+    void setGrabberPointerHandler(QQuickPointerHandler *grabber);
 
 private:
     QPointF m_pos;

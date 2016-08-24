@@ -551,17 +551,17 @@ QObject *QQuickEventPoint::grabber() const
 void QQuickEventPoint::setGrabber(QObject *grabber)
 {
     if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber))
-        setPointerHandlerGrabber(phGrabber);
+        setGrabberPointerHandler(phGrabber);
     else
-        setItemGrabber(static_cast<QQuickItem *>(grabber));
+        setGrabberItem(static_cast<QQuickItem *>(grabber));
 }
 
-QQuickItem *QQuickEventPoint::itemGrabber() const
+QQuickItem *QQuickEventPoint::grabberItem() const
 {
     return (m_grabberIsHandler ? nullptr : static_cast<QQuickItem *>(m_grabber.data()));
 }
 
-void QQuickEventPoint::setItemGrabber(QQuickItem *grabber)
+void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 {
     if (grabber != m_grabber.data()) {
         qCDebug(lcPointerHandlerDispatch) << this << grabber;
@@ -571,12 +571,12 @@ void QQuickEventPoint::setItemGrabber(QQuickItem *grabber)
     }
 }
 
-QQuickPointerHandler *QQuickEventPoint::pointerHandlerGrabber() const
+QQuickPointerHandler *QQuickEventPoint::grabberPointerHandler() const
 {
     return (m_grabberIsHandler ? static_cast<QQuickPointerHandler *>(m_grabber.data()) : nullptr);
 }
 
-void QQuickEventPoint::setPointerHandlerGrabber(QQuickPointerHandler *grabber)
+void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber)
 {
     if (grabber != m_grabber.data()) {
         qCDebug(lcPointerHandlerDispatch) << this << grabber;
@@ -692,7 +692,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         if (point->state() == QQuickEventPoint::Pressed) {
             if (grabbers.at(i))
                 qWarning() << "TouchPointPressed without previous release event" << point;
-            point->setItemGrabber(nullptr);
+            point->setGrabberItem(nullptr);
         } else {
             point->setGrabber(grabbers.at(i));
         }
@@ -751,7 +751,7 @@ QVector<QObject *> QQuickPointerMouseEvent::grabbers() const
 }
 
 void QQuickPointerMouseEvent::clearGrabbers() const {
-    m_mousePoint->setItemGrabber(nullptr);
+    m_mousePoint->setGrabberItem(nullptr);
 }
 
 bool QQuickPointerMouseEvent::isPressEvent() const
