@@ -340,16 +340,16 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
         if (heapFunctionObject) {
 
             QJsonObject frame;
-            frame[QStringLiteral("language")] = QStringLiteral("js");
-            frame[QStringLiteral("context")] = encodeContext(executionContext);
+            frame.insert(QStringLiteral("language"), QStringLiteral("js"));
+            frame.insert(QStringLiteral("context"), encodeContext(executionContext));
 
             if (QV4::Function *function = heapFunctionObject->function) {
                 if (QV4::Heap::String *functionName = function->name())
-                    frame[QStringLiteral("function")] = functionName->toQString();
-                frame[QStringLiteral("file")] = function->sourceFile();
+                    frame.insert(QStringLiteral("function"), functionName->toQString());
+                frame.insert(QStringLiteral("file"), function->sourceFile());
             }
             int line = executionContext->d()->lineNumber;
-            frame[QStringLiteral("line")] = (line < 0 ? -line : line);
+            frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
             frameArray.push_back(frame);
         }
@@ -548,15 +548,15 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
         m_runningJob = false;
         if (result->isUndefined()) {
             QJsonObject dict;
-            dict[QStringLiteral("name")] = name;
-            dict[QStringLiteral("valueencoded")] = QStringLiteral("undefined");
+            dict.insert(QStringLiteral("name"), name);
+            dict.insert(QStringLiteral("valueencoded"), QStringLiteral("undefined"));
             output.append(dict);
         } else if (result.ptr && result.ptr->rawValue()) {
             collector.collect(&output, QString(), name, *result);
         } else {
             QJsonObject dict;
-            dict[QStringLiteral("name")] = name;
-            dict[QStringLiteral("valueencoded")] = QStringLiteral("notaccessible");
+            dict.insert(QStringLiteral("name"), name);
+            dict.insert(QStringLiteral("valueencoded"), QStringLiteral("notaccessible"));
             output.append(dict);
         }
         TRACE_PROTOCOL("EXCEPTION: " << engine->hasException);
