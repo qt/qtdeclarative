@@ -90,6 +90,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
 void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
+    m_currentPoint->setAccepted(true);
     handleEventPoint(m_currentPoint);
     bool grab = m_currentPoint->isAccepted() && m_currentPoint->state() != QQuickEventPoint::Released;
     setGrab(m_currentPoint, grab);
