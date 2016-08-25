@@ -67,6 +67,7 @@ protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
     void handlePointerEventImpl(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
+    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
 
 private:
     void setCurrentPoint(QQuickEventPoint *p);
