@@ -71,7 +71,7 @@ type that is supported by the QML engine.
 By default, the engine supports a number of Qt C++ types and can automatically
 convert them as appropriately when used from QML. Additionally, C++ classes
 that are \l{Registering C++ types with the QML type system}{registered} with
-the QML type system can be can be used as data types, as can their enums if
+the QML type system can be used as data types, as can their enums if
 appropriately registered. See \l{qtqml-cppintegration-data.html}{Data Type
 Conversion Between QML and C++} for further information.
 
