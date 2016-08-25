@@ -61,13 +61,17 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
+        moduleDefined = true;
         QQmlQtQuick2Module::defineModule();
     }
 
     ~QtQuick2Plugin()
     {
-        QQmlQtQuick2Module::undefineModule();
+        if (moduleDefined)
+            QQmlQtQuick2Module::undefineModule();
     }
+
+    bool moduleDefined = false;
 };
 //![class decl]
 
