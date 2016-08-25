@@ -9142,7 +9142,7 @@ QQuickPaintedItem::_ZTV17QQuickPaintedItem: 56u entries
 136   (int (*)(...))QQuickItem::inputMethodQuery
 144   (int (*)(...))QQuickPaintedItem::isTextureProvider
 152   (int (*)(...))QQuickPaintedItem::textureProvider
-160   (int (*)(...))QQuickItem::itemChange
+160   (int (*)(...))QQuickPaintedItem::itemChange
 168   (int (*)(...))QQuickItem::classBegin
 176   (int (*)(...))QQuickItem::componentComplete
 184   (int (*)(...))QQuickItem::keyPressEvent
