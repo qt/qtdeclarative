@@ -126,8 +126,8 @@ public:
 
     struct State {
         State()
-            : strokeStyle(QColor("#000000"))
-            , fillStyle(QColor("#000000"))
+            : strokeStyle(QColor(Qt::black))
+            , fillStyle(QColor(Qt::black))
             , fillPatternRepeatX(false)
             , fillPatternRepeatY(false)
             , strokePatternRepeatX(false)
