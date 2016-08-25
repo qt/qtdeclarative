@@ -109,7 +109,7 @@ void tst_qqmlextensionplugin::iidCheck()
     QFETCH(QString, filePath);
 
     QPluginLoader loader(filePath);
-    QVERIFY(loader.load());
+    QVERIFY2(loader.load(), qPrintable(loader.errorString()));
     QVERIFY(loader.instance() != Q_NULLPTR);
 
     if (qobject_cast<QQmlExtensionPlugin *>(loader.instance())) {
