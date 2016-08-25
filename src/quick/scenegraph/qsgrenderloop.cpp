@@ -209,11 +209,11 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
             if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))) {
                 const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
-                if (loopName == QByteArrayLiteral("windows"))
+                if (loopName == "windows")
                     loopType = WindowsRenderLoop;
-                else if (loopName == QByteArrayLiteral("basic"))
+                else if (loopName == "basic")
                     loopType = BasicRenderLoop;
-                else if (loopName == QByteArrayLiteral("threaded"))
+                else if (loopName == "threaded")
                     loopType = ThreadedRenderLoop;
             }
 
