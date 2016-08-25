@@ -84,17 +84,16 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
 {
     m_rc = static_cast<QSGDefaultRenderContext *>(m_sg->createRenderContext());
 
-    m_animationDriver = m_sg->createAnimationDriver(m_sg);
-    m_animationDriver->install();
-
-    connect(m_animationDriver, SIGNAL(started()), this, SLOT(started()));
-    connect(m_animationDriver, SIGNAL(stopped()), this, SLOT(stopped()));
-
     m_vsyncDelta = 1000 / QGuiApplication::primaryScreen()->refreshRate();
     if (m_vsyncDelta <= 0)
         m_vsyncDelta = 16;
 
     RLDEBUG("Windows Render Loop created");
+
+    m_animationDriver = m_sg->createAnimationDriver(m_sg);
+    connect(m_animationDriver, SIGNAL(started()), this, SLOT(started()));
+    connect(m_animationDriver, SIGNAL(stopped()), this, SLOT(stopped()));
+    m_animationDriver->install();
 
     qsg_render_timer.start();
 }
