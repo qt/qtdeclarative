@@ -150,85 +150,79 @@ ApplicationWindow {
 
         Flickable {
             anchors.fill: parent
-            contentWidth: rowLayout.implicitWidth
-            contentHeight: rowLayout.height
+            contentWidth: toolRow.implicitWidth
             flickableDirection: Qt.Horizontal
             boundsBehavior: Flickable.StopAtBounds
 
-            RowLayout {
-                id: rowLayout
-                height: parent.height
+            Row {
+                id: toolRow
 
-                RowLayout {
-                    ToolButton {
-                        id: boldButton
-                        text: "\uE800" // icon-bold
-                        font.family: "fontello"
-                        // Don't want to close the virtual keyboard when this is clicked.
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.bold
-                        onClicked: document.bold = !document.bold
-                    }
-                    ToolButton {
-                        id: italicButton
-                        text: "\uE801" // icon-italic
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.italic
-                        onClicked: document.italic = !document.italic
-                    }
-                    ToolButton {
-                        id: underlineButton
-                        text: "\uF0CD" // icon-underline
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.underline
-                        onClicked: document.underline = !document.underline
-                    }
+                ToolButton {
+                    id: boldButton
+                    text: "\uE800" // icon-bold
+                    font.family: "fontello"
+                    // Don't want to close the virtual keyboard when this is clicked.
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.bold
+                    onClicked: document.bold = !document.bold
+                }
+                ToolButton {
+                    id: italicButton
+                    text: "\uE801" // icon-italic
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.italic
+                    onClicked: document.italic = !document.italic
+                }
+                ToolButton {
+                    id: underlineButton
+                    text: "\uF0CD" // icon-underline
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.underline
+                    onClicked: document.underline = !document.underline
                 }
 
                 ToolSeparator {}
 
-                RowLayout {
-                    ToolButton {
-                        id: alignLeftButton
-                        text: "\uE803" // icon-align-left
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.alignment == Qt.AlignLeft
-                        onClicked: document.alignment = Qt.AlignLeft
-                    }
-                    ToolButton {
-                        id: alignCenterButton
-                        text: "\uE804" // icon-align-center
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.alignment == Qt.AlignHCenter
-                        onClicked: document.alignment = Qt.AlignHCenter
-                    }
-                    ToolButton {
-                        id: alignRightButton
-                        text: "\uE805" // icon-align-right
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.alignment == Qt.AlignRight
-                        onClicked: document.alignment = Qt.AlignRight
-                    }
-                    ToolButton {
-                        id: alignJustifyButton
-                        text: "\uE806" // icon-align-justify
-                        font.family: "fontello"
-                        focusPolicy: Qt.NoFocus
-                        checkable: true
-                        checked: document.alignment == Qt.AlignJustify
-                        onClicked: document.alignment = Qt.AlignJustify
-                    }
+                ToolButton {
+                    id: alignLeftButton
+                    text: "\uE803" // icon-align-left
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.alignment == Qt.AlignLeft
+                    onClicked: document.alignment = Qt.AlignLeft
+                }
+                ToolButton {
+                    id: alignCenterButton
+                    text: "\uE804" // icon-align-center
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.alignment == Qt.AlignHCenter
+                    onClicked: document.alignment = Qt.AlignHCenter
+                }
+                ToolButton {
+                    id: alignRightButton
+                    text: "\uE805" // icon-align-right
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.alignment == Qt.AlignRight
+                    onClicked: document.alignment = Qt.AlignRight
+                }
+                ToolButton {
+                    id: alignJustifyButton
+                    text: "\uE806" // icon-align-justify
+                    font.family: "fontello"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    checked: document.alignment == Qt.AlignJustify
+                    onClicked: document.alignment = Qt.AlignJustify
                 }
             }
         }
