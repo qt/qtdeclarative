@@ -58,10 +58,16 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
+    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
 
 public:
     QQuickPointerSingleHandler(QObject *parent = 0);
     virtual ~QQuickPointerSingleHandler() { }
+
+    Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
+
+signals:
+    void pressedButtonsChanged();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
@@ -70,7 +76,11 @@ protected:
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
 
 private:
+    void setPressedButtons(Qt::MouseButtons buttons);
+
+private:
     quint64 m_currentPointId;
+    Qt::MouseButtons m_pressedButtons;
 };
 
 QT_END_NAMESPACE
