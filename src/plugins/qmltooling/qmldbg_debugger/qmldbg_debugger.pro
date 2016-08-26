@@ -2,7 +2,6 @@ TARGET = qmldbg_debugger
 QT = qml-private core-private packetprotocol-private
 
 SOURCES += \
-    $$PWD/qdebugmessageservice.cpp \
     $$PWD/qqmldebuggerservicefactory.cpp \
     $$PWD/qqmlenginedebugservice.cpp \
     $$PWD/qqmlnativedebugservice.cpp \
@@ -16,7 +15,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/../shared/qqmlconfigurabledebugservice.h \
     $$PWD/../shared/qqmldebugpacket.h \
-    $$PWD/qdebugmessageservice.h \
     $$PWD/qqmldebuggerservicefactory.h \
     $$PWD/qqmlenginedebugservice.h \
     $$PWD/qqmlnativedebugservice.h \
