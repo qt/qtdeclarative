@@ -238,8 +238,7 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.margins: 12
         visible: textArea.readOnly
-
-        Material.foreground: "white"
+        highlighted: true
 
         onClicked: {
             textArea.readOnly = false
