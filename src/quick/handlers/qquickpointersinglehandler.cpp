@@ -68,7 +68,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         int c = event->pointCount();
         for (int i = 0; i < c && !m_currentPointId; ++i) {
             QQuickEventPoint *p = event->point(i);
-            if (!p->grabber() && targetContains(p))
+            if (p->state() == QQuickEventPoint::Pressed && !p->grabber() && targetContains(p))
                 m_currentPointId = p->pointId();
         }
     }
