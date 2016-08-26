@@ -335,12 +335,14 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
+        bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         Param base;
         Param result;
+        bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER

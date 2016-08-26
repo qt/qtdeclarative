@@ -147,7 +147,7 @@ void IRDecoder::visitMove(IR::Move *s)
                 const int attachedPropertiesId = m->attachedPropertiesId;
                 const bool isSingletonProperty = m->kind == IR::Member::MemberOfSingletonObject;
 
-                if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
+                if (_function && attachedPropertiesId == 0 && !m->property->isConstant() && _function->isQmlBinding) {
                     if (m->kind == IR::Member::MemberOfQmlContextObject) {
                         _function->contextObjectPropertyDependencies.insert(m->property->coreIndex(), m->property->notifyIndex());
                         captureRequired = false;
@@ -157,14 +157,14 @@ void IRDecoder::visitMove(IR::Move *s)
                     }
                 }
                 if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
-                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex(), s->target);
+                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex(), captureRequired, s->target);
                     return;
                 }
                 getQObjectProperty(m->base, m->property->coreIndex(), captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
 #endif // V4_BOOTSTRAP
                 return;
             } else if (m->kind == IR::Member::MemberOfIdObjectsArray) {
-                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->idIndex, s->target);
+                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->idIndex, /*captureRequired*/false, s->target);
                 return;
             } else if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {
                 getProperty(m->base, *m->name, s->target);

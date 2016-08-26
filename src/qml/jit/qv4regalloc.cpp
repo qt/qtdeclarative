@@ -528,7 +528,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, IR::Expr *target)
+    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, bool /*captureRequired*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
