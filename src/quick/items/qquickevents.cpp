@@ -549,10 +549,12 @@ QQuickItem *QQuickEventPoint::itemGrabber() const
 
 void QQuickEventPoint::setItemGrabber(QQuickItem *grabber)
 {
-    qCDebug(lcPointerHandlerDispatch) << this << grabber;
-    m_grabber = QPointer<QObject>(grabber);
-    m_grabberIsHandler = false;
-    m_sceneGrabPos = m_scenePos;
+    if (grabber != m_grabber.data()) {
+        qCDebug(lcPointerHandlerDispatch) << this << grabber;
+        m_grabber = QPointer<QObject>(grabber);
+        m_grabberIsHandler = false;
+        m_sceneGrabPos = m_scenePos;
+    }
 }
 
 QQuickPointerHandler *QQuickEventPoint::pointerHandlerGrabber() const
@@ -562,10 +564,12 @@ QQuickPointerHandler *QQuickEventPoint::pointerHandlerGrabber() const
 
 void QQuickEventPoint::setPointerHandlerGrabber(QQuickPointerHandler *grabber)
 {
-    qCDebug(lcPointerHandlerDispatch) << this << grabber;
-    m_grabber = QPointer<QObject>(grabber);
-    m_grabberIsHandler = true;
-    m_sceneGrabPos = m_scenePos;
+    if (grabber != m_grabber.data()) {
+        qCDebug(lcPointerHandlerDispatch) << this << grabber;
+        m_grabber = QPointer<QObject>(grabber);
+        m_grabberIsHandler = true;
+        m_sceneGrabPos = m_scenePos;
+    }
 }
 
 void QQuickEventPoint::setAccepted(bool accepted)
