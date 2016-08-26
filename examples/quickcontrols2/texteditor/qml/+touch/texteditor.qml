@@ -106,8 +106,6 @@ ApplicationWindow {
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
         // textColor: TODO
-        // TODO: if we don't do this, e.g. the bold button won't be checked
-        // when it should be (the title is bold)
         Component.onCompleted: document.load("qrc:/texteditor.html")
         onLoaded: {
             textArea.text = text
