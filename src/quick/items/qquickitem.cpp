@@ -1450,6 +1450,9 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     behavior to all child items as well. If the \c LayoutMirroring attached property has not been defined
     for an item, mirroring is not enabled.
 
+    \note Since Qt 5.8, \c LayoutMirroring can be attached to a \l Window. In practice, it is the same as
+    attaching \c LayoutMirroring to the window's \c contentItem.
+
     The following example shows mirroring in action. The \l Row below is specified as being anchored
     to the left of its parent. However, since mirroring has been enabled, the anchor is horizontally
     reversed and it is now anchored to the right. Also, since items in a \l Row are positioned
@@ -1499,11 +1502,15 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
 QQuickLayoutMirroringAttached::QQuickLayoutMirroringAttached(QObject *parent) : QObject(parent), itemPrivate(0)
 {
-    if (QQuickItem *item = qobject_cast<QQuickItem*>(parent)) {
+    if (QQuickItem *item = qobject_cast<QQuickItem *>(parent))
         itemPrivate = QQuickItemPrivate::get(item);
+    else if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent))
+        itemPrivate = QQuickItemPrivate::get(window->contentItem());
+
+    if (itemPrivate)
         itemPrivate->extra.value().layoutDirectionAttached = this;
-    } else
-        qmlInfo(parent) << tr("LayoutDirection attached property only works with Items");
+    else
+        qmlInfo(parent) << tr("LayoutDirection attached property only works with Items and Windows");
 }
 
 QQuickLayoutMirroringAttached * QQuickLayoutMirroringAttached::qmlAttachedProperties(QObject *object)

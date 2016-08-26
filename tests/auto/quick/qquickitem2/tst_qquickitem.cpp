@@ -88,6 +88,7 @@ private slots:
     void keyNavigation_focusReason();
     void keyNavigation_loop();
     void layoutMirroring();
+    void layoutMirroringWindow();
     void layoutMirroringIllegalParent();
     void smooth();
     void antialiasing();
@@ -1776,11 +1777,28 @@ void tst_QQuickItem::layoutMirroring()
     delete parentItem2;
 }
 
+void tst_QQuickItem::layoutMirroringWindow()
+{
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("layoutmirroring_window.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(object.data());
+    QVERIFY(window);
+    window->show();
+
+    QQuickItemPrivate *content = QQuickItemPrivate::get(window->contentItem());
+    QCOMPARE(content->effectiveLayoutMirror, true);
+    QCOMPARE(content->inheritedLayoutMirror, true);
+    QCOMPARE(content->isMirrorImplicit, false);
+    QCOMPARE(content->inheritMirrorFromParent, true);
+    QCOMPARE(content->inheritMirrorFromItem, true);
+}
+
 void tst_QQuickItem::layoutMirroringIllegalParent()
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; QtObject { LayoutMirroring.enabled: true; LayoutMirroring.childrenInherit: true }", QUrl::fromLocalFile(""));
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:1:21: QML QtObject: LayoutDirection attached property only works with Items");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:1:21: QML QtObject: LayoutDirection attached property only works with Items and Windows");
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
