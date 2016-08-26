@@ -4,7 +4,6 @@ QT = qml-private core-private packetprotocol-private
 SOURCES += \
     $$PWD/qqmldebuggerservicefactory.cpp \
     $$PWD/qqmlenginedebugservice.cpp \
-    $$PWD/qqmlnativedebugservice.cpp \
     $$PWD/qqmlwatcher.cpp \
     $$PWD/qv4debugservice.cpp \
     $$PWD/qv4debugger.cpp \
@@ -17,7 +16,6 @@ HEADERS += \
     $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/qqmldebuggerservicefactory.h \
     $$PWD/qqmlenginedebugservice.h \
-    $$PWD/qqmlnativedebugservice.h \
     $$PWD/qqmlwatcher.h \
     $$PWD/qv4debugservice.h \
     $$PWD/qv4debugger.h \

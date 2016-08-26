@@ -37,22 +37,21 @@
 **
 ****************************************************************************/
 
-#include "qqmldebuggerservicefactory.h"
-#include "qqmlenginedebugservice.h"
-#include "qv4debugservice.h"
-#include <private/qqmldebugserviceinterfaces_p.h>
+#ifndef QQMLNATIVEDEBUGSERVICEFACTORY_H
+#define QQMLNATIVEDEBUGSERVICEFACTORY_H
+
+#include <private/qqmldebugservicefactory_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQmlDebugService *QQmlDebuggerServiceFactory::create(const QString &key)
+class QQmlNativeDebugServiceFactory : public QQmlDebugServiceFactory
 {
-    if (key == QQmlEngineDebugServiceImpl::s_key)
-        return new QQmlEngineDebugServiceImpl(this);
-
-    if (key == QV4DebugServiceImpl::s_key)
-        return new QV4DebugServiceImpl(this);
-
-    return 0;
-}
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qqmlnativedebugservice.json")
+public:
+    QQmlDebugService *create(const QString &key);
+};
 
 QT_END_NAMESPACE
+
+#endif // QQMLNATIVEDEBUGSERVICEFACTORY_H
