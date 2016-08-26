@@ -298,7 +298,7 @@ void QQuickWidgetPrivate::render(bool needsSync)
 
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(offscreenWindow);
         auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
-        if (softwareRenderer) {
+        if (softwareRenderer && !softwareImage.isNull()) {
             softwareRenderer->setCurrentPaintDevice(&softwareImage);
             renderControl->render();
 
