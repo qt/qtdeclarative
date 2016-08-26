@@ -680,6 +680,60 @@ TestCase {
     }
 
     Component {
+        id: removeComponent
+
+        Item {
+            objectName: "removeItem"
+            StackView.onRemoved: destroy()
+        }
+    }
+
+    function test_destroyOnRemoved() {
+        var control = stackView.createObject(testCase, { initialItem: component })
+        verify(control)
+
+        var item = removeComponent.createObject(control)
+        verify(item)
+
+        var removedSpy = signalSpy.createObject(control, { target: item.StackView, signalName: "removed" })
+        verify(removedSpy)
+        verify(removedSpy.valid)
+
+        var destructionSpy = signalSpy.createObject(control, { target: item.Component, signalName: "destruction" })
+        verify(destructionSpy)
+        verify(destructionSpy.valid)
+
+        // push-pop
+        control.push(item, StackView.Immediate)
+        compare(control.currentItem, item)
+        control.pop(StackView.Transition)
+        item = null
+        tryCompare(removedSpy, "count", 1)
+        tryCompare(destructionSpy, "count", 1)
+        compare(control.busy, false)
+
+        item = removeComponent.createObject(control)
+        verify(item)
+
+        removedSpy.target = item.StackView
+        verify(removedSpy.valid)
+
+        destructionSpy.target = item.Component
+        verify(destructionSpy.valid)
+
+        // push-replace
+        control.push(item, StackView.Immediate)
+        compare(control.currentItem, item)
+        control.replace(component, StackView.Transition)
+        item = null
+        tryCompare(removedSpy, "count", 2)
+        tryCompare(destructionSpy, "count", 2)
+        compare(control.busy, false)
+
+        control.destroy()
+    }
+
+    Component {
         id: attachedItem
         Item {
             property int index: StackView.index
