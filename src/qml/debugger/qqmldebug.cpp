@@ -84,7 +84,19 @@ QStringList QQmlDebuggingEnabler::inspectorServices()
  */
 QStringList QQmlDebuggingEnabler::profilerServices()
 {
-    return QStringList() << QQmlProfilerService::s_key << QQmlEngineControlService::s_key;
+    return QStringList() << QQmlProfilerService::s_key << QQmlEngineControlService::s_key
+                         << QDebugMessageService::s_key;
+}
+
+/*!
+ * Retrieves the plugin keys of the debug services designed to be used with a native debugger. The
+ * native debugger will communicate with these services by directly reading and writing the
+ * application's memory.
+ * \return List of plugin keys of debug services designed to be used with a native debugger.
+ */
+QStringList QQmlDebuggingEnabler::nativeDebuggerServices()
+{
+    return QStringList() << QQmlNativeDebugService::s_key;
 }
 
 /*!

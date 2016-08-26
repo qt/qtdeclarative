@@ -60,6 +60,7 @@ struct Q_QML_EXPORT QQmlDebuggingEnabler
     static QStringList debuggerServices();
     static QStringList inspectorServices();
     static QStringList profilerServices();
+    static QStringList nativeDebuggerServices();
 
     static void setServices(const QStringList &services);
 
