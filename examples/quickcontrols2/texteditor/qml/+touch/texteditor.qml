@@ -76,9 +76,7 @@ ApplicationWindow {
                 text: qsTr("Text Editor Example")
                 font.bold: true
                 font.pixelSize: 20
-            }
-
-            Item {
+                elide: Label.ElideRight
                 Layout.fillWidth: true
             }
 
