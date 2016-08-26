@@ -537,6 +537,12 @@ void QQuickEventPoint::localize(QQuickItem *target)
         m_pos = QPointF();
 }
 
+void QQuickEventPoint::invalidate()
+{
+    m_valid = false;
+    m_pointId = 0;
+}
+
 QObject *QQuickEventPoint::grabber() const
 {
     return m_grabber.data();

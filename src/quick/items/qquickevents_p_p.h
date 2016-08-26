@@ -276,7 +276,7 @@ public:
     void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
     void localize(QQuickItem *target);
 
-    void invalidate() { m_valid = false; }
+    void invalidate();
 
     QQuickPointerEvent *pointerEvent() const;
     QPointF pos() const { return m_pos; }
