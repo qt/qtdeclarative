@@ -300,6 +300,8 @@ public:
     QQuickPointerHandler *grabberPointerHandler() const;
     void setGrabberPointerHandler(QQuickPointerHandler *grabber);
 
+    Q_INVOKABLE void cancelGrab();
+
 private:
     QPointF m_pos;
     QPointF m_scenePos;

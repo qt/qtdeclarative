@@ -516,7 +516,13 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
 void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity)
 {
     m_scenePos = scenePos;
-    m_pointId = pointId;
+    if (m_pointId != pointId) {
+        if (m_grabber) {
+            qWarning() << m_grabber << "failed to ungrab previous point" << m_pointId;
+            cancelGrab();
+        }
+        m_pointId = pointId;
+    }
     m_valid = true;
     m_accept = false;
     m_state = static_cast<QQuickEventPoint::State>(state);
@@ -598,6 +604,17 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber)
         m_grabberIsHandler = true;
         m_sceneGrabPos = m_scenePos;
     }
+}
+
+void QQuickEventPoint::cancelGrab()
+{
+    if (m_grabber.isNull()) {
+        qWarning("cancelGrab: no grabber");
+        return;
+    }
+    if (auto handler = grabberPointerHandler())
+        handler->handleGrabCancel(this);
+    m_grabber.clear();
 }
 
 void QQuickEventPoint::setAccepted(bool accepted)

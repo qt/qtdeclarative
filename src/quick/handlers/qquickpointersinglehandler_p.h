@@ -74,6 +74,7 @@ protected:
     void handlePointerEventImpl(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
+    void handleGrabCancel(QQuickEventPoint *point) override;
 
 private:
     void setPressedButtons(Qt::MouseButtons buttons);

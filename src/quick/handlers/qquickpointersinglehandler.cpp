@@ -88,6 +88,12 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
         m_currentPointId = 0;
 }
 
+void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
+{
+    QQuickPointerHandler::handleGrabCancel(point);
+    m_currentPointId = 0;
+}
+
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
 {
     if (buttons != m_pressedButtons) {

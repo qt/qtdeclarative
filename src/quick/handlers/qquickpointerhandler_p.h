@@ -86,6 +86,7 @@ Q_SIGNALS:
     void enabledChanged();
     void activeChanged();
     void targetChanged();
+    void canceled(QQuickEventPoint *point);
 
 protected:
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
@@ -93,6 +94,7 @@ protected:
     virtual void setActive(bool active);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setGrab(QQuickEventPoint *point, bool grab);
+    virtual void handleGrabCancel(QQuickEventPoint *point);
     QPointF eventPos(const QQuickEventPoint *point) const;
     bool targetContains(const QQuickEventPoint *point) const;
 
@@ -101,6 +103,8 @@ private:
     QQuickItem *m_target;
     bool m_enabled : 1;
     bool m_active : 1;
+
+    friend class QQuickEventPoint;
 };
 
 QT_END_NAMESPACE
