@@ -70,10 +70,6 @@ protected:
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
 
 private:
-    void setCurrentPoint(QQuickEventPoint *p);
-
-private:
-    QQuickEventPoint *m_currentPoint;
     quint64 m_currentPointId;
 };
 

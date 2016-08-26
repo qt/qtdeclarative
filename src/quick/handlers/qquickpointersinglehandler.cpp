@@ -51,7 +51,6 @@ QT_BEGIN_NAMESPACE
 
 QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
   : QQuickPointerDeviceHandler(parent)
-  , m_currentPoint(nullptr)
   , m_currentPointId(0)
 {
 }
@@ -60,48 +59,33 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
-    int c = event->pointCount();
-    for (int i = 0; i < c; ++i) {
-        QQuickEventPoint *p = event->point(i);
-        if (m_currentPointId) {
-            if (m_currentPointId == p->pointId()) {
-                m_currentPoint = p;
-                return true;
-            }
-        } else {
-            if (p->grabber()) {
-                if (p->grabber() == target())
-                    setCurrentPoint(p);
-                else
-                    continue;
-            } else {
-                if (targetContains(p))
-                    setCurrentPoint(p);
-            }
-            if (m_currentPoint)
-                return true;
+    if (m_currentPointId) {
+        // We already know which one we want, so check whether it's there.
+        // It's expected to be an update or a release.
+        return (event->pointById(m_currentPointId) != nullptr);
+    } else {
+        // We have not yet chosen a point; choose the first one within target bounds.
+        int c = event->pointCount();
+        for (int i = 0; i < c && !m_currentPointId; ++i) {
+            QQuickEventPoint *p = event->point(i);
+            if (!p->grabber() && targetContains(p))
+                m_currentPointId = p->pointId();
         }
     }
-    // If we didn't return yet, there are no interesting points
-    setCurrentPoint(nullptr);
-    return false;
+    return m_currentPointId;
 }
 
 void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
-    m_currentPoint->setAccepted(true);
-    handleEventPoint(m_currentPoint);
-    bool grab = m_currentPoint->isAccepted() && m_currentPoint->state() != QQuickEventPoint::Released;
-    setGrab(m_currentPoint, grab);
+    QQuickEventPoint *currentPoint = event->pointById(m_currentPointId);
+    Q_ASSERT(currentPoint);
+    currentPoint->setAccepted(true);
+    handleEventPoint(currentPoint);
+    bool grab = currentPoint->isAccepted() && currentPoint->state() != QQuickEventPoint::Released;
+    setGrab(currentPoint, grab);
     if (!grab)
-        setCurrentPoint(nullptr);
-}
-
-void QQuickPointerSingleHandler::setCurrentPoint(QQuickEventPoint *p)
-{
-    m_currentPoint = p;
-    m_currentPointId = p ? p->pointId() : 0;
+        m_currentPointId = 0;
 }
 
 QT_END_NAMESPACE
