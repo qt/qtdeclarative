@@ -60,6 +60,11 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     Q_UNUSED(engine);
     Q_UNUSED(uri);
 
+    // make sure not to re-create the proxy theme if initializeEngine()
+    // is called multiple times, like in case of qml2puppet (QTBUG-54995)
+    if (!m_theme.isNull())
+        return;
+
     const QString style = name();
     if (!style.isEmpty() && style.compare(QQuickStyle::name(), Qt::CaseInsensitive) == 0) {
         m_theme.reset(createTheme());
