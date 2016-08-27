@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,45 +38,16 @@
 **
 ****************************************************************************/
 
-#ifdef QT_WIDGETS_LIB
-#include <QApplication>
-#else
-#include <QGuiApplication>
-#endif
-#include <QFontDatabase>
-#include <QDebug>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQmlFileSelector>
-#include <QQuickStyle>
+import QtQuick 2.7
+import QtQuick.Controls 2.0
 
-#include "documenthandler.h"
+ApplicationWindow {
+    width: 400
+    height: 400
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("Text Editor");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    property alias label: label
 
-#ifdef QT_WIDGETS_LIB
-    QApplication app(argc, argv);
-#else
-    QGuiApplication app(argc, argv);
-#endif
-
-    QFontDatabase fontDatabase;
-    if (fontDatabase.addApplicationFont(":/fonts/fontello.ttf") == -1)
-        qWarning() << "Failed to load fontello.ttf";
-
-    qmlRegisterType<DocumentHandler>("io.qt.examples.texteditor", 1, 0, "DocumentHandler");
-
-    QQmlApplicationEngine engine;
-#ifdef QT_EXTRA_FILE_SELECTOR
-    QQmlFileSelector::get(&engine)->setExtraSelectors(QStringList() << QT_EXTRA_FILE_SELECTOR);
-#endif
-    engine.load(QUrl("qrc:/qml/texteditor.qml"));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-
-    return app.exec();
+    Label {
+        id: label
+    }
 }

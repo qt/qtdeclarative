@@ -115,8 +115,7 @@ static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPriv
                                                                   | QQuickItemPrivate::Children;
 
 static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate::Geometry
-                                                             | QQuickItemPrivate::Parent
-                                                             | QQuickItemPrivate::Destroyed;
+                                                             | QQuickItemPrivate::Parent;
 
 QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
@@ -551,14 +550,11 @@ void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child
         removeAncestorListeners(item);
 }
 
-void QQuickPopupPositioner::itemDestroyed(QQuickItem *item)
+void QQuickPopupPrivate::itemDestroyed(QQuickItem *item)
 {
-    Q_ASSERT(m_parentItem == item);
-
-    m_parentItem = nullptr;
-    m_popup->parentItem = nullptr;
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, ItemChangeTypes);
-    removeAncestorListeners(item->parentItem());
+    Q_Q(QQuickPopup);
+    if (item == parentItem)
+        q->setParentItem(nullptr);
 }
 
 void QQuickPopupPrivate::reposition()
@@ -728,7 +724,10 @@ void QQuickPopupTransitionManager::transitionEnter()
 
     state = Enter;
     popup->prepareEnterTransition();
-    transition(popup->enterActions, popup->enter, popup->q_func());
+    if (popup->window)
+        transition(popup->enterActions, popup->enter, popup->q_func());
+    else
+        finished();
 }
 
 void QQuickPopupTransitionManager::transitionExit()
@@ -738,7 +737,10 @@ void QQuickPopupTransitionManager::transitionExit()
 
     state = Exit;
     popup->prepareExitTransition();
-    transition(popup->exitActions, popup->exit, popup->q_func());
+    if (popup->window)
+        transition(popup->exitActions, popup->exit, popup->q_func());
+    else
+        finished();
 }
 
 void QQuickPopupTransitionManager::finished()
@@ -768,8 +770,7 @@ QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
 QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
-    d->setWindow(nullptr);
-    d->positioner.setParentItem(nullptr);
+    setParentItem(nullptr);
     delete d->popupItem;
 }
 
@@ -1463,17 +1464,23 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (d->parentItem == parent)
         return;
 
-    if (d->parentItem)
+    if (d->parentItem) {
         QObjectPrivate::disconnect(d->parentItem, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
+        QQuickItemPrivate::get(d->parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed);
+    }
     d->parentItem = parent;
     if (d->positioner.parentItem())
         d->positioner.setParentItem(parent);
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
+        QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);
+
         QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
         p->resolveFont();
         if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
             p->updateLocale(window->locale(), false); // explicit=false
+    } else {
+        close();
     }
     d->setWindow(parent ? parent->window() : nullptr);
     emit parentChanged();

@@ -62,7 +62,7 @@ T.ComboBox {
     Material.foreground: flat ? undefined : Material.foreground
 
     delegate: MenuItem {
-        width: control.width
+        width: control.popup.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         Material.foreground: control.currentIndex === index ? control.popup.Material.accent : control.popup.Material.foreground
         highlighted: control.highlightedIndex === index

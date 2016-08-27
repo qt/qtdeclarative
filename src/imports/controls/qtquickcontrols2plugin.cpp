@@ -41,6 +41,7 @@
 #include <QtCore/private/qfileselector_p.h>
 
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
@@ -89,12 +90,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickContainer>(uri, 2, 0, "Container");
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
 
-    QQuickStyleSelector selector;
-    selector.setBaseUrl(typeUrl());
-
+    QQuickStylePrivate::init(typeUrl());
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
+
+    QQuickStyleSelector selector;
+    selector.setBaseUrl(typeUrl());
 
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");

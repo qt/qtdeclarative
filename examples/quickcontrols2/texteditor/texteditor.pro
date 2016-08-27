@@ -1,6 +1,9 @@
 TEMPLATE = app
 TARGET = texteditor
-QT += quick quickcontrols2 widgets
+QT += quick quickcontrols2
+qtHaveModule(widgets): QT += widgets
+
+cross_compile: DEFINES += QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
 
 HEADERS += \
     documenthandler.h

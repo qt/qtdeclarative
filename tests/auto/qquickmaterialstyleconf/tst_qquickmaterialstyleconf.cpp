@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,41 +34,39 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.1 as T
+#include <qtest.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include "../shared/util.h"
+#include "../shared/visualtestutil.h"
 
-T.TabBar {
-    id: control
+using namespace QQuickVisualTestUtil;
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+class tst_qquickmaterialstyleconf : public QQmlDataTest
+{
+    Q_OBJECT
 
-    spacing: 1
+public:
 
-    //! [contentItem]
-    contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 40
+private slots:
+    void conf();
+};
 
-        model: control.contentModel
-        currentIndex: control.currentIndex
+void tst_qquickmaterialstyleconf::conf()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-        spacing: control.spacing
-        orientation: ListView.Horizontal
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.AutoFlickIfNeeded
-        snapMode: ListView.SnapToItem
+    QQuickApplicationWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    // We specified a custom background color, so the window should have it.
+    QCOMPARE(window->property("color").value<QColor>(), QColor("#444444"));
 
-        highlightMoveDuration: 0
-        highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: 40
-        preferredHighlightEnd: width - 40
-    }
-    //! [contentItem]
-
-    //! [background]
-    background: Rectangle { }
-    //! [background]
+    // We specified a custom foreground color, so the label should have it.
+    QQuickItem *label = window->property("label").value<QQuickItem*>();
+    QVERIFY(label);
+    QCOMPARE(label->property("color").value<QColor>(), QColor("#F44336"));
 }
+
+QTEST_MAIN(tst_qquickmaterialstyleconf)
+
+#include "tst_qquickmaterialstyleconf.moc"

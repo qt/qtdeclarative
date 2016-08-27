@@ -320,19 +320,27 @@ public:
 
 QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
 {
-    static QPointer<QQuickToolTip> tip;
+    QQmlEngine *engine = qmlEngine(parent);
+    if (!engine)
+        return nullptr;
+
+    static const char *name = "_q_QQuickToolTip";
+
+    QQuickToolTip *tip = engine->property(name).value<QQuickToolTip *>();
     if (!tip && create) {
         // TODO: a cleaner way to create the instance? QQml(Meta)Type?
-        QQmlContext *context = qmlContext(parent);
-        if (context) {
-            QQmlComponent component(context->engine());
-            component.setData("import QtQuick.Controls 2.1; ToolTip { }", QUrl());
+        QQmlComponent component(engine);
+        component.setData("import QtQuick.Controls 2.1; ToolTip { }", QUrl());
 
-            QObject *object = component.create(context);
-            tip = qobject_cast<QQuickToolTip *>(object);
-            if (!tip)
-                delete object;
-        }
+        QObject *object = component.create();
+        if (object)
+            object->setParent(engine);
+
+        tip = qobject_cast<QQuickToolTip *>(object);
+        if (!tip)
+            delete object;
+        else
+            engine->setProperty(name, QVariant::fromValue(object));
     }
     return tip;
 }
@@ -366,8 +374,8 @@ void QQuickToolTipAttached::setText(const QString &text)
     d->text = text;
     emit textChanged();
 
-    if (QQuickToolTip *tip = d->instance(true))
-        tip->setText(text);
+    if (isVisible())
+        d->instance(true)->setText(text);
 }
 
 /*!
@@ -392,6 +400,9 @@ void QQuickToolTipAttached::setDelay(int delay)
 
     d->delay = delay;
     emit delayChanged();
+
+    if (isVisible())
+        d->instance(true)->setDelay(delay);
 }
 
 /*!
@@ -416,6 +427,9 @@ void QQuickToolTipAttached::setTimeout(int timeout)
 
     d->timeout = timeout;
     emit timeoutChanged();
+
+    if (isVisible())
+        d->instance(true)->setTimeout(timeout);
 }
 
 /*!

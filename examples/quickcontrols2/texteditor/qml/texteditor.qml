@@ -41,10 +41,12 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.1
 import QtQuick.Window 2.0
-import QtQuick.Controls.Material 2.1
 import Qt.labs.platform 1.0
 
 import io.qt.examples.texteditor 1.0
+
+// TODO:
+// - make designer-friendly
 
 ApplicationWindow {
     id: window
@@ -202,7 +204,7 @@ ApplicationWindow {
                 id: fileRow
                 ToolButton {
                     id: openButton
-                    text: "\uF115"
+                    text: "\uF115" // icon-folder-open-empty
                     font.family: "fontello"
                     onClicked: openDialog.open()
                 }
@@ -215,7 +217,7 @@ ApplicationWindow {
                 id: editRow
                 ToolButton {
                     id: copyButton
-                    text: "\uF0C5"
+                    text: "\uF0C5" // icon-docs
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.selectedText
@@ -223,7 +225,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: cutButton
-                    text: "\uE802"
+                    text: "\uE802" // icon-scissors
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.selectedText
@@ -231,7 +233,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: pasteButton
-                    text: "\uF0EA"
+                    text: "\uF0EA" // icon-paste
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.canPaste
@@ -246,7 +248,7 @@ ApplicationWindow {
                 id: formatRow
                 ToolButton {
                     id: boldButton
-                    text: "\uE800"
+                    text: "\uE800" // icon-bold
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -255,7 +257,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: italicButton
-                    text: "\uE801"
+                    text: "\uE801" // icon-italic
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -264,7 +266,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: underlineButton
-                    text: "\uF0CD"
+                    text: "\uF0CD" // icon-underline
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -273,7 +275,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: fontFamilyToolButton
-                    text: qsTr("\uE808")
+                    text: qsTr("\uE808") // icon-font
                     font.family: "fontello"
                     font.bold: document.bold
                     font.italic: document.italic
@@ -286,7 +288,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: textColorButton
-                    text: "\uF1FC"
+                    text: "\uF1FC" // icon-brush
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     onClicked: colorDialog.open()
@@ -316,7 +318,7 @@ ApplicationWindow {
                 id: alignRow
                 ToolButton {
                     id: alignLeftButton
-                    text: "\uE803"
+                    text: "\uE803" // icon-align-left
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -325,7 +327,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: alignCenterButton
-                    text: "\uE804"
+                    text: "\uE804" // icon-align-center
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -334,7 +336,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: alignRightButton
-                    text: "\uE805"
+                    text: "\uE805" // icon-align-right
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -343,7 +345,7 @@ ApplicationWindow {
                 }
                 ToolButton {
                     id: alignJustifyButton
-                    text: "\uE806"
+                    text: "\uE806" // icon-align-justify
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     checkable: true
@@ -361,8 +363,6 @@ ApplicationWindow {
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
         textColor: colorDialog.color
-        // TODO: if we don't do this, e.g. the bold button won't be checked
-        // when it should be (the title is bold)
         Component.onCompleted: document.load("qrc:/texteditor.html")
         onLoaded: {
             textArea.text = text

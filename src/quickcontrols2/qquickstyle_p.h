@@ -34,41 +34,31 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.1 as T
+#ifndef QQUICKSTYLE_P_H
+#define QQUICKSTYLE_P_H
 
-T.TabBar {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+#include <QtCore/qurl.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
-    spacing: 1
+QT_BEGIN_NAMESPACE
 
-    //! [contentItem]
-    contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 40
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePrivate
+{
+public:
+    static void init(const QUrl &baseUrl);
+};
 
-        model: control.contentModel
-        currentIndex: control.currentIndex
+QT_END_NAMESPACE
 
-        spacing: control.spacing
-        orientation: ListView.Horizontal
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.AutoFlickIfNeeded
-        snapMode: ListView.SnapToItem
-
-        highlightMoveDuration: 0
-        highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: 40
-        preferredHighlightEnd: width - 40
-    }
-    //! [contentItem]
-
-    //! [background]
-    background: Rectangle { }
-    //! [background]
-}
+#endif // QQUICKSTYLE_P_H

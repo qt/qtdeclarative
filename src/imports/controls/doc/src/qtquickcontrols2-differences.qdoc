@@ -115,7 +115,7 @@
     \row
         \li Can be used on Desktop
         \li Yes
-        \li Yes \b *
+        \li Yes
     \row
         \li Can be used on Mobile
         \li Yes
@@ -129,8 +129,6 @@
         \li QML
         \li C++
     \endtable
-
-    \b {* No hover effects}
 
     \section2 Porting Qt Quick Controls Code
 
@@ -262,6 +260,9 @@
         \li \l [QML QtQuickControls] {MenuItem}
         \li \l [QML QtQuickControls2] {MenuItem}
     \row
+        \li \l [QML QtQuickControls] {MenuSeparator}
+        \li \l [QML QtQuickControls2] {MenuSeparator}
+    \row
         \li \mdash
         \li \l [QML QtQuickControls2] {Page}
     \row
@@ -347,6 +348,9 @@
     \row
         \li \l [QML QtQuickControls] {ToolButton}
         \li \l [QML QtQuickControls2] {ToolButton}
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ToolSeparator}
     \row
         \li \mdash
         \li \l [QML QtQuickControls2] {ToolTip}

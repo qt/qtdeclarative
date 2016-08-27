@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickstyle.h"
+#include "qquickstyle_p.h"
 #include "qquickstyleattached_p.h"
 
 #include <QtCore/qdir.h>
@@ -88,8 +89,6 @@ struct QQuickStyleSpec
 
     QString name()
     {
-        if (!resolved)
-            resolve();
         return style.mid(style.lastIndexOf(QLatin1Char('/')) + 1);
     }
 
@@ -110,7 +109,7 @@ struct QQuickStyleSpec
         resolve();
     }
 
-    void resolve()
+    void resolve(const QUrl &baseUrl = QUrl())
     {
         if (style.isEmpty())
             style = QGuiApplicationPrivate::styleOverride;
@@ -120,6 +119,13 @@ struct QQuickStyleSpec
             QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
             if (settings)
                 style = settings->value(QStringLiteral("Style")).toString();
+        }
+
+        if (baseUrl.isValid()) {
+            if (style.isEmpty())
+                style = baseUrl.toString(QUrl::StripTrailingSlash) + QLatin1Char('/');
+            else if (!style.contains(QLatin1Char('/')))
+                style = baseUrl.toString(QUrl::StripTrailingSlash) + QLatin1Char('/') + style;
         }
 
         if (QGuiApplication::instance()) {
@@ -157,6 +163,11 @@ struct QQuickStyleSpec
 };
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
+
+void QQuickStylePrivate::init(const QUrl &baseUrl)
+{
+    styleSpec()->resolve(baseUrl);
+}
 
 /*!
     Returns the name of the application style.
