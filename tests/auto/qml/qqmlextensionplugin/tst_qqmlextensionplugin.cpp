@@ -80,6 +80,10 @@ void tst_qqmlextensionplugin::iidCheck_data()
     QList<QString> files;
     for (QDirIterator it(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath), QDirIterator::Subdirectories); it.hasNext(); ) {
         QString file = it.next();
+#if defined(Q_OS_DARWIN)
+        if (file.contains(QLatin1String(".dSYM/")))
+            continue;
+#endif
         if (file.endsWith(SUFFIX)) {
             files << file;
         }
@@ -105,7 +109,7 @@ void tst_qqmlextensionplugin::iidCheck()
     QFETCH(QString, filePath);
 
     QPluginLoader loader(filePath);
-    QVERIFY(loader.load());
+    QVERIFY2(loader.load(), qPrintable(loader.errorString()));
     QVERIFY(loader.instance() != Q_NULLPTR);
 
     if (qobject_cast<QQmlExtensionPlugin *>(loader.instance())) {

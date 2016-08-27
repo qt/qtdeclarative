@@ -139,7 +139,8 @@ public Q_SLOTS:
     void textureFactoryDestroyed(QObject *o);
 
 protected:
-    QSGContext *m_sg;
+    // Hold m_sg with QPointer in the rare case it gets deleted before us.
+    QPointer<QSGContext> m_sg;
 
     QMutex m_mutex;
     QHash<QQuickTextureFactory *, QSGTexture *> m_textures;

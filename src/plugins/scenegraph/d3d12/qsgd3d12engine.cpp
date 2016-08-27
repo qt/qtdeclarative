@@ -737,9 +737,13 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
     const bool debugLayer = qEnvironmentVariableIntValue("QT_D3D_DEBUG") != 0;
     if (debugLayer) {
         qCDebug(QSG_LOG_INFO_GENERAL, "Enabling debug layer");
+#if !defined(Q_OS_WINRT) || !defined(NDEBUG)
         ComPtr<ID3D12Debug> debugController;
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
             debugController->EnableDebugLayer();
+#else
+        qCDebug(QSG_LOG_INFO_GENERAL, "Using DebugInterface will not allow certification to pass");
+#endif
     }
 
     QSGD3D12DeviceManager *dev = deviceManager();

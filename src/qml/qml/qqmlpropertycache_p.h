@@ -86,6 +86,8 @@ template <typename T> class QQmlPropertyCacheAliasCreator;
 class QQmlPropertyRawData
 {
 public:
+    typedef QObjectPrivate::StaticMetaCallFunction StaticMetaCallFunction;
+
     struct Flags {
         enum Types {
             OtherType            = 0,
@@ -99,6 +101,14 @@ public:
             VarPropertyType      = 8, // Property type is a "var" property of VMEMO
             QVariantType         = 9  // Property is a QVariant
         };
+
+        // The _otherBits (which "pad" the Flags struct to align it nicely) are used
+        // to store the relative property index. It will only get used when said index fits. See
+        // trySetStaticMetaCallFunction for details.
+        // (Note: this padding is done here, because certain compilers have surprising behavior
+        // when an enum is declared in-between two bit fields.)
+        enum { BitsLeftInFlags = 10 };
+        unsigned _otherBits       : BitsLeftInFlags; // align to 32 bits
 
         // Can apply to all properties, except IsFunction
         unsigned isConstant       : 1; // Has CONST flag
@@ -126,15 +136,18 @@ public:
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
         unsigned overrideIndexIsProperty: 1;
 
-        unsigned _padding         : 10; // align to 32 bits
-
         inline Flags();
         inline bool operator==(const Flags &other) const;
         inline void copyPropertyTypeFlags(Flags from);
     };
 
     Flags flags() const { return _flags; }
-    void setFlags(Flags f) { _flags = f; }
+    void setFlags(Flags f)
+    {
+        unsigned otherBits = _flags._otherBits;
+        _flags = f;
+        _flags._otherBits = otherBits;
+    }
 
     bool isValid() const { return coreIndex() != -1; }
 
@@ -147,6 +160,7 @@ public:
     bool isOverridden() const { return _flags.isOverridden; }
     bool isDirect() const { return _flags.isDirect; }
     bool hasAccessors() const { return accessors() != nullptr; }
+    bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return _flags.type == Flags::FunctionType; }
     bool isQObject() const { return _flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return _flags.type == Flags::EnumType; }
@@ -226,8 +240,17 @@ public:
         _metaObjectOffset = qint16(off);
     }
 
-    QQmlAccessors *accessors() const { return _accessors; }
-    void setAccessors(QQmlAccessors *acc) { _accessors = acc; }
+    QQmlAccessors *accessors() const { return nullptr; } // TODO: remove in subsequent patch
+
+    StaticMetaCallFunction staticMetaCallFunction() const { return _staticMetaCallFunction; }
+    void trySetStaticMetaCallFunction(StaticMetaCallFunction f, unsigned relativePropertyIndex)
+    {
+        if (relativePropertyIndex < (1 << Flags::BitsLeftInFlags) - 1) {
+            _flags._otherBits = relativePropertyIndex;
+            _staticMetaCallFunction = f;
+        }
+    }
+    quint16 relativePropertyIndex() const { Q_ASSERT(hasStaticMetaCallFunction()); return _flags._otherBits; }
 
 private:
     Flags _flags;
@@ -243,7 +266,7 @@ private:
     qint16 _metaObjectOffset;
 
     QQmlPropertyCacheMethodArguments *_arguments;
-    QQmlAccessors *_accessors;
+    StaticMetaCallFunction _staticMetaCallFunction;
 
     friend class QQmlPropertyData;
     friend class QQmlPropertyCache;
@@ -286,22 +309,24 @@ public:
 
     inline void readPropertyWithArgs(QObject *target, void *args[]) const
     {
-        if (hasAccessors()) {
-            accessors()->read(target, args[0]);
-        } else {
+        if (hasStaticMetaCallFunction())
+            staticMetaCallFunction()(target, QMetaObject::ReadProperty, relativePropertyIndex(), args);
+        else if (isDirect())
+            target->qt_metacall(QMetaObject::ReadProperty, coreIndex(), args);
+        else
             QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex(), args);
-        }
     }
 
     bool writeProperty(QObject *target, void *value, WriteFlags flags) const
     {
-        if (flags.testFlag(BypassInterceptor) && hasAccessors() && accessors()->write) {
-            accessors()->write(target, value);
-        } else {
-            int status = -1;
-            void *argv[] = { value, 0, &status, &flags };
+        int status = -1;
+        void *argv[] = { value, 0, &status, &flags };
+        if (flags.testFlag(BypassInterceptor) && hasStaticMetaCallFunction())
+            staticMetaCallFunction()(target, QMetaObject::WriteProperty, relativePropertyIndex(), argv);
+        else if (flags.testFlag(BypassInterceptor) && isDirect())
+            target->qt_metacall(QMetaObject::WriteProperty, coreIndex(), argv);
+        else
             QMetaObject::metacall(target, QMetaObject::WriteProperty, coreIndex(), argv);
-        }
         return true;
     }
 
@@ -568,7 +593,8 @@ public:
 };
 
 QQmlPropertyRawData::Flags::Flags()
-    : isConstant(false)
+    : _otherBits(0)
+    , isConstant(false)
     , isWritable(false)
     , isResettable(false)
     , isAlias(false)
@@ -587,7 +613,6 @@ QQmlPropertyRawData::Flags::Flags()
     , isConstructor(false)
     , notFullyResolved(false)
     , overrideIndexIsProperty(false)
-    , _padding(0)
 {}
 
 bool QQmlPropertyRawData::Flags::operator==(const QQmlPropertyRawData::Flags &other) const
@@ -635,7 +660,7 @@ QQmlPropertyData::QQmlPropertyData()
     setRevision(0);
     setMetaObjectOffset(-1);
     setArguments(nullptr);
-    setAccessors(nullptr);
+    trySetStaticMetaCallFunction(nullptr, 0);
 }
 
 QQmlPropertyData::QQmlPropertyData(const QQmlPropertyRawData &d)
@@ -645,7 +670,7 @@ QQmlPropertyData::QQmlPropertyData(const QQmlPropertyRawData &d)
 
 bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
 {
-    return _flags == other._flags &&
+    return flags() == other.flags() &&
            propType() == other.propType() &&
            coreIndex() == other.coreIndex() &&
            notifyIndex() == other.notifyIndex() &&
@@ -752,7 +777,7 @@ QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
 
 bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 {
-    return (data->hasAccessors() || (data->metaObjectOffset() == -1 && data->revision() == 0)) ||
+    return (data->metaObjectOffset() == -1 && data->revision() == 0) ||
            (allowedRevisionCache[data->metaObjectOffset()] >= data->revision());
 }
 

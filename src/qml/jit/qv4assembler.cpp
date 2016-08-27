@@ -152,11 +152,14 @@ Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::Ex
     , _executableAllocator(executableAllocator)
     , _isel(isel)
 {
+    _addrs.resize(_function->basicBlockCount());
+    _patches.resize(_function->basicBlockCount());
+    _labelPatches.resize(_function->basicBlockCount());
 }
 
 void Assembler::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
 {
-    _addrs[block] = label();
+    _addrs[block->index()] = label();
     catchBlock = block->catchBlock;
     _nextBlock = nextBlock;
 }
@@ -166,12 +169,12 @@ void Assembler::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
     Q_UNUSED(current);
 
     if (target != _nextBlock)
-        _patches[target].append(jump());
+        _patches[target->index()].push_back(jump());
 }
 
 void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
 {
-    _patches[targetBlock].append(targetJump);
+    _patches[targetBlock->index()].push_back(targetJump);
 }
 
 void Assembler::addPatch(DataLabelPtr patch, Label target)
@@ -179,12 +182,12 @@ void Assembler::addPatch(DataLabelPtr patch, Label target)
     DataLabelPatch p;
     p.dataLabel = patch;
     p.target = target;
-    _dataLabelPatches.append(p);
+    _dataLabelPatches.push_back(p);
 }
 
 void Assembler::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
 {
-    _labelPatches[target].append(patch);
+    _labelPatches[target->index()].push_back(patch);
 }
 
 void Assembler::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,

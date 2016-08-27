@@ -144,13 +144,10 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     Label endOfCode = label();
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _patches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            foreach (Jump jump, it.value())
+            for (Jump jump : qAsConst(_patches.at(i)))
                 jump.linkTo(target, this);
         }
     }
@@ -158,21 +155,18 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     JSC::JSGlobalData dummy(_executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
 
-    foreach (const DataLabelPatch &p, _dataLabelPatches)
+    for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
 
     // link exception handlers
-    foreach(Jump jump, exceptionPropagationJumps)
+    for (Jump jump : qAsConst(exceptionPropagationJumps))
         linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<DataLabelPtr> > it(_labelPatches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _labelPatches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            foreach (DataLabelPtr label, it.value())
+            for (DataLabelPtr label : _labelPatches.at(i))
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
     }
@@ -187,7 +181,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     if (showCode) {
         QHash<void*, const char*> functions;
 #ifndef QT_NO_DEBUG
-        foreach (CallInfo call, _callInfos)
+        for (CallInfo call : qAsConst(_callInfos))
             functions[linkBuffer.locationOf(call.label).dataLocation()] = call.functionName;
 #endif
 
@@ -337,7 +331,7 @@ void InstructionSelection::run(int functionIndex)
             continue;
         _as->registerBlock(_block, nextBlock);
 
-        foreach (IR::Stmt *s, _block->statements()) {
+        for (IR::Stmt *s : _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
                     _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
@@ -1682,7 +1676,7 @@ void InstructionSelection::calculateRegistersToSave(const RegisterInformation &u
     regularRegistersToSave.clear();
     fpRegistersToSave.clear();
 
-    foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
+    for (const RegisterInfo &ri : Assembler::getRegisterInfo()) {
 #if defined(RESTORE_EBX_ON_CALL)
         if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
             regularRegistersToSave.append(ri);

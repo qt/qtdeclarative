@@ -49,7 +49,8 @@ SOURCES += \
     $$PWD/qqmlfileselector.cpp \
     $$PWD/qqmlobjectcreator.cpp \
     $$PWD/qqmldirparser.cpp \
-    $$PWD/qqmldelayedcallqueue.cpp
+    $$PWD/qqmldelayedcallqueue.cpp \
+    $$PWD/qqmlloggingcategory.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -121,7 +122,8 @@ HEADERS += \
     $$PWD/qqmlfileselector.h \
     $$PWD/qqmlobjectcreator_p.h \
     $$PWD/qqmldirparser_p.h \
-    $$PWD/qqmldelayedcallqueue_p.h
+    $$PWD/qqmldelayedcallqueue_p.h \
+    $$PWD/qqmlloggingcategory_p.h
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

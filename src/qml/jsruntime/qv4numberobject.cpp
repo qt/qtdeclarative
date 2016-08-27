@@ -285,12 +285,30 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
     if (!ctx->argc() || ctx->args()[0].isUndefined())
         return RuntimeHelpers::toString(scope.engine, v);
 
-    double precision = ctx->args()[0].toInt32();
+    int precision = ctx->args()[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
         return ctx->engine()->throwRangeError(error);
     }
 
-    QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
+    // TODO: Once we get a NumberOption to retain trailing zeroes, replace the code below with:
+    // QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
+    QByteArray format = "%#." + QByteArray::number(precision) + "g";
+    QString result = QString::asprintf(format.constData(), v->asDouble());
+    if (result.endsWith(QLatin1Char('.'))) {
+        // This is 'f' notation, not 'e'.
+        result.chop(1);
+    } else {
+        int ePos = result.indexOf(QLatin1Char('e'));
+        if (ePos != -1) {
+            Q_ASSERT(ePos + 2 < result.length()); // always '+' or '-', and number, after 'e'
+            Q_ASSERT(ePos > 0);                   // 'e' is not the first character
+
+            if (result.at(ePos + 2) == QLatin1Char('0')) // Drop leading zeroes in exponent
+                result = result.remove(ePos + 2, 1);
+            if (result.at(ePos - 1) == QLatin1Char('.')) // Drop trailing dots before 'e'
+                result = result.remove(ePos - 1, 1);
+        }
+    }
     return scope.engine->newString(result)->asReturnedValue();
 }

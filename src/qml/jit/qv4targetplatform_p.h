@@ -563,7 +563,7 @@ public:
 #endif // Linux on MIPS (32 bit)
 
 public: // utility functions
-    static RegisterInformation getRegisterInfo()
+    static const RegisterInformation getRegisterInfo()
     {
         static const RegisterInformation info = getPlatformRegisterInfo();
 
