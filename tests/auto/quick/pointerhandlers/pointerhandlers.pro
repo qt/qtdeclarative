@@ -7,6 +7,7 @@ qtConfig(private_tests) {
         qquickpointerhandler \
         qquickpointhandler \
         qquickdraghandler \
+        qquickpinchhandler \
         qquicktaphandler \
 }
 
