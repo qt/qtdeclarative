@@ -45,8 +45,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlproperty.h>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include "../../../shared/util.h"
+#include "../../shared/viewtestutil.h"
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
@@ -461,5 +461,5 @@ void tst_PointerHandlers::mouseEventDelivery()
 
 QTEST_MAIN(tst_PointerHandlers)
 
-#include "tst_pointerhandlers.moc"
+#include "tst_qquickpointerhandler.moc"
 
