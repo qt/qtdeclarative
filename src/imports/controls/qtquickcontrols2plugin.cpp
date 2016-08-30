@@ -86,7 +86,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
     qmlRegisterType<QQuickContainer>(uri, 2, 0, "Container");
-    qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
 
     QQuickStyleSelector selector;
     selector.setBaseUrl(typeUrl());
@@ -101,6 +100,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
     qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");
+    qmlRegisterType(selector.select(QStringLiteral("Control.qml")), uri, 2, 0, "Control");
     qmlRegisterType(selector.select(QStringLiteral("Dial.qml")), uri, 2, 0, "Dial");
     qmlRegisterType(selector.select(QStringLiteral("Drawer.qml")), uri, 2, 0, "Drawer");
     qmlRegisterType(selector.select(QStringLiteral("Frame.qml")), uri, 2, 0, "Frame");

@@ -53,7 +53,12 @@ TestCase {
 
     Component {
         id: component
-        T.Control { }
+        Control { }
+    }
+
+    Component {
+        id: rectangle
+        Rectangle { }
     }
 
     Component {
@@ -874,6 +879,28 @@ TestCase {
 
         mouseMove(control, -10, -10)
         compare(control.hovered, false)
+
+        control.destroy()
+    }
+
+    function test_implicitSize() {
+        var control = component.createObject(testCase)
+        verify(control)
+
+        compare(control.implicitWidth, 0)
+        compare(control.implicitHeight, 0)
+
+        control.contentItem = rectangle.createObject(control, {implicitWidth: 10, implicitHeight: 20})
+        compare(control.implicitWidth, 10)
+        compare(control.implicitHeight, 20)
+
+        control.background = rectangle.createObject(control, {implicitWidth: 20, implicitHeight: 30})
+        compare(control.implicitWidth, 20)
+        compare(control.implicitHeight, 30)
+
+        control.padding = 100
+        compare(control.implicitWidth, 210)
+        compare(control.implicitHeight, 220)
 
         control.destroy()
     }
