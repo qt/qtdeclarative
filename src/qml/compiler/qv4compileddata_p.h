@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x04
+#define QV4_DATA_STRUCTURE_VERSION 0x05
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -202,6 +202,8 @@ struct String
     }
 };
 
+// Function is aligned on an 8-byte boundary to make sure there are no bus errors or penalties
+// for unaligned access. The ordering of the fields is also from largest to smallest.
 struct Function
 {
     enum Flags : unsigned int {
@@ -211,6 +213,11 @@ struct Function
         IsNamedExpression   = 0x8,
         HasCatchOrWith      = 0x10
     };
+
+    // Absolute offset into file where the code for this function is located. Only used when the function
+    // is serialized.
+    LEUInt64 codeOffset;
+    LEUInt64 codeSize;
 
     LEUInt32 nameIndex;
     LEUInt32 nFormals;
@@ -228,11 +235,6 @@ struct Function
     LEUInt32 nDependingScopeProperties;
     LEUInt32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
     // Qml Extensions End
-
-    // Absolute offset into file where the code for this function is located. Only used when the function
-    // is serialized.
-    LEUInt64 codeOffset;
-    LEUInt64 codeSize;
 
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
