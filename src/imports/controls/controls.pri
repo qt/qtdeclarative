@@ -16,6 +16,7 @@ QML_CONTROLS = \
     CheckDelegate.qml \
     CheckIndicator.qml \
     ComboBox.qml \
+    Container.qml \
     Control.qml \
     Dial.qml \
     Drawer.qml \
