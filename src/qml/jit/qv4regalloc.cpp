@@ -528,7 +528,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, IR::Expr *target)
+    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, bool /*captureRequired*/, IR::Expr *target)
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -814,10 +814,10 @@ class ResolutionPhase
     Q_DISABLE_COPY(ResolutionPhase)
 
     LifeTimeIntervals::Ptr _intervals;
-    QVector<LifeTimeInterval *> _unprocessed;
+    QVector<LifeTimeInterval *> _unprocessedReverseOrder;
     IR::Function *_function;
     const std::vector<int> &_assignedSpillSlots;
-    QHash<IR::Temp, const LifeTimeInterval *> _intervalForTemp;
+    std::vector<const LifeTimeInterval *> _liveIntervals;
     const QVector<const RegisterInfo *> &_intRegs;
     const QVector<const RegisterInfo *> &_fpRegs;
 
@@ -825,26 +825,26 @@ class ResolutionPhase
     std::vector<Move *> _loads;
     std::vector<Move *> _stores;
 
-    QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtStart;
-    QHash<BasicBlock *, QList<const LifeTimeInterval *> > _liveAtEnd;
+    std::vector<std::vector<const LifeTimeInterval *> > _liveAtStart;
+    std::vector<std::vector<const LifeTimeInterval *> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QVector<LifeTimeInterval *> &unprocessed,
+    ResolutionPhase(QVector<LifeTimeInterval *> &&unprocessedReversedOrder,
                     const LifeTimeIntervals::Ptr &intervals,
                     IR::Function *function,
                     const std::vector<int> &assignedSpillSlots,
                     const QVector<const RegisterInfo *> &intRegs,
                     const QVector<const RegisterInfo *> &fpRegs)
         : _intervals(intervals)
+        , _unprocessedReverseOrder(unprocessedReversedOrder)
         , _function(function)
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
         , _currentStmt(0)
     {
-        _unprocessed = unprocessed;
-        _liveAtStart.reserve(function->basicBlockCount());
-        _liveAtEnd.reserve(function->basicBlockCount());
+        _liveAtStart.resize(function->basicBlockCount());
+        _liveAtEnd.resize(function->basicBlockCount());
     }
 
     void run() {
@@ -883,7 +883,7 @@ private:
 
             cleanOldIntervals(_intervals->startPosition(bb));
             addNewIntervals(_intervals->startPosition(bb));
-            _liveAtStart[bb] = _intervalForTemp.values();
+            _liveAtStart[bb->index()] = _liveIntervals;
 
             for (int i = 0, ei = statements.size(); i != ei; ++i) {
                 _currentStmt = statements.at(i);
@@ -905,24 +905,24 @@ private:
             }
 
             cleanOldIntervals(_intervals->endPosition(bb));
-            _liveAtEnd[bb] = _intervalForTemp.values();
+            _liveAtEnd[bb->index()] = _liveIntervals;
 
             if (DebugRegAlloc) {
                 QBuffer buf;
                 buf.open(QIODevice::WriteOnly);
                 QTextStream os(&buf);
                 os << "Intervals live at the start of L" << bb->index() << ":" << endl;
-                if (_liveAtStart[bb].isEmpty())
+                if (_liveAtStart[bb->index()].empty())
                     os << "\t(none)" << endl;
-                for (const LifeTimeInterval *i : _liveAtStart.value(bb)) {
+                for (const LifeTimeInterval *i : _liveAtStart.at(bb->index())) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
                 }
                 os << "Intervals live at the end of L" << bb->index() << ":" << endl;
-                if (_liveAtEnd[bb].isEmpty())
+                if (_liveAtEnd[bb->index()].empty())
                     os << "\t(none)" << endl;
-                for (const LifeTimeInterval *i : _liveAtEnd.value(bb)) {
+                for (const LifeTimeInterval *i : _liveAtEnd.at(bb->index())) {
                     os << "\t";
                     i->dump(os);
                     os << endl;
@@ -935,9 +935,19 @@ private:
 
     }
 
+    const LifeTimeInterval *findLiveInterval(Temp *t) const
+    {
+        for (const LifeTimeInterval *lti : _liveIntervals) {
+            if (lti->temp() == *t)
+                return lti;
+        }
+
+        return nullptr;
+    }
+
     void maybeGenerateSpill(Temp *t)
     {
-        const LifeTimeInterval *i = _intervalForTemp[*t];
+        const LifeTimeInterval *i = findLiveInterval(t);
         if (i->reg() == LifeTimeInterval::InvalidRegister)
             return;
 
@@ -953,26 +963,27 @@ private:
         if (position == Stmt::InvalidId)
             return;
 
-        while (!_unprocessed.isEmpty()) {
-            const LifeTimeInterval *i = _unprocessed.constFirst();
+        while (!_unprocessedReverseOrder.isEmpty()) {
+            const LifeTimeInterval *i = _unprocessedReverseOrder.constLast();
             if (i->start() > position)
                 break;
 
             Q_ASSERT(!i->isFixedInterval());
-            _intervalForTemp[i->temp()] = i;
+            _liveIntervals.push_back(i);
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
-            _unprocessed.removeFirst();
+            _unprocessedReverseOrder.removeLast();
         }
     }
 
     void cleanOldIntervals(int position)
     {
-        QMutableHashIterator<Temp, const LifeTimeInterval *> it(_intervalForTemp);
-        while (it.hasNext()) {
-            const LifeTimeInterval *i = it.next().value();
-            if (i->end() < position || i->isFixedInterval())
-                it.remove();
+        for (size_t it = 0; it != _liveIntervals.size(); ) {
+            const LifeTimeInterval *lti = _liveIntervals.at(it);
+            if (lti->end() < position || lti->isFixedInterval())
+                _liveIntervals.erase(_liveIntervals.begin() + it);
+            else
+                ++it;
         }
     }
 
@@ -1019,7 +1030,7 @@ private:
         int successorStart = _intervals->startPosition(successor);
         Q_ASSERT(successorStart > 0);
 
-        for (const LifeTimeInterval *it : _liveAtStart.value(successor)) {
+        for (const LifeTimeInterval *it : _liveAtStart.at(successor->index())) {
             bool isPhiTarget = false;
             Expr *moveFrom = 0;
 
@@ -1033,7 +1044,7 @@ private:
                         Temp *t = opd->asTemp();
                         Q_ASSERT(t);
 
-                        for (const LifeTimeInterval *it2 : _liveAtEnd.value(predecessor)) {
+                        for (const LifeTimeInterval *it2 : _liveAtEnd.at(predecessor->index())) {
                             if (it2->temp() == *t
                                     && it2->reg() != LifeTimeInterval::InvalidRegister
                                     && it2->covers(predecessorEnd)) {
@@ -1048,7 +1059,7 @@ private:
                     }
                 }
             } else {
-                for (const LifeTimeInterval *predIt : _liveAtEnd.value(predecessor)) {
+                for (const LifeTimeInterval *predIt : _liveAtEnd.at(predecessor->index())) {
                     if (predIt->temp() == it->temp()) {
                         if (predIt->reg() != LifeTimeInterval::InvalidRegister
                                 && predIt->covers(predecessorEnd)) {
@@ -1198,7 +1209,7 @@ private:
         if (t->kind != Temp::VirtualRegister)
             return;
 
-        const LifeTimeInterval *i = _intervalForTemp[*t];
+        const LifeTimeInterval *i = findLiveInterval(t);
         Q_ASSERT(i->isValid());
 
         if (_currentStmt != 0 && i->start() == usePosition(_currentStmt)) {
@@ -1314,8 +1325,13 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc)
         dump(function);
 
-    std::sort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
-    ResolutionPhase(_handled, _lifeTimeIntervals, function, _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
+    // sort the ranges in reverse order, so the ResolutionPhase can take from the end (and thereby
+    // prevent the copy overhead that taking from the beginning would give).
+    std::sort(_handled.begin(), _handled.end(),
+              [](const LifeTimeInterval *r1, const LifeTimeInterval *r2) -> bool {
+        return LifeTimeInterval::lessThan(r2, r1);
+    });
+    ResolutionPhase(std::move(_handled), _lifeTimeIntervals, function, _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
 
     function->tempCount = *std::max_element(_assignedSpillSlots.begin(), _assignedSpillSlots.end()) + 1;
 

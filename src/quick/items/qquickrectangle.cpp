@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 QQuickPen::QQuickPen(QObject *parent)
     : QObject(parent)
     , m_width(1)
-    , m_color("#000000")
+    , m_color(Qt::black)
     , m_aligned(true)
     , m_valid(false)
 {

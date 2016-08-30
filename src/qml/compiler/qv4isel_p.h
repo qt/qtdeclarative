@@ -188,7 +188,7 @@ public: // to implement by subclasses:
     virtual void initClosure(IR::Closure *closure, IR::Expr *target) = 0;
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target) = 0;
     virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target) = 0;
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target) = 0;
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName) = 0;
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex) = 0;
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex) = 0;

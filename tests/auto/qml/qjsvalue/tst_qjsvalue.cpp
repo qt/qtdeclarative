@@ -431,6 +431,12 @@ void tst_QJSValue::toString()
         QVERIFY(!o.engine());
         QCOMPARE(o.toString(), QStringLiteral("1,2,3"));
     }
+
+    {
+        QByteArray hello = QByteArrayLiteral("Hello World");
+        QJSValue jsValue = eng.toScriptValue(hello);
+        QCOMPARE(jsValue.toString(), QString::fromUtf8(hello));
+    }
 }
 
 void tst_QJSValue::toNumber()

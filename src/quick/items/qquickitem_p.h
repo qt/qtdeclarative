@@ -245,8 +245,6 @@ public:
     static QQuickItemPrivate* get(QQuickItem *item) { return item->d_func(); }
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
-    static void registerAccessorProperties();
-
     QQuickItemPrivate();
     ~QQuickItemPrivate();
     void init(QQuickItem *parent);

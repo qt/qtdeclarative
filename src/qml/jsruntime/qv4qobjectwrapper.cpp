@@ -44,7 +44,6 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qjsvalue_p.h>
-#include <private/qqmlaccessors_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypewrapper_p.h>
@@ -115,93 +114,57 @@ static QPair<QObject *, int> extractQtSignal(const Value &value)
     return qMakePair((QObject *)0, -1);
 }
 
-
-struct ReadAccessor {
-    static inline void Indirect(QObject *object, const QQmlPropertyData &property,
-                                void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(n == 0);
-        Q_UNUSED(n);
-
-        void *args[] = { output, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex(), args);
-    }
-
-    static inline void Direct(QObject *object, const QQmlPropertyData &property,
-                              void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(n == 0);
-        Q_UNUSED(n);
-
-        void *args[] = { output, 0 };
-        object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex(), args);
-    }
-
-    static inline void Accessor(QObject *object, const QQmlPropertyData &property,
-                                void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(property.accessors());
-
-        property.accessors()->read(object, output);
-        if (n) property.accessors()->notifier(object, n);
-    }
-};
-
-// Load value properties
-template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
-                              void *, QQmlNotifier **)>
-static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object,
-                                          const QQmlPropertyData &property,
-                                          QQmlNotifier **notifier)
+static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object,
+                                       const QQmlPropertyData &property)
 {
     Q_ASSERT(!property.isFunction());
     QV4::Scope scope(v4);
 
     if (property.isQObject()) {
         QObject *rv = 0;
-        ReadFunction(object, property, &rv, notifier);
+        property.readProperty(object, &rv);
         return QV4::QObjectWrapper::wrap(v4, rv);
     } else if (property.isQList()) {
         return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType());
     } else if (property.propType() == QMetaType::QReal) {
         qreal v = 0;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.propType() == QMetaType::Int || property.isEnum()) {
         int v = 0;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.propType() == QMetaType::Bool) {
         bool v = false;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.propType() == QMetaType::QString) {
         QString v;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return v4->newString(v)->asReturnedValue();
     } else if (property.propType() == QMetaType::UInt) {
         uint v = 0;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.propType() == QMetaType::Float) {
         float v = 0;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.propType() == QMetaType::Double) {
         double v = 0;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QV4::Encode(v);
     } else if (property.isV4Handle()) {
         QQmlV4Handle handle;
-        ReadFunction(object, property, &handle, notifier);
+        property.readProperty(object, &handle);
         return handle;
     } else if (property.propType() == qMetaTypeId<QJSValue>()) {
         QJSValue v;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
         return QJSValuePrivate::convertedToValue(v4, v);
     } else if (property.isQVariant()) {
         QVariant v;
-        ReadFunction(object, property, &v, notifier);
+        property.readProperty(object, &v);
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
             if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(v.userType()))
@@ -210,13 +173,9 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
 
         return scope.engine->fromVariant(v);
     } else if (QQmlValueTypeFactory::isValueType(property.propType())) {
-        Q_ASSERT(notifier == 0);
-
         if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property.propType()))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, property.propType());
     } else {
-        Q_ASSERT(notifier == 0);
-
         // see if it's a sequence type
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType(), object, property.coreIndex(), &succeeded));
@@ -231,7 +190,7 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
         return QV4::Encode::undefined();
     } else {
         QVariant v(property.propType(), (void *)0);
-        ReadFunction(object, property, v.data(), notifier);
+        property.readProperty(object, v.data());
         return scope.engine->fromVariant(v);
     }
 }
@@ -352,29 +311,6 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
 
     QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
 
-    if (property->hasAccessors()) {
-        QQmlNotifier *n = 0;
-        QQmlNotifier **nptr = 0;
-
-        if (ep && ep->propertyCapture && property->accessors()->notifier)
-            nptr = &n;
-
-        Scope scope(engine);
-        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(engine, object, *property, nptr));
-
-        if (captureRequired && !property->isConstant()) {
-            if (property->accessors()->notifier) {
-                if (n && ep->propertyCapture)
-                    ep->propertyCapture->captureProperty(n);
-            } else {
-                if (ep->propertyCapture)
-                    ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
-            }
-        }
-
-        return rv->asReturnedValue();
-    }
-
     if (captureRequired && ep && ep->propertyCapture && !property->isConstant())
         ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
 
@@ -382,10 +318,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         return vmemo->vmeProperty(property->coreIndex());
-    } else if (property->isDirect())  {
-        return LoadProperty<ReadAccessor::Direct>(engine, object, *property, 0);
     } else {
-        return LoadProperty<ReadAccessor::Indirect>(engine, object, *property, 0);
+        return loadProperty(engine, object, *property);
     }
 }
 

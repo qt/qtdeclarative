@@ -84,6 +84,7 @@ private slots:
     void arrayExpressions();
     void contextPropertiesTriggerReeval();
     void objectPropertiesTriggerReeval();
+    void dependenciesWithFunctions();
     void deferredProperties();
     void deferredPropertiesErrors();
     void deferredPropertiesInComponents();
@@ -879,6 +880,18 @@ void tst_qqmlecmascript::objectPropertiesTriggerReeval()
         expr.changed = false;
         QCOMPARE(expr.evaluate(), QVariant("Donkey"));
     }
+}
+
+void tst_qqmlecmascript::dependenciesWithFunctions()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("dependenciesWithFunctions.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object, qPrintable(component.errorString()));
+    QVERIFY(!object->property("success").toBool());
+    object->setProperty("value", 42);
+    QVERIFY(object->property("success").toBool());
 }
 
 void tst_qqmlecmascript::deferredProperties()

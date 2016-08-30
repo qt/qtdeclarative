@@ -45,7 +45,6 @@
 #include <private/qv8engine_p.h>
 
 #include <private/qmetaobject_p.h>
-#include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 
 #include <private/qv4value_p.h>
@@ -150,7 +149,7 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
     Q_ASSERT(p.revision() <= Q_INT16_MAX);
     setRevision(p.revision());
 
-    _flags = fastFlagsForProperty(p);
+    setFlags(fastFlagsForProperty(p));
 
     int type = static_cast<int>(p.type());
     if (type == QMetaType::QObjectStar) {
@@ -171,7 +170,7 @@ void QQmlPropertyData::load(const QMetaProperty &p, QQmlEngine *engine)
     setPropType(p.userType());
     setCoreIndex(p.propertyIndex());
     setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
-    _flags = fastFlagsForProperty(p);
+    setFlags(fastFlagsForProperty(p));
     flagsForPropertyType(propType(), engine, _flags);
     Q_ASSERT(p.revision() <= Q_INT16_MAX);
     setRevision(p.revision());
@@ -344,7 +343,7 @@ void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Fl
     data.setPropType(propType);
     data.setCoreIndex(coreIndex);
     data.setNotifyIndex(notifyIndex);
-    data._flags = flags;
+    data.setFlags(flags);
 
     QQmlPropertyData *old = findNamedProperty(name);
     if (old)
@@ -363,7 +362,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     QQmlPropertyData data;
     data.setPropType(QVariant::Invalid);
     data.setCoreIndex(coreIndex);
-    data._flags = flags;
+    data.setFlags(flags);
     data.setArguments(nullptr);
 
     QQmlPropertyData handler = data;
@@ -409,7 +408,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     args->argumentsValid = true;
     data.setArguments(args);
 
-    data._flags = flags;
+    data.setFlags(flags);
 
     QQmlPropertyData *old = findNamedProperty(name);
     if (old)
@@ -500,34 +499,15 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     int signalCount = metaObjectSignalCount(metaObject);
     int classInfoCount = QMetaObjectPrivate::get(metaObject)->classInfoCount;
 
-    QQmlAccessorProperties::Properties accessorProperties;
-
     if (classInfoCount) {
         int classInfoOffset = metaObject->classInfoOffset();
-        bool hasFastProperty = false;
         for (int ii = 0; ii < classInfoCount; ++ii) {
             int idx = ii + classInfoOffset;
             QMetaClassInfo mci = metaObject->classInfo(idx);
             const char *name = mci.name();
-            if (0 == qstrcmp(name, "qt_HasQmlAccessors")) {
-                hasFastProperty = true;
-            } else if (0 == qstrcmp(name, "DefaultProperty")) {
+            if (0 == qstrcmp(name, "DefaultProperty")) {
                 _defaultPropertyName = QString::fromUtf8(mci.value());
             }
-        }
-
-        if (hasFastProperty) {
-            accessorProperties = QQmlAccessorProperties::properties(metaObject);
-            if (accessorProperties.count == 0)
-                qFatal("QQmlPropertyCache: %s has FastProperty class info, but has not "
-                       "installed property accessors", metaObject->className());
-        } else {
-#ifndef QT_NO_DEBUG
-            accessorProperties = QQmlAccessorProperties::properties(metaObject);
-            if (accessorProperties.count != 0)
-                qFatal("QQmlPropertyCache: %s has fast property accessors, but is missing "
-                       "FastProperty class info", metaObject->className());
-#endif
         }
     }
 
@@ -568,9 +548,9 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         QQmlPropertyData *sigdata = 0;
 
         if (m.methodType() == QMetaMethod::Signal)
-            data->_flags = signalFlags;
+            data->setFlags(signalFlags);
         else
-            data->_flags = methodFlags;
+            data->setFlags(methodFlags);
 
         data->lazyLoad(m);
         data->_flags.isDirect = !dynamicMetaObject;
@@ -650,7 +630,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
 
         QQmlPropertyData *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 
-        data->_flags = propertyFlags;
+        data->setFlags(propertyFlags);
         data->lazyLoad(p);
 
         data->_flags.isDirect = !dynamicMetaObject;
@@ -672,16 +652,18 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             setNamedProperty(propName, ii, data, (old != 0));
         }
 
-        QQmlAccessorProperties::Property *accessorProperty = accessorProperties.property(str);
-
-        // Fast properties may not be overrides or revisioned
-        Q_ASSERT(accessorProperty == 0 || (old == 0 && data->revision() == 0));
-
-        if (accessorProperty) {
-            data->setAccessors(accessorProperty->accessors);
-        } else if (old) {
-            data->markAsOverrideOf(old);
+        bool isGadget = true;
+        for (const QMetaObject *it = metaObject; it != nullptr; it = it->superClass()) {
+            if (it == &QObject::staticMetaObject)
+                isGadget = false;
         }
+
+        if (isGadget) // always dispatch over a 'normal' meta-call so the QQmlValueType can intercept
+            data->_flags.isDirect = false;
+        else
+            data->trySetStaticMetaCallFunction(metaObject->d.static_metacall, ii - propOffset);
+        if (old)
+            data->markAsOverrideOf(old);
     }
 }
 
