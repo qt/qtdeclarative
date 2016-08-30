@@ -252,6 +252,8 @@ protected:
 
         }
 
+        cancelPermanentGuards();
+
         ep->dereferenceScarceResources();
     }
 
