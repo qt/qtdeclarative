@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x03
+#define QV4_DATA_STRUCTURE_VERSION 0x04
 
 class QIODevice;
 class QQmlPropertyCache;
