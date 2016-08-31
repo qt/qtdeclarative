@@ -250,6 +250,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QPointF pos READ pos)
     Q_PROPERTY(QPointF scenePos READ scenePos)
     Q_PROPERTY(QPointF scenePressPos READ scenePressPos)
     Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos)
@@ -273,10 +274,12 @@ public:
     QQuickEventPoint(QQuickPointerEvent *parent);
 
     void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
+    void localize(QQuickItem *target);
 
     void invalidate() { m_valid = false; }
 
     QQuickPointerEvent *pointerEvent() const;
+    QPointF pos() const { return m_pos; }
     QPointF scenePos() const { return m_scenePos; }
     QPointF scenePressPos() const { return m_scenePressPos; }
     QPointF sceneGrabPos() const { return m_sceneGrabPos; }
@@ -297,6 +300,7 @@ public:
     void setPointerHandlerGrabber(QQuickPointerHandler *grabber);
 
 private:
+    QPointF m_pos;
     QPointF m_scenePos;
     QPointF m_scenePressPos;
     QPointF m_sceneGrabPos;
@@ -365,6 +369,7 @@ public: // property accessors
 
 public: // helpers for C++ only (during event delivery)
     virtual QQuickPointerEvent *reset(QEvent *ev) = 0;
+    virtual void localize(QQuickItem *target) = 0;
 
     virtual bool isPressEvent() const = 0;
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
@@ -404,6 +409,7 @@ public:
         : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this)) { }
 
     QQuickPointerEvent *reset(QEvent *) override;
+    void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
     QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
     const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
@@ -433,6 +439,7 @@ public:
     { }
 
     QQuickPointerEvent *reset(QEvent *) override;
+    void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
     QQuickPointerTouchEvent *asPointerTouchEvent() override { return this; }
     const QQuickPointerTouchEvent *asPointerTouchEvent() const override { return this; }

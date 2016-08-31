@@ -529,6 +529,14 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
     m_velocity = velocity;
 }
 
+void QQuickEventPoint::localize(QQuickItem *target)
+{
+    if (target)
+        m_pos = target->mapFromScene(scenePos());
+    else
+        m_pos = QPointF();
+}
+
 QObject *QQuickEventPoint::grabber() const
 {
     return m_grabber.data();
@@ -638,6 +646,11 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     return this;
 }
 
+void QQuickPointerMouseEvent::localize(QQuickItem *target)
+{
+    m_mousePoint->localize(target);
+}
+
 QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
 {
     auto ev = static_cast<QTouchEvent*>(event);
@@ -680,6 +693,12 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
     }
     m_pointCount = newPointCount;
     return this;
+}
+
+void QQuickPointerTouchEvent::localize(QQuickItem *target)
+{
+    for (auto point : qAsConst(m_touchPoints))
+        point->localize(target);
 }
 
 QQuickEventPoint *QQuickPointerMouseEvent::point(int i) const {

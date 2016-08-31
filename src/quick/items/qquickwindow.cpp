@@ -2252,6 +2252,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
 {
     Q_Q(QQuickWindow);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+    pointerEvent->localize(item);
 
     // Let the Item's handlers (if any) have the event first.
     itemPrivate->handlePointerEvent(pointerEvent);
@@ -2264,9 +2265,8 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             auto point = event->point(0);
             if (point->isAccepted())
                 return false;
-            QPointF localPos = item->mapFromScene(point->scenePos());
-            Q_ASSERT(item->contains(localPos)); // transform is checked already
-            QMouseEvent *me = event->asMouseEvent(localPos);
+            Q_ASSERT(item->contains(point->pos())); // transform is checked already
+            QMouseEvent *me = event->asMouseEvent(point->pos());
             me->accept();
             q->sendEvent(item, me);
             if (me->isAccepted()) {
