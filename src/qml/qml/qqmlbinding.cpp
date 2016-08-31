@@ -43,7 +43,6 @@
 #include "qqmlcontext.h"
 #include "qqmlinfo.h"
 #include "qqmldata_p.h"
-#include "qqmlaccessors_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>

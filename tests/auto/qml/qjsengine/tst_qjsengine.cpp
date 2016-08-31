@@ -2154,6 +2154,15 @@ void tst_QJSEngine::jsNumberClass()
         QJSValue ret = eng.evaluate("new Number(123).toPrecision()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("123"));
+        ret = eng.evaluate("new Number(42).toPrecision(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("4e+1"));
+        ret = eng.evaluate("new Number(42).toPrecision(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("42"));
+        ret = eng.evaluate("new Number(42).toPrecision(3)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("42.0"));
     }
 }
 

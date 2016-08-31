@@ -75,7 +75,7 @@ public:
 
         bool covers(int position) const { return start <= position && position <= end; }
     };
-    typedef QVector<Range> Ranges;
+    typedef QVarLengthArray<Range, 4> Ranges;
 
 private:
     Temp _temp;
@@ -89,7 +89,7 @@ public:
     enum { InvalidPosition = -1 };
     enum { InvalidRegister = -1 };
 
-    explicit LifeTimeInterval(int rangeCapacity = 2)
+    explicit LifeTimeInterval(int rangeCapacity = 4)
         : _end(InvalidPosition)
         , _reg(InvalidRegister)
         , _isFixedInterval(0)
@@ -145,6 +145,17 @@ public:
 #endif
     }
 };
+
+inline bool LifeTimeInterval::lessThan(const LifeTimeInterval *r1, const LifeTimeInterval *r2)
+{
+    if (r1->_ranges.first().start == r2->_ranges.first().start) {
+        if (r1->isSplitFromInterval() == r2->isSplitFromInterval())
+            return r1->_ranges.last().end < r2->_ranges.last().end;
+        else
+            return r1->isSplitFromInterval();
+    } else
+        return r1->_ranges.first().start < r2->_ranges.first().start;
+}
 
 class LifeTimeIntervals
 {

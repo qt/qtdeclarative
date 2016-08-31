@@ -133,7 +133,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 {
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
-    QQuickItemPrivate::registerAccessorProperties();
 
 #ifdef QT_NO_MOVIE
     qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));

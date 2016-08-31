@@ -58,8 +58,6 @@
 #include "private/qv4lookup_p.h"
 #include "qv4targetplatform_p.h"
 
-#include <QtCore/QHash>
-#include <QtCore/QStack>
 #include <config.h>
 #include <wtf/Vector.h>
 
@@ -1073,8 +1071,8 @@ public:
 private:
     QScopedPointer<const StackLayout> _stackLayout;
     IR::Function *_function;
-    QHash<IR::BasicBlock *, Label> _addrs;
-    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
+    std::vector<Label> _addrs;
+    std::vector<std::vector<Jump>> _patches;
 #ifndef QT_NO_DEBUG
     QVector<CallInfo> _callInfos;
 #endif
@@ -1083,9 +1081,9 @@ private:
         DataLabelPtr dataLabel;
         Label target;
     };
-    QList<DataLabelPatch> _dataLabelPatches;
+    std::vector<DataLabelPatch> _dataLabelPatches;
 
-    QHash<IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
+    std::vector<std::vector<DataLabelPtr>> _labelPatches;
     IR::BasicBlock *_nextBlock;
 
     QV4::ExecutableAllocator *_executableAllocator;

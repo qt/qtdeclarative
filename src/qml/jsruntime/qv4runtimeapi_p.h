@@ -327,8 +327,8 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine));
     RUNTIME_METHOD(ReturnedValue, getQmlSingleton, (NoThrowEngine *engine, int nameIndex));
     RUNTIME_METHOD(ReturnedValue, getQmlAttachedProperty, (ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex));
-    RUNTIME_METHOD(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
-    RUNTIME_METHOD(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired));
+    RUNTIME_METHOD(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlSingletonQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index));

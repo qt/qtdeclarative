@@ -125,6 +125,7 @@ private slots:
     void containsPress_data();
     void containsPress();
     void ignoreBySource();
+    void notPressedAfterStolenGrab();
 
 private:
     int startDragDistance() const {
@@ -1985,6 +1986,23 @@ void tst_QQuickMouseArea::ignoreBySource()
     // Flickable content should not have moved
     QCOMPARE(flickable->contentX(), 0.);
     QCOMPARE(flickable->contentY(), 0.);
+}
+
+void tst_QQuickMouseArea::notPressedAfterStolenGrab()
+{
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+
+    QQuickMouseArea *ma = new QQuickMouseArea(window.contentItem());
+    ma->setSize(window.size());
+    QObject::connect(ma,
+                     static_cast<void (QQuickMouseArea::*)(QQuickMouseEvent*)>(&QQuickMouseArea::pressed),
+                     [&]() { window.contentItem()->grabMouse(); });
+
+    QTest::mouseClick(&window, Qt::LeftButton);
+    QVERIFY(!ma->pressed());
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)

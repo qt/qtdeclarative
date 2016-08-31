@@ -2270,8 +2270,12 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             me->accept();
             q->sendEvent(item, me);
             if (me->isAccepted()) {
-                if (!q->mouseGrabberItem())
+                auto mouseGrabber = q->mouseGrabberItem();
+                if (mouseGrabber && mouseGrabber != item) {
+                    item->mouseUngrabEvent();
+                } else {
                     item->grabMouse();
+                }
                 point->setAccepted(true);
             }
             return me->isAccepted();
