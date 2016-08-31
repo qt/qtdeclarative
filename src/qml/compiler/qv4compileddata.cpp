@@ -65,6 +65,12 @@
 
 #include <algorithm>
 
+#if defined(QT_BUILD_INTERNAL)
+#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
+#include <dlfcn.h>
+#endif
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -604,12 +610,47 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
+#if defined(QT_BUILD_INTERNAL)
+
+static QByteArray ownLibraryChecksum()
+{
+    static QByteArray libraryChecksum;
+    static bool checksumInitialized = false;
+    if (checksumInitialized)
+        return libraryChecksum;
+    checksumInitialized = true;
+#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
+    Dl_info libInfo;
+    if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
+        QFile library(QFile::decodeName(libInfo.dli_fname));
+        if (library.open(QIODevice::ReadOnly)) {
+            QCryptographicHash hash(QCryptographicHash::Sha1);
+            hash.addData(&library);
+            libraryChecksum = hash.result();
+        }
+    }
+#else
+    // Not implemented.
+#endif
+    return libraryChecksum;
+}
+
+#endif
+
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
         if (!it.value()->addToHash(hash, engine))
             return false;
     }
+
+    // This is a bit of a hack to make development easier. When hacking on the code generator
+    // the cache files may end up being re-used. To avoid that we also add the checksum of
+    // the QtQml library.
+#if defined(QT_BUILD_INTERNAL)
+    hash->addData(ownLibraryChecksum());
+#endif
+
     return true;
 }
 
