@@ -2703,8 +2703,6 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    d->parentNotifier.notify();
-
     emit parentChanged(d->parentItem);
     if (isVisible() && d->parentItem)
         emit d->parentItem->visibleChildrenChanged();
