@@ -41,9 +41,9 @@ import QtQuick.Controls.Universal 2.0
 T.TextField {
     id: control
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            placeholderText ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+                            || contentWidth + leftPadding + rightPadding
     implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
                              background ? background.implicitHeight : 0,
                              placeholder.implicitHeight + topPadding + bottomPadding)
