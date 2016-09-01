@@ -146,6 +146,8 @@ private:
         setValue(name, val);
     }
 
+    void emitDirectNotifies(const int *changedRoles, int roleCount);
+
     void initialize();
     bool m_initialized;
 };

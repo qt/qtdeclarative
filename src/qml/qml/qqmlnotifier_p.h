@@ -59,6 +59,8 @@ public:
     inline ~QQmlNotifier();
     inline void notify();
 
+    static void notify(QQmlData *ddata, int notifierIndex);
+
 private:
     friend class QQmlData;
     friend class QQmlNotifierEndpoint;

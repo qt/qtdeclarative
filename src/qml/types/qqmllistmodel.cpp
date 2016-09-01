@@ -40,10 +40,12 @@
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlnotifier_p.h>
 
 #include <private/qv4object_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qv4alloca_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -52,6 +54,7 @@
 #include <QtCore/qstack.h>
 #include <QXmlStreamReader>
 #include <QtCore/qdatetime.h>
+#include <QScopedValueRollback>
 
 QT_BEGIN_NAMESPACE
 
@@ -1259,9 +1262,14 @@ ModelNodeMetaObject *ModelNodeMetaObject::get(QObject *obj)
 
 void ModelNodeMetaObject::updateValues()
 {
-    if (!m_initialized)
+    const int roleCount = m_model->m_listModel->roleCount();
+    if (!m_initialized) {
+        int *changedRoles = reinterpret_cast<int *>(alloca(roleCount * sizeof(int)));
+        for (int i = 0; i < roleCount; ++i)
+            changedRoles[i] = i;
+        emitDirectNotifies(changedRoles, roleCount);
         return;
-    int roleCount = m_model->m_listModel->roleCount();
+    }
     for (int i=0 ; i < roleCount ; ++i) {
         const ListLayout::Role &role = m_model->m_listModel->getExistingRole(i);
         QByteArray name = role.name.toUtf8();
@@ -1272,8 +1280,10 @@ void ModelNodeMetaObject::updateValues()
 
 void ModelNodeMetaObject::updateValues(const QVector<int> &roles)
 {
-    if (!m_initialized)
+    if (!m_initialized) {
+        emitDirectNotifies(roles.constData(), roles.count());
         return;
+    }
     int roleCount = roles.count();
     for (int i=0 ; i < roleCount ; ++i) {
         int roleIndex = roles.at(i);
@@ -1300,6 +1310,22 @@ void ModelNodeMetaObject::propertyWritten(int index)
         QVector<int> roles;
         roles << roleIndex;
         m_model->emitItemsChanged(m_elementIndex, 1, roles);
+    }
+}
+
+// Does the emission of the notifiers when we haven't created the meta-object yet
+void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCount)
+{
+    Q_ASSERT(!m_initialized);
+    QQmlData *ddata = QQmlData::get(object(), /*create*/false);
+    if (!ddata)
+        return;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine(m_model));
+    if (!ep)
+        return;
+    for (int i = 0; i < roleCount; ++i) {
+        const int changedRole = changedRoles[i];
+        QQmlNotifier::notify(ddata, changedRole);
     }
 }
 
@@ -1332,6 +1358,18 @@ ReturnedValue ModelObject::get(const Managed *m, String *name, bool *hasProperty
         return QObjectWrapper::get(m, name, hasProperty);
     if (hasProperty)
         *hasProperty = true;
+
+    if (QQmlEngine *qmlEngine = that->engine()->qmlEngine()) {
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine);
+        if (ep && ep->propertyCapture) {
+            QObjectPrivate *op = QObjectPrivate::get(that->object());
+            // Temporarily hide the dynamic meta-object, to prevent it from being created when the capture
+            // triggers a QObject::connectNotify() by calling obj->metaObject().
+            QScopedValueRollback<QDynamicMetaObjectData*> metaObjectBlocker(op->metaObject, 0);
+            ep->propertyCapture->captureProperty(that->object(), -1, role->index);
+        }
+    }
+
     const int elementIndex = that->d()->m_elementIndex;
     QVariant value = that->d()->m_model->data(elementIndex, role->index);
     return that->engine()->fromVariant(value);
