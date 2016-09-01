@@ -285,7 +285,23 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
     if (wasGrabbed) {
         const QPointF releasePoint = event->windowPos();
         velocityCalculator.stopMeasuring(releasePoint, event->timestamp());
-        const qreal velocity = velocityCalculator.velocity().x();
+
+        qreal velocity = 0;
+        if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+            velocity = velocityCalculator.velocity().x();
+        else
+            velocity = velocityCalculator.velocity().y();
+
+        // the velocity is calculated so that swipes from left to right
+        // and top to bottom have positive velocity, and swipes from right
+        // to left and bottom to top have negative velocity.
+        //
+        // - top/left edge: positive velocity opens, negative velocity closes
+        // - bottom/right edge: negative velocity opens, positive velocity closes
+        //
+        // => invert the velocity for bottom and right edges, for the threshold comparison below
+        if (edge == Qt::RightEdge || edge == Qt::BottomEdge)
+            velocity = -velocity;
 
         if (position > 0.7 || velocity > openCloseVelocityThreshold) {
             transitionManager.transitionEnter();
