@@ -629,4 +629,44 @@ TestCase {
 
         appWindow.destroy()
     }
+
+    Component {
+        id: popups
+        ApplicationWindow {
+            id: window
+            property Drawer drawer: Drawer { parent: window.contentItem }
+            property Menu menu: Menu { parent: window.contentItem; visible: true }
+            property Popup popup: Popup { parent: window.contentItem; visible: true }
+            property ToolTip tooltip: ToolTip { parent: window.contentItem; visible: true }
+        }
+    }
+
+    function test_popupBackground_data() {
+        return [
+            { tag: "drawer", inherit: true },
+            { tag: "menu", inherit: true },
+            { tag: "popup", inherit: true },
+            { tag: "tooltip", inherit: false }
+        ]
+    }
+
+    function test_popupBackground(data) {
+        var window = popups.createObject(testCase)
+        verify(window)
+
+        var control = window[data.tag]
+        verify(control)
+
+        window.Material.background = "#ff0000"
+        compare(window.color, "#ff0000")
+        if (data.inherit)
+            compare(control.background.color, "#ff0000")
+        else
+            verify(control.background !== "#ff0000")
+
+        control.Material.background = "#0000ff"
+        compare(control.background.color, "#0000ff")
+
+        window.destroy()
+    }
 }
