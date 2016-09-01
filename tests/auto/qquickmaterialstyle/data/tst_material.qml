@@ -606,66 +606,74 @@ TestCase {
         window.destroy()
     }
 
-    function test_buttonBackground() {
-        var appWindow = applicationWindow.createObject(testCase)
-        verify(appWindow)
-        appWindow.visible = true
-
-        var childButton = button.createObject(appWindow)
-        verify(childButton)
-
-        var buttonBackgroundColor = childButton.background.color
-        appWindow.Material.background = "red"
-        // We wait the length of the color animation to be sure that it hasn't actually changed.
-        wait(400)
-        // We want childButton.Material.background to be equal to appWindow.Material.background,
-        // because we want the color to propagate to items that might actually use it...
-        // but Button doesn't use the background color unless explicitly set,
-        // so we compare the actual background rect color instead.
-        compare(childButton.background.color, buttonBackgroundColor)
-
-        childButton.Material.background = "#0000ff"
-        tryCompare(childButton.background, "color", "#0000ff")
-
-        appWindow.destroy()
-    }
-
     Component {
-        id: popups
+        id: backgroundControls
         ApplicationWindow {
             id: window
-            property Drawer drawer: Drawer { parent: window.contentItem }
-            property Menu menu: Menu { parent: window.contentItem; visible: true }
-            property Popup popup: Popup { parent: window.contentItem; visible: true }
-            property ToolTip tooltip: ToolTip { parent: window.contentItem; visible: true }
+            property Button button: Button { }
+            property ComboBox combobox: ComboBox { }
+            property Drawer drawer: Drawer { }
+            property GroupBox groupbox: GroupBox { Material.elevation: 10 }
+            property Frame frame: Frame { Material.elevation: 10 }
+            property Menu menu: Menu { }
+            property Page page: Page { }
+            property Pane pane: Pane { }
+            property Popup popup: Popup { }
+            property TabBar tabbar: TabBar { }
+            property ToolBar toolbar: ToolBar { }
+            property ToolTip tooltip: ToolTip { }
         }
     }
 
-    function test_popupBackground_data() {
+    function test_background_data() {
         return [
+            { tag: "button", inherit: false, wait: 400 },
+            { tag: "combobox", inherit: false, wait: 400 },
             { tag: "drawer", inherit: true },
+            { tag: "groupbox", inherit: true },
+            { tag: "frame", inherit: true },
             { tag: "menu", inherit: true },
+            { tag: "page", inherit: true },
+            { tag: "pane", inherit: true },
             { tag: "popup", inherit: true },
+            { tag: "tabbar", inherit: true },
+            { tag: "toolbar", inherit: false },
             { tag: "tooltip", inherit: false }
         ]
     }
 
-    function test_popupBackground(data) {
-        var window = popups.createObject(testCase)
+    function test_background(data) {
+        var window = backgroundControls.createObject(testCase)
         verify(window)
 
         var control = window[data.tag]
         verify(control)
 
+        control.parent = window.contentItem
+        control.visible = true
+
+        var defaultBackground = control.background.color
+
         window.Material.background = "#ff0000"
         compare(window.color, "#ff0000")
+
+        // For controls that have an animated background color, we wait the length
+        // of the color animation to be sure that the color hasn't actually changed.
+        if (data.wait)
+            wait(data.wait)
+
+        // We want the control's background color to be equal to the window's background
+        // color, because we want the color to propagate to items that might actually use
+        // it... Button, ComboBox, ToolBar and ToolTip have a special background color,
+        // so they don't use the generic background color unless explicitly set, so we
+        // compare the actual background rect color instead.
         if (data.inherit)
             compare(control.background.color, "#ff0000")
         else
-            verify(control.background !== "#ff0000")
+            compare(control.background.color, defaultBackground)
 
         control.Material.background = "#0000ff"
-        compare(control.background.color, "#0000ff")
+        tryCompare(control.background, "color", "#0000ff")
 
         window.destroy()
     }
