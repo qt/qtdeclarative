@@ -283,7 +283,8 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
 
     bool wasGrabbed = popupItem->keepMouseGrab();
     if (wasGrabbed) {
-        velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
+        const QPointF releasePoint = event->windowPos();
+        velocityCalculator.stopMeasuring(releasePoint, event->timestamp());
         const qreal velocity = velocityCalculator.velocity().x();
 
         if (position > 0.7 || velocity > openCloseVelocityThreshold) {
@@ -293,25 +294,25 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
         } else {
             switch (edge) {
             case Qt::LeftEdge:
-                if (event->x() - pressPoint.x() > 0)
+                if (releasePoint.x() - pressPoint.x() > 0)
                     transitionManager.transitionEnter();
                 else
                     transitionManager.transitionExit();
                 break;
             case Qt::RightEdge:
-                if (event->x() - pressPoint.x() < 0)
+                if (releasePoint.x() - pressPoint.x() < 0)
                     transitionManager.transitionEnter();
                 else
                     transitionManager.transitionExit();
                 break;
             case Qt::TopEdge:
-                if (event->y() - pressPoint.y() > 0)
+                if (releasePoint.y() - pressPoint.y() > 0)
                     transitionManager.transitionEnter();
                 else
                     transitionManager.transitionExit();
                 break;
             case Qt::BottomEdge:
-                if (event->y() - pressPoint.y() < 0)
+                if (releasePoint.y() - pressPoint.y() < 0)
                     transitionManager.transitionEnter();
                 else
                     transitionManager.transitionExit();
