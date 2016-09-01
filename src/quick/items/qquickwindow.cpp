@@ -1685,11 +1685,23 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
         if (me->type() == QEvent::MouseButtonRelease && !me->buttons() && q->mouseGrabberItem())
             q->mouseGrabberItem()->ungrabMouse();
     } else {
-        // send initial press
         bool delivered = false;
         if (pointerEvent->isPressEvent()) {
+            // send initial press
             QSet<QQuickItem*> hasFiltered;
             delivered = deliverPressEvent(pointerEvent, &hasFiltered);
+        } else if (pointerEvent->device()->type() == QQuickPointerDevice::Mouse) {
+            // if this is an update or release from an actual mouse,
+            // and the point wasn't grabbed, deliver only to non-grabber PointerHandlers
+            QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePos(), false);
+            for (QQuickItem *item : targetItems) {
+                QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                pointerEvent->localize(item);
+                if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
+                    delivered = true;
+                if (point->grabber())
+                    break;
+            }
         }
 
         if (!delivered)
@@ -2082,7 +2094,6 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
                 accepted = clearHover(event->timestamp());
             }
             event->setAccepted(accepted);
-            return;
         }
         deliverPointerEvent(pointerEventInstance(event));
         break;
@@ -2269,6 +2280,31 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
         if (allowChildEventFiltering && sendFilteredPointerEvent(event, receiver))
             return true;
         deliverMatchingPointsToItem(receiver, event, hasFiltered);
+    }
+
+    // If some points weren't grabbed, deliver only to non-grabber PointerHandlers
+    if (!event->allPointsGrabbed()) {
+        QVector<QQuickItem *> targetItems;
+        int pointCount = event->pointCount();
+        for (int i = 0; i < pointCount; ++i) {
+            QQuickEventPoint *point = event->point(i);
+            QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePos(), false);
+            if (targetItems.count()) {
+                targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
+            } else {
+                targetItems = targetItemsForPoint;
+            }
+        }
+
+        for (QQuickItem *item: targetItems) {
+            if (grabbers.contains(item))
+                continue;
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            event->localize(item);
+            itemPrivate->handlePointerEvent(event, true); // avoid re-delivering to grabbers
+            if (event->allPointsGrabbed())
+                break;
+        }
     }
 
     return false;

@@ -5091,15 +5091,20 @@ void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
     }
 }
 
-void QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event)
+bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidGrabber)
 {
     Q_Q(QQuickItem);
+    bool delivered = false;
     if (extra.isAllocated()) {
         for (QQuickPointerHandler *handler : extra->pointerHandlers) {
             qCDebug(lcPointerHandlerDispatch) << "   delivering" << event << "to" << handler << "on" << q;
-            handler->handlePointerEvent(event);
+            if (!avoidGrabber || !event->hasGrabber(handler)) {
+                handler->handlePointerEvent(event);
+                delivered = true;
+            }
         }
     }
+    return delivered;
 }
 
 /*!

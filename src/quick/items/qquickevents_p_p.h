@@ -393,6 +393,7 @@ public: // helpers for C++ only (during event delivery)
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
+    virtual bool allPointsGrabbed() const = 0;
     bool isAccepted() { return m_event->isAccepted(); }
     void setAccepted(bool accepted) { m_event->setAccepted(accepted); }
     QVector<QPointF> unacceptedPressedPointScenePositions() const;
@@ -402,6 +403,7 @@ public: // helpers for C++ only (during event delivery)
     virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
     virtual QVector<QObject *> grabbers() const = 0;
     virtual void clearGrabbers() const = 0;
+    virtual bool hasGrabber(const QQuickPointerHandler *handler) const = 0;
 
     ulong timestamp() const { return m_event->timestamp(); }
 
@@ -430,8 +432,10 @@ public:
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(quint64 pointId) const override;
     bool allPointsAccepted() const override;
+    bool allPointsGrabbed() const override;
     QVector<QObject *> grabbers() const override;
     void clearGrabbers() const override;
+    bool hasGrabber(const QQuickPointerHandler *handler) const override;
 
     QMouseEvent *asMouseEvent(const QPointF& localPos) const;
 
@@ -461,8 +465,10 @@ public:
     QQuickEventPoint *pointById(quint64 pointId) const override;
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
+    bool allPointsGrabbed() const override;
     QVector<QObject *> grabbers() const override;
     void clearGrabbers() const override;
+    bool hasGrabber(const QQuickPointerHandler *handler) const override;
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
     QTouchEvent *touchEventForItem(QQuickItem *item, bool isFiltering = false) const;

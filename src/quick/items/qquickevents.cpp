@@ -835,6 +835,11 @@ bool QQuickPointerMouseEvent::allPointsAccepted() const {
     return m_mousePoint->isAccepted();
 }
 
+bool QQuickPointerMouseEvent::allPointsGrabbed() const
+{
+    return m_mousePoint->grabber() != nullptr;
+}
+
 QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
 {
     auto event = static_cast<QMouseEvent *>(m_event);
@@ -854,6 +859,11 @@ void QQuickPointerMouseEvent::clearGrabbers() const {
     m_mousePoint->setGrabberItem(nullptr);
 }
 
+bool QQuickPointerMouseEvent::hasGrabber(const QQuickPointerHandler *handler) const
+{
+    return m_mousePoint->grabber() == handler;
+}
+
 bool QQuickPointerMouseEvent::isPressEvent() const
 {
     auto me = static_cast<QMouseEvent*>(m_event);
@@ -864,6 +874,15 @@ bool QQuickPointerMouseEvent::isPressEvent() const
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
+            return false;
+    }
+    return true;
+}
+
+bool QQuickPointerTouchEvent::allPointsGrabbed() const
+{
+    for (int i = 0; i < m_pointCount; ++i) {
+        if (!m_touchPoints.at(i)->grabber())
             return false;
     }
     return true;
@@ -885,6 +904,14 @@ QVector<QObject *> QQuickPointerTouchEvent::grabbers() const
 void QQuickPointerTouchEvent::clearGrabbers() const {
     for (auto point: m_touchPoints)
         point->setGrabber(nullptr);
+}
+
+bool QQuickPointerTouchEvent::hasGrabber(const QQuickPointerHandler *handler) const
+{
+    for (auto point: m_touchPoints)
+        if (point->grabber() == handler)
+            return true;
+    return false;
 }
 
 bool QQuickPointerTouchEvent::isPressEvent() const

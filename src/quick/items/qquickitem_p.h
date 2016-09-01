@@ -563,7 +563,7 @@ public:
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
 
-    virtual void handlePointerEvent(QQuickPointerEvent *);
+    virtual bool handlePointerEvent(QQuickPointerEvent *, bool avoidGrabber = false);
 
     bool isTransparentForPositioner() const;
     void setTransparentForPositioner(bool trans);
