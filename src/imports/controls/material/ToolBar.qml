@@ -56,7 +56,7 @@ T.ToolBar {
 
     background: Rectangle {
         implicitHeight: 48
-        color: control.Material.primaryColor
+        color: control.Material.toolBarColor
 
         layer.enabled: control.Material.elevation > 0
         layer.effect: ElevationEffect {

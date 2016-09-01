@@ -102,6 +102,7 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor toolBarColor READ toolBarColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY paletteChanged FINAL)
 
@@ -229,6 +230,7 @@ public:
     QColor backgroundDimColor() const;
     QColor listHighlightColor() const;
     QColor tooltipColor() const;
+    QColor toolBarColor() const;
     QColor toolTextColor() const;
     QColor spinBoxDisabledIconColor() const;
 

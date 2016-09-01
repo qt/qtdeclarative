@@ -1042,6 +1042,13 @@ QColor QQuickMaterialStyle::tooltipColor() const
     return color(Grey, Shade700);
 }
 
+QColor QQuickMaterialStyle::toolBarColor() const
+{
+    if (m_explicitBackground)
+        return backgroundColor();
+    return primaryColor();
+}
+
 QColor QQuickMaterialStyle::toolTextColor() const
 {
     if (m_hasForeground || m_customPrimary)
