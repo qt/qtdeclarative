@@ -1017,11 +1017,6 @@ QColor QQuickMaterialStyle::scrollBarPressedColor() const
     return QColor::fromRgba(m_theme == Light ? 0x80000000 : 0x80FFFFFF);
 }
 
-QColor QQuickMaterialStyle::drawerBackgroundColor() const
-{
-    return QColor::fromRgba(dividerColorLight);
-}
-
 QColor QQuickMaterialStyle::dialogColor() const
 {
     return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
