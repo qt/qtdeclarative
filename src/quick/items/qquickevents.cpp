@@ -642,7 +642,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     default:
         break;
     }
-    m_mousePoint->reset(state, ev->windowPos(), quint64(1) << 32, ev->timestamp());  // mouse has device ID 1
+    m_mousePoint->reset(state, ev->windowPos(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
     return this;
 }
 

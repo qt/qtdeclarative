@@ -85,11 +85,22 @@ Rectangle {
             }
             Rectangle {
                 color: touchPoint.color
-                width: 50 * touchPoint.pressure
+                width: Math.max(2, 50 * touchPoint.pressure)
                 height: width
                 radius: width / 2
                 x: touchPoint.x - width / 2
                 y: touchPoint.y - width / 2
+                Rectangle {
+                    y: -40
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: "#c0c0c0"
+                    implicitWidth: label.implicitWidth
+                    implicitHeight: label.implicitHeight
+                    Text {
+                        id: label
+                        text: 'id: ' + touchPoint.pointId.toString(16) + '\npos: (' + touchPoint.x.toFixed(2) + ', ' + touchPoint.y.toFixed(2) + ')'
+                    }
+                }
             }
             Rectangle {
                 id: velocityVector
