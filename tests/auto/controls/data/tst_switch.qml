@@ -263,4 +263,15 @@ TestCase {
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
         control.destroy()
     }
+
+    function test_focus() {
+        var control = swtch.createObject(testCase)
+        verify(control)
+
+        verify(!control.activeFocus)
+        mouseClick(control.indicator)
+        verify(control.activeFocus)
+
+        control.destroy()
+    }
 }

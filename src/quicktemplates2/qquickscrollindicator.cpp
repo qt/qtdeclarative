@@ -109,12 +109,17 @@ void QQuickScrollIndicatorPrivate::resizeContent()
     if (!contentItem)
         return;
 
+    // - negative overshoot (pos < 0): clamp the pos to 0, and deduct the overshoot from the size
+    // - positive overshoot (pos + size > 1): clamp the size to 1-pos
+    const qreal clampedSize = qBound<qreal>(0, size + qMin<qreal>(0, position), 1.0 - position);
+    const qreal clampedPos = qBound<qreal>(0, position, 1.0 - clampedSize);
+
     if (orientation == Qt::Horizontal) {
-        contentItem->setPosition(QPointF(q->leftPadding() + position * q->availableWidth(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth() * size, q->availableHeight()));
+        contentItem->setPosition(QPointF(q->leftPadding() + clampedPos * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * clampedSize, q->availableHeight()));
     } else {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + clampedPos * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * clampedSize));
     }
 }
 

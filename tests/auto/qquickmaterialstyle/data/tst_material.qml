@@ -74,6 +74,11 @@ TestCase {
     }
 
     Component {
+        id: applicationWindow
+        ApplicationWindow { }
+    }
+
+    Component {
         id: styledWindow
         Window {
             Material.theme: Material.Dark
@@ -599,5 +604,29 @@ TestCase {
         compare(control.font[data.attribute], data.window)
 
         window.destroy()
+    }
+
+    function test_buttonBackground() {
+        var appWindow = applicationWindow.createObject(testCase)
+        verify(appWindow)
+        appWindow.visible = true
+
+        var childButton = button.createObject(appWindow)
+        verify(childButton)
+
+        var buttonBackgroundColor = childButton.background.color
+        appWindow.Material.background = "red"
+        // We wait the length of the color animation to be sure that it hasn't actually changed.
+        wait(400)
+        // We want childButton.Material.background to be equal to appWindow.Material.background,
+        // because we want the color to propagate to items that might actually use it...
+        // but Button doesn't use the background color unless explicitly set,
+        // so we compare the actual background rect color instead.
+        compare(childButton.background.color, buttonBackgroundColor)
+
+        childButton.Material.background = "#0000ff"
+        tryCompare(childButton.background, "color", "#0000ff")
+
+        appWindow.destroy()
     }
 }

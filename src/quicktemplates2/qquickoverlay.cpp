@@ -57,6 +57,7 @@ public:
     void createOverlay(QQuickPopup *popup);
     void destroyOverlay(QQuickPopup *popup);
     void resizeOverlay(QQuickPopup *popup);
+    void toggleOverlay();
 
     QVector<QQuickPopup *> stackingOrderPopups() const;
 
@@ -106,7 +107,7 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
     context->setContextObject(popup);
     QQuickItem *item = qobject_cast<QQuickItem*>(component->beginCreate(context));
     if (item) {
-        item->setOpacity(0.0);
+        item->setOpacity(popup->isVisible() ? 1.0 : 0.0);
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
@@ -148,6 +149,18 @@ void QQuickOverlayPrivate::resizeOverlay(QQuickPopup *popup)
         p->dimmer->setWidth(q->width());
         p->dimmer->setHeight(q->height());
     }
+}
+
+void QQuickOverlayPrivate::toggleOverlay()
+{
+    Q_Q(QQuickOverlay);
+    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
+    if (!popup)
+        return;
+
+    destroyOverlay(popup);
+    if (popup->dim())
+        createOverlay(popup);
 }
 
 QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
@@ -233,6 +246,8 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         d->popups.append(popup);
         if (popup->dim())
             d->createOverlay(popup);
+        QObjectPrivate::connect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
+        QObjectPrivate::connect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {
@@ -247,6 +262,8 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     } else if (change == ItemChildRemovedChange) {
         d->popups.removeOne(popup);
         d->destroyOverlay(popup);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
+        QObjectPrivate::disconnect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
 
         QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
         if (drawer) {

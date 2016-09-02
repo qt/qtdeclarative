@@ -98,7 +98,10 @@ void tst_Drawer::position()
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
     QTest::mouseMove(window, to);
     QCOMPARE(drawer->position(), position);
+
+    // moved half-way open at almost infinite speed => snap to open
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    QTRY_COMPARE(drawer->position(), 1.0);
 }
 
 void tst_Drawer::dragMargin_data()

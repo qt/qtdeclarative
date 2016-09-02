@@ -1159,17 +1159,23 @@ TestCase {
         tryCompare(window.plainPopup, "visible", true)
         compare(window.overlay.children.length, countBefore + 1) // only popup added, no overlays involved
 
+        window.plainPopup.modal = true
+        compare(window.overlay.children.length, countBefore + 2) // overlay added
+
         window.plainPopup.close()
         tryCompare(window.plainPopup, "visible", false)
-        compare(window.overlay.children.length, countBefore) // only popup removed, no overlays involved
+        compare(window.overlay.children.length, countBefore) // popup + overlay removed
 
         window.modalPopupWithoutDim.open()
         tryCompare(window.modalPopupWithoutDim, "visible", true)
         compare(window.overlay.children.length, countBefore + 1) // only popup added, no overlays involved
 
+        window.modalPopupWithoutDim.dim = true
+        compare(window.overlay.children.length, countBefore + 2) // overlay added
+
         window.modalPopupWithoutDim.close()
         tryCompare(window.modalPopupWithoutDim, "visible", false)
-        compare(window.overlay.children.length, countBefore) // only popup added, no overlays involved
+        compare(window.overlay.children.length, countBefore) // popup + overlay removed
 
         window.destroy()
     }

@@ -706,6 +706,7 @@ void QQuickMaterialStyle::setBackground(const QVariant &var)
     m_background = background;
     propagateBackground();
     emit backgroundChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
@@ -854,7 +855,7 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
 
     QColor color = Qt::transparent;
 
-    if (m_hasBackground) {
+    if (m_explicitBackground) {
         color = backgroundColor(shade);
     } else if (highlighted) {
         color = accentColor(shade);
@@ -948,11 +949,6 @@ QColor QQuickMaterialStyle::scrollBarHoveredColor() const
 QColor QQuickMaterialStyle::scrollBarPressedColor() const
 {
     return QColor::fromRgba(m_theme == Light ? 0x80000000 : 0x80FFFFFF);
-}
-
-QColor QQuickMaterialStyle::drawerBackgroundColor() const
-{
-    return QColor::fromRgba(dividerColorLight);
 }
 
 QColor QQuickMaterialStyle::dialogColor() const
