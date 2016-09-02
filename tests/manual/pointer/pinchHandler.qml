@@ -54,18 +54,21 @@ Rectangle {
 
         Text {
             anchors.centerIn: parent
-            text: "Pinch with 2 fingers to scale & rotate\nDrag with 1 finger\ncurrent rotation " + pinch2.rotation.toFixed(1)
+            text: "Pinch with 2 fingers to scale, rotate and translate"
+                + "\ncurrent rotation: " + pinch2.rotation.toFixed(1)
+                + "\nscale: " + pinch2.scale.toFixed(1)
+                + "\ntranslation: " + pinch2.translation
         }
-
-        DragHandler { objectName: "DragHandler" }
 
         PinchHandler {
             id: pinch2
             objectName: "2-finger pinch"
             minimumRotation: -45
             maximumRotation: 45
-            minimumScale: 0.1
-            maximumScale: 10
+            minimumScale: 0.5
+            maximumScale: 3
+            minimumX: 0
+            maximumX: 600
             pointDistanceThreshold: 150
         }
     }
@@ -79,8 +82,10 @@ Rectangle {
 
         Text {
             anchors.centerIn: parent
-            text: "Pinch with 3 fingers to scale & rotate\ncurrent rotation " + pinch3.rotation.toFixed(1)
+            text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
+                + "\ncurrent rotation " + pinch3.rotation.toFixed(1)
         }
+        DragHandler { objectName: "DragHandler" }
 
         PinchHandler {
             id: pinch3
@@ -89,5 +94,18 @@ Rectangle {
             minimumScale: 0.1
             maximumScale: 10
         }
+    }
+
+    Rectangle {
+        id: centroidIndicator
+        property QtObject pincher: pinch2.active ? pinch2 : pinch3
+        x: pincher.centroid.x
+        y: pincher.centroid.y
+        z: 1
+        visible: pincher.active
+        radius: width / 2
+        width: 10
+        height: width
+        color: "red"
     }
 }

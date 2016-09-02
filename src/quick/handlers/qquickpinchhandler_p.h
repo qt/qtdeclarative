@@ -66,9 +66,14 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointerHandler
     Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
     Q_PROPERTY(PinchOrigin pinchOrigin READ pinchOrigin WRITE setPinchOrigin NOTIFY pinchOriginChanged)
-    Q_PROPERTY(QPointF center READ center NOTIFY updated)
+    Q_PROPERTY(QPointF centroid READ centroid NOTIFY updated)
     Q_PROPERTY(qreal scale READ scale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
+    Q_PROPERTY(QPointF translation READ translation NOTIFY updated)
+    Q_PROPERTY(qreal minimumX READ minimumX WRITE setMinimumX NOTIFY minimumXChanged)
+    Q_PROPERTY(qreal maximumX READ maximumX WRITE setMaximumX NOTIFY maximumXChanged)
+    Q_PROPERTY(qreal minimumY READ minimumY WRITE setMinimumY NOTIFY minimumYChanged)
+    Q_PROPERTY(qreal maximumY READ maximumY WRITE setMaximumY NOTIFY maximumYChanged)
 
 public:
     enum PinchOrigin {
@@ -94,9 +99,19 @@ public:
     PinchOrigin pinchOrigin() const { return m_pinchOrigin; }
     void setPinchOrigin(PinchOrigin pinchOrigin);
 
-    QPointF center() const { return m_scaleTransform.origin().toPointF(); }
-    qreal scale() const { return m_scaleTransform.xScale(); }
-    qreal rotation() const { return m_rotationTransform.angle(); }
+    QPointF translation() const { return m_translation; }
+    qreal scale() const { return m_scale; }
+    qreal rotation() const { return m_rotation; }
+    QPointF centroid() const { return m_centroid; }
+
+    qreal minimumX() const { return m_minimumX; }
+    void setMinimumX(qreal minX);
+    qreal maximumX() const { return m_maximumX; }
+    void setMaximumX(qreal maxX);
+    qreal minimumY() const { return m_minimumY; }
+    void setMinimumY(qreal minY);
+    qreal maximumY() const { return m_maximumY; }
+    void setMaximumY(qreal maxY);
 
 signals:
     void requiredPointCountChanged();
@@ -104,6 +119,10 @@ signals:
     void maximumScaleChanged();
     void minimumRotationChanged();
     void maximumRotationChanged();
+    void minimumXChanged();
+    void maximumXChanged();
+    void minimumYChanged();
+    void maximumYChanged();
     void pinchOriginChanged();
     void updated();
 
@@ -113,15 +132,34 @@ protected:
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
 
 private:
-    qreal m_startScale;
-    qreal m_startRotation;
+    // properties
+    qreal m_scale;
+    qreal m_rotation;
+    QPointF m_translation;
+    QPointF m_centroid;
+
     qreal m_minimumScale;
     qreal m_maximumScale;
+
     qreal m_minimumRotation;
     qreal m_maximumRotation;
+
+    qreal m_minimumX;
+    qreal m_maximumX;
+    qreal m_minimumY;
+    qreal m_maximumY;
+
     PinchOrigin m_pinchOrigin;
-    QQuickScale m_scaleTransform;
-    QQuickRotation m_rotationTransform;
+
+    // internal
+    qreal m_startScale;
+    qreal m_startRotation;
+    qreal m_activeRotation;
+
+    QVector<PointData> m_startAngles;
+    QMatrix4x4 m_startMatrix;
+    QQuickMatrix4x4 m_transform;
+
 };
 
 QT_END_NAMESPACE

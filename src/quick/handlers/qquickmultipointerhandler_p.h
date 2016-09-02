@@ -79,6 +79,13 @@ signals:
     void pointDistanceThresholdChanged();
 
 protected:
+    struct PointData {
+        PointData() : id(0), angle(0) {}
+        PointData(quint64 id, qreal angle) : id(id), angle(angle) {}
+        quint64 id;
+        qreal angle;
+    };
+
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     bool sameAsCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> pointsInsideOrNearTarget(QQuickPointerEvent *event);
@@ -88,6 +95,8 @@ protected:
     qreal averageStartingDistance(const QPointF &ref);
     qreal averageTouchPointAngle(const QPointF &ref);
     qreal averageStartingAngle(const QPointF &ref);
+    QVector<PointData> angles(const QPointF &ref) const;
+    static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
     void grabPoints(QVector<QQuickEventPoint *> points);
 
 protected:

@@ -168,25 +168,47 @@ qreal QQuickMultiPointerHandler::averageStartingDistance(const QPointF &ref)
     return ret / m_currentPoints.size();
 }
 
-qreal QQuickMultiPointerHandler::averageTouchPointAngle(const QPointF &ref)
+QVector<QQuickMultiPointerHandler::PointData> QQuickMultiPointerHandler::angles(const QPointF &ref) const
 {
-    qreal ret = 0;
-    if (Q_UNLIKELY(m_currentPoints.size() == 0))
-        return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QLineF(ref, point->scenePos()).angle();
-    return ret / m_currentPoints.size();
+    QVector<PointData> angles;
+    angles.reserve(m_currentPoints.count());
+    for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
+        qreal angle = QLineF(ref, point->scenePos()).angle();
+        angles.append(PointData(point->pointId(), angle));
+    }
+    return angles;
 }
 
-qreal QQuickMultiPointerHandler::averageStartingAngle(const QPointF &ref)
+qreal QQuickMultiPointerHandler::averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles)
 {
-    // TODO cache it in setActive()?
-    qreal ret = 0;
-    if (Q_UNLIKELY(m_currentPoints.size() == 0))
-        return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QLineF(ref, point->sceneGrabPos()).angle();
-    return ret / m_currentPoints.size();
+    qreal avgAngleDelta = 0;
+    int numSamples = 0;
+
+    auto oldBegin = old.constBegin();
+
+    for (PointData newData : newAngles) {
+        quint64 id = newData.id;
+        auto it = std::find_if(oldBegin, old.constEnd(), [id] (PointData pd) { return pd.id == id; });
+        qreal angleD = 0;
+        if (it != old.constEnd()) {
+            PointData oldData = *it;
+            // We might rotate from 359 degrees to 1 degree. However, this
+            // should be interpreted as a rotation of +2 degrees instead of
+            // -358 degrees. Therefore, we call remainder() to translate the angle
+            // to be in the range [-180, 180] (-350 to +10 etc)
+            angleD = remainder(newData.angle - oldData.angle, qreal(360));
+            // optimization: narrow down the O(n^2) search to optimally O(n)
+            // if both vectors have the same points and they are in the same order
+            if (it == oldBegin)
+                ++oldBegin;
+            numSamples++;
+        }
+        avgAngleDelta += angleD;
+    }
+    if (numSamples > 1)
+        avgAngleDelta /= numSamples;
+
+    return avgAngleDelta;
 }
 
 void QQuickMultiPointerHandler::grabPoints(QVector<QQuickEventPoint *> points)

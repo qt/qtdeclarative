@@ -64,13 +64,20 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
     : QQuickMultiPointerHandler(parent, 2)
-    , m_startScale(1)
-    , m_startRotation(0)
+    , m_scale(1)
+    , m_rotation(0)
+    , m_translation(0,0)
     , m_minimumScale(-qInf())
     , m_maximumScale(qInf())
     , m_minimumRotation(-qInf())
     , m_maximumRotation(qInf())
+    , m_minimumX(-qInf())
+    , m_maximumX(qInf())
+    , m_minimumY(-qInf())
+    , m_maximumY(qInf())
     , m_pinchOrigin(PinchCenter)
+    , m_startScale(1)
+    , m_startRotation(0)
 {
     connect(this, &QQuickPinchHandler::activeChanged, this, &QQuickPinchHandler::onActiveChanged);
     connect(this, &QQuickPinchHandler::targetChanged, this, &QQuickPinchHandler::onTargetChanged);
@@ -126,6 +133,58 @@ void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOri
 }
 
 /*!
+    \qmlproperty QQuickPinchHandler::minimumX
+
+    The minimum acceptable x coordinate of the centroid
+ */
+void QQuickPinchHandler::setMinimumX(qreal minX)
+{
+    if (m_minimumX == minX)
+        return;
+    m_minimumX = minX;
+    emit minimumXChanged();
+}
+
+/*!
+    \qmlproperty QQuickPinchHandler::maximumX
+
+    The maximum acceptable x coordinate of the centroid
+ */
+void QQuickPinchHandler::setMaximumX(qreal maxX)
+{
+    if (m_maximumX == maxX)
+        return;
+    m_maximumX = maxX;
+    emit maximumXChanged();
+}
+
+/*!
+    \qmlproperty QQuickPinchHandler::minimumY
+
+    The minimum acceptable y coordinate of the centroid
+ */
+void QQuickPinchHandler::setMinimumY(qreal minY)
+{
+    if (m_minimumY == minY)
+        return;
+    m_minimumY = minY;
+    emit minimumYChanged();
+}
+
+/*!
+    \qmlproperty QQuickPinchHandler::maximumY
+
+    The maximum acceptable y coordinate of the centroid
+ */
+void QQuickPinchHandler::setMaximumY(qreal maxY)
+{
+    if (m_maximumY == maxY)
+        return;
+    m_maximumY = maxY;
+    emit maximumYChanged();
+}
+
+/*!
     \qmlproperty QQuickPinchHandler::minimumTouchPoints
 
     The pinch begins when this number of fingers are pressed.
@@ -141,8 +200,11 @@ void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOri
 void QQuickPinchHandler::onActiveChanged()
 {
     if (active()) {
-        m_startScale = m_scaleTransform.xScale(); // TODO incompatible with independent x/y scaling
-        m_startRotation = m_rotationTransform.angle();
+        m_startScale = m_scale; // TODO incompatible with independent x/y scaling
+        m_startRotation = m_rotation;
+        m_startAngles = angles(touchPointCentroid());
+        m_activeRotation = 0;
+        m_startMatrix = m_transform.matrix();
         qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
         grabPoints(m_currentPoints);
     }
@@ -154,8 +216,7 @@ void QQuickPinchHandler::onTargetChanged()
         // TODO if m_target was previously set differently,
         // does prepending to the new target remove it from the old one?
         // If not, should we fix that there, or here?
-        m_scaleTransform.prependToItem(target());
-        m_rotationTransform.prependToItem(target());
+        m_transform.prependToItem(target());
     }
 }
 
@@ -170,30 +231,47 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
     // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
     QPointF startCentroid = startingCentroid();
-    QPointF centroid = touchPointCentroid();
-    QVector3D origin(centroid);
+    m_centroid = touchPointCentroid();
+    m_centroid = QPointF(qBound(m_minimumX, m_centroid.x(), m_maximumX),
+                         qBound(m_minimumY, m_centroid.y(), m_maximumY));
 
+
+    // 1. scale
     qreal startDist = averageStartingDistance(startCentroid);
-    qreal dist = averageTouchPointDistance(centroid);
-    qreal zoom = dist / startDist;
+    qreal dist = averageTouchPointDistance(m_centroid);
+    qreal activeScale = dist / startDist;
+    activeScale = qBound(m_minimumScale/m_startScale, activeScale, m_maximumScale/m_startScale);
+    m_scale = m_startScale * activeScale;
 
-    qreal newScale = qBound(m_minimumScale, zoom * m_startScale, m_maximumScale);
-    m_scaleTransform.setOrigin(origin);
-    // TODO optionally allow separate x and y scaling?
-    m_scaleTransform.setXScale(newScale);
-    m_scaleTransform.setYScale(newScale);
+    // 2. rotate
+    QVector<PointData> newAngles = angles(m_centroid);
+    const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
+    m_activeRotation += angleDelta;
+    const qreal totalRotation = m_startRotation + m_activeRotation;
+    m_rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
+    m_activeRotation += (m_rotation - totalRotation);   //adjust for the potential bounding above
+    m_startAngles = std::move(newAngles);
 
-    qreal startAngle = averageStartingAngle(startCentroid);
-    qreal angle = averageTouchPointAngle(centroid);
-    qreal angleDelta = startAngle - angle;
-    m_rotationTransform.setOrigin(origin);
-    m_rotationTransform.setAngle(qMin(m_maximumRotation, qMax(m_minimumRotation, m_startRotation + angleDelta)));
+    // 3. Drag/translate
+    QPointF activeTranslation(m_centroid - startCentroid);
+
+    // apply rotation + scaling around the centroid - then apply translation.
+    QMatrix4x4 mat;
+    QVector3D xlatOrigin(m_centroid - target()->position());
+    mat.translate(xlatOrigin);
+    mat.rotate(m_activeRotation, 0, 0, -1);
+    mat.scale(activeScale);
+    mat.translate(-xlatOrigin);
+    mat.translate(QVector3D(activeTranslation));
 
     // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
 
-    qCDebug(lcPinchHandler) << "startCentroid" << startCentroid << "centroid"  << centroid << "dist" << dist << "starting dist" << startDist
-                            << "zoom" << zoom << "startScale" << m_startScale << "startAngle" << startAngle << "angle" << angle
-                            << "scale" << scale() << "rotation" << rotation();
+    qCDebug(lcPinchHandler) << "startCentroid" << startCentroid << "centroid"  << m_centroid << "dist" << dist << "starting dist" << startDist
+                            << "startScale" << m_startScale << "activeRotation" << m_activeRotation
+                            << "scale" << m_scale << "rotation" << m_rotation;
+
+    mat = mat * m_startMatrix;
+    m_transform.setMatrix(mat);
 
     emit updated();
 }
