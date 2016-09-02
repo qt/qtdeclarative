@@ -39,6 +39,7 @@
     \list
         \li \l {material-accent-attached-prop}{\b accent} : color
         \li \l {material-background-attached-prop}{\b background} : color
+        \li \l {material-elevation-attached-prop}{\b elevation} : int
         \li \l {material-foreground-attached-prop}{\b foreground} : color
         \li \l {material-primary-attached-prop}{\b primary} : color
         \li \l {material-theme-attached-prop}{\b theme} : enumeration
@@ -277,6 +278,16 @@
     can be attached to any window or item. The value is propagated to children.
 
     The default value is theme-specific (light or dark).
+
+    \endstyleproperty
+
+    \styleproperty {Material.elevation} {int} {material-elevation-attached-prop}
+    \target material-elevation-attached-prop
+    This attached property holds the elevation of the control. The higher the
+    elevation, the deeper the shadow. The property can be attached to any control,
+    but not all controls visualize elevation.
+
+    The default value is control-specific.
 
     \endstyleproperty
 
