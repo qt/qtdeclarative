@@ -144,6 +144,7 @@ Module {
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "popup"; type: "QQuickPopup"; isPointer: true }
+        Signal { name: "flatChanged"; revision: 1 }
         Signal {
             name: "activated"
             Parameter { name: "index"; type: "int" }
@@ -583,6 +584,13 @@ Module {
         Signal { name: "triggered" }
     }
     Component {
+        name: "QQuickMenuSeparator"
+        defaultProperty: "data"
+        prototype: "QQuickControl"
+        exports: ["QtQuick.Templates/MenuSeparator 2.1"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
         name: "QQuickOverlay"
         defaultProperty: "data"
         prototype: "QQuickItem"
@@ -803,6 +811,14 @@ Module {
         }
     }
     Component {
+        name: "QQuickRoundButton"
+        defaultProperty: "data"
+        prototype: "QQuickButton"
+        exports: ["QtQuick.Templates/RoundButton 2.1"]
+        exportMetaObjectRevisions: [1]
+        Property { name: "radius"; type: "double" }
+    }
+    Component {
         name: "QQuickScrollBar"
         defaultProperty: "data"
         prototype: "QQuickControl"
@@ -934,6 +950,7 @@ Module {
         Signal { name: "activating" }
         Signal { name: "deactivated" }
         Signal { name: "deactivating" }
+        Signal { name: "removed" }
     }
     Component {
         name: "QQuickStackView"

@@ -16,14 +16,14 @@ Module {
         name: "QQuickBusyIndicatorRing"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick.Controls.impl/BusyRing 2.1"]
+        exports: ["QtQuick.Controls.impl/BusyRing 2.0"]
         exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickDialRing"
         defaultProperty: "data"
         prototype: "QQuickPaintedItem"
-        exports: ["QtQuick.Controls.impl/DialRing 2.1"]
+        exports: ["QtQuick.Controls.impl/DialRing 2.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "progress"; type: "double" }
         Property { name: "color"; type: "QColor" }
@@ -32,7 +32,7 @@ Module {
         name: "QQuickProgressStrip"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick.Controls.impl/ProgressStrip 2.1"]
+        exports: ["QtQuick.Controls.impl/ProgressStrip 2.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "indeterminate"; type: "bool" }
         Property { name: "progress"; type: "double" }
@@ -89,9 +89,9 @@ Module {
     }
     Component {
         prototype: "QQuickRectangle"
-        name: "QtQuick.Controls.impl/CheckIndicator 2.1"
-        exports: ["QtQuick.Controls.impl/CheckIndicator 2.1"]
-        exportMetaObjectRevisions: [1]
+        name: "QtQuick.Controls.impl/CheckIndicator 2.0"
+        exports: ["QtQuick.Controls.impl/CheckIndicator 2.0"]
+        exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
         Property { name: "control"; type: "QQuickItem"; isPointer: true }
@@ -100,6 +100,22 @@ Module {
         prototype: "QQuickComboBox"
         name: "QtQuick.Controls/ComboBox 2.0"
         exports: ["QtQuick.Controls/ComboBox 2.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
+        prototype: "QQuickContainer"
+        name: "QtQuick.Controls/Container 2.0"
+        exports: ["QtQuick.Controls/Container 2.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "contentData"
+    }
+    Component {
+        prototype: "QQuickControl"
+        name: "QtQuick.Controls/Control 2.0"
+        exports: ["QtQuick.Controls/Control 2.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
@@ -185,6 +201,14 @@ Module {
         defaultProperty: "data"
     }
     Component {
+        prototype: "QQuickMenuSeparator"
+        name: "QtQuick.Controls/MenuSeparator 2.1"
+        exports: ["QtQuick.Controls/MenuSeparator 2.1"]
+        exportMetaObjectRevisions: [1]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
         prototype: "QQuickPage"
         name: "QtQuick.Controls/Page 2.0"
         exports: ["QtQuick.Controls/Page 2.0"]
@@ -242,9 +266,9 @@ Module {
     }
     Component {
         prototype: "QQuickRectangle"
-        name: "QtQuick.Controls.impl/RadioIndicator 2.1"
-        exports: ["QtQuick.Controls.impl/RadioIndicator 2.1"]
-        exportMetaObjectRevisions: [1]
+        name: "QtQuick.Controls.impl/RadioIndicator 2.0"
+        exports: ["QtQuick.Controls.impl/RadioIndicator 2.0"]
+        exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
         Property { name: "control"; type: "QQuickItem"; isPointer: true }
@@ -254,6 +278,14 @@ Module {
         name: "QtQuick.Controls/RangeSlider 2.0"
         exports: ["QtQuick.Controls/RangeSlider 2.0"]
         exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
+        prototype: "QQuickRoundButton"
+        name: "QtQuick.Controls/RoundButton 2.1"
+        exports: ["QtQuick.Controls/RoundButton 2.1"]
+        exportMetaObjectRevisions: [1]
         isComposite: true
         defaultProperty: "data"
     }
@@ -331,9 +363,9 @@ Module {
     }
     Component {
         prototype: "QQuickItem"
-        name: "QtQuick.Controls.impl/SwitchIndicator 2.1"
-        exports: ["QtQuick.Controls.impl/SwitchIndicator 2.1"]
-        exportMetaObjectRevisions: [1]
+        name: "QtQuick.Controls.impl/SwitchIndicator 2.0"
+        exports: ["QtQuick.Controls.impl/SwitchIndicator 2.0"]
+        exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
         Property { name: "control"; type: "QQuickItem"; isPointer: true }
@@ -529,11 +561,15 @@ Module {
         name: "QQuickComboBox"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/ComboBox 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/ComboBox 2.0",
+            "QtQuick.Templates/ComboBox 2.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegateModel"; type: "QQmlInstanceModel"; isReadonly: true; isPointer: true }
+        Property { name: "flat"; revision: 1; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "highlightedIndex"; type: "int"; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }
@@ -543,6 +579,7 @@ Module {
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "popup"; type: "QQuickPopup"; isPointer: true }
+        Signal { name: "flatChanged"; revision: 1 }
         Signal {
             name: "activated"
             Parameter { name: "index"; type: "int" }
@@ -982,6 +1019,13 @@ Module {
         Signal { name: "triggered" }
     }
     Component {
+        name: "QQuickMenuSeparator"
+        defaultProperty: "data"
+        prototype: "QQuickControl"
+        exports: ["QtQuick.Templates/MenuSeparator 2.1"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
         name: "QQuickOverlay"
         defaultProperty: "data"
         prototype: "QQuickItem"
@@ -1202,6 +1246,14 @@ Module {
         }
     }
     Component {
+        name: "QQuickRoundButton"
+        defaultProperty: "data"
+        prototype: "QQuickButton"
+        exports: ["QtQuick.Templates/RoundButton 2.1"]
+        exportMetaObjectRevisions: [1]
+        Property { name: "radius"; type: "double" }
+    }
+    Component {
         name: "QQuickScrollBar"
         defaultProperty: "data"
         prototype: "QQuickControl"
@@ -1333,6 +1385,7 @@ Module {
         Signal { name: "activating" }
         Signal { name: "deactivated" }
         Signal { name: "deactivating" }
+        Signal { name: "removed" }
     }
     Component {
         name: "QQuickStackView"
