@@ -178,11 +178,14 @@ QQuickOverlayPrivate::QQuickOverlayPrivate() :
 void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
 {
     allPopups += popup;
+    if (QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup))
+        allDrawers += drawer;
 }
 
 void QQuickOverlayPrivate::removePopup(QQuickPopup *popup)
 {
     allPopups.removeOne(popup);
+    allDrawers.removeOne(static_cast<QQuickDrawer *>(popup));
 }
 
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
@@ -283,14 +286,9 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
             d->createOverlay(popup);
         QObjectPrivate::connect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         QObjectPrivate::connect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-
-        QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
-        if (drawer) {
-            d->drawers.append(drawer);
-        } else {
+        if (!qobject_cast<QQuickDrawer *>(popup)) {
             if (popup->isModal())
                 ++d->modalPopups;
-
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
         }
@@ -299,14 +297,9 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         d->destroyOverlay(popup);
         QObjectPrivate::disconnect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         QObjectPrivate::disconnect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-
-        QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup);
-        if (drawer) {
-            d->drawers.removeOne(drawer);
-        } else {
+        if (!qobject_cast<QQuickDrawer *>(popup)) {
             if (popup->isModal())
                 --d->modalPopups;
-
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
         }
