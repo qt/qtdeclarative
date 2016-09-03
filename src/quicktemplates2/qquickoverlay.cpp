@@ -37,11 +37,12 @@
 #include "qquickoverlay_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickpopup_p_p.h"
-#include "qquickdrawer_p.h"
+#include "qquickdrawer_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -93,7 +94,8 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
-        if (popup->isModal() && !qobject_cast<QQuickDrawer *>(popup)) {
+        if (popup->isModal()) {
+            item->setAcceptedMouseButtons(Qt::AllButtons);
             // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
             item->setAcceptHoverEvents(true);
             // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
@@ -162,6 +164,15 @@ QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
     return popups;
 }
 
+QVector<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
+{
+    QVector<QQuickDrawer *> sorted(allDrawers);
+    std::sort(sorted.begin(), sorted.end(), [](const QQuickDrawer *one, const QQuickDrawer *another) {
+        return one->z() > another->z();
+    });
+    return sorted;
+}
+
 void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &)
 {
     Q_Q(QQuickOverlay);
@@ -170,22 +181,26 @@ void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGe
 
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
     modal(nullptr),
-    modeless(nullptr),
-    modalPopups(0)
+    modeless(nullptr)
 {
 }
 
 void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
 {
+    Q_Q(QQuickOverlay);
     allPopups += popup;
-    if (QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup))
+    if (QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(popup)) {
         allDrawers += drawer;
+        q->setVisible(!allDrawers.isEmpty() || !q->childItems().isEmpty());
+    }
 }
 
 void QQuickOverlayPrivate::removePopup(QQuickPopup *popup)
 {
+    Q_Q(QQuickOverlay);
     allPopups.removeOne(popup);
-    allDrawers.removeOne(static_cast<QQuickDrawer *>(popup));
+    if (allDrawers.removeOne(static_cast<QQuickDrawer *>(popup)))
+        q->setVisible(!allDrawers.isEmpty() || !q->childItems().isEmpty());
 }
 
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
@@ -275,7 +290,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     QQuickPopup *popup = nullptr;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
         popup = qobject_cast<QQuickPopup *>(data.item->parent());
-        setVisible(!childItems().isEmpty());
+        setVisible(!d->allDrawers.isEmpty() || !childItems().isEmpty());
     }
     if (!popup)
         return;
@@ -286,8 +301,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         QObjectPrivate::connect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         QObjectPrivate::connect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         if (!qobject_cast<QQuickDrawer *>(popup)) {
-            if (popup->isModal())
-                ++d->modalPopups;
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
         }
@@ -296,8 +309,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         QObjectPrivate::disconnect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         QObjectPrivate::disconnect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         if (!qobject_cast<QQuickDrawer *>(popup)) {
-            if (popup->isModal())
-                --d->modalPopups;
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
             QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
         }
@@ -312,75 +323,82 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
         d->resizeOverlay(popup);
 }
 
-bool QQuickOverlay::event(QEvent *event)
+void QQuickOverlay::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickOverlay);
-    switch (event->type()) {
-    case QEvent::MouseButtonPress: {
-        emit pressed();
+    emit pressed();
+
+    if (!d->allDrawers.isEmpty()) {
+        // the overlay background was pressed, so there are no modal popups open.
+        // test if the press point lands on any drawer's drag margin
+
+        const QVector<QQuickDrawer *> drawers = d->stackingOrderDrawers();
+        for (QQuickDrawer *drawer : drawers) {
+            QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
+            if (p->startDrag(window(), event)) {
+                d->mouseGrabberPopup = drawer;
+                return;
+            }
+        }
+    }
+
+    if (!d->mouseGrabberPopup) {
         const auto popups = d->stackingOrderPopups();
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(this, event)) {
                 d->mouseGrabberPopup = popup;
-                return true;
+                return;
             }
         }
-        break;
-    }
-    case QEvent::MouseMove:
-        if (d->mouseGrabberPopup) {
-            if (d->mouseGrabberPopup->overlayEvent(this, event))
-                return true;
-        } else {
-            const auto popups = d->stackingOrderPopups();
-            for (QQuickPopup *popup : popups) {
-                if (popup->overlayEvent(this, event))
-                    return true;
-            }
-        }
-        break;
-    case QEvent::MouseButtonRelease:
-        emit released();
-        if (d->mouseGrabberPopup) {
-            QQuickPopup *grabber = d->mouseGrabberPopup;
-            d->mouseGrabberPopup = nullptr;
-            if (grabber->overlayEvent(this, event))
-                return true;
-        } else {
-            const auto popups = d->stackingOrderPopups();
-            for (QQuickPopup *popup : popups) {
-                if (popup->overlayEvent(this, event))
-                    return true;
-            }
-        }
-        break;
-    default:
-        break;
     }
 
-    return QQuickItem::event(event);
+    event->ignore();
+}
+
+void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickOverlay);
+    if (d->mouseGrabberPopup)
+        d->mouseGrabberPopup->overlayEvent(this, event);
+}
+
+void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickOverlay);
+    emit released();
+
+    if (d->mouseGrabberPopup) {
+        d->mouseGrabberPopup->overlayEvent(this, event);
+        d->mouseGrabberPopup = nullptr;
+    } else {
+        const auto popups = d->stackingOrderPopups();
+        for (QQuickPopup *popup : popups) {
+            if (popup->overlayEvent(this, event))
+                break;
+        }
+    }
 }
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);
-    if (d->modalPopups == 0)
-        return false;
-    // TODO Filter touch events
-    if (event->type() != QEvent::MouseButtonPress)
-        return false;
-    while (item->parentItem() != this)
-        item = item->parentItem();
-
-    const auto popups = d->stackingOrderPopups();
-    for (QQuickPopup *popup : popups) {
-        if (popup->popupItem() == item)
-            break;
-
-        if (popup->overlayEvent(item, event))
-            return true;
+    for (QQuickPopup *popup : qAsConst(d->allPopups)) {
+        QQuickItem *dimmer = QQuickPopupPrivate::get(popup)->dimmer;
+        if (item == dimmer) {
+            switch (event->type()) {
+            case QEvent::MouseButtonPress:
+                emit pressed();
+                return popup->overlayEvent(item, event);
+            case QEvent::MouseMove:
+                return popup->overlayEvent(item, event);
+            case QEvent::MouseButtonRelease:
+                emit released();
+                return popup->overlayEvent(item, event);
+            default:
+                break;
+            }
+        }
     }
-
     return false;
 }
 

@@ -42,6 +42,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 
@@ -52,6 +53,9 @@ class tst_Drawer : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void visible_data();
+    void visible();
+
     void position_data();
     void position();
 
@@ -62,7 +66,57 @@ private slots:
 
     void hover_data();
     void hover();
+
+    void multiple();
 };
+
+void tst_Drawer::visible_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("Window") << "window.qml";
+    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+}
+
+void tst_Drawer::visible()
+{
+    QFETCH(QString, source);
+    QQuickApplicationHelper helper(this, source);
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    QQuickItem *popupItem = drawer->popupItem();
+
+    QCOMPARE(drawer->isVisible(), false);
+    QCOMPARE(drawer->position(), qreal(0.0));
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+    QVERIFY(!overlay->childItems().contains(popupItem));
+
+    drawer->open();
+    QVERIFY(drawer->isVisible());
+    QVERIFY(overlay->childItems().contains(popupItem));
+    QTRY_COMPARE(drawer->position(), qreal(1.0));
+
+    drawer->close();
+    QTRY_VERIFY(!drawer->isVisible());
+    QTRY_COMPARE(drawer->position(), qreal(0.0));
+    QVERIFY(!overlay->childItems().contains(popupItem));
+
+    drawer->setVisible(true);
+    QVERIFY(drawer->isVisible());
+    QVERIFY(overlay->childItems().contains(popupItem));
+    QTRY_COMPARE(drawer->position(), qreal(1.0));
+
+    drawer->setVisible(false);
+    QTRY_VERIFY(!drawer->isVisible());
+    QTRY_COMPARE(drawer->position(), qreal(0.0));
+    QTRY_VERIFY(!overlay->childItems().contains(popupItem));
+}
 
 void tst_Drawer::position_data()
 {
@@ -179,10 +233,10 @@ void tst_Drawer::reposition()
     drawer->open();
     QTRY_COMPARE(drawer->popupItem()->x(), window->width() - drawer->width());
 
-    drawer->close();
-    QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
-
     window->setWidth(window->width() + 100);
+    QTRY_COMPARE(drawer->popupItem()->x(), window->width() - drawer->width());
+
+    drawer->close();
     QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
 }
 
@@ -248,6 +302,127 @@ void tst_Drawer::hover()
     // hover the background button after closing the drawer
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
     QVERIFY(backgroundButton->isHovered());
+}
+
+void tst_Drawer::multiple()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("multiple.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *leftDrawer = window->property("leftDrawer").value<QQuickDrawer*>();
+    QVERIFY(leftDrawer);
+    QQuickButton *leftButton = window->property("leftButton").value<QQuickButton*>();
+    QVERIFY(leftButton);
+    QSignalSpy leftClickSpy(leftButton, SIGNAL(clicked()));
+    QVERIFY(leftClickSpy.isValid());
+
+    QQuickDrawer *rightDrawer = window->property("rightDrawer").value<QQuickDrawer*>();
+    QVERIFY(rightDrawer);
+    QQuickButton *rightButton = window->property("rightButton").value<QQuickButton*>();
+    QVERIFY(rightButton);
+    QSignalSpy rightClickSpy(rightButton, SIGNAL(clicked()));
+    QVERIFY(rightClickSpy.isValid());
+
+    QQuickButton *contentButton = window->property("contentButton").value<QQuickButton*>();
+    QVERIFY(contentButton);
+    QSignalSpy contentClickSpy(contentButton, SIGNAL(clicked()));
+    QVERIFY(contentClickSpy.isValid());
+
+    // no drawers open, click the content
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 0);
+    QCOMPARE(rightClickSpy.count(), 0);
+
+    // drag the left drawer open
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, window->height() / 2));
+    QTest::mouseMove(window, QPoint(leftDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(leftDrawer->position(), 0.5);
+    QCOMPARE(rightDrawer->position(), 0.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftDrawer->width() / 2, window->height() / 2));
+    QTRY_COMPARE(leftDrawer->position(), 1.0);
+    QCOMPARE(rightDrawer->position(), 0.0);
+
+    // cannot drag the right drawer while the left drawer is open
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, window->height() / 2));
+    QTest::mouseMove(window, QPoint(window->width() - leftDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(leftDrawer->position(), 1.0);
+    QCOMPARE(rightDrawer->position(), 0.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - leftDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(rightDrawer->position(), 0.0);
+    QCOMPARE(leftDrawer->position(), 1.0);
+
+    // open the right drawer below the left drawer
+    rightDrawer->open();
+    QTRY_COMPARE(rightDrawer->position(), 1.0);
+
+    // click the left drawer's button
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 0);
+
+    // click the left drawer's background (button disabled, don't leak through to the right drawer below)
+    leftButton->setEnabled(false);
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 0);
+    leftButton->setEnabled(true);
+
+    // click the overlay of the left drawer (don't leak through to right drawer below)
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - (window->width() - leftDrawer->width()) / 2, window->height() / 2));
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 0);
+    QTRY_VERIFY(!leftDrawer->isVisible());
+
+    // click the right drawer's button
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 1);
+
+    // cannot drag the left drawer while the right drawer is open
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, window->height() / 2));
+    QTest::mouseMove(window, QPoint(leftDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(leftDrawer->position(), 0.0);
+    QCOMPARE(rightDrawer->position(), 1.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(leftDrawer->position(), 0.0);
+    QCOMPARE(rightDrawer->position(), 1.0);
+
+    // click the right drawer's background (button disabled, don't leak through to the content below)
+    rightButton->setEnabled(false);
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 1);
+    rightButton->setEnabled(true);
+
+    // click the overlay of the right drawer (don't leak through to the content below)
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint((window->width() - rightDrawer->width()) / 2, window->height() / 2));
+    QCOMPARE(contentClickSpy.count(), 1);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 1);
+    QTRY_VERIFY(!rightDrawer->isVisible());
+
+    // no drawers open, click the content
+    QTest::mouseClick(window, Qt::LeftButton);
+    QCOMPARE(contentClickSpy.count(), 2);
+    QCOMPARE(leftClickSpy.count(), 1);
+    QCOMPARE(rightClickSpy.count(), 1);
+
+    // drag the right drawer open
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, window->height() / 2));
+    QTest::mouseMove(window, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
+    QCOMPARE(rightDrawer->position(), 0.5);
+    QCOMPARE(leftDrawer->position(), 0.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
+    QTRY_COMPARE(rightDrawer->position(), 1.0);
+    QCOMPARE(leftDrawer->position(), 0.0);
 }
 
 QTEST_MAIN(tst_Drawer)

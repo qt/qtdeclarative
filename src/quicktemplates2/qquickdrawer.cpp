@@ -191,6 +191,12 @@ bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
         break;
     }
 
+    if (drag) {
+        prepareEnterTransition();
+        reposition();
+        handleMousePressEvent(window->contentItem(), event);
+    }
+
     return drag;
 }
 
@@ -289,21 +295,12 @@ bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
 
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
-    pressPoint = event->windowPos();
     offset = 0;
-
-    if (qFuzzyIsNull(position)) {
-        // only accept pressing at drag margins when fully closed
-        event->setAccepted(startDrag(item->window(), event));
-    } else {
-        if (modal)
-            event->setAccepted(item->isAncestorOf(popupItem));
-        else
-            event->setAccepted(false);
-    }
-
+    pressPoint = event->windowPos();
     velocityCalculator.startMeasuring(pressPoint, event->timestamp());
 
+    // don't block press events a) outside a non-modal drawer, or b) to drawer children
+    event->setAccepted(modal && !popupItem->isAncestorOf(item));
     return event->isAccepted();
 }
 
@@ -384,7 +381,7 @@ void QQuickDrawerPrivate::finalizeEnterTransition()
 
 void QQuickDrawerPrivate::finalizeExitTransition(bool hide)
 {
-    QQuickPopupPrivate::finalizeExitTransition(hide = false);
+    QQuickPopupPrivate::finalizeExitTransition(hide);
 }
 
 QQuickDrawer::QQuickDrawer(QObject *parent) :
@@ -448,12 +445,8 @@ void QQuickDrawer::setPosition(qreal position)
     d->position = position;
     if (isComponentComplete())
         d->reposition();
-    if (d->dimmer) {
+    if (d->dimmer)
         d->dimmer->setOpacity(position);
-        // TODO: check QStyleHints::useHoverEffects in Qt 5.8
-        d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0);
-        // d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0 && QGuiApplication::styleHints()->useHoverEffects());
-    }
     emit positionChanged();
 }
 
@@ -545,17 +538,6 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
     default:
         return false;
-    }
-}
-
-void QQuickDrawer::componentComplete()
-{
-    Q_D(QQuickDrawer);
-    QQuickPopup::componentComplete();
-    if (d->window) {
-        bool notify = false;
-        d->prepareEnterTransition(notify);
-        d->reposition();
     }
 }
 

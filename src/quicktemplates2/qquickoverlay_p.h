@@ -84,7 +84,9 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
 
-    bool event(QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
 
 private:

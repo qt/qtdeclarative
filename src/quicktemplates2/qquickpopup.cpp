@@ -1898,6 +1898,12 @@ void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
 
 void QQuickPopup::mouseUngrabEvent()
 {
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window());
+    if (overlay) {
+        QQuickOverlayPrivate *p = QQuickOverlayPrivate::get(overlay);
+        if (p->mouseGrabberPopup == this)
+            p->mouseGrabberPopup = nullptr;
+    }
 }
 
 bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)

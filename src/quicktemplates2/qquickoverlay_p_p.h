@@ -82,6 +82,7 @@ public:
     void toggleOverlay();
 
     QVector<QQuickPopup *> stackingOrderPopups() const;
+    QVector<QQuickDrawer *> stackingOrderDrawers() const;
 
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
@@ -90,7 +91,6 @@ public:
     QVector<QQuickPopup *> allPopups;
     QVector<QQuickDrawer *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
-    int modalPopups;
 };
 
 QT_END_NAMESPACE
