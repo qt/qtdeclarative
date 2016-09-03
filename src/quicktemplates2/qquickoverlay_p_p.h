@@ -70,6 +70,9 @@ public:
         return overlay->d_func();
     }
 
+    void addPopup(QQuickPopup *popup);
+    void removePopup(QQuickPopup *popup);
+
     void popupAboutToShow();
     void popupAboutToHide();
 
@@ -86,6 +89,7 @@ public:
     QQmlComponent *modeless;
     QVector<QQuickDrawer *> drawers;
     QVector<QQuickPopup *> popups;
+    QVector<QQuickPopup *> allPopups;
     QPointer<QQuickPopup> mouseGrabberPopup;
     int modalPopups;
 };

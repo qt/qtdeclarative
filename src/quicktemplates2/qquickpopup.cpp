@@ -37,7 +37,7 @@
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
-#include "qquickoverlay_p.h"
+#include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
@@ -303,6 +303,18 @@ void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
     Q_Q(QQuickPopup);
     if (window == newWindow)
         return;
+
+    if (window) {
+        QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+        if (overlay)
+            QQuickOverlayPrivate::get(overlay)->removePopup(q);
+    }
+
+    if (newWindow) {
+        QQuickOverlay *overlay = QQuickOverlay::overlay(newWindow);
+        if (overlay)
+            QQuickOverlayPrivate::get(overlay)->addPopup(q);
+    }
 
     window = newWindow;
     emit q->windowChanged(newWindow);

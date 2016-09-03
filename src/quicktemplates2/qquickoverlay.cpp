@@ -175,6 +175,16 @@ QQuickOverlayPrivate::QQuickOverlayPrivate() :
 {
 }
 
+void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
+{
+    allPopups += popup;
+}
+
+void QQuickOverlayPrivate::removePopup(QQuickPopup *popup)
+{
+    allPopups.removeOne(popup);
+}
+
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
