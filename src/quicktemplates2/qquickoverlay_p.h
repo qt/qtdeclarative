@@ -64,6 +64,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = nullptr);
+    ~QQuickOverlay();
 
     QQmlComponent *modal() const;
     void setModal(QQmlComponent *modal);

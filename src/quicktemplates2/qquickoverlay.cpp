@@ -41,10 +41,11 @@
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickOverlayPrivate : public QQuickItemPrivate
+class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickOverlay)
 
@@ -60,6 +61,8 @@ public:
     void toggleOverlay();
 
     QVector<QQuickPopup *> stackingOrderPopups() const;
+
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QQmlComponent *modal;
     QQmlComponent *modeless;
@@ -179,6 +182,12 @@ QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
     return popups;
 }
 
+void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &)
+{
+    Q_Q(QQuickOverlay);
+    q->setSize(newGeometry.size());
+}
+
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
     modal(nullptr),
     modeless(nullptr),
@@ -189,10 +198,21 @@ QQuickOverlayPrivate::QQuickOverlayPrivate() :
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
+    Q_D(QQuickOverlay);
     setZ(1000001); // DefaultWindowDecoration+1
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
     setVisible(false);
+
+    if (parent)
+        QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Geometry);
+}
+
+QQuickOverlay::~QQuickOverlay()
+{
+    Q_D(QQuickOverlay);
+    if (QQuickItem *parent = parentItem())
+        QQuickItemPrivate::get(parent)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
 }
 
 QQmlComponent *QQuickOverlay::modal() const

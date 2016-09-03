@@ -157,12 +157,6 @@ void QQuickApplicationWindowPrivate::relayout()
     content->setWidth(q->width());
     content->setHeight(q->height() - hh - fh);
 
-    if (overlay) {
-        overlay->setWidth(q->width());
-        overlay->setHeight(q->height());
-        overlay->stackAfter(content);
-    }
-
     if (header) {
         header->setY(-hh);
         QQuickItemPrivate *p = QQuickItemPrivate::get(header);
@@ -484,7 +478,7 @@ QQuickOverlay *QQuickApplicationWindow::overlay() const
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->overlay) {
         d->overlay = new QQuickOverlay(QQuickWindow::contentItem());
-        d->relayout();
+        d->overlay->stackAfter(QQuickApplicationWindow::contentItem());
     }
     return d->overlay;
 }
