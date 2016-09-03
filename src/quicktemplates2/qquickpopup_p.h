@@ -334,7 +334,6 @@ protected:
     void componentComplete() override;
     bool isComponentComplete() const;
 
-    bool eventFilter(QObject *object, QEvent *event) override;
     virtual bool childMouseEventFilter(QQuickItem *child, QEvent *event);
     virtual void focusInEvent(QFocusEvent *event);
     virtual void focusOutEvent(QFocusEvent *event);

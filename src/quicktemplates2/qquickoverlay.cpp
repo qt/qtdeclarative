@@ -37,6 +37,7 @@
 #include "qquickoverlay_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdrawer_p.h"
+#include "qquickapplicationwindow_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
@@ -204,8 +205,10 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     setFiltersChildMouseEvents(true);
     setVisible(false);
 
-    if (parent)
+    if (parent) {
+        setSize(QSizeF(parent->width(), parent->height()));
         QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Geometry);
+    }
 }
 
 QQuickOverlay::~QQuickOverlay()
@@ -247,6 +250,29 @@ void QQuickOverlay::setModeless(QQmlComponent *modeless)
     delete d->modeless;
     d->modeless = modeless;
     emit modelessChanged();
+}
+
+QQuickOverlay *QQuickOverlay::overlay(QQuickWindow *window)
+{
+    if (!window)
+        return nullptr;
+
+    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow *>(window);
+    if (applicationWindow)
+        return applicationWindow->overlay();
+
+    const char *name = "_q_QQuickOverlay";
+    QQuickOverlay *overlay = window->property(name).value<QQuickOverlay *>();
+    if (!overlay) {
+        QQuickItem *content = window->contentItem();
+        // Do not re-create the overlay if the window is being destroyed
+        // and thus, its content item no longer has a window associated.
+        if (content->window()) {
+            overlay = new QQuickOverlay(window->contentItem());
+            window->setProperty(name, QVariant::fromValue(overlay));
+        }
+    }
+    return overlay;
 }
 
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)

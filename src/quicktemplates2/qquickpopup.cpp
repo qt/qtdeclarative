@@ -188,15 +188,7 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
         return;
     }
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
-    if (!applicationWindow) {
-        window->installEventFilter(q);
-        popupItem->setZ(1000001); // DefaultWindowDecoration+1
-        popupItem->setParentItem(window->contentItem());
-    } else {
-        popupItem->setParentItem(applicationWindow->overlay());
-    }
-
+    popupItem->setParentItem(QQuickOverlay::overlay(window));
     if (notify)
         emit q->aboutToShow();
     visible = notify;
@@ -208,8 +200,6 @@ void QQuickPopupPrivate::prepareEnterTransition(bool notify)
 void QQuickPopupPrivate::prepareExitTransition()
 {
     Q_Q(QQuickPopup);
-    if (window && !qobject_cast<QQuickApplicationWindow *>(window))
-        window->removeEventFilter(q);
     if (focus) {
         // The setFocus(false) call below removes any active focus before we're
         // able to check it in finalizeExitTransition.
@@ -1835,13 +1825,6 @@ bool QQuickPopup::isComponentComplete() const
 {
     Q_D(const QQuickPopup);
     return d->complete;
-}
-
-bool QQuickPopup::eventFilter(QObject *object, QEvent *event)
-{
-    if (QQuickWindow *window = qobject_cast<QQuickWindow *>(object))
-        return overlayEvent(window->contentItem(), event);
-    return false;
 }
 
 bool QQuickPopup::childMouseEventFilter(QQuickItem *child, QEvent *event)

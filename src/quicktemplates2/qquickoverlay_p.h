@@ -72,6 +72,8 @@ public:
     QQmlComponent *modeless() const;
     void setModeless(QQmlComponent *modeless);
 
+    static QQuickOverlay *overlay(QQuickWindow *window);
+
 Q_SIGNALS:
     void modalChanged();
     void modelessChanged();

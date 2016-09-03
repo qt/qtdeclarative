@@ -476,6 +476,9 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 QQuickOverlay *QQuickApplicationWindow::overlay() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
+    if (!d) // being deleted
+        return nullptr;
+
     if (!d->overlay) {
         d->overlay = new QQuickOverlay(QQuickWindow::contentItem());
         d->overlay->stackAfter(QQuickApplicationWindow::contentItem());
