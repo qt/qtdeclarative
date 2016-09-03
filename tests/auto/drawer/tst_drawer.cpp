@@ -86,12 +86,12 @@ void tst_Drawer::position()
 
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
     drawer->setEdge(edge);
 
@@ -131,12 +131,12 @@ void tst_Drawer::dragMargin()
 
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
     drawer->setEdge(edge);
     drawer->setDragMargin(dragMargin);
@@ -167,12 +167,12 @@ void tst_Drawer::reposition()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
     drawer->setEdge(Qt::RightEdge);
 
@@ -199,20 +199,20 @@ void tst_Drawer::hover()
     QFETCH(bool, modal);
 
     QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickDrawer *drawer = helper.window->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
     drawer->setModal(modal);
 
-    QQuickButton *backgroundButton = helper.window->property("backgroundButton").value<QQuickButton*>();
+    QQuickButton *backgroundButton = helper.appWindow->property("backgroundButton").value<QQuickButton*>();
     QVERIFY(backgroundButton);
     backgroundButton->setHoverEnabled(true);
 
-    QQuickButton *drawerButton = helper.window->property("drawerButton").value<QQuickButton*>();
+    QQuickButton *drawerButton = helper.appWindow->property("drawerButton").value<QQuickButton*>();
     QVERIFY(drawerButton);
     drawerButton->setHoverEnabled(true);
 

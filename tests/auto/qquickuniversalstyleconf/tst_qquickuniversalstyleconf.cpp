@@ -55,7 +55,7 @@ void tst_qquickuniversalstyleconf::conf()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     // We specified a custom background color, so the window should have it.

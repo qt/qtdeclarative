@@ -71,7 +71,7 @@ void tst_menu::defaults()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-    QQuickMenu *emptyMenu = helper.window->property("emptyMenu").value<QQuickMenu*>();
+    QQuickMenu *emptyMenu = helper.appWindow->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
     QCOMPARE(emptyMenu->contentItem()->property("currentIndex"), QVariant(-1));
 }
@@ -80,7 +80,7 @@ void tst_menu::mouse()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
@@ -152,7 +152,7 @@ void tst_menu::contextMenuKeyboard()
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -230,7 +230,7 @@ void tst_menu::menuButton()
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -254,7 +254,7 @@ void tst_menu::menuButton()
 void tst_menu::addItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("addItem.qml"));
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 

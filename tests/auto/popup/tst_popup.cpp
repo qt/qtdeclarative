@@ -68,12 +68,12 @@ void tst_popup::visible()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     QQuickItem *popupItem = popup->popupItem();
 
@@ -98,7 +98,7 @@ void tst_popup::overlay()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -115,10 +115,10 @@ void tst_popup::overlay()
     QCOMPARE(overlayPressedSignal.count(), 0);
     QCOMPARE(overlayReleasedSignal.count(), 0);
 
-    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
 
-    QQuickButton *button = helper.window->property("button").value<QQuickButton*>();
+    QQuickButton *button = helper.appWindow->property("button").value<QQuickButton*>();
     QVERIFY(button);
 
     popup->open();
@@ -160,16 +160,16 @@ void tst_popup::zOrder()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     popup->setModal(true);
 
-    QQuickPopup *popup2 = helper.window->property("popup2").value<QQuickPopup*>();
+    QQuickPopup *popup2 = helper.appWindow->property("popup2").value<QQuickPopup*>();
     QVERIFY(popup2);
     popup2->setModal(true);
 
@@ -237,15 +237,15 @@ void tst_popup::closePolicy()
 
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
 
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
 
-    QQuickButton *button = helper.window->property("button").value<QQuickButton*>();
+    QQuickButton *button = helper.appWindow->property("button").value<QQuickButton*>();
     QVERIFY(button);
 
     popup->setModal(true);
@@ -308,15 +308,15 @@ void tst_popup::activeFocusOnClose1()
     // Test that a popup that never sets focus: true (e.g. ToolTip) doesn't affect
     // the active focus item when it closes.
     QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose1.qml"));
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *focusedPopup = helper.window->property("focusedPopup").value<QQuickPopup*>();
+    QQuickPopup *focusedPopup = helper.appWindow->property("focusedPopup").value<QQuickPopup*>();
     QVERIFY(focusedPopup);
 
-    QQuickPopup *nonFocusedPopup = helper.window->property("nonFocusedPopup").value<QQuickPopup*>();
+    QQuickPopup *nonFocusedPopup = helper.appWindow->property("nonFocusedPopup").value<QQuickPopup*>();
     QVERIFY(nonFocusedPopup);
 
     focusedPopup->open();
@@ -338,18 +338,18 @@ void tst_popup::activeFocusOnClose2()
     // calling forceActiveFocus() on another item) before it closes doesn't
     // affect the active focus item when it closes.
     QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose2.qml"));
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup1 = helper.window->property("popup1").value<QQuickPopup*>();
+    QQuickPopup *popup1 = helper.appWindow->property("popup1").value<QQuickPopup*>();
     QVERIFY(popup1);
 
-    QQuickPopup *popup2 = helper.window->property("popup2").value<QQuickPopup*>();
+    QQuickPopup *popup2 = helper.appWindow->property("popup2").value<QQuickPopup*>();
     QVERIFY(popup2);
 
-    QQuickButton *closePopup2Button = helper.window->property("closePopup2Button").value<QQuickButton*>();
+    QQuickButton *closePopup2Button = helper.appWindow->property("closePopup2Button").value<QQuickButton*>();
     QVERIFY(closePopup2Button);
 
     popup1->open();
@@ -380,20 +380,20 @@ void tst_popup::hover()
     QFETCH(bool, modal);
 
     QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
-    QQuickApplicationWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup = helper.window->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     popup->setModal(modal);
 
-    QQuickButton *parentButton = helper.window->property("parentButton").value<QQuickButton*>();
+    QQuickButton *parentButton = helper.appWindow->property("parentButton").value<QQuickButton*>();
     QVERIFY(parentButton);
     parentButton->setHoverEnabled(true);
 
-    QQuickButton *childButton = helper.window->property("childButton").value<QQuickButton*>();
+    QQuickButton *childButton = helper.appWindow->property("childButton").value<QQuickButton*>();
     QVERIFY(childButton);
     childButton->setHoverEnabled(true);
 
