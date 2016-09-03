@@ -27,6 +27,7 @@ HEADERS += \
     $$PWD/qquickmenu_p_p.h \
     $$PWD/qquickmenuitem_p.h \
     $$PWD/qquickoverlay_p.h \
+    $$PWD/qquickoverlay_p_p.h \
     $$PWD/qquickpage_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpane_p.h \

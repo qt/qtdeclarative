@@ -35,43 +35,15 @@
 ****************************************************************************/
 
 #include "qquickoverlay_p.h"
+#include "qquickoverlay_p_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdrawer_p.h"
 #include "qquickapplicationwindow_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
-{
-    Q_DECLARE_PUBLIC(QQuickOverlay)
-
-public:
-    QQuickOverlayPrivate();
-
-    void popupAboutToShow();
-    void popupAboutToHide();
-
-    void createOverlay(QQuickPopup *popup);
-    void destroyOverlay(QQuickPopup *popup);
-    void resizeOverlay(QQuickPopup *popup);
-    void toggleOverlay();
-
-    QVector<QQuickPopup *> stackingOrderPopups() const;
-
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
-
-    QQmlComponent *modal;
-    QQmlComponent *modeless;
-    QVector<QQuickDrawer *> drawers;
-    QVector<QQuickPopup *> popups;
-    QPointer<QQuickPopup> mouseGrabberPopup;
-    int modalPopups;
-};
 
 void QQuickOverlayPrivate::popupAboutToShow()
 {
