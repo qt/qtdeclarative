@@ -188,31 +188,35 @@ void tst_Drawer::reposition()
 
 void tst_Drawer::hover_data()
 {
+    QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
 
-    QTest::newRow("modal") << true;
-    QTest::newRow("modeless") << false;
+    QTest::newRow("Window:modal") << "window-hover.qml" << true;
+    QTest::newRow("Window:modeless") << "window-hover.qml" << false;
+    QTest::newRow("ApplicationWindow:modal") << "applicationwindow-hover.qml" << true;
+    QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-hover.qml" << false;
 }
 
 void tst_Drawer::hover()
 {
+    QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
-    QQuickApplicationWindow *window = helper.appWindow;
+    QQuickApplicationHelper helper(this, source);
+    QQuickWindow *window = helper.window;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
     drawer->setModal(modal);
 
-    QQuickButton *backgroundButton = helper.appWindow->property("backgroundButton").value<QQuickButton*>();
+    QQuickButton *backgroundButton = window->property("backgroundButton").value<QQuickButton*>();
     QVERIFY(backgroundButton);
     backgroundButton->setHoverEnabled(true);
 
-    QQuickButton *drawerButton = helper.appWindow->property("drawerButton").value<QQuickButton*>();
+    QQuickButton *drawerButton = window->property("drawerButton").value<QQuickButton*>();
     QVERIFY(drawerButton);
     drawerButton->setHoverEnabled(true);
 

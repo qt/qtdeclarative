@@ -411,31 +411,35 @@ void tst_popup::activeFocusOnClose2()
 
 void tst_popup::hover_data()
 {
+    QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
 
-    QTest::newRow("modal") << true;
-    QTest::newRow("modeless") << false;
+    QTest::newRow("Window:modal") << "window-hover.qml" << true;
+    QTest::newRow("Window:modeless") << "window-hover.qml" << false;
+    QTest::newRow("ApplicationWindow:modal") << "applicationwindow-hover.qml" << true;
+    QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-hover.qml" << false;
 }
 
 void tst_popup::hover()
 {
+    QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("hover.qml"));
-    QQuickApplicationWindow *window = helper.appWindow;
+    QQuickApplicationHelper helper(this, source);
+    QQuickWindow *window = helper.window;
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     popup->setModal(modal);
 
-    QQuickButton *parentButton = helper.appWindow->property("parentButton").value<QQuickButton*>();
+    QQuickButton *parentButton = window->property("parentButton").value<QQuickButton*>();
     QVERIFY(parentButton);
     parentButton->setHoverEnabled(true);
 
-    QQuickButton *childButton = helper.appWindow->property("childButton").value<QQuickButton*>();
+    QQuickButton *childButton = window->property("childButton").value<QQuickButton*>();
     QVERIFY(childButton);
     childButton->setHoverEnabled(true);
 

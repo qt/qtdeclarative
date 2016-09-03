@@ -101,15 +101,21 @@ void QQuickOverlayPrivate::popupAboutToHide()
 
 static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
 {
-    if (!component)
-        return nullptr;
+    QQuickItem *item = nullptr;
+    if (component) {
+        QQmlContext *creationContext = component->creationContext();
+        if (!creationContext)
+            creationContext = qmlContext(parent);
+        QQmlContext *context = new QQmlContext(creationContext);
+        context->setContextObject(popup);
+        item = qobject_cast<QQuickItem*>(component->beginCreate(context));
+    }
 
-    QQmlContext *creationContext = component->creationContext();
-    if (!creationContext)
-        creationContext = qmlContext(parent);
-    QQmlContext *context = new QQmlContext(creationContext);
-    context->setContextObject(popup);
-    QQuickItem *item = qobject_cast<QQuickItem*>(component->beginCreate(context));
+    // when there is no overlay component available (with plain QQuickWindow),
+    // use a plain QQuickItem as a fallback to block hover events
+    if (!item && popup->isModal())
+        item = new QQuickItem;
+
     if (item) {
         item->setOpacity(popup->isVisible() ? 1.0 : 0.0);
         item->setParentItem(parent);
@@ -121,7 +127,8 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
             // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
             // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, item, &QQuickItem::setAcceptHoverEvents);
         }
-        component->completeCreate();
+        if (component)
+            component->completeCreate();
     }
     return item;
 }
