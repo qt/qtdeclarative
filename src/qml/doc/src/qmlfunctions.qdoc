@@ -180,6 +180,42 @@
 */
 
 /*!
+  \fn static inline int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject, const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+  \relates QQmlEngine
+  \since 5.8
+
+  This function registers the \a staticMetaObject and its extension
+  in the QML system with the name \a qmlName in the library imported
+  from \a uri having version number composed from \a versionMajor and
+  \a versionMinor.
+
+  This function is useful to register Q_NAMESPACE namespaces.
+
+  Returns the QML type id.
+
+  Example:
+
+  \code
+  namespace MyNamespace {
+    Q_NAMESPACE
+    enum MyEnum {
+        Key1,
+        Key2,
+    };
+    Q_ENUMS(MyEnum)
+  }
+
+  //...
+  qmlRegisterUncreatableMetaObject(MyNamespace::staticMetaObject, "io.qt", 1, 0, "MyNamespace", "Access to enums & flags only");
+  \endcode
+
+  Now on QML side you can use the registered enums:
+  \code
+  Component.onCompleted: console.log(MyNamespace.Key2)
+  \endcode
+*/
+
+/*!
   \fn int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, QQmlCustomParser *parser)
   \relates QQmlEngine
   \internal

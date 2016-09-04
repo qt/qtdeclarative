@@ -45,6 +45,7 @@ void registerTypes()
     qmlRegisterType<MyDotPropertyObject>("Test",1,0,"MyDotPropertyObject");
     qmlRegisterType<MyNamespace::MyNamespacedType>("Test",1,0,"MyNamespacedType");
     qmlRegisterType<MyNamespace::MySecondNamespacedType>("Test",1,0,"MySecondNamespacedType");
+    qmlRegisterUncreatableMetaObject(MyNamespace::staticMetaObject, "Test", 1, 0, "MyNamespace", "Access to enums & flags only");
     qmlRegisterType<MyParserStatus>("Test",1,0,"MyParserStatus");
     qmlRegisterType<MyGroupedObject>();
     qmlRegisterType<MyRevisionedClass>("Test",1,0,"MyRevisionedClass");
