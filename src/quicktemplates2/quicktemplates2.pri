@@ -16,6 +16,7 @@ HEADERS += \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickdial_p.h \
     $$PWD/qquickdrawer_p.h \
+    $$PWD/qquickdrawer_p_p.h \
     $$PWD/qquickframe_p.h \
     $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \

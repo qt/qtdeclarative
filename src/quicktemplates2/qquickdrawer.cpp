@@ -35,8 +35,7 @@
 ****************************************************************************/
 
 #include "qquickdrawer_p.h"
-#include "qquickpopup_p_p.h"
-#include "qquickvelocitycalculator_p_p.h"
+#include "qquickdrawer_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -114,33 +113,11 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
-class QQuickDrawerPrivate : public QQuickPopupPrivate
+QQuickDrawerPrivate::QQuickDrawerPrivate()
+    : edge(Qt::LeftEdge), offset(0), position(0),
+      dragMargin(QGuiApplication::styleHints()->startDragDistance())
 {
-    Q_DECLARE_PUBLIC(QQuickDrawer)
-
-public:
-    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0),
-        dragMargin(QGuiApplication::styleHints()->startDragDistance()) { }
-
-    qreal positionAt(const QPointF &point) const;
-    void reposition() override;
-
-    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
-
-    void prepareEnterTransition(bool notify = true) override;
-    void prepareExitTransition() override;
-    void finalizeEnterTransition() override;
-    void finalizeExitTransition(bool hide = true) override;
-
-    Qt::Edge edge;
-    qreal offset;
-    qreal position;
-    qreal dragMargin;
-    QPointF pressPoint;
-    QQuickVelocityCalculator velocityCalculator;
-};
+}
 
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
 {
