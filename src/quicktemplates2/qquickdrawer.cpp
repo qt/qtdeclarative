@@ -225,55 +225,10 @@ bool QQuickDrawerPrivate::grabMouse(QMouseEvent *event)
     return overThreshold;
 }
 
-bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
-{
-    pressPoint = event->windowPos();
-    offset = 0;
-
-    if (qFuzzyIsNull(position)) {
-        // only accept pressing at drag margins when fully closed
-        event->setAccepted(startDrag(item->window(), event));
-    } else {
-        if (modal)
-            event->setAccepted(item->isAncestorOf(popupItem));
-        else
-            event->setAccepted(false);
-    }
-
-    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
-
-    return event->isAccepted();
-}
-
-bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
-{
-    Q_Q(QQuickDrawer);
-    Q_UNUSED(item);
-
-    const QPointF movePoint = event->windowPos();
-
-    if (grabMouse(event)) {
-        QQuickItem *grabber = window->mouseGrabberItem();
-        if (!grabber || !grabber->keepMouseGrab()) {
-            popupItem->grabMouse();
-            popupItem->setKeepMouseGrab(true);
-            offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
-        }
-    }
-
-    if (popupItem->keepMouseGrab())
-        q->setPosition(positionAt(movePoint) - offset);
-    event->accept();
-
-    return popupItem->keepMouseGrab();
-}
-
 static const qreal openCloseVelocityThreshold = 300;
 
-bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
+bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
 {
-    Q_UNUSED(item);
-
     bool wasGrabbed = popupItem->keepMouseGrab();
     if (wasGrabbed) {
         const QPointF releasePoint = event->windowPos();
@@ -328,10 +283,63 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
                 break;
             }
         }
-        popupItem->setKeepMouseGrab(false);
     }
+    return wasGrabbed;
+}
+
+bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
+{
+    pressPoint = event->windowPos();
+    offset = 0;
+
+    if (qFuzzyIsNull(position)) {
+        // only accept pressing at drag margins when fully closed
+        event->setAccepted(startDrag(item->window(), event));
+    } else {
+        if (modal)
+            event->setAccepted(item->isAncestorOf(popupItem));
+        else
+            event->setAccepted(false);
+    }
+
+    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
+
+    return event->isAccepted();
+}
+
+bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
+{
+    Q_Q(QQuickDrawer);
+    Q_UNUSED(item);
+
+    const QPointF movePoint = event->windowPos();
+
+    if (grabMouse(event)) {
+        QQuickItem *grabber = window->mouseGrabberItem();
+        if (!grabber || !grabber->keepMouseGrab()) {
+            popupItem->grabMouse();
+            popupItem->setKeepMouseGrab(true);
+            offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
+        }
+    }
+
+    if (popupItem->keepMouseGrab())
+        q->setPosition(positionAt(movePoint) - offset);
+    event->accept();
+
+    return popupItem->keepMouseGrab();
+}
+
+bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
+{
+    Q_UNUSED(item);
+
+    const bool wasGrabbed = ungrabMouse(event);
+
+    popupItem->setKeepMouseGrab(false);
     pressPoint = QPoint();
     event->accept();
+
     return wasGrabbed;
 }
 

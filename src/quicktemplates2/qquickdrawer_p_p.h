@@ -71,6 +71,7 @@ public:
 
     bool startDrag(QQuickWindow *window, QMouseEvent *event);
     bool grabMouse(QMouseEvent *event);
+    bool ungrabMouse(QMouseEvent *event);
 
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
