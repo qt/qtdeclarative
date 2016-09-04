@@ -281,7 +281,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         return;
 
     if (change == ItemChildAddedChange) {
-        d->popups.append(popup);
         if (popup->dim())
             d->createOverlay(popup);
         QObjectPrivate::connect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
@@ -293,7 +292,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
             QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
         }
     } else if (change == ItemChildRemovedChange) {
-        d->popups.removeOne(popup);
         d->destroyOverlay(popup);
         QObjectPrivate::disconnect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
         QObjectPrivate::disconnect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
@@ -310,7 +308,7 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
 {
     Q_D(QQuickOverlay);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
-    for (QQuickPopup *popup : d->popups)
+    for (QQuickPopup *popup : qAsConst(d->allPopups))
         d->resizeOverlay(popup);
 }
 

@@ -87,7 +87,6 @@ public:
 
     QQmlComponent *modal;
     QQmlComponent *modeless;
-    QVector<QQuickPopup *> popups;
     QVector<QQuickPopup *> allPopups;
     QVector<QQuickDrawer *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
