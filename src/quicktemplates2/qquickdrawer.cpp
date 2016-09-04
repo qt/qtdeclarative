@@ -168,31 +168,40 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
     return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
 }
 
+bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
+{
+    if (!window || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
+        return false;
+
+    bool drag = false;
+    switch (edge) {
+    case Qt::LeftEdge:
+        drag = !dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, dragMargin);
+        break;
+    case Qt::RightEdge:
+        drag = !dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event, dragMargin);
+        break;
+    case Qt::TopEdge:
+        drag = !dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, dragMargin);
+        break;
+    case Qt::BottomEdge:
+        drag = !dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event, dragMargin);
+        break;
+    default:
+        break;
+    }
+
+    return drag;
+}
+
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     pressPoint = event->windowPos();
     offset = 0;
 
-    QQuickWindow *window = item->window();
-    if (!window)
-        return false;
-
     if (qFuzzyIsNull(position)) {
         // only accept pressing at drag margins when fully closed
-        switch (edge) {
-        case Qt::LeftEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, dragMargin));
-            break;
-        case Qt::RightEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event, dragMargin));
-            break;
-        case Qt::TopEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, dragMargin));
-            break;
-        case Qt::BottomEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event, dragMargin));
-            break;
-        }
+        event->setAccepted(startDrag(item->window(), event));
     } else {
         if (modal)
             event->setAccepted(item->isAncestorOf(popupItem));

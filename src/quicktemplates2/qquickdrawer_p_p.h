@@ -69,6 +69,8 @@ public:
     qreal positionAt(const QPointF &point) const;
     void reposition() override;
 
+    bool startDrag(QQuickWindow *window, QMouseEvent *event);
+
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
