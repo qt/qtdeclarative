@@ -58,6 +58,8 @@
 #include <private/qv4value_p.h>
 #include "qv4instr_moth_p.h"
 
+QT_REQUIRE_CONFIG(qml_interpreter);
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
