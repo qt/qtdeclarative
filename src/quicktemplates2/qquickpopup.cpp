@@ -143,6 +143,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , bottomMargin(0)
     , contentWidth(0)
     , contentHeight(0)
+    , transitionState(QQuickPopupPrivate::NoTransition)
     , closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside)
     , parentItem(nullptr)
     , dimmer(nullptr)
@@ -180,33 +181,46 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
     return false;
 }
 
-void QQuickPopupPrivate::prepareEnterTransition(bool notify)
+bool QQuickPopupPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickPopup);
     if (!window) {
         qmlInfo(q) << "cannot find any window to open popup in.";
-        return;
+        return false;
     }
 
-    popupItem->setParentItem(QQuickOverlay::overlay(window));
-    if (notify)
+    if (transitionState == EnterTransition && transitionManager.isRunning())
+        return false;
+
+    if (transitionState != EnterTransition) {
+        popupItem->setParentItem(QQuickOverlay::overlay(window));
         emit q->aboutToShow();
-    visible = notify;
-    popupItem->setVisible(true);
-    positioner.setParentItem(parentItem);
-    emit q->visibleChanged();
+        visible = true;
+        transitionState = EnterTransition;
+        popupItem->setVisible(true);
+        positioner.setParentItem(parentItem);
+        emit q->visibleChanged();
+    }
+    return true;
 }
 
-void QQuickPopupPrivate::prepareExitTransition()
+bool QQuickPopupPrivate::prepareExitTransition()
 {
     Q_Q(QQuickPopup);
-    if (focus) {
-        // The setFocus(false) call below removes any active focus before we're
-        // able to check it in finalizeExitTransition.
-        hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
-        popupItem->setFocus(false);
+    if (transitionState == ExitTransition && transitionManager.isRunning())
+        return false;
+
+    if (transitionState != ExitTransition) {
+        if (focus) {
+            // The setFocus(false) call below removes any active focus before we're
+            // able to check it in finalizeExitTransition.
+            hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
+            popupItem->setFocus(false);
+        }
+        transitionState = ExitTransition;
+        emit q->aboutToHide();
     }
-    emit q->aboutToHide();
+    return true;
 }
 
 void QQuickPopupPrivate::finalizeEnterTransition()
@@ -214,17 +228,16 @@ void QQuickPopupPrivate::finalizeEnterTransition()
     Q_Q(QQuickPopup);
     if (focus)
         popupItem->setFocus(true);
+    transitionState = NoTransition;
     emit q->opened();
 }
 
-void QQuickPopupPrivate::finalizeExitTransition(bool hide)
+void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
-    if (hide) {
-        positioner.setParentItem(nullptr);
-        popupItem->setParentItem(nullptr);
-        popupItem->setVisible(false);
-    }
+    positioner.setParentItem(nullptr);
+    popupItem->setParentItem(nullptr);
+    popupItem->setVisible(false);
 
     if (hadActiveFocusBeforeExitTransition) {
         QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
@@ -235,6 +248,7 @@ void QQuickPopupPrivate::finalizeExitTransition(bool hide)
     }
 
     visible = false;
+    transitionState = NoTransition;
     hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
@@ -713,19 +727,15 @@ bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
 }
 
 QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *popup)
-    : QQuickTransitionManager()
-    , state(Off)
-    , popup(popup)
+    : QQuickTransitionManager(), popup(popup)
 {
 }
 
 void QQuickPopupTransitionManager::transitionEnter()
 {
-    if (state == Enter && isRunning())
+    if (!popup->prepareEnterTransition())
         return;
 
-    state = Enter;
-    popup->prepareEnterTransition();
     if (popup->window)
         transition(popup->enterActions, popup->enter, popup->q_func());
     else
@@ -734,11 +744,9 @@ void QQuickPopupTransitionManager::transitionEnter()
 
 void QQuickPopupTransitionManager::transitionExit()
 {
-    if (state == Exit && isRunning())
+    if (!popup->prepareExitTransition())
         return;
 
-    state = Exit;
-    popup->prepareExitTransition();
     if (popup->window)
         transition(popup->exitActions, popup->exit, popup->q_func());
     else
@@ -747,12 +755,10 @@ void QQuickPopupTransitionManager::transitionExit()
 
 void QQuickPopupTransitionManager::finished()
 {
-    if (state == Enter)
+    if (popup->transitionState == QQuickPopupPrivate::EnterTransition)
         popup->finalizeEnterTransition();
-    else if (state == Exit)
+    else if (popup->transitionState == QQuickPopupPrivate::ExitTransition)
         popup->finalizeExitTransition();
-
-    state = Off;
 }
 
 QQuickPopup::QQuickPopup(QObject *parent)

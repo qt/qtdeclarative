@@ -76,11 +76,6 @@ protected:
     void finished() override;
 
 private:
-    enum TransitionState {
-        Off, Enter, Exit
-    };
-
-    TransitionState state;
     QQuickPopupPrivate *popup;
 };
 
@@ -163,10 +158,10 @@ public:
     bool tryClose(QQuickItem *item, QMouseEvent *event);
     virtual void reposition();
 
-    virtual void prepareEnterTransition(bool notify = true);
-    virtual void prepareExitTransition();
+    virtual bool prepareEnterTransition();
+    virtual bool prepareExitTransition();
     virtual void finalizeEnterTransition();
-    virtual void finalizeExitTransition(bool hide = true);
+    virtual void finalizeExitTransition();
 
     QMarginsF getMargins() const;
 
@@ -177,6 +172,10 @@ public:
 
     void setWindow(QQuickWindow *window);
     void itemDestroyed(QQuickItem *item) override;
+
+    enum TransitionState {
+        NoTransition, EnterTransition, ExitTransition
+    };
 
     bool focus;
     bool modal;
@@ -202,6 +201,7 @@ public:
     qreal bottomMargin;
     qreal contentWidth;
     qreal contentHeight;
+    TransitionState transitionState;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;
     QQuickItem *dimmer;

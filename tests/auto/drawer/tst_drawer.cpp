@@ -56,6 +56,8 @@ private slots:
     void visible_data();
     void visible();
 
+    void state();
+
     void position_data();
     void position();
 
@@ -116,6 +118,106 @@ void tst_Drawer::visible()
     QTRY_VERIFY(!drawer->isVisible());
     QTRY_COMPARE(drawer->position(), qreal(0.0));
     QTRY_VERIFY(!overlay->childItems().contains(popupItem));
+}
+
+void tst_Drawer::state()
+{
+    QQuickApplicationHelper helper(this, "applicationwindow.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+
+    QCOMPARE(drawer->isVisible(), false);
+
+    QSignalSpy visibleChangedSpy(drawer, SIGNAL(visibleChanged()));
+    QSignalSpy aboutToShowSpy(drawer, SIGNAL(aboutToShow()));
+    QSignalSpy aboutToHideSpy(drawer, SIGNAL(aboutToHide()));
+    QSignalSpy openedSpy(drawer, SIGNAL(opened()));
+    QSignalSpy closedSpy(drawer, SIGNAL(closed()));
+
+    QVERIFY(visibleChangedSpy.isValid());
+    QVERIFY(aboutToShowSpy.isValid());
+    QVERIFY(aboutToHideSpy.isValid());
+    QVERIFY(openedSpy.isValid());
+    QVERIFY(closedSpy.isValid());
+
+    int visibleChangedCount = 0;
+    int aboutToShowCount = 0;
+    int aboutToHideCount = 0;
+    int openedCount = 0;
+    int closedCount = 0;
+
+    // open programmatically...
+    drawer->open();
+    QCOMPARE(visibleChangedSpy.count(), ++visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), ++aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // ...and wait until fully open
+    QVERIFY(openedSpy.wait());
+    QCOMPARE(visibleChangedSpy.count(), visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), ++openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // close programmatically...
+    drawer->close();
+    QCOMPARE(visibleChangedSpy.count(), visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), ++aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // ...and wait until fully closed
+    QVERIFY(closedSpy.wait());
+    QCOMPARE(visibleChangedSpy.count(), ++visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), ++closedCount);
+
+    // open interactively...
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(drawer->width() * 0.2, drawer->height() / 2), 16);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(drawer->width() * 0.8, drawer->height() / 2), 16);
+    QCOMPARE(visibleChangedSpy.count(), ++visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), ++aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // ...and wait until fully open
+    QVERIFY(openedSpy.wait());
+    QCOMPARE(visibleChangedSpy.count(), visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), ++openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // close interactively...
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(drawer->width(), drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(drawer->width() * 0.8, drawer->height() / 2), 16);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(drawer->width() * 0.2, drawer->height() / 2), 16);
+    QCOMPARE(visibleChangedSpy.count(), visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), ++aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), closedCount);
+
+    // ...and wait until fully closed
+    QVERIFY(closedSpy.wait());
+    QCOMPARE(visibleChangedSpy.count(), ++visibleChangedCount);
+    QCOMPARE(aboutToShowSpy.count(), aboutToShowCount);
+    QCOMPARE(aboutToHideSpy.count(), aboutToHideCount);
+    QCOMPARE(openedSpy.count(), openedCount);
+    QCOMPARE(closedSpy.count(), ++closedCount);
 }
 
 void tst_Drawer::position_data()

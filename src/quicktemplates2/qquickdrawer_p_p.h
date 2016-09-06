@@ -77,10 +77,8 @@ public:
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
-    void prepareEnterTransition(bool notify = true) override;
-    void prepareExitTransition() override;
-    void finalizeEnterTransition() override;
-    void finalizeExitTransition(bool hide = true) override;
+    bool prepareEnterTransition() override;
+    bool prepareExitTransition() override;
 
     Qt::Edge edge;
     qreal offset;

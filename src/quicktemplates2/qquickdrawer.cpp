@@ -360,28 +360,18 @@ static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTr
     return actions;
 }
 
-void QQuickDrawerPrivate::prepareEnterTransition(bool notify)
+bool QQuickDrawerPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickDrawer);
     enterActions = prepareTransition(q, enter, 1.0);
-    QQuickPopupPrivate::prepareEnterTransition(notify);
+    return QQuickPopupPrivate::prepareEnterTransition();
 }
 
-void QQuickDrawerPrivate::prepareExitTransition()
+bool QQuickDrawerPrivate::prepareExitTransition()
 {
     Q_Q(QQuickDrawer);
     exitActions = prepareTransition(q, exit, 0.0);
-    QQuickPopupPrivate::prepareExitTransition();
-}
-
-void QQuickDrawerPrivate::finalizeEnterTransition()
-{
-    QQuickPopupPrivate::finalizeEnterTransition();
-}
-
-void QQuickDrawerPrivate::finalizeExitTransition(bool hide)
-{
-    QQuickPopupPrivate::finalizeExitTransition(hide);
+    return QQuickPopupPrivate::prepareExitTransition();
 }
 
 QQuickDrawer::QQuickDrawer(QObject *parent) :

@@ -53,6 +53,7 @@ class tst_popup : public QQmlDataTest
 private slots:
     void visible_data();
     void visible();
+    void state();
     void overlay_data();
     void overlay();
     void zOrder_data();
@@ -106,6 +107,46 @@ void tst_popup::visible()
     popup->setVisible(false);
     QVERIFY(!popup->isVisible());
     QVERIFY(!overlay->childItems().contains(popupItem));
+}
+
+void tst_popup::state()
+{
+    QQuickApplicationHelper helper(this, "applicationwindow.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QCOMPARE(popup->isVisible(), false);
+
+    QSignalSpy visibleChangedSpy(popup, SIGNAL(visibleChanged()));
+    QSignalSpy aboutToShowSpy(popup, SIGNAL(aboutToShow()));
+    QSignalSpy aboutToHideSpy(popup, SIGNAL(aboutToHide()));
+    QSignalSpy openedSpy(popup, SIGNAL(opened()));
+    QSignalSpy closedSpy(popup, SIGNAL(closed()));
+
+    QVERIFY(visibleChangedSpy.isValid());
+    QVERIFY(aboutToShowSpy.isValid());
+    QVERIFY(aboutToHideSpy.isValid());
+    QVERIFY(openedSpy.isValid());
+    QVERIFY(closedSpy.isValid());
+
+    popup->open();
+    QCOMPARE(visibleChangedSpy.count(), 1);
+    QCOMPARE(aboutToShowSpy.count(), 1);
+    QCOMPARE(aboutToHideSpy.count(), 0);
+    QTRY_COMPARE(openedSpy.count(), 1);
+    QCOMPARE(closedSpy.count(), 0);
+
+    popup->close();
+    QCOMPARE(visibleChangedSpy.count(), 2);
+    QCOMPARE(aboutToShowSpy.count(), 1);
+    QCOMPARE(aboutToHideSpy.count(), 1);
+    QCOMPARE(openedSpy.count(), 1);
+    QTRY_COMPARE(closedSpy.count(), 1);
 }
 
 void tst_popup::overlay_data()
